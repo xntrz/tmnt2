@@ -1,0 +1,363 @@
+#include "Light.hpp"
+
+#include "Game/Component/GameMain/GameProperty.hpp"
+#include "Game/Component/Gimmick/GimmickUtils.hpp"
+#include "Game/System/Map/MapCamera.hpp"
+#include "Game/System/Texture/TextureManager.hpp"
+#include "System/Common/Screen.hpp"
+#include "System/Common/RenderState.hpp"
+
+
+class CEffectLight
+{
+private:
+    struct LIGHTWORK
+    {
+        RwV3d m_vPosition;
+        RwRGBA m_Color;
+        float m_fRadius;
+        RwIm3DVertex m_aVertices[4];        
+        bool m_bVisible;
+        bool m_bUse;
+    };
+
+    static const int32 LIGHTWORKNUM = 128;
+
+public:
+    CEffectLight(void);
+    ~CEffectLight(void);
+    void Run(void);
+    void Draw(void);
+    uint32 Regist(const RwV3d* pvPosition, float fRadius, const RwRGBA& color);
+    void Remove(uint32 hLight);
+    void SetColor(uint32 hLight, const RwRGBA& color);
+    void SetPosition(uint32 hLight, const RwV3d* pvPosition);
+    void SetRadius(uint32 hLight, float fRadius);
+
+private:
+    LIGHTWORK* workAlloc(void);
+    void workFree(LIGHTWORK* pWork);
+    LIGHTWORK* workFromHandle(uint32 hLight);
+    void setVertex(LIGHTWORK* pWork, float fRadius, const RwRGBA& color);
+
+private:
+    LIGHTWORK m_aLightWork[LIGHTWORKNUM];
+    int32 m_nNumActiveLights;
+    RwTexture* m_pTexture;
+};
+
+
+CEffectLight::CEffectLight(void)
+: m_nNumActiveLights(0)
+, m_pTexture(nullptr)
+{
+    std::memset(m_aLightWork, 0x00, sizeof(m_aLightWork));    
+};
+
+
+CEffectLight::~CEffectLight(void)
+{
+    ;
+};
+
+
+void CEffectLight::Run(void)
+{
+    for (int32 i = 0; i < COUNT_OF(m_aLightWork); ++i)
+    {
+        LIGHTWORK* pWork = &m_aLightWork[i];
+        pWork->m_bVisible = CGimmickUtils::IsPositionVisible(&pWork->m_vPosition, pWork->m_fRadius, true);        
+    };
+};
+
+
+void CEffectLight::Draw(void)
+{
+    if (!m_nNumActiveLights)
+        return;
+
+    RwMatrix matrixView;
+    RwMatrix matrixBillboard;
+    RwMatrixSetIdentityMacro(&matrixView);
+    RwMatrixSetIdentityMacro(&matrixBillboard);
+
+    CGameProperty::GetCameraViewMatrix(&matrixView);
+    Math::Matrix_Invert(&matrixBillboard, &matrixView);
+
+    RwV3d vEyePos = matrixBillboard.pos;
+
+    if (m_pTexture)
+    {
+        RENDERSTATE_PUSH(rwRENDERSTATETEXTURERASTER, RwTextureGetRaster(m_pTexture));
+    }
+    else
+    {
+        RENDERSTATE_PUSH(rwRENDERSTATETEXTURERASTER, 0);
+    };
+
+    RENDERSTATE_PUSH(rwRENDERSTATEVERTEXALPHAENABLE, true);
+    RENDERSTATE_PUSH(rwRENDERSTATEZWRITEENABLE, false);
+    RENDERSTATE_PUSH(rwRENDERSTATESRCBLEND, rwBLENDSRCALPHA);
+    RENDERSTATE_PUSH(rwRENDERSTATEDESTBLEND, rwBLENDONE);
+    RENDERSTATE_PUSH(rwRENDERSTATEFOGENABLE, false);
+
+    for (int32 i = 0; i < m_nNumActiveLights; ++i)
+    {
+        LIGHTWORK* pWork = &m_aLightWork[i];
+        if (!pWork->m_bUse)
+            continue;
+
+        if (pWork->m_bVisible)
+        {
+            RwV3d vTmp = Math::VECTOR3_ZERO;
+            Math::Vec3_Sub(&vTmp, &vEyePos, &pWork->m_vPosition);
+            Math::Vec3_Normalize(&vTmp, &vTmp);
+            Math::Vec3_Scale(&vTmp, &vTmp, 1.0f);
+            Math::Vec3_Add(&matrixBillboard.pos, &pWork->m_vPosition, &vTmp);
+            
+            setVertex(pWork, pWork->m_fRadius, pWork->m_Color);
+            
+            uint32 uFlags = rwIM3D_VERTEXRGBA | rwIM3D_VERTEXXYZ | rwIM3D_VERTEXUV;
+            
+            if (RwIm3DTransform(pWork->m_aVertices, COUNT_OF(pWork->m_aVertices), &matrixBillboard, uFlags))
+            {
+                RwIm3DRenderPrimitive(rwPRIMTYPETRISTRIP);
+                RwIm3DEnd();
+            };
+        };
+    };
+
+    RENDERSTATE_POP(rwRENDERSTATEVERTEXALPHAENABLE);
+    RENDERSTATE_POP(rwRENDERSTATEZWRITEENABLE);
+    RENDERSTATE_POP(rwRENDERSTATESRCBLEND);
+    RENDERSTATE_POP(rwRENDERSTATEDESTBLEND);
+    RENDERSTATE_POP(rwRENDERSTATEFOGENABLE);
+};
+
+
+uint32 CEffectLight::Regist(const RwV3d* pvPosition, float fRadius, const RwRGBA& color)
+{
+    LIGHTWORK* pWork = workAlloc();
+    ASSERT(pWork);
+    if (pWork)
+    {
+        pWork->m_vPosition = *pvPosition;
+        pWork->m_fRadius = fRadius;
+        pWork->m_Color = color;
+        pWork->m_bVisible = true;
+    };
+
+    if (!m_pTexture)
+    {
+        CTextureManager::SetCurrentTextureSet("mapeffect");
+        m_pTexture = CTextureManager::GetRwTexture("light");
+        ASSERT(m_pTexture);
+    };
+
+    return uint32(pWork);
+};
+
+
+void CEffectLight::Remove(uint32 hLight)
+{
+    LIGHTWORK* pWork = workFromHandle(hLight);
+    ASSERT(pWork);
+    if (pWork)
+        workFree(pWork);
+};
+
+
+void CEffectLight::SetColor(uint32 hLight, const RwRGBA& color)
+{
+    LIGHTWORK* pWork = workFromHandle(hLight);
+    ASSERT(pWork);
+
+    pWork->m_Color = color;
+};
+
+
+void CEffectLight::SetPosition(uint32 hLight, const RwV3d* pvPosition)
+{
+    ASSERT(pvPosition);
+    
+    LIGHTWORK* pWork = workFromHandle(hLight);
+    ASSERT(pWork);
+
+    pWork->m_vPosition = *pvPosition;
+};
+
+
+void CEffectLight::SetRadius(uint32 hLight, float fRadius)
+{
+    LIGHTWORK* pWork = workFromHandle(hLight);
+    ASSERT(pWork);
+
+    pWork->m_fRadius = fRadius;
+};
+
+
+CEffectLight::LIGHTWORK* CEffectLight::workAlloc(void)
+{
+    for (int32 i = 0; i < COUNT_OF(m_aLightWork); ++i)
+    {
+        if (!m_aLightWork[i].m_bUse)
+        {
+            ++m_nNumActiveLights;
+            m_aLightWork[i].m_bUse = true;
+            return &m_aLightWork[i];
+        };
+    };
+
+    return nullptr;
+};
+
+
+void CEffectLight::workFree(LIGHTWORK* pWork)
+{
+    ASSERT(pWork);
+    pWork->m_bUse = false;
+    --m_nNumActiveLights;
+};
+
+
+CEffectLight::LIGHTWORK* CEffectLight::workFromHandle(uint32 hLight)
+{
+    LIGHTWORK* pWork = (LIGHTWORK*)hLight;    
+    ASSERT(pWork);
+    ASSERT(pWork->m_bUse);
+    if (pWork)
+    {
+        if (pWork->m_bUse)
+            return pWork;
+    };
+
+    return nullptr;
+};
+
+
+void CEffectLight::setVertex(LIGHTWORK* pWork, float fRadius, const RwRGBA& color)
+{
+    ASSERT(pWork);
+    
+    CMapCamera* pMapCamera = CGameProperty::GetMapCamera();
+    ASSERT(pMapCamera);
+
+    float fViewRatio = pMapCamera->GetViewRatio();
+    float fWidth = float(CScreen::Width());
+    float fHeight = float(CScreen::Height());    
+    float x = fViewRatio * fRadius;
+    float y = (fWidth / fHeight) * fViewRatio * fRadius;
+
+    RwIm3DVertex* pVertex = pWork->m_aVertices;
+
+    pVertex[0].objVertex.x = x;
+    pVertex[0].objVertex.y = y;
+    pVertex[0].objVertex.z = 0.0f;
+    pVertex[0].objNormal.x = 0.0f;
+    pVertex[0].objNormal.y = 0.0f;
+    pVertex[0].objNormal.z = 0.0f;
+    pVertex[0].u = 0.0f;
+    pVertex[0].v = 1.0f;
+    pVertex[0].color = COLOR_TO_INTEGER_RWRGBA(color);
+
+    pVertex[1].objVertex.x = x;
+    pVertex[1].objVertex.y = y * -1.0f;
+    pVertex[1].objVertex.z = 0.0f;
+    pVertex[1].objNormal.x = 0.0f;
+    pVertex[1].objNormal.y = 0.0f;
+    pVertex[1].objNormal.z = 0.0f;
+    pVertex[1].u = 0.0f;
+    pVertex[1].v = 0.0f;
+    pVertex[1].color = COLOR_TO_INTEGER_RWRGBA(color);
+
+    pVertex[2].objVertex.x = x * -1.0f;
+    pVertex[2].objVertex.y = y;
+    pVertex[2].objVertex.z = 0.0f;
+    pVertex[2].objNormal.x = 0.0f;
+    pVertex[2].objNormal.y = 0.0f;
+    pVertex[2].objNormal.z = 0.0f;
+    pVertex[2].u = 1.0f;
+    pVertex[2].v = 1.0f;
+    pVertex[2].color = COLOR_TO_INTEGER_RWRGBA(color);
+
+    pVertex[3].objVertex.x = x * -1.0f;
+    pVertex[3].objVertex.y = y * -1.0f;
+    pVertex[3].objVertex.z = 0.0f;
+    pVertex[3].objNormal.x = 0.0f;
+    pVertex[3].objNormal.y = 0.0f;
+    pVertex[3].objNormal.z = 0.0f;
+    pVertex[3].u = 1.0f;
+    pVertex[3].v = 0.0f;
+    pVertex[3].color = COLOR_TO_INTEGER_RWRGBA(color);
+};
+
+
+static CEffectLight* s_pEffectLight = nullptr;
+
+
+static inline CEffectLight& EffectLight(void)
+{
+    ASSERT(s_pEffectLight);
+    return *s_pEffectLight;
+};
+
+
+/*static*/ void CEffectLightManager::Initialize(void)
+{
+    if (!s_pEffectLight)
+    {
+        s_pEffectLight = new CEffectLight;
+    };
+};
+
+
+/*static*/ void CEffectLightManager::Terminate(void)
+{
+    if (s_pEffectLight)
+    {
+        delete s_pEffectLight;
+        s_pEffectLight = nullptr;
+    };
+};
+
+
+/*static*/ void CEffectLightManager::Run(void)
+{
+    EffectLight().Run();
+};
+
+
+/*static*/ void CEffectLightManager::Draw(void)
+{
+    EffectLight().Draw();
+};
+
+
+/*static*/ uint32 CEffectLightManager::Regist(const RwV3d* pvPosition, float fRadius, const RwRGBA& color)
+{
+    return EffectLight().Regist(pvPosition, fRadius, color);
+};
+
+
+/*static*/ void CEffectLightManager::Remove(uint32 hLight)
+{
+    EffectLight().Remove(hLight);
+};
+
+
+/*static*/ void CEffectLightManager::SetPosition(uint32 hLight, const RwV3d* pvPosition)
+{
+    EffectLight().SetPosition(hLight, pvPosition);
+};
+
+
+/*static*/ void CEffectLightManager::SetColor(uint32 hLight, const RwRGBA& color)
+{
+    EffectLight().SetColor(hLight, color);
+};
+
+
+/*static*/ void CEffectLightManager::SetRadius(uint32 hLight, float fRadius)
+{
+    EffectLight().SetRadius(hLight, fRadius);
+};

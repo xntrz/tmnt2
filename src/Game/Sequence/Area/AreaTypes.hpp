@@ -1,0 +1,19 @@
+#pragma once
+
+
+namespace AREATYPES
+{
+    enum NEXTSEQUENCE
+    {
+        NEXTSEQUENCE_NONE = 0,
+        NEXTSEQUENCE_AREA,
+        NEXTSEQUENCE_WARP,
+        NEXTSEQUENCE_CHARASEL,
+        NEXTSEQUENCE_MENUSAVE,
+        NEXTSEQUENCE_MENULOAD,
+        NEXTSEQUENCE_OPTIONS,
+        NEXTSEQUENCE_TITLE,
+
+        NEXTSEQUENCENUM,
+    };
+};

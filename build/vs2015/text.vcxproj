@@ -1,0 +1,113 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="14.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Debug|Win32">
+      <Configuration>Debug</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+  <PropertyGroup Label="Globals">
+    <ProjectGuid>{C5C6C770-DEC9-4AFB-9D32-EAB6949020AC}</ProjectGuid>
+    <Keyword>Win32Proj</Keyword>
+    <RootNamespace>text</RootNamespace>
+    <WindowsTargetPlatformVersion>8.1</WindowsTargetPlatformVersion>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <PlatformToolset>v140</PlatformToolset>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <ImportGroup Label="ExtensionSettings">
+  </ImportGroup>
+  <ImportGroup Label="Shared">
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <PropertyGroup Label="UserMacros" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <LinkIncremental>true</LinkIncremental>
+    <OutDir>$(SolutionDir)..\..\bin\$(ProjectName)\$(Configuration)\</OutDir>
+    <IntDir>$(SolutionDir)..\..\obj\$(ProjectName)\$(Configuration)\</IntDir>
+  </PropertyGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <ClCompile>
+      <PrecompiledHeader>Use</PrecompiledHeader>
+      <WarningLevel>Level3</WarningLevel>
+      <Optimization>Disabled</Optimization>
+      <PreprocessorDefinitions>WIN32;_DEBUG;_WINDOWS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>$(SolutionDir)..\..\utils\$(ProjectName);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <ForcedIncludeFiles>pch.hpp</ForcedIncludeFiles>
+      <PrecompiledHeaderFile>pch.hpp</PrecompiledHeaderFile>
+      <ObjectFileName>$(IntDir)/%(RelativeDir)/</ObjectFileName>
+      <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
+      <RuntimeTypeInfo>false</RuntimeTypeInfo>
+    </ClCompile>
+    <Link>
+      <SubSystem>Windows</SubSystem>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <RandomizedBaseAddress>false</RandomizedBaseAddress>
+    </Link>
+    <ResourceCompile>
+      <AdditionalIncludeDirectories>$(SolutionDir)..\..\utils\$(ProjectName);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <ShowProgress>true</ShowProgress>
+    </ResourceCompile>
+  </ItemDefinitionGroup>
+  <ItemGroup>
+    <ClCompile Include="..\..\utils\text\Configuration.cpp" />
+    <ClCompile Include="..\..\utils\text\debug.cpp" />
+    <ClCompile Include="..\..\utils\text\DlgAbout.cpp" />
+    <ClCompile Include="..\..\utils\text\DlgEdit.cpp" />
+    <ClCompile Include="..\..\utils\text\DlgMain.cpp" />
+    <ClCompile Include="..\..\utils\text\GameTextDB.cpp" />
+    <ClCompile Include="..\..\utils\text\Ini.cpp" />
+    <ClCompile Include="..\..\utils\text\IniHelp.cpp" />
+    <ClCompile Include="..\..\utils\text\main.cpp" />
+    <ClCompile Include="..\..\utils\text\pch.cpp">
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="..\..\utils\text\UIDlg.cpp" />
+    <ClCompile Include="..\..\utils\text\UIDragAndDrop.cpp" />
+    <ClCompile Include="..\..\utils\text\UILocale.cpp" />
+    <ClCompile Include="..\..\utils\text\UIResize.cpp" />
+    <ClCompile Include="..\..\utils\text\UIUtils.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\..\utils\text\Configuration.hpp" />
+    <ClInclude Include="..\..\utils\text\debug.hpp" />
+    <ClInclude Include="..\..\utils\text\DlgAbout.hpp" />
+    <ClInclude Include="..\..\utils\text\DlgEdit.hpp" />
+    <ClInclude Include="..\..\utils\text\DlgMain.hpp" />
+    <ClInclude Include="..\..\utils\text\GameTextDB.hpp" />
+    <ClInclude Include="..\..\utils\text\Ini.hpp" />
+    <ClInclude Include="..\..\utils\text\IniHelp.hpp" />
+    <ClInclude Include="..\..\utils\text\pch.hpp" />
+    <ClInclude Include="..\..\utils\text\rc_dlg.hpp" />
+    <ClInclude Include="..\..\utils\text\rc_menu.hpp" />
+    <ClInclude Include="..\..\utils\text\rc_text.hpp" />
+    <ClInclude Include="..\..\utils\text\typedefs.hpp" />
+    <ClInclude Include="..\..\utils\text\UIDlg.hpp" />
+    <ClInclude Include="..\..\utils\text\UIDragAndDrop.hpp" />
+    <ClInclude Include="..\..\utils\text\UILocale.hpp" />
+    <ClInclude Include="..\..\utils\text\UIResize.hpp" />
+    <ClInclude Include="..\..\utils\text\UITypes.hpp" />
+    <ClInclude Include="..\..\utils\text\UIUtils.hpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <Image Include="..\..\utils\text\logo32.ico" />
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="..\..\utils\text\rc_dlg.rc" />
+    <ResourceCompile Include="..\..\utils\text\rc_menu.rc" />
+    <ResourceCompile Include="..\..\utils\text\rc_text.rc" />
+  </ItemGroup>
+  <ItemGroup>
+    <Manifest Include="..\..\utils\text\text.manifest" />
+  </ItemGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <ImportGroup Label="ExtensionTargets">
+  </ImportGroup>
+</Project>

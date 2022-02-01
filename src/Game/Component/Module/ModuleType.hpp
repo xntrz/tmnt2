@@ -1,0 +1,44 @@
+#pragma once
+
+
+namespace MODULETYPE
+{
+    enum VALUE
+    {
+        INVALID = -1,
+        
+        CIRCLE_SHADOW = 0,
+        INK_THICKNESS_CONTROL,
+        ATOMIC_DISPLAY_CONTROL,
+        AMBIENT_LIGHT,
+        BANDANA,
+        LOCUS,
+        EFFECT,
+        SLEEP_EFFECT,
+        FOOTPRINTS,
+        RIPPLE,
+        TO_GIMMICK_MSG,
+        BARRIER,
+        ACCUMULATE,
+        SICKLE_AURA,
+        BLINK_CHARACTER,
+        PLAYERATTRCTRL_INVINCIBILITY,
+        PLAYERATTRCTRL_ATTACK_POWER_UP,
+        PLAYERATTRCTRL_DEFENCE_POWER_UP,
+        PLAYERATTRCTRL_CHANGE_TIME_CUT,
+        PLAYERATTRCTRL_INNUMERABLE_KNIFE,
+        PLAYERATTRCTRL_CONFUSION,
+        DAMAGE_FLOOR,
+        ITEM_EFFECT_ATTACK,
+        ITEM_EFFECT_CHARGE,
+        ITEM_EFFECT_DEFENCE,
+        ITEM_EFFECT_DART,
+        ITEM_EFFECT_INVINCIBLE,
+        FOOTFALL,
+        RIDE_EFFECT,
+        WALL_JUMP_SIGN,
+        PLAYER_CHNG_VOICE,
+
+        NUMMAX,
+    };
+};

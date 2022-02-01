@@ -1,0 +1,364 @@
+#include "MenuController.hpp"
+
+#include "Game/Component/GameData/GameData.hpp"
+#include "System/Common/Controller.hpp"
+
+
+/*static*/ const char* CMenuController::m_apszButtonLabel[] =
+{
+    //
+    //  Virtual controller
+    //
+    "btUp",
+    "btDown",
+    "btLeft",
+    "btRight",
+    "btOk",
+    "btCancel",
+    "btSelect",
+    "btStart",
+    "btMenu",
+
+    //
+    //  Player 1
+    //
+    "btP1Up",
+    "btP1Down",
+    "btP1Left",
+    "btP1Right",
+    "btP1Ok",
+    "btP1Cancel",
+    "btP1Select",
+    "btP1Start",
+    "btP1Menu",
+
+    //
+    //  Player 2
+    //
+    "btP2Up",
+    "btP2Down",
+    "btP2Left",
+    "btP2Right",
+    "btP2Ok",
+    "btP2Cancel",
+    "btP2Select",
+    "btP2Start",
+    "btP2Menu",
+
+    //
+    //  Player 3
+    //
+    "btP3Up",
+    "btP3Down",
+    "btP3Left",
+    "btP3Right",
+    "btP3Ok",
+    "btP3Cancel",
+    "btP3Select",
+    "btP3Start",
+    "btP3Menu",
+
+    //
+    //  Player 4
+    //
+    "btP4Up",
+    "btP4Down",
+    "btP4Left",
+    "btP4Right",
+    "btP4Ok",
+    "btP4Cancel",
+    "btP4Select",
+    "btP4Start",
+    "btP4Menu",
+};
+
+
+/*static*/ uint32 CMenuController::m_auDigitalDataTable[] =
+{
+    CController::DIGITAL,
+    CController::DIGITAL,
+    CController::DIGITAL,
+    CController::DIGITAL,
+    CController::DIGITAL,
+    CController::DIGITAL,
+    CController::DIGITAL,
+    CController::DIGITAL,
+    CController::DIGITAL,
+};
+
+
+/*static*/ bool CMenuController::m_abLockKeyData[] =
+{
+	true,
+	true,
+	true,
+	true,
+	true,
+	true,
+	true,
+	true,
+	true,
+};
+
+
+/*static*/ bool CMenuController::Initialize(void)
+{
+    for (int32 i = 0; i < COUNT_OF(m_auDigitalDataTable); ++i)
+    {
+        uint32 uDigital = CController::DIGITAL;
+        
+        switch (i)
+        {
+        case BUTTON_ID_UP:
+            uDigital = CController::DIGITAL_UP;
+            break;
+            
+        case BUTTON_ID_DOWN:
+            uDigital = CController::DIGITAL_DOWN;
+            break;
+            
+        case BUTTON_ID_LEFT:
+            uDigital = CController::DIGITAL_LEFT;
+            break;
+            
+        case BUTTON_ID_RIGHT:
+            uDigital = CController::DIGITAL_RIGHT;
+            break;
+            
+        case BUTTON_ID_OK:
+            uDigital = CController::DIGITAL_OK;
+            break;
+            
+        case BUTTON_ID_CANCEL:
+            uDigital = CController::DIGITAL_CANCEL;
+            break;
+            
+        case BUTTON_ID_SELECT:
+            uDigital = CController::DIGITAL_SELECT;
+            break;
+            
+        case BUTTON_ID_START:
+            uDigital = CController::DIGITAL_START;
+            break;
+            
+        case BUTTON_ID_MENU:
+			uDigital = CController::DIGITAL_RIGHT_TRIGGER;
+            break;
+
+        default:
+            ASSERT(false);
+            break;
+        };
+
+        m_auDigitalDataTable[i] = uDigital;
+        m_abLockKeyData[i] = false;		
+    };
+
+    return true;
+};
+
+
+/*static*/ void CMenuController::Terminate(void)
+{
+    ;
+};
+
+
+/*static*/ void CMenuController::KeyLock(uint32 uKey)
+{
+    m_abLockKeyData[GetPadToButtonID(uKey)] = true;
+};
+
+
+/*static*/ void CMenuController::KeyUnlock(uint32 uKey)
+{
+    m_abLockKeyData[GetPadToButtonID(uKey)] = false;
+};
+
+
+/*static*/ CMenuController::BUTTON_ID CMenuController::GetPadToButtonID(uint32 uKey)
+{
+    if (uKey == CController::DIGITAL_OK)
+        return BUTTON_ID_OK;
+
+    if (uKey == CController::DIGITAL_CANCEL)
+        return BUTTON_ID_CANCEL;
+
+    switch (uKey)
+    {
+    case CController::DIGITAL_UP:        
+        return BUTTON_ID_UP;
+
+    case CController::DIGITAL_DOWN:
+        return BUTTON_ID_DOWN;
+
+    case CController::DIGITAL_LEFT:
+        return BUTTON_ID_LEFT;
+
+    case CController::DIGITAL_RIGHT:
+        return BUTTON_ID_RIGHT;
+
+    case CController::DIGITAL_SELECT:
+        return BUTTON_ID_SELECT;
+
+    case CController::DIGITAL_START:
+        return BUTTON_ID_START;
+
+    case CController::DIGITAL_RIGHT_TRIGGER:
+        return BUTTON_ID_MENU;
+
+    default:
+        ASSERT(false);
+        return BUTTON_ID_MAX;
+    };
+};
+
+
+CMenuController::CMenuController(void)
+{
+	m_aControllerEnableBit[0] = 0;
+	m_aControllerEnableBit[1] = 0;
+	m_aControllerEnableBit[2] = 0;
+	m_aControllerEnableBit[3] = 0;
+	m_aControllerEnableBit[4] = 0;
+
+    static_assert(COUNT_OF(m_auDigitalDataTable) == BUTTON_ID_MAX, "update me");
+    static_assert(COUNT_OF(m_abLockKeyData) == BUTTON_ID_MAX, "update me");
+    static_assert(COUNT_OF(m_apszButtonLabel) == (CONTROLLER_ID_MAX * BUTTON_ID_MAX), "update me");
+};
+
+
+CMenuController::~CMenuController(void)
+{
+    ;
+};
+
+
+void CMenuController::CheckButtonLabelList(Rt2dMaestro* pMaestro)
+{
+    ASSERT(pMaestro);
+
+    for (int32 i = 0; i < COUNT_OF(m_aButtonLabelID); ++i)
+    {
+        for (int32 j = 0; j < COUNT_OF(m_aButtonLabelID[0]); ++j)
+        {
+            int32 index = -1;
+			int32 idx = (i * COUNT_OF(m_aButtonLabelID[0])) + j;
+            if (Rt2dMaestroFindStringLabel(pMaestro, rt2dANIMLABELTYPEBUTTON, m_apszButtonLabel[idx], &index))
+            {
+                m_aButtonLabelID[i][j] = index;
+                m_aControllerEnableBit[i] |= m_auDigitalDataTable[j];
+            }
+            else
+            {
+                m_aButtonLabelID[i][j] = -1;
+            };
+        };        
+    };
+};
+
+
+void CMenuController::SetButtonState(Rt2dMaestro* pMaestro, CONTROLLER_ID iController, BUTTON_ID iButton, int32 iAnimButtonState)
+{
+    ASSERT(pMaestro);
+    ASSERT(iController >= 0 && iController < CONTROLLER_ID_MAX);
+    ASSERT(iButton >= 0 && iButton < BUTTON_ID_MAX);
+    ASSERT(iController >= 0 && iController < COUNT_OF(m_aButtonLabelID));
+    ASSERT(iButton >= 0 && iButton < COUNT_OF(m_aButtonLabelID[0]));
+
+    int32 index = m_aButtonLabelID[iController][iButton];
+    if (index >= 0)
+    {
+        ButtonByLabelPacket Packet;
+        Packet.m_iButtonID = index;
+        Packet.m_iAnimButtonState = iAnimButtonState;
+
+        Rt2dMaestroForAllVisibleAnimations(pMaestro, AnimationsCallBack, &Packet);
+    };
+};
+
+
+void CMenuController::Trigger(Rt2dMaestro* pMaestro)
+{    
+    ASSERT(pMaestro);
+
+    int32 iControllerMax = CController::Max() + 1;
+    const int32 iControllerNo[CONTROLLER_ID_MAX] =
+    {
+		CGameData::Attribute().GetVirtualPad(), 0, 1, 2, 3,
+    };
+
+    for (int32 i = 0; i < iControllerMax; ++i)
+    {
+        uint32 uDigital = CController::GetDigitalTrigger(iControllerNo[i]);
+		uint32 uResult = (m_aControllerEnableBit[i] & uDigital);
+        if(uResult == 0)
+            continue;
+
+		bool bFlag = true;
+
+        for (int32 j = 0; j < BUTTON_ID_MAX; ++j)
+        {
+			bool b1 = (j != BUTTON_ID_START);
+			bool b2 = ((m_auDigitalDataTable[BUTTON_ID_START] & m_auDigitalDataTable[BUTTON_ID_OK]) == 0);
+			bool b3 = (m_abLockKeyData[j] != true);
+
+			if (b1 || b2 && b3)
+			{
+				if (CController::GetDigitalTrigger(iControllerNo[i], m_auDigitalDataTable[j]))
+				{
+					if (bFlag)
+					{
+						if (j < 8)
+							bFlag = false;
+
+						SetButtonState(pMaestro, CONTROLLER_ID(i), BUTTON_ID(j), rt2dANIMBUTTONSTATEOVERUPTOOVERDOWN);
+					};
+				};
+			};
+        };
+    };
+};
+
+
+void CMenuController::KeyPress(Rt2dMaestro* pMaestro, uint32 uKey)
+{
+    ASSERT(pMaestro);
+
+    BUTTON_ID iButton = GetPadToButtonID(uKey);
+    ASSERT(iButton >= 0 && iButton < BUTTON_ID_MAX);
+
+    int32 index = m_aButtonLabelID[CONTROLLER_ID_VIRTUAL][iButton];
+    if (index > -1)
+    {
+        ButtonByLabelPacket Packet;
+        Packet.m_iButtonID = index;
+        Packet.m_iAnimButtonState = rt2dANIMBUTTONSTATEOVERUPTOOVERDOWN;
+
+        Rt2dMaestroForAllVisibleAnimations(pMaestro, AnimationsCallBack, &Packet);
+    };
+};
+
+
+void CMenuController::FlashUnlockKeyEnable(bool bEnable)
+{
+    m_bUnlock = bEnable;
+};
+
+
+/*static*/ Rt2dMaestro* CMenuController::AnimationsCallBack(Rt2dMaestro* maestro, Rt2dAnim* anim, Rt2dAnimProps* props, void* pData)
+{
+    ASSERT(pData);
+    
+    ButtonByLabelPacket* pPacket = (ButtonByLabelPacket*)pData;
+    Rt2dMessage Message = { 0 };
+    
+    Message.messageType = rt2dMESSAGETYPEBUTTONBYLABEL;
+    Message.index       = -1;
+    Message.intParam1   = pPacket->m_iButtonID;
+    Message.intParam2   = pPacket->m_iAnimButtonState;
+    
+    Rt2dMaestroPostMessages(maestro, &Message, 1);
+
+	return maestro;
+};
