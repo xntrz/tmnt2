@@ -2,9 +2,9 @@
 
 
 CFileAccess::CFileAccess(void)
-: m_pBuffer(nullptr)
-, m_uBufferSize(0)
-, m_status(STATUS_NOREAD)
+    : m_pBuffer(nullptr)
+    , m_uBufferSize(0)
+    , m_status(STATUS_NOREAD)
 {
     ;
 };

@@ -102,7 +102,7 @@ bool CGameGimmick::IsSleep(void) const
 
 bool CGameGimmick::IsAbleToSleep(void) const
 {
-    return IS_FLAG_SET(Gimmick().GetFeatures(), GAMEOBJECTTYPES::FLAG_SLEEP);
+    return FLAG_TEST(Gimmick().GetFeatures(), GAMEOBJECTTYPES::FLAG_SLEEP);
 };
 
 

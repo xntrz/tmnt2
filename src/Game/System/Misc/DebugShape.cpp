@@ -397,7 +397,7 @@ void CDebugShapeContainer::DrawSphere(SHAPE_SPHERE* pShapeSphere)
 
             Math::Vec3_Add(&pVertex->objVertex, &pVertex->objVertex, &vPosition);
 
-            pVertex->color = COLOR_TO_INTEGER_RWRGBA(Color);
+            pVertex->color = RWRGBALONGEX(Color);
         };
     };
 
@@ -423,7 +423,9 @@ void CDebugShapeContainer::DrawSphere(SHAPE_SPHERE* pShapeSphere)
 
 void CDebugShapeContainer::DrawLine(SHAPE_LINE* pShapeLine)
 {
-    ;
+    //
+    //  TODO
+    //
 };
 
 
@@ -437,7 +439,7 @@ void CDebugShapeContainer::DrawPlane(SHAPE_PLANE* pShapePlane)
     for (int32 i = 0; i < COUNT_OF(aVertex); i++)
     {
         aVertex[i].objVertex = pShapePlane->m_vPoint[i];
-        aVertex[i].color = COLOR_TO_INTEGER_RWRGBA(pShapePlane->m_Color);
+        aVertex[i].color = RWRGBALONGEX(pShapePlane->m_Color);
     };
 
     RwImVertexIndex aIndex[] =
@@ -460,7 +462,7 @@ void CDebugShapeContainer::DrawBox(SHAPE_BOX* pShapeBox)
     for (int32 i = 0; i < COUNT_OF(aVertex); i++)
     {
         aVertex[i].objVertex = pShapeBox->m_vPoint[i];
-        aVertex[i].color = COLOR_TO_INTEGER_RWRGBA(pShapeBox->m_Color);
+        aVertex[i].color = RWRGBALONGEX(pShapeBox->m_Color);
     };
     
     //             6           4

@@ -1,11 +1,13 @@
 #include "GimmickMotion.hpp"
 
+#include "Game/Component/GameMain/GameProperty.hpp"
 #include "Game/System/Motion/MotionController.hpp"
 #include "Game/System/Model/Model.hpp"
 
 
 CGimmickMotion::CGimmickMotion(CModel* pModel)
 : m_pMotionController(nullptr)
+, m_fPlayRate(1.0f)
 {
     ASSERT(pModel);
     
@@ -24,9 +26,14 @@ CGimmickMotion::~CGimmickMotion(void)
 };
 
 
-void CGimmickMotion::Update(float dt)
+void CGimmickMotion::Update(void)
 {
-    m_pMotionController->Update(dt);
+    float fUpdateTime = CGameProperty::GetElapsedTime() * m_fPlayRate;
+    while (fUpdateTime < 0.0f)
+        fUpdateTime += GetEndTime();
+    ASSERT(fUpdateTime >= 0.0f);
+
+    m_pMotionController->Update(fUpdateTime);
 };
 
 

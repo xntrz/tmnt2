@@ -54,7 +54,7 @@ void CPlayNexusStageSeqState::OnAttach(CStageBaseSequence* pSeq, const void* pPa
 
     CGameData::Attribute().SetInteractive(false);
 
-    OUTPUT("[GAME] %s starting nexus round %d\n", __FUNCTION__, CGameData::PlayParam().GetStageIndex());
+    OUTPUT(" %s starting nexus round %d\n", __FUNCTION__, CGameData::PlayParam().GetStageIndex());
 };
 
 

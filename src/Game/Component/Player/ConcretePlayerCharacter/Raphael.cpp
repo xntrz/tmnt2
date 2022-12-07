@@ -147,7 +147,7 @@ namespace Raphael
 
 
 CRaphael::CRaphael(GAMETYPES::COSTUME costume)
-: CPlayerCharacter("raphael", PLAYERID::ID_RAPH, costume)
+: CPlayerCharacter("raphael", PLAYERID::ID_RAP, costume)
 {
     //
 	//	Model parts:

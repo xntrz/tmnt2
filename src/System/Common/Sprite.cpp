@@ -23,12 +23,6 @@
 };
 
 
-/*static*/ void CSprite::ScreenChanged(void)
-{
-    ;
-};
-
-
 /*static*/ void CSprite::GetRealScreenPos(float* x, float* y)
 {
 	*x = ((*x - m_fVirtualScreenX) / m_fVirtualScreenW) * CScreen::Width();
@@ -263,7 +257,7 @@ void CSprite::Draw(void) const
 
         float z = RwIm2DGetNearScreenZ();
         float rhw = 1.0f / RwCameraGetNearClipPlane(CCamera::CameraCurrent());
-        uint32 color = COLOR_TO_INTEGER_RWRGBA(m_Color);
+        uint32 color = RWRGBALONG(m_Color.red, m_Color.green, m_Color.blue, m_Color.alpha);
 
         for (int32 i = 0; i < COUNT_OF(aVertices); ++i)
         {
@@ -272,14 +266,12 @@ void CSprite::Draw(void) const
             aVertices[i].z = m_fZ;
             aVertices[i].u = uv_vertex[i].x;
             aVertices[i].v = uv_vertex[i].y;
-            aVertices[i].rhw = rhw;
+            aVertices[i].rhw = 0.0f;// rhw;
             aVertices[i].emissiveColor = color;
         };
 
 		if (m_pTexture)
-            RENDERSTATE_PUSH(rwRENDERSTATETEXTURERASTER, RwTextureGetRaster(m_pTexture));
-		else
-            RENDERSTATE_PUSH(rwRENDERSTATETEXTURERASTER, nullptr);		
+            RENDERSTATE_PUSH(rwRENDERSTATETEXTURERASTER, RwTextureGetRaster(m_pTexture));	
 
         RwIm2DRenderPrimitive(rwPRIMTYPETRISTRIP, aVertices, COUNT_OF(aVertices));
     };
@@ -315,7 +307,7 @@ void CSprite::DrawRotate(void) const
 
         float z = RwIm2DGetNearScreenZ();
         float rhw = 1.0f / RwCameraGetNearClipPlane(CCamera::CameraCurrent());
-        uint32 color = COLOR_TO_INTEGER_RWRGBA(m_Color);
+        uint32 color = RWRGBALONG(m_Color.red, m_Color.green, m_Color.blue, m_Color.alpha);
         
         for (int32 i = 0; i < COUNT_OF(aVertices); ++i)
         {
@@ -330,14 +322,12 @@ void CSprite::DrawRotate(void) const
             aVertices[i].z = m_fZ;
             aVertices[i].u = uv_vertex[i].x;
             aVertices[i].v = uv_vertex[i].y;
-            aVertices[i].rhw = rhw;
+            aVertices[i].rhw = 0.0f;// rhw;
             aVertices[i].emissiveColor = color;
         };
 
         if (m_pTexture)
             RENDERSTATE_PUSH(rwRENDERSTATETEXTURERASTER, RwTextureGetRaster(m_pTexture));
-        else
-            RENDERSTATE_PUSH(rwRENDERSTATETEXTURERASTER, nullptr);
 
         RwIm2DRenderPrimitive(rwPRIMTYPETRISTRIP, aVertices, COUNT_OF(aVertices));
     };

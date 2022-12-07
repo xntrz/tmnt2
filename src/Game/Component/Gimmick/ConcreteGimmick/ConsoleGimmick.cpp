@@ -209,7 +209,7 @@ void CConsoleGimmick::OnCatchAttack(CHitAttackData* pAttack)
             if (pCharacter->GetCharacterType() == CCharacter::TYPE_PLAYER)
             {
                 CPlayerCharacter* pPlayerCharacter = (CPlayerCharacter*)pCharacter;
-                if (pPlayerCharacter->GetID() == PLAYERID::ID_SPLINTER)
+                if (pPlayerCharacter->GetID() == PLAYERID::ID_SPL)
                     m_nHitNum = 10;
             };
             

@@ -28,7 +28,7 @@ bool CAntiqueRecord::IsValid(void) const
     if (m_shopstate < SHOPSTATE_NONE ||
         m_shopstate > SHOPSTATE_COMPLETED)
     {
-        OUTPUT("[GAME] %s is failed: shopstate\n", __FUNCTION__);
+        OUTPUT(" %s is failed: shopstate\n", __FUNCTION__);
         return false;
     };
 
@@ -37,12 +37,12 @@ bool CAntiqueRecord::IsValid(void) const
         if (m_aNodeAntique[i].m_state < STATE_NONE ||
             m_aNodeAntique[i].m_state > STATE_IDENTIFIED)
         {
-            OUTPUT("[GAME] %s is failed: antique node state\n", __FUNCTION__);
+            OUTPUT(" %s is failed: antique node state\n", __FUNCTION__);
             return false;
         };
     };
 
-    OUTPUT("[GAME] %s ...OK!\n", __FUNCTION__);
+    OUTPUT(" %s ...OK!\n", __FUNCTION__);
     return true;
 };
 
@@ -102,7 +102,7 @@ bool CAntiqueRecord::CheckJustCompleted(void)
     if (GetShopState() == SHOPSTATE_COMPLETED)
         return false;
 
-    for (int32 i = 0; i < COUNT_OF(m_aNodeAntique); ++i)
+    for (int32 i = 1; i < COUNT_OF(m_aNodeAntique); ++i)
     {
         if (m_aNodeAntique[i].m_state != STATE_IDENTIFIED)
             return false;

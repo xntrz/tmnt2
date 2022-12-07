@@ -202,37 +202,37 @@ void CAccumulate::SetVertex(RwV3d* pvPosition, RwV3d* aSummit, RwMatrix* pMatrix
 
     pVertex[0].objVertex = aPosition[1];
     pVertex[0].objNormal = Math::VECTOR3_ZERO;
-    pVertex[0].color = COLOR_TO_INTEGER_RWRGBA(m_Color);
+    pVertex[0].color = RWRGBALONG(m_Color.red, m_Color.green, m_Color.blue, m_Color.alpha);
     pVertex[0].u = 0.0f;
     pVertex[0].v = 1.0f;
 
     pVertex[1].objVertex = aPosition[0];
     pVertex[1].objNormal = Math::VECTOR3_ZERO;
-    pVertex[1].color = COLOR_TO_INTEGER_RWRGBA(m_Color);
+    pVertex[1].color = RWRGBALONG(m_Color.red, m_Color.green, m_Color.blue, m_Color.alpha);
     pVertex[1].u = 0.0f;
     pVertex[1].v = 0.0f;
 
     pVertex[2].objVertex = aPosition[3];
     pVertex[2].objNormal = Math::VECTOR3_ZERO;
-    pVertex[2].color = COLOR_TO_INTEGER_RWRGBA(m_Color);
+    pVertex[2].color = RWRGBALONG(m_Color.red, m_Color.green, m_Color.blue, m_Color.alpha);
     pVertex[2].u = 1.0f;
     pVertex[2].v = 1.0f;
 
     pVertex[3].objVertex = aPosition[3];
     pVertex[3].objNormal = Math::VECTOR3_ZERO;
-    pVertex[3].color = COLOR_TO_INTEGER_RWRGBA(m_Color);
+    pVertex[3].color = RWRGBALONG(m_Color.red, m_Color.green, m_Color.blue, m_Color.alpha);
     pVertex[3].u = 1.0f;
     pVertex[3].v = 1.0f;
 
     pVertex[4].objVertex = aPosition[0];
     pVertex[4].objNormal = Math::VECTOR3_ZERO;
-    pVertex[4].color = COLOR_TO_INTEGER_RWRGBA(m_Color);
+    pVertex[4].color = RWRGBALONG(m_Color.red, m_Color.green, m_Color.blue, m_Color.alpha);
     pVertex[4].u = 0.0f;
     pVertex[4].v = 0.0f;
 
     pVertex[5].objVertex = aPosition[2];
     pVertex[5].objNormal = Math::VECTOR3_ZERO;
-    pVertex[5].color = COLOR_TO_INTEGER_RWRGBA(m_Color);
+    pVertex[5].color = RWRGBALONG(m_Color.red, m_Color.green, m_Color.blue, m_Color.alpha);
     pVertex[5].u = 1.0f;
     pVertex[5].v = 0.0f;
 

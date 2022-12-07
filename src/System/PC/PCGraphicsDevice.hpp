@@ -41,7 +41,9 @@ public:
     DISPLAYMODE GetDisplaymode(void) const;
     void GetVideomode(int32 iVideomodeIndex, int32& riWidth, int32& riHeight, int32& riDepth);
     int32 GetVideomodeNum(void) const;
-    
+    int32 GetVideomodeCur(void) const;
+    bool IsVideomodeWindow(int32 iVideomodeNo) const;
+
 private:
     int32 GetDeviceNoByMonitorNo(int32 iMonitorNo);
     DEVICE& Device(void);

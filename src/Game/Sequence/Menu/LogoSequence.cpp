@@ -6,10 +6,11 @@
 #include "Game/System/Misc/ScreenFade.hpp"
 #include "System/Common/Screen.hpp"
 #include "System/Common/Controller.hpp"
-#include "System/Common/File/AfsFileID.hpp"
+#include "System/Common/File/FileID.hpp"
 
 
-namespace {
+namespace
+{
     struct LOGOPROPERTY
     {
         const char* m_pszTextureName;
@@ -58,7 +59,7 @@ bool CLogoSequence::OnAttach(const void* param)
 {
     CTextureManager::GenerationInc();
 
-    CDataLoader::Regist(AFSFILEID::ID_LOGO);
+    CDataLoader::Regist(FILEID::ID_LOGO);
     m_phase = PHASE_LOAD;
     m_fTime = 0.0f;
     m_iLogoIndex = 0;
@@ -73,7 +74,7 @@ void CLogoSequence::OnDetach(void)
 };
 
 
-void CLogoSequence::OnMove(bool bResume, const void* param)
+void CLogoSequence::OnMove(bool bRet, const void* param)
 {
     switch (m_phase)
     {

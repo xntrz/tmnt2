@@ -142,7 +142,7 @@ void CEnbuProc_Container::Settings(void)
         BandanaColor = CBandanaModule::BANDANACOLOR_BLUE;
         break;
 
-    case PLAYERID::ID_RAPH:
+    case PLAYERID::ID_RAP:
         BandanaColor = CBandanaModule::BANDANACOLOR_RED;
         break;
 
@@ -154,7 +154,7 @@ void CEnbuProc_Container::Settings(void)
         BandanaColor = CBandanaModule::BANDANACOLOR_PURPLE;
         break;
 
-    case PLAYERID::ID_SLASHUUR:
+    case PLAYERID::ID_SLA:
         BandanaColor = CBandanaModule::BANDANACOLOR_SLASHUURGREY;
         vBandanaOffset = { -0.02f, 0.15f, -0.038f };
         break;
@@ -203,28 +203,28 @@ void CEnbuProc_Container::Settings(void)
     switch (m_idPlayerMvp)
     {
     case PLAYERID::ID_LEO:
-    case PLAYERID::ID_SLASHUUR:
+    case PLAYERID::ID_SLA:
         CTextureManager::SetCurrentTextureSet("enbu2d_leo");
         m_apTexture[2] = CTextureManager::GetRwTexture("enbu_bg_leo1");
         m_apTexture[3] = CTextureManager::GetRwTexture("enbu_bg_leo");
         break;
 
-    case PLAYERID::ID_RAPH:
-    case PLAYERID::ID_CASEY:
+    case PLAYERID::ID_RAP:
+    case PLAYERID::ID_CAS:
         CTextureManager::SetCurrentTextureSet("enbu2d_rap");
         m_apTexture[2] = CTextureManager::GetRwTexture("enbu_bg_rap1");
         m_apTexture[3] = CTextureManager::GetRwTexture("enbu_bg_rap");
         break;
 
     case PLAYERID::ID_MIC:
-    case PLAYERID::ID_KARAI:
+    case PLAYERID::ID_KAR:
         CTextureManager::SetCurrentTextureSet("enbu2d_mic");
         m_apTexture[2] = CTextureManager::GetRwTexture("enbu_bg_mic1");
         m_apTexture[3] = CTextureManager::GetRwTexture("enbu_bg_mic");
         break;
 
     case PLAYERID::ID_DON:
-    case PLAYERID::ID_SPLINTER:
+    case PLAYERID::ID_SPL:
         CTextureManager::SetCurrentTextureSet("enbu2d_don");
         m_apTexture[2] = CTextureManager::GetRwTexture("enbu_bg_don1");
         m_apTexture[3] = CTextureManager::GetRwTexture("enbu_bg_don");
@@ -280,7 +280,7 @@ void CEnbuProc_Container::Period(void)
                     CGameSound::PlaySE(SDCODE_SE(8192));
                     break;
 
-                case PLAYERID::ID_RAPH:
+                case PLAYERID::ID_RAP:
                     CGameSound::PlaySE(SDCODE_SE(8193));
                     break;
 
@@ -349,7 +349,7 @@ void CEnbuProc_Container::Draw2D(void)
             pwszText = CGameText::GetText(GAMETEXT::VALUE(17));
             break;
 
-        case PLAYERID::ID_RAPH:
+        case PLAYERID::ID_RAP:
             pwszText = CGameText::GetText(GAMETEXT::VALUE(18));
             break;
 
@@ -361,19 +361,19 @@ void CEnbuProc_Container::Draw2D(void)
             pwszText = CGameText::GetText(GAMETEXT::VALUE(20));
             break;
 
-        case PLAYERID::ID_SLASHUUR:
+        case PLAYERID::ID_SLA:
             pwszText = CGameText::GetText(GAMETEXT::VALUE(24));
             break;
 
-        case PLAYERID::ID_CASEY:
+        case PLAYERID::ID_CAS:
             pwszText = CGameText::GetText(GAMETEXT::VALUE(22));
             break;
 
-        case PLAYERID::ID_KARAI:
+        case PLAYERID::ID_KAR:
             pwszText = CGameText::GetText(GAMETEXT::VALUE(23));
             break;
 
-        case PLAYERID::ID_SPLINTER:
+        case PLAYERID::ID_SPL:
             pwszText = CGameText::GetText(GAMETEXT::VALUE(21));
             break;
 
@@ -653,7 +653,7 @@ void CEnbuProc_Container::EnbuAtomicSet(void)
         }
         break;
 
-    case PLAYERID::ID_RAPH:
+    case PLAYERID::ID_RAP:
         {
             ;
         }
@@ -671,13 +671,13 @@ void CEnbuProc_Container::EnbuAtomicSet(void)
         }
         break;
 
-    case PLAYERID::ID_SLASHUUR:
+    case PLAYERID::ID_SLA:
         {
             ;
         }
         break;
 
-    case PLAYERID::ID_CASEY:
+    case PLAYERID::ID_CAS:
         {
             bool bEnable = false;
             
@@ -691,7 +691,7 @@ void CEnbuProc_Container::EnbuAtomicSet(void)
         }
         break;
 
-    case PLAYERID::ID_KARAI:
+    case PLAYERID::ID_KAR:
         {
             m_pModel->SetPartsDrawEnable(2, true);
             m_pModel->SetPartsDrawEnable(3, true);
@@ -709,7 +709,7 @@ void CEnbuProc_Container::EnbuAtomicSet(void)
         }
         break;
 
-    case PLAYERID::ID_SPLINTER:
+    case PLAYERID::ID_SPL:
         {
             ;
         }
@@ -750,7 +750,7 @@ const char* CEnbuProc_Container::GetMvpNameStr(void) const
         pszResult = "leo";
         break;
         
-    case PLAYERID::ID_RAPH:
+    case PLAYERID::ID_RAP:
         pszResult = "rap";
         break;
         
@@ -762,19 +762,19 @@ const char* CEnbuProc_Container::GetMvpNameStr(void) const
         pszResult = "don";
         break;
         
-    case PLAYERID::ID_SLASHUUR:
+    case PLAYERID::ID_SLA:
         pszResult = "sls";
         break;
         
-    case PLAYERID::ID_CASEY:
+    case PLAYERID::ID_CAS:
         pszResult = "cas";
         break;
         
-    case PLAYERID::ID_KARAI:
+    case PLAYERID::ID_KAR:
         pszResult = "kri";
         break;
         
-    case PLAYERID::ID_SPLINTER:
+    case PLAYERID::ID_SPL:
         pszResult = "spl";
         break;
 

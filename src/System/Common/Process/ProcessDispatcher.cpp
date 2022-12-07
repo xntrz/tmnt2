@@ -387,46 +387,16 @@ bool CProcessDispatcher::CList::IsProperList(void) const
 	while (pProcess->m_iLabel != PROCESSTYPES::LABEL_EOL)
 	{
 		if (pProcess->m_iPriority < PROCESSTYPES::PRIORITY_MIN ||
-			pProcess->m_iPriority >= PROCESSTYPES::PRIORITY_MAX)// ||
-			//!pProcess->m_pfnInstance)
+			pProcess->m_iPriority >= PROCESSTYPES::PRIORITY_MAX)
 			return false;
-
+#ifndef _DEBUG
+		//if (!pProcess->m_pfnInstance)
+		//	return false;			
+#endif		
 		++pProcess;
 	};
 
 	return true;
-};
-
-
-/*static*/ CProcessMail* CProcessDispatcher::m_pMailSvc = nullptr;
-
-
-/*static*/ bool CProcessDispatcher::SendMail(PROCESSTYPES::MAIL& mail)
-{
-	ASSERT(m_pMailSvc);
-	return m_pMailSvc->Send(mail);
-};
-
-
-/*static*/ bool CProcessDispatcher::AttachProcess(int32 iLabel)
-{
-	PROCESSTYPES::MAIL mail = PROCESSTYPES::MAIL::EMPTY;
-
-	mail.m_type 	= PROCESSTYPES::MAIL::TYPE_ATTACH;
-	mail.m_iLabel 	= iLabel;
-
-	return CProcessDispatcher::SendMail(mail);
-};
-
-
-/*static*/ bool CProcessDispatcher::DetachProcess(int32 iLabel)
-{
-	PROCESSTYPES::MAIL mail = PROCESSTYPES::MAIL::EMPTY;
-
-	mail.m_type 	= PROCESSTYPES::MAIL::TYPE_DETACH;
-	mail.m_iLabel 	= iLabel;
-
-	return CProcessDispatcher::SendMail(mail);
 };
 
 
@@ -445,18 +415,11 @@ CProcessDispatcher::CProcessDispatcher(const PROCESSTYPES::PROCESS* pProcessList
 	ASSERT(m_pMemory);
 	ASSERT(m_pAccesser);
 	ASSERT(m_pList);
-
-	ASSERT(!m_pMailSvc);
-	m_pMailSvc = m_pMail;
 };
 
 
 CProcessDispatcher::~CProcessDispatcher(void)
 {
-	ASSERT(m_pMailSvc);
-	ASSERT(m_pMailSvc == m_pMail);
-	m_pMailSvc = nullptr;
-
 	if (m_pList)
 	{
 		delete m_pList;

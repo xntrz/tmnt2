@@ -16,7 +16,17 @@ class IGameStageCameraUpdater;
 class CGameStage final
 {
 public:
-    static const int32 EXGAUGE_MAX = 5;
+    enum EXGAUGE
+    {
+        EXGAUGE_START = 0,
+        EXGAUGE_BOSS = EXGAUGE_START,
+        EXGAUGE_TIMER,
+        EXGAUGE_COUNTER,
+        EXGAUGE_LIFE,
+        EXGAUGE_THREERACE,
+        
+        EXGAUGE_NUM,
+    };
 
     enum SYSTEMSTATE
     {
@@ -69,7 +79,7 @@ public:
     void NotifyPlayerDead(int32 nPlayerNo);
     int32 GetDeadPlayer(void) const;
     void NotifyEnemyDead(CEnemy* pEnemy);
-    void NotifyEnemyDamaged(CEnemy* pEnemy, int32 nAmount);
+    void NotifyEnemyDamaged(CEnemy* pEnemy, int32 nRemainHP);
     RESULT GetResult(void) const;
     CMapCamera* GetMapCamera(void) const;
     void SetCameraUpdater(CStageInfo::CAMERAUPDATE cameraupdtype);
@@ -107,5 +117,5 @@ private:
     CGameObject* m_pRecoveryObj;
     IGameStageCameraUpdater* m_pCameraUpdater;
     IGameStagePause* m_pPauseHandler;
-    IGameStageExGauge* m_apExGauge[EXGAUGE_MAX];
+    IGameStageExGauge* m_apExGauge[EXGAUGE_NUM];
 };

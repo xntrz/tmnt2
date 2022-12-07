@@ -1,4 +1,12 @@
-*.idb
 *.csproj
 *.db
 *.user
+**/.vscode/*
+*.code-workspace
+*.exe
+*.elf
+*.idb
+**/idb/*
+*.bat
+*.bt
+*.json

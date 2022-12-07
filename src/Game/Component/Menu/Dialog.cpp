@@ -32,7 +32,7 @@ void CDialog::SetSprite(float x, float y, float w, float h)
 
 void CDialog::DrawInWindow(const Rt2dBBox& bbox) const
 {
-    if (m_Title.Text() && m_Text.Text())
+    if (m_Title.Text())
     {
         Rt2dBBox bboxTitle;
         Rt2dBBox bboxText;
@@ -176,6 +176,12 @@ void CDialog::GetPositionYesNo(RwV2d* pPos, STATUS status) const
 void CDialog::SetStatus(STATUS status)
 {
     m_status = status;
+};
+
+
+void CDialog::SetController(int32 iController)
+{
+    m_iController = iController;
 };
 
 

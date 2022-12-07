@@ -238,12 +238,14 @@ AREATYPES::NEXTSEQUENCE CAreaMenu_Container::AreaMenuSelect_Sub(void)
             {
                 m_nSubCursorPage = Math::InvClamp(--m_nSubCursorPage, 0, 1);
                 CGameSound::PlaySE(SDCODE_SE(4100));
+				if (m_nSubCursorPage && (m_nSubCursor == (nSubMenuItemCount - 1)))
+					--m_nSubCursor;
             }
             else if (CController::GetDigitalTrigger(iController, CController::DIGITAL_RIGHT))
             {
                 m_nSubCursorPage = Math::InvClamp(++m_nSubCursorPage, 0, 1);
                 CGameSound::PlaySE(SDCODE_SE(4100));
-                if (m_nSubCursor == (nSubMenuItemCount - 1))
+                if (m_nSubCursorPage && (m_nSubCursor == (nSubMenuItemCount - 1)))
                     --m_nSubCursor;
             }
             else if (CController::GetDigitalTrigger(iController, CController::DIGITAL_CANCEL))

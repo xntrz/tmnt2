@@ -39,4 +39,5 @@ public:
     static uint32 ConvertToVirtualButton(uint32 uBasicButton);
     static bool IsKeyboard(int32 iController);
     static int32 GetKeyboardController(void);
+    static void DigitalCancelToFunction(bool bEnable);
 };

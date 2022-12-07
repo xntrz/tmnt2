@@ -23,7 +23,7 @@
     case PLAYERID::ID_LEO:
         return new CLeonardoManipulator(pPlayerChr, nControllerNo);
 
-    case PLAYERID::ID_RAPH:
+    case PLAYERID::ID_RAP:
         return new CRaphaelManipulator(pPlayerChr, nControllerNo);
 
     case PLAYERID::ID_MIC:
@@ -32,16 +32,16 @@
     case PLAYERID::ID_DON:
         return new CDonatelloManipulator(pPlayerChr, nControllerNo);
 
-    case PLAYERID::ID_SLASHUUR:
+    case PLAYERID::ID_SLA:
         return new CSlashuurManipulator(pPlayerChr, nControllerNo);
 
-    case PLAYERID::ID_CASEY:
+    case PLAYERID::ID_CAS:
         return new CCaseyManipulator(pPlayerChr, nControllerNo);
 
-    case PLAYERID::ID_KARAI:
+    case PLAYERID::ID_KAR:
         return new CKaraiManipulator(pPlayerChr, nControllerNo);
 
-    case PLAYERID::ID_SPLINTER:
+    case PLAYERID::ID_SPL:
         return new CSplinterManipulator(pPlayerChr, nControllerNo);
 
     default:
@@ -233,7 +233,8 @@ void CManipulator::RunRun(void)
 void CManipulator::RunGrounding(void)
 {
     PLAYERTYPES::STATUS status = PLAYERTYPES::STATUS_IDLE;
-    
+	bool bChangeStatus = true;
+
     if (m_input.m_uAttack == 1)
     {
         status = PLAYERTYPES::STATUS_ATTACK_A;
@@ -260,14 +261,27 @@ void CManipulator::RunGrounding(void)
     }
     else if (m_input.m_uMove == 1)
     {
-        status = PLAYERTYPES::STATUS_WALK;
+		if (m_pPlayerChr->GetStatus() == PLAYERTYPES::STATUS_WALK)
+			bChangeStatus = false;
+
+		status = PLAYERTYPES::STATUS_WALK;
     }
     else if (m_input.m_uMove == 2)
     {
-        status = PLAYERTYPES::STATUS_RUN;
-    };
+		if (m_pPlayerChr->GetStatus() == PLAYERTYPES::STATUS_RUN)
+			bChangeStatus = false;
 
-    m_pPlayerChr->ChangeStatus(status);
+        status = PLAYERTYPES::STATUS_RUN;
+    }
+	else
+	{
+		if (m_pPlayerChr->GetStatus() == PLAYERTYPES::STATUS_IDLE)
+			bChangeStatus = false;
+	};
+
+    if (bChangeStatus)
+		m_pPlayerChr->ChangeStatus(status);
+
     if (m_input.m_uMove)
         m_pPlayerChr->SetDirection(m_input.m_fDirection);
 };
@@ -606,7 +620,7 @@ void CManipulator::AnalyzeInputDevice(void)
 		CGamepad::CheckFunction(uDigitalTrigger, CGamepad::FUNCTION_ATTACK_B) &&
 		CGamepad::CheckFunction(uDigital, CGamepad::FUNCTION_GUARD);
 
-    m_input.m_uRecover = IS_FLAG_SET_ANY(
+    m_input.m_uRecover = FLAG_TEST_ANY(
         uDigitalTrigger,
         CController::DIGITAL_A |
         CController::DIGITAL_B |
@@ -653,7 +667,7 @@ void CManipulator::AnalyzeInputVector(RwV3d& rvInputVector, float& rfInputVector
                                     CController::DIGITAL_RIGHT);
 
     uint32 uDigital = m_padstream.GetDigital(m_nControllerNo);
-    if (!IS_FLAG_SET_ANY(uDigital, uDigitalMovementMask))
+    if (!FLAG_TEST_ANY(uDigital, uDigitalMovementMask))
         return;
     
     float xDigital, yDigital;
@@ -661,11 +675,11 @@ void CManipulator::AnalyzeInputVector(RwV3d& rvInputVector, float& rfInputVector
     //
     //  Check X axis
     //
-    if (IS_FLAG_SET(uDigital, CController::DIGITAL_LEFT))
+    if (FLAG_TEST(uDigital, CController::DIGITAL_LEFT))
     {
         xDigital = -1.0f;
     }
-    else if (IS_FLAG_SET(uDigital, CController::DIGITAL_RIGHT))
+    else if (FLAG_TEST(uDigital, CController::DIGITAL_RIGHT))
     {
         xDigital = 1.0f;
     }
@@ -677,11 +691,11 @@ void CManipulator::AnalyzeInputVector(RwV3d& rvInputVector, float& rfInputVector
     //
     //  Check Y axis
     //
-    if (IS_FLAG_SET(uDigital, CController::DIGITAL_UP))
+    if (FLAG_TEST(uDigital, CController::DIGITAL_UP))
     {
         yDigital = -1.0f;
     }
-    else if (IS_FLAG_SET(uDigital, CController::DIGITAL_DOWN))
+    else if (FLAG_TEST(uDigital, CController::DIGITAL_DOWN))
     {
         yDigital = 1.0f;
     }

@@ -196,8 +196,8 @@ void CFootprintsModule::Stamp(const RwV3d* pvPosition, float fDirection, FOOTTYP
     if (fHeight >= 0.1f)
         return;
 
-    if (IS_FLAG_SET(pCollisionResult->m_attribute, MAPTYPES::ATTRIBUTE_SNOW) ||
-        IS_FLAG_SET(pCollisionResult->m_attribute, MAPTYPES::ATTRIBUTE_SAND))
+    if (FLAG_TEST(pCollisionResult->m_attribute, MAPTYPES::ATTRIBUTE_SNOW) ||
+        FLAG_TEST(pCollisionResult->m_attribute, MAPTYPES::ATTRIBUTE_SAND))
     {
         RwV3d vAxisX = Math::VECTOR3_ZERO;
         RwV3d vAxisY = Math::VECTOR3_ZERO;
@@ -233,7 +233,7 @@ void CFootprintsModule::Stamp(const RwV3d* pvPosition, float fDirection, FOOTTYP
         pWork->m_vPosition.y = fMapHeight + 0.05f;
         pWork->m_foottype = foottype;
 
-        if (IS_FLAG_SET(pCollisionResult->m_attribute, MAPTYPES::ATTRIBUTE_SNOW))
+        if (FLAG_TEST(pCollisionResult->m_attribute, MAPTYPES::ATTRIBUTE_SNOW))
             CEffectManager::Play(EFFECTID::ID_ALL_DASH_SNOW, &pWork->m_vPosition);
     };
 };
@@ -289,37 +289,37 @@ void CFootprintsModule::SetVertex(void)
 
         pVertex[0].objVertex = aPosition[1];
         pVertex[0].objNormal = Math::VECTOR3_ZERO;
-        pVertex[0].color = COLOR_TO_INTEGER_RWRGBA(color);
+        pVertex[0].color = RWRGBALONGEX(color);
         pVertex[0].u = u1;
         pVertex[0].v = 1.0f;
 
         pVertex[1].objVertex = aPosition[0];
         pVertex[1].objNormal = Math::VECTOR3_ZERO;
-        pVertex[1].color = COLOR_TO_INTEGER_RWRGBA(color);
+        pVertex[1].color = RWRGBALONGEX(color);
         pVertex[1].u = u1;
         pVertex[1].v = 0.0f;
 
         pVertex[2].objVertex = aPosition[3];
         pVertex[2].objNormal = Math::VECTOR3_ZERO;
-        pVertex[2].color = COLOR_TO_INTEGER_RWRGBA(color);
+        pVertex[2].color = RWRGBALONGEX(color);
         pVertex[2].u = u0;
         pVertex[2].v = 1.0f;
 
         pVertex[3].objVertex = aPosition[3];
         pVertex[3].objNormal = Math::VECTOR3_ZERO;
-        pVertex[3].color = COLOR_TO_INTEGER_RWRGBA(color);
+        pVertex[3].color = RWRGBALONGEX(color);
         pVertex[3].u = u0;
         pVertex[3].v = 1.0f;
 
         pVertex[4].objVertex = aPosition[0];
         pVertex[4].objNormal = Math::VECTOR3_ZERO;
-        pVertex[4].color = COLOR_TO_INTEGER_RWRGBA(color);
+        pVertex[4].color = RWRGBALONGEX(color);
         pVertex[4].u = u1;
         pVertex[4].v = 0.0f;
 
         pVertex[5].objVertex = aPosition[2];
         pVertex[5].objNormal = Math::VECTOR3_ZERO;
-        pVertex[5].color = COLOR_TO_INTEGER_RWRGBA(color);
+        pVertex[5].color = RWRGBALONGEX(color);
         pVertex[5].u = u0;
         pVertex[5].v = 0.0f;
 

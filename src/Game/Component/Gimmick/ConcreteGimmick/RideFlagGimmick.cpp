@@ -70,8 +70,8 @@ CRideFlagGimmick::CRideFlagGimmick(const char* pszName, void* pParam)
     SetModelStrategy(&m_model);
     SetMoveStrategy(m_pRideMove);
 
-    ++m_iCounter[ m_flagtype ];
-    ++m_iRestCounter[ m_flagtype ];
+    ++m_iCounter[m_flagtype];
+    ++m_iRestCounter[m_flagtype];
 
     if (CRideStage::GetShadowFlag())
     {

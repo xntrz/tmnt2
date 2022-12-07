@@ -577,7 +577,7 @@ void CCloth::SetVertex(RwIm3DVertex* pVertex, RwV3d* pPos, float u, float v)
     pVertex->objNormal.x = 0.0f;
     pVertex->objNormal.y = 0.0f;
     pVertex->objNormal.z = 0.0f;
-    pVertex->color = COLOR_TO_INTEGER_RWRGBA(m_Color);
+    pVertex->color = RWRGBALONGEX(m_Color);
     pVertex->u = u;
     pVertex->v = v;
 };

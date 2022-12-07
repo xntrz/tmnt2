@@ -43,7 +43,7 @@ void CAreaPlaySequence::OnDetach(void)
 };
 
 
-void CAreaPlaySequence::OnMove(bool bResume, const void* param)
+void CAreaPlaySequence::OnMove(bool bRet, const void* param)
 {
     switch (m_step)
     {

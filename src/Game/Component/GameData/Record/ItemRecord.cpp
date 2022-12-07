@@ -104,41 +104,41 @@ bool CItemRecord::IsValid(void) const
     if (m_iComebackNum < 0 ||
         m_iComebackNum > 1)
     {
-        OUTPUT("[GAME] %s is failed: comeback num\n", __FUNCTION__);
+        OUTPUT(" %s is failed: comeback num\n", __FUNCTION__);
         return false;
     };
 
-    if (IS_FLAG_SET_ANY(m_uCrystalRedFlag, ~ALL_CRY_TAKEN_MASK))
+    if (FLAG_TEST_ANY(m_uCrystalRedFlag, ~ALL_CRY_TAKEN_MASK))
     {
-        OUTPUT("[GAME] %s is failed: red cry flag\n", __FUNCTION__);
+        OUTPUT(" %s is failed: red cry flag\n", __FUNCTION__);
         return false;
     };
 
-    if (IS_FLAG_SET_ANY(m_uCrystalGreenFlag, ~ALL_CRY_TAKEN_MASK))
+    if (FLAG_TEST_ANY(m_uCrystalGreenFlag, ~ALL_CRY_TAKEN_MASK))
     {
-        OUTPUT("[GAME] %s is failed: green cry flag\n", __FUNCTION__);
+        OUTPUT(" %s is failed: green cry flag\n", __FUNCTION__);
         return false;
     };
 
-    if (IS_FLAG_SET_ANY(m_uCrystalOrangeFlag, ~ALL_CRY_TAKEN_MASK))
+    if (FLAG_TEST_ANY(m_uCrystalOrangeFlag, ~ALL_CRY_TAKEN_MASK))
     {
-        OUTPUT("[GAME] %s is failed: orange cry flag\n", __FUNCTION__);
+        OUTPUT(" %s is failed: orange cry flag\n", __FUNCTION__);
         return false;
     };
 
-    if (IS_FLAG_SET_ANY(m_uCrystalWhiteFlag, ~ALL_CRY_TAKEN_MASK))
+    if (FLAG_TEST_ANY(m_uCrystalWhiteFlag, ~ALL_CRY_TAKEN_MASK))
     {
-        OUTPUT("[GAME] %s is failed: white cry flag\n", __FUNCTION__);
+        OUTPUT(" %s is failed: white cry flag\n", __FUNCTION__);
         return false;
     };
 
-    if (IS_FLAG_SET_ANY(m_uItemTakenFlag, ~ALL_ITEM_TAKEN_MASK))
+    if (FLAG_TEST_ANY(m_uItemTakenFlag, ~ALL_ITEM_TAKEN_MASK))
     {
-        OUTPUT("[GAME] %s is failed: item taken flag\n", __FUNCTION__);
+        OUTPUT(" %s is failed: item taken flag\n", __FUNCTION__);
         return false;
     };
 
-    OUTPUT("[GAME] %s ...OK!\n", __FUNCTION__);
+    OUTPUT(" %s ...OK!\n", __FUNCTION__);
     return true;
 };
 
@@ -202,7 +202,7 @@ bool CItemRecord::IsItemTakenYet(ITEMID::VALUE idItem) const
 {
     ASSERT(idItem > ITEMID::ID_NONE && idItem <= ITEMID::ID_MAX);
 
-    return IS_FLAG_SET(m_uItemTakenFlag, BIT(idItem));
+    return FLAG_TEST(m_uItemTakenFlag, BIT(idItem));
 };
 
 
@@ -238,7 +238,7 @@ int32 CItemRecord::GetCrystalNum(GAMETYPES::CRYSTALTYPE crytype) const
     
     for (int32 i = 0; i < getCrystalMax(crytype); i++)
     {
-        if (IS_FLAG_SET(uCryFlag, BIT(i)))
+        if (FLAG_TEST(uCryFlag, BIT(i)))
             ++iResult;
     };
 
@@ -370,19 +370,19 @@ bool CItemRecord::getCrystalFlag(GAMETYPES::CRYSTALTYPE crytype, int32 no) const
         switch (crytype)
         {
         case GAMETYPES::CRYSTALTYPE_RED:
-            bResult = IS_FLAG_SET(m_uCrystalRedFlag, BIT(no));
+            bResult = FLAG_TEST(m_uCrystalRedFlag, BIT(no));
             break;
 
         case GAMETYPES::CRYSTALTYPE_GREEN:
-            bResult = IS_FLAG_SET(m_uCrystalGreenFlag, BIT(no));
+            bResult = FLAG_TEST(m_uCrystalGreenFlag, BIT(no));
             break;
 
         case GAMETYPES::CRYSTALTYPE_ORANGE:
-            bResult = IS_FLAG_SET(m_uCrystalOrangeFlag, BIT(no));
+            bResult = FLAG_TEST(m_uCrystalOrangeFlag, BIT(no));
             break;
 
         case GAMETYPES::CRYSTALTYPE_WHITE:
-            bResult = IS_FLAG_SET(m_uCrystalWhiteFlag, BIT(no));
+            bResult = FLAG_TEST(m_uCrystalWhiteFlag, BIT(no));
             break;
 
         default:

@@ -53,7 +53,7 @@
     case PLAYERID::ID_LEO:
         return new CLeonardo(costume);
 
-    case PLAYERID::ID_RAPH:
+    case PLAYERID::ID_RAP:
         return new CRaphael(costume);
 	
 	case PLAYERID::ID_MIC:
@@ -62,16 +62,16 @@
     case PLAYERID::ID_DON:
         return new CDonatello(costume);
 
-    case PLAYERID::ID_SLASHUUR:
+    case PLAYERID::ID_SLA:
         return new CSlashuur(costume);
 
-    case PLAYERID::ID_CASEY:
+    case PLAYERID::ID_CAS:
         return new CCasey(costume);
 
-    case PLAYERID::ID_KARAI:
+    case PLAYERID::ID_KAR:
         return new CKarai(costume);
 
-    case PLAYERID::ID_SPLINTER:
+    case PLAYERID::ID_SPL:
         return new CSplinter(costume);
 
     default:
@@ -308,7 +308,7 @@ void CPlayerCharacter::OnMessageAttackResult(CHitCatchData* pCatch)
         pCatch->GetResult() == CHitCatchData::RESULT_THROWFRONT)
     {
         if (GetStatus() == PLAYERTYPES::STATUS_LIFT_CHALLENGE ||
-            (m_idPlayer == PLAYERID::ID_RAPH && GetStatus() == PLAYERTYPES::STATUS_ATTACK_AAC))
+            (m_idPlayer == PLAYERID::ID_RAP && GetStatus() == PLAYERTYPES::STATUS_ATTACK_AAC))
         {
             CGameObject* pDefender = pCatch->GetObject();
             ASSERT(pDefender);
@@ -596,7 +596,7 @@ void CPlayerCharacter::OnSteppedDeathFloor(void)
 
 	CGamepad::StartVibration(iController, CGamepad::VIBRATIONTYPE_HARD, 0.2f);
 
-	if (IS_FLAG_SET(m_collisionGroundInfo.m_attribute, MAPTYPES::ATTRIBUTE_DOBON))
+	if (FLAG_TEST(m_collisionGroundInfo.m_attribute, MAPTYPES::ATTRIBUTE_DOBON))
 		CEffectManager::Play(EFFECTID::ID_ALL_W_DOBON, &m_vPosition);
 
 	CGameEvent::SetPlayerFallen(m_nPlayerNo);
@@ -1555,7 +1555,7 @@ bool CPlayerCharacter::IsEnableJump2nd(void) const
 
 bool CPlayerCharacter::IsEnableJumpWall(void) const
 {
-    if (m_collisionWallInfo.m_bHit)
+    if (m_collisionWallInfo.m_bJumpWallHit)
     {
         if (m_collisionWallInfo.m_attribute == MAPTYPES::ATTRIBUTE_JUMP ||
             m_collisionWallInfo.m_attribute == MAPTYPES::ATTRIBUTE_MISSJUMP)
@@ -1611,13 +1611,13 @@ void CPlayerCharacter::SetAttributeFlag(PLAYERTYPES::ATTRIBUTE flag, bool bSet)
 
 bool CPlayerCharacter::IsPlayerFlagSet(PLAYERTYPES::FLAG flag) const
 {
-    return IS_FLAG_SET(m_playerflag, flag);
+    return FLAG_TEST(m_playerflag, flag);
 };
 
 
 bool CPlayerCharacter::IsAttributeFlagSet(PLAYERTYPES::ATTRIBUTE flag) const
 {
-    return IS_FLAG_SET(m_attribute, flag);
+    return FLAG_TEST(m_attribute, flag);
 };
 
 

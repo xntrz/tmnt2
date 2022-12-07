@@ -518,7 +518,7 @@ void CGaugeResult_Container::CallFailMessage(void) const
         CMessageManager::Request(SEGROUPID::VALUE(47), PLAYERID::VALUE(-1));
         break;
 
-    case PLAYERID::ID_RAPH:
+    case PLAYERID::ID_RAP:
         CMessageManager::Request(SEGROUPID::VALUE(48), PLAYERID::VALUE(-1));
         break;
 
@@ -530,19 +530,19 @@ void CGaugeResult_Container::CallFailMessage(void) const
         CMessageManager::Request(SEGROUPID::VALUE(50), PLAYERID::VALUE(-1));
         break;
 
-    case PLAYERID::ID_SLASHUUR:
+    case PLAYERID::ID_SLA:
         CMessageManager::Request(SEGROUPID::VALUE(54), PLAYERID::VALUE(-1));
         break;
 
-    case PLAYERID::ID_CASEY:
+    case PLAYERID::ID_CAS:
         CMessageManager::Request(SEGROUPID::VALUE(51), PLAYERID::VALUE(-1));
         break;
 
-    case PLAYERID::ID_KARAI:
+    case PLAYERID::ID_KAR:
         CMessageManager::Request(SEGROUPID::VALUE(52), PLAYERID::VALUE(-1));
         break;
 
-    case PLAYERID::ID_SPLINTER:
+    case PLAYERID::ID_SPL:
         CMessageManager::Request(SEGROUPID::VALUE(53), PLAYERID::VALUE(-1));
         break;
 

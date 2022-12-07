@@ -114,7 +114,7 @@ void CScrEffectFlash::Draw(void)
         RwRGBA color = m_Color;
         color.alpha = m_uAlphaBasis;
         
-        m_aVertex[i].emissiveColor = COLOR_TO_INTEGER_RWRGBA(color);
+        m_aVertex[i].emissiveColor = RWRGBALONG(color.red, color.green, color.blue, color.alpha);
     };
 
     RwIm2DRenderPrimitive(rwPRIMTYPETRISTRIP, m_aVertex, COUNT_OF(m_aVertex));

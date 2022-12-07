@@ -30,15 +30,13 @@ private:
 public:
     CRenderStateStack(void);
     virtual ~CRenderStateStack(void);
-    template<class T>
-    void Push(RwRenderState rs, T value);
+    void Push(RwRenderState rs);
 
     template<class T>
     void Set(RwRenderState rs, T value);
 
 private:    
     void set(RwRenderState rs, void* pValue);
-    void push(RwRenderState rs, void* pValue);
 
 private:
     RSVALUE m_aValue[RSVALUE_NUM];
@@ -47,15 +45,8 @@ private:
 
 
 template<class T>
-void CRenderStateStack::Push(RwRenderState rs, T value)
-{
-    push(rs, (void*)value);    
-};
-
-
-template<class T>
 void CRenderStateStack::Set(RwRenderState rs, T value)
 {
-    Push(rs, value);
+	Push(rs);
     set(rs, (void*)value);
 };

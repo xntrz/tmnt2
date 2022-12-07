@@ -12,7 +12,7 @@
 #include "Game/System/Texture/TextureManager.hpp"
 #include "System/Common/Sprite.hpp"
 #include "System/Common/Controller.hpp"
-#include "System/Common/File/AfsFileID.hpp"
+#include "System/Common/File/FileID.hpp"
 #include "System/Common/RenderState.hpp"
 #include "System/Common/TextData.hpp"
 #include "System/Common/Screen.hpp"
@@ -776,30 +776,30 @@ bool CResultSequence::OnAttach(const void* param)
     {
     case GAMETYPES::RESULTTYPE_NORMAL:
         SetAnimationName("result");
-        bResult = CAnim2DSequence::OnAttach(AFSFILEID::ID_RESULT);
+        bResult = CAnim2DSequence::OnAttach(FILEID::ID_RESULT);
         break;
 
     case GAMETYPES::RESULTTYPE_RIDE:
         SetAnimationName("result_r");
-        bResult = CAnim2DSequence::OnAttach(AFSFILEID::ID_RESULT_R);
+        bResult = CAnim2DSequence::OnAttach(FILEID::ID_RESULT_R);
         break;
 
     case GAMETYPES::RESULTTYPE_NEXUS:        
         if (CGameData::PlayResult().GetAreaResult() == CGamePlayResult::AREARESULT_CLEAR)
         {
-            bResult = CAnim2DSequence::OnAttach(AFSFILEID::ID_RESULT_N);
+            bResult = CAnim2DSequence::OnAttach(FILEID::ID_RESULT_N);
             SetAnimationName("result_n");
         }
         else
         {
-            bResult = CAnim2DSequence::OnAttach(AFSFILEID::ID_RESULT_N_LOSE);
+            bResult = CAnim2DSequence::OnAttach(FILEID::ID_RESULT_N_LOSE);
             SetAnimationName("result_n_lose");
         };
         break;
 
     case GAMETYPES::RESULTTYPE_ENDING:
         SetAnimationName("result_e");
-        bResult = CAnim2DSequence::OnAttach(AFSFILEID::ID_RESULT_E);
+        bResult = CAnim2DSequence::OnAttach(FILEID::ID_RESULT_E);
         break;
 
     default:
@@ -826,9 +826,9 @@ void CResultSequence::OnDetach(void)
 };
 
 
-void CResultSequence::OnMove(bool bResume, const void* param)
+void CResultSequence::OnMove(bool bRet, const void* param)
 {
-    CAnim2DSequence::OnMove(bResume, param);
+    CAnim2DSequence::OnMove(bRet, param);
     switch (m_step)
     {
     case STEP_FADE_OUT:
@@ -901,7 +901,7 @@ void CResultSequence::BeginFadeOut(void)
                     pszTextureName = "res_per_face_leo";
                     break;
 
-                case PLAYERID::ID_RAPH:
+                case PLAYERID::ID_RAP:
                     pszTextureName = "res_per_face_rap";
                     break;
 
@@ -913,19 +913,19 @@ void CResultSequence::BeginFadeOut(void)
                     pszTextureName = "res_per_face_don";
                     break;
 
-                case PLAYERID::ID_SLASHUUR:
+                case PLAYERID::ID_SLA:
                     pszTextureName = "res_per_face_sla";
                     break;
 
-                case PLAYERID::ID_CASEY:
+                case PLAYERID::ID_CAS:
                     pszTextureName = "res_per_face_cay";
                     break;
 
-                case PLAYERID::ID_KARAI:
+                case PLAYERID::ID_KAR:
                     pszTextureName = "res_per_face_kar";
                     break;
 
-                case PLAYERID::ID_SPLINTER:
+                case PLAYERID::ID_SPL:
                     pszTextureName = "res_per_face_spl";
                     break;
 
@@ -1049,7 +1049,7 @@ void CResultSequence::BeginFadeOut(void)
                     pszTextureName = "res_per_face_leo";
                     break;
 
-                case PLAYERID::ID_RAPH:
+                case PLAYERID::ID_RAP:
                     pszTextureName = "res_per_face_rap";
                     break;
 
@@ -1061,19 +1061,19 @@ void CResultSequence::BeginFadeOut(void)
                     pszTextureName = "res_per_face_don";
                     break;
 
-                case PLAYERID::ID_SLASHUUR:
+                case PLAYERID::ID_SLA:
                     pszTextureName = "res_per_face_sla";
                     break;
 
-                case PLAYERID::ID_CASEY:
+                case PLAYERID::ID_CAS:
                     pszTextureName = "res_per_face_cay";
                     break;
 
-                case PLAYERID::ID_KARAI:
+                case PLAYERID::ID_KAR:
                     pszTextureName = "res_per_face_kar";
                     break;
 
-                case PLAYERID::ID_SPLINTER:
+                case PLAYERID::ID_SPL:
                     pszTextureName = "res_per_face_spl";
                     break;
 
@@ -1231,7 +1231,7 @@ void CResultSequence::BeginFadeOut(void)
                         pszMvpName = "LEONARDO";
                         break;
 
-                    case PLAYERID::ID_RAPH:
+                    case PLAYERID::ID_RAP:
                         pszMvpName = "RAPHAEL";
                         break;
 
@@ -1243,19 +1243,19 @@ void CResultSequence::BeginFadeOut(void)
                         pszMvpName = "DONATELLO";
                         break;
 
-                    case PLAYERID::ID_SLASHUUR:
+                    case PLAYERID::ID_SLA:
                         pszMvpName = "SLASHUUR";
                         break;
 
-                    case PLAYERID::ID_CASEY:
+                    case PLAYERID::ID_CAS:
                         pszMvpName = "CASEY";
                         break;
 
-                    case PLAYERID::ID_KARAI:
+                    case PLAYERID::ID_KAR:
                         pszMvpName = "KARAI";
                         break;
 
-                    case PLAYERID::ID_SPLINTER:
+                    case PLAYERID::ID_SPL:
                         pszMvpName = "SPLINTER";
                         break;
 

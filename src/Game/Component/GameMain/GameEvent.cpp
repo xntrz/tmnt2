@@ -109,7 +109,7 @@
     switch (CGameProperty::Player(nPlayerNo).GetCurrentCharacterID())
     {
     case PLAYERID::ID_LEO:
-    case PLAYERID::ID_RAPH:
+    case PLAYERID::ID_RAP:
     case PLAYERID::ID_MIC:
     case PLAYERID::ID_DON:
 		//
@@ -197,13 +197,13 @@
 };
 
 
-/*static*/ void CGameEvent::SetEnemyDamaged(CEnemy* pEnemy, int32 nAmount)
+/*static*/ void CGameEvent::SetEnemyDamaged(CEnemy* pEnemy, int32 nRemainHP)
 {
     ASSERT(pEnemy);
     
     CGameStage* pStage = CGameStage::GetCurrent();
     if (pStage)
-        pStage->NotifyEnemyDamaged(pEnemy, nAmount);
+        pStage->NotifyEnemyDamaged(pEnemy, nRemainHP);
 };
 
 

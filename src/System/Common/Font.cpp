@@ -7,20 +7,20 @@
 
 /*static*/ bool CStringParser::IsSeparator(const wchar* pwszString)
 {
-    return *pwszString == UTEXT(' ');
+    return (*pwszString == UTEXT(' '));
 };
 
 
 /*static*/ bool CStringParser::IsNull(const wchar* pwszString)
 {
-    return *pwszString == UTEXT('\0');
+    return (*pwszString == UTEXT('\0'));
 };
 
 
 /*static*/ bool CStringParser::IsNewLine(const wchar* pwszString)
 {
-    return  *pwszString == UTEXT('\r') ||
-            *pwszString == UTEXT('\n');
+    return  (*pwszString == UTEXT('\r')) ||
+            (*pwszString == UTEXT('\n'));
 };
 
 
@@ -28,9 +28,9 @@
 {
     int32 iSize = 0;
     
-    for (iSize = 0; iSize < count - 1; ++iSize)
+    for (iSize = 0; iSize < (count - 1); ++iSize)
     {
-        if (!CStringParser::IsSeparator(pSrc))
+        if (!CStringParser::IsSeparator(&pSrc[iSize]))
             break;
 
         pDst[iSize] = pSrc[iSize];
@@ -46,15 +46,15 @@
 {
     int32 iSize = 0;
 
-    for (iSize = 0; iSize < count - 1; ++iSize)
+    for (iSize = 0; iSize < (count - 1); ++iSize)
     {
-        if (!CStringParser::IsSeparator(pSrc))
+        if (CStringParser::IsSeparator(&pSrc[iSize]))
             break;
         
-        if (!CStringParser::IsNewLine(pSrc))
+        if (CStringParser::IsNewLine(&pSrc[iSize]))
             break;
         
-        if (!CStringParser::IsNull(pSrc))
+        if (CStringParser::IsNull(&pSrc[iSize]))
             break;        
 
         pDst[iSize] = pSrc[iSize];
@@ -87,7 +87,7 @@
             iSize = 2;
         };
 
-        pDst[2 * iSize] = UTEXT('\0');
+        pDst[iSize] = UTEXT('\0');
     }
     else
     {
@@ -99,8 +99,8 @@
 
 
 CFont::CFont(Rt2dFont* pFont)
-    : m_pFont(pFont)
-    , m_pBrush(nullptr)
+: m_pFont(pFont)
+, m_pBrush(nullptr)
 {
     ASSERT(m_pFont);
 
@@ -192,21 +192,74 @@ CUnicodeFont::~CUnicodeFont(void)
 
 int32 CUnicodeFont::GetDisplayLineString(wchar* dst, const wchar* src, float fHeight, float fWidth, int32 count) const
 {
-    //
-    //  TODO
-    //
-    ASSERT(false);
-    return 0;
+    wchar TmpBuff[128];
+    TmpBuff[0] = UTEXT('\0');
+
+    wchar TextBuffer[128];
+    TextBuffer[0] = UTEXT('\0');
+
+    dst[0] = UTEXT('\0');
+    
+    float fStringWidthCache = 0.0f;
+    const wchar* ptr = &src[CStringParser::ExtractSeparator(TmpBuff, src, COUNT_OF(TmpBuff))];
+    
+    for (int32 DstCnt = (count - 1); DstCnt > 0; )
+    {
+        int32 CntSep = CStringParser::ExtractSeparator(TmpBuff, ptr, COUNT_OF(TmpBuff));
+        CTextData::StrCpy(TextBuffer, TmpBuff);
+
+        int32 CntTok = CStringParser::ExtractToken(TmpBuff, &ptr[CntSep], COUNT_OF(TmpBuff));
+        CTextData::StrCat(TextBuffer, TmpBuff);
+
+        if (CntTok > 0)
+        {
+			float fStringWidth = Rt2dFontGetStringWidth(m_pFont, (const RwChar*)TextBuffer, fHeight) + fStringWidthCache;
+            if (fStringWidth >= fWidth)
+                break;
+            
+            fStringWidthCache = fStringWidth;
+
+            //
+            //  FIXME implementation is identically retail game version but dst buffer overflow is possible here
+            //
+            CTextData::StrCat(dst, TextBuffer);
+            DstCnt -= (CntTok + CntSep);
+            ptr += (CntTok + CntSep);
+        }
+        else
+        {
+            ptr += CntSep;
+        };
+
+        if (CStringParser::IsNewLine(ptr))
+        {
+			ptr += CStringParser::ExtractNewLine(TmpBuff, ptr);
+            break;
+        };
+
+        if (CStringParser::IsNull(ptr))
+            break;
+    };
+    
+    return (ptr - src);
 };
 
 
 int32 CUnicodeFont::CountFlowLine(const wchar* pwszString, float fHeight, float fWidth)
 {
-    //
-    //  TODO
-    //
-    ASSERT(false);
-    return 0;
+    int32 LineNum = 0;
+    wchar Buff[128];
+    Buff[0] = UTEXT('\0');
+
+    for (int32 Cnt = GetDisplayLineString(Buff, pwszString, fHeight, fWidth, COUNT_OF(Buff));
+        Cnt;
+        Cnt = GetDisplayLineString(Buff, pwszString, fHeight, fWidth, COUNT_OF(Buff)))
+    {
+        pwszString += Cnt;
+        ++LineNum;
+    };
+
+    return LineNum;
 };
 
 
@@ -296,7 +349,7 @@ void CUnicodeFont::FlowEx(const wchar* pwszString, float fHeight, int32 numLineP
         int32 iLen = GetDisplayLineString(wszBuff, pwszString, fHeight, BBox.w, sizeof(wszBuff));
         if (!iLen)
             break;
-
+		pwszString += iLen;
         if (numLinePad-- <= 0)
         {
             if (!CStringParser::IsNewLine(wszBuff))

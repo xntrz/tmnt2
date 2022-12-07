@@ -18,7 +18,15 @@
 #include "ConcreteGimmick/LaserGimmick.hpp"
 #include "ConcreteGimmick/RideFlagGimmick.hpp"
 #include "ConcreteGimmick/RideRockGimmick.hpp"
+#include "ConcreteGimmick/RideMineGimmick.hpp"
+#include "ConcreteGimmick/RideShutterGimmick.hpp"
 #include "ConcreteGimmick/StopperGimmick.hpp"
+#include "ConcreteGimmick/MapModelCtrlGimmick.hpp"
+#include "ConcreteGimmick/UniqueTransferFloorGimmick.hpp"
+#include "ConcreteGimmick/BridgePillarGimmick.hpp"
+#include "ConcreteGimmick/MadCarGimmick.hpp"
+#include "ConcreteGimmick/MadCarGimmickManager.hpp"
+#include "ConcreteGimmick/FallGimmick.hpp"
 
 #include "Game/Component/GameData/GameData.hpp"
 
@@ -60,6 +68,9 @@
         break;
         
     case GIMMICKID::ID_S_EVCAM:
+        //
+        //  Not exists
+        //
         break;
         
     case GIMMICKID::ID_S_SOUND:
@@ -81,12 +92,12 @@
         break;
         
     case GIMMICKID::ID_S_HELP:
-        if (CGameData::Option().Play().IsHelpEnabled())
+        if (CGameData::Option().Display().IsHelpEnabled())
             pGimmick = new CHelpGimmick(pszName, pParam);        
         break;
         
     case GIMMICKID::ID_S_TUTO:
-        if (CGameData::Option().Play().IsHelpEnabled())
+        if (CGameData::Option().Display().IsHelpEnabled())
            pGimmick = new CTutorialGimmick(pszName, pParam);        
         break;
         
@@ -191,9 +202,11 @@
         break;
         
     case GIMMICKID::ID_N_MVFLPA:
+        pGimmick = new CPathTransferFloorGimmick(pszName, pParam);
         break;
         
     case GIMMICKID::ID_N_MVFLRO:
+        pGimmick = new CRotateTransferFloorGimmick(pszName, pParam);
         break;
         
     case GIMMICKID::ID_N_CONSOL:
@@ -225,6 +238,7 @@
         break;
         
     case GIMMICKID::ID_N_LEOL:
+        pGimmick = new CBridgePillarGimmick(pszName, pParam);
         break;
         
     case GIMMICKID::ID_N_GRASS:
@@ -241,6 +255,7 @@
         break;
         
     case GIMMICKID::ID_N_FALOBJ:
+        pGimmick = new CFallGimmick(pszName, pParam);
         break;
         
     case GIMMICKID::ID_N_METEO:
@@ -276,6 +291,7 @@
         break;
         
     case GIMMICKID::ID_R_THNDER:
+        pGimmick = new CRideMineGimmick(pszName, pParam);
         break;
         
     case GIMMICKID::ID_R_ASTRID:
@@ -283,6 +299,7 @@
         break;
         
     case GIMMICKID::ID_R_SHUTTR:
+        pGimmick = new CRideShutterGimmick(pszName, pParam);
         break;
 
 
@@ -356,9 +373,11 @@
         break;
         
     case GIMMICKID::ID_K_M44N:
+        pGimmick = new CMadCarGimmick(pszName, pParam);
         break;
         
     case GIMMICKID::ID_K_M44NM:
+        pGimmick = new CMadCarGimmickManager(pszName, pParam);
         break;
         
     case GIMMICKID::ID_K_M50NB:
@@ -369,12 +388,15 @@
         break;
         
     case GIMMICKID::ID_K_M04N:
+        pGimmick = new CUniquePathTransferFloorGimmick(pszName, pParam);
         break;
         
     case GIMMICKID::ID_K_M20F:
+        pGimmick = new CUniqueLinearTransferFloorGimmick(pszName, pParam);
         break;
         
     case GIMMICKID::ID_K_M53F:
+        pGimmick = new CMapModelCtrlGimmick(pszName, pParam);
         break;
 
     default:
@@ -385,7 +407,7 @@
     if (pGimmick)
         pGimmick->Init(idGimmick);
     else
-        OUTPUT("[GAME] Missing gimmick %s\n", pszName);
+        OUTPUT("Missing gimmick %s\n", pszName);
 
     return pGimmick;
 };

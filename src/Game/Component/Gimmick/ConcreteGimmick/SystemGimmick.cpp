@@ -400,7 +400,7 @@ void CCameraChangeGimmick::ReplacePlayers(void)
 
         float fHeight = CWorldMap::GetMapHeight(&vPosition);
         
-        if (IS_FLAG_SET(CWorldMap::GetCollisionResultAttribute(), MAPTYPES::ATTRIBUTE_DEATH))
+        if (FLAG_TEST(CWorldMap::GetCollisionResultAttribute(), MAPTYPES::ATTRIBUTE_DEATH))
         {
             vPosition = m_vPosition;
         }
@@ -479,7 +479,7 @@ CSEGimmick::~CSEGimmick(void)
 
 void CSEGimmick::PostMove(void)
 {
-    if (IS_FLAG_SET(m_pNowSEInfo->m_flag, SEINFO::FLAG_LOOP) && m_bPlaying)
+    if (FLAG_TEST(m_pNowSEInfo->m_flag, SEINFO::FLAG_LOOP) && m_bPlaying)
     {
         if (m_fTimer >= m_pNowSEInfo->m_fDuration)
         {
@@ -518,7 +518,7 @@ void CSEGimmick::startSE(void)
 void CSEGimmick::stopSE(void)
 {
     m_bPlaying = false;
-    if (IS_FLAG_SET(m_pNowSEInfo->m_flag, SEINFO::FLAG_FADE))
+    if (FLAG_TEST(m_pNowSEInfo->m_flag, SEINFO::FLAG_FADE))
         CGameSound::FadeOutSE(m_pNowSEInfo->m_nSE, CGameSound::FADESPEED_NORMAL);    
 };
 
@@ -843,7 +843,7 @@ void CReplaceGimmick::OnReplacePlayer(int32 nPlayerNo, bool bProtect)
 
     float fHeight = CWorldMap::GetMapHeight(&vPosition);
 
-    if (IS_FLAG_SET(CWorldMap::GetCollisionResultAttribute(), MAPTYPES::ATTRIBUTE_DEATH))
+    if (FLAG_TEST(CWorldMap::GetCollisionResultAttribute(), MAPTYPES::ATTRIBUTE_DEATH))
     {
         vPosition = m_vReplacePosition;
     }

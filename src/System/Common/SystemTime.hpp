@@ -39,6 +39,7 @@ public:
     int32 GetDay(void) const;
     int32 GetHour(void) const;
     int32 GetMinute(void) const;
+    int32 GetSeconds(void) const;
     uint32 GetTimevalue(void) const;
     static CTimeSpanObj CalcSpan(const CTimeObj& a, const CTimeObj& b);
 

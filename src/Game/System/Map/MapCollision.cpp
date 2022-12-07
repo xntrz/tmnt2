@@ -161,8 +161,8 @@ static void CheckWallJump(CMapCollision::COLLISIONPARAM* pCollisionParam, RpColl
 
         if (fDist <= pCollisionParam->m_fDistance)            
         {
-            if (!IS_FLAG_SET(pCollisionParam->m_checkflag, CWorldMap::CHECKFLAG_ONEWAY) ||
-                !IS_FLAG_SET(attribute, MAPTYPES::ATTRIBUTE_ONEWAY))
+            if (!FLAG_TEST(pCollisionParam->m_checkflag, CWorldMap::CHECKFLAG_ONEWAY) ||
+                !FLAG_TEST(attribute, MAPTYPES::ATTRIBUTE_ONEWAY))
             {
                 pCollisionParam->m_vClosestPt.x = vProjPos.x;
                 pCollisionParam->m_vClosestPt.y = vProjPos.y;
@@ -173,8 +173,8 @@ static void CheckWallJump(CMapCollision::COLLISIONPARAM* pCollisionParam, RpColl
             };
         };
 
-        if (IS_FLAG_SET(pCollisionParam->m_checkflag, CWorldMap::CHECKFLAG_WALLJUMP) ||
-            IS_FLAG_SET(attribute, MAPTYPES::ATTRIBUTE_JUMP))
+        if (FLAG_TEST(pCollisionParam->m_checkflag, CWorldMap::CHECKFLAG_WALLJUMP) ||
+            FLAG_TEST(attribute, MAPTYPES::ATTRIBUTE_JUMP))
         {
             CheckWallJump(pCollisionParam, pCollTriangle, &vProjPos, fDist);            
         };
@@ -206,8 +206,8 @@ static void CheckWallJump(CMapCollision::COLLISIONPARAM* pCollisionParam, RpColl
 
             if ((pCollisionParam->m_fDistance + 0.001f) >= fDist)
             {
-                if (!IS_FLAG_SET(pCollisionParam->m_checkflag, CWorldMap::CHECKFLAG_ONEWAY) ||
-                    !IS_FLAG_SET(attribute, MAPTYPES::ATTRIBUTE_ONEWAY))
+                if (!FLAG_TEST(pCollisionParam->m_checkflag, CWorldMap::CHECKFLAG_ONEWAY) ||
+                    !FLAG_TEST(attribute, MAPTYPES::ATTRIBUTE_ONEWAY))
                 {
                     pCollisionParam->m_vClosestPt.x = vClosestPt.x;
                     pCollisionParam->m_vClosestPt.y = vClosestPt.y;
@@ -218,8 +218,8 @@ static void CheckWallJump(CMapCollision::COLLISIONPARAM* pCollisionParam, RpColl
                 };
             };
 
-            if (IS_FLAG_SET(pCollisionParam->m_checkflag, CWorldMap::CHECKFLAG_WALLJUMP) ||
-                IS_FLAG_SET(attribute, MAPTYPES::ATTRIBUTE_JUMP))
+            if (FLAG_TEST(pCollisionParam->m_checkflag, CWorldMap::CHECKFLAG_WALLJUMP) ||
+                FLAG_TEST(attribute, MAPTYPES::ATTRIBUTE_JUMP))
             {
                 CheckWallJump(pCollisionParam, pCollTriangle, &vProjPos, fDist);
             };

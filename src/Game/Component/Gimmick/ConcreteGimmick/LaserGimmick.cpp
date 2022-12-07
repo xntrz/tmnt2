@@ -125,21 +125,21 @@ void CLaserGimmickModel::Draw(void) const
         case 0:            
             {
                 RwRGBA color = { 0xFF, 0x14, 0x0, 0xFF };
-                pVertex->color = COLOR_TO_INTEGER_RWRGBA(color);
+                pVertex->color = RWRGBALONGEX(color);
             }
             break;
             
         case 1:
             {
                 RwRGBA color = { 0xFF, 0x00, 0xDE, 0xFF };
-                pVertex->color = COLOR_TO_INTEGER_RWRGBA(color);
+                pVertex->color = RWRGBALONGEX(color);
             }
             break;
 
         case 2:
             {
                 RwRGBA color = { 0xFF, 0xFF, 0xFF, 0x00 };
-                pVertex->color = COLOR_TO_INTEGER_RWRGBA(color);
+                pVertex->color = RWRGBALONGEX(color);
             }
             break;
 

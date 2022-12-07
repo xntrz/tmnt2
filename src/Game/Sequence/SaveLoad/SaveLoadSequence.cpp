@@ -31,7 +31,7 @@ void CSaveLoadSequenceBase::OnDetach(void)
 };
 
 
-void CSaveLoadSequenceBase::OnMove(bool bResume, const void* param)
+void CSaveLoadSequenceBase::OnMove(bool bRet, const void* param)
 {
     switch (m_phase)
     {

@@ -15,7 +15,7 @@ protected:
 
     enum PASSINGWAY
     {
-        PASSINGWAY_GO,
+        PASSINGWAY_GO = 0,
         PASSINGWAY_BACK,
     };
 
@@ -53,4 +53,36 @@ public:
 protected:
     RwV3d m_vStartPosition;
     RwV3d m_vGoalPosition;
+};
+
+
+class CPathTransferFloorGimmickMove : public CTransferFloorGimmickMove
+{
+public:
+    CPathTransferFloorGimmickMove(void);
+    virtual ~CPathTransferFloorGimmickMove(void);
+    virtual RESULT OnMove(float dt) override;
+    void SetPathName(const char* pszName);
+
+protected:
+    float m_fPathT;
+    char m_szPathName[16];
+};
+
+
+class CRotateTransferFloorGimmickMove : public CTransferFloorGimmickMove
+{
+public:
+    CRotateTransferFloorGimmickMove(void);
+    virtual ~CRotateTransferFloorGimmickMove(void);
+    virtual RESULT OnMove(float dt) override;
+    void SetRoundTime(float t);
+    void SetRotAxis(RwMatrix* mat);    
+    void GetRotation(RwV3d* pvRot);
+    
+protected:
+    float m_fRoundTime;
+    RwV3d m_vRotAxis;
+    RwV3d m_vRotation;
+    bool m_bTurnRight;
 };

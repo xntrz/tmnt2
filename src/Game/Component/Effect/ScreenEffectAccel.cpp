@@ -135,7 +135,7 @@ void CScrEffectAccel::Draw(void)
         pVertex[0].u = 0.0f;
         pVertex[0].v = 0.0f;
         pVertex[0].rhw = rhw;
-        pVertex[0].emissiveColor = COLOR_TO_INTEGER_RWRGBA(colorHead);
+        pVertex[0].emissiveColor = RWRGBALONG(colorHead.red, colorHead.green, colorHead.blue, colorHead.alpha);
 
         pVertex[1].x = pParticle->m_vTailPosition.x;
         pVertex[1].y = pParticle->m_vTailPosition.y;
@@ -143,7 +143,7 @@ void CScrEffectAccel::Draw(void)
         pVertex[1].u = 0.0f;
         pVertex[1].v = 0.0f;
         pVertex[1].rhw = rhw;
-        pVertex[1].emissiveColor = COLOR_TO_INTEGER_RWRGBA(colorTail);
+        pVertex[1].emissiveColor = RWRGBALONG(colorTail.red, colorTail.green, colorTail.blue, colorTail.alpha);
     };
 
     RwIm2DRenderPrimitive(rwPRIMTYPELINELIST, m_aVertex, m_nDisplayNum * 2);

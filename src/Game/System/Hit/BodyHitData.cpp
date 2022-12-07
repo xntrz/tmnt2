@@ -51,7 +51,7 @@ void CBodyHitData::SetState(uint32 uState, bool bEnable)
 
 bool CBodyHitData::IsEnableState(uint32 uState) const
 {
-    return IS_FLAG_SET(m_uHitState, uState);
+    return FLAG_TEST(m_uHitState, uState);
 };
 
 

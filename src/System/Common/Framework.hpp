@@ -13,11 +13,10 @@ class CFramework
 {
 public:
     static CFramework* GetConcreteInstance(void);
+    static bool StartAndRun(void);
     
     CFramework(void);
     virtual ~CFramework(void);
-    virtual void Startup(void);
-    virtual void Cleanup(void);
     virtual bool Initialize(void);
     virtual void Terminate(void);
     virtual void Run(void);

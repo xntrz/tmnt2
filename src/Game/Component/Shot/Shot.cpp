@@ -736,7 +736,7 @@ void CShot::MessageProc(int32 nMessageID, void* pParam)
                     else
                         uTarget = CHitAttackData::TARGET_PLAYER;
 
-                    if (IS_FLAG_SET(m_uTarget, uTarget))
+                    if (FLAG_TEST(m_uTarget, uTarget))
                     {
                         m_vVelocity.x *= -1.0f;
                         m_vVelocity.y = 0.0f;
@@ -928,7 +928,7 @@ bool CShot::CheckHit(RwV3d* pvCollisionPoint)
         const CWorldMap::COLLISIONRESULT* pResult = CWorldMap::GetCollisionResult();
         ASSERT(pResult);
 
-        if (IS_FLAG_SET(pResult->m_attribute, MAPTYPES::ATTRIBUTE_ONEWAY))
+        if (FLAG_TEST(pResult->m_attribute, MAPTYPES::ATTRIBUTE_ONEWAY))
             return false;
 
         RwV3d vPosition = pResult->m_vClosestPt;

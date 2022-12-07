@@ -60,7 +60,7 @@ void CNexusRetrySequence::OnDetach(void)
 };
 
 
-void CNexusRetrySequence::OnMove(bool bResume, const void* param)
+void CNexusRetrySequence::OnMove(bool bRet, const void* param)
 {
     switch (m_step)
     {

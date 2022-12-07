@@ -38,11 +38,11 @@ void CHomeSequence::OnDetach(void)
 };
 
 
-void CHomeSequence::OnMove(bool bResume, const void* param)
+void CHomeSequence::OnMove(bool bRet, const void* param)
 {
     int32 iCallParam = 0;
     
-    if (bResume)
+    if (bRet)
     {
         int32 iNextSequenceLabel = Branch(m_iCallLabel, param);
         if (iNextSequenceLabel == PROCESSTYPES::LABEL_SEQ_ENDING)
@@ -125,7 +125,7 @@ int32 CHomeSequence::Branch(int32 iLabel, const void* param)
             case HOMETYPES::DOORKIND_COMPUTER:
                 {
                     CGameData::Record().Database().SetDatabaseState(CDatabaseRecord::DBSTATE_NORMAL);
-                    iNextSequenceLabel = PROCESSTYPES::LABEL_SEQ_DATABASE;
+                    iNextSequenceLabel = PROCESSTYPES::LABEL_SEQ_DATABASEMAIN;
                 }
                 break;
 
@@ -144,7 +144,7 @@ int32 CHomeSequence::Branch(int32 iLabel, const void* param)
         }
         break;
 
-    case PROCESSTYPES::LABEL_SEQ_DATABASE:
+    case PROCESSTYPES::LABEL_SEQ_DATABASEMAIN:
         {
             if (CGameData::Option().Play().IsAutosaveEnabled())
                 iNextSequenceLabel = PROCESSTYPES::LABEL_SEQ_SAVELOADAUTO;

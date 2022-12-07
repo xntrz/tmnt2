@@ -3,12 +3,10 @@
 
 class CPCTimer
 {
-public:
-    class IGetTimeFunctor
-    {
-    public:
-        virtual uint32 operator()(void) const = 0;
-    };
+private:
+    class IGetTimeFunctor;
+    class CGetTimeFunctorOS;
+    class CGetTimeFunctorCPU;
     
 public:
     static CPCTimer& Instance(void);

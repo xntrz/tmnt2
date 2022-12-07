@@ -75,7 +75,6 @@ void CGamePropertyObject::Period(void)
     UpdateTime();
     UpdateActiveObject();
     WatchPlayerFallen();
-    CGameRadar::Update(m_pEnemyContainer, m_pMapCamera);
 };
 
 
@@ -124,17 +123,15 @@ void CGamePropertyObject::UpdateActiveObject(void)
     for (int32 i = 0; i < m_pGimmickContainer->GameGimmickMax(); ++i)
     {
         CGameGimmick& GameGimmick = m_pGimmickContainer->GameGimmick(i);
-        if (!GameGimmick.IsAlive() || !GameGimmick.IsAbleToSleep())
-            continue;
-
-        switch (m_pMapCamera->GetCameraMode())
+        if (GameGimmick.IsAlive())
         {
-        case CMapCamera::MODE_INTRODUCTION:
+            if (GameGimmick.IsAbleToSleep())
             {
                 RwV3d vPosition = Math::VECTOR3_ZERO;
                 GameGimmick.GetPosition(&vPosition);
-
-                if (CGimmickUtils::IsPositionVisible(&vPosition))
+                
+                if ((m_pMapCamera->GetCameraMode() == CMapCamera::MODE_INTRODUCTION) ||
+                    (CGimmickUtils::CalcNearestPlayerDistanceXZ(&vPosition) <= m_fSleepDistance))
                 {
                     if (GameGimmick.IsSleep())
                         GameGimmick.Resume();
@@ -144,26 +141,7 @@ void CGamePropertyObject::UpdateActiveObject(void)
                     if (!GameGimmick.IsSleep())
                         GameGimmick.Sleep();
                 };
-            }
-            break;
-
-        default:
-            {
-                RwV3d vPosition = Math::VECTOR3_ZERO;
-                GameGimmick.GetPosition(&vPosition);
-
-                if (CGimmickUtils::CalcNearestPlayerDistanceXZ(&vPosition) <= m_fSleepDistance)
-                {
-                    if (GameGimmick.IsSleep())
-                        GameGimmick.Resume();
-                }
-                else
-                {
-                    if (!GameGimmick.IsSleep())
-                        GameGimmick.Sleep();
-                };
-            }
-            break;
+            };
         };
     };
 };

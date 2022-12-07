@@ -8,7 +8,7 @@
 #include "Game/System/2d/MenuController.hpp"
 #include "Game/System/2d/MenuSound.hpp"
 #include "Game/System/Misc/ScreenFade.hpp"
-#include "System/Common/File/AfsFileID.hpp"
+#include "System/Common/File/FileID.hpp"
 #include "System/Common/Controller.hpp"
 #include "System/Common/TextData.hpp"
 
@@ -145,7 +145,7 @@ CNexusMenuSequence::~CNexusMenuSequence(void)
 bool CNexusMenuSequence::OnAttach(const void* param)
 {
     m_nexusmenu = NEXUSMENU_NONE;
-    return CAnim2DSequence::OnAttach(AFSFILEID::ID_NEXUSMENU);
+    return CAnim2DSequence::OnAttach(FILEID::ID_NEXUSMENU);
 };
 
 
@@ -156,7 +156,7 @@ void CNexusMenuSequence::OnDetach(void)
 };
 
 
-void CNexusMenuSequence::OnMove(bool bResume, const void* param)
+void CNexusMenuSequence::OnMove(bool bRet, const void* param)
 {
     switch (m_step)
     {
@@ -171,7 +171,7 @@ void CNexusMenuSequence::OnMove(bool bResume, const void* param)
         break;
     };
 
-    CAnim2DSequence::OnMove(bResume, param);
+    CAnim2DSequence::OnMove(bRet, param);
 };
 
 
@@ -275,6 +275,8 @@ void CNexusMenuSequence::replaceText(void)
         "b_",	// BATTLE NEXUS
     };
 
+    static_assert(COUNT_OF(s_apszTournamentHeadLabel) == GAMETYPES::NEXUSID_NUM, "update me");
+    
 	static const char* s_pszHatena = "??????";
 
     static char s_szTmpRep[128];

@@ -5,13 +5,15 @@
 #include "Game/Component/GameData/GameData.hpp"
 #include "Game/Component/GameMain/AreaInfo.hpp"
 #include "Game/Component/GameMain/AreaID.hpp"
+#include "Game/Component/GameMain/StageInfo.hpp"
+#include "Game/Component/GameMain/MapInfo.hpp"
 #include "Game/Component/Menu/Dialog.hpp"
 #include "Game/System/Sound/GameSound.hpp"
 #include "Game/System/2d/GameText.hpp"
 #include "Game/System/2d/GameFont.hpp"
 #include "Game/System/Misc/ScreenFade.hpp"
 #include "Game/System/Texture/TextureManager.hpp"
-#include "System/Common/File/AfsFileID.hpp"
+#include "System/Common/File/FileID.hpp"
 #include "System/Common/RenderState.hpp"
 #include "System/Common/Sprite.hpp"
 #include "System/Common/Screen.hpp"
@@ -89,7 +91,8 @@ public:
     void SetCurrentSelectedArea(AREAID::VALUE idArea);
     bool IsAreaRootCleared(AREAID::VALUE idArea, CAreaRecord::CLEAR_ROOT root);
     void DebugStartPlayClearAnim(void);
-
+    void DebugAreaChanged(void);
+    
 private:
     AREATYPES::NEXTSEQUENCE m_NextSequence;
     RwV2d m_vKamePos;
@@ -1157,15 +1160,17 @@ void CAreaWorkPool::AreaMoveAnimation(void)
     y *= (1.0f / len) * step;
 
     if (m_KameMoveAnimCount >= CScreen::Framerate() * 0.4f)
-    {
+    {        
         GetAreaPosition(&m_vKamePos, m_NewArea);
         
 		m_KameMoveAnimCount = 0;
         m_Animation = ANIMATION_NONE;
         m_NowArea = m_NewArea;
 
-        OUTPUT("[GAME] %s current area: %d\n", __FUNCTION__, m_NowArea);
-
+#ifdef _DEBUG        
+        DebugAreaChanged();
+#endif
+        
         if (m_NowArea < AREAID::SELECTABLEMAX)
             CGameData::Record().Area().SetCurrentSelectedArea(m_NowArea);
     }
@@ -2464,6 +2469,12 @@ void CAreaWorkPool::DebugStartPlayClearAnim(void)
 };
 
 
+void CAreaWorkPool::DebugAreaChanged(void)
+{
+    OUTPUT("Now area %d (name: %s)\n", m_NewArea, CMapInfo::GetName(CStageInfo::GetMapID(CAreaInfo::GetStageID(m_NowArea, 0))));
+};
+
+
 /*static*/ bool CAreaSequence::m_bDebugClearAnim = false;
 
 
@@ -2533,7 +2544,7 @@ void CAreaSequence::OnDetach(void)
 };
 
 
-void CAreaSequence::OnMove(bool bResume, const void* param)
+void CAreaSequence::OnMove(bool bRet, const void* param)
 {
     switch (m_step)
     {
@@ -2608,7 +2619,7 @@ void CAreaSequence::OnMove(bool bResume, const void* param)
         break;
     };
 
-    CAnim2DSequence::OnMove(bResume, param);
+    CAnim2DSequence::OnMove(bRet, param);
 };
 
 
@@ -2648,6 +2659,9 @@ bool CAreaSequence::OnRet(void)
         break;
         
     case AREATYPES::NEXTSEQUENCE_OPTIONS:
+        Ret((const void*)PROCESSTYPES::LABEL_SEQ_OPTION);
+        break;
+        
     case AREATYPES::NEXTSEQUENCE_TITLE:
         Ret((const void*)PROCESSTYPES::LABEL_SEQ_TITLE);
         break;
@@ -2669,32 +2683,32 @@ bool CAreaSequence::AreaSelectLoad(void)
     {
     case WORLDID::ID_MNY:
         SetAnimationName("area_ny");
-        bResult = CAnim2DSequence::OnAttach(AFSFILEID::ID_AREA_NY);
+        bResult = CAnim2DSequence::OnAttach(FILEID::ID_AREA_NY);
         break;
 
     case WORLDID::ID_DHO:
         SetAnimationName("area_dho");
-        bResult = CAnim2DSequence::OnAttach(AFSFILEID::ID_AREA_DHO);
+        bResult = CAnim2DSequence::OnAttach(FILEID::ID_AREA_DHO);
         break;
 
     case WORLDID::ID_TRI:
         SetAnimationName("area_tri");
-        bResult = CAnim2DSequence::OnAttach(AFSFILEID::ID_AREA_TRI);
+        bResult = CAnim2DSequence::OnAttach(FILEID::ID_AREA_TRI);
         break;
 
     case WORLDID::ID_JPN:
         SetAnimationName("area_jpn");
-        bResult = CAnim2DSequence::OnAttach(AFSFILEID::ID_AREA_JPN);
+        bResult = CAnim2DSequence::OnAttach(FILEID::ID_AREA_JPN);
         break;
 
     case WORLDID::ID_FNY:
         SetAnimationName("area_fny");
-        bResult = CAnim2DSequence::OnAttach(AFSFILEID::ID_AREA_FNY);
+        bResult = CAnim2DSequence::OnAttach(FILEID::ID_AREA_FNY);
         break;
 
     case WORLDID::ID_KUR:
         SetAnimationName("area_kur");
-        bResult = CAnim2DSequence::OnAttach(AFSFILEID::ID_AREA_KUR);
+        bResult = CAnim2DSequence::OnAttach(FILEID::ID_AREA_KUR);
         break;
 
     default:

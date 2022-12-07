@@ -4,8 +4,8 @@
 // 
 //  Message tags:
 //      [RW]    - RenderWare debug messages
-//      [SYS]   - System module debug messages
-//      [GAME]  - Game module debug messages 
+//         - System module debug messages
+//        - Game module debug messages 
 //      [AFS]   - Afs archive subsystem messages
 //      [SND]   - Sound subsystem messages
 //      [MOV]   - Movie subsystem messages
@@ -17,8 +17,9 @@ static void RwDebugMsgEndpoint(RwDebugType type, const RwChar* string)
 {
     switch (type)
 	{
-	case RwDebugType::rwDEBUGASSERT:
-		ASSERT(false, string);
+    case RwDebugType::rwDEBUGASSERT:
+        //OUTPUT("[RW::TRACE] %s\n", string);
+        ASSERT(false, string);
 		break;
 
     case RwDebugType::rwDEBUGTRACE:
@@ -41,25 +42,25 @@ static void RwDebugMsgEndpoint(RwDebugType type, const RwChar* string)
 #endif
 
 
-/*static*/ void(*CDebug::Output)(const char* format, ...) = nullptr;
-/*static*/ void(*CDebug::Fatal)(const char* reason) = nullptr;
+/*static*/ void(*CDebug::CallbackOutput)(const char* fname, int32 fline, const char* format, ...) = nullptr;
+/*static*/ void(*CDebug::CallbackFatal)(const char* reason, ...) = nullptr;
 
 
 /*static*/ void CDebug::Initialize(void)
 {
-    Output = nullptr;
-    Fatal = nullptr;
+    CallbackOutput = nullptr;
+    CallbackFatal = nullptr;
 };
 
 
 /*static*/ void CDebug::Terminate(void)
 {
-    Output = nullptr;
-    Fatal = nullptr;
+    CallbackOutput = nullptr;
+    CallbackFatal = nullptr;
 };
 
 
-/*static*/ void CDebug::StartRWDebug(void)
+/*static*/ void CDebug::StartRwDebug(void)
 {
 #ifdef RWDEBUG    
     RwDebugSetHandler(RwDebugMsgEndpoint);
@@ -68,7 +69,7 @@ static void RwDebugMsgEndpoint(RwDebugType type, const RwChar* string)
 };
 
 
-/*static*/ void CDebug::StopRWDebug(void)
+/*static*/ void CDebug::StopRwDebug(void)
 {
 #ifdef RWDEBUG
     RwDebugSetTraceState(FALSE);
@@ -106,6 +107,6 @@ static void RwDebugMsgEndpoint(RwDebugType type, const RwChar* string)
         va_end(vl);
     };
 
-	Output(buff);
-    Fatal(buff);
+	CallbackOutput(fname, fline, buff);
+    CallbackFatal(buff);
 };

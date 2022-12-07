@@ -82,13 +82,13 @@ bool CPCSystem::Initialize(void)
 
     if (!CheckOS())
     {
-        OUTPUT("[SYS] Operating system check failed\n");
+        OUTPUT(" Operating system check failed\n");
         return false;
     };
 
     if (!WindowCreate())
     {
-        OUTPUT("[SYS] Create window failed\n");
+        OUTPUT(" Create window failed\n");
         return false;
     };    
 
@@ -141,8 +141,7 @@ void CPCSystem::Run(void)
 
 void CPCSystem::WindowShow(bool bFullscreen)
 {
-    HWND hWnd = HWND(CPCSpecific::m_hWnd);
-    
+    HWND hWnd = HWND(CPCSpecific::m_hWnd);    
     if (bFullscreen)
     {
         ShowCursor(FALSE);
@@ -151,6 +150,7 @@ void CPCSystem::WindowShow(bool bFullscreen)
     {
         ShowWindow(hWnd, SW_SHOW);
         SetForegroundWindow(hWnd);
+        SetFocus(hWnd);
     };
 };
 
@@ -158,7 +158,6 @@ void CPCSystem::WindowShow(bool bFullscreen)
 void CPCSystem::WindowHide(bool bFullscreen)
 {
     HWND hWnd = HWND(CPCSpecific::m_hWnd);
-    
     if (!bFullscreen)
         ShowWindow(hWnd, SW_HIDE);
 };
@@ -340,17 +339,20 @@ LRESULT CALLBACK CPCSystem::WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM 
 void CPCSystem::OnActivate(HWND hWnd, uint32 state, HWND hwndActDeact, BOOL fMinimized)
 {
     if (state == WA_INACTIVE)
+    {
         m_bIsForeground = false;
+    }
     else
+    {
         m_bIsForeground = true;
-
-    UpdateWindow(hWnd);
+        UpdateWindow(hWnd);
+    };
 };
 
 
 void CPCSystem::OnSize(HWND hWnd, uint32 state, int32 w, int32 h)
 {
-    if (w > 0 && h > 0)
+    if ((w > 0) && (h > 0))
         m_pFramework->UpdateSize(w, h);
 };
 

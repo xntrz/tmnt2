@@ -71,11 +71,11 @@ static COptionData::RAWDATA s_OptionBackup;
     //
     //  TODO remove me when OptionSequence is done
     //
-    Option().Play().SetClassicInput(CPCSetting::m_bFlagClassicPad);
-    Option().Play().SetEnableAutosave(CPCSetting::m_bFlagAutosave);
-    Option().Play().SetEnableHelp(CPCSetting::m_bFlagHelp);
-    Option().Play().SetDifficulty(GAMETYPES::DIFFICULTY(CPCSetting::m_iDifficulty));
-    Option().Display().SetEnableFontEffect(CPCSetting::m_bFlagFontEffect);
+    //Option().Play().SetClassicInput(CPCSetting::m_bFlagClassicPad);
+    //Option().Play().SetEnableAutosave(CPCSetting::m_bFlagAutosave);
+    //Option().Play().SetEnableHelp(CPCSetting::m_bFlagHelp);
+    //Option().Play().SetDifficulty(GAMETYPES::DIFFICULTY(CPCSetting::m_iDifficulty));
+    //Option().Display().SetEnableFontEffect(CPCSetting::m_bFlagFontEffect);
 #endif    
 };
 
@@ -101,10 +101,8 @@ static COptionData::RAWDATA s_OptionBackup;
 
 /*static*/ void CGameData::OnNewGame(void)
 {
-    m_bNewGame = true;
-    
-    Record().Area().OnNewGame();
-    
+    m_bNewGame = true;    
+    Record().Area().OnNewGame();    
     PlayParam().ClearArea();
     PlayParam().SetStage(STAGEID::ID_ST01T);
 };

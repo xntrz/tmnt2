@@ -180,7 +180,7 @@ void CBarrierModule::Run(void)
                 if (pCharacter->GetCharacterType() == CCharacter::TYPE_PLAYER)
                 {
                     CPlayerCharacter* pPlayerCharacter = (CPlayerCharacter*)pCharacter;
-                    if (pPlayerCharacter->GetID() == PLAYERID::ID_SPLINTER)
+                    if (pPlayerCharacter->GetID() == PLAYERID::ID_SPL)
                         Attack.SetFlyawayParameter(0.0f, 8.0f);
                 };
             };

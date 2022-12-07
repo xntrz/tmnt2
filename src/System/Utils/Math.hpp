@@ -13,6 +13,8 @@ namespace Math
     static const RwV3d VECTOR3_ZERO = { 0.0f, 0.0f, 0.0f };
     static const RwV2d VECTOR2_ZERO = { 0.0f, 0.0f };
 
+    float RadianClamp(float x);
+    float FNegate(float x);
     float Floor(float x);
     float Round(float x);
     float RadianCorrect(float fRadian);

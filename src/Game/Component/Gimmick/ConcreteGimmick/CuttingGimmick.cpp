@@ -188,11 +188,9 @@ void CCuttingGimmick::OnReceiveEvent(const char* pszSender, GIMMICKTYPES::EVENTT
 
 void CCuttingGimmick::OnCatchAttack(CHitAttackData* pAttack)
 {
-    ASSERT(pAttack);
-
     if (m_state == STATE_WAIT)
     {
-        if (pAttack->IsFlagSlice() || (--m_nNumAttack <= 1))
+        if (pAttack->IsFlagSlice() || (--m_nNumAttack <= 0))
         {
             onCut();            
             CGimmickUtils::PlayHitEffect(pAttack);

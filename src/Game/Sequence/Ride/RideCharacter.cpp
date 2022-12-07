@@ -147,8 +147,7 @@ void CRideCharacter::Run(void)
 
     MoveLimit();
 
-    if (vPosition.y > -6.0f &&
-        vPosition.y < -6.0f)
+    if ((vPosition.y > -6.0f) && (vPosition.y < -6.0f))
         CMessageManager::Request(SEGROUPID::VALUE(162), GetID());
 
     m_fPlaytime += CGameProperty::GetElapsedTime();
@@ -377,7 +376,7 @@ void CRideCharacter::OnMessageScoreAdd(void* param)
 
     RwV3d vOffset = { 0.0f, 2.0f, 0.0f };
     if (!IsShip())
-        vOffset.y = 2.0f;
+        vOffset.y = 3.0f;
     CEffectManager::PlayTrace(EFFECTID::ID_I_GET, new CRideCharacterTracer(this), &vOffset);
 
     switch (scorekind)
@@ -405,7 +404,7 @@ void CRideCharacter::OnMessageScoreAdd(void* param)
             CMessageManager::DirectCall(SDCODE_VOICE(20705));
             break;
 
-        case PLAYERID::ID_RAPH:
+        case PLAYERID::ID_RAP:
             CMessageManager::DirectCall(SDCODE_VOICE(20707));
             break;
 
@@ -417,19 +416,19 @@ void CRideCharacter::OnMessageScoreAdd(void* param)
             CMessageManager::DirectCall(SDCODE_VOICE(20703));
             break;
 
-        case PLAYERID::ID_SLASHUUR:
+        case PLAYERID::ID_SLA:
             CMessageManager::DirectCall(SDCODE_VOICE(20708));
             break;
 
-        case PLAYERID::ID_CASEY:
+        case PLAYERID::ID_CAS:
             CMessageManager::DirectCall(SDCODE_VOICE(20702));
             break;
 
-        case PLAYERID::ID_KARAI:
+        case PLAYERID::ID_KAR:
             CMessageManager::DirectCall(SDCODE_VOICE(20704));
             break;
 
-        case PLAYERID::ID_SPLINTER:
+        case PLAYERID::ID_SPL:
             CMessageManager::DirectCall(SDCODE_VOICE(20709));
             break;
 
@@ -448,7 +447,7 @@ void CRideCharacter::OnMessageScoreAdd(void* param)
             CMessageManager::DirectCall(SDCODE_VOICE(20713));
             break;
 
-        case PLAYERID::ID_RAPH:
+        case PLAYERID::ID_RAP:
             CMessageManager::DirectCall(SDCODE_VOICE(20715));
             break;
 
@@ -460,19 +459,19 @@ void CRideCharacter::OnMessageScoreAdd(void* param)
             CMessageManager::DirectCall(SDCODE_VOICE(20711));
             break;
 
-        case PLAYERID::ID_SLASHUUR:
+        case PLAYERID::ID_SLA:
             CMessageManager::DirectCall(SDCODE_VOICE(20716));
             break;
 
-        case PLAYERID::ID_CASEY:
+        case PLAYERID::ID_CAS:
             CMessageManager::DirectCall(SDCODE_VOICE(20710));
             break;
 
-        case PLAYERID::ID_KARAI:
+        case PLAYERID::ID_KAR:
             CMessageManager::DirectCall(SDCODE_VOICE(20712));
             break;
 
-        case PLAYERID::ID_SPLINTER:
+        case PLAYERID::ID_SPL:
             CMessageManager::DirectCall(SDCODE_VOICE(20717));
             break;
 
@@ -923,7 +922,7 @@ void CRideCharacter::InitBandana(void)
         }
         break;
 
-    case PLAYERID::ID_RAPH:
+    case PLAYERID::ID_RAP:
         {
             bBandanaFlag = true;
             vBandanaOffset = { 0.0f, 0.15f, 0.05f };
@@ -947,7 +946,7 @@ void CRideCharacter::InitBandana(void)
         }
         break;
 
-    case PLAYERID::ID_SLASHUUR:
+    case PLAYERID::ID_SLA:
         {
             bBandanaFlag = true;
             vBandanaOffset = { 0.0f, 0.15f, 0.05f };

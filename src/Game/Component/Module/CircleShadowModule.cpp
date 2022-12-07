@@ -120,7 +120,7 @@ float CCircleShadowModuleForGimmick::GetDirection(void) const
 	RsStack.Set(rwRENDERSTATEZWRITEENABLE, false);
 	RsStack.Set(rwRENDERSTATESRCBLEND, rwBLENDSRCALPHA);
 	RsStack.Set(rwRENDERSTATEDESTBLEND, rwBLENDINVSRCALPHA);
-	RsStack.Set(rwRENDERSTATEVERTEXALPHAENABLE, true);
+    RsStack.Push(rwRENDERSTATEVERTEXALPHAENABLE);
 
     for (CCircleShadowModule& it : m_listDraw)
         it.DrawNode();
@@ -134,14 +134,19 @@ CCircleShadowModule::CCircleShadowModule(float w, float h)
 : IModule(MODULETYPE::CIRCLE_SHADOW)
 , m_pTexture(nullptr)
 , m_bEnable(true)
+#ifdef _DEBUG
+, m_wh(w)
+#endif
 {
+    RwMatrixSetIdentityMacro(&m_matrix);
+    
     CTextureManager::SetCurrentTextureSet("common_ef");;
     m_pTexture = CTextureManager::GetRwTexture("Shadow1");
     ASSERT(m_pTexture);
 
     SetSize(w, h);
 
-	m_nodeDraw.data = this;
+    m_nodeDraw.data = this;
     m_listDraw.push_back(&m_nodeDraw);
 };
 
@@ -171,7 +176,7 @@ void CCircleShadowModule::Run(void)
     float fScale = (1.0f - 0.5f * (fCharacterHeight * 0.2f));
     uint8 uAlphaBasis = uint8(255.0f - 191.0f * (fCharacterHeight * 0.2f));
     RwV3d vNormal = pCollisionResult->m_vNormal;
-    
+	
     vPosition.y = fHeight + 0.05f;
 
     RwV3d vAxisX = Math::VECTOR3_ZERO;
@@ -204,10 +209,10 @@ void CCircleShadowModule::Run(void)
     Math::Matrix_Multiply(&m_matrix, &m_matrix, &matTranslation);
 
     RwRGBA VertexColor = { 0xFF, 0xFF, 0xFF, uAlphaBasis };
-    m_aVertices[0].color = COLOR_TO_INTEGER_RWRGBA(VertexColor);
-    m_aVertices[1].color = COLOR_TO_INTEGER_RWRGBA(VertexColor);
-    m_aVertices[2].color = COLOR_TO_INTEGER_RWRGBA(VertexColor);
-    m_aVertices[3].color = COLOR_TO_INTEGER_RWRGBA(VertexColor);
+    m_aVertices[0].color = RWRGBALONGEX(VertexColor);
+    m_aVertices[1].color = RWRGBALONGEX(VertexColor);
+    m_aVertices[2].color = RWRGBALONGEX(VertexColor);
+    m_aVertices[3].color = RWRGBALONGEX(VertexColor);
 };
 
 
@@ -226,6 +231,7 @@ void CCircleShadowModule::SetSize(float w, float h)
         pVertex->objVertex.x = (2 % (i + 1) != 0 ? -1.0f : 1.0f) * (w * 0.5f);
         pVertex->objVertex.y = 0.0f;
         pVertex->objVertex.z = (2.0f * (i % 2 == 0) - 1) * (h * 0.5f);
+        pVertex->objNormal = { 0 };
         pVertex->color = 0xFFFFFFFF;
         pVertex->u = (i / 2 ? 1.0f : 0.0f);
         pVertex->v = (i % 2 ? 0.0f : 1.0f);
@@ -252,9 +258,7 @@ void CCircleShadowModule::DrawNode(void)
 
     if (m_pTexture)
         RENDERSTATE_PUSH(rwRENDERSTATETEXTURERASTER, RwTextureGetRaster(m_pTexture));
-    else
-        RENDERSTATE_PUSH(rwRENDERSTATETEXTURERASTER, 0);
-    
+
     if (RwIm3DTransform(m_aVertices, COUNT_OF(m_aVertices), &m_matrix, rwIM3D_VERTEXUV | rwIM3D_ALLOPAQUE))
     {
         RwIm3DRenderPrimitive(rwPRIMTYPETRISTRIP);

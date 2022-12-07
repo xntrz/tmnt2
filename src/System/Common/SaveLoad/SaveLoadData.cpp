@@ -90,11 +90,6 @@ void CSaveLoadDataBase::SetData(int32 iVersion, const void* pData, uint32 uDataS
         pHeader->m_iVersion = m_iVersion;
         pHeader->m_uSize = m_uSize;
         pHeader->m_uChecksum = GetCheckSum();
-
-		auto s1 = GetCheckSum();
-		auto s2 = GetCheckSum();
-		auto s3 = GetCheckSum();
-		auto s4 = GetCheckSum();
     };
 };
 

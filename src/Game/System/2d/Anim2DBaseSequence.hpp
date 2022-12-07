@@ -18,17 +18,15 @@ protected:
         STEP_DRAW,
         STEP_FADE_IN,
         STEP_END,
-        STEP_CUSTOM_RET,
     };
     
 public:
     CAnim2DSequence(void);
     CAnim2DSequence(const char* pszAnimName);
     virtual ~CAnim2DSequence(void);
-    virtual bool Call(int32 iLabel, bool bKeepDraw = false, const void* param = nullptr) override;
     virtual bool Ret(const void* param = nullptr) override;
     virtual void OnDetach(void) override;
-    virtual void OnMove(bool bResume, const void* param) override;
+    virtual void OnMove(bool bRet, const void* param) override;
     virtual void OnDraw(void) const override;
     virtual bool OnAttach(int32 iFileID);
     virtual bool OnAttach(const char* pszFilename);

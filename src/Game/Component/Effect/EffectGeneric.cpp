@@ -40,7 +40,7 @@ static void CallCharacterHitEffect(const CCharacter* pCharacter, const RwV3d* pv
             switch (pPlayerCharacter->GetID())
             {
             case PLAYERID::ID_LEO:
-            case PLAYERID::ID_SLASHUUR:
+            case PLAYERID::ID_SLA:
                 {
                     if (nPower >= GAMETYPES::ATTACKPOWER_MAX)
                         CEffectManager::Play(EFFECTID::ID_LEO_HIT_B, pvPosition);
@@ -49,8 +49,8 @@ static void CallCharacterHitEffect(const CCharacter* pCharacter, const RwV3d* pv
                 }
                 break;
                 
-            case PLAYERID::ID_RAPH:
-            case PLAYERID::ID_CASEY:
+            case PLAYERID::ID_RAP:
+            case PLAYERID::ID_CAS:
                 {
                     if (nPower >= GAMETYPES::ATTACKPOWER_MAX)
                         CEffectManager::Play(EFFECTID::ID_RAP_HIT_B, pvPosition);
@@ -60,7 +60,7 @@ static void CallCharacterHitEffect(const CCharacter* pCharacter, const RwV3d* pv
                 break;
                 
             case PLAYERID::ID_MIC:
-            case PLAYERID::ID_KARAI:
+            case PLAYERID::ID_KAR:
                 {
                     if (nPower >= GAMETYPES::ATTACKPOWER_MAX)
                         CEffectManager::Play(EFFECTID::ID_MIC_HIT_B, pvPosition);
@@ -70,7 +70,7 @@ static void CallCharacterHitEffect(const CCharacter* pCharacter, const RwV3d* pv
                 break;
                 
             case PLAYERID::ID_DON:
-            case PLAYERID::ID_SPLINTER:
+            case PLAYERID::ID_SPL:
                 {
                     if (nPower >= GAMETYPES::ATTACKPOWER_MAX)
                         CEffectManager::Play(EFFECTID::ID_DON_HIT_B, pvPosition);
@@ -225,7 +225,7 @@ namespace EFFECT_GENERIC
 
     bool IsNeedWaterEffect(MAPTYPES::ATTRIBUTE attribute)
     {
-        return (IS_FLAG_SET(attribute, MAPTYPES::ATTRIBUTE_WATER) ||
-                IS_FLAG_SET(attribute, MAPTYPES::ATTRIBUTE_POISON));
+        return (FLAG_TEST(attribute, MAPTYPES::ATTRIBUTE_WATER) ||
+                FLAG_TEST(attribute, MAPTYPES::ATTRIBUTE_POISON));
     };
 };

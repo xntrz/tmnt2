@@ -734,8 +734,8 @@ void CParticle::SetColorToVertex(const RwRGBA& color)
 	for (int32 i = 0, j = 0; i < m_nPointNum + 1; ++i, j += 2)
 	{
 		ASSERT(j <= m_nVertexNum);
-        s_aVertexForCylinder[j + 0].color = COLOR_TO_INTEGER_RWRGBA(color);
-		s_aVertexForCylinder[j + 1].color = COLOR_TO_INTEGER_RWRGBA(color);
+        s_aVertexForCylinder[j + 0].color = RWRGBALONGEX(color);
+		s_aVertexForCylinder[j + 1].color = RWRGBALONGEX(color);
 	};
 };
 
@@ -875,42 +875,42 @@ void CParticle::SetVertexInfo(RwIm3DVertex* aVertexList, RwCamera* pCamera, TRAN
     pVertex[0].objVertex.z = aPos[1].z;
     pVertex[0].u = m_u0;
     pVertex[0].v = m_v1;
-    pVertex[0].color = COLOR_TO_INTEGER_RWRGBA(pTransition->m_ColorNow);
+    pVertex[0].color =  RWRGBALONGEX(pTransition->m_ColorNow);
 
     pVertex[1].objVertex.x = aPos[0].x;
     pVertex[1].objVertex.y = aPos[0].y;
     pVertex[1].objVertex.z = aPos[0].z;
     pVertex[1].u = m_u0;
     pVertex[1].v = m_v0;
-    pVertex[1].color = COLOR_TO_INTEGER_RWRGBA(pTransition->m_ColorNow);
+    pVertex[1].color = RWRGBALONGEX(pTransition->m_ColorNow);
 
     pVertex[2].objVertex.x = aPos[3].x;
     pVertex[2].objVertex.y = aPos[3].y;
     pVertex[2].objVertex.z = aPos[3].z;
     pVertex[2].u = m_u1;
     pVertex[2].v = m_v1;
-    pVertex[2].color = COLOR_TO_INTEGER_RWRGBA(pTransition->m_ColorNow);
+    pVertex[2].color = RWRGBALONGEX(pTransition->m_ColorNow);
 
     pVertex[3].objVertex.x = aPos[3].x;
     pVertex[3].objVertex.y = aPos[3].y;
     pVertex[3].objVertex.z = aPos[3].z;
     pVertex[3].u = m_u1;
     pVertex[3].v = m_v1;
-    pVertex[3].color = COLOR_TO_INTEGER_RWRGBA(pTransition->m_ColorNow);
+    pVertex[3].color = RWRGBALONGEX(pTransition->m_ColorNow);
 
     pVertex[4].objVertex.x = aPos[0].x;
     pVertex[4].objVertex.y = aPos[0].y;
     pVertex[4].objVertex.z = aPos[0].z;
     pVertex[4].u = m_u0;
     pVertex[4].v = m_v0;
-    pVertex[4].color = COLOR_TO_INTEGER_RWRGBA(pTransition->m_ColorNow);
+    pVertex[4].color = RWRGBALONGEX(pTransition->m_ColorNow);
 
     pVertex[5].objVertex.x = aPos[2].x;
     pVertex[5].objVertex.y = aPos[2].y;
     pVertex[5].objVertex.z = aPos[2].z;
     pVertex[5].u = m_u1;
     pVertex[5].v = m_v0;
-    pVertex[5].color = COLOR_TO_INTEGER_RWRGBA(pTransition->m_ColorNow);
+    pVertex[5].color = RWRGBALONGEX(pTransition->m_ColorNow);
 
     m_nNowUseNum += 6;
 };
@@ -967,7 +967,7 @@ void CParticle::CreateCylinder(float fTopRadius, float fBottomRadius, int32 nPoi
         pVertex[0].objNormal.z = 0.0f;
         pVertex[0].u = tu;
         pVertex[0].v = 0.0f;
-        pVertex[0].color = COLOR_TO_INTEGER_RWRGBA(m_InitTransition.m_Color);
+        pVertex[0].color = RWRGBALONGEX(m_InitTransition.m_Color);
 
         pVertex[1].objVertex.x = Math::Sin(float(i) * fDeltaSegAngle) * m_fBottomRadius;
         pVertex[1].objVertex.y = 0.0f;
@@ -977,7 +977,7 @@ void CParticle::CreateCylinder(float fTopRadius, float fBottomRadius, int32 nPoi
         pVertex[1].objNormal.z = 0.0f;
         pVertex[1].u = tu;
         pVertex[1].v = 1.0f;
-        pVertex[1].color = COLOR_TO_INTEGER_RWRGBA(m_InitTransition.m_Color);
+        pVertex[1].color = RWRGBALONGEX(m_InitTransition.m_Color);
     };
 };
 
@@ -1114,14 +1114,14 @@ void CParticle::CreateParticle(TRANSITION* pInitTransition)
 
 void CParticle::TransitionNatureFall(TRANSITION* pTransition, RwV3d* pvVec)
 {
-    if (IS_FLAG_SET(m_uPatternFlag, PEFINFO::PATTERNFLAG_FALL))
+    if (FLAG_TEST(m_uPatternFlag, PEFINFO::PATTERNFLAG_FALL))
         pvVec->y += (m_fGravity * pTransition->m_fCounterNow);
 };
 
 
 void CParticle::TransitionNatureRise(TRANSITION* pTransition, RwV3d* pvVec)
 {
-    if (IS_FLAG_SET(m_uPatternFlag, PEFINFO::PATTERNFLAG_RISE))
+    if (FLAG_TEST(m_uPatternFlag, PEFINFO::PATTERNFLAG_RISE))
         pvVec->y += ((m_fGravity * pTransition->m_fCounterNow) * -1.0f);
 };
 
@@ -1189,35 +1189,35 @@ void CParticle::TransitionScale(TRANSITION* pTransition)
 
 void CParticle::TransitionAcceleration(TRANSITION* pTransition)
 {
-    if (IS_FLAG_SET(m_uPatternFlag, PEFINFO::PATTERNFLAG_ACCELSIZE2D_X))
+    if (FLAG_TEST(m_uPatternFlag, PEFINFO::PATTERNFLAG_ACCELSIZE2D_X))
     {
         m_fAccelSizeDecayWidthBuffer =
             pTransition->m_fCounterNow * (0.01f * (m_InitTransition.m_vSize.x * m_fAccelSizeDecayWidth));
     };
 
-    if (IS_FLAG_SET(m_uPatternFlag, PEFINFO::PATTERNFLAG_ACCELSIZE2D_Y))
+    if (FLAG_TEST(m_uPatternFlag, PEFINFO::PATTERNFLAG_ACCELSIZE2D_Y))
     {
         m_fAccelSizeDecayHeightBuffer =
             pTransition->m_fCounterNow * (0.01f * (m_InitTransition.m_vSize.y * m_fAccelSizeDecayHeight));
     };
 
-    if (IS_FLAG_SET(m_uPatternFlag, PEFINFO::PATTERNFLAG_ACCELROT3D_X))
+    if (FLAG_TEST(m_uPatternFlag, PEFINFO::PATTERNFLAG_ACCELROT3D_X))
         m_vAccelRotationBuffer.x = m_vAccelRotation.x * pTransition->m_fCounterNow;
 
-    if (IS_FLAG_SET(m_uPatternFlag, PEFINFO::PATTERNFLAG_ACCELROT3D_Y))
+    if (FLAG_TEST(m_uPatternFlag, PEFINFO::PATTERNFLAG_ACCELROT3D_Y))
         m_vAccelRotationBuffer.y = m_vAccelRotation.y * pTransition->m_fCounterNow;
 
-    if (IS_FLAG_SET(m_uPatternFlag, PEFINFO::PATTERNFLAG_ACCELROT3D_Z))
+    if (FLAG_TEST(m_uPatternFlag, PEFINFO::PATTERNFLAG_ACCELROT3D_Z))
         m_vAccelRotationBuffer.z = m_vAccelRotation.z * pTransition->m_fCounterNow;
 
-    if (IS_FLAG_SET(m_uPatternFlag, PEFINFO::PATTERNFLAG_ACCELROT2D))
+    if (FLAG_TEST(m_uPatternFlag, PEFINFO::PATTERNFLAG_ACCELROT2D))
         m_fAccelRotationBillboardBuffer = m_fAccelRotationBillboard * pTransition->m_fCounterNow;
 };
 
 
 void CParticle::TransitionRotation(TRANSITION* pTransition, const RwV3d* pvVec)
 {
-    if (IS_FLAG_SET(m_uPatternFlag, PEFINFO::PATTERNFLAG_ROT_X))
+    if (FLAG_TEST(m_uPatternFlag, PEFINFO::PATTERNFLAG_ROT_X))
     {
         RwMatrixRotate(
             &pTransition->m_matrix,
@@ -1227,7 +1227,7 @@ void CParticle::TransitionRotation(TRANSITION* pTransition, const RwV3d* pvVec)
         );
     };
 
-    if (IS_FLAG_SET(m_uPatternFlag, PEFINFO::PATTERNFLAG_ROT_Y))
+    if (FLAG_TEST(m_uPatternFlag, PEFINFO::PATTERNFLAG_ROT_Y))
     {
         RwMatrixRotate(
             &pTransition->m_matrix,
@@ -1237,7 +1237,7 @@ void CParticle::TransitionRotation(TRANSITION* pTransition, const RwV3d* pvVec)
         );
     };
 
-    if (IS_FLAG_SET(m_uPatternFlag, PEFINFO::PATTERNFLAG_ROT_Z))
+    if (FLAG_TEST(m_uPatternFlag, PEFINFO::PATTERNFLAG_ROT_Z))
     {
         RwMatrixRotate(
             &pTransition->m_matrix,
@@ -1247,8 +1247,8 @@ void CParticle::TransitionRotation(TRANSITION* pTransition, const RwV3d* pvVec)
         );
     };
 
-    if (IS_FLAG_SET(m_uPatternFlag, PEFINFO::PATTERNFLAG_BILLBOARD) ||
-        IS_FLAG_SET(m_uRandCheckFlag, PEFINFO::RANDFLAG_RANDANGLE))
+    if (FLAG_TEST(m_uPatternFlag, PEFINFO::PATTERNFLAG_BILLBOARD) ||
+        FLAG_TEST(m_uRandCheckFlag, PEFINFO::RANDFLAG_RANDANGLE))
     {        
         float fAngle = pTransition->m_fInitRotationBillboard + pTransition->m_fRotationBillboard;
 
@@ -1321,7 +1321,7 @@ void CParticle::SortZ(RwCamera* pCamera)
 
 void CParticle::AddRandomStartPos(RwV3d* pvStartPos, RwV3d* pvRandElement, uint32 uRandomFlag)
 {
-    if (IS_FLAG_SET(uRandomFlag, PEFINFO::RANDFLAG_STARTPOS_X))
+    if (FLAG_TEST(uRandomFlag, PEFINFO::RANDFLAG_STARTPOS_X))
     {
         float fRand = Randomize() * pvRandElement->x;
 
@@ -1330,7 +1330,7 @@ void CParticle::AddRandomStartPos(RwV3d* pvStartPos, RwV3d* pvRandElement, uint3
         pvStartPos->z += (m_vAxisX.z * fRand);
     };
 
-    if (IS_FLAG_SET(uRandomFlag, PEFINFO::RANDFLAG_STARTPOS_Y))
+    if (FLAG_TEST(uRandomFlag, PEFINFO::RANDFLAG_STARTPOS_Y))
     {
         float fRand = Randomize() * pvRandElement->y;
 
@@ -1339,7 +1339,7 @@ void CParticle::AddRandomStartPos(RwV3d* pvStartPos, RwV3d* pvRandElement, uint3
         pvStartPos->z += (m_vAxisY.z * fRand);
     };
 
-    if (IS_FLAG_SET(uRandomFlag, PEFINFO::RANDFLAG_STARTPOS_Z))
+    if (FLAG_TEST(uRandomFlag, PEFINFO::RANDFLAG_STARTPOS_Z))
     {
         float fRand = Randomize() * pvRandElement->z;
 
@@ -1352,10 +1352,10 @@ void CParticle::AddRandomStartPos(RwV3d* pvStartPos, RwV3d* pvRandElement, uint3
 
 void CParticle::AddRandomStartSize(RwV2d* pvStartSize, RwV2d* pvRandElement, uint32 uRandomFlag)
 {
-    if (IS_FLAG_SET(uRandomFlag, PEFINFO::RANDFLAG_STARTSIZE_X))
+    if (FLAG_TEST(uRandomFlag, PEFINFO::RANDFLAG_STARTSIZE_X))
         pvStartSize->x += (Randomize() * pvRandElement->x);
 
-    if (IS_FLAG_SET(uRandomFlag, PEFINFO::RANDFLAG_STARTSIZE_Y))
+    if (FLAG_TEST(uRandomFlag, PEFINFO::RANDFLAG_STARTSIZE_Y))
         pvStartSize->y += (Randomize() * pvRandElement->y);
 };
 
@@ -1364,7 +1364,7 @@ float CParticle::AddRandomStartLive(float fFirstLive, float fRandElement, uint32
 {
     float fRet = fFirstLive;
 
-    if (IS_FLAG_SET(uRandomFlag, PEFINFO::RANDFLAG_LIVECOUNT))
+    if (FLAG_TEST(uRandomFlag, PEFINFO::RANDFLAG_LIVECOUNT))
         fRet += (Randomize() * fRandElement);
 
     return fRet;
@@ -1373,7 +1373,7 @@ float CParticle::AddRandomStartLive(float fFirstLive, float fRandElement, uint32
 
 void CParticle::AddRandomFirstVec(RwV3d* pvFirstVec, RwV3d* pvRandomElement, uint32 uRandomFlag)
 {
-    if (IS_FLAG_SET(uRandomFlag, PEFINFO::RANDFLAG_FIRSTVEC_X))
+    if (FLAG_TEST(uRandomFlag, PEFINFO::RANDFLAG_FIRSTVEC_X))
     {
         float fRand = Randomize() * pvRandomElement->x;
 
@@ -1382,7 +1382,7 @@ void CParticle::AddRandomFirstVec(RwV3d* pvFirstVec, RwV3d* pvRandomElement, uin
         pvFirstVec->z += (m_vAxisX.z * fRand);
     };
 
-    if (IS_FLAG_SET(uRandomFlag, PEFINFO::RANDFLAG_FIRSTVEC_Y))
+    if (FLAG_TEST(uRandomFlag, PEFINFO::RANDFLAG_FIRSTVEC_Y))
     {
         float fRand = Randomize() * pvRandomElement->y;
 
@@ -1391,7 +1391,7 @@ void CParticle::AddRandomFirstVec(RwV3d* pvFirstVec, RwV3d* pvRandomElement, uin
         pvFirstVec->z += (m_vAxisY.z * fRand);
     };
 
-    if (IS_FLAG_SET(uRandomFlag, PEFINFO::RANDFLAG_FIRSTVEC_Z))
+    if (FLAG_TEST(uRandomFlag, PEFINFO::RANDFLAG_FIRSTVEC_Z))
     {
         float fRand = Randomize() * pvRandomElement->z;
 
@@ -1413,7 +1413,7 @@ float CParticle::AddRandomSpeed(float fFirstSpeed, float fRandElement, uint32 uR
 {
     float fRet = fFirstSpeed;
 
-    if (IS_FLAG_SET(uRandomFlag, PEFINFO::RANDFLAG_FIRSTSPEED))
+    if (FLAG_TEST(uRandomFlag, PEFINFO::RANDFLAG_FIRSTSPEED))
         fRet += (Randomize() * fRandElement);
 
     return fRet;
@@ -1422,7 +1422,7 @@ float CParticle::AddRandomSpeed(float fFirstSpeed, float fRandElement, uint32 uR
 
 void CParticle::AddRandomAccelVec(RwV3d* pvAccelVec, RwV3d* pvRandomElement, uint32 uRandomFlag)
 {
-    if (IS_FLAG_SET(uRandomFlag, PEFINFO::RANDFLAG_ACCELVEC_X))
+    if (FLAG_TEST(uRandomFlag, PEFINFO::RANDFLAG_ACCELVEC_X))
     {
         float fRand = Randomize() * pvRandomElement->x;
 
@@ -1431,7 +1431,7 @@ void CParticle::AddRandomAccelVec(RwV3d* pvAccelVec, RwV3d* pvRandomElement, uin
         pvAccelVec->z += (m_vAxisX.z * fRand);
     };
 
-    if (IS_FLAG_SET(uRandomFlag, PEFINFO::RANDFLAG_ACCELVEC_Y))
+    if (FLAG_TEST(uRandomFlag, PEFINFO::RANDFLAG_ACCELVEC_Y))
     {
         float fRand = Randomize() * pvRandomElement->y;
 
@@ -1440,7 +1440,7 @@ void CParticle::AddRandomAccelVec(RwV3d* pvAccelVec, RwV3d* pvRandomElement, uin
         pvAccelVec->z += (m_vAxisY.z * fRand);
     };
 
-    if (IS_FLAG_SET(uRandomFlag, PEFINFO::RANDFLAG_ACCELVEC_Z))
+    if (FLAG_TEST(uRandomFlag, PEFINFO::RANDFLAG_ACCELVEC_Z))
     {
         float fRand = Randomize() * pvRandomElement->z;
 
@@ -1462,7 +1462,7 @@ float CParticle::AddRandomAccel(float fAccel, float fRandElement, uint32 uRandom
 {    
     float fRet = fAccel;
     
-    if (IS_FLAG_SET(uRandomFlag, PEFINFO::RANDFLAG_ACCELVEC_Z))
+    if (FLAG_TEST(uRandomFlag, PEFINFO::RANDFLAG_ACCELVEC_Z))
         fRet += (Randomize() * fRandElement);
 
     return fRet;
@@ -1471,7 +1471,7 @@ float CParticle::AddRandomAccel(float fAccel, float fRandElement, uint32 uRandom
 
 void CParticle::RandomScale(RwV2d* pvStartSize, float fScaleMin, float fScaleMax, uint32 uRandomFlag)
 {
-    if (IS_FLAG_SET(uRandomFlag, PEFINFO::RANDFLAG_SCALESIZE2D))
+    if (FLAG_TEST(uRandomFlag, PEFINFO::RANDFLAG_SCALESIZE2D))
     {
         float fValue = (Randomize() * (fScaleMin + (fScaleMax - fScaleMin))) * 0.0099999998f;// 0.01f;
         
@@ -1483,13 +1483,13 @@ void CParticle::RandomScale(RwV2d* pvStartSize, float fScaleMin, float fScaleMax
 
 void CParticle::RandomScale3D(RwV3d* pvStartSize, RwV3d* pvRandomElement, uint32 uRandomFlag)
 {
-    if (IS_FLAG_SET(uRandomFlag, PEFINFO::RANDFLAG_SCALESIZE3D_X))
+    if (FLAG_TEST(uRandomFlag, PEFINFO::RANDFLAG_SCALESIZE3D_X))
         pvStartSize->x += (Randomize() * pvRandomElement->x);
     
-    if (IS_FLAG_SET(uRandomFlag, PEFINFO::RANDFLAG_SCALESIZE3D_Y))
+    if (FLAG_TEST(uRandomFlag, PEFINFO::RANDFLAG_SCALESIZE3D_Y))
         pvStartSize->y += (Randomize() * pvRandomElement->y);
     
-    if (IS_FLAG_SET(uRandomFlag, PEFINFO::RANDFLAG_SCALESIZE3D_Z))
+    if (FLAG_TEST(uRandomFlag, PEFINFO::RANDFLAG_SCALESIZE3D_Z))
         pvStartSize->z += (Randomize() * pvRandomElement->z);
 };
 
@@ -1498,7 +1498,7 @@ float CParticle::RandomAngle(float fRandElement, uint32 uRandomFlag)
 {
     float fRet = 0.0f;
     
-    if (IS_FLAG_SET(uRandomFlag, PEFINFO::RANDFLAG_RANDANGLE))
+    if (FLAG_TEST(uRandomFlag, PEFINFO::RANDFLAG_RANDANGLE))
         fRet = Randomize() * fRandElement;
 
     return fRandElement;
@@ -1507,7 +1507,7 @@ float CParticle::RandomAngle(float fRandElement, uint32 uRandomFlag)
 
 void CParticle::CircleMove(RwV3d* pvDest, float fRadius, float fSpeed, float fTime, uint32 uFlag)
 {
-    if (IS_FLAG_SET(uFlag, PEFINFO::MOVEFLAG_CIRCLE))
+    if (FLAG_TEST(uFlag, PEFINFO::MOVEFLAG_CIRCLE))
     {
         float fBasis = fSpeed * 0.0027777f * fTime * Math::PI2 + m_fCircleBaseRotation;
 

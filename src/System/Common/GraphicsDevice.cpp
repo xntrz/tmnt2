@@ -17,6 +17,7 @@
 #include "rpuvanim.h"
 #include "rtbmp.h"
 #include "rtpng.h"
+#include "rtcharse.h"
 
 
 /*static*/ const RwRGBA CGraphicsDevice::DEFAULT_CLEAR_COLOR = { 0 };
@@ -42,48 +43,50 @@ CGraphicsDevice::~CGraphicsDevice(void)
 
 bool CGraphicsDevice::Initialize(void)
 {
-    bool bResult = false;
-
-    try
+    RwMemoryFunctions memfuncs =
     {
-        RwMemoryFunctions memfuncs =
-        {
-            &CMemory::rwmalloc,
-            &CMemory::rwfree,
-            &CMemory::rwrealloc,
-            &CMemory::rwcalloc
-        };
-
-        if (!RwEngineInit(&memfuncs, 0x0, 0x400000))
-            throw std::exception("Engine init");
-
-        if (!AttachPlugin())
-            throw std::exception("Attach plugins");
-
-        RwEngineOpenParams params;
-        params.displayID = Configure();
-        if (!RwEngineOpen(&params))
-            throw std::exception("Engine open");
-
-        if (!RwEngineSetSubSystem(Subsystem()))
-            throw std::exception("Subsystem");
-
-        if (!RwEngineSetVideoMode(Videomode()))
-            throw std::exception("Videomode");
-
-        ASSERT(((RwGlobals*)RwEngineInstance)->dOpenDevice.fpRenderStateGet);
-        ASSERT(((RwGlobals*)RwEngineInstance)->dOpenDevice.fpRenderStateSet);		
-
-        bResult = true;
-    }
-    catch (std::exception& e)
-    {
-		REF(e);
-        OUTPUT("[SYS] Failed to initialize gx device: %s\n", e.what());
-        bResult = false;
+        &CMemory::rwmalloc,
+        &CMemory::rwfree,
+        &CMemory::rwrealloc,
+        &CMemory::rwcalloc
     };
-    
-    return bResult;
+
+    if (!RwEngineInit(&memfuncs, 0x0, 0x400000))
+    {
+        OUTPUT("RwEngineInit failed");
+        return false;
+    };
+
+    if (!AttachPlugin())
+    {
+        OUTPUT("attach plugin failed");
+        return false;
+    };        
+
+    RwEngineOpenParams params;
+    params.displayID = Configure();
+    if (!RwEngineOpen(&params))
+    {
+        OUTPUT("RwEngineOpen failed");
+        return false;
+    };
+
+    if (!RwEngineSetSubSystem(Subsystem()))
+    {
+        OUTPUT("RwEngineSetSubSystem failed");
+        return false;
+    };
+
+    if (!RwEngineSetVideoMode(Videomode()))
+    {
+        OUTPUT("RwEngineSetVideoMode failed");
+        return false;
+    };
+
+    ASSERT(((RwGlobals*)RwEngineInstance)->dOpenDevice.fpRenderStateGet);
+    ASSERT(((RwGlobals*)RwEngineInstance)->dOpenDevice.fpRenderStateSet);
+
+    return true;
 };
 
 
@@ -96,48 +99,51 @@ void CGraphicsDevice::Terminate(void)
 
 bool CGraphicsDevice::Start(void)
 {
-    bool bResult = false;
-
-    try
+    if (!RwEngineStart())
     {
-        if (!RwEngineStart())
-            throw std::exception("Engine start");
-
-#ifdef RWDEBUG
-        CDebug::StartRWDebug();
-#endif        
-
-        if (!RwImageRegisterImageFormat("bmp", RtBMPImageRead, 0))
-            throw std::exception("Register image format BMP");
-
-        if (!RwImageRegisterImageFormat("png", RtPNGImageRead, 0))
-            throw std::exception("Register image format PNG");
-
-        CRenderState::Initialize();
-        CCamera::Initialize();
-
-        if (!CreateCamera())
-            throw std::exception("Create camera");
-        
-        ASSERT(!CCamera::CameraDefault());
-        CCamera::SetCameraDefault(m_pCamera);
-
-        if (!CreateFrameBuffer())
-            throw std::exception("Create frame buffer");
-
-        CScreen::AttachDevice(this);        
-        SetFlipInterval(m_iFlipInterval);
-
-        bResult = true;
-    }
-    catch (std::exception& e)
-    {
-		REF(e);
-        OUTPUT("[SYS] Failed to start gx device: %s\n", e.what());        
-        bResult = false;
+        OUTPUT("RwEngineStart failed");
+        return false;
     };
 
-    return bResult;
+#ifdef RWDEBUG
+    CDebug::StartRwDebug();
+    RtCharsetOpen();
+#endif        
+
+    if (!RwImageRegisterImageFormat("bmp", RtBMPImageRead, 0))
+    {
+        OUTPUT("RwImageRegisterImageFormat 'bmp' failed");
+        return false;
+    };
+
+    if (!RwImageRegisterImageFormat("png", RtPNGImageRead, 0))
+    {
+        OUTPUT("RwImageRegisterImageFormat 'png' failed");
+        return false;
+    };
+
+    CRenderState::Initialize();
+    CCamera::Initialize();
+
+    if (!CreateCamera())
+    {
+        OUTPUT("CreateCamera failed");
+        return false;
+    };
+
+    ASSERT(!CCamera::CameraDefault());
+    CCamera::SetCameraDefault(m_pCamera);
+
+    if (!CreateFrameBuffer())
+    {
+        OUTPUT("CreateFrameBuffer failed");
+        return false;
+    };
+
+    CScreen::AttachDevice(this);
+    SetFlipInterval(m_iFlipInterval);
+
+    return true;
 };
 
 
@@ -154,7 +160,8 @@ void CGraphicsDevice::Stop(void)
 
     CCamera::Terminate();
 #ifdef RWDEBUG
-    CDebug::StopRWDebug();
+    CDebug::StopRwDebug();
+    RtCharsetClose();
 #endif
     
     RwEngineStop();
@@ -165,10 +172,8 @@ bool CGraphicsDevice::RenderBegin(void)
 {
     ASSERT(m_pCamera);
 
-    if (!m_bFlipEnable)
-        return false;
-    
-    RwCameraClear(m_pCamera, &m_ClearColor, rwCAMERACLEARZ | rwCAMERACLEARIMAGE);
+    if (m_bFlipEnable)
+        RwCameraClear(m_pCamera, &m_ClearColor, rwCAMERACLEARZ | rwCAMERACLEARIMAGE);
 
     if (RwCameraBeginUpdate(m_pCamera) != m_pCamera)
         return false;
@@ -182,9 +187,6 @@ void CGraphicsDevice::RenderEnd(void)
 {
     ASSERT(m_pCamera);
     ASSERT(m_pCamera == CCamera::CameraCurrent());
-
-    if (!m_bFlipEnable)
-        return;
 
     RwCameraEndUpdate(m_pCamera);
     CCamera::SetCameraCurrent(nullptr);
@@ -265,7 +267,7 @@ bool CGraphicsDevice::AttachPlugin(void)
     catch (std::exception& e)
     {
 		REF(e);
-        OUTPUT("[SYS] Failed to attach plugin: %s\n", e.what());
+        OUTPUT(" Failed to attach plugin: %s\n", e.what());
         bResult = false;
     };
 
@@ -319,7 +321,7 @@ bool CGraphicsDevice::CreateFrameBuffer(int32 iWidth, int32 iHeight, bool bFulls
     CScreen::DeviceChanged();
 
 	OUTPUT(
-		"[SYS] Creating framebuffer with size %d x %d"
+		"Creating framebuffer with size %d x %d"
 		"(aspect ratio : %f, pixel aspect ratio: %d:%d\n",
 		iWidth,
 		iHeight,

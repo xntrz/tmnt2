@@ -387,7 +387,7 @@ void CGaugeMeter_Container::GaugeMeterVertexSet(int32 nVertexNum, int32 aVertexL
         aVertices[i].y = y;
         aVertices[i].z = RwIm2DGetNearScreenZMacro();
         aVertices[i].rhw = 1.0f;
-        aVertices[i].emissiveColor = COLOR_TO_INTEGER_RWRGBA(Color);
+        aVertices[i].emissiveColor = RWRGBALONGEX(Color);
         aVertices[i].u = (u + fScale) * (1.0f / 128.0f);
         aVertices[i].v = (v + fScale) * (1.0f / 128.0f);
     };

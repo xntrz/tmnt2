@@ -725,7 +725,7 @@ bool CMagic::CheckBody(void)
 
             ++m_nMapHitNum;
 
-            if (!IS_FLAG_SET(pResult->m_attribute, MAPTYPES::ATTRIBUTE_ONEWAY))
+            if (!FLAG_TEST(pResult->m_attribute, MAPTYPES::ATTRIBUTE_ONEWAY))
             {
                 flag = MAGICTYPES::FEATURE(
                     MAGICTYPES::FEATURE_COLLISION_MAP_HIT |
@@ -764,7 +764,7 @@ bool CMagic::CheckBody(void)
 
                 ++m_nMapHitNum;
 
-                if (!IS_FLAG_SET(pResult->m_attribute, MAPTYPES::ATTRIBUTE_ONEWAY))
+                if (!FLAG_TEST(pResult->m_attribute, MAPTYPES::ATTRIBUTE_ONEWAY))
                 {
                     flag = MAGICTYPES::FEATURE(
                         MAGICTYPES::FEATURE_COLLISION_MAP_HIT |
@@ -1181,7 +1181,7 @@ bool CMagic::IsRivalAttack(CHitAttackData* pAttack, const CGameObject* pObject)
 
 bool CMagic::IsFeaturePresent(MAGICTYPES::FEATURE feature) const
 {
-    return IS_FLAG_SET(m_feature, feature);
+    return FLAG_TEST(m_feature, feature);
 };
 
 

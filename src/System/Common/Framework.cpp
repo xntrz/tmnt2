@@ -20,12 +20,38 @@
     CFramework* pFramework = nullptr;
 
 #ifdef _TARGET_PC
-    pFramework = new CPCFramework();
+    pFramework = new CPCFramework;
 #else
 #error Not implemented for current target
 #endif
 
     return pFramework;
+};
+
+
+/*static*/ bool CFramework::StartAndRun(void)
+{
+    bool bResult = false;
+    
+    CFramework* pFramework = CFramework::GetConcreteInstance();
+    if (pFramework)
+    {
+        if (pFramework->Initialize())
+        {
+            pFramework->Run();
+            pFramework->Terminate();
+            bResult = true;
+        }
+        else
+        {
+            pFramework->Terminate();
+        };
+
+        delete pFramework;
+        pFramework = nullptr;
+    };
+
+    return bResult;
 };
 
 
@@ -47,25 +73,12 @@ CFramework::~CFramework(void)
 };
 
 
-void CFramework::Startup(void)
-{
-    ;
-};
-
-
-void CFramework::Cleanup(void)
-{
-    ;
-};
-
-
 bool CFramework::Initialize(void)
 {
-    ASSERT(!m_pProcessDispatcher);
-    
     ASSERT(m_pGraphicsDevice);
     ASSERT(m_pInputsDevice);
     ASSERT(m_pFileManager);
+    ASSERT(!m_pProcessDispatcher);    
 
     if (!m_pGraphicsDevice->Initialize() ||
         !m_pGraphicsDevice->Start())
@@ -156,7 +169,7 @@ void CFramework::Flip(void)
     m_pFileManager->Sync();
 
     // TODO impl
-    //m_pSoundDevice->Sync();
+    // SoundFramework()
 };
 
 

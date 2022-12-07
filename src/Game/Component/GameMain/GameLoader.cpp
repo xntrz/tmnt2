@@ -5,7 +5,7 @@
 #include "LoadInfo/StageLoadInfo.hpp"
 #include "LoadInfo/EnbuLoadInfo.hpp"
 
-#include "System/Common/File/AfsFileID.hpp"
+#include "System/Common/File/FileID.hpp"
 #include "Game/System/DataLoader/DataLoader.hpp"
 
 
@@ -39,10 +39,10 @@ void CGameLoader::loadObjectRecursive(CGameObjLoadInfo& rInfo, int32 nDepth)
 
     int32 nFileID = rInfo.GetFileID();
 
-    ASSERT(nFileID != AFSFILEID::ID_INVALID);
-    ASSERT(nFileID >= 0 && nFileID < AFSFILEID::ID_MAX);
+    ASSERT(nFileID != FILEID::ID_INVALID);
+    ASSERT(nFileID >= 0 && nFileID < FILEID::ID_MAX);
     
-    if (nFileID != AFSFILEID::ID_INVALID)
+    if (nFileID != FILEID::ID_INVALID)
         CDataLoader::Regist(nFileID);
 };
 

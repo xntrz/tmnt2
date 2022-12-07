@@ -80,12 +80,19 @@ CThrowingGimmick::CThrowingGimmick(const char* pszName, void* pParam)
     m_pModuleManager = new CModuleManager;
     ASSERT(m_pModuleManager);
 
-    m_pModuleManager->Include(CCircleShadowModule::New(
-        this,
-        m_pKindinfo->m_fShadowRadius,
-        m_pKindinfo->m_fShadowRadius,
-        true
-    ));    
+	//float r = m_pKindinfo->m_fShadowRadius;
+	//if (m_subid == SUBID_THROWING::TRASHBOX_L ||
+	//	m_subid == SUBID_THROWING::TRASHBOX_S)
+	//{
+	//	r = 1.5f;
+	//};
+
+	m_pModuleManager->Include(CCircleShadowModule::New(
+		this,
+		m_pKindinfo->m_fShadowRadius,
+		m_pKindinfo->m_fShadowRadius,
+		true
+	));
 };
 
 

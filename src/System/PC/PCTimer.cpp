@@ -2,7 +2,14 @@
 #include "PCTypedefs.hpp"
 
 
-class CGetTimeFunctorOS final : public CPCTimer::IGetTimeFunctor
+class CPCTimer::IGetTimeFunctor
+{
+public:
+    virtual uint32 operator()(void) const = 0;
+};
+
+
+class CPCTimer::CGetTimeFunctorOS final : public CPCTimer::IGetTimeFunctor
 {
 public:
     CGetTimeFunctorOS(void)

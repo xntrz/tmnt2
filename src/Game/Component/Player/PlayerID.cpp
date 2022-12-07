@@ -58,27 +58,25 @@ namespace PLAYERID
         switch (idPlayer)
         {
         case ID_LEO:
-        case ID_RAPH:
+        case ID_RAP:
         case ID_MIC:
         case ID_DON:
-            {
-                bResult = true;
-            }
+            bResult = true;
             break;
 
-        case ID_SLASHUUR:
+        case ID_SLA:
             bResult = CGameData::Record().Secret().IsUnlockedSecret(SECRETID::ID_CHARACTER_SLASHUUR);
             break;
             
-        case ID_CASEY:
+        case ID_CAS:
             bResult = CGameData::Record().Secret().IsUnlockedSecret(SECRETID::ID_CHARACTER_CASEY);
             break;
             
-        case ID_KARAI:
+        case ID_KAR:
             bResult = CGameData::Record().Secret().IsUnlockedSecret(SECRETID::ID_CHARACTER_KARAI);
             break;
             
-        case ID_SPLINTER:
+        case ID_SPL:
             bResult = CGameData::Record().Secret().IsUnlockedSecret(SECRETID::ID_CHARACTER_SPLINTER);
             break;
 

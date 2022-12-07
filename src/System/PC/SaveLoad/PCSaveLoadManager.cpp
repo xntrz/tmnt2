@@ -229,7 +229,7 @@ bool CPCSaveLoadManagerBase::LoadFile(void)
 
         if (uFileSize)
         {
-            pFileData = new char[ uFileSize ];
+            pFileData = new char[uFileSize];
             ASSERT(pFileData);
 
             if (pFileData)

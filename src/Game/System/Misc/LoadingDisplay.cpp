@@ -18,44 +18,44 @@
 };
 
 
-/*static*/ void CLoadingDisplay::Initialize(void)
+/*static*/ bool CLoadingDisplay::Initialize(CProcess* pCurrent)
 {
-    CProcessDispatcher::AttachProcess(PROCESSTYPES::LABEL_LOADINGDISPLAY);
+    return pCurrent->Mail().Send(PROCESSTYPES::LABEL_LOADINGDISPLAY, PROCESSTYPES::MAIL::TYPE_ATTACH);
 };
 
 
-/*static*/ void CLoadingDisplay::Terminate(void)
+/*static*/ void CLoadingDisplay::Terminate(CProcess* pCurrent)
 {
-    CProcessDispatcher::DetachProcess(PROCESSTYPES::LABEL_LOADINGDISPLAY);
+    pCurrent->Mail().Send(PROCESSTYPES::LABEL_LOADINGDISPLAY, PROCESSTYPES::MAIL::TYPE_DETACH);
 };
 
 
-/*static*/ void CLoadingDisplay::Start(MODE mode)
+/*static*/ bool CLoadingDisplay::Start(CProcess* pSender, MODE mode)
 {
     m_message.m_type = MESSAGE::TYPE_START;
     m_message.m_mode = mode;
 
-    PROCESSTYPES::MAIL mail = PROCESSTYPES::MAIL::EMPTY;
-
-    mail.m_type     = PROCESSTYPES::MAIL::TYPE_MSG;
-    mail.m_iLabel   = PROCESSTYPES::LABEL_LOADINGDISPLAY;
-    mail.m_param    = &m_message;
-
-    CProcessDispatcher::SendMail(mail);
+    return postPrivateMessage(pSender, &m_message);
 };
 
 
-/*static*/ void CLoadingDisplay::Stop(void)
+/*static*/ void CLoadingDisplay::Stop(CProcess* pSender)
 {
     m_message.m_type = MESSAGE::TYPE_STOP;
 
+    postPrivateMessage(pSender, &m_message);
+};
+
+
+/*static*/ bool CLoadingDisplay::postPrivateMessage(CProcess* pSender, MESSAGE* pMessage)
+{
     PROCESSTYPES::MAIL mail = PROCESSTYPES::MAIL::EMPTY;
 
-    mail.m_type     = PROCESSTYPES::MAIL::TYPE_MSG;
-    mail.m_iLabel   = PROCESSTYPES::LABEL_LOADINGDISPLAY;
-    mail.m_param    = &m_message;
+    mail.m_type = PROCESSTYPES::MAIL::TYPE_MSG;
+    mail.m_iLabel = PROCESSTYPES::LABEL_LOADINGDISPLAY;
+    mail.m_param = pMessage;
 
-    CProcessDispatcher::SendMail(mail);
+    return pSender->Mail().Send(mail);
 };
 
 
@@ -140,7 +140,7 @@ void CLoadingDisplay::Draw(void) const
 void CLoadingDisplay::messageProc(void)
 {
     PROCESSTYPES::MAIL mail = PROCESSTYPES::MAIL::EMPTY;
-
+    
     while (Mail().Recv(mail))
     {
         if (mail.m_type == PROCESSTYPES::MAIL::TYPE_MSG)
@@ -151,13 +151,17 @@ void CLoadingDisplay::messageProc(void)
             switch (pMessage->m_type)
             {
             case MESSAGE::TYPE_START:
-                m_mode = pMessage->m_mode;
-                m_state = STATE_DISPLAY;
-                m_fPhase = 0.0f;
+                {
+                    m_mode = pMessage->m_mode;
+                    m_state = STATE_DISPLAY;
+                    m_fPhase = 0.0f;
+                }
                 break;
 
             case MESSAGE::TYPE_STOP:
-                m_state = STATE_NONE;
+                {
+                    m_state = STATE_NONE;
+                }                
                 break;
 
             default:

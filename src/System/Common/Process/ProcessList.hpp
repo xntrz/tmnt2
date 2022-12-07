@@ -10,8 +10,7 @@ namespace PROCESSTYPES
         //
         //  Sequences
         //
-        LABEL_SEQ_MAIN = LABEL_TOP,
-        LABEL_SEQ_GAMEMAIN,
+        LABEL_SEQ_GAMEMAIN = LABEL_TOP,
         LABEL_SEQ_MOVIE,
         LABEL_SEQ_LOGO,
         LABEL_SEQ_TITLE,
@@ -33,11 +32,16 @@ namespace PROCESSTYPES
         LABEL_SEQ_HOME,
         LABEL_SEQ_HOMESTAGE,
         LABEL_SEQ_ANTIQUESHOP,
+        LABEL_SEQ_DATABASEMAIN,
         LABEL_SEQ_DATABASE,
+        LABEL_SEQ_DATABASEVIEWER,
         LABEL_SEQ_NEXUSMENU,
         LABEL_SEQ_NEXUSRETRY,
         LABEL_SEQ_ENDING,
         LABEL_SEQ_STAFFROLL,
+        LABEL_SEQ_OPTION,
+        LABEL_SEQ_TESTMV,
+        LABEL_SEQ_TESTSD,
 
         //
         //  Processes
@@ -47,6 +51,7 @@ namespace PROCESSTYPES
         LABEL_TIMEOUT,
         LABEL_PADCONNECTCHECK,
         LABEL_SOFTWARERESET,
+        LABEL_DEBUGPROC,
 
         LABEL_MAX,
     };

@@ -138,7 +138,7 @@ private:
     };
 
     ASSERT(pfnCallback);
-    RpCollisionGeometryForAllIntersections(RpAtomicGetGeometryMacro(atomic), &rpIntersect, pfnCallback, &param);
+    RpCollisionGeometryForAllIntersections(param.m_pGeometry, &rpIntersect, pfnCallback, &param);
 
     if (param.m_fDistance < m_CollisionResult.m_fDistance)
     {

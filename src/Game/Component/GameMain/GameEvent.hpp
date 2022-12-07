@@ -26,7 +26,7 @@ public:
     static void SetPlayerRideAction(int32 nPlayerNo, GAMETYPES::RIDEACT rideact);
     static void SetEnemyCreated(CEnemy* pEnemy);
     static void SetEnemyDestroyed(CEnemy* pEnemy);
-    static void SetEnemyDamaged(CEnemy* pEnemy, int32 nAmount);
+    static void SetEnemyDamaged(CEnemy* pEnemy, int32 nRemainHP);
     static void SetGimmickCreated(CGimmick* pGimmick);
     static void SetGimmickDestroyed(CGimmick* pGimmick);
     static void SetItemBoxPut(void);

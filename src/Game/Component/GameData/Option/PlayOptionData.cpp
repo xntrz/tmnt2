@@ -29,7 +29,6 @@ void CPlayOptionData::SetDefault(void)
 {
     m_difficulty = GAMETYPES::DIFFICULTY_EASY;
     m_bAutosaveFlag = true;
-    m_bHelpFlag = true;
     m_bClassicInput = false;
 };
 
@@ -56,7 +55,6 @@ void CPlayOptionData::Snapshot(RAWDATA& rRawData) const
 {
     rRawData.m_difficulty = m_difficulty;
     rRawData.m_bAutosaveFlag = m_bAutosaveFlag;
-    rRawData.m_bHelpFlag = m_bHelpFlag;
     rRawData.m_bClassicInput = m_bClassicInput;
 };
 
@@ -65,7 +63,6 @@ void CPlayOptionData::Restore(const RAWDATA& rRawData)
 {
     m_difficulty = rRawData.m_difficulty;
     m_bAutosaveFlag = rRawData.m_bAutosaveFlag;
-    m_bHelpFlag = rRawData.m_bHelpFlag;
     m_bClassicInput = rRawData.m_bClassicInput;
 };
 
@@ -80,12 +77,6 @@ void CPlayOptionData::SetDifficulty(GAMETYPES::DIFFICULTY difficulty)
 void CPlayOptionData::SetEnableAutosave(bool bSet)
 {
     m_bAutosaveFlag = bSet;
-};
-
-
-void CPlayOptionData::SetEnableHelp(bool bSet)
-{
-    m_bHelpFlag = bSet;
 };
 
 
@@ -111,12 +102,6 @@ GAMETYPES::DIFFICULTY CPlayOptionData::GetDifficulty(void) const
 bool CPlayOptionData::IsAutosaveEnabled(void) const
 {
     return m_bAutosaveFlag;
-};
-
-
-bool CPlayOptionData::IsHelpEnabled(void) const
-{
-    return m_bHelpFlag;
 };
 
 

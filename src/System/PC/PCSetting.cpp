@@ -1,162 +1,23 @@
 #include "PCSetting.hpp"
-#include "PCIniVar.hpp"
+#include "PCSpecific.hpp"
 #include "PCResources.hpp"
 #include "PCGraphicsDevice.hpp"
 
-#include "File/PCFileAccess.hpp"
 #include "PCTypedefs.hpp"
 
 
 /*static*/ CPCSetting::VIDEOMODE CPCSetting::CPCSetting::m_videomode = { 640, 480, 32 };
 /*static*/ int32 CPCSetting::m_iDispMode = CPCGraphicsDevice::DISPLAYMODE_FULLSCREEN;
 /*static*/ int32 CPCSetting::m_iMonitorNo = 0;
-/*static*/ bool CPCSetting::m_bFlagClassicPad = false;
-/*static*/ bool CPCSetting::m_bFlagFontEffect = true;
-/*static*/ bool CPCSetting::m_bFlagAutosave = true;
-/*static*/ bool CPCSetting::m_bFlagHelp = true;
-/*static*/ int32 CPCSetting::m_iDifficulty = 0;
-
-
-namespace
-{
-    template<class T>
-    void ReadIniVar(T& t, CIniVar& ini, const char* segment, const char* name)
-    {
-        try
-        {
-            t = ini[segment][name];
-        }
-        catch (CIniVar::exception& e)
-        {
-			REF(e);
-            OUTPUT("[SYS-PC] %s --> %s\n", __FUNCTION__, e.what());
-        };
-    };
-
-
-    template<class T>
-    void WriteIniVar(T& t, CIniVar& ini, const char* segment, const char* name)
-    {
-        try
-        {
-            ini[segment][name] = t;
-        }
-        catch (CIniVar::exception& e)
-        {
-			REF(e);
-            OUTPUT("[SYS-PC] %s --> %s\n", __FUNCTION__, e.what());
-        };
-    };
-
-
-    void LoadIniVar(const char* buffer, int32 bufferSize)
-    {
-        ASSERT(buffer);
-        ASSERT(bufferSize);
-
-        try
-        {
-            CIniVar ini(buffer, bufferSize, CIniVar::access_read);
-
-            ReadIniVar(CPCSetting::m_videomode.m_iWidth,    ini, "SYSTEM", "gx_width");
-            ReadIniVar(CPCSetting::m_videomode.m_iHeight,   ini, "SYSTEM", "gx_height");
-            ReadIniVar(CPCSetting::m_videomode.m_iDepth,    ini, "SYSTEM", "gx_depth");
-            ReadIniVar(CPCSetting::m_iDispMode,             ini, "SYSTEM", "gx_dispmode");
-            ReadIniVar(CPCSetting::m_iMonitorNo,            ini, "SYSTEM", "gx_monitor");
-
-            ReadIniVar(CPCSetting::m_bFlagClassicPad,       ini, "GAME", "gm_classicpad");
-            ReadIniVar(CPCSetting::m_bFlagAutosave,         ini, "GAME", "gm_autosave");
-            ReadIniVar(CPCSetting::m_bFlagHelp,             ini, "GAME", "gm_help");
-            ReadIniVar(CPCSetting::m_bFlagFontEffect,       ini, "GAME", "gm_fontfx");
-            ReadIniVar(CPCSetting::m_iDifficulty,           ini, "GAME", "gm_difficulty");
-        }
-        catch (CIniVar::exception& e)
-        {
-			REF(e);
-            OUTPUT("[SYS-PC] %s --> %s\n", __FUNCTION__, e.what());
-        };
-    };
-
-
-    std::string SaveIniVarCommon(CIniVar& ini)
-    {
-        std::string result;
-
-        try
-        {
-            WriteIniVar(CPCSetting::m_videomode.m_iWidth,   ini, "SYSTEM", "gx_width");
-            WriteIniVar(CPCSetting::m_videomode.m_iHeight,  ini, "SYSTEM", "gx_height");
-            WriteIniVar(CPCSetting::m_videomode.m_iDepth,   ini, "SYSTEM", "gx_depth");
-            WriteIniVar(CPCSetting::m_iDispMode,            ini, "SYSTEM", "gx_dispmode");
-            WriteIniVar(CPCSetting::m_iMonitorNo,           ini, "SYSTEM", "gx_monitor");
-
-            WriteIniVar(CPCSetting::m_bFlagClassicPad,      ini, "GAME", "gm_classicpad");
-            WriteIniVar(CPCSetting::m_bFlagAutosave,        ini, "GAME", "gm_autosave");
-            WriteIniVar(CPCSetting::m_bFlagHelp,            ini, "GAME", "gm_help");
-            WriteIniVar(CPCSetting::m_bFlagFontEffect,      ini, "GAME", "gm_fontfx");
-            WriteIniVar(CPCSetting::m_iDifficulty,          ini, "GAME", "gm_difficulty");
-
-            result = ini.save();
-        }
-        catch (CIniVar::exception& e)
-        {
-			REF(e);
-            OUTPUT("[SYS-PC] %s --> %s\n", __FUNCTION__, e.what());
-        };
-
-        return result;
-    };
-
-    
-    std::string SaveIniVar(const char* buffer, int32 bufferSize)
-    {
-        std::string result;        
-
-        try
-        {
-            CIniVar ini(buffer, bufferSize, CIniVar::access_write);
-            result = SaveIniVarCommon(ini);
-        }
-        catch (CIniVar::exception& e)
-        {
-			REF(e);
-            OUTPUT("[SYS-PC] %s --> %s\n", __FUNCTION__, e.what());
-        };
-
-        return result;
-    };
-
-
-    std::string SaveIniVar(void)
-    {
-        std::string result;
-
-        try
-        {
-            CIniVar ini;
-            result = SaveIniVarCommon(ini);
-        }
-        catch (CIniVar::exception& e)
-        {
-			REF(e);
-            OUTPUT("[SYS-PC] %s --> %s\n", __FUNCTION__, e.what());
-        };
-
-        return result;
-    };
-};
+///*static*/ bool CPCSetting::m_bFlagClassicPad = false;
+///*static*/ bool CPCSetting::m_bFlagFontEffect = true;
+///*static*/ bool CPCSetting::m_bFlagAutosave = true;
+///*static*/ bool CPCSetting::m_bFlagHelp = true;
+///*static*/ int32 CPCSetting::m_iDifficulty = 0;
 
 
 /*static*/ void CPCSetting::Initialize(void)
 {
-    TCHAR szModulePath[MAX_PATH];
-    szModulePath[0] = TEXT('\0');
-
-    GetModuleFileName(NULL, szModulePath, sizeof(szModulePath));
-    TCHAR* pszResult = _tcsrchr(szModulePath, TEXT('\\'));
-    *pszResult = TEXT('\0');
-    SetCurrentDirectory(szModulePath);
-
     Load();
 };
 
@@ -169,52 +30,85 @@ namespace
 
 /*static*/ void CPCSetting::Load(void)
 {
-    const char* pszFilename = "TMNT2.ini";
+    std::string Path;
+    GetIniPath(Path);
 
-    //
-    //  Load base 
-    //
-    CPCResFileAccess resfile;
-    if (resfile.Read(IDF_DBG_CFG))
-    {
-        LoadIniVar((char*)resfile.Data(), (int32)resfile.Size());
-        resfile.Clear();
-    }
-    else
-    {
-        OUTPUT("[SYS-PC] Reading resource configuration file %s failed!\n", pszFilename);
-    };
+    char szBuff[256];
+    szBuff[0] = '\0';
     
-    //
-    //  Load overrides if exists
-    //
-    if (CPCPhysicalFileAccess::IsExists(pszFilename))
+    if (GetPrivateProfileStringA("SCREEN", "WIDTH", "640", szBuff, COUNT_OF(szBuff), Path.c_str()))
+        m_videomode.m_iWidth = std::atol(szBuff);
+
+    if (GetPrivateProfileStringA("SCREEN", "HEIGHT", "480", szBuff, COUNT_OF(szBuff), Path.c_str()))
+        m_videomode.m_iHeight = std::atol(szBuff);
+
+    if (GetPrivateProfileStringA("SCREEN", "DEPTH", "32", szBuff, COUNT_OF(szBuff), Path.c_str()))
+        m_videomode.m_iDepth = std::atol(szBuff);
+
+    if (GetPrivateProfileStringA("SCREEN", "MODE", "FULLSCREEN", szBuff, COUNT_OF(szBuff), Path.c_str()))
     {
-        CPCPhysicalFileAccess phyfile;
-        if (phyfile.Read(pszFilename))
+        if (!std::strcmp(szBuff, "FULLSCREEN"))
         {
-            LoadIniVar((char*)phyfile.Data(), (int32)phyfile.Size());
-            phyfile.Clear();
+            m_iDispMode = CPCGraphicsDevice::DISPLAYMODE_FULLSCREEN;
         }
-        else
+        else if (!std::strcmp(szBuff, "BORDERLESS"))
         {
-            OUTPUT("[SYS-PC] Reading physical configuration file %s failed!\n", pszFilename);
+            m_iDispMode = CPCGraphicsDevice::DISPLAYMODE_FULLWINDOW;
+        }
+        else if (!std::strcmp(szBuff, "WINDOW"))
+        {
+            m_iDispMode = CPCGraphicsDevice::DISPLAYMODE_WINDOW;
         };
     };
+
+    if (GetPrivateProfileStringA("SCREEN", "MONITOR", "-1", szBuff, COUNT_OF(szBuff), Path.c_str()))
+        m_iMonitorNo = std::atol(szBuff);
+
+    //m_iDispMode = CPCGraphicsDevice::DISPLAYMODE_WINDOW;
 };
 
 
 /*static*/ void CPCSetting::Save(void)
 {
-    const char* pszFilename = "TMNT2.ini";
+    std::string Path;
+    GetIniPath(Path);
 
-    {
-        CPCPhysicalFileAccess phyfile;
-        
-		std::string result = SaveIniVar();
-        if (!phyfile.Write(pszFilename, result.data(), result.size()))
-            OUTPUT("[SYS-PC] Writing physical configuration file %s failed!\n", pszFilename);
-        
-        phyfile.Clear();
-    }    
+    char szBuff[256];
+    szBuff[0] = '\0';
+
+    std::sprintf(szBuff, "%d", m_videomode.m_iWidth);
+    WritePrivateProfileStringA("SCREEN", "WIDTH", szBuff, Path.c_str());
+
+    std::sprintf(szBuff, "%d", m_videomode.m_iHeight);
+    WritePrivateProfileStringA("SCREEN", "HEIGHT", szBuff, Path.c_str());
+
+    std::sprintf(szBuff, "%d", m_videomode.m_iDepth);
+    WritePrivateProfileStringA("SCREEN", "DEPTH", szBuff, Path.c_str());
+
+    static const char* s_apszDispMode[] = { "FULLSCREEN", "BORDERLESS", "WINDOW", };
+    WritePrivateProfileStringA("SCREEN", "MODE", s_apszDispMode[m_iDispMode], Path.c_str());
+
+    std::sprintf(szBuff, "%d", m_iMonitorNo);
+    WritePrivateProfileStringA("SCREEN", "MONITOR", szBuff, Path.c_str());
+};
+
+
+/*static*/ void CPCSetting::GetIniPath(std::string& Path)
+{
+    char szBuff[MAX_PATH];
+    szBuff[0] = '\0';    
+    CPCSpecific::GetModulePath(szBuff, COUNT_OF(szBuff));
+
+    char szDrive[32];
+    char szDir[256];
+    char szFname[128];
+    szDrive[0] = '\0';
+    szDir[0] = '\0';
+    szFname[0] = '\0';    
+    _splitpath(szBuff, szDrive, szDir, szFname, nullptr);
+
+    Path += szDrive;
+    Path += szDir;
+    Path += szFname;
+    Path += ".ini";
 };

@@ -24,7 +24,7 @@ bool CDatabaseRecord::IsValid(void) const
 {
     if (m_dbstate < 0 && m_dbstate > DBSTATE_NORMAL)
     {
-        OUTPUT("[GAME] %s is failed: db state\n", __FUNCTION__);
+        OUTPUT(" %s is failed: db state\n", __FUNCTION__);
         return false;
     };
 
@@ -32,12 +32,12 @@ bool CDatabaseRecord::IsValid(void) const
     {
         if (m_aState[i] > STATE_READ)
         {
-            OUTPUT("[GAME] %s is failed: node state\n", __FUNCTION__);
+            OUTPUT(" %s is failed: node state\n", __FUNCTION__);
             return false;
         };
     };
 
-    OUTPUT("[GAME] %s ...OK!\n", __FUNCTION__);
+    OUTPUT(" %s ...OK!\n", __FUNCTION__);
     return true;
 };
 
@@ -70,7 +70,7 @@ CDatabaseRecord::DBSTATE CDatabaseRecord::GetDatabaseState(void) const
 
 bool CDatabaseRecord::IsNewItemExisted(void) const
 {
-    for (int32 i = 0; i < COUNT_OF(m_aState); ++i)
+    for (int32 i = DBITEMID::ID_FIRST; i < COUNT_OF(m_aState); ++i)
     {
         if (getItemState(DBITEMID::VALUE(i)) == STATE_UNREAD)
             return true;
@@ -213,6 +213,6 @@ void CDatabaseRecord::setItemState(DBITEMID::VALUE idItem, STATE state)
 
     m_aState[idItem] = state;
     
-    OUTPUT("[GAME] %s proc! Item: %d, state: %d\n", __FUNCTION__, idItem, state);
+    OUTPUT(" %s proc! Item: %d, state: %d\n", __FUNCTION__, idItem, state);
 };
 

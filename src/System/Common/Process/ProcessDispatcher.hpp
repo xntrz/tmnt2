@@ -14,10 +14,6 @@ private:
 	class CList;
 
 public:
-	static bool SendMail(PROCESSTYPES::MAIL& mail);
-	static bool AttachProcess(int32 iLabel);
-	static bool DetachProcess(int32 iLabel);
-
 	CProcessDispatcher(const PROCESSTYPES::PROCESS* pProcessList);
 	virtual ~CProcessDispatcher(void);
 	bool Start(void);
@@ -37,7 +33,6 @@ public:
 	CList& List(void) const;
 
 private:
-	static CProcessMail* m_pMailSvc;
 	CProcessMail* m_pMail;
 	CProcessMemory* m_pMemory;
 	CAccesser* m_pAccesser;

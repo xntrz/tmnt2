@@ -1,23 +1,20 @@
 #pragma once
 
 
-class CFileManager;
-
-
 class CFileAccess
 {
 public:
-    friend CFileManager;
-    
+    friend class CFileManager;
+
     enum STATUS
     {
         STATUS_NOREAD = 0,
         STATUS_PENDING,
         STATUS_READING,
         STATUS_READEND,
-        STATUS_ERROR,
+        STATUS_ERROR
     };
-    
+
 public:
     CFileAccess(void);
     virtual ~CFileAccess(void);

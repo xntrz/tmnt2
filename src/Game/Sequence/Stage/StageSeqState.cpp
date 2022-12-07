@@ -12,7 +12,7 @@
 #include "Game/System/Map/MapCamera.hpp"
 #include "Game/System/Misc/ScreenFade.hpp"
 #include "System/Common/Controller.hpp"
-#include "System/Common/File/AfsFileID.hpp"
+#include "System/Common/File/FileID.hpp"
 
 
 /*static*/ CDummyStageState* CDummyStageState::Instance(void)
@@ -209,7 +209,6 @@ void CPlayStageSeqState::OnAttach(CStageBaseSequence* pSeq, const void* pParam)
         pMapCamera->SetPathMode(CMapCamera::PATHMODE_MULTIPLAYER);
     else
         pMapCamera->SetPathMode(CMapCamera::PATHMODE_SINGLEPLAYER);
-    
 
     CScreenFade::StartOut();
     m_fTime = 0.0f;
@@ -231,8 +230,11 @@ bool CPlayStageSeqState::OnMove(CStageBaseSequence* pSeq)
         {
             CGameStage& stage = pSeq->Stage();
 
-            if (stage.CheckPauseMenu())
-                stage.StartPause(CGameStage::PAUSETYPE_MENU, nullptr);
+			if (!stage.IsPaused())
+			{
+				if (stage.CheckPauseMenu())
+					stage.StartPause(CGameStage::PAUSETYPE_MENU, nullptr);
+			};
 
             if (stage.GetResult())
             {

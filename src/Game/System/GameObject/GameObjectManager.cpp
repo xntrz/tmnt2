@@ -131,7 +131,7 @@ bool CGameObjectContainer::CObjectCollector::operator()(GAMEOBJECTWORK* pWork)
 
 bool CGameObjectContainer::CGarbageCollector::operator()(GAMEOBJECTWORK* pWork)
 {
-    if (IS_FLAG_SET(pWork->m_flag, GAMEOBJECTWORK::FLAG_DELETE_REQUEST) ||
+    if (FLAG_TEST(pWork->m_flag, GAMEOBJECTWORK::FLAG_DELETE_REQUEST) ||
         pWork->m_iGeneration > m_iGeneration)
     {
         ASSERT(m_nNumObj < m_nNumMaxObj);
@@ -365,7 +365,12 @@ void CGameObjectContainer::PeriodForList(CList<GAMEOBJECTWORK>& rList, CGameObje
     {
         m_pCurrentParent = pParent;
 
-        if (!IS_FLAG_SET(it.m_flag, GAMEOBJECTWORK::FLAG_DELETE_REQUEST))
+		//RwV3d* p = (RwV3d*)0x1138CC0C;
+		//OUTPUT("%s -> %f %f %f\n", it.m_pObject->GetName(), p->x, p->y, p->z);
+		//if (it.m_pObject->GetType() == GAMEOBJECTTYPE::CHARACTER)
+			//OUTPUT("WTF\n");
+
+        if (!FLAG_TEST(it.m_flag, GAMEOBJECTWORK::FLAG_DELETE_REQUEST))
             it.m_pObject->Period();
 
         if (!it.m_listChild.empty())

@@ -58,8 +58,8 @@ void CRideGimmick::PostMove(void)
     RwV3d vRotation = Math::VECTOR3_ZERO;
     RwV3d vPosition = Math::VECTOR3_ZERO;
 
-    m_pRideMove->GetRotation(&vRotation);
     m_pRideMove->GetPosition(&vPosition);
+    m_pRideMove->GetRotation(&vRotation);
 
     m_model.SetPosition(&vPosition);
     m_model.SetRotation(&vRotation);
@@ -117,14 +117,15 @@ bool CRideGimmick::IsProcess(PROCESSTYPE processtype) const
         200.0f,
         200.0f,
     };
-    
-    ASSERT(m_pRideMove);
-
+ 
     RwV3d vBasisPoint = Math::VECTOR3_ZERO;
     CRideStage::GetBasisPoint(&vBasisPoint);
 
     RwV3d vPosition = Math::VECTOR3_ZERO;
-    m_pRideMove->GetPosition(&vPosition);
+	if (m_pRideMove)
+		m_pRideMove->GetPosition(&vPosition);
+	else
+		m_model.GetPosition(&vPosition);
 
     float fDist = vPosition.z - vBasisPoint.z;
     if (fDist < s_afCheckDistance[processtype] && fDist > -15.0f)

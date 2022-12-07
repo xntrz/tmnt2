@@ -150,7 +150,7 @@ void CScrEffectRain::Draw(void)
         pVertex[0].u = 0.0f;
         pVertex[0].v = 0.0f;
         pVertex[0].rhw = rhw;
-        pVertex[0].emissiveColor = COLOR_TO_INTEGER_RWRGBA(pParticle->m_Color);
+        pVertex[0].emissiveColor = RWRGBALONGEX(pParticle->m_Color);
 
         pVertex[1].x = pParticle->m_vTailPosition.x;
         pVertex[1].y = pParticle->m_vTailPosition.y;
@@ -158,7 +158,7 @@ void CScrEffectRain::Draw(void)
         pVertex[1].u = 0.0f;
         pVertex[1].v = 0.0f;
         pVertex[1].rhw = rhw;
-        pVertex[1].emissiveColor = COLOR_TO_INTEGER_RWRGBA(pParticle->m_Color);
+        pVertex[1].emissiveColor = RWRGBALONGEX(pParticle->m_Color);
     };
 
     RwIm2DRenderPrimitive(rwPRIMTYPELINELIST, m_aVertex, m_nDisplayNum * 2);
@@ -362,7 +362,7 @@ void CScrEffectRainBack::SetVertex(PARTICLE* pParticle, RwIm2DVertex* pVertex)
         pVertex[0].u = 1.0f;
     pVertex[0].v = 1.0f;
     pVertex[0].rhw = rhw;
-    pVertex[0].emissiveColor = COLOR_TO_INTEGER_RWRGBA(color);
+    pVertex[0].emissiveColor = RWRGBALONGEX(color);
 
     pVertex[1].x = aPos[0].x;
     pVertex[1].y = aPos[0].y;
@@ -373,7 +373,7 @@ void CScrEffectRainBack::SetVertex(PARTICLE* pParticle, RwIm2DVertex* pVertex)
         pVertex[1].u = 1.0f;
     pVertex[1].v = 0.0f;
     pVertex[1].rhw = rhw;
-    pVertex[1].emissiveColor = COLOR_TO_INTEGER_RWRGBA(color);
+    pVertex[1].emissiveColor = RWRGBALONGEX(color);
 
     pVertex[2].x = aPos[1].x;
     pVertex[2].y = aPos[1].y;
@@ -384,7 +384,7 @@ void CScrEffectRainBack::SetVertex(PARTICLE* pParticle, RwIm2DVertex* pVertex)
         pVertex[2].u = 0.0f;
     pVertex[2].v = 1.0f;
     pVertex[2].rhw = rhw;
-    pVertex[2].emissiveColor = COLOR_TO_INTEGER_RWRGBA(color);
+    pVertex[2].emissiveColor = RWRGBALONGEX(color);
 
     pVertex[3].x = aPos[1].x;
     pVertex[3].y = aPos[1].y;
@@ -395,7 +395,7 @@ void CScrEffectRainBack::SetVertex(PARTICLE* pParticle, RwIm2DVertex* pVertex)
         pVertex[3].u = 0.0f;
     pVertex[3].v = 1.0f;
     pVertex[3].rhw = rhw;
-    pVertex[3].emissiveColor = COLOR_TO_INTEGER_RWRGBA(color);
+    pVertex[3].emissiveColor = RWRGBALONGEX(color);
 
     pVertex[4].x = aPos[0].x;
     pVertex[4].y = aPos[0].y;
@@ -406,7 +406,7 @@ void CScrEffectRainBack::SetVertex(PARTICLE* pParticle, RwIm2DVertex* pVertex)
         pVertex[4].u = 1.0f;
     pVertex[4].v = 0.0f;
     pVertex[4].rhw = rhw;
-    pVertex[4].emissiveColor = COLOR_TO_INTEGER_RWRGBA(color);
+    pVertex[4].emissiveColor = RWRGBALONGEX(color);
 
     pVertex[5].x = aPos[1].x;
     pVertex[5].y = aPos[0].y;
@@ -417,7 +417,7 @@ void CScrEffectRainBack::SetVertex(PARTICLE* pParticle, RwIm2DVertex* pVertex)
         pVertex[5].u = 0.0f;
     pVertex[5].v = 0.0f;
     pVertex[5].rhw = rhw;
-    pVertex[5].emissiveColor = COLOR_TO_INTEGER_RWRGBA(color);
+    pVertex[5].emissiveColor = RWRGBALONGEX(color);
 };
 
 

@@ -34,5 +34,5 @@ private:
 
 private:
     int32 m_aiKeyAssign[OPTIONTYPES::KEYFUNCMAX];
-    uint32 m_auButtonAssign[OPTIONTYPES::BTNFUNCMAX];
+    uint32 m_auButtonAssign[OPTIONTYPES::KEYFUNCMAX - 4];
 };

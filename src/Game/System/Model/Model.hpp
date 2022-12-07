@@ -66,6 +66,7 @@ public:
     void GetRotation(RwV3d* pvRotation) const;
     RwRGBA GetColor(void) const;
     void SetColor(const RwRGBA& color);
+    void SetBoundingSphereRadius(float r);
 
 protected:
     static RwFrame* CallbackFrame(RwFrame* frame, void* data);

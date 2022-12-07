@@ -6,6 +6,7 @@
 #include "Game/Component/Effect/Snow.hpp"
 #include "Game/Component/GameData/GameData.hpp"
 #include "Game/Component/GameMain/GameProperty.hpp"
+#include "Game/System/Misc/Gamepad.hpp"
 #include "System/Common/Camera.hpp"
 #include "System/Common/Controller.hpp"
 
@@ -343,7 +344,22 @@ void CMapCamera::Update(const RwV3d* pvAt)
 void CMapCamera::Update(const RwV3d* pvAt, float fZoom)
 {
     VibrationUpdate();
-    
+
+    if (!CGameData::Attribute().IsPlayDemoMode())
+    {
+        uint32 uDigitalTriggerUnlocked = CController::GetDigitalTrigger(CController::CONTROLLER_UNLOCKED_ON_VIRTUAL);
+        uint32 uDigitalTriggerLocked = CController::GetDigitalTrigger(CController::CONTROLLER_LOCKED_ON_VIRTUAL);
+
+        if (CGamepad::CheckFunction(uDigitalTriggerUnlocked, CGamepad::FUNCTION_SWITCH_CAM)
+            || CGamepad::CheckFunction(uDigitalTriggerLocked, CGamepad::FUNCTION_SWITCH_CAM))
+        {
+            int32 pathmode = m_pathmode;
+            ++pathmode;
+            pathmode %= PATHMODEMAX;
+            m_pathmode = PATHMODE(pathmode);
+        };
+    };
+
     m_fRequestZoom = fZoom;
 
     switch (m_mode)

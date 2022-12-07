@@ -34,7 +34,7 @@ void CDamageFloorModule::Run(void)
     {
 		uint32 uAttributeMask = MAPTYPES::ATTRIBUTE_DAMAGE | MAPTYPES::ATTRIBUTE_MAGMA | MAPTYPES::ATTRIBUTE_POISON;
 
-		if (IS_FLAG_SET_ANY(pGroundInfo->m_attribute, uAttributeMask))
+		if (FLAG_TEST_ANY(pGroundInfo->m_attribute, uAttributeMask))
 		{
 			if (CGameProperty::GetTotalElapsedTime() - m_fTimer > 0.5f)
 			{

@@ -5,13 +5,14 @@ namespace ENEMYID
 {
     enum VALUE
     {
-        ID_DUMMY = 0x0,
-
+        ID_START = 0,
+        
+        ID_DUMMY = ID_START,
         ID_PURPLE_DRAGON_GANG = 0x1,
         ID_FOOT_NINJA_SWORD = 0x2,
-        ID_FOOT_NINJA_BO = 0x3,
+        ID_FOOT_NINJA_STAFF = 0x3,
         ID_FEUDAL_FOOT_NINJA_SWORD = 0x4,
-        ID_FEUDAL_FOOT_NINJA_BO = 0x5,
+        ID_FEUDAL_FOOT_NINJA_STAFF = 0x5,
         ID_UTROMS_SECURITY_PATROL = 0x6,
         ID_FEDERATION_SOLDIER = 0x7,
         ID_MOBSTER = 0xA,
@@ -91,4 +92,9 @@ namespace ENEMYID
         
         ID_MAX = NEUTRALEND,
     };
+
+    const char* GetName(VALUE id);
+    const char* GetExtName(VALUE id);
+    const wchar* GetDispName(VALUE id);
+    bool GetImplementProgress(VALUE id);
 };

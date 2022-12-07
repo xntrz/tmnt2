@@ -725,12 +725,12 @@ bool CHitAttackContainer::IsHitTarget(const CHitAttackData* pAttack, const CHitC
     ASSERT(pCatch->GetObject());
 
     if (pAttack->GetObjectHandle() == pCatch->GetObjectHandle())
-        return IS_FLAG_SET(pAttack->GetTarget(), CHitAttackData::TARGET_SELF);
+        return FLAG_TEST(pAttack->GetTarget(), CHitAttackData::TARGET_SELF);
 
     switch (pCatch->GetObjectType())
     {
     case GAMEOBJECTTYPE::GIMMICK:
-        return IS_FLAG_SET(pAttack->GetTarget(), CHitAttackData::TARGET_GIMMICK);
+        return FLAG_TEST(pAttack->GetTarget(), CHitAttackData::TARGET_GIMMICK);
         
     case GAMEOBJECTTYPE::CHARACTER:
         {
@@ -739,10 +739,10 @@ bool CHitAttackContainer::IsHitTarget(const CHitAttackData* pAttack, const CHitC
             switch (pCharacter->GetCharacterType())
             {
             case CCharacter::TYPE_ENEMY:
-                return IS_FLAG_SET(pAttack->GetTarget(), CHitAttackData::TARGET_ENEMY);
+                return FLAG_TEST(pAttack->GetTarget(), CHitAttackData::TARGET_ENEMY);
 
             case CCharacter::TYPE_PLAYER:
-                return IS_FLAG_SET(pAttack->GetTarget(), CHitAttackData::TARGET_PLAYER);
+                return FLAG_TEST(pAttack->GetTarget(), CHitAttackData::TARGET_PLAYER);
 
             default:
                 ASSERT(false);
@@ -752,10 +752,10 @@ bool CHitAttackContainer::IsHitTarget(const CHitAttackData* pAttack, const CHitC
         return false;
 
     case GAMEOBJECTTYPE::EFFECT:
-        return IS_FLAG_SET(pAttack->GetTarget(), CHitAttackData::TARGET_ALL_EXCEPT_SELF);
+        return FLAG_TEST(pAttack->GetTarget(), CHitAttackData::TARGET_ALL_EXCEPT_SELF);
 
     case GAMEOBJECTTYPE::SHOT:
-        return IS_FLAG_SET(pAttack->GetTarget(), CHitAttackData::TARGET_SHOT);
+        return FLAG_TEST(pAttack->GetTarget(), CHitAttackData::TARGET_SHOT);
 
     default:
         ASSERT(false);

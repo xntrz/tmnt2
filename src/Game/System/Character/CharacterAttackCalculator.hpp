@@ -39,7 +39,8 @@ public:
     bool IsSliceAttack(void) const;
     CGameObject* GetDefender(void) const;
     CGameObject* GetAttacker(void) const;
-    const CHitAttackData& GetAttack(void) const;
+    CHitAttackData& GetAttack(void) const;
+    CHARACTERTYPES::ATTACKDIRECTIONTYPE DirectionType(void) const;
 
 private:
     CCharacter& m_rCharacter;

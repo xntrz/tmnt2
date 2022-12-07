@@ -7,7 +7,7 @@
 #include "Game/System/DataLoader/DataLoader.hpp"
 #include "Game/System/Texture/TextureManager.hpp"
 #include "System/Common/Screen.hpp"
-#include "System/Common/File/AfsFileID.hpp"
+#include "System/Common/File/FileID.hpp"
 
 
 /*static*/ CProcess* CUnlockSequence::Instance(void)
@@ -45,8 +45,8 @@ bool CUnlockSequence::OnAttach(const void* param)
     if (m_UnnnotifiedSecretID != SECRETID::ID_NONE)
     {
         CScreen::SetClearColor({ 0x00, 0x00, 0x00, 0xFF });
-        CDataLoader::Regist(AFSFILEID::ID_UNLOCK);
-        CLoadingDisplay::Start();
+        CDataLoader::Regist(FILEID::ID_UNLOCK);
+        CLoadingDisplay::Start(this);
         
         m_phase = PHASE_LOAD;
     }
@@ -71,7 +71,7 @@ void CUnlockSequence::OnDetach(void)
 };
 
 
-void CUnlockSequence::OnMove(bool bResume, const void* param)
+void CUnlockSequence::OnMove(bool bRet, const void* param)
 {
     switch (m_phase)
     {
@@ -79,7 +79,7 @@ void CUnlockSequence::OnMove(bool bResume, const void* param)
         if (CDataLoader::IsLoadEnd())
         {
             CUnlockMessage::SetTexture();
-            CLoadingDisplay::Stop();
+            CLoadingDisplay::Stop(this);
             m_phase = PHASE_FADEOUT;
         }
         else

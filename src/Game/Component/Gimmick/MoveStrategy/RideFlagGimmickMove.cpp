@@ -55,7 +55,7 @@ CRideFlagGimmickMove::~CRideFlagGimmickMove(void)
 
 CRideFlagGimmickMove::RESULT CRideFlagGimmickMove::OnMove(float dt)
 {
-    m_fSpeed = Math::Cos(Math::PI2 / m_fT * m_fTimer) * m_fA * (Math::PI2 / m_fT);
+    m_fSpeed = Math::Cos((Math::PI2 / m_fT) * m_fTimer) * m_fA * (Math::PI2 / m_fT);
     
     m_fTimer += dt;
     

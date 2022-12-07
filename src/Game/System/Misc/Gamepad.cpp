@@ -22,7 +22,7 @@
 {
     ASSERT(function >= 0 && function < FUNCTION_MAX);
 
-    return IS_FLAG_SET(uDigital, BIT(CController::FUNCTIONAL_BEGIN + function));
+    return FLAG_TEST(uDigital, BIT(CController::FUNCTIONAL_BEGIN + function));
 };
 
 
@@ -122,7 +122,7 @@
     
     for (int32 i = 0; i < FUNCTION_MAX; ++i)
     {
-        if (IS_FLAG_SET(DefaultFunctionToDigitalMapping[i], uBasicButton))
+        if (FLAG_TEST(DefaultFunctionToDigitalMapping[i], uBasicButton))
             uVirtualButton |= (1 << (i + CController::FUNCTIONAL_BEGIN));
     };
 
@@ -139,4 +139,10 @@
 /*static*/ int32 CGamepad::GetKeyboardController(void)
 {
     return CController::GetController(CKeyboard::GetPort());
+};
+
+
+/*static*/ void CGamepad::DigitalCancelToFunction(bool bEnable)
+{
+    FLAG_CHANGE(CController::DIGITAL_CANCEL, CController::DIGITAL_B, bEnable);
 };

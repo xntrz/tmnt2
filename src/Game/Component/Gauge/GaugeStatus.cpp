@@ -20,7 +20,7 @@ private:
     {
         bool m_bWork;
         int32 m_nNo;
-        uint32 m_uValue;
+        float m_fValue;
     };
 
     struct COUNTERINFO
@@ -42,11 +42,11 @@ private:
 
         bool m_bWork;
         int32 m_nNo;
-        int32 m_nHpReq;
-        STATE m_state;
-        int32 m_nHpNow;
+        STATE m_eState;
+        int32 m_nHp;
         int32 m_nHpOld;
-        int32 m_nHpMax;
+        int32 m_nHpMove;
+        int32 m_nHpTotal;
         uint32 m_uAnimCnt;
     };
 
@@ -123,16 +123,13 @@ void CGaugeStatus_Container::Period(void)
 {
     if (m_bGaugeSetting)
     {
-        for (int32 i = 0; i < CGameProperty::GetPlayerNum(); ++i)
+        uint32 uDigitalTriggerUnlocked = CController::GetDigitalTrigger(CController::CONTROLLER_UNLOCKED_ON_VIRTUAL);
+        uint32 uDigitalTriggerLocked = CController::GetDigitalTrigger(CController::CONTROLLER_LOCKED_ON_VIRTUAL);
+		
+        if (CGamepad::CheckFunction(uDigitalTriggerUnlocked, CGamepad::FUNCTION_SWITCH_GAUGE)
+            || CGamepad::CheckFunction(uDigitalTriggerLocked, CGamepad::FUNCTION_SWITCH_GAUGE))
         {
-            int32 nPadID = CGameProperty::Player(i).GetPadID();
-            uint32 uDigitalTrigger = CController::GetDigitalTrigger(nPadID);
-
-            if (CGamepad::CheckFunction(uDigitalTrigger, CGamepad::FUNCTION_SWITCH_GAUGE))
-            {
-                m_bWakuCheck = !m_bWakuCheck;
-                break;
-            };
+            m_bWakuCheck = !m_bWakuCheck;
         };
     }
     else
@@ -198,43 +195,46 @@ void CGaugeStatus_Container::Draw(void)
 
 void CGaugeStatus_Container::TimerDispEnable(bool bEnable)
 {
-
+    m_timer.m_bWork = bEnable;
 };
 
 
 void CGaugeStatus_Container::TimerDispSet(int32 no, float fValue)
 {
-
+    m_timer.m_nNo = no;
+	m_timer.m_fValue = fValue;
 };
 
 
 void CGaugeStatus_Container::CounterDispEnable(bool bEnable)
 {
-
+    m_counter.m_bWork = bEnable;
 };
 
 
 void CGaugeStatus_Container::CounterDispSet(int32 no, int32 value)
 {
-
+    m_counter.m_nNo = no;
+    m_counter.m_nValue = value;
 };
 
 
 void CGaugeStatus_Container::ExGaugeDispEnable(CGaugeStatus::EX_GAUGE_TYPE type, bool bEnable)
 {
-
+    m_aZako[type].m_bWork = bEnable;
 };
 
 
 void CGaugeStatus_Container::ExGaugeDispInit(CGaugeStatus::EX_GAUGE_TYPE type, int32 value)
 {
-
+    m_aZako[type].m_nHpTotal = value;
 };
 
 
 void CGaugeStatus_Container::ExGaugeDispSet(int32 no, CGaugeStatus::EX_GAUGE_TYPE type, int32 value)
 {
-
+    m_aZako[type].m_nNo = no;
+    m_aZako[type].m_nHp = value;
 };
 
 
@@ -401,22 +401,22 @@ void CGaugeStatus_Container::CharacterIconDisp(int32 nPlayerNo, IGamePlayer* pGa
         switch (CGameProperty::Player(nPlayerNo).GetCharacterID(nStart))
         {
         case PLAYERID::ID_LEO:
-        case PLAYERID::ID_SLASHUUR:
+        case PLAYERID::ID_SLA:
             m_aSprite[7].SetUV(0.0f, 0.0f, 1.0f, 0.25f);
             break;
 
-        case PLAYERID::ID_RAPH:
-        case PLAYERID::ID_CASEY:
+        case PLAYERID::ID_RAP:
+        case PLAYERID::ID_CAS:
             m_aSprite[7].SetUV(0.0f, 0.25f, 1.0f, 0.5f);
             break;
 
         case PLAYERID::ID_MIC:
-        case PLAYERID::ID_KARAI:
+        case PLAYERID::ID_KAR:
             m_aSprite[7].SetUV(0.0f, 0.5f, 1.0f, 0.75f);
             break;
 
         case PLAYERID::ID_DON:
-        case PLAYERID::ID_SPLINTER:
+        case PLAYERID::ID_SPL:
             m_aSprite[7].SetUV(0.0f, 0.75f, 1.0f, 1.0f);
             break;
 
@@ -555,7 +555,7 @@ float CGaugeStatus_Container::GetMarkerPosY(int32 nPlayerNo) const
         CGameData::PlayParam().GetArea() == AREAID::ID_AREA32)
         return 0.6f;
 
-    if (CGameProperty::Player(nPlayerNo).GetCurrentCharacterID() == PLAYERID::ID_SLASHUUR)
+    if (CGameProperty::Player(nPlayerNo).GetCurrentCharacterID() == PLAYERID::ID_SLA)
         return 1.2f;
     else
         return 1.7f;
@@ -578,10 +578,10 @@ void CGaugeStatus_Container::TimerDispProc(void)
     y = (float(m_timer.m_nNo) * 42.0f) - 174.0f;
 
     NumDraw(10, x, y, 128,
-        "%02d:%02d:%02dd",
-        m_timer.m_uValue / 60,
-        m_timer.m_uValue % 60,
-        (m_timer.m_uValue * 100) % 100
+        "%02d:%02d:%02d",
+        int32(m_timer.m_fValue) / 60,
+        int32(m_timer.m_fValue) % 60,
+        int32(m_timer.m_fValue * 100.0f) % 100
     );
 
     CGaugeManager::SetGaugeAlphaMode(CGaugeManager::ALPHAMODE_ALPHA);
@@ -601,7 +601,7 @@ void CGaugeStatus_Container::CounterDispProc(void)
     m_aSprite[6].Draw();
 
     x = -30.0f;
-    y = (float(m_timer.m_nNo) * 42.0f) - 174.0f;
+    y = (float(m_counter.m_nNo) * 42.0f) - 174.0f;
 
     NumDraw(10, x, y, 128, "%02d", m_counter.m_nValue);
 
@@ -610,14 +610,128 @@ void CGaugeStatus_Container::CounterDispProc(void)
 
 
 void CGaugeStatus_Container::ExGaugeDispProc(void)
-{
-    ;
+{   
+    for (int32 i = 0; i < COUNT_OF(m_aZako); ++i)
+    {
+        if (!m_aZako[i].m_bWork)
+            continue;
+
+        CGaugeManager::SetGaugeAlphaMode(CGaugeManager::ALPHAMODE_ADD);
+
+        m_aSprite[6].SetUV(
+            0.0f,
+            (float(i + 2) * 32.0f) * (1.0f / 256.0f),
+            1.0f,
+            ((float(i + 2) * 32.0f) + 32.0f) * (1.0f / 256.0f)
+        );
+
+        if (i == CGaugeStatus::EX_GAUGE_ZAKO_FUGITOID_LIVE)
+        {
+            float OfsY = (float(m_aZako[i].m_nNo) * 42.0f);
+            
+            m_aSprite[6].Move(m_fCondStartX, m_fCondStartY + OfsY);
+            m_aSprite[6].Draw();
+
+            ZakoGaugeDisp(i, -30.0f, (OfsY - 174.0f));
+        }
+        else
+        {
+            float OfsX = (float(i - 1) * 200.0f);
+            m_aSprite[6].Move(OfsX - 194.0f, 181.0f);
+            m_aSprite[6].Draw();
+
+            ZakoGaugeDisp(i, OfsX - 130.0f, 191.0f);
+        };
+
+        CGaugeManager::SetGaugeAlphaMode(CGaugeManager::ALPHAMODE_ALPHA);
+    };
 };
 
 
 void CGaugeStatus_Container::ZakoGaugeDisp(int32 nZakoNo, float fX, float fY)
 {
-    ;
+    ZAKOINFO* pZakoInfo = &m_aZako[nZakoNo];
+
+    if (pZakoInfo->m_eState)
+    {
+        if ((pZakoInfo->m_eState == ZAKOINFO::STATE_IDLE) ||
+            (pZakoInfo->m_nHp != pZakoInfo->m_nHpOld))
+        {
+            int32 HpNow = pZakoInfo->m_nHp;
+            int32 HpOld = pZakoInfo->m_nHpOld;
+
+            pZakoInfo->m_nHpMove = pZakoInfo->m_nHpOld;
+            pZakoInfo->m_nHpOld = pZakoInfo->m_nHp;
+
+            if (HpOld > HpNow)
+            {
+                pZakoInfo->m_eState = ZAKOINFO::STATE_DAMAGE;
+                pZakoInfo->m_uAnimCnt = 0;
+            }
+            else
+            {
+                pZakoInfo->m_eState = ZAKOINFO::STATE_RECOVER;
+                pZakoInfo->m_uAnimCnt = 0;
+            };
+        };
+    }
+    else
+    {
+        pZakoInfo->m_nHpMove = pZakoInfo->m_nHpTotal;
+        pZakoInfo->m_nHpOld = pZakoInfo->m_nHpTotal;
+        pZakoInfo->m_eState = ZAKOINFO::STATE_IDLE;
+    };
+
+    float AnimDuration = (CScreen::Framerate() * 0.06f);
+    float AnimStep = (float(pZakoInfo->m_uAnimCnt) / AnimDuration);
+    float HpMove = float(pZakoInfo->m_nHpMove);
+
+    if (pZakoInfo->m_eState == ZAKOINFO::STATE_RECOVER)
+    {
+        HpMove = (HpMove - ((HpMove - float(pZakoInfo->m_nHpOld)) * AnimStep));
+    }
+    else if (pZakoInfo->m_eState == ZAKOINFO::STATE_DAMAGE)
+    {
+        HpMove = (HpMove + ((float(pZakoInfo->m_nHpOld) - HpMove) * AnimStep));
+    };
+
+    if (pZakoInfo->m_eState > ZAKOINFO::STATE_IDLE)
+    {
+        if (float(pZakoInfo->m_uAnimCnt) >= AnimDuration)
+            pZakoInfo->m_eState = ZAKOINFO::STATE_IDLE;
+        else
+            ++pZakoInfo->m_uAnimCnt;
+    };
+
+    const RwRGBA aZakoColor[] =
+    {
+        { 0x70, 0xFF, 0xFF, 0x80 },
+        { 0xB3, 0x28, 0xFF, 0x80 },
+        { 0xFF, 0x28, 0x41, 0x80 },
+        { 0x28, 0xB0, 0xFF, 0x80 },
+    };
+
+    static_assert(COUNT_OF(aZakoColor) == COUNT_OF(m_aZako), "update me");
+
+    float fHeight = 13.0f;
+    if (nZakoNo)
+        fHeight = 7.0f;
+
+    RENDERSTATE_PUSH(rwRENDERSTATETEXTURERASTER, nullptr);
+    m_aSprite[0].SetOffset(1.0f, 0.0f);
+    m_aSprite[0].SetUV(
+        (140.0f - ((140.0f / float(pZakoInfo->m_nHpTotal)) * HpMove)) * (1.0f / 140.0f),
+        0.0f,
+        1.0f,
+        1.0f
+    );
+    m_aSprite[0].Resize(
+        (140.0f / float(pZakoInfo->m_nHpTotal)) * HpMove,
+        fHeight
+    );
+    m_aSprite[0].Move(fX, fY);
+    m_aSprite[0].SetRGBA(aZakoColor[nZakoNo]);
+    m_aSprite[0].Draw();
 };
 
 
@@ -679,14 +793,14 @@ void CGaugeStatus_Container::NumDraw(int32 nFontNo, float fOfsX, float fOfsY, ui
         rasterW = 512.0f;
         stepX = 20.0f;
         startPosY = fOfsY - 6.0f;
-
+		
         for (int32 i = 0; i < len; ++i)
         {
             if (szBuffer[i] == ':')
                 ++numDelimiters;
         };
 
-        startPosX = fOfsX - (len - 1) * 20.0f + numDelimiters * 8.0f;
+		startPosX = (fOfsX - (float(len - 1) * 20.0f)) + (numDelimiters * 8.0f);
         break;
 
     default:
@@ -714,12 +828,12 @@ void CGaugeStatus_Container::NumDraw(int32 nFontNo, float fOfsX, float fOfsY, ui
         {
             if (ch == ':')
             {
-                stepX = 12.0f;
+                stepX = 16.0f;
                 posX -= 4.0f;
             }
             else
             {
-                stepX = 32.0f;
+                stepX = 20.0f;
             };
         }
         else if (ch == '-' && nFontNo == 9)

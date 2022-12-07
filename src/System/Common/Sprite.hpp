@@ -15,7 +15,6 @@ public:
     
 public:
     static void SetDefaultVirtualScreen(void);
-    static void ScreenChanged(void);
     static void GetRealScreenPos(float* x, float* y);
     static void PushRenderStates(void);
     static void PopRenderStates(void);

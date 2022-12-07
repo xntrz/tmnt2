@@ -1,6 +1,6 @@
 #include "StageCommonLoadInfo.hpp"
 
-#include "System/Common/File/AfsFileID.hpp"
+#include "System/Common/File/FileID.hpp"
 
 
 CStageCommonLoadInfo::CStageCommonLoadInfo(GAMETYPES::STAGEMODE stagemode)
@@ -18,20 +18,20 @@ CStageCommonLoadInfo::~CStageCommonLoadInfo(void)
 
 int32 CStageCommonLoadInfo::GetFileID(void) const
 {
-    int32 nFileID = AFSFILEID::ID_STCOMMON;
+    int32 nFileID = FILEID::ID_STCOMMON;
 
     switch (m_stagemode)
     {
     case GAMETYPES::STAGEMODE_HOME:
-        nFileID = AFSFILEID::ID_STCOMMON_H;
+        nFileID = FILEID::ID_STCOMMON_H;
         break;
 
     case GAMETYPES::STAGEMODE_RIDE:
-        nFileID = AFSFILEID::ID_STCOMMON_R;
+        nFileID = FILEID::ID_STCOMMON_R;
         break;
 
     case GAMETYPES::STAGEMODE_NEXUS:
-        nFileID = AFSFILEID::ID_STCOMMON_N;
+        nFileID = FILEID::ID_STCOMMON_N;
         break;
     };
 

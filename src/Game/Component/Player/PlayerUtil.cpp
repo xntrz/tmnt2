@@ -24,8 +24,8 @@ namespace PlayerUtil
     {
         ASSERT(pPlayerChr);
 
-        return (pPlayerChr->GetID() == PLAYERID::ID_RAPH ||
-                pPlayerChr->GetID() == PLAYERID::ID_CASEY);
+        return (pPlayerChr->GetID() == PLAYERID::ID_RAP ||
+                pPlayerChr->GetID() == PLAYERID::ID_CAS);
     };
 
 
@@ -38,7 +38,7 @@ namespace PlayerUtil
         {
             CGameSound::PlayObjectSE(pPlayerChr, SDCODE_SE(4117), 0);
         }
-        else if (!IS_FLAG_SET(pGndInfo->m_attribute, MAPTYPES::ATTRIBUTE_DEATH))
+        else if (!FLAG_TEST(pGndInfo->m_attribute, MAPTYPES::ATTRIBUTE_DEATH))
         {
             CGameSound::PlayObjectSE(pPlayerChr, SDCODE_SE(4116), 0);
         };

@@ -4,23 +4,23 @@
 
 /*static*/ uint32 CController::DIGITAL_OK = CController::DIGITAL_START | CController::DIGITAL_A;
 /*static*/ uint32 CController::DIGITAL_CANCEL = CController::DIGITAL_SELECT | CController::DIGITAL_B;
-/*static*/ const uint32 CController::DIGITAL_MASK =
-	CController::DIGITAL_UP				|
-	CController::DIGITAL_DOWN 			|
-	CController::DIGITAL_LEFT 			|
-	CController::DIGITAL_RIGHT 			|
-	CController::DIGITAL_A 				|
-	CController::DIGITAL_B 				|
-	CController::DIGITAL_X 				|
-	CController::DIGITAL_Y 				|
-	CController::DIGITAL_LEFT_BUMPER 	|
-	CController::DIGITAL_RIGHT_BUMPER 	|
-	CController::DIGITAL_LEFT_TRIGGER 	|
-	CController::DIGITAL_RIGHT_TRIGGER 	|
-	CController::DIGITAL_SELECT 		|
-	CController::DIGITAL_START 			|
-	CController::DIGITAL_LEFT_THUMB 	|
-	CController::DIGITAL_RIGHT_THUMB;
+/*static*/ const uint32 CController::DIGITAL_MASK = CController::DIGITAL_UP
+													| CController::DIGITAL_DOWN
+													| CController::DIGITAL_LEFT
+													| CController::DIGITAL_RIGHT
+													| CController::DIGITAL_A
+													| CController::DIGITAL_B
+													| CController::DIGITAL_X
+													| CController::DIGITAL_Y
+													| CController::DIGITAL_LEFT_BUMPER
+													| CController::DIGITAL_RIGHT_BUMPER
+													| CController::DIGITAL_LEFT_TRIGGER
+													| CController::DIGITAL_RIGHT_TRIGGER
+													| CController::DIGITAL_SELECT
+													| CController::DIGITAL_START
+													| CController::DIGITAL_LEFT_THUMB
+													| CController::DIGITAL_RIGHT_THUMB;
+
 
 /*static*/ uint32 CController::DigitalFunction(uint32 uDigital)
 {
@@ -294,7 +294,10 @@
 			return i;
 	};
 
-	return CController::CONTROLLER_LOCKED_ON_VIRTUAL;
+	//
+	//	NOTE: its invalid result, not a CONTROLLER_LOCKED_ON_VIRTUAL
+	//
+	return -1;
 };
 
 

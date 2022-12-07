@@ -15,8 +15,8 @@
 
     switch (pPlayerCharacter->GetID())
     {
-    case PLAYERID::ID_RAPH:
-    case PLAYERID::ID_CASEY:
+    case PLAYERID::ID_RAP:
+    case PLAYERID::ID_CAS:
         pRet = new CPowerfullCharacterToGimmickMessageModule(pPlayerCharacter);
         break;
 
@@ -75,7 +75,7 @@ void CToGimmickMessageModule::Run(void)
 
     if (pGroundInfo->m_bHit)
     {
-        if (!IS_FLAG_SET(pGroundInfo->m_attribute, MAPTYPES::ATTRIBUTE_DEATH))
+        if (!FLAG_TEST(pGroundInfo->m_attribute, MAPTYPES::ATTRIBUTE_DEATH))
         {
             RwV3d vPosition = Math::VECTOR3_ZERO;
             

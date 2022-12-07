@@ -114,7 +114,7 @@ CNormalDoorGimmick::~CNormalDoorGimmick(void)
 
 void CNormalDoorGimmick::PreMove(void)
 {
-    m_pMotion->Update(CGameProperty::GetElapsedTime());
+	m_pMotion->Update();
 
     switch (m_state)
     {

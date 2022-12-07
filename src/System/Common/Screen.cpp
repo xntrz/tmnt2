@@ -36,24 +36,17 @@ static CGraphicsDevice* s_pDevice = nullptr;
 {
     if (s_pDevice)
     {
-
-        //s_pDevice->CurrentVideomode(s_iWidth, s_iHeight, s_iDepth);
-        
         s_iWidth = s_pDevice->ScreenWidth();
         s_iHeight = s_pDevice->ScreenHeight();
         s_iDepth = s_pDevice->ScreenDepth();
 
-        int32 iFlipInterval = s_pDevice->GetFlipInternval();
-        
+        int32 iFlipInterval = s_pDevice->GetFlipInternval();        
         if (iFlipInterval == CGraphicsDevice::FLIPINTERVAL_DEFAULT)
             iFlipInterval = CGraphicsDevice::FLIPINTERVAL_60;
         
         s_fFramerate = 60.0f / float(iFlipInterval);
         ASSERT(s_fFramerate > 0.0f);
         s_fTimerStride = 1.0f / s_fFramerate;
-
-        CSprite::ScreenChanged();
-        CSystem2D::ScreenChanged();
     };
 };
 

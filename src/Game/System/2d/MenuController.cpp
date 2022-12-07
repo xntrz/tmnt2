@@ -303,7 +303,7 @@ void CMenuController::Trigger(Rt2dMaestro* pMaestro)
 			bool b2 = ((m_auDigitalDataTable[BUTTON_ID_START] & m_auDigitalDataTable[BUTTON_ID_OK]) == 0);
 			bool b3 = (m_abLockKeyData[j] != true);
 
-			if (b1 || b2 && b3)
+			if ((b1 || b2) && b3)
 			{
 				if (CController::GetDigitalTrigger(iControllerNo[i], m_auDigitalDataTable[j]))
 				{

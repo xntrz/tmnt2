@@ -41,7 +41,7 @@ void CEndingSequence::OnDetach(void)
 };
 
 
-void CEndingSequence::OnMove(bool bResume, const void* param)
+void CEndingSequence::OnMove(bool bRet, const void* param)
 {
     PostSequence();
     Branch();

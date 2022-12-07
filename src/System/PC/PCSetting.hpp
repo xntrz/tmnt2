@@ -16,14 +16,10 @@ public:
     static void Terminate(void);
     static void Load(void);
     static void Save(void);
+    static void GetIniPath(std::string& Path);
 
 public:
     static VIDEOMODE m_videomode;
     static int32 m_iDispMode;
     static int32 m_iMonitorNo;
-    static bool m_bFlagClassicPad;
-    static bool m_bFlagFontEffect;
-    static bool m_bFlagAutosave;
-    static bool m_bFlagHelp;
-    static int32 m_iDifficulty;
 };

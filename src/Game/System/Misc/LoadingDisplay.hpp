@@ -31,10 +31,10 @@ public:
 
 public:
     static CProcess* Instance(void);
-    static void Initialize(void);
-    static void Terminate(void);
-    static void Start(MODE mode = MODE_NORMAL);
-    static void Stop(void);
+    static bool Initialize(CProcess* pCurrent);
+    static void Terminate(CProcess* pCurrent);
+    static bool Start(CProcess* pSender, MODE mode = MODE_NORMAL);
+    static void Stop(CProcess* pSender);
 
     CLoadingDisplay(void);
     virtual ~CLoadingDisplay(void);
@@ -43,7 +43,8 @@ public:
     virtual void Move(void) override;
     virtual void Draw(void) const override;
 
-private:    
+private:
+    static bool postPrivateMessage(CProcess* pSender, MESSAGE* pMessage);
     void messageProc(void);
 
 private:

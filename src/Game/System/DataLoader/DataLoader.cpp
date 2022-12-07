@@ -1,7 +1,7 @@
 #include "DataLoader.hpp"
 #include "DataLoaderImpl.hpp"
 
-#include "System/Common/File/AfsFile.hpp"
+#include "System/Common/File/AdxFile.hpp"
 #include "System/Common/File/File.hpp"
 #include "System/Common/File/FileTypes.hpp"
 
@@ -221,7 +221,7 @@ void CDataLoaderContainer::Regist(const char* pszFilename)
 
 void CDataLoaderContainer::CreateFile(int32 iFileID)
 {
-    CAfsFileID* pFile = new CAfsFileID;
+    CAdxFileID* pFile = new CAdxFileID;
     if (pFile)
     {
         pFile->Open(iFileID);
@@ -234,7 +234,7 @@ void CDataLoaderContainer::CreateFile(const char* pszFilename)
 {
     ASSERT(!m_pCurrentFile);
 
-    CAfsFileISO* pFile = new CAfsFileISO;
+    CAdxFileISO* pFile = new CAdxFileISO;
     if (pFile)
     {
         pFile->Open(pszFilename);

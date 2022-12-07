@@ -229,6 +229,12 @@ int32 CTimeObj::GetMinute(void) const
 };
 
 
+int32 CTimeObj::GetSeconds(void) const
+{
+    return m_bSeconds;
+};
+
+
 uint32 CTimeObj::GetTimevalue(void) const
 {
     return m_timevalue;

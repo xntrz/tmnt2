@@ -1,6 +1,8 @@
 #include "DataLoaderImpl.hpp"
 
 #include "Game/Component/Effect/EffectManager.hpp"
+#include "Game/Component/Enemy/EnemyParameter.hpp"
+#include "Game/Component/Gimmick/GimmickData.hpp"
 #include "Game/System/Texture/TextureManager.hpp"
 #include "Game/System/2d/GameFont.hpp"
 #include "Game/System/2d/GameText.hpp"
@@ -12,7 +14,6 @@
 #include "Game/System/Map/CameraDataMan.hpp"
 #include "Game/System/Map/MapClumpModelMan.hpp"
 #include "Game/System/Map/WorldMap.hpp"
-#include "Game/Component/Gimmick/GimmickData.hpp"
 #include "System/Common/SystemText.hpp"
 #include "System/Common/Font.hpp"
 
@@ -180,10 +181,6 @@ CDataLoaderFromBinary::~CDataLoaderFromBinary(void)
 
 void CDataLoaderFromBinary::Eval(const void* pBuffer, uint32 uBufferSize)
 {
-#define ALIGN(value, align)         (uint32)(uint32(value) + (align - 1) & ~(align - 1))
-#define ADJUST(value, align)        (uint32)(align - (uint32(value) & (align - 1)))
-#define IS_ALIGNED(value, align)    ((uint32(value) & (align - 1)) == 0)
-    
     CFileHeader* pFileHeader = (CFileHeader*)pBuffer;
     pBuffer = ((uint8*)pBuffer + ALIGN(sizeof(CFileHeader), CHUNK_ALIGNMENT_SIZE));
 
@@ -202,7 +199,7 @@ void CDataLoaderFromBinary::Eval(const void* pBuffer, uint32 uBufferSize)
                 if (m_apItemReader[j]->GetType() == ChunkHeader.m_pHeader->m_uType)
                 {
                     OUTPUT(
-                        "[GAME] DataLoaderFromBinary: reading file %-20s\t\t(%-20s -- 0x%x)\n",
+                        "reading file %-20s\t\t(%-20s -- 0x%x)\n",
 						ChunkHeader.m_pHeader->m_szName,
                         m_apItemReader[j]->GetLabel(),
                         m_apItemReader[j]->GetType()
@@ -215,10 +212,10 @@ void CDataLoaderFromBinary::Eval(const void* pBuffer, uint32 uBufferSize)
 
         uint32 uChunkSize = ChunkHeader.m_pHeader->m_uSize;
         
-        if (!IS_ALIGNED(uChunkSize, CHUNK_ALIGNMENT_SIZE))
-            uChunkSize += ADJUST(uChunkSize, CHUNK_ALIGNMENT_SIZE);
+        if (!ALIGN_CHECK(uChunkSize, CHUNK_ALIGNMENT_SIZE))
+            uChunkSize += ALIGN_ADJUST(uChunkSize, CHUNK_ALIGNMENT_SIZE);
 
-        ASSERT(IS_ALIGNED(uChunkSize, CHUNK_ALIGNMENT_SIZE));
+        ASSERT(ALIGN_CHECK(uChunkSize, CHUNK_ALIGNMENT_SIZE));
         pBuffer = ((uint8*)pBuffer + uChunkSize);
     };
 };
@@ -739,7 +736,7 @@ READERTYPE::VALUE CItemStringsReader::GetType(void) const
 
 void CItemEnemyParameterReader::Eval(CDataLoaderFromBinary::CChunkHeader* pChunkHeader, void* pData)
 {
-    ;
+    CEnemyParameter::Read(pData, pChunkHeader->m_pHeader->m_uSize);
 };
 
 

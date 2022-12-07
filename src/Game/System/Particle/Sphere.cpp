@@ -186,7 +186,7 @@ void CSphere::SetVertex(void)
             pVertex[0].objNormal.x = 0.0f;
             pVertex[0].objNormal.y = 0.0f;
             pVertex[0].objNormal.z = 0.0f;
-            pVertex[0].color = COLOR_TO_INTEGER_RWRGBA(m_Color);
+            pVertex[0].color = RWRGBALONG(m_Color.red, m_Color.green, m_Color.blue, m_Color.alpha);
             pVertex[0].u = tu * j;
             pVertex[0].u = tv * i;
 
@@ -196,7 +196,7 @@ void CSphere::SetVertex(void)
             pVertex[1].objNormal.x = 0.0f;
             pVertex[1].objNormal.y = 0.0f;
             pVertex[1].objNormal.z = 0.0f;
-            pVertex[1].color = COLOR_TO_INTEGER_RWRGBA(m_Color);
+            pVertex[1].color = RWRGBALONG(m_Color.red, m_Color.green, m_Color.blue, m_Color.alpha);
             pVertex[1].u = tu * j;
             pVertex[1].u = tv * (i + 1);
 
@@ -270,7 +270,7 @@ void CSphere::SetVertexRandom(void)
 
 			pVertex[0].objVertex = vPosition;
 			pVertex[0].objNormal = vNormal;
-			pVertex[0].color = COLOR_TO_INTEGER_RWRGBA(m_Color);
+            pVertex[0].color = RWRGBALONG(m_Color.red, m_Color.green, m_Color.blue, m_Color.alpha);
 			pVertex[0].u = tu * j;
 			pVertex[0].v = tv * i;
 
@@ -281,7 +281,7 @@ void CSphere::SetVertexRandom(void)
 
 			pVertex[1].objVertex = vPosition;
 			pVertex[1].objNormal = vNormal;
-			pVertex[1].color = COLOR_TO_INTEGER_RWRGBA(m_Color);
+            pVertex[1].color = RWRGBALONG(m_Color.red, m_Color.green, m_Color.blue, m_Color.alpha);
 			pVertex[1].u = tu * j;
 			pVertex[1].v = tv * (i + 1);
 

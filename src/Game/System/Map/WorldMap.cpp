@@ -365,7 +365,7 @@ void CWorldMapManager::Draw(CWorldMap::DRAWTYPE drawtype)
             RENDERSTATE_PUSH(rwRENDERSTATEFOGENABLE, true);
             RENDERSTATE_PUSH(
                 rwRENDERSTATEFOGCOLOR,
-                COLOR_TO_INTEGER_RWRGBA(m_pMapInfo->m_foginfo.m_Color)
+                RWRGBALONGEX(m_pMapInfo->m_foginfo.m_Color)
             );
             RENDERSTATE_PUSH(rwRENDERSTATEFOGTYPE, rwFOGTYPELINEAR);
         }
@@ -548,7 +548,7 @@ void CWorldMapManager::CheckWorldCollision(RpIntersection* pIntersection, CMapCo
     ASSERT(pIntersection);
     ASSERT(pCollisionParam);
 
-    if(!IS_FLAG_SET(pCollisionParam->m_checkflag, CWorldMap::CHECKFLAG_MAPONLY))
+    if(!FLAG_TEST(pCollisionParam->m_checkflag, CWorldMap::CHECKFLAG_MAPONLY))
         CheckWorldObjCollision(pIntersection, pCollisionParam, collisiontype);
     
     CheckWorldMapCollision(pIntersection, pCollisionParam, collisiontype);
@@ -655,7 +655,7 @@ bool CWorldMapManager::CheckCollisionCharacterMove(RwV3d* pPos, RwV3d* pNewPos, 
         pNewPos->x = vPosition.x;
         pNewPos->z = vPosition.z;
 
-        if (!IS_FLAG_SET(uHitFlag, 2) || pVel->y < 0.0f)
+        if (!FLAG_TEST(uHitFlag, 2) || pVel->y < 0.0f)
             pNewPos->y = vOldPosition.y + pVel->y;
         else
             pNewPos->y = vOldPosition.y;
@@ -741,7 +741,7 @@ bool CWorldMapManager::CheckCollisionCharacterHeight(RwV3d* pPos, RwV3d* pNewPos
     float fCheckRadius = fRadius;
 
     vPos.x = pPos->x;
-    vPos.y = pPos->y + fCheckHeight;
+	vPos.y = pPos->y + fCheckHeight;
     vPos.z = pPos->z;
 
     if (!CheckCollisionHeight(&vPos, fCheckRadius, -fCheckHeight))
@@ -842,10 +842,10 @@ bool CWorldMapManager::CheckCollisionHeight(RwV3d* pPos, float fRadius, float fH
 
     if (!Math::FEqual(fRadius, 0.0f))
     {
-        int32 nNumDivRadius = int32(fRadius > 0.4f ? 1 - (fRadius * -2.5f) : 1);
+        int32 nNumDivRadius = int32( ((fRadius > 0.4f) ? (1.0f - (fRadius * -2.5f)) : (1.0f)) );
         float fCheckRadius = fRadius;
 
-        for (int32 i = 0; i < nNumDivRadius; ++i)
+        for (int32 i = nNumDivRadius; i > 0; --i)
         {
             int32 nNumAngle = int32(Math::PI2);
             float fAngleStep = Math::PI2 / 6.0f;
@@ -855,7 +855,7 @@ bool CWorldMapManager::CheckCollisionHeight(RwV3d* pPos, float fRadius, float fH
 
             for (int32 j = 0; j < nNumAngle; ++j)
             {
-                float fAngle = (j * fAngleStep);
+                float fAngle = (float(j) * fAngleStep);
 
                 vPtStart.x = Math::Cos(fAngle) * fCheckRadius + pPos->x;
                 vPtStart.y = pPos->y;
@@ -1300,7 +1300,7 @@ static inline CWorldMapManager& WorldMapManager(void)
     vVelocityStep.y = pVel->y * (1.0f / float(nCheck));
     vVelocityStep.z = pVel->z * (1.0f / float(nCheck));
 
-    for (int32 i = 0; i < nCheck; ++i)
+    for (int32 i = nCheck; i > 0; --i)
     {
         if (i == 1)
         {

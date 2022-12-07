@@ -316,7 +316,7 @@ static RENDERSTATEDEFAULT s_RsDefault =
     RENDERSTATE_PUSH(rwRENDERSTATESRCBLEND,             s_RsDefault.m_srcBlendFunc);
     RENDERSTATE_PUSH(rwRENDERSTATEDESTBLEND,            s_RsDefault.m_dstBlendFunc);
     RENDERSTATE_PUSH(rwRENDERSTATEFOGENABLE,            s_RsDefault.m_bFog);
-    RENDERSTATE_PUSH(rwRENDERSTATEFOGCOLOR,             uint32(COLOR_TO_INTEGER_RWRGBA(s_FogColor)));
+    RENDERSTATE_PUSH(rwRENDERSTATEFOGCOLOR,             uint32(RWRGBALONGEX(s_FogColor)));
     RENDERSTATE_PUSH(rwRENDERSTATEFOGTYPE,              s_RsDefault.m_fogType);
     RENDERSTATE_PUSH(rwRENDERSTATECULLMODE,             s_RsDefault.m_cullMode);
     RENDERSTATE_PUSH(rwRENDERSTATEALPHATESTFUNCTION,    s_RsDefault.m_alphaTestFunc);
@@ -343,7 +343,7 @@ static RENDERSTATEDEFAULT s_RsDefault =
     {
         s_FogColor = color;
         s_RsDefault.m_bFog = true;
-        s_RsDefault.m_uFogColor = COLOR_TO_INTEGER_RWRGBA(s_FogColor);
+        s_RsDefault.m_uFogColor = RWRGBALONGEX(s_FogColor);
     }
     else
     {

@@ -163,7 +163,7 @@ static inline bool GetObjectPositionForCorrectDirection(CGameObject* pGameObject
     case GAMEOBJECTTYPE::GIMMICK:
         {
             CGimmick* pGimmick = (CGimmick*)pGameObject;
-            if (IS_FLAG_SET(pGimmick->GetFeatures(), GIMMICKTYPES::FEATURE_HOMING))
+            if (FLAG_TEST(pGimmick->GetFeatures(), GIMMICKTYPES::FEATURE_HOMING))
             {
                 pGimmick->GetCenterPosition(pResult);                
                 bResult = true;

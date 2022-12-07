@@ -13,6 +13,7 @@
 #include "System/Common/RenderState.hpp"
 #include "System/Common/Controller.hpp"
 #include "System/Common/Screen.hpp"
+#include "System/Common/TextData.hpp"
 
 
 class CGaugeInformation_Container
@@ -24,15 +25,17 @@ private:
         {
             STATE_INIT = 0,
             STATE_IDLE,
-            STATE_DMG,
-            STATE_RESTORE,
+            STATE_DAMAGE,
+            STATE_RECOVER,
         };
 
-        STATE m_state;
-        ENEMYID::VALUE m_idEnemy;
-        int32 m_nCurrentHpRate;
-        int32 m_nPrevHpRate;
-        int32 m_nInitHpRate;
+        ENEMYID::VALUE m_IdEnemy;
+        STATE m_eState;
+        int32 m_nHp;
+        int32 m_nHpOld;
+        int32 m_nHpTotal;
+        int32 m_nHpMove;
+        uint32 m_uAnimCnt;
         bool m_bEnable;
     };
 
@@ -44,6 +47,18 @@ private:
         PAUSERESULT_RET_TITLE,
         
         PAUSERESULTNUM,
+    };
+
+    enum NEXUSSTEP
+    {
+        NEXUSSTEP_ENEMY_IN = 0,
+        NEXUSSTEP_ENEMY_WAIT,
+        NEXUSSTEP_ENEMY_OUT,
+        NEXUSSTEP_STEADY,
+        NEXUSSTEP_FIGHT,
+        NEXUSSTEP_END,
+        
+        NEXUSSTEP_NUM,
     };
 
 public:
@@ -89,7 +104,10 @@ private:
     int32 m_nCursor;
     CDialog* m_pConfirmDlg;
     bool m_bDlgRunFlag;
-    BOSSGAUGEINFO m_aBossGaugeInfo[4];
+    BOSSGAUGEINFO m_aBossGaugeInfo[2];
+    uint32 m_uNexusAnimCnt;
+    NEXUSSTEP m_eNexusStep;
+    bool m_bNexusDispFlag;
 };
 
 
@@ -105,6 +123,10 @@ CGaugeInformation_Container::CGaugeInformation_Container(void)
 , m_nCursor(0)
 , m_pConfirmDlg(nullptr)
 , m_bDlgRunFlag(false)
+, m_aBossGaugeInfo()
+, m_uNexusAnimCnt(0)
+, m_eNexusStep(NEXUSSTEP_ENEMY_IN)
+, m_bNexusDispFlag(false)
 {
     std::memset(m_aBossGaugeInfo, 0x00, sizeof(m_aBossGaugeInfo));
 
@@ -213,6 +235,7 @@ void CGaugeInformation_Container::PausePeriodSub(void)
     {
         if (!m_pConfirmDlg->IsOpen())
         {
+            m_bDlgRunFlag = false;
             switch (m_pConfirmDlg->GetStatus())
             {
             case CDialog::STATUS_YES:
@@ -231,12 +254,6 @@ void CGaugeInformation_Container::PausePeriodSub(void)
                         ASSERT(false);
                         break;
                     };
-                }
-                break;
-
-            case CDialog::STATUS_NO:
-                {
-                    m_bDlgRunFlag = false;
                 }
                 break;
             };
@@ -608,19 +625,186 @@ void CGaugeInformation_Container::MissionInfoDrawSub(void)
 
 void CGaugeInformation_Container::SetBattleNexusInfoSub(void)
 {
-    ;
+    m_uNexusAnimCnt = 0;
+    m_eNexusStep = NEXUSSTEP_ENEMY_IN;
+    m_bNexusDispFlag = true;
 };
 
 
 bool CGaugeInformation_Container::IsBattleNexusInfoEndSub(void)
 {
-	return true;
+    return (m_eNexusStep >= NEXUSSTEP_FIGHT);
 };
 
 
 void CGaugeInformation_Container::DispBattleNexusInfoSub(void)
 {
-    ;
+    if (!m_bTextureInitedFlag)
+        return;
+
+    if (!m_bNexusDispFlag)
+        return;
+
+	InfoDispRenderStatePush();
+    
+    float SpriteW = 512.0f;
+    float SpriteH = 128.0f;
+    uint8 Alpha = 255;
+
+    switch (m_eNexusStep)
+    {
+    case NEXUSSTEP_ENEMY_IN:
+        {
+            float fDuration = (CScreen::Framerate() * 0.25f);
+            Alpha = uint8(Math::LinearTween(0.0f, 255.0f, float(m_uNexusAnimCnt), fDuration));
+            if (float(m_uNexusAnimCnt) >= fDuration)
+            {
+                m_eNexusStep = NEXUSSTEP_ENEMY_WAIT;
+                m_uNexusAnimCnt = 0;
+            }
+            else
+            {
+                ++m_uNexusAnimCnt;
+            };
+        }
+        break;
+
+    case NEXUSSTEP_ENEMY_WAIT:
+        {
+            float fDuration = (CScreen::Framerate() * 0.5f);
+            if (float(m_uNexusAnimCnt) >= fDuration)
+            {
+                m_eNexusStep = NEXUSSTEP_ENEMY_OUT;
+                m_uNexusAnimCnt = 0;
+            }
+            else
+            {
+                ++m_uNexusAnimCnt;
+            };
+        }
+        break;
+
+    case NEXUSSTEP_ENEMY_OUT:
+        {
+            float fDuration = (CScreen::Framerate() * 0.25f);
+            Alpha = uint8(Math::LinearTween(255.0f, -255.0f, float(m_uNexusAnimCnt), fDuration));
+            if (float(m_uNexusAnimCnt) >= fDuration)
+            {
+                m_eNexusStep = NEXUSSTEP_STEADY;                
+                m_uNexusAnimCnt = 0;
+            }
+            else
+            {
+                ++m_uNexusAnimCnt;
+            };
+        }
+        break;
+
+    case NEXUSSTEP_STEADY:
+        {
+            float fDuration = (CScreen::Framerate() * 0.5f);
+            Alpha = uint8(Math::LinearTween(255.0f, -255.0f, float(m_uNexusAnimCnt), fDuration));
+            SpriteW = Math::LinearTween(512.0f, -512.0f, float(m_uNexusAnimCnt), fDuration);
+            SpriteH = Math::LinearTween(128.0f, -128.0f, float(m_uNexusAnimCnt), fDuration);
+            if (float(m_uNexusAnimCnt) >= fDuration)
+            {
+                m_eNexusStep = NEXUSSTEP_FIGHT;
+                m_uNexusAnimCnt = 0;
+            }
+            else
+            {
+                ++m_uNexusAnimCnt;
+            };
+        }
+        break;
+
+    case NEXUSSTEP_FIGHT:
+        {
+            float fDuration = (CScreen::Framerate());
+            Alpha = uint8(Math::LinearTween(255.0f, -255.0f, float(m_uNexusAnimCnt), fDuration));
+            SpriteW = Math::LinearTween(0.0f, 512.0f, float(m_uNexusAnimCnt), fDuration);
+            SpriteH = Math::LinearTween(0.0f, 128.0f, float(m_uNexusAnimCnt), fDuration);
+            if (float(m_uNexusAnimCnt) >= fDuration)
+            {
+                m_eNexusStep = NEXUSSTEP_END;
+                m_uNexusAnimCnt = 0;
+            }
+            else
+            {
+                ++m_uNexusAnimCnt;
+            };
+        }
+        break;
+
+    case NEXUSSTEP_END:
+        {
+            m_bNexusDispFlag = false;
+        }
+        break;
+
+    default:
+        ASSERT(false);
+        break;
+    };
+
+    if ((m_eNexusStep == NEXUSSTEP_ENEMY_IN)
+        || (m_eNexusStep == NEXUSSTEP_ENEMY_WAIT)
+        || (m_eNexusStep == NEXUSSTEP_ENEMY_OUT))
+    {                
+        STAGEID::VALUE IdStage = CGameData::PlayParam().GetStage();
+        AREAID::VALUE IdArea = CGameData::PlayParam().GetArea();
+        int32 StageIndex = CAreaInfo::IndexOfStage(IdArea, IdStage);
+        int32 StringOffset = -1;
+
+        const int32 aStringOffset[] = { 1157, 1167, 1177, 1187 };
+#ifdef _DEBUG        
+        int32 idx = IdArea - AREAID::NEXUSSTART;
+        ASSERT((idx >= 0) && (idx < COUNT_OF(aStringOffset)));
+#endif        
+        StringOffset = aStringOffset[IdArea - AREAID::NEXUSSTART];
+
+        CSystem2D::PushRenderState();
+        
+        wchar wszBuff[128];
+        const wchar* pwszFormat = CGameText::GetText(GAMETEXT::VALUE(0x39E));
+        CTextData::Sprintf(wszBuff, pwszFormat, StageIndex + 1);
+
+        CGameFont::m_fHeight = (CGameFont::GetScreenSize() / 156.0f);
+        
+        CGameFont::SetRGBA(255, 170, 0, Alpha);
+        CGameFont::Show(
+            wszBuff,
+            -(CGameFont::GetStringWidth(wszBuff) * 0.5f),
+            -20.0f
+        );
+
+        const wchar* pwszText = CGameText::GetText(GAMETEXT::VALUE(StringOffset + StageIndex));
+        CGameFont::SetRGBA(255, 170, 0, Alpha);
+        CGameFont::Show(
+            pwszText,
+            -(CGameFont::GetStringWidth(pwszText) * 0.5f),
+            20.0f
+        );
+
+        CSystem2D::PopRenderState();
+    };
+
+    if ((m_eNexusStep == NEXUSSTEP_STEADY) ||
+        (m_eNexusStep == NEXUSSTEP_FIGHT))
+    {
+        if (m_eNexusStep == NEXUSSTEP_STEADY)
+            m_sprite.SetTexture(m_pTextureBtReady);
+        else if (m_eNexusStep == NEXUSSTEP_FIGHT)
+            m_sprite.SetTexture(m_pTextureBtFight);
+        else
+            ASSERT(false);
+
+        m_sprite.SetOffset(0.5f, 0.5f);
+        m_sprite.Move(0.0f, 0.0f);
+        m_sprite.Resize(SpriteW, SpriteH);
+        m_sprite.SetRGBA(255, 255, 255, Alpha);
+        m_sprite.Draw();
+    };
 };
 
 
@@ -628,8 +812,8 @@ void CGaugeInformation_Container::BossGaugeEnableSub(bool bEnable, int32 no, ENE
 {
     ASSERT(no >= 0 && no < COUNT_OF(m_aBossGaugeInfo));
     
-    m_aBossGaugeInfo[no].m_idEnemy = idEnemy;
-    m_aBossGaugeInfo[no].m_nCurrentHpRate = 0;
+    m_aBossGaugeInfo[no].m_IdEnemy = idEnemy;
+    m_aBossGaugeInfo[no].m_nHp = 0;
     m_aBossGaugeInfo[no].m_bEnable = bEnable;
 };
 
@@ -638,7 +822,7 @@ void CGaugeInformation_Container::BossGaugeSetSub(int32 no, int32 hp)
 {
     ASSERT(no >= 0 && no < COUNT_OF(m_aBossGaugeInfo));
 
-    m_aBossGaugeInfo[no].m_nCurrentHpRate = hp;
+    m_aBossGaugeInfo[no].m_nHp = hp;
 };
 
 
@@ -650,39 +834,108 @@ void CGaugeInformation_Container::BossGaugeDrawSub(int32 no)
     if (!pBossGaugeInfo->m_bEnable)
         return;
 
-    float fOfsY = (no * 30.0f);
+	float fOfsY = 30.0f;
+	if (!no)
+		fOfsY = 0.0f;
 
     InfoDispRenderStatePush();
 
-    switch (pBossGaugeInfo->m_state)
+    if (pBossGaugeInfo->m_eState)
     {
-    case BOSSGAUGEINFO::STATE_INIT:
-        {
-            pBossGaugeInfo->m_nPrevHpRate = pBossGaugeInfo->m_nCurrentHpRate;
-            pBossGaugeInfo->m_nInitHpRate = pBossGaugeInfo->m_nCurrentHpRate;
-            pBossGaugeInfo->m_state = BOSSGAUGEINFO::STATE_IDLE;
-        }
-        break;
+		if((pBossGaugeInfo->m_eState == BOSSGAUGEINFO::STATE_IDLE) ||
+			(pBossGaugeInfo->m_nHp != pBossGaugeInfo->m_nHpOld))
+		{
+			int32 HpNow = pBossGaugeInfo->m_nHp;
+			int32 HpOld = pBossGaugeInfo->m_nHpOld;
 
-    case BOSSGAUGEINFO::STATE_IDLE:
-        {
-            
-        }
-        break;
+			pBossGaugeInfo->m_nHpMove = pBossGaugeInfo->m_nHpOld;
+			pBossGaugeInfo->m_nHpOld = pBossGaugeInfo->m_nHp;
 
-    case BOSSGAUGEINFO::STATE_DMG:
-        {
-            
-        }
-        break;
+			if (HpOld > HpNow)
+			{
+				pBossGaugeInfo->m_eState = BOSSGAUGEINFO::STATE_DAMAGE;
+				pBossGaugeInfo->m_uAnimCnt = 0;
+			}
+			else
+			{
+				pBossGaugeInfo->m_eState = BOSSGAUGEINFO::STATE_RECOVER;
+				pBossGaugeInfo->m_uAnimCnt = 0;
+			};
+		};
+    }
+    else
+    {
+        pBossGaugeInfo->m_nHpTotal = pBossGaugeInfo->m_nHp;
+        pBossGaugeInfo->m_nHpMove = pBossGaugeInfo->m_nHp;
+        pBossGaugeInfo->m_nHpOld = pBossGaugeInfo->m_nHp;
+        pBossGaugeInfo->m_eState = BOSSGAUGEINFO::STATE_IDLE;        
+	};
 
-    case BOSSGAUGEINFO::STATE_RESTORE:
-        break;
+    float AnimDuration = (CScreen::Framerate() * 0.15f);
+    float AnimStep = (float(pBossGaugeInfo->m_uAnimCnt) / AnimDuration);
+    float HpMove = float(pBossGaugeInfo->m_nHpMove);
 
-    default:
-        ASSERT(false);
-        break;
+    if (pBossGaugeInfo->m_eState == BOSSGAUGEINFO::STATE_RECOVER)
+    {
+        HpMove = ( HpMove - ((HpMove - float(pBossGaugeInfo->m_nHpOld)) * AnimStep) );
+    }
+    else if (pBossGaugeInfo->m_eState == BOSSGAUGEINFO::STATE_DAMAGE)
+    {
+        HpMove = ( HpMove + ((float(pBossGaugeInfo->m_nHpOld) - HpMove) * AnimStep) );
     };
+
+    if (pBossGaugeInfo->m_eState > BOSSGAUGEINFO::STATE_IDLE)
+    {
+        if (float(pBossGaugeInfo->m_uAnimCnt) >= AnimDuration)
+            pBossGaugeInfo->m_eState = BOSSGAUGEINFO::STATE_IDLE;
+        else
+            ++pBossGaugeInfo->m_uAnimCnt;
+    };
+
+	m_sprite.SetRGBA(255, 255, 255, 255);
+    m_sprite.SetOffset(1.0f, 0.5f);
+    m_sprite.Resize(541.0f, 32.0f);
+    m_sprite.SetTexture(m_pTextureGGEnemyBG);
+    m_sprite.Move(270.0f, 192.0f - fOfsY);
+    m_sprite.Draw();
+
+	m_sprite.SetRGBA(255, 255, 255, 255);
+    m_sprite.SetOffset(1.0f, 0.5f);
+    m_sprite.Resize(541.0f, 16.0f);
+    m_sprite.SetTexture(m_pTextureGGEnemyGauge);
+    m_sprite.SetUV(
+        (536.0f - (HpMove * (536.0f / float(pBossGaugeInfo->m_nHpTotal)))) * (1.0f / 536.0f),
+        0.0f,
+        1.0f,
+        1.0f
+    );
+    m_sprite.Resize(
+        HpMove * (536.0f / float(pBossGaugeInfo->m_nHpTotal)),
+        16.0f
+    );
+    m_sprite.Move(268.0f, 191.0f - fOfsY);
+    m_sprite.Draw();
+
+    m_sprite.SetUV(0.0f, 0.0f, 1.0f, 1.0f); // restore uv
+
+    ENEMYID::VALUE IdEnemy = pBossGaugeInfo->m_IdEnemy;
+    if (!IdEnemy)
+    {
+        STAGEID::VALUE IdStage = CGameData::PlayParam().GetStage();
+        IdEnemy = CStageInfo::GetGaugeEnemyID(IdStage, 0);
+    };
+
+    const wchar* pwszEnemyName = ENEMYID::GetDispName(IdEnemy);
+
+    CSystem2D::PushRenderState();
+    CGameFont::SetRGBA(255, 255, 255, 255);
+    CGameFont::m_fHeight = CGameFont::GetScreenSize() / 223.0f;
+    CGameFont::Show(
+        pwszEnemyName,
+        268.0f - CGameFont::GetStringWidth(pwszEnemyName),
+        175.0f - fOfsY
+    );
+    CSystem2D::PopRenderState();
 };
 
 
@@ -734,6 +987,7 @@ void CGaugeInformation_Container::InfoDispBase(bool bFullScreen)
     m_sprite.SetOffset(0.5f, 0.5f);
     m_sprite.SetRGBA(0, 0, 0, 200);
     m_sprite.Move(0.0f, 0.0f);
+	RENDERSTATE_PUSH(rwRENDERSTATETEXTURERASTER, nullptr);
     m_sprite.Draw();
 };
 

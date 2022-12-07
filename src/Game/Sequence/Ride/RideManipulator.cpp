@@ -208,16 +208,16 @@ void CRideManipulator::makeRidePadInput(void)
                                     CController::DIGITAL_RIGHT);
 
     uint32 uDigital = m_padstream.GetDigital(m_nControllerNo);
-    if (IS_FLAG_SET_ANY(uDigital, uDigitalMovementMask))
+    if (FLAG_TEST_ANY(uDigital, uDigitalMovementMask))
     {
         float xDigital = 0.0f;
         float yDigital = 0.0f;
 
-        if (IS_FLAG_SET(uDigital, CController::DIGITAL_LEFT))
+        if (FLAG_TEST(uDigital, CController::DIGITAL_LEFT))
         {
             xDigital = -1.0f;
         }
-        else if (IS_FLAG_SET(uDigital, CController::DIGITAL_RIGHT))
+        else if (FLAG_TEST(uDigital, CController::DIGITAL_RIGHT))
         {
             xDigital = 1.0f;
         }
@@ -226,11 +226,11 @@ void CRideManipulator::makeRidePadInput(void)
             xDigital = 0.0f;
         };
 
-        if (IS_FLAG_SET(uDigital, CController::DIGITAL_UP))
+        if (FLAG_TEST(uDigital, CController::DIGITAL_UP))
         {
             yDigital = 1.0f;
         }
-        else if (IS_FLAG_SET(uDigital, CController::DIGITAL_DOWN))
+        else if (FLAG_TEST(uDigital, CController::DIGITAL_DOWN))
         {
             yDigital = -1.0f;
         }

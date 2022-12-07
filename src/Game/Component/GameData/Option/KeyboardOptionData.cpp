@@ -53,6 +53,7 @@ void CKeyboardOptionData::SetDefault(void)
 
     assignDefaultButton();
     assignDefaultKey();
+    Apply();
 };
 
 
@@ -89,7 +90,7 @@ bool CKeyboardOptionData::IsValid(void) const
 
     for (int32 i = 0; i < COUNT_OF(m_auButtonAssign); ++i)
     {
-        if (IS_FLAG_SET_ANY(m_auButtonAssign[i], ~CController::DIGITAL_MASK))
+        if (FLAG_TEST_ANY(m_auButtonAssign[i], ~CController::DIGITAL_MASK))
             return false;
     };
 
@@ -160,11 +161,19 @@ const char* CKeyboardOptionData::GetKeyName(int32 iDIKey) const
 
 void CKeyboardOptionData::InitializeGamepadMapping(void)
 {
-    int32 iKeyboardPort = CKeyboard::GetPort();
-    ASSERT(iKeyboardPort < CGameData::Option().GamepadNum());
+    int32 iPort = CKeyboard::GetPort();
+    if ((iPort >= 0) && (iPort < CGameData::Option().GamepadNum()))
+    {
 
-    for (int32 i = 0; i < COUNT_OF(m_auButtonAssign); ++i)
-        m_auButtonAssign[i] = CGameData::Option().Gamepad(iKeyboardPort).GetAssignedButton(OPTIONTYPES::BTNFUNC(i));
+        for (int32 i = 0; i < OPTIONTYPES::BTNFUNCMAX; ++i)
+            m_auButtonAssign[i] = CGameData::Option().Gamepad(iPort).GetAssignedButton(OPTIONTYPES::BTNFUNC(i));
+    }
+    else
+    {
+        
+    };
+
+    Apply();
 };
 
 
@@ -197,13 +206,15 @@ void CKeyboardOptionData::assignDefaultKey(void)
 
 void CKeyboardOptionData::assignDefaultButton(void)
 {
-    m_auButtonAssign[OPTIONTYPES::BTNFUNC_ATTACK_A] = CController::DIGITAL_A;
-    m_auButtonAssign[OPTIONTYPES::BTNFUNC_ATTACK_B] = CController::DIGITAL_B;    
-    m_auButtonAssign[OPTIONTYPES::BTNFUNC_SHURIKEN] = CController::DIGITAL_Y;
-    m_auButtonAssign[OPTIONTYPES::BTNFUNC_JUMP] = CController::DIGITAL_X;
-    m_auButtonAssign[OPTIONTYPES::BTNFUNC_DASH] = CController::DIGITAL_LEFT_BUMPER;
-    m_auButtonAssign[OPTIONTYPES::BTNFUNC_GUARD] = CController::DIGITAL_RIGHT_BUMPER;
-    m_auButtonAssign[OPTIONTYPES::BTNFUNC_CHANGE_CHARA] = CController::DIGITAL_RIGHT_TRIGGER;
+    m_auButtonAssign[OPTIONTYPES::KEYFUNC_ATTACK_A] = CController::DIGITAL_A;
+    m_auButtonAssign[OPTIONTYPES::KEYFUNC_ATTACK_B] = CController::DIGITAL_B;
+    m_auButtonAssign[OPTIONTYPES::KEYFUNC_SHURIKEN] = CController::DIGITAL_Y;
+    m_auButtonAssign[OPTIONTYPES::KEYFUNC_JUMP] = CController::DIGITAL_X;
+    m_auButtonAssign[OPTIONTYPES::KEYFUNC_DASH] = CController::DIGITAL_LEFT_BUMPER;
+    m_auButtonAssign[OPTIONTYPES::KEYFUNC_GUARD] = CController::DIGITAL_RIGHT_BUMPER;
+    m_auButtonAssign[OPTIONTYPES::KEYFUNC_CHANGE_CHARA] = CController::DIGITAL_RIGHT_TRIGGER;
+    m_auButtonAssign[OPTIONTYPES::KEYFUNC_CHANGE_CAMERA] = CController::DIGITAL_LEFT_THUMB;
+    m_auButtonAssign[OPTIONTYPES::KEYFUNC_CHANGE_GAUGE] = CController::DIGITAL_RIGHT_THUMB;
 };
 
 

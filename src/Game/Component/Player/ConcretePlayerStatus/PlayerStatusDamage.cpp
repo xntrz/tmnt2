@@ -81,6 +81,7 @@ namespace PlayerStatus
             &Character().AttackParameter().m_vVelocity,
             -(1.0f / Character().GetMotionEndTime())
         );
+		Character().SetAcceleration(&vAccleration);
 
         CGamepad::StartVibration(Character().GetPadID(), CGamepad::VIBRATIONTYPE_LOW, 0.2f);        
     };
@@ -298,7 +299,7 @@ namespace PlayerStatus
 
         EFFECT_GENERIC::CallTouchDownEffect(pGroundInfo->m_attribute, &vPosition);
         
-        if (!IS_FLAG_SET(pGroundInfo->m_attribute, MAPTYPES::ATTRIBUTE_DEATH))
+        if (!FLAG_TEST(pGroundInfo->m_attribute, MAPTYPES::ATTRIBUTE_DEATH))
             CGameSound::PlayObjectSE(m_pPlayerChr, SDCODE_SE(4121));
 
         CGamepad::StartVibration(Character().GetPadID(), CGamepad::VIBRATIONTYPE_HARD, 0.2f);

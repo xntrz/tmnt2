@@ -18,7 +18,7 @@ public:
 	virtual bool IsProcessExist(int32 iLabel);
 	virtual PROCESSTYPES::STATE State(void) const;
 	virtual int32 Priority(void) const;
-	virtual int32 Label(void) const;
+	virtual int32 Label(void) const;	
 
 private:
 	int32 m_iLabel;

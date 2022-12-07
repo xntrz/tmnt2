@@ -119,7 +119,7 @@ void CEnbuSequence::OnDetach(void)
 };
 
 
-void CEnbuSequence::OnMove(bool bResume, const void* param)
+void CEnbuSequence::OnMove(bool bRet, const void* param)
 {
     switch (m_step)
     {
@@ -584,7 +584,7 @@ void CEnbuSequence::SetEnbuCameraInit(void)
             m_fCameraOfsY = 1.0f;        
         break;
         
-    case PLAYERID::ID_RAPH:
+    case PLAYERID::ID_RAP:
         if (clearrank == GAMETYPES::CLEARRANK_E)
             m_fCameraOfsY = 0.9f;        
         break;
@@ -595,21 +595,21 @@ void CEnbuSequence::SetEnbuCameraInit(void)
     case PLAYERID::ID_DON:
         break;
         
-    case PLAYERID::ID_SLASHUUR:
+    case PLAYERID::ID_SLA:
         m_fCameraOfsY = 1.5f;
         m_fDistEye = 4.25f;
         break;
         
-    case PLAYERID::ID_CASEY:
+    case PLAYERID::ID_CAS:
         m_fCameraOfsY = 1.5f;
         break;
         
-    case PLAYERID::ID_KARAI:
+    case PLAYERID::ID_KAR:
         if (clearrank == GAMETYPES::CLEARRANK_S)
             m_fCameraOfsY = 1.35f;        
         break;
         
-    case PLAYERID::ID_SPLINTER:
+    case PLAYERID::ID_SPL:
         if (clearrank == GAMETYPES::CLEARRANK_SS)
             m_fCameraOfsY = 1.15f;
         else

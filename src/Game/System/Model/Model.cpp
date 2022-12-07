@@ -625,6 +625,12 @@ void CModel::SetColor(const RwRGBA& color)
 };
 
 
+void CModel::SetBoundingSphereRadius(float r)
+{
+    m_BSphere.radius = r;
+};
+
+
 /*static*/ RwFrame* CModel::CallbackFrame(RwFrame* frame, void* data)
 {
     IFrameCallbackFunctor* pFunctor = (IFrameCallbackFunctor*)data;

@@ -258,7 +258,7 @@ void CEffectLight::setVertex(LIGHTWORK* pWork, float fRadius, const RwRGBA& colo
     pVertex[0].objNormal.z = 0.0f;
     pVertex[0].u = 0.0f;
     pVertex[0].v = 1.0f;
-    pVertex[0].color = COLOR_TO_INTEGER_RWRGBA(color);
+    pVertex[0].color = RWRGBALONG(color.red, color.green, color.blue, color.alpha);
 
     pVertex[1].objVertex.x = x;
     pVertex[1].objVertex.y = y * -1.0f;
@@ -268,7 +268,7 @@ void CEffectLight::setVertex(LIGHTWORK* pWork, float fRadius, const RwRGBA& colo
     pVertex[1].objNormal.z = 0.0f;
     pVertex[1].u = 0.0f;
     pVertex[1].v = 0.0f;
-    pVertex[1].color = COLOR_TO_INTEGER_RWRGBA(color);
+    pVertex[1].color = RWRGBALONG(color.red, color.green, color.blue, color.alpha);
 
     pVertex[2].objVertex.x = x * -1.0f;
     pVertex[2].objVertex.y = y;
@@ -278,7 +278,7 @@ void CEffectLight::setVertex(LIGHTWORK* pWork, float fRadius, const RwRGBA& colo
     pVertex[2].objNormal.z = 0.0f;
     pVertex[2].u = 1.0f;
     pVertex[2].v = 1.0f;
-    pVertex[2].color = COLOR_TO_INTEGER_RWRGBA(color);
+    pVertex[2].color = RWRGBALONG(color.red, color.green, color.blue, color.alpha);
 
     pVertex[3].objVertex.x = x * -1.0f;
     pVertex[3].objVertex.y = y * -1.0f;
@@ -288,7 +288,7 @@ void CEffectLight::setVertex(LIGHTWORK* pWork, float fRadius, const RwRGBA& colo
     pVertex[3].objNormal.z = 0.0f;
     pVertex[3].u = 1.0f;
     pVertex[3].v = 0.0f;
-    pVertex[3].color = COLOR_TO_INTEGER_RWRGBA(color);
+    pVertex[3].color = RWRGBALONG(color.red, color.green, color.blue, color.alpha);
 };
 
 

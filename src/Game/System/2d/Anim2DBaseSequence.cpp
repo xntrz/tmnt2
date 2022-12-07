@@ -35,25 +35,6 @@ CAnim2DSequence::~CAnim2DSequence(void)
 };
 
 
-bool CAnim2DSequence::Call(int32 iLabel, bool bKeepDraw, const void* param)
-{
-    //
-    //  Intercept the call inside anim2dseq for correctly resume after return child seq
-    //
-    
-    switch (m_step)
-    {
-	case STEP_CUSTOM_RET:
-        m_step = STEP_READFILE;
-        return CSequence::Call(iLabel, bKeepDraw, param);
-
-    default:
-        ASSERT(false);
-        return false;
-    };
-};
-
-
 bool CAnim2DSequence::Ret(const void* param)
 {
     switch (m_step)
@@ -62,16 +43,18 @@ bool CAnim2DSequence::Ret(const void* param)
         BeginFadeIn();
         return true;
 
-    case STEP_CUSTOM_RET:
-    default:
-        return CSequence::Ret(param);
-    };        
+    case STEP_END:
+        CSequence::Ret(param);
+        return true;
+    };
+
+    return false;
 };
 
 
 void CAnim2DSequence::OnDetach(void)
 {
-    CLoadingDisplay::Stop();
+    CLoadingDisplay::Stop(this);
     m_pAnimation2D->Stop();
     m_pAnimation2D = nullptr;
     CAnimation2DLoader::Close(m_szAnimName);
@@ -80,18 +63,18 @@ void CAnim2DSequence::OnDetach(void)
 };
 
 
-void CAnim2DSequence::OnMove(bool bResume, const void* param)
+void CAnim2DSequence::OnMove(bool bRet, const void* param)
 {
     switch (m_step)
     {
     case STEP_READFILE:
         if (CDataLoader::IsLoadEnd())
         {
-            CLoadingDisplay::Stop();
+            CLoadingDisplay::Stop(this);
 
             ASSERT(std::strlen(m_szAnimName) > 0);
             
-            m_bResumed = bResume;
+            m_bResumed = bRet;
             m_pAnimation2D = CAnimation2DLoader::Get(m_szAnimName);
             ASSERT(m_pAnimation2D);
            
@@ -130,20 +113,10 @@ void CAnim2DSequence::OnMove(bool bResume, const void* param)
         
     case STEP_END:
         m_bResumed = false;
-        m_step = STEP_CUSTOM_RET;
-
-		//
-		//	OnRet can modify step var while calling
-		//	overrided virtual Call, so check it out
-		//
 		if (!OnRet())
             CSequence::Ret();
         break;
-
-    case STEP_CUSTOM_RET:
-        ASSERT(false, "Return was intercepted but possibly not handled correctly");
-        break;
-
+        
     default:
         ASSERT(false);
         break;
@@ -173,7 +146,7 @@ bool CAnim2DSequence::OnAttach(int32 iFileID)
     CDataLoader::Regist(iFileID);
 
     if (m_bDisplayLoading)
-        CLoadingDisplay::Start();
+        CLoadingDisplay::Start(this);
 
 	m_step = STEP_READFILE;
 
@@ -188,7 +161,7 @@ bool CAnim2DSequence::OnAttach(const char* pszFilename)
     CDataLoader::Regist(pszFilename);
 
     if (m_bDisplayLoading)
-        CLoadingDisplay::Start();
+        CLoadingDisplay::Start(this);
     
 	m_step = STEP_READFILE;
 
@@ -230,7 +203,7 @@ bool CAnim2DSequence::IsAnim2DMessageList(const char** pTable, int32 max, int32*
     
     for (int32 i = 0; i < max; ++i)
     {
-        if (!m_pAnimation2D->CheckMessageGetURL(pTable[i]))
+        if (m_pAnimation2D->CheckMessageGetURL(pTable[i]))
         {
             *index = i;
             return true;

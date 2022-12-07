@@ -5,13 +5,37 @@
 
 class CSoftwareReset : public CProcess
 {
+private:
+    enum MODE
+    {
+        MODE_NORMAL = 0,
+        MODE_DEBUGMENU,
+    };
+    
+    struct MESSAGE
+    {
+        enum TYPE
+        {
+            TYPE_MODE = 0,
+            TYPE_ENABLE,
+            TYPE_ROOTSEQ,
+        };
+
+        union PARAM
+        {
+            bool m_bEnable;
+            int32 m_iRootSeqLabel;
+            MODE m_mode;
+        };
+
+        TYPE m_type;
+        PARAM m_param;
+    };
+    
 public:
     static CProcess* Instance(void);
-    static void Request(void);
-    static bool IsRequested(void);
-    static void Complete(void);
-    static void Initialize(void);
-    static void Terminate(void);
+    static bool Initialize(CProcess* pCurrent);
+    static void Terminate(CProcess* pCurrent);
 
     CSoftwareReset(void);
     virtual ~CSoftwareReset(void);
@@ -19,9 +43,15 @@ public:
     virtual void Detach(void) override;
     virtual void Move(void) override;
     virtual void Draw(void) const override;
-    void ExecReset(void);
-    void CheckDebugRequest(void);
 
+private:    
+    void execReset(void);
+    void messageProc(void);
+    void clear(void);
+    
 private:
-    float m_fTimer;
+    static bool m_bEnable;
+    float m_fKeyTimer;
+    int32 m_iRootSeqLabel;
+    MODE m_mode;
 };

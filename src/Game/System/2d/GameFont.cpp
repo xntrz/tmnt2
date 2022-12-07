@@ -3,6 +3,7 @@
 #include "Game/System/Texture/TextureManager.hpp"
 #include "System/Common/System2D.hpp"
 #include "System/Common/Screen.hpp"
+#include "System/Common/Sprite.hpp"
 
 
 /*static*/ CUnicodeFont* CGameFont::m_pFont = nullptr;
@@ -73,7 +74,7 @@
 
 /*static*/ float CGameFont::GetScreenSize(void)
 {
-    return (Rt2dFontGetHeight(m_pFont->GetFontObj()) * CScreen::Height());
+    return ( Rt2dFontGetHeight(m_pFont->GetFontObj()) * float(CSprite::m_fVirtualScreenW) );
 };
 
 

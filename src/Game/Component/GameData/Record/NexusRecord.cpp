@@ -38,7 +38,7 @@ bool CNexusRecord::IsValid(void) const
 {
     if (m_nexusstate < 0 || m_nexusstate > NEXUSSTATE_NORMAL)
     {
-        OUTPUT("[GAME] %s is failed: nexus state\n", __FUNCTION__);
+        OUTPUT(" %s is failed: nexus state\n", __FUNCTION__);
         return false;
     };
 
@@ -47,14 +47,14 @@ bool CNexusRecord::IsValid(void) const
         if (m_aNodeTour[i].m_state < 0 ||
             m_aNodeTour[i].m_state > STATE_CLEAR)
         {
-            OUTPUT("[GAME] %s is failed: tour node state\n", __FUNCTION__);
+            OUTPUT(" %s is failed: tour node state\n", __FUNCTION__);
             return false;
         };
 
         if (m_aNodeTour[i].m_state != STATE_CLEAR &&
             (m_aNodeTour[i].m_cleartime.GetTotalSecond() > 0))
         {
-            OUTPUT("[GAME] %s is failed: tour node clear time\n", __FUNCTION__);
+            OUTPUT(" %s is failed: tour node clear time\n", __FUNCTION__);
             return false;
         };
     };
@@ -63,26 +63,26 @@ bool CNexusRecord::IsValid(void) const
     {
         if (m_aNodeStage[i].m_iNumPlayed < 0)
         {
-            OUTPUT("[GAME] %s is failed: node stage num played\n", __FUNCTION__);
+            OUTPUT(" %s is failed: node stage num played\n", __FUNCTION__);
             return false;
         };
 
         if (m_aNodeStage[i].m_iNumCleared < 0 ||
             m_aNodeStage[i].m_iNumCleared > m_aNodeStage[i].m_iNumPlayed)
         {
-            OUTPUT("[GAME] %s is failed: node stage num cleared\n", __FUNCTION__);
+            OUTPUT(" %s is failed: node stage num cleared\n", __FUNCTION__);
             return false;
         };
 
         if (!m_aNodeStage[i].m_iNumCleared &&
             (m_aNodeStage[i].m_cleartime.GetTotalSecond() > 0))
         {
-            OUTPUT("[GAME] %s is failed: node stage clear time\n", __FUNCTION__);
+            OUTPUT(" %s is failed: node stage clear time\n", __FUNCTION__);
             return false;
         };
     };
 
-    OUTPUT("[GAME] %s ...OK\n", __FUNCTION__);
+    OUTPUT(" %s ...OK\n", __FUNCTION__);
     return true;
 };
 

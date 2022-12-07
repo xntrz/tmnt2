@@ -14,7 +14,7 @@
 #include "System/Common/Screen.hpp"
 #include "System/Common/System2D.hpp"
 #include "System/Common/Process/ProcessList.hpp"
-#include "System/Common/File/AfsFileID.hpp"
+#include "System/Common/File/FileID.hpp"
 #include "System/Common/RenderState.hpp"
 #include "System/Common/TextData.hpp"
 
@@ -892,10 +892,8 @@ void CPlayerSelectWorkPool::TextureLoad(void)
     m_pTextureName[7]       = CTextureManager::GetRwTexture("chsel_name_spl");    
 #ifdef _TARGET_PC    
     m_pTexturePressStart    = CTextureManager::GetRwTexture("chsel_pressstart_ps");
-#elif defined _TARGET_PS2
-    m_pTexturePressStart    = CTextureManager::GetRwTexture("chsel_pressstart_ps");
-#elif defined _TARGET_NGC
-    m_pTexturePressStart    = CTextureManager::GetRwTexture("chsel_pressstart_gc");
+#else
+#error Not implemented for current target
 #endif    
     m_pTextureStartP[0]     = CTextureManager::GetRwTexture("chsel_start_p1");
     m_pTextureStartP[1]     = CTextureManager::GetRwTexture("chsel_start_p2");
@@ -1134,7 +1132,7 @@ bool CPlayerSelectWorkPool::IsCostumeTaken(int32 iCursor, GAMETYPES::COSTUME Cos
                 bResult = CGameData::Record().Secret().IsUnlockedSecret(SECRETID::ID_HOME_SAMURAI_LEO);
                 break;
 
-            case PLAYERID::ID_RAPH:
+            case PLAYERID::ID_RAP:
                 bResult = CGameData::Record().Secret().IsUnlockedSecret(SECRETID::ID_HOME_SAMURAI_RAP);
                 break;
 
@@ -1157,7 +1155,7 @@ bool CPlayerSelectWorkPool::IsCostumeTaken(int32 iCursor, GAMETYPES::COSTUME Cos
                 bResult = CGameData::Record().Secret().IsUnlockedSecret(SECRETID::ID_HOME_NEXUS_LEO);
                 break;
 
-            case PLAYERID::ID_RAPH:
+            case PLAYERID::ID_RAP:
                 bResult = CGameData::Record().Secret().IsUnlockedSecret(SECRETID::ID_HOME_NEXUS_RAP);
                 break;
 
@@ -1226,7 +1224,7 @@ bool CCharacterSelectSequence::OnAttach(const void* param)
     CController::UnlockAllControllers();
     m_pWorkPool->LimitCheck();
 
-    return CAnim2DSequence::OnAttach(AFSFILEID::ID_CHARSELECT);
+    return CAnim2DSequence::OnAttach(FILEID::ID_CHARSELECT);
 };
 
 
@@ -1244,7 +1242,7 @@ void CCharacterSelectSequence::OnDetach(void)
 };
 
 
-void CCharacterSelectSequence::OnMove(bool bResume, const void* param)
+void CCharacterSelectSequence::OnMove(bool bRet, const void* param)
 {
     switch (m_step)
     {
@@ -1263,7 +1261,7 @@ void CCharacterSelectSequence::OnMove(bool bResume, const void* param)
         break;
     };
 
-    CAnim2DSequence::OnMove(bResume, param);
+    CAnim2DSequence::OnMove(bRet, param);
 };
 
 

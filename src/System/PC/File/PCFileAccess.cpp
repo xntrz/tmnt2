@@ -5,7 +5,7 @@
 #include "System/PC/PCTypedefs.hpp"
 
 
-/*static*/ bool CPCPhysicalFileAccess::IsExists(const char* path)
+/*static*/ bool CPCPhyFileAccess::IsExists(const char* path)
 {
     void* hFile = stdf_open(path, "rb");
     if (hFile)
@@ -20,20 +20,20 @@
 };
 
 
-CPCPhysicalFileAccess::CPCPhysicalFileAccess(void)
+CPCPhyFileAccess::CPCPhyFileAccess(void)
 : m_hFile(nullptr)
 {
     ;
 };
 
 
-CPCPhysicalFileAccess::~CPCPhysicalFileAccess(void)
+CPCPhyFileAccess::~CPCPhyFileAccess(void)
 {
     ;
 };
 
 
-bool CPCPhysicalFileAccess::Read(const char* pszName)
+bool CPCPhyFileAccess::Read(const char* pszName)
 {
     bool bResult = false;
 
@@ -75,14 +75,14 @@ bool CPCPhysicalFileAccess::Read(const char* pszName)
 };
 
 
-bool CPCPhysicalFileAccess::Read(int32 nID)
+bool CPCPhyFileAccess::Read(int32 nID)
 {
     ASSERT(false);
     return false;
 };
 
 
-void CPCPhysicalFileAccess::Clear(void)
+void CPCPhyFileAccess::Clear(void)
 {
     if (m_pBuffer)
     {
@@ -95,7 +95,7 @@ void CPCPhysicalFileAccess::Clear(void)
 };
 
 
-bool CPCPhysicalFileAccess::Write(const char* pszName, const char* data, int32 datalen)
+bool CPCPhyFileAccess::Write(const char* pszName, const char* data, int32 datalen)
 {
     bool bResult = false;
 
@@ -121,27 +121,27 @@ bool CPCPhysicalFileAccess::Write(const char* pszName, const char* data, int32 d
 };
 
 
-CPCResFileAccess::CPCResFileAccess(void)
+CPCRcFileAccess::CPCRcFileAccess(void)
 : m_hData(nullptr)
 {
     ;
 };
 
 
-CPCResFileAccess::~CPCResFileAccess(void)
+CPCRcFileAccess::~CPCRcFileAccess(void)
 {
     ASSERT(!m_hData);
 };
 
 
-bool CPCResFileAccess::Read(const char* pszName)
+bool CPCRcFileAccess::Read(const char* pszName)
 {
     ASSERT(false);
     return false;
 };
 
 
-bool CPCResFileAccess::Read(int32 nID)
+bool CPCRcFileAccess::Read(int32 nID)
 {
     bool bResult = false;
 
@@ -171,7 +171,7 @@ bool CPCResFileAccess::Read(int32 nID)
 		REF(e);
 
         DWORD dwError = GetLastError();
-        OUTPUT("[SYS] Resource loading error: %s %u\n", e.what(), dwError);
+        OUTPUT("Resource loading error: %s %u\n", e.what(), dwError);
 
         Clear();
 
@@ -182,7 +182,7 @@ bool CPCResFileAccess::Read(int32 nID)
 };
 
 
-void CPCResFileAccess::Clear(void)
+void CPCRcFileAccess::Clear(void)
 {
     if (m_hData)
     {

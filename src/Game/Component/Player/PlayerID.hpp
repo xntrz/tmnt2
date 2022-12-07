@@ -6,18 +6,17 @@ namespace PLAYERID
     enum VALUE
     {
         ID_LEO = 0,
-        ID_RAPH,
+        ID_RAP,
         ID_MIC,
         ID_DON,
-        ID_SLASHUUR,
-        ID_CASEY,
-        ID_KARAI,
-        ID_SPLINTER,
+        ID_SLA,
+        ID_CAS,
+        ID_KAR,
+        ID_SPL,
 
         ID_MAX,
         ID_INVALID = ID_MAX,
         ID_START = ID_LEO,
-        ID_RANDOM = -1,
     };
 
     const char* GetName(VALUE idPlayer);    

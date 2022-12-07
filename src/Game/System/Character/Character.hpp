@@ -120,6 +120,7 @@ public:
     virtual void OnSteppedDeathFloor(void);
     void RequestDamage(int32 iDmgReq);
     bool IsDamageRequested(void) const;
+    int32 GetRequestedDamage(void) const;
     void GetBonePosition(RwV3d* pvPosition, int32 nBoneID, const RwV3d* pvOffset) const;
     void GetBonePositionOfPositionCheck(RwV3d* pvPosition) const;
     void GetOffsetPosition(RwV3d* pvPosition, int32 no) const;

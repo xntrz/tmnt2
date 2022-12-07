@@ -63,7 +63,7 @@ void CGameObject::SetObjectFlag(GAMEOBJECTTYPES::FLAG flag, bool bSet)
 
 bool CGameObject::IsObjectFlagSet(GAMEOBJECTTYPES::FLAG flag) const
 {
-    return IS_FLAG_SET(m_objflag, flag);
+    return FLAG_TEST(m_objflag, flag);
 };
 
 

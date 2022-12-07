@@ -193,7 +193,7 @@ void CGimmick::OnAttackResult(CHitCatchData* pCatch)
 
 bool CGimmick::IsSleep(void) const
 {
-    return (IS_FLAG_SET(GetObjectFlag(), GAMEOBJECTTYPES::FLAG_SLEEP));
+    return (FLAG_TEST(GetObjectFlag(), GAMEOBJECTTYPES::FLAG_SLEEP));
 };
 
 

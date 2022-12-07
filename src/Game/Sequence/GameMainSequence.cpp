@@ -12,14 +12,15 @@
 #include "Game/System/Misc/ScreenFade.hpp"
 #include "Game/System/Misc/SoftwareReset.hpp"
 #include "Game/System/Misc/Gamepad.hpp"
+#include "Game/System/Misc/PadConnectCheck.hpp"
+#include "Game/System/Movie/MovieManager.hpp"
 #include "System/Common/Screen.hpp"
 #include "System/Common/GraphicsDevice.hpp"
-#include "System/Common/File/AfsFileID.hpp"
+#include "System/Common/File/FileID.hpp"
 #include "System/Common/Controller.hpp"
 #include "System/Common/Configure.hpp"
 #include "System/Common/Process/ProcessList.hpp"
 #include "System/Common/SystemText.hpp"
-
 #include "Game/Component/Gimmick/GimmickDebug.hpp"
 #include "Game/System/Hit/HitAttackManager.hpp"
 
@@ -37,7 +38,7 @@ CGameMainSequence::CGameMainSequence(void)
 , m_iLabelCurrent(PROCESSTYPES::LABEL_EOL)
 , m_param(nullptr)
 , m_fTime(0.0f)
-, m_iIntroMovieID(0)
+, m_iMovieID(0)
 {
     ;
 };
@@ -51,40 +52,44 @@ CGameMainSequence::~CGameMainSequence(void)
 
 bool CGameMainSequence::OnAttach(const void* param)
 {
-    Math::SRand(123456);
     CScreen::SetFlipEnable(false);
+#ifdef _TARGET_PC    
+    CScreen::SetFlipInterval(1);    // 60
+#else
+    CScreen::SetFlipInterval(2);    // 30
+#endif    
+    Math::SRand(123456);
     CDataLoader::Initialize();
     CTextureManager::Initialize();
+    CMovieManager::Initialize();
     CGameSound::Initialize();
     CSystemText::Initialize();
     CGameText::Initialize();
 
     if (CGameFont::Initialize())
-    {
-        CScreenFade::Initialize();
-        CLoadingDisplay::Initialize();
+    {        
+        if (CScreenFade::Initialize(this) &&
+            CLoadingDisplay::Initialize(this))
+        {
+            CDataLoader::Regist(FILEID::ID_STRINGS);
+            CDataLoader::Regist(FILEID::ID_FONT);
+            CGameData::Initialize();
+            CGamepad::EnableStickToDigitalMapping(true);
 
-        CDataLoader::Regist(AFSFILEID::ID_STRINGS);
-        CDataLoader::Regist(AFSFILEID::ID_FONT);
-        
-        CGameData::Initialize();
-
-		CGamepad::EnableStickToDigitalMapping(true);
-
-        m_fTime = 0.0f;
-        m_iIntroMovieID = MOVIECODE(1);
-        m_step = STEP_LOAD_TEXTURE;
+            m_fTime = 0.0f;
+            m_iMovieID = MOVIECODE(0);
+            m_step = STEP_LOAD_TEXTURE;
 
 #ifdef _DEBUG
-        CGimmickDebug::SHOW_AREA = false;
-        CGimmickDebug::SHOW_ATTACK = false;
-        CGimmickDebug::SHOW_CATCH = false;
-        CGimmickDebug::SHOW_MODEL = false;
-        CGimmickDebug::SHOW_ME = false;
-        CHitAttackManager::m_bDebugDrawHitSphere = false;
+            CGimmickDebug::SHOW_AREA = false;
+            CGimmickDebug::SHOW_ATTACK = false;
+            CGimmickDebug::SHOW_CATCH = false;
+            CGimmickDebug::SHOW_MODEL = false;
+            CGimmickDebug::SHOW_ME = false;
+            CHitAttackManager::m_bDebugDrawHitSphere = false;
 #endif            
-
-        return true;
+            return true;
+        };        
     };
 
     return false;
@@ -93,39 +98,131 @@ bool CGameMainSequence::OnAttach(const void* param)
 
 void CGameMainSequence::OnDetach(void)
 {
+#ifdef _TARGET_PS2
+    CPadConnectCheckProcess::Terminate(this);
+#endif
+    
     CGameData::Terminate();
-
-    CLoadingDisplay::Terminate();
-    CScreenFade::Terminate();
-
+    CLoadingDisplay::Terminate(this);
+    CScreenFade::Terminate(this);
+    
     CGameFont::Terminate();
+
     CGameText::Terminate();
     CSystemText::Terminate();
     CGameSound::Terminate();
+    CMovieManager::Terminate();
     CTextureManager::Terminate();
     CDataLoader::Terminate();
 };
 
 
-void CGameMainSequence::OnMove(bool bResume, const void* param)
+void CGameMainSequence::OnMove(bool bRet, const void* param)
 {
-    switch (m_step)
+    if (bRet)
     {
-    case STEP_LOAD_TEXTURE:
-        OnLoadTexture();
-        break;
+		//for (int32 i = 0; i < CSystemText::GetTextNum(); ++i)
+		//	wprintf(L"%x) %s\n", i, CSystemText::GetText(SYSTEXT::VALUE(i)));
 
-    case STEP_LOAD_SOUND:
-        OnLoadSound();
-        break;
+        //for (int32 i = AREAID::SELECTABLESTART; i < AREAID::SELECTABLEMAX; i++)
+        //{
+        //    CGameData::Record().Area().SetAreaCleared(AREAID::VALUE(i), CAreaRecord::CLEAR_ROOT_A);
+        //    CGameData::Record().Area().SetAreaCleared(AREAID::VALUE(i), CAreaRecord::CLEAR_ROOT_B);
+        //    CGameData::Record().Area().SetAreaRank(AREAID::VALUE(i), GAMETYPES::CLEARRANK_SS);
+        //};
 
-    case STEP_RUN:
-        OnRun(bResume, int32(param));
-        break;
+        //for (int32 i = 0; i < CGameText::GetTextNum(); ++i)
+        //    wprintf(L"%x) %s\n", i, CGameText::GetText(GAMETEXT::VALUE(i)));
+        
+        //for (int32 i = ANTIQUEID::ID_FIRST; i < ANTIQUEID::ID_MAX; ++i)
+        //{
+        //    if (!CGameData::Record().Antique().IsAntiqueTaken(ANTIQUEID::VALUE(i)))
+        //        CGameData::Record().Antique().SetAntiqueTaken(ANTIQUEID::VALUE(i));
+        //};
 
-    default:
-        ASSERT(false);
-        break;
+        //for (int32 i = DBITEMID::ID_FIRST; i < DBITEMID::ID_MAX; ++i)
+        //{
+        //    if (!CGameData::Record().Database().IsItemUnlocked(DBITEMID::VALUE(i)))
+        //        CGameData::Record().Database().SetItemUnlocked(DBITEMID::VALUE(i));
+        //};
+        
+        if (param)
+        {
+            m_iLabelNext = int32(param);
+            if (m_iLabelNext == PROCESSTYPES::LABEL_EOL)
+            {
+                Kill(PROCESSTYPES::LABEL_EOL);
+                return;
+            };
+        }
+        else
+        {
+            m_iLabelNext = Branch(m_iLabelNext);
+            if (m_iLabelNext == PROCESSTYPES::LABEL_PREV)
+                m_iLabelNext = m_iLabelPrev;
+        };        
+
+        m_iLabelPrev = m_iLabelCurrent;
+        m_iLabelCurrent = m_iLabelNext;
+        
+        if (m_iLabelCurrent == PROCESSTYPES::LABEL_SEQ_MOVIE)
+        {
+            PreMovie();
+        }
+        else if (m_iLabelCurrent == PROCESSTYPES::LABEL_SEQ_AREA)
+        {
+            CGameData::ClearNewGameFlag();
+        };
+
+        OUTPUT(
+            "GameMainSeq: branching to \"%s\", prev \"%s\"\n",
+            g_aProcessList[m_iLabelNext == PROCESSTYPES::LABEL_EOL ? PROCESSTYPES::LABEL_MAX : m_iLabelNext].m_pszName,
+            g_aProcessList[m_iLabelPrev].m_pszName
+        );
+
+        Call(m_iLabelCurrent);
+    }
+    else
+    {
+        m_fTime += CScreen::TimerStride();
+        
+        switch (m_step)
+        {
+        case STEP_LOAD_TEXTURE:
+            {
+                if (CDataLoader::IsLoadEnd())
+                {
+                    CScreenFade::StartIn(0.0f);
+                    CMessageWindow::Load();
+                    CGameSound::LoadWave(1);
+                    m_step = STEP_LOAD_SOUND;
+
+#ifdef _TARGET_PS2                    
+                    CPadConnectCheckProcess::Initialize(this);
+#endif                    
+                }
+                else
+                {
+                    CDataLoader::Period();
+                };
+            }
+            break;
+
+        case STEP_LOAD_SOUND:
+            {
+                if (CGameSound::IsLoadEnd())
+                {
+                    CScreen::SetFlipEnable(true);
+                    Call(PROCESSTYPES::LABEL_SEQ_SAVELOADCHECK);
+                    m_iLabelNext = PROCESSTYPES::LABEL_SEQ_SAVELOADCHECK;
+                    m_iLabelPrev = PROCESSTYPES::LABEL_SEQ_SAVELOADCHECK;
+                    m_iLabelCurrent = PROCESSTYPES::LABEL_SEQ_SAVELOADCHECK;
+                    m_param = nullptr;
+                    m_step = STEP_RUN;
+                };
+            }
+            break;
+        };
     };
 };
 
@@ -136,185 +233,32 @@ void CGameMainSequence::OnDraw(void) const
 };
 
 
-void CGameMainSequence::OnLoadTexture(void)
-{
-    if (CDataLoader::IsLoadEnd())
-    {
-        CScreenFade::StartIn(0.0f);
-        CMessageWindow::Load();
-        CGameSound::LoadWave(1);
-        m_step = STEP_LOAD_SOUND;
-    }
-    else
-    {
-        CDataLoader::Period();
-    };
-};
-
-
-void CGameMainSequence::OnLoadSound(void)
-{
-    if (!CGameSound::IsLoadEnd())
-        return;
-
-    CScreen::SetFlipInterval(CGraphicsDevice::FLIPINTERVAL_60);
-    CScreen::SetFlipEnable(true);
-
-    Call(PROCESSTYPES::LABEL_SEQ_SAVELOADCHECK);
-
-    m_iLabelNext = PROCESSTYPES::LABEL_SEQ_SAVELOADCHECK;
-    m_iLabelPrev = PROCESSTYPES::LABEL_SEQ_SAVELOADCHECK;
-	m_iLabelCurrent = PROCESSTYPES::LABEL_SEQ_SAVELOADCHECK;
-    m_param = nullptr;
-    m_step = STEP_RUN;
-};
-
-
-void CGameMainSequence::OnRun(bool bResume, int32 iLabel)
-{
-    bool bResult = false;
-
-    if (iLabel)
-    {
-        ASSERT(bResume);
-        m_iLabelNext = iLabel;
-    }
-    else
-    {
-        m_iLabelNext = Branch(m_iLabelNext);
-        if (m_iLabelNext == PROCESSTYPES::LABEL_PREV)
-            m_iLabelNext = m_iLabelPrev;
-    };
-
-    m_iLabelPrev = m_iLabelCurrent;
-    m_iLabelCurrent = m_iLabelNext;
-
-	OUTPUT(
-		"[GAME] GameMainSeq: branching to \"%s\", prev \"%s\"\n",
-		g_aProcessList[m_iLabelNext == PROCESSTYPES::LABEL_EOL ? PROCESSTYPES::LABEL_MAX : m_iLabelNext].m_pszName,
-		g_aProcessList[m_iLabelPrev].m_pszName
-	);
-
-    if (m_iLabelNext == PROCESSTYPES::LABEL_EOL)
-        bResult = Ret();
-    else
-        bResult = Call(m_iLabelNext, false, m_param);
-
-    ASSERT(bResult);
-
-    m_param = nullptr;
-};
-
-
 int32 CGameMainSequence::Branch(int32 iLabel)
 {
     switch (iLabel)
     {
-    case PROCESSTYPES::LABEL_SEQ_SAVELOADCHECK:
-        //return PROCESSTYPES::LABEL_SEQ_TITLE;
 #ifdef _DEBUG
-        {
-            bool bBasicDebug = true;
-            bool bOverwriteSave = false;
-
-            //
-            //  Hold left bumper to enchance game features
-            //
-            if (CController::GetDigital(CController::CONTROLLER_LOCKED_ON_VIRTUAL, CController::DIGITAL_LEFT_BUMPER) ||
-                CController::GetDigital(CController::CONTROLLER_UNLOCKED_ON_VIRTUAL, CController::DIGITAL_LEFT_BUMPER))
-                bBasicDebug = false;
-
-            //
-            //   Hold right bumper to overwrite save file even if its not new
-            //
-            if (CController::GetDigital(CController::CONTROLLER_LOCKED_ON_VIRTUAL, CController::DIGITAL_RIGHT_BUMPER) ||
-                CController::GetDigital(CController::CONTROLLER_UNLOCKED_ON_VIRTUAL, CController::DIGITAL_RIGHT_BUMPER))
-                bOverwriteSave = true;
-
-            if (CSaveLoad::IsNewSave() || bOverwriteSave)
-            {
-                OUTPUT(
-                    "[GAME] %s! Setting %s debug game data...\n",
-                    (bOverwriteSave ? "Overriding save file" : "Is new game save"),
-                    (bBasicDebug ? "BASIC" : "FULL")
-                );
-
-                CGameData::ClearNewGameFlag();
-                
-                for (int32 i = AREAID::SELECTABLESTART; i < AREAID::SELECTABLEMAX; i++)
-                {
-                    CGameData::Record().Area().SetAreaCleared(AREAID::VALUE(i), CAreaRecord::CLEAR_ROOT_A);
-                    CGameData::Record().Area().SetAreaCleared(AREAID::VALUE(i), CAreaRecord::CLEAR_ROOT_B);
-                    CGameData::Record().Area().SetAreaRank(AREAID::VALUE(i), GAMETYPES::CLEARRANK_SS);
-                };
-                
-                for (int32 i = 0; i < 30; ++i)
-                {
-                    //bool bTaken = (i <= 8);
-                    bool bTaken = true;
-
-                    CGameData::Record().Item().DebugSetCryTaken(GAMETYPES::CRYSTALTYPE_RED, i, bTaken);
-                    CGameData::Record().Item().DebugSetCryTaken(GAMETYPES::CRYSTALTYPE_GREEN, i, bTaken);
-                    CGameData::Record().Item().DebugSetCryTaken(GAMETYPES::CRYSTALTYPE_ORANGE, i, bTaken);
-                    CGameData::Record().Item().DebugSetCryTaken(GAMETYPES::CRYSTALTYPE_WHITE, i, bTaken);
-                };
-
-                CGameData::Record().Area().SetCurrentSelectedArea(AREAID::ID_MNY_STN);
-
-                if (!bBasicDebug)
-                {
-                    CSecretRecord::m_bDebugNotifyUnlocked = false;
-                    CGameData::Record().Secret().UnlockSecret(SECRETID::ID_CHARACTER_SLASHUUR);
-                    CGameData::Record().Secret().UnlockSecret(SECRETID::ID_CHARACTER_CASEY);
-                    CGameData::Record().Secret().UnlockSecret(SECRETID::ID_CHARACTER_KARAI);
-                    CGameData::Record().Secret().UnlockSecret(SECRETID::ID_CHARACTER_SPLINTER);
-                    CGameData::Record().Secret().UnlockSecret(SECRETID::ID_HOME_NEXUS_LEO);
-                    CGameData::Record().Secret().UnlockSecret(SECRETID::ID_HOME_NEXUS_RAP);
-                    CGameData::Record().Secret().UnlockSecret(SECRETID::ID_HOME_NEXUS_MIC);
-                    CGameData::Record().Secret().UnlockSecret(SECRETID::ID_HOME_NEXUS_DON);
-                    CGameData::Record().Secret().UnlockSecret(SECRETID::ID_HOME_SAMURAI_LEO);
-                    CGameData::Record().Secret().UnlockSecret(SECRETID::ID_HOME_SAMURAI_RAP);
-                    CGameData::Record().Secret().UnlockSecret(SECRETID::ID_HOME_SAMURAI_MIC);
-                    CGameData::Record().Secret().UnlockSecret(SECRETID::ID_HOME_SAMURAI_DON);
-                    CGameData::Record().Secret().UnlockSecret(SECRETID::ID_HOME_SHOP);
-                    CGameData::Record().Secret().UnlockSecret(SECRETID::ID_HOME_BONUSMATERIAL);
-                    CGameData::Record().Secret().UnlockSecret(SECRETID::ID_HOME_TOURNAMENT_KITTY);
-                    CGameData::Record().Secret().UnlockSecret(SECRETID::ID_HOME_TOURNAMENT_MONSTER);
-                    CGameData::Record().Secret().UnlockSecret(SECRETID::ID_HOME_TOURNAMENT_FOOT);
-                    CGameData::Record().Secret().UnlockSecret(SECRETID::ID_HOME_TOURNAMENT_BATTLENEXUS);
-                    CGameData::Record().Secret().UnlockSecret(SECRETID::ID_CHEATCODE_SHURIKEN);
-
-                    CGameData::Record().Nexus().SetTournamentState(GAMETYPES::NEXUSID_KITTY_OPEN, CNexusRecord::STATE_CLEAR);
-                    CGameData::Record().Nexus().SetTournamentState(GAMETYPES::NEXUSID_MONSTER_OPEN, CNexusRecord::STATE_CLEAR);
-                    CGameData::Record().Nexus().SetTournamentState(GAMETYPES::NEXUSID_FOOT_COMBAT, CNexusRecord::STATE_CLEAR);
-                    CGameData::Record().Nexus().SetTournamentState(GAMETYPES::NEXUSID_BATTLE_NEXUS, CNexusRecord::STATE_CLEAR);
-
-					for (int32 i = DBITEMID::ID_FIRST; i < DBITEMID::ID_MAX; ++i)
-					{
-						if (!CGameData::Record().Database().IsItemUnlocked(DBITEMID::VALUE(i)))
-							CGameData::Record().Database().SetItemUnlocked(DBITEMID::VALUE(i));
-					};
-
-					for (int32 i = ANTIQUEID::ID_FIRST; i < ANTIQUEID::ID_MAX; ++i)
-					{
-						if(!CGameData::Record().Antique().IsAntiqueTaken(ANTIQUEID::VALUE(i)))
-							CGameData::Record().Antique().SetAntiqueTaken(ANTIQUEID::VALUE(i));
-					};
-
-                    CSecretRecord::m_bDebugNotifyUnlocked = true;
-                };
-            };
-        }
-        return PROCESSTYPES::LABEL_SEQ_CHARSELECT;
-#else        
+    case PROCESSTYPES::LABEL_SEQ_TESTMV:
+    case PROCESSTYPES::LABEL_SEQ_TESTSD:
+        return PROCESSTYPES::LABEL_SEQ_SAVELOADCHECK;
+#endif
+        
+    case PROCESSTYPES::LABEL_SEQ_MOVIE:
+        PostMovie();
+        return PROCESSTYPES::LABEL_SEQ_TITLE;
+        
+    case PROCESSTYPES::LABEL_SEQ_SAVELOADCHECK:
+#ifdef _DEBUG        
+        return BranchTest(PROCESSTYPES::LABEL_SEQ_TITLE);
+#else
         return PROCESSTYPES::LABEL_SEQ_LOGO;
 #endif        
 
     case PROCESSTYPES::LABEL_SEQ_LOGO:
-        return PROCESSTYPES::LABEL_SEQ_MOVIE;
+        return (CConfigure::m_launchmode != CConfigure::LAUNCHMODE_NORMAL ? PROCESSTYPES::LABEL_SEQ_TITLE : PROCESSTYPES::LABEL_SEQ_MOVIE);
 
-    case PROCESSTYPES::LABEL_SEQ_MOVIE:
     case PROCESSTYPES::LABEL_SEQ_STAGEDEMO:
+    case PROCESSTYPES::LABEL_SEQ_ENDING:
         return PROCESSTYPES::LABEL_SEQ_TITLE;
 
     case PROCESSTYPES::LABEL_SEQ_TITLE:
@@ -337,6 +281,7 @@ int32 CGameMainSequence::Branch(int32 iLabel)
     case PROCESSTYPES::LABEL_SEQ_UNLOCK:
         return PROCESSTYPES::LABEL_EOL;
 
+    case PROCESSTYPES::LABEL_SEQ_OPTION:        
     case PROCESSTYPES::LABEL_SEQ_SAVELOADMENULOAD:
     case PROCESSTYPES::LABEL_SEQ_SAVELOADMENUSAVE:
         return PROCESSTYPES::LABEL_PREV;
@@ -365,7 +310,7 @@ int32 CGameMainSequence::Branch(int32 iLabel)
             {
             case CGamePlayResult::AREARESULT_CLEAR:
                 if (CGameData::Record().Area().GetCurrentSelectedArea() == AREAID::ID_AREA58)
-                    return PROCESSTYPES::LABEL_EOL; // TODO ending
+                    return PROCESSTYPES::LABEL_SEQ_ENDING;
                 else
                     return PROCESSTYPES::LABEL_SEQ_AREA;
 
@@ -400,8 +345,49 @@ int32 CGameMainSequence::Branch(int32 iLabel)
 		break;
 
     default:
-		OUTPUT("[GAME] Unknown branching for: %s\n", g_aProcessList[iLabel].m_pszName);
+		OUTPUT("Unknown branching for: %s\n", g_aProcessList[iLabel].m_pszName);
         ASSERT(false);
         return PROCESSTYPES::LABEL_EOL;
     };
+};
+
+
+void CGameMainSequence::PreMovie(void)
+{
+    CMovieManager::PreCreateMovieInstance(m_iMovieID);
+    CScreenFade::StartOut(0.0f);
+    m_iMovieID = (m_iMovieID == 0);
+};
+
+
+void CGameMainSequence::PostMovie(void)
+{
+    CMovieManager::DeleteMovieInstance();
+};
+
+
+int32 CGameMainSequence::BranchTest(int32 iDefaultLabel)
+{
+    struct TESTSEQ_INFO
+    {
+        int32 m_iLabel;
+        int32 m_Pad;
+        uint32 m_DigitalBtn;
+    };
+
+    static const TESTSEQ_INFO s_aTestSeqInfo[] =
+    {
+        { PROCESSTYPES::LABEL_SEQ_TESTMV, 0, CController::DIGITAL_SELECT | CController::DIGITAL_UP      },
+        { PROCESSTYPES::LABEL_SEQ_TESTSD, 0, CController::DIGITAL_SELECT | CController::DIGITAL_LEFT    },
+    };
+
+    for (int32 i = 0; i < COUNT_OF(s_aTestSeqInfo); ++i)
+    {
+        const TESTSEQ_INFO* pTestSeqInfo = &s_aTestSeqInfo[i];
+        uint32 DigitalBtn = CController::GetDigital(pTestSeqInfo->m_Pad);
+        if (FLAG_TEST(DigitalBtn, pTestSeqInfo->m_DigitalBtn))
+            return pTestSeqInfo->m_iLabel;
+    };
+
+    return iDefaultLabel;
 };

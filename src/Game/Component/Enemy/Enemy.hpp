@@ -12,6 +12,9 @@ class CEnemyCharacter;
 class CEnemy : public CGameObject
 {
 public:
+    static int32 m_iRefCount;
+    static int32 m_iUniqueCount;
+    
     static CEnemy* New(const ENEMYTYPES::CREATEINFO* pCreateInfo);
     
     CEnemy(const char* pszName, ENEMYID::VALUE idEnemy, CEnemyCharacter* pEnemyChr);
@@ -26,7 +29,5 @@ public:
     int32 GetHP(void);
 
 private:
-    static int32 m_iRefCount;
-    static int32 m_iUniqueCount;
     CEnemyCharacter* m_pEnemyCharacter;
 };

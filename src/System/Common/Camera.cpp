@@ -102,9 +102,6 @@ static inline CRwCameraContainer& RwCameraContainer(void)
 };
 
 
-CHECK_SIZE(CCamera, 0xC);
-
-
 /*static*/ RwCamera* CCamera::m_pCameraCurrent = nullptr;
 /*static*/ RwCamera* CCamera::m_pCameraDefault = nullptr;
 

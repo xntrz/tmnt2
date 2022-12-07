@@ -1,12 +1,16 @@
 #include "ProcessList.hpp"
 
-#include "Game/Sequence/MainSequence.hpp"
 #include "Game/Sequence/GameMainSequence.hpp"
 #include "Game/Sequence/MovieSequence.hpp"
 #include "Game/Sequence/Menu/LogoSequence.hpp"
 #include "Game/Sequence/Menu/TitleSequence.hpp"
 #include "Game/Sequence/Menu/CharacterSelectSequence.hpp"
 #include "Game/Sequence/Menu/UnlockSequence.hpp"
+#include "Game/Sequence/Menu/AntiqueShopSequence.hpp"
+#include "Game/Sequence/Menu/DatabaseSequence.hpp"
+#include "Game/Sequence/Menu/Database.hpp"
+#include "Game/Sequence/Menu/DatabaseViewer.hpp"
+#include "Game/Sequence/Menu/OptionsSequence.hpp"
 #include "Game/Sequence/SaveLoad/SaveLoadAutoSequence.hpp"
 #include "Game/Sequence/SaveLoad/SaveLoadCheckSequence.hpp"
 #include "Game/Sequence/SaveLoad/SaveLoadMenuLoadSequence.hpp"
@@ -25,9 +29,15 @@
 #include "Game/Sequence/Result/EnbuSequence.hpp"
 #include "Game/Sequence/Result/EndingSequence.hpp"
 #include "Game/Sequence/Result/StaffRollSequence.hpp"
+#include "Game/Sequence/Debug/MvTestSeq.hpp"
+#include "Game/Sequence/Debug/SdTestSeq.hpp"
+
+#include "Game/System/Misc/PadConnectCheck.hpp"
+#include "Game/System/Misc/Timeout.hpp"
 #include "Game/System/Misc/ScreenFade.hpp"
 #include "Game/System/Misc/LoadingDisplay.hpp"
 #include "Game/System/Misc/SoftwareReset.hpp"
+#include "Game/System/Misc/DebugProc.hpp"
 
 
 const PROCESSTYPES::PROCESS g_aProcessList[] =
@@ -35,7 +45,6 @@ const PROCESSTYPES::PROCESS g_aProcessList[] =
     //
     //  Sequence
     //
-    { "MainSeq",                PROCESSTYPES::LABEL_SEQ_MAIN,               PROCESSTYPES::PRIORITY_MEDIUM, CMainSequence::Instance,             },
     { "GameMainSeq",            PROCESSTYPES::LABEL_SEQ_GAMEMAIN,           PROCESSTYPES::PRIORITY_MEDIUM, CGameMainSequence::Instance,         },
     { "MovieSeq",               PROCESSTYPES::LABEL_SEQ_MOVIE,              PROCESSTYPES::PRIORITY_MEDIUM, CMovieSequence::Instance,            },
     { "LogoSeq",                PROCESSTYPES::LABEL_SEQ_LOGO,               PROCESSTYPES::PRIORITY_MEDIUM, CLogoSequence::Instance,             },
@@ -57,21 +66,27 @@ const PROCESSTYPES::PROCESS g_aProcessList[] =
     { "EnbuSeq",                PROCESSTYPES::LABEL_SEQ_ENBU,               PROCESSTYPES::PRIORITY_MEDIUM, CEnbuSequence::Instance              },
     { "HomeSeq",                PROCESSTYPES::LABEL_SEQ_HOME,               PROCESSTYPES::PRIORITY_MEDIUM, CHomeSequence::Instance              },
     { "HomeStageSeq",           PROCESSTYPES::LABEL_SEQ_HOMESTAGE,          PROCESSTYPES::PRIORITY_MEDIUM, CHomeStageSequence::Instance         },
-    { "AprilSeq",               PROCESSTYPES::LABEL_SEQ_ANTIQUESHOP,        PROCESSTYPES::PRIORITY_MEDIUM, nullptr                              },
-    { "DatabaseSeq",            PROCESSTYPES::LABEL_SEQ_DATABASE,           PROCESSTYPES::PRIORITY_MEDIUM, nullptr                              },
+    { "AprilSeq",               PROCESSTYPES::LABEL_SEQ_ANTIQUESHOP,        PROCESSTYPES::PRIORITY_MEDIUM, CAntiqueShopSequence::Instance       },
+    { "DatabaseSeq",            PROCESSTYPES::LABEL_SEQ_DATABASEMAIN,       PROCESSTYPES::PRIORITY_MEDIUM, CDatabaseSequence::Instance          },
+    { "Database",               PROCESSTYPES::LABEL_SEQ_DATABASE,           PROCESSTYPES::PRIORITY_MEDIUM, CDatabase::Instance                  },
+    { "DatabaseVw",             PROCESSTYPES::LABEL_SEQ_DATABASEVIEWER,     PROCESSTYPES::PRIORITY_MEDIUM, CDatabaseViewer::Instance            },
     { "NexusMenuSeq",           PROCESSTYPES::LABEL_SEQ_NEXUSMENU,          PROCESSTYPES::PRIORITY_MEDIUM, CNexusMenuSequence::Instance         },
     { "NexusRetrySeq",          PROCESSTYPES::LABEL_SEQ_NEXUSRETRY,         PROCESSTYPES::PRIORITY_MEDIUM, CNexusRetrySequence::Instance        },
     { "EndingSeq",              PROCESSTYPES::LABEL_SEQ_ENDING,             PROCESSTYPES::PRIORITY_MEDIUM, CEndingSequence::Instance            },
     { "StaffRollSeq",           PROCESSTYPES::LABEL_SEQ_STAFFROLL,          PROCESSTYPES::PRIORITY_MEDIUM, CStaffRollSequence::Instance         },
+    { "OptionSeq",              PROCESSTYPES::LABEL_SEQ_OPTION,             PROCESSTYPES::PRIORITY_MEDIUM, COptionsSequence::Instance           },
+    { "TestMV",                 PROCESSTYPES::LABEL_SEQ_TESTMV,             PROCESSTYPES::PRIORITY_MEDIUM, CMvTestSeq::Instance                 },
+    { "TestSD",                 PROCESSTYPES::LABEL_SEQ_TESTSD,             PROCESSTYPES::PRIORITY_MEDIUM, CSdTestSeq::Instance                 },
 
     //
     //  Process
     //
-    { "ScreenFade",     PROCESSTYPES::LABEL_SCREENFADE,         PROCESSTYPES::PRIORITY_LOW,     CScreenFade::Instance,          },
-    { "LoadingDisp",    PROCESSTYPES::LABEL_LOADINGDISPLAY,     PROCESSTYPES::PRIORITY_LOW,     CLoadingDisplay::Instance,      },
-    { "Timeout",        PROCESSTYPES::LABEL_TIMEOUT,            PROCESSTYPES::PRIORITY_MEDIUM,  nullptr                         },
-    { "PadConnCheck",   PROCESSTYPES::LABEL_PADCONNECTCHECK,    PROCESSTYPES::PRIORITY_MEDIUM,  nullptr                         },
-    { "SoftwareReset",  PROCESSTYPES::LABEL_SOFTWARERESET,      PROCESSTYPES::PRIORITY_LOW,     CSoftwareReset::Instance        },
+    { "ScreenFade",     PROCESSTYPES::LABEL_SCREENFADE,         PROCESSTYPES::PRIORITY_LOW,         CScreenFade::Instance,              },
+    { "LoadingDisp",    PROCESSTYPES::LABEL_LOADINGDISPLAY,     PROCESSTYPES::PRIORITY_LOW,         CLoadingDisplay::Instance,          },
+    { "Timeout",        PROCESSTYPES::LABEL_TIMEOUT,            PROCESSTYPES::PRIORITY_HIGH + 2,    CTimeoutProcess::Instance           },
+    { "PadConnCheck",   PROCESSTYPES::LABEL_PADCONNECTCHECK,    PROCESSTYPES::PRIORITY_MEDIUM + 1,  CPadConnectCheckProcess::Instance   },
+    { "SoftwareReset",  PROCESSTYPES::LABEL_SOFTWARERESET,      PROCESSTYPES::PRIORITY_LOW,         CSoftwareReset::Instance            },
+    { "DebugProc",      PROCESSTYPES::LABEL_DEBUGPROC,          PROCESSTYPES::PRIORITY_LOW,         CDebugProc::Instance                },
 
     //
     //  List end

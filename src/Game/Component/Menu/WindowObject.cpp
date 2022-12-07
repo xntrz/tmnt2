@@ -135,7 +135,7 @@ void CWindowObject::DoneInput(void)
 
 void CWindowObject::DrawInWindow(const Rt2dBBox& bbox) const
 {
-    if (m_Title.Text() && m_Text.Text())
+    if (m_Title.Text())
     {
         Rt2dBBox bboxTitle;
         Rt2dBBox bboxText;

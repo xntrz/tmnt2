@@ -1,8 +1,8 @@
 #include "GameObjLoadInfo.hpp"
 
 #include "System/Common/File/FileTypes.hpp"
-#include "System/Common/File/AfsFileID.hpp"
-#include "System/Common/File/AfsFilename.hpp"
+#include "System/Common/File/FileID.hpp"
+#include "System/Common/File/Filename.hpp"
 
 
 CGameObjLoadInfo::CGameObjLoadInfo(void)
@@ -22,9 +22,9 @@ int32 CGameObjLoadInfo::GetFileID(void) const
 {
     const char* pszFilename = GetFileName();
     if (pszFilename)
-        return CAfsFilename::FileID(pszFilename);
+        return CFilename::ID(pszFilename);
     else
-        return AFSFILEID::ID_INVALID;
+        return FILEID::ID_INVALID;
 };
 
 

@@ -1,20 +1,17 @@
 #pragma once
 
-#include "System/Common/File/AfsFileManager.hpp"
+#include "System/Common/File/AdxFileManager.hpp"
+
+class CPCPhyFileAccess;
+class CPCRcFileAccess;
 
 
-class CPCResRwFileSystem;
-class CPCPhysicalFileAccess;
-class CPCResFileAccess;
-
-
-class CPCFileManager final : public CAfsFileManager
+class CPCFileManager final : public CAdxFileManager
 {
 public:
     enum
     {
-        LABELPCBEGIN = LABELAFS_EXTEND,
-        
+        LABELPCBEGIN = LABELADX_EXTEND,
         LABELPC_RESID,
     };
     
@@ -27,18 +24,22 @@ public:
     virtual CFileAccess* AllocRequest(int32 nID, int32 nLabel) override;
     virtual CFileAccess* AllocRequest(const char* pszName, int32 nLabel) override;
     virtual void GarbageCollection(void) override;
+    virtual bool SetupFileSystem(void) override;
+    virtual void ShutdownFileSystem(void) override;
 
 private:
-    CFileAccess* AllocFileResource(int32 nID);
-    CFileAccess* AllocFilePhysical(const char* pszFilename);
+    CFileAccess* AllocFileRc(int32 nID);
+    CFileAccess* AllocFilePhy(const char* pszFilename);
+    void SetupWorkingDir(void);
 
-private:
-    CPCResRwFileSystem* m_pResRwFS;    
-    CPCPhysicalFileAccess* m_paPCPhyFileAccess;
-    CList<CPCPhysicalFileAccess> m_listPCPhyFileAccessPool;
-    CList<CPCPhysicalFileAccess> m_listPCPhyFileAccessAlloc;
-    CPCResFileAccess* m_paPCResFileAccess;
-    CList<CPCResFileAccess> m_listPCResFileAccessPool;
-    CList<CPCResFileAccess> m_listPCResFileAccessAlloc;
+private:    
+    CPCPhyFileAccess* m_paPCPhyFileAccess;
+    CList<CPCPhyFileAccess> m_listPCPhyFileAccessPool;
+    CList<CPCPhyFileAccess> m_listPCPhyFileAccessAlloc;
+    CPCRcFileAccess* m_paPCRcFileAccess;
+    CList<CPCRcFileAccess> m_listPCRcFileAccessPool;
+    CList<CPCRcFileAccess> m_listPCRcFileAccessAlloc;
     bool m_bAfsOverrideFlag;
+    void* m_adxfic;
+    char m_szPath[256];
 };

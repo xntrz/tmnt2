@@ -14,7 +14,7 @@
 #include "System/Common/Screen.hpp"
 #include "System/Common/SystemText.hpp"
 #include "System/Common/Process/ProcessList.hpp"
-#include "System/Common/File/AfsFileID.hpp"
+#include "System/Common/File/FileID.hpp"
 
 
 namespace MENUITEMID
@@ -34,7 +34,7 @@ namespace MENUITEMID
 {
 	{ MENUITEMID::ID_GAME_NEW, 		GAMETEXT::VALUE(0x232), CTitleSequence::NEXT_SEQUENCE_GAME_NEW, 		true, 	true, 	},
 	{ MENUITEMID::ID_GAME_CONTINUE, GAMETEXT::VALUE(0x233), CTitleSequence::NEXT_SEQUENCE_GAME_CONTINUE, 	true, 	true, 	},
-	{ MENUITEMID::ID_OPTIONS, 		GAMETEXT::VALUE(0xD), 	CTitleSequence::NEXT_SEQUENCE_OPTIONS, 			true, 	false, 	},
+	{ MENUITEMID::ID_OPTIONS, 		GAMETEXT::VALUE(0xD), 	CTitleSequence::NEXT_SEQUENCE_OPTIONS, 			true, 	true, 	},
 	{ MENUITEMID::ID_QUIT, 			GAMETEXT::VALUE(0xE), 	CTitleSequence::NEXT_SEQUENCE_QUIT, 			true, 	true, 	},
 	{ MENUITEMID::ID_ARCADE, 		GAMETEXT::VALUE(0x234), CTitleSequence::NEXT_SEQUENCE_ARCADE, 			false, 	false, 	},
 };
@@ -74,7 +74,13 @@ bool CTitleSequence::OnAttach(const void* param)
 #ifdef _TARGET_PC
 	m_aMenuItemInfoTable[MENUITEMID::ID_QUIT].m_bEnabled = true;
 	m_aMenuItemInfoTable[MENUITEMID::ID_QUIT].m_bVisible = true;
-#endif
+#else
+	if (CGameData::Record().Secret().IsUnlockedSecret(SECRETID::ID_HOME_ARCADEGAME))
+	{
+		m_aMenuItemInfoTable[MENUITEMID::ID_ARCADE].m_bEnabled = true;
+		m_aMenuItemInfoTable[MENUITEMID::ID_ARCADE].m_bVisible = true;
+	};
+#endif	
 	m_aMenuItemInfoTable[MENUITEMID::ID_GAME_CONTINUE].m_bEnabled = (!CGameData::IsNewGame());
 	
 	CAnim2DSequence::m_bDisplayLoading = false;
@@ -82,8 +88,8 @@ bool CTitleSequence::OnAttach(const void* param)
 	CController::UnlockAllControllers();
 	CGameData::Attribute().SetVirtualPad(CController::CONTROLLER_UNLOCKED_ON_VIRTUAL);
 	
-	bool bResult = CAnim2DSequence::OnAttach(AFSFILEID::ID_TITLE);
-	CDataLoader::Regist(AFSFILEID::ID_TITLE2);
+	bool bResult = CAnim2DSequence::OnAttach(FILEID::ID_TITLE);
+	CDataLoader::Regist(FILEID::ID_TITLE2);
 	return bResult;
 };
 
@@ -95,15 +101,15 @@ void CTitleSequence::OnDetach(void)
 };
 
 
-void CTitleSequence::OnMove(bool bResume, const void* param)
+void CTitleSequence::OnMove(bool bRet, const void* param)
 {
-	if (bResume)
+	if (bRet)
 	{
 		CController::UnlockAllControllers();
 		CGameData::Attribute().SetVirtualPad(CController::CONTROLLER_UNLOCKED_ON_VIRTUAL);
 	};
 
-	CAnim2DSequence::OnMove(bResume, param);
+	CAnim2DSequence::OnMove(bRet, param);
 
 	if (m_step != STEP_DRAW)
 		return;
@@ -196,6 +202,10 @@ bool CTitleSequence::OnRet(void)
 	switch (m_NextSequence)
 	{
 	case NEXT_SEQUENCE_GAME_NEW:
+		CGameData::OnNewGame();
+		Ret();
+		break;
+		
 	case NEXT_SEQUENCE_GAME_CONTINUE:
 		Ret();
 		break;
@@ -205,7 +215,10 @@ bool CTitleSequence::OnRet(void)
 		break;
 
 	case NEXT_SEQUENCE_OPTIONS:
-	case NEXT_SEQUENCE_ARCADE:		
+		Ret((const void*)PROCESSTYPES::LABEL_SEQ_OPTION);
+		break;
+		
+	case NEXT_SEQUENCE_ARCADE:
 	case NEXT_SEQUENCE_QUIT:
 		Ret((const void*)PROCESSTYPES::LABEL_EOL);
 		break;

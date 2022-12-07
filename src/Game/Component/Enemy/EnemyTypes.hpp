@@ -5,6 +5,18 @@
 
 namespace ENEMYTYPES
 {
+    struct CHARACTERISTIC
+    {
+        float m_fThinkingFrequency;
+        float m_fRatioOfActivity;
+        float m_fRatioOfMove;
+        float m_fRatioOfFrontView;
+        float m_fRatioOfRearView;
+        float m_fRadiusOfAction;
+        float m_fDistanceOfSuitable;
+        float m_fRatioOfImpulsiveness;
+    };
+
     enum STATUS
     {
         STATUS_HIDE = 0,
@@ -63,8 +75,8 @@ namespace ENEMYTYPES
         STATUS_CAUGHT,
         STATUS_LIFTED,
         STATUS_LIFTED_WALK,
-        STATUS_THROW_FRONT,
-        STATUS_THROW_BACK,
+        STATUS_THROWN_FRONT,
+        STATUS_THROWN_BACK,
         STATUS_GUARD,
         
         STATUS_SPECIAL,

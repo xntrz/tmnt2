@@ -1,6 +1,8 @@
 #include "GameEnemy.hpp"
 
 #include "Game/Component/Enemy/Enemy.hpp"
+#include "Game/Component/Enemy/CharacterCompositor.hpp"
+#include "Game/Component/Enemy/EnemyCharacter.hpp"
 #include "Game/System/GameObject/GameObjectManager.hpp"
 
 
@@ -48,9 +50,10 @@ void CGameEnemy::InvokeDeathFloor(void)
 {
     if (IsAlive())
     {
-        //
-        // TODO
-        //
+        CGameObjectManager::SendMessage(
+            &Enemy().EnemyCharacter().CharacterCompositor(),
+            CHARACTERTYPES::MESSAGEID_DEATHFLOOR
+        );
     };
 };
 

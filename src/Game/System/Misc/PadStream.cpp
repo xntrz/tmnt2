@@ -2,7 +2,7 @@
 #include "Gamepad.hpp"
 
 #include "System/Common/Controller.hpp"
-#include "System/PC/PCUtils.hpp"
+#include "System/PC/PCSpecific.hpp"
 
 
 CPadStream::CPadStream(void)
@@ -280,7 +280,7 @@ CPCPadFileStream::CPCPadFileStream(FILEMODE filemode, STAGEID::VALUE idStage, in
             szDir[0] = '\0';
             szModulePath[0] = '\0';
 
-            CPCUtils::GetModulePath(szModulePath, sizeof(szModulePath));
+            CPCSpecific::GetModulePath(szModulePath, sizeof(szModulePath));
             _splitpath(szModulePath, szDrive, szDrive, nullptr, nullptr);
             sprintf(
                 szFilePath,

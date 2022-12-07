@@ -18,7 +18,7 @@
 /*static*/ PLAYERID::VALUE CPlayDemoSequence::m_aPlayerTable[] =
 {
     PLAYERID::ID_LEO,
-    PLAYERID::ID_RAPH,
+    PLAYERID::ID_RAP,
     PLAYERID::ID_MIC,
     PLAYERID::ID_DON,
 };
@@ -64,7 +64,7 @@ bool CPlayDemoSequence::OnAttach(const void* param)
     
     CGameData::PushOption();
     CGameData::Option().Play().SetDefault();
-    CGameData::Option().Play().SetEnableHelp(false);
+    CGameData::Option().Display().SetEnableHelp(false);
     CGameData::Option().Display().SetDefault();
 
     CGameSound::Stop();
@@ -121,9 +121,9 @@ void CPlayDemoSequence::OnDetach(void)
 };
 
 
-void CPlayDemoSequence::OnMove(bool bResume, const void* param)
+void CPlayDemoSequence::OnMove(bool bRet, const void* param)
 {
-    CStageBaseSequence::OnMove(bResume, param);
+    CStageBaseSequence::OnMove(bRet, param);
 
     if (GetState() == STATE_PLAY)
     {

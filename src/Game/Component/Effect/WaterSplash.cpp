@@ -209,37 +209,37 @@ void CWaterSplash::SetVertex(WATERSPLASH* pWaterSplash, RwMatrix* pMatrix, RwIm3
 
     pVertex[0].objVertex = aPosition[1];
     pVertex[0].objNormal = Math::VECTOR3_ZERO;
-    pVertex[0].color = COLOR_TO_INTEGER_RWRGBA(color);
+    pVertex[0].color = RWRGBALONGEX(color);
     pVertex[0].u = 0.0f;
     pVertex[0].v = 1.0f;
 
     pVertex[1].objVertex = aPosition[0];
     pVertex[1].objNormal = Math::VECTOR3_ZERO;
-    pVertex[1].color = COLOR_TO_INTEGER_RWRGBA(color);
+    pVertex[1].color = RWRGBALONGEX(color);
     pVertex[1].u = 0.0f;
     pVertex[1].v = 0.0f;
 
     pVertex[2].objVertex = aPosition[3];
     pVertex[2].objNormal = Math::VECTOR3_ZERO;
-    pVertex[2].color = COLOR_TO_INTEGER_RWRGBA(color);
+    pVertex[2].color = RWRGBALONGEX(color);
     pVertex[2].u = 1.0f;
     pVertex[2].v = 1.0f;
 
     pVertex[3].objVertex = aPosition[3];
     pVertex[3].objNormal = Math::VECTOR3_ZERO;
-    pVertex[3].color = COLOR_TO_INTEGER_RWRGBA(color);
+    pVertex[3].color = RWRGBALONGEX(color);
     pVertex[3].u = 1.0f;
     pVertex[3].v = 1.0f;
 
     pVertex[4].objVertex = aPosition[0];
     pVertex[4].objNormal = Math::VECTOR3_ZERO;
-    pVertex[4].color = COLOR_TO_INTEGER_RWRGBA(color);
+    pVertex[4].color = RWRGBALONGEX(color);
     pVertex[4].u = 0.0f;
     pVertex[4].v = 0.0f;
 
     pVertex[5].objVertex = aPosition[2];
     pVertex[5].objNormal = Math::VECTOR3_ZERO;
-    pVertex[5].color = COLOR_TO_INTEGER_RWRGBA(color);
+    pVertex[5].color = RWRGBALONGEX(color);
     pVertex[5].u = 1.0f;
     pVertex[5].v = 0.0f;
 };

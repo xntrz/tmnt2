@@ -242,7 +242,7 @@ namespace Splinter
 
 
 CSplinter::CSplinter(GAMETYPES::COSTUME costume)
-: CPlayerCharacter("Splinter", PLAYERID::ID_SPLINTER, costume)
+: CPlayerCharacter("Splinter", PLAYERID::ID_SPL, costume)
 {
     //
 	//	Model parts:

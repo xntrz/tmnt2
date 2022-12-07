@@ -9,8 +9,7 @@
 #include "System/Common/Process/Sequence.hpp"
 
 
-static bool s_bRequested = false;
-static bool s_bExecuting = false;
+/*static*/ bool CSoftwareReset::m_bEnable = false;
 
 
 /*static*/ CProcess* CSoftwareReset::Instance(void)
@@ -19,38 +18,22 @@ static bool s_bExecuting = false;
 };
 
 
-/*static*/ void CSoftwareReset::Request(void)
+/*static*/ bool CSoftwareReset::Initialize(CProcess* pCurrent)
 {
-    s_bRequested = true;
+    return pCurrent->Mail().Send(PROCESSTYPES::LABEL_SOFTWARERESET, PROCESSTYPES::MAIL::TYPE_ATTACH);
 };
 
 
-/*static*/ bool CSoftwareReset::IsRequested(void)
+/*static*/ void CSoftwareReset::Terminate(CProcess* pCurrent)
 {
-    return s_bExecuting;
-};
-
-
-/*static*/ void CSoftwareReset::Complete(void)
-{
-    s_bExecuting = false;
-};
-
-
-/*static*/ void CSoftwareReset::Initialize(void)
-{
-    CProcessDispatcher::AttachProcess(PROCESSTYPES::LABEL_SOFTWARERESET);
-};
-
-
-/*static*/ void CSoftwareReset::Terminate(void)
-{
-    CProcessDispatcher::DetachProcess(PROCESSTYPES::LABEL_SOFTWARERESET);
+    pCurrent->Mail().Send(PROCESSTYPES::LABEL_SOFTWARERESET, PROCESSTYPES::MAIL::TYPE_DETACH);
 };
 
 
 CSoftwareReset::CSoftwareReset(void)
-: m_fTimer(0.0f)
+: m_fKeyTimer(0.0f)
+, m_iRootSeqLabel(0)
+, m_mode(MODE_NORMAL)
 {
     ;
 };
@@ -64,7 +47,8 @@ CSoftwareReset::~CSoftwareReset(void)
 
 bool CSoftwareReset::Attach(void)
 {
-    m_fTimer = 0.0f;
+    clear();
+    messageProc();
 	return true;
 };
 
@@ -77,63 +61,94 @@ void CSoftwareReset::Detach(void)
 
 void CSoftwareReset::Move(void)
 {
-    if (!CGameData::Attribute().IsInteractive())
-    {
-        m_fTimer = 0.0f;
-        return;
-    };
+    messageProc();
 
-#ifdef _DEBUG
-    CheckDebugRequest();
-#endif
-
-    if (s_bRequested)
+    if (m_bEnable && CGameData::Attribute().IsInteractive())
     {
-        s_bRequested = false;
-        s_bExecuting = true;
-        
-        ExecReset();
+        int32 iController = CGameData::Attribute().GetVirtualPad();
+        if (m_mode == MODE_DEBUGMENU)
+            iController = CController::CONTROLLER_UNLOCKED_ON_VIRTUAL;
+
+        if (CController::GetDigital(iController, CController::DIGITAL_LEFT_BUMPER) &&
+            CController::GetDigital(iController, CController::DIGITAL_RIGHT_BUMPER))
+        {
+            m_fKeyTimer += CScreen::TimerStride();
+            if (m_fKeyTimer >= 0.0f)
+                execReset();
+        }
+        else
+        {
+            m_fKeyTimer = 0.0f;
+        };
+    }
+    else
+    {
+        m_fKeyTimer = 0.0f;
     };
 };
 
 
 void CSoftwareReset::Draw(void) const
 {
-	;
+    ;
 };
 
 
-void CSoftwareReset::ExecReset(void)
+void CSoftwareReset::execReset(void)
 {
-    int32 iRootSeq = PROCESSTYPES::LABEL_TOP;
+    clear();
+    
     int32 iCurrentSeq = CSequence::GetCurrently();
-
-    if(Info().IsProcessExist(iCurrentSeq))
-        ((CSequence&)Info().Process(iCurrentSeq)).Kill(iRootSeq);
+    CSequence& SeqProc = (CSequence&)Info().Process(iCurrentSeq);
+    SeqProc.Kill(m_iRootSeqLabel);
 };
 
 
-void CSoftwareReset::CheckDebugRequest(void)
-{    
-    if (CController::GetDigital(CController::CONTROLLER_UNLOCKED_ON_VIRTUAL, CController::DIGITAL_SELECT) &&
-        CController::GetDigital(CController::CONTROLLER_UNLOCKED_ON_VIRTUAL, CController::DIGITAL_START) ||
-        CController::GetDigital(CController::CONTROLLER_LOCKED_ON_VIRTUAL, CController::DIGITAL_SELECT) &&
-        CController::GetDigital(CController::CONTROLLER_LOCKED_ON_VIRTUAL, CController::DIGITAL_START))
+void CSoftwareReset::messageProc(void)
+{
+    PROCESSTYPES::MAIL mail = PROCESSTYPES::MAIL::EMPTY;
+
+    while (Mail().Recv(mail))
     {
-        m_fTimer += CScreen::TimerStride();
-        if (m_fTimer > 1.0f)
+        if (mail.m_type == PROCESSTYPES::MAIL::TYPE_MSG)
         {
-            s_bRequested = true;
-            m_fTimer = 0.0f;
-        };
-    }
-    else
-    {
-        m_fTimer -= CScreen::TimerStride();
-        if (m_fTimer < 0.0f)
-        {
-            s_bRequested = false;
-            m_fTimer = 0.0f;
+            MESSAGE* pMessage = (MESSAGE*)mail.m_param;
+            ASSERT(pMessage);
+
+            switch (pMessage->m_type)
+            {
+            case MESSAGE::TYPE_MODE:
+                {
+                    ASSERT((pMessage->m_param.m_mode == MODE_NORMAL) || (pMessage->m_param.m_mode == MODE_DEBUGMENU));
+                    m_mode = pMessage->m_param.m_mode;
+                }
+                break;
+
+            case MESSAGE::TYPE_ENABLE:
+                {
+                    m_bEnable = pMessage->m_param.m_bEnable;
+                }
+                break;
+
+            case MESSAGE::TYPE_ROOTSEQ:
+                {
+                    m_iRootSeqLabel = pMessage->m_param.m_iRootSeqLabel;
+                }
+                break;
+
+            default:
+                ASSERT(false);
+                break;
+            };
         };
     };
+};
+
+
+void CSoftwareReset::clear(void)
+{
+    m_bEnable = false;
+    m_mode = MODE_NORMAL;
+    m_fKeyTimer = 0.0f;
+    m_iRootSeqLabel = 0;
 };

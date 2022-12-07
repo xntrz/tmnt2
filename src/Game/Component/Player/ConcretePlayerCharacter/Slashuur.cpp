@@ -89,7 +89,7 @@ namespace Slashuur
 
 
 CSlashuur::CSlashuur(GAMETYPES::COSTUME costume)
-: CPlayerCharacter("Slashuur", PLAYERID::ID_SLASHUUR, costume)
+: CPlayerCharacter("Slashuur", PLAYERID::ID_SLA, costume)
 {
 	//
 	//	Model parts:

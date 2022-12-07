@@ -21,7 +21,6 @@ void CPlayDemoStageSeqState::OnAttach(CStageBaseSequence* pSeq, const void* pPar
     else
         pMapCamera->SetPathMode(CMapCamera::PATHMODE_SINGLEPLAYER);
 
-
     CScreenFade::StartOut();
     m_fTime = 0.0f;
     m_step = STEP_PLAY;

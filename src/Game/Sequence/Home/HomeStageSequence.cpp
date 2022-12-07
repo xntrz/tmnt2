@@ -66,9 +66,9 @@ void CHomeStageSequence::OnDetach(void)
 };
 
 
-void CHomeStageSequence::OnMove(bool bResume, const void* param)
+void CHomeStageSequence::OnMove(bool bRet, const void* param)
 {
-    CStageBaseSequence::OnMove(bResume, param);
+    CStageBaseSequence::OnMove(bRet, param);
 };
 
 

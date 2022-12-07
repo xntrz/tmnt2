@@ -178,7 +178,7 @@ CCharacter::TYPE CCharacter::GetAttackCharacterType(void) const
 
 void CCharacter::Draw(void) const
 {
-    if (IS_FLAG_SET(GetObjectFlag(), GAMEOBJECTTYPES::FLAG_SLEEP))
+    if (FLAG_TEST(GetObjectFlag(), GAMEOBJECTTYPES::FLAG_SLEEP))
         return;
 
     ASSERT(m_pModuleMan);
@@ -224,7 +224,7 @@ void CCharacter::UpdateParameter(void)
     if (!IsCharacterFlagSet(CHARACTERTYPES::FLAG_CANCEL_GRAVITY))
     {
         float fGravity = CGameProperty::GetGravity();
-        m_vVelocity.y += dt * fGravity;
+        m_vVelocity.y += (dt * fGravity);
     };
 
     if (IsCharacterFlagSet(CHARACTERTYPES::FLAG_CLAMP_VELOCITY_XZ))
@@ -676,6 +676,12 @@ void CCharacter::RequestDamage(int32 iDmgReq)
 bool CCharacter::IsDamageRequested(void) const
 {
     return (m_iDamageRequest > 0);
+};
+
+
+int32 CCharacter::GetRequestedDamage(void) const
+{
+    return m_iDamageRequest;
 };
 
 
@@ -1260,7 +1266,7 @@ CHARACTERTYPES::FLAG CCharacter::GetCharacterFlag(void) const
 
 bool CCharacter::IsCharacterFlagSet(CHARACTERTYPES::FLAG flag) const
 {
-    return IS_FLAG_SET(m_characterflag, flag);
+    return FLAG_TEST(m_characterflag, flag);
 };
 
 

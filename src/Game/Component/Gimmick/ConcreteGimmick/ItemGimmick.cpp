@@ -124,7 +124,7 @@ void CItemGimmick::PostMove(void)
     case STATE_INIT:
         {
             m_fDeathHeight = CWorldMap::GetMapHeight(&m_vPosition) + 1.0f;
-            if (IS_FLAG_SET(CWorldMap::GetCollisionResultAttribute(), MAPTYPES::ATTRIBUTE_DEATH))
+            if (FLAG_TEST(CWorldMap::GetCollisionResultAttribute(), MAPTYPES::ATTRIBUTE_DEATH))
                 m_fDeathHeight = CWorldMap::GetCharacterDeathHeight();
             
             m_state = STATE_FALL;
@@ -341,28 +341,28 @@ void CItemGimmick::setVertex(float fRadius, const RwRGBA& rColor)
     m_aVertex[0].objVertex.z = 0.0f;
     m_aVertex[0].u = 0.01f;
     m_aVertex[0].v = 0.99f;
-    m_aVertex[0].color = COLOR_TO_INTEGER_RWRGBA(rColor);
+    m_aVertex[0].color = RWRGBALONGEX(rColor);
 
     m_aVertex[1].objVertex.x = w * -1.0f;
     m_aVertex[1].objVertex.y = h * -1.0f;
     m_aVertex[1].objVertex.z = 0.0f;
     m_aVertex[1].u = 0.01f;
     m_aVertex[1].v = 0.01f;
-    m_aVertex[1].color = COLOR_TO_INTEGER_RWRGBA(rColor);
+    m_aVertex[1].color = RWRGBALONGEX(rColor);
 
     m_aVertex[2].objVertex.x = w;
     m_aVertex[2].objVertex.y = h;
     m_aVertex[2].objVertex.z = 0.0f;
     m_aVertex[2].u = 0.99f;
     m_aVertex[2].v = 0.99f;
-    m_aVertex[2].color = COLOR_TO_INTEGER_RWRGBA(rColor);
+    m_aVertex[2].color = RWRGBALONGEX(rColor);
 
     m_aVertex[3].objVertex.x = w;
     m_aVertex[3].objVertex.y = h * -1.0f;
     m_aVertex[3].objVertex.z = 0.0f;
     m_aVertex[3].u = 0.99f;
     m_aVertex[3].v = 0.01f;
-    m_aVertex[3].color = COLOR_TO_INTEGER_RWRGBA(rColor);
+    m_aVertex[3].color = RWRGBALONGEX(rColor);
 };
 
 

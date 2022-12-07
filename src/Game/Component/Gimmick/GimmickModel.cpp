@@ -100,7 +100,7 @@ void CGimmickModel::SetRotation(const RwV3d* pRot)
 };
 
 
-void CGimmickModel::GetPosition(RwV3d* pPos)
+void CGimmickModel::GetPosition(RwV3d* pPos) const
 {
     ASSERT(pPos);
     ASSERT(m_apModel[0]);
@@ -217,13 +217,13 @@ void CNormalGimmickModel::SetVisualBreak(void)
 
 void CNormalGimmickModel::SetCollisionNormal(void)
 {
-    m_ViewModelKind = MODELKIND_ATARI_NORMAL;
+	m_CollisionModelKind = MODELKIND_ATARI_NORMAL;
 };
 
 
 void CNormalGimmickModel::SetCollisionBreak(void)
 {
-    m_ViewModelKind = MODELKIND_ATARI_BREAK;
+	m_CollisionModelKind = MODELKIND_ATARI_BREAK;
 };
 
 

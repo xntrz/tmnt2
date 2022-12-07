@@ -368,7 +368,7 @@ void CLocus::SetVertex(RwIm3DVertex* pVertex, RwV3d* pVector, RwRGBA& color, uin
 {
     color.alpha = alpha;
     
-    pVertex->color = COLOR_TO_INTEGER_RWRGBA(color);
+    pVertex->color = RWRGBALONGEX(color);
     pVertex->objVertex.x = pVector->x;
     pVertex->objVertex.y = pVector->y;
     pVertex->objVertex.z = pVector->z;

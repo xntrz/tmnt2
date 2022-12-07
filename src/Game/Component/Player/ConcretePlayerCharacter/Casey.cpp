@@ -115,7 +115,7 @@ namespace Casey
 
 
 CCasey::CCasey(GAMETYPES::COSTUME costume)
-: CPlayerCharacter("Casey", PLAYERID::ID_CASEY, costume)
+: CPlayerCharacter("Casey", PLAYERID::ID_CAS, costume)
 {
     //
 	//	Model parts:

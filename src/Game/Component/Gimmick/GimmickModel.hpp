@@ -13,8 +13,8 @@ public:
     virtual void UpdateFrame(void);
     void SetPosition(const RwV3d* pPos);
     void SetRotation(const RwV3d* pRot);
-    void GetPosition(RwV3d* pPos);
-    
+    void GetPosition(RwV3d* pPos) const;
+
 protected:
     CModel** m_apModel;
     int32 m_nNumGimmickModel;

@@ -42,14 +42,16 @@ bool CStageBaseSequence::OnAttach(const void* param)
     );
     
     CGamepad::EnableStickToDigitalMapping(false);
+    CGamepad::DigitalCancelToFunction(false);
     return true;
 };
 
 
 void CStageBaseSequence::OnDetach(void)
 {
+    CGamepad::DigitalCancelToFunction(true);
     CGamepad::EnableStickToDigitalMapping(true);
-    CLoadingDisplay::Stop();
+    CLoadingDisplay::Stop(this);
     CGameData::Attribute().SetInteractive(false);
     m_GameStage.Stop();
     cleanupState();
@@ -63,7 +65,7 @@ void CStageBaseSequence::OnDetach(void)
 };
 
 
-void CStageBaseSequence::OnMove(bool bResume, const void* param)
+void CStageBaseSequence::OnMove(bool bRet, const void* param)
 {
     if (runState())
     {
@@ -111,11 +113,11 @@ void CStageBaseSequence::ChangeState(STATE state, const void* pParam)
     {
         if (state == STATE_LOAD)
         {
-            CLoadingDisplay::Start();
+            CLoadingDisplay::Start(this);
         }
         else if (m_state == STATE_LOAD)
         {
-            CLoadingDisplay::Stop();
+            CLoadingDisplay::Stop(this);
         };
 
         if (state == STATE_PLAY)

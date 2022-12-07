@@ -49,18 +49,18 @@ bool CSecretRecord::IsValid(void) const
 	if (m_fAttackEnchanceValue < 1.0f ||
 		m_fAttackEnchanceValue > 2.0f)
 	{
-		OUTPUT("[GAME] %s is failed: attack value\n", __FUNCTION__);
+		OUTPUT(" %s is failed: attack value\n", __FUNCTION__);
 		return false;
 	};
 
 	if (m_fDefenceEnchanceValue < 1.0f ||
 		m_fDefenceEnchanceValue > 2.0f)
 	{
-		OUTPUT("[GAME] %s is failed: defence value\n", __FUNCTION__);
+		OUTPUT(" %s is failed: defence value\n", __FUNCTION__);
 		return false;
 	};
 
-	OUTPUT("[GAME] %s ...OK\n", __FUNCTION__);
+	OUTPUT(" %s ...OK\n", __FUNCTION__);
 	return true;
 };
 
@@ -317,5 +317,5 @@ bool CSecretRecord::getFlag(FLAGTYPE flagtype, SECRETID::VALUE idSecret) const
 
 	const uint32* puFlag = (flagtype == FLAGTYPE_UNLOCKED ? m_auUnlockedFlag : m_auUnnotifiedFlag);
 
-	return IS_FLAG_SET(puFlag[FlagNo], BIT(SecretNo));
+	return FLAG_TEST(puFlag[FlagNo], BIT(SecretNo));
 };

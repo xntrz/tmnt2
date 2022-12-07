@@ -13,7 +13,7 @@ public:
     };
     
 public:
-    CDialog(COLOR color, STATUS defaultStatus, int32 iController);
+    CDialog(COLOR color = COLOR_NORMAL, STATUS defaultStatus = STATUS_YES, int32 iController = -1);
     virtual ~CDialog(void);
     virtual void SetSprite(float x, float y, float w, float h) override;
     virtual void DrawInWindow(const Rt2dBBox& bbox) const override;
@@ -22,6 +22,7 @@ public:
     void RotateCursor(void);
     void GetPositionYesNo(RwV2d* pPos, STATUS status) const;
     void SetStatus(STATUS stauts);
+    void SetController(int32 iController);
     STATUS GetStatus(void) const;
     int32 GetController(void) const;
     

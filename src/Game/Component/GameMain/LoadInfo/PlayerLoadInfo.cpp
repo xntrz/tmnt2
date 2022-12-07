@@ -1,6 +1,6 @@
 #include "PlayerLoadInfo.hpp"
 
-#include "System/Common/File/AfsFileID.hpp"
+#include "System/Common/File/FileID.hpp"
 
 
 /*static*/ const char* CPlayerLoadInfo::LISTFILE_PATH = "Common/Player/";
@@ -22,7 +22,7 @@ CPlayerLoadInfo::~CPlayerLoadInfo(void)
 
 int32 CPlayerLoadInfo::GetFileID(void) const
 {
-    int32 FileID = AFSFILEID::ID_INVALID;
+    int32 FileID = FILEID::ID_INVALID;
     
     switch (m_idPlayer)
     {
@@ -31,34 +31,34 @@ int32 CPlayerLoadInfo::GetFileID(void) const
             switch (m_costume)
             {
             case GAMETYPES::COSTUME_NONE:
-                FileID = AFSFILEID::ID_LEONARDO;
+                FileID = FILEID::ID_LEONARDO;
                 break;
                 
             case GAMETYPES::COSTUME_SAMURAI:
-                FileID = AFSFILEID::ID_LEONARDO_EXA;
+                FileID = FILEID::ID_LEONARDO_EXA;
                 break;
                 
             case GAMETYPES::COSTUME_NEXUS:
-                FileID = AFSFILEID::ID_LEONARDO_EXB;
+                FileID = FILEID::ID_LEONARDO_EXB;
                 break;
             };
         }
         break;
         
-    case PLAYERID::ID_RAPH:
+    case PLAYERID::ID_RAP:
         {
             switch (m_costume)
             {
             case GAMETYPES::COSTUME_NONE:
-                FileID = AFSFILEID::ID_RAPHAEL;
+                FileID = FILEID::ID_RAPHAEL;
                 break;
 
             case GAMETYPES::COSTUME_SAMURAI:
-                FileID = AFSFILEID::ID_RAPHAEL_EXA;
+                FileID = FILEID::ID_RAPHAEL_EXA;
                 break;
 
             case GAMETYPES::COSTUME_NEXUS:
-                FileID = AFSFILEID::ID_RAPHAEL_EXB;
+                FileID = FILEID::ID_RAPHAEL_EXB;
                 break;
             };
         }
@@ -69,15 +69,15 @@ int32 CPlayerLoadInfo::GetFileID(void) const
             switch (m_costume)
             {
             case GAMETYPES::COSTUME_NONE:
-                FileID = AFSFILEID::ID_MICHELANGERO;
+                FileID = FILEID::ID_MICHELANGERO;
                 break;
 
             case GAMETYPES::COSTUME_SAMURAI:
-                FileID = AFSFILEID::ID_MICHELANGERO_EXA;
+                FileID = FILEID::ID_MICHELANGERO_EXA;
                 break;
 
             case GAMETYPES::COSTUME_NEXUS:
-                FileID = AFSFILEID::ID_MICHELANGERO_EXB;
+                FileID = FILEID::ID_MICHELANGERO_EXB;
                 break;
             };
         }
@@ -88,34 +88,34 @@ int32 CPlayerLoadInfo::GetFileID(void) const
             switch (m_costume)
             {
             case GAMETYPES::COSTUME_NONE:
-                FileID = AFSFILEID::ID_DONATELLO;
+                FileID = FILEID::ID_DONATELLO;
                 break;
 
             case GAMETYPES::COSTUME_SAMURAI:
-                FileID = AFSFILEID::ID_DONATELLO_EXA;
+                FileID = FILEID::ID_DONATELLO_EXA;
                 break;
 
             case GAMETYPES::COSTUME_NEXUS:
-                FileID = AFSFILEID::ID_DONATELLO_EXB;
+                FileID = FILEID::ID_DONATELLO_EXB;
                 break;
             };
         }
         break;
         
-    case PLAYERID::ID_SLASHUUR:
-        FileID = AFSFILEID::ID_SLASHUUR;
+    case PLAYERID::ID_SLA:
+        FileID = FILEID::ID_SLASHUUR;
         break;
 
-    case PLAYERID::ID_CASEY:
-        FileID = AFSFILEID::ID_CASEY;
+    case PLAYERID::ID_CAS:
+        FileID = FILEID::ID_CASEY;
         break;
         
-    case PLAYERID::ID_KARAI:
-        FileID = AFSFILEID::ID_KARAI;
+    case PLAYERID::ID_KAR:
+        FileID = FILEID::ID_KARAI;
         break;
         
-    case PLAYERID::ID_SPLINTER:
-        FileID = AFSFILEID::ID_SPLINTER;
+    case PLAYERID::ID_SPL:
+        FileID = FILEID::ID_SPLINTER;
         break;
 
     default:

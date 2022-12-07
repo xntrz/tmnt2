@@ -52,7 +52,7 @@ public:
 	virtual bool Ret(const void* param = nullptr);
 	virtual bool OnAttach(const void* param = nullptr) = 0;
 	virtual void OnDetach(void) = 0;
-	virtual void OnMove(bool bResume = false, const void* param = nullptr) = 0;
+	virtual void OnMove(bool bRet = false, const void* param = nullptr) = 0;
 	virtual void OnDraw(void) const = 0;
 	int32 Child(void) const;
 	int32 Parent(void) const;

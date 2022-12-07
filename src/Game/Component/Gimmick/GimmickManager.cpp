@@ -50,7 +50,7 @@ private:
 class CGimmickContainer
 {
 private:
-    static const int32 DRAWPRIMAX = CGimmickInfo::DRAWPRIMAX;
+    static const int32 DRAWPRIMAX = CGimmickInfo::DRAWPRIMAX + 1;
     static const int32 WORKMAX = DRAWPRIMAX * 64;
 
     struct GIMMICKWORK : public CListNode<GIMMICKWORK>
@@ -187,7 +187,7 @@ void CGimmickEventDispatcher::send(EVENT_PARAM* pEventParam)
         if (pGimmick)
         {
             OUTPUT(
-                "[GAME] Sending event: %s to %s (param: %d depth %d)\n",
+                " Sending event: %s to %s (param: %d depth %d)\n",
                 pEventParam->m_args.m_szSender,
                 pEventParam->m_szTargetName,
                 pEventParam->m_args.m_type,

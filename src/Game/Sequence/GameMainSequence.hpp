@@ -20,19 +20,19 @@ public:
     virtual ~CGameMainSequence(void);
     virtual bool OnAttach(const void* param) override;
     virtual void OnDetach(void) override;
-    virtual void OnMove(bool bResume, const void* param) override;
+    virtual void OnMove(bool bRet, const void* param) override;
     virtual void OnDraw(void) const override;
-    void OnLoadSound(void);
-    void OnLoadTexture(void);
-    void OnRun(bool bResume, int32 iLabel);
     int32 Branch(int32 iLabel);
-    
+    void PreMovie(void);
+    void PostMovie(void);
+    int32 BranchTest(int32 iDefaultLabel);
+
 private:
     STEP m_step;
     int32 m_iLabelNext;
     int32 m_iLabelPrev;
     int32 m_iLabelCurrent;
-    void* m_param;
+    const void* m_param;
     float m_fTime;
-    int32 m_iIntroMovieID;    
+    int32 m_iMovieID;    
 };

@@ -4,6 +4,8 @@
 class CController
 {
 public:
+	static const int32 PORT_MAX = 8;
+
 	static const int32 CONTROLLER_LOCKED_ON_VIRTUAL 	= -1;
 	static const int32 CONTROLLER_UNLOCKED_ON_VIRTUAL 	= -2;
 

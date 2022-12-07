@@ -5,6 +5,16 @@
 
 namespace Math
 {
+    float RadianClamp(float x)
+    {
+        return x;
+    };
+    
+    float FNegate(float x)
+    {
+        return -x;
+    };
+    
     float Floor(float x)
     {
         return std::floor(x);
@@ -230,14 +240,7 @@ namespace Math
 
     float Vec3_Length(const RwV3d* pvIn)
     {
-        float fResult = 0.0f;
-
-        if (pvIn->x != 0.0f ||
-            pvIn->y != 0.0f ||
-            pvIn->z != 0.0f)
-            fResult = RwV3dLength(pvIn);
-
-        return fResult;
+		return RwV3dLength(pvIn);
     };
 
 

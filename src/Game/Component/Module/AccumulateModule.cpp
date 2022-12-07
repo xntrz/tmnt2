@@ -117,7 +117,7 @@ static const RwRGBA STEPTHREE_COLOR = { 0xFF, 0xc8, 0xC8 ,0xFF };
             pRet = new CLeonardoAccumulateModule(pCharacter);
             break;
 
-        case PLAYERID::ID_RAPH:
+        case PLAYERID::ID_RAP:
             pRet = new CRaphaelAccumulateModule(pCharacter);
             break;
 
@@ -129,19 +129,19 @@ static const RwRGBA STEPTHREE_COLOR = { 0xFF, 0xc8, 0xC8 ,0xFF };
             pRet = new CDonatelloAccumulateModule(pCharacter);
             break;
 
-        case PLAYERID::ID_SLASHUUR:
+        case PLAYERID::ID_SLA:
             pRet = new CSlashuurAccumulateModule(pCharacter);
             break;
 
-        case PLAYERID::ID_CASEY:
+        case PLAYERID::ID_CAS:
             pRet = new CCaseyAccumulateModule(pCharacter);
             break;
 
-        case PLAYERID::ID_KARAI:
+        case PLAYERID::ID_KAR:
             pRet = new CKaraiAccumulateModule(pCharacter);
             break;
 
-        case PLAYERID::ID_SPLINTER:
+        case PLAYERID::ID_SPL:
             pRet = new CSplinterAccumulateModule(pCharacter);
             break;
 

@@ -75,13 +75,13 @@ bool CAreaRecord::IsValid(void) const
 {
     if (m_AreaNow < AREAID::ID_NONE && m_AreaNow >= AREAID::SELECTABLEMAX)
     {
-        OUTPUT("[GAME] %s is failed: area now\n", __FUNCTION__);
+        OUTPUT(" %s is failed: area now\n", __FUNCTION__);
         return false;
     };
 
     if (m_AreaSelected < AREAID::ID_NONE && m_AreaSelected >= AREAID::SELECTABLEMAX)
     {
-        OUTPUT("[GAME] %s is failed: area selected\n", __FUNCTION__);
+        OUTPUT(" %s is failed: area selected\n", __FUNCTION__);
         return false;
     };
 
@@ -90,25 +90,25 @@ bool CAreaRecord::IsValid(void) const
         if (m_aNodeArea[i].m_state < 0 ||
             m_aNodeArea[i].m_state > STATE_CLEAR)
         {
-            OUTPUT("[GAME] %s is failed: area node state\n", __FUNCTION__);
+            OUTPUT(" %s is failed: area node state\n", __FUNCTION__);
             return false;
         };
 
         if (m_aNodeArea[i].m_clearrank < GAMETYPES::CLEARRANK_NONE ||
             m_aNodeArea[i].m_clearrank > GAMETYPES::CLEARRANK_SS)
         {
-            OUTPUT("[GAME] %s is failed: area node clearrank\n", __FUNCTION__);
+            OUTPUT(" %s is failed: area node clearrank\n", __FUNCTION__);
             return false;
         };
 
-        if (IS_FLAG_SET_ANY(m_aNodeArea[i].m_rootflag, ~ALL_CLEAR_ROOT_MASK))
+        if (FLAG_TEST_ANY(m_aNodeArea[i].m_rootflag, ~ALL_CLEAR_ROOT_MASK))
         {
-            OUTPUT("[GAME] %s is failed: area node root flag\n", __FUNCTION__);
+            OUTPUT(" %s is failed: area node root flag\n", __FUNCTION__);
             return false;
         };
     };
 
-    OUTPUT("[GAME] %s ...OK!\n", __FUNCTION__);
+    OUTPUT(" %s ...OK!\n", __FUNCTION__);
     return true;
 };
 
@@ -454,7 +454,7 @@ void CAreaRecord::SetAreaCleared(AREAID::VALUE idArea, CLEAR_ROOT clearroot)
     nodearea.m_state = STATE_CLEAR;    
     FLAG_SET(nodearea.m_rootflag, BIT(clearroot));
     
-    ASSERT(!IS_FLAG_SET_ANY(nodearea.m_rootflag, ~ALL_CLEAR_ROOT_MASK));
+    ASSERT(!FLAG_TEST_ANY(nodearea.m_rootflag, ~ALL_CLEAR_ROOT_MASK));
 };
 
 
@@ -495,7 +495,7 @@ bool CAreaRecord::IsAreaRootCleared(AREAID::VALUE idArea, CLEAR_ROOT clearroot) 
     if (m_aNodeArea[idArea].m_state != STATE_CLEAR)
         return false;
 
-    return IS_FLAG_SET(m_aNodeArea[idArea].m_rootflag, BIT(clearroot));
+    return FLAG_TEST(m_aNodeArea[idArea].m_rootflag, BIT(clearroot));
 };
 
 

@@ -87,7 +87,7 @@ namespace Karai
 
 
 CKarai::CKarai(GAMETYPES::COSTUME costume)
-: CPlayerCharacter("Karai", PLAYERID::ID_KARAI, costume)
+: CPlayerCharacter("Karai", PLAYERID::ID_KAR, costume)
 {
     //
 	//	Model parts:
