@@ -222,25 +222,25 @@ HOMETYPES::PADINPUT CHomeCamera::GetPadInput(void) const
         if (GetDoorStatus(HOMETYPES::DOORPOSITION_FRONT))
             return HOMETYPES::PADINPUT_OK;
     }
-    else if (CController::GetDigitalTrigger(iController, CController::DIGITAL_UP) ||
+    else if (CController::GetDigitalTrigger(iController, CController::DIGITAL_LUP) ||
         (stickY > (TYPEDEF::SINT16_MAX / 2)))
     {
         if (GetDoorStatus(HOMETYPES::DOORPOSITION_FRONT))
             return HOMETYPES::PADINPUT_UP;
     }
-    else if (CController::GetDigitalTrigger(iController, CController::DIGITAL_DOWN) ||
+    else if (CController::GetDigitalTrigger(iController, CController::DIGITAL_LDOWN) ||
         (stickY < (TYPEDEF::SINT16_MIN / 2)))
     {
         if (GetDoorStatus(HOMETYPES::DOORPOSITION_BACK))
             return HOMETYPES::PADINPUT_DOWN;
     }
-    else if (CController::GetDigitalTrigger(iController, CController::DIGITAL_LEFT) ||
+    else if (CController::GetDigitalTrigger(iController, CController::DIGITAL_LLEFT) ||
         (stickX < (TYPEDEF::SINT16_MIN / 2)))
     {
         if (GetDoorStatus(HOMETYPES::DOORPOSITION_LEFT))
             return HOMETYPES::PADINPUT_LEFT;
     }
-    else if (CController::GetDigitalTrigger(iController, CController::DIGITAL_RIGHT) ||
+    else if (CController::GetDigitalTrigger(iController, CController::DIGITAL_LRIGHT) ||
         (stickX > (TYPEDEF::SINT16_MAX / 2)))
     {
         if (GetDoorStatus(HOMETYPES::DOORPOSITION_RIGHT))

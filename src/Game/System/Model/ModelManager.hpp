@@ -23,25 +23,25 @@ public:
 
     static void Read(
         const char* pszName,
-        MODELTYPE modeltype,
-        void* pBuffer,
-        uint32 uBufferSize,
+        MODELTYPE   modeltype,
+        void*       pBuffer,
+        uint32      uBufferSize,
         const char* pszTextureSetName,
-        int32 pattern
+        int32       pattern
     );
 
     static void ReadNormal(
         const char* pszName,
-        void* pBuffer,
-        uint32 uBufferSize,
+        void*       pBuffer,
+        uint32      uBufferSize,
         const char* pszTextureSetName
     );
 
     static void ReadToon(
         const char* pszName,
-        void* pBuffer,
-        uint32 uBufferSize,
+        void*       pBuffer,
+        uint32      uBufferSize,
         const char* pszTextureSetName,
-        int32 pattern
+        int32       pattern
     );
 };

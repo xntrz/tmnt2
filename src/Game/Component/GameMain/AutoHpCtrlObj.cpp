@@ -48,8 +48,9 @@ void CAutoHpCtrlObj::Run(void)
 
     if (m_fValue >= 0.0f)
     {
-		for (int32 i = 0; i < CGameProperty::GetPlayerNum(); ++i)
-			CGameProperty::Player(i).AddHP(int32(m_fValue));
+		int32 nPlayerNum = CGameProperty::GetPlayerNum();
+		for (int32 i = 0; i < nPlayerNum; ++i)
+			CGameProperty::Player(i)->AddHP(int32(m_fValue));
     };
 
     m_fValue -= m_fValue;

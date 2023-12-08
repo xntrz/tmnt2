@@ -111,7 +111,7 @@
     {
         float fHeight = Rt2dObjectStringGetHeight(object);
         char* pszText = Rt2dObjectStringGetText(object);
-        float fWidth = Rt2dFontGetStringWidth(CGameFont::m_pFont->GetFontObj(), pszText, fHeight);
+        float fWidth = Rt2dFontGetStringWidth(CGameFont::GetFontObj(), pszText, fHeight);
         RwMatrix* pMatrix = Rt2dObjectGetMTM(object);
         RwV3d vTranslation = pMatrix->pos;
         
@@ -256,15 +256,10 @@ void CAnimation2D::Start(void)
     RwV2d scale;
     scale.x = ((xstep.y + xstep.x) * CScreen::Width()) / pBBox->w;
     scale.y = ((ystep.y + ystep.x) * CScreen::Height()) / pBBox->h;
-	
-	float scaleQ = RwRealMin2(scale.x, scale.y);
-	
+
 	RwV2d translation;
 	translation.x = ((CSprite::m_fVirtualScreenW - pBBox->w) * 0.5f) + origin.x;
 	translation.y = (((CSprite::m_fVirtualScreenH - pBBox->h) * 0.5f) + pBBox->h) + origin.y;
-	
-	//translation.x = -340;
-	//translation.y = 240;
 	
 	Rt2dObjectMTMScale(pScene, scale.x, scale.y);
 	Rt2dObjectMTMTranslate(pScene, translation.x, translation.y);
@@ -631,7 +626,7 @@ void CAnimation2D::SetCenterAllStrings(void)
 		wchar wszBuff[128];
 		wszBuff[0] = UTEXT('\0');
 
-        CUnicodeFont::ConvertToUnicode(wszBuff, pszText);
+        CGameFont::ConvertToUnicode(wszBuff, pszText);
 
 		Rt2dObjectStringSetText(object, (const RwChar*)wszBuff);
         

@@ -1,181 +1,367 @@
 #include "PCSpecific.hpp"
 #include "PCFramework.hpp"
 #include "PCGraphicsDevice.hpp"
+#include "PCPhysicalController.hpp"
 
 
-static bool RemoveEvaluationLogo(void)
+struct KEYINFO
 {
-	enum
-	{
-		STEP_WND = BIT(0),
-		STEP_INIT = BIT(1),
-		STEP_OPEN = BIT(2),
-		STEP_START = BIT(3),
-	};
-
-	uint32 uStepFlag = 0;
-	HWND hWnd = NULL;
-	RwCamera* pCamera = nullptr;
-	bool bResult = false;
-
-	try
-	{
-		hWnd = CreateWindowA("STATIC", NULL, NULL, 0, 0, 64, 64, NULL, NULL, NULL, NULL);
-		if (hWnd == NULL)
-			throw std::exception("creating dummy window");
-
-		FLAG_SET(uStepFlag, STEP_WND);
-
-		if (!RwEngineInit(nullptr, 0, 0))
-			throw std::exception("rw engine init");
-
-		FLAG_SET(uStepFlag, STEP_INIT);
-
-		RwEngineOpenParams OpenParams;
-		OpenParams.displayID = hWnd;
-		if (!RwEngineOpen(&OpenParams))
-			throw std::exception("rw engine open");
-
-		FLAG_SET(uStepFlag, STEP_OPEN);
-
-		if (!RwEngineStart())
-			throw std::exception("rw engine start");
-
-		FLAG_SET(uStepFlag, STEP_START);
-
-		pCamera = RwCameraCreate();
-		if (pCamera)
-		{
-			RwCameraEndUpdateFunc pfnCameraEnd = pCamera->endUpdate;
-			SYSTEM_INFO SystemInfo;
-			DWORD dwPrevProtect = 0;
-
-			GetSystemInfo(&SystemInfo);
-
-			if (VirtualProtect(pfnCameraEnd, SystemInfo.dwPageSize, PAGE_EXECUTE_READWRITE, &dwPrevProtect))
-			{
-				const uint8 NOP = 0x90;
-
-#ifdef _DEBUG
-				*((uint8*)pfnCameraEnd + 0x74) = NOP;
-				*((uint8*)pfnCameraEnd + 0x75) = NOP;
-				*((uint8*)pfnCameraEnd + 0x76) = NOP;
-				*((uint8*)pfnCameraEnd + 0x77) = NOP;
-				*((uint8*)pfnCameraEnd + 0x78) = NOP;
-#else /*NDEBUG*/
-				*((uint8*)pfnCameraEnd + 0x6) = NOP;
-				*((uint8*)pfnCameraEnd + 0x7) = NOP;
-				*((uint8*)pfnCameraEnd + 0x8) = NOP;
-				*((uint8*)pfnCameraEnd + 0x9) = NOP;
-				*((uint8*)pfnCameraEnd + 0xA) = NOP;
-#endif                
-
-				VirtualProtect(pfnCameraEnd, SystemInfo.dwPageSize, dwPrevProtect, &dwPrevProtect);
-			}
-			else
-			{
-				throw std::exception("change mem page protection");
-			};
-			
-			RwCameraDestroy(pCamera);
-			pCamera = nullptr;
-			
-			bResult = true;
-		}
-		else
-		{
-			throw std::exception("create camera");
-		};
-
-		OUTPUT(" Remove Evaluation Logo success!\n");
-	}
-	catch (std::exception& e)
-	{
-		REF(e);
-		OUTPUT(" Remove Evaluation Logo failed: %s\n", e.what());
-	};
-
-	if (pCamera)
-		RwCameraDestroy(pCamera);
-
-	if (FLAG_TEST(uStepFlag, STEP_START))
-		RwEngineStop();
-
-	if (FLAG_TEST(uStepFlag, STEP_OPEN))
-		RwEngineClose();
-
-	if (FLAG_TEST(uStepFlag, STEP_INIT))
-		RwEngineTerm();
-
-	if (FLAG_TEST(uStepFlag, STEP_WND))
-		DestroyWindow(hWnd);
-
-	return bResult;
+	bool Enable;
+	const char* Name;
 };
+
+
+static const KEYINFO s_aKeyInfoTbl[] =
+{
+	{ false,	"NULL" 			},
+	{ false, 	"NULL" 			},
+	{ true, 	"1" 			},
+	{ true, 	"2" 			},
+	{ true, 	"3" 			},
+	{ true, 	"4" 			},
+	{ true, 	"5" 			},
+	{ true, 	"6" 			},
+	{ true, 	"7" 			},
+	{ true, 	"8" 			},
+	{ true, 	"9" 			},
+	{ true, 	"0" 			},
+	{ true, 	"dash" 			},
+	{ false, 	"NULL" 			},
+	{ true, 	"back" 			},
+	{ true, 	"tab" 			},
+	{ true, 	"q" 			},
+	{ true, 	"w" 			},
+	{ true, 	"e" 			},
+	{ true, 	"r" 			},
+	{ true, 	"t" 			},
+	{ true, 	"y" 			},
+	{ true, 	"u" 			},
+	{ true, 	"i" 			},
+	{ true, 	"o" 			},
+	{ true, 	"p" 			},
+	{ true, 	"lbrace"		},
+	{ true, 	"rbrace"		},
+	{ false, 	"NULL" 			},
+	{ true, 	"lctrl" 		},
+	{ true, 	"a" 			},
+	{ true, 	"s" 			},
+	{ true, 	"d" 			},
+	{ true, 	"f" 			},
+	{ true, 	"g" 			},
+	{ true, 	"h" 			},
+	{ true, 	"j" 			},
+	{ true, 	"k" 			},
+	{ true, 	"l" 			},
+	{ true, 	"colon" 		},
+	{ false, 	"NULL" 			},
+	{ false, 	"NULL" 			},
+	{ true, 	"lshift"		},
+	{ true, 	"bkslash" 		},
+	{ true, 	"z" 			},
+	{ true, 	"x" 			},
+	{ true, 	"c" 			},
+	{ true, 	"v" 			},
+	{ true, 	"b" 			},
+	{ true, 	"n" 			},
+	{ true, 	"m" 			},
+	{ true, 	"comma" 		},
+	{ true, 	"period" 		},
+	{ true, 	"slash" 		},
+	{ true, 	"rshift" 		},
+	{ true, 	"numpad star" 	},
+	{ true, 	"lalt" 			},
+	{ true, 	"space" 		},
+	{ false, 	"capslock" 		},
+	{ true, 	"f1" 			},
+	{ true, 	"f2" 			},
+	{ true, 	"f3" 			},
+	{ true, 	"f4" 			},
+	{ true, 	"f5" 			},
+	{ true, 	"f6" 			},
+	{ true, 	"f7" 			},
+	{ true, 	"f8" 			},
+	{ true, 	"f9" 			},
+	{ true, 	"f10" 			},
+	{ true, 	"numlock" 		},
+	{ true, 	"scroll" 		},
+	{ true, 	"numpad 7" 		},
+	{ true, 	"numpad 8" 		},
+	{ true, 	"numpad 9" 		},
+	{ true, 	"numpad minus" 	},
+	{ true, 	"numpad 4" 		},
+	{ true, 	"numpad 5" 		},
+	{ true, 	"numpad 6" 		},
+	{ true, 	"numpad plus" 	},
+	{ true, 	"numpad 1" 		},
+	{ true, 	"numpad 2" 		},
+	{ true, 	"numpad 3" 		},
+	{ true, 	"numpad 0" 		},
+	{ true, 	"numpad del" 	},
+	{ false, 	"NULL" 			},
+	{ false, 	"NULL" 			},
+	{ false, 	"NULL" 			},
+	{ true, 	"f11" 			},
+	{ true, 	"f12" 			},
+	{ false, 	"NULL" 			},
+	{ false, 	"NULL" 			},
+	{ false, 	"NULL" 			},
+	{ false, 	"NULL" 			},
+	{ false, 	"NULL" 			},
+	{ false, 	"NULL" 			},
+	{ false, 	"NULL" 			},
+	{ false, 	"NULL" 			},
+	{ false, 	"NULL" 			},
+	{ false, 	"NULL" 			},
+	{ false, 	"NULL" 			},
+	{ false, 	"NULL" 			},
+	{ false, 	"NULL" 			},
+	{ false, 	"NULL" 			},
+	{ false, 	"NULL" 			},
+	{ false, 	"NULL" 			},
+	{ false, 	"NULL" 			},
+	{ false, 	"NULL" 			},
+	{ false, 	"NULL" 			},
+	{ false, 	"NULL" 			},
+	{ false, 	"NULL" 			},
+	{ false, 	"NULL" 			},
+	{ false, 	"NULL" 			},
+	{ false, 	"NULL" 			},
+	{ false, 	"NULL" 			},
+	{ false, 	"NULL" 			},
+	{ false, 	"NULL" 			},
+	{ false, 	"NULL" 			},
+	{ false, 	"NULL" 			},
+	{ false, 	"NULL" 			},
+	{ false, 	"NULL" 			},
+	{ false, 	"NULL" 			},
+	{ false, 	"NULL" 			},
+	{ false, 	"NULL" 			},
+	{ false, 	"NULL" 			},
+	{ false, 	"NULL" 			},
+	{ false, 	"NULL" 			},
+	{ false, 	"NULL" 			},
+	{ false, 	"NULL" 			},
+	{ false, 	"NULL" 			},
+	{ false, 	"NULL" 			},
+	{ false, 	"NULL" 			},
+	{ false, 	"NULL" 			},
+	{ false, 	"NULL" 			},
+	{ false, 	"NULL" 			},
+	{ false, 	"NULL" 			},
+	{ false, 	"NULL" 			},
+	{ false, 	"NULL" 			},
+	{ false, 	"NULL" 			},
+	{ false, 	"NULL" 			},
+	{ false, 	"NULL" 			},
+	{ false, 	"NULL" 			},
+	{ false, 	"NULL" 			},
+	{ false, 	"NULL" 			},
+	{ false, 	"NULL" 			},
+	{ false, 	"NULL" 			},
+	{ false, 	"NULL" 			},
+	{ false, 	"NULL" 			},
+	{ false, 	"NULL" 			},
+	{ false, 	"NULL" 			},
+	{ false, 	"NULL" 			},
+	{ false, 	"NULL" 			},
+	{ false, 	"NULL" 			},
+	{ false, 	"NULL" 			},
+	{ false, 	"NULL" 			},
+	{ false, 	"NULL" 			},
+	{ false, 	"NULL" 			},
+	{ false, 	"NULL" 			},
+	{ true, 	"rctrl" 		},
+	{ false, 	"NULL" 			},
+	{ false, 	"NULL" 			},
+	{ false, 	"NULL" 			},
+	{ false, 	"NULL" 			},
+	{ false, 	"NULL" 			},
+	{ false, 	"NULL" 			},
+	{ false, 	"NULL" 			},
+	{ false, 	"NULL" 			},
+	{ false, 	"NULL" 			},
+	{ false, 	"NULL" 			},
+	{ false, 	"NULL" 			},
+	{ false, 	"NULL" 			},
+	{ false, 	"NULL" 			},
+	{ false, 	"NULL" 			},
+	{ false, 	"NULL" 			},
+	{ false, 	"NULL" 			},
+	{ false, 	"NULL" 			},
+	{ false, 	"NULL" 			},
+	{ false, 	"NULL" 			},
+	{ false, 	"NULL" 			},
+	{ false, 	"NULL" 			},
+	{ false, 	"NULL" 			},
+	{ false, 	"NULL" 			},
+	{ true, 	"numpad slash" 	},
+	{ false, 	"NULL" 			},
+	{ false, 	"NULL" 			},
+	{ true, 	"ralt" 			},
+	{ false, 	"NULL" 			},
+	{ false, 	"NULL" 			},
+	{ false, 	"NULL" 			},
+	{ false, 	"NULL" 			},
+	{ false, 	"NULL" 			},
+	{ false, 	"NULL" 			},
+	{ false, 	"NULL" 			},
+	{ false, 	"NULL" 			},
+	{ false, 	"NULL" 			},
+	{ false, 	"NULL" 			},
+	{ false, 	"NULL" 			},
+	{ false, 	"NULL" 			},
+	{ false, 	"NULL" 			},
+	{ false, 	"NULL" 			},
+	{ true, 	"home" 			},
+	{ true, 	"up" 			},
+	{ true, 	"pgup" 			},
+	{ false, 	"NULL" 			},
+	{ true, 	"left" 			},
+	{ false, 	"NULL" 			},
+	{ true, 	"right" 		},
+	{ false, 	"NULL" 			},
+	{ true, 	"end" 			},
+	{ true, 	"down" 			},
+	{ true, 	"pgdown" 		},
+	{ true, 	"ins" 			},
+	{ true, 	"del" 			},
+	{ false, 	"NULL" 			},
+	{ false, 	"NULL" 			},
+	{ false, 	"NULL" 			},
+	{ false, 	"NULL" 			},
+	{ false, 	"NULL" 			},
+	{ false, 	"NULL" 			},
+	{ false, 	"NULL" 			},
+	{ false, 	"lwin" 			},
+	{ false, 	"rwin" 			},
+	{ false, 	"NULL" 			},
+	{ false, 	"NULL" 			},
+	{ false, 	"NULL" 			},
+	{ false, 	"NULL" 			},
+	{ false, 	"NULL" 			},
+	{ false, 	"NULL" 			},
+	{ false, 	"NULL" 			},
+	{ false, 	"NULL" 			},
+	{ false, 	"NULL" 			},
+	{ false, 	"NULL" 			},
+	{ false, 	"NULL" 			},
+	{ false, 	"NULL" 			},
+	{ false, 	"NULL" 			},
+	{ false, 	"NULL" 			},
+	{ false, 	"NULL" 			},
+	{ false, 	"NULL" 			},
+	{ false, 	"NULL" 			},
+	{ false, 	"NULL" 			},
+	{ false, 	"NULL" 			},
+	{ false, 	"NULL" 			},
+	{ false, 	"NULL" 			},
+	{ false, 	"NULL" 			},
+	{ false, 	"NULL" 			},
+	{ false, 	"NULL" 			},
+	{ false, 	"NULL" 			},
+	{ false, 	"NULL" 			},
+	{ false, 	"NULL" 			},
+	{ false, 	"NULL" 			},
+	{ false, 	"NULL" 			},
+	{ false, 	"NULL" 			},
+	{ false, 	"NULL" 			},
+	{ false, 	"NULL" 			},
+	{ false, 	"NULL" 			},
+	{ false, 	"NULL" 			},
+	{ false, 	"NULL" 			},
+};
+
+
+static_assert(COUNT_OF(s_aKeyInfoTbl) == 256, "check out");
 
 
 /*static*/ HINSTANCE CPCSpecific::m_hInstance = NULL;
 /*static*/ HWND CPCSpecific::m_hWnd = NULL;
 
 
-/*static*/ void CPCSpecific::Initialize(void)
+/*static*/ int32 CPCSpecific::GetKeyboradPort(void)
 {
-	if (!RemoveEvaluationLogo())
-		OUTPUT("removing eval logo failed");
+	return CPCPhysicalController::GetPort();
 };
 
 
-/*static*/ void CPCSpecific::Terminate(void)
+/*static*/ void CPCSpecific::MapDigital(uint32 btn, int32 iDIKey)
 {
-	;
+	CPCPhysicalController::MapDigital(btn, iDIKey);
 };
 
 
-/*static*/ void CPCSpecific::SetFlipEnable(bool bEnable)
+/*static*/ void CPCSpecific::MapDigitalFixed(uint32 btn, int32 iDIKey)
 {
-	CPCFramework::Instance().GraphicsDevice().SetFlipEnable(bEnable);
+	CPCPhysicalController::MapDigitalFixed(btn, iDIKey);
 };
 
 
-/*static*/ bool CPCSpecific::SetVideomode(int32 iWidth, int32 iHeight, int32 iDepth)
+/*static*/ void CPCSpecific::MapAnalog(CController::ANALOG analog, int32 iDIKeyX, int32 iDIKeyY)
 {
-	return CPCFramework::Instance().GraphicsDevice().SetVideomode(iWidth, iHeight, iDepth);
+	CPCPhysicalController::MapAnalog(analog, iDIKeyX, iDIKeyY);
 };
 
 
-/*static*/ bool CPCSpecific::SetVideomode(int32 iVideomodeNo)
+/*static*/ int32 CPCSpecific::GetDownKey(void)
 {
-	return CPCFramework::Instance().GraphicsDevice().SetVideomode(iVideomodeNo);
+	int32 iDIKey = CPCPhysicalController::GetDownKey();
+
+	return (IsKeyValid(iDIKey) ? iDIKey : -1);
+};
+
+
+/*static*/ bool CPCSpecific::IsKeyDown(int32 iDIKey)
+{
+	return CPCPhysicalController::IsKeyDown(iDIKey);
+};
+
+
+/*static*/ bool CPCSpecific::IsKeyValid(int32 iDIKey)
+{
+	if (!CPCPhysicalController::IsKeyNotFixed(iDIKey))
+		return false;
+
+	if ((iDIKey < 0) || (iDIKey >= COUNT_OF(s_aKeyInfoTbl)))
+		return false;
+
+	return s_aKeyInfoTbl[iDIKey].Enable;
+};
+
+
+/*static*/ const char* CPCSpecific::GetKeyName(int32 iDIKey)
+{
+	return ((iDIKey >= 0) && (iDIKey < COUNT_OF(s_aKeyInfoTbl)) ? s_aKeyInfoTbl[iDIKey].Name : nullptr);
+};
+
+
+/*static*/ bool CPCSpecific::SetVideomode(int32 No)
+{
+	return CPCFramework::Instance().SetVideomode(No);
+};
+
+
+/*static*/ bool CPCSpecific::GetVideomode(int32 No, PC::VIDEOMODE& vm)
+{
+	return CPCFramework::Instance().GetVideomode(No, vm);
 };
 
 
 /*static*/ int32 CPCSpecific::GetVideomodeNum(void)
 {
-	return CPCFramework::Instance().GraphicsDevice().GetVideomodeNum();
+	return CPCFramework::Instance().GetVideomodeNum();
 };
 
 
 /*static*/ int32 CPCSpecific::GetVideomodeCur(void)
 {
-	return CPCFramework::Instance().GraphicsDevice().GetVideomodeCur();
+	return CPCFramework::Instance().GetVideomodeCur();
 };
 
 
-/*static*/ void CPCSpecific::GetVideomode(int32 iVideomodeNo, int32& w, int32& h, int32& d)
+/*static*/ void CPCSpecific::FrameSkipEnable(bool bEnable)
 {
-	CPCFramework::Instance().GraphicsDevice().GetVideomode(iVideomodeNo, w, h, d);
-};
-
-
-/*static*/ bool CPCSpecific::IsVideomodeWindow(int32 iVideomodeNo)
-{
-	return CPCFramework::Instance().GraphicsDevice().IsVideomodeWindow(iVideomodeNo);
-};
-
-
-/*static*/ void CPCSpecific::GetModulePath(char* pszModulePathBuff, int32 buffsize)
-{
-	GetModuleFileNameA(GetModuleHandle(NULL), pszModulePathBuff, buffsize);
+	CPCFramework::Instance().SetSkipEnable(bEnable);
 };
 
 
@@ -191,4 +377,18 @@ static bool RemoveEvaluationLogo(void)
 		while (ShowCursor(FALSE) >= 0)
 			;
 	};
+};
+
+
+/*static*/ void CPCSpecific::PathCorrection(std::string& str)
+{
+	//
+	//	Replace spaces and " in path
+	// 	Converts / to \\ in path
+	//
+
+	for (auto it : " \"")
+		str.erase(std::remove(str.begin(), str.end(), it), str.end());
+
+	std::replace(str.begin(), str.end(), '/', '\\');
 };

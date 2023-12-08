@@ -7,7 +7,7 @@ class CGimmick;
 class CGameGimmick final
 {
 public:
-    static CGameGimmick& Dummy(void);
+    static CGameGimmick* Dummy(void);
         
     CGameGimmick(void);
     ~CGameGimmick(void);
@@ -23,7 +23,9 @@ public:
     CGimmick& Gimmick(void) const;
 
 private:
-    uint32 m_hObj;    
+    static CGameGimmick m_dummy;
+    
+    uint32 m_hObj;
     CGimmick* m_pGimmick;
     RwV3d m_vPosition;
 };

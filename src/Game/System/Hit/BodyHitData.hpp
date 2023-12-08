@@ -6,7 +6,7 @@ class CBodyHitData : public CListNode<CBodyHitData>
 public:
     static const uint32 INVALID_HIT_ID = 0;
 
-    enum STATE
+    enum STATE : uint32
     {
         STATE_NONE          = 0x0,
         STATE_SELF_TO_OTHER = 0x1,

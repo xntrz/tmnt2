@@ -40,7 +40,8 @@ public:
         PARAMTYPE_ENEMY_SINGLE,
         PARAMTYPE_ENEMY_MULTIPLE,
         PARAMTYPE_GROUP,
-        PARAMTYPE_GUILLOTINE,        
+        PARAMTYPE_GUILLOTINE,
+        
         PARAMTYPEMAX,
     };
 

@@ -1,6 +1,6 @@
 #include "NexusInfo.hpp"
 
-#include "Game/System/2d/GameText.hpp"
+#include "Game/System/Text/GameText.hpp"
 
 
 namespace
@@ -8,16 +8,16 @@ namespace
     struct NEXUSINFO
     {
         const char* m_pszLabel;
-        GAMETEXT::VALUE m_idTextStart;
+        GAMETEXT m_idTextStart;
     };
 
 
     static const NEXUSINFO s_aNexusInfoList[] =
     {
-        { "Kitty",          GAMETEXT::VALUE(1157) },
-        { "Monster",        GAMETEXT::VALUE(1167) },
-        { "Foot",           GAMETEXT::VALUE(1177) },
-        { "Battle Nexus",   GAMETEXT::VALUE(1187) },
+        { "Kitty",          GAMETEXT(1157) },
+        { "Monster",        GAMETEXT(1167) },
+        { "Foot",           GAMETEXT(1177) },
+        { "Battle Nexus",   GAMETEXT(1187) },
     };
 
     
@@ -36,7 +36,7 @@ namespace
 {
     ASSERT(nRoundNo >= 0 && nRoundNo < GAMETYPES::STAGE_MAX);
 
-    GAMETEXT::VALUE idText = GAMETEXT::VALUE(NexusInfo(idNexus).m_idTextStart + nRoundNo);
+    GAMETEXT idText = GAMETEXT(NexusInfo(idNexus).m_idTextStart + nRoundNo);
     
     const wchar* pwszText = CGameText::GetText(idText);
     ASSERT(pwszText);

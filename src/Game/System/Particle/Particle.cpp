@@ -182,19 +182,20 @@ void CParticle::Copy(const CParticle* pParticle)
     ASSERT(m_nVertexNum <= VERTEXNUM);
 
     if (m_type == PEFINFO::PARTICLETYPE_CYLINDER)
-    {
-        CreateCylinder(
-            m_fTopRadius,
-            m_fBottomRadius,
-            m_nPointNum,
-            m_fHeight
-        );
-    };
+        CreateCylinder(m_fTopRadius, m_fBottomRadius, m_nPointNum, m_fHeight);
+};
+
+
+void CParticle::ConvertEndian(PEFINFO::PARTICLEINFO* pParticleInfo)
+{
+    ;
 };
 
 
 void CParticle::ReadParticleData(PEFINFO::PARTICLEINFO* pParticleInfo)
 {
+    ConvertEndian(pParticleInfo);
+    
     std::memcpy(m_szName, pParticleInfo->m_szParticleName, sizeof(m_szName));
     m_type = PEFINFO::PARTICLETYPE(pParticleInfo->m_nType);
     m_uLinearFlag = pParticleInfo->m_uLinearFlag;
@@ -263,14 +264,7 @@ void CParticle::ReadParticleData(PEFINFO::PARTICLEINFO* pParticleInfo)
     m_vOriginAcceleration = m_InitTransition.m_vAcceleration;
 
     if (m_type == PEFINFO::PARTICLETYPE_CYLINDER)
-    {
-        CreateCylinder(
-            m_fTopRadius,
-            m_fBottomRadius,
-            m_nPointNum,
-            m_fHeight
-        );
-    };
+        CreateCylinder(m_fTopRadius, m_fBottomRadius, m_nPointNum, m_fHeight);
 };
 
 
@@ -409,11 +403,12 @@ void CParticle::Draw(RwCamera* pCamera)
     SortZ(pCamera);
 
     RwMatrix matrixBillboard;
-    RwMatrix* pMatModeling = RwFrameGetMatrixMacro(RwCameraGetFrameMacro(pCamera));
-    RwMatrix* pMatView = RwCameraGetViewMatrixMacro(pCamera);
     RwMatrixSetIdentityMacro(&matrixBillboard);
 
+    RwMatrix* pMatModeling = RwFrameGetMatrixMacro(RwCameraGetFrameMacro(pCamera));
     ASSERT(pMatModeling);
+
+    RwMatrix* pMatView = RwCameraGetViewMatrixMacro(pCamera);
     ASSERT(pMatView);
 
     Math::Matrix_Invert(&matrixBillboard, pMatView);
@@ -421,14 +416,13 @@ void CParticle::Draw(RwCamera* pCamera)
     for (TRANSITION& it : m_listTransitionAlloc)
     {
         TRANSITION* pTransition = &it;
-        ASSERT(pTransition);
 
         switch (m_type)
         {
         case PEFINFO::PARTICLETYPE_BILLBOARD:
-            {
+            {			
                 std::memcpy(&pTransition->m_matrix, &matrixBillboard, sizeof(pTransition->m_matrix));
-				TransitionRotation(pTransition, &pMatModeling->at);
+				TransitionRotation(pTransition, &pMatModeling->pos);
                 pTransition->m_matrix.pos = pTransition->m_vPositionNow;
             }
             break;
@@ -436,7 +430,7 @@ void CParticle::Draw(RwCamera* pCamera)
         case PEFINFO::PARTICLETYPE_NORMALBOARD:
             {
                 SetMatrixDirection(&pTransition->m_matrix, &pTransition->m_vDirection);
-                TransitionRotation(pTransition, &pMatModeling->at);
+                TransitionRotation(pTransition, &pMatModeling->pos);
                 TransitionScale(pTransition);
 
                 RwMatrix matrix;
@@ -451,7 +445,7 @@ void CParticle::Draw(RwCamera* pCamera)
         case PEFINFO::PARTICLETYPE_CYLINDER:
             {
                 SetMatrixDirection(&pTransition->m_matrix, &pTransition->m_vDirection);
-                TransitionRotation(pTransition, &pMatModeling->at);
+                TransitionRotation(pTransition, &pMatModeling->pos);
                 TransitionScale(pTransition);
 
                 RwMatrix matrix;
@@ -683,25 +677,7 @@ void CParticle::SetMatrixDirection(RwMatrix* pMatrix, const RwV3d* pvLookVec)
     vRot.y = Math::ToDegree(Math::ATan2(vXZ.x, vXZ.y));
     vRot.x = Math::ToDegree(Math::ATan2(Math::Vec2_Length(&vXZ), pvLookVec->y)) - 90.0f;
 
-    if (vRot.x <= 90.0f)
-    {
-        if (vRot.x < -90.0f)
-            vRot.x += 90.0f;
-    }
-    else
-    {
-        vRot.x -= 90.0f;
-    };
-
-    if (vRot.x <= 90.0f)
-    {
-        if (vRot.x < -90.0f)
-            vRot.x += 90.0f;
-    }
-    else
-    {
-        vRot.x -= 90.0f;
-    };
+    vRot.x = InvClamp(vRot.x, -90.0f, 90.0f);
 
     RwMatrixRotate(pMatrix, &Math::VECTOR3_AXIS_Y, vRot.y, rwCOMBINEREPLACE);
     RwMatrixRotate(pMatrix, &pMatrix->right, vRot.x, rwCOMBINEPOSTCONCAT);
@@ -740,12 +716,6 @@ void CParticle::SetColorToVertex(const RwRGBA& color)
 };
 
 
-void CParticle::ConvertEndian(PEFINFO::PARTICLEINFO* pParticlInfo)
-{
-    ;
-};
-
-
 bool CParticle::GetMyTexture(void)
 {
     m_pMyTexture = CTextureManager::GetRwTexture(m_szTextureName);
@@ -780,44 +750,36 @@ void CParticle::SetVertexInfo(RwIm3DVertex* aVertexList, RwCamera* pCamera, TRAN
             
             RwV3d vNowVec = Math::VECTOR3_ZERO;
             Math::Vec3_Sub(&vNowVec, &pMatModeling->pos, &pTransition->m_vPositionNow);
-            float fLen = Math::Vec3_Length(&vNowVec);
-
-			bool b1 = (fLen < m_fClippingParameter);
-			bool b2 = (fLen == m_fClippingParameter);
-
-            if(!b1 && !b2)
+            float fDist = Math::Vec3_Length(&vNowVec);
+            
+            if (fDist > m_fClippingParameter)
                 return;
         }
         break;
         
     case PEFINFO::CLIPPINGTYPE_INCLUDEDCAMERA:
         {
-            RwV3d vTmp = Math::VECTOR3_ZERO;
+            RwV3d vScrPos = Math::VECTOR3_ZERO;
             float fFar = RwCameraGetFarClipPlaneMacro(pCamera);
             float fNear = RwCameraGetNearClipPlaneMacro(pCamera);
             
-            RwV3dTransformPoint(&vTmp, &pTransition->m_vPositionNow, RwCameraGetViewMatrixMacro(pCamera));
-
-            if (vTmp.z > 0.0f)
+            RwV3dTransformPoint(&vScrPos, &pTransition->m_vPositionNow, RwCameraGetViewMatrixMacro(pCamera));
+			
+            if (vScrPos.z > 0.0f)
             {
-                vTmp.x *= (1.0f / vTmp.z);
-                vTmp.y *= (1.0f / vTmp.z);
+                vScrPos.x *= (1.0f / vScrPos.z);
+                vScrPos.y *= (1.0f / vScrPos.z);
 
-                if (vTmp.z < fNear ||
-                    vTmp.z > fFar ||
-                    vTmp.x < 0.0f ||
-                    vTmp.x > 1.0f ||
-                    vTmp.y < 0.0f)
+                if ((vScrPos.z < fNear) ||
+                    (vScrPos.z > fFar) ||
+                    (vScrPos.x < 0.0f) ||
+                    (vScrPos.x > 1.0f) ||
+                    (vScrPos.y < 0.0f) ||
+                    (vScrPos.y > 1.0f))
                 {
                     return;
                 };
-
-				bool b1 = (vTmp.y < 1.0f);
-				bool b2 = (vTmp.y == 1.0f);
-
-                if(!b1 && !b2)
-                    return;
-            };
+            };            
         }
         break;
     };
@@ -1133,10 +1095,10 @@ void CParticle::TransitionColor(TRANSITION* pTransition)
     int32 nBuffB = int32(pTransition->m_Color.blue)   + int32(m_fColorDecayBuffer[2] * pTransition->m_fCounterNow);
     int32 nBuffA = int32(pTransition->m_Color.alpha)  + int32(m_fColorDecayBuffer[3] * pTransition->m_fCounterNow);
 
-    nBuffR = Math::Clamp(nBuffR, 0, 255);
-    nBuffG = Math::Clamp(nBuffG, 0, 255);
-    nBuffB = Math::Clamp(nBuffB, 0, 255);
-    nBuffA = Math::Clamp(nBuffA, 0, 255);
+    nBuffR = Clamp(nBuffR, 0, 255);
+    nBuffG = Clamp(nBuffG, 0, 255);
+    nBuffB = Clamp(nBuffB, 0, 255);
+    nBuffA = Clamp(nBuffA, 0, 255);
 
     pTransition->m_ColorNow.red     = RwUInt8(nBuffR);
     pTransition->m_ColorNow.green   = RwUInt8(nBuffG);
@@ -1215,7 +1177,7 @@ void CParticle::TransitionAcceleration(TRANSITION* pTransition)
 };
 
 
-void CParticle::TransitionRotation(TRANSITION* pTransition, const RwV3d* pvVec)
+void CParticle::TransitionRotation(TRANSITION* pTransition, const RwV3d* pCameraPos)
 {
     if (FLAG_TEST(m_uPatternFlag, PEFINFO::PATTERNFLAG_ROT_X))
     {
@@ -1247,22 +1209,17 @@ void CParticle::TransitionRotation(TRANSITION* pTransition, const RwV3d* pvVec)
         );
     };
 
-    if (FLAG_TEST(m_uPatternFlag, PEFINFO::PATTERNFLAG_BILLBOARD) ||
-        FLAG_TEST(m_uRandCheckFlag, PEFINFO::RANDFLAG_RANDANGLE))
-    {        
+    if (FLAG_TEST_ANY(m_uPatternFlag, PEFINFO::PATTERNFLAG_BILLBOARD) ||
+        FLAG_TEST_ANY(m_uRandCheckFlag, PEFINFO::RANDFLAG_RANDANGLE))
+    {
         float fAngle = pTransition->m_fInitRotationBillboard + pTransition->m_fRotationBillboard;
-
+		
         RwV3d vAxis = Math::VECTOR3_ZERO;
-        Math::Vec3_Sub(&vAxis, &pTransition->m_vPositionNow, pvVec);
+        Math::Vec3_Sub(&vAxis, &pTransition->m_vPositionNow, pCameraPos);
         Math::Vec3_Normalize(&vAxis, &vAxis);
 
-        FLAG_CLEAR(pTransition->m_matrix.flags, rwMATRIXINTERNALIDENTITY);
-        
-        //
-        //  FIXME rotation problem with some billboard effects when camera is too far from sprite (look at for example: "expl_b1")
-        //
-        if (Math::Vec3_Length(&vAxis) > 0.000001f)
-            RwMatrixRotate(&pTransition->m_matrix, &vAxis, 360.0f, rwCOMBINEPOSTCONCAT);
+        if (Math::Vec3_Length(&vAxis) > Math::EPSILON)
+            RwMatrixRotate(&pTransition->m_matrix, &vAxis, fAngle, rwCOMBINEPOSTCONCAT);
     };
 };
 
@@ -1473,7 +1430,7 @@ void CParticle::RandomScale(RwV2d* pvStartSize, float fScaleMin, float fScaleMax
 {
     if (FLAG_TEST(uRandomFlag, PEFINFO::RANDFLAG_SCALESIZE2D))
     {
-        float fValue = (Randomize() * (fScaleMin + (fScaleMax - fScaleMin))) * 0.0099999998f;// 0.01f;
+        float fValue = (Randomize() * (fScaleMin + (fScaleMax - fScaleMin))) * 0.01f;
         
         pvStartSize->x *= fValue;
         pvStartSize->y *= fValue;
@@ -1501,7 +1458,7 @@ float CParticle::RandomAngle(float fRandElement, uint32 uRandomFlag)
     if (FLAG_TEST(uRandomFlag, PEFINFO::RANDFLAG_RANDANGLE))
         fRet = Randomize() * fRandElement;
 
-    return fRandElement;
+    return fRet;
 };
 
 

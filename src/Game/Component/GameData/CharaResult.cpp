@@ -114,7 +114,7 @@
 void CCharaResult::NODE::Clear(void)
 {
     m_nOffensePoint     = 0;
-    m_nOffenseActCount  = 0;
+    m_nOffenseCount     = 0;
     m_fOffenseRatio     = 0.0f;
     m_nOffenseEval      = 0;
     m_nDefensePoint     = 0;
@@ -123,6 +123,8 @@ void CCharaResult::NODE::Clear(void)
     m_nAerialEval       = 0;
     m_nPersonalPoint    = 0;
     m_nPersonalEval     = 0;
+    //m_nDefenseCount     = 0;
+    //m_nJumpPoint        = 0;
 };
 
 
@@ -135,7 +137,7 @@ void CCharaResult::NODE::AddTechnicalAction(PLAYERID::VALUE idPlayer, GAMETYPES:
     switch (pTechInfo->m_type)
     {
     case TECHINFO::TYPE_OFFENSE:
-        ++m_nOffenseActCount;
+        ++m_nOffenseCount;
         m_nOffensePoint += pTechInfo->m_nPoints;
         break;
 
@@ -144,7 +146,7 @@ void CCharaResult::NODE::AddTechnicalAction(PLAYERID::VALUE idPlayer, GAMETYPES:
         break;
 
     case TECHINFO::TYPE_AERIAL:
-        if (idPlayer == PLAYERID::ID_MIC && tecact == GAMETYPES::TECACT_JUMP)
+        if ((idPlayer == PLAYERID::ID_MIC) && (tecact == GAMETYPES::TECACT_JUMP))
             ++m_nAerialPoint;
         else
             m_nAerialPoint += pTechInfo->m_nPoints;        
@@ -155,9 +157,13 @@ void CCharaResult::NODE::AddTechnicalAction(PLAYERID::VALUE idPlayer, GAMETYPES:
         break;
     };
 
-    //
-    //  TODO: см. IDB
-    //
+    if (tecact && tecact < GAMETYPES::TECACT_JUMP_WALL)
+        ++m_nDefensePoint;
+    //    ++m_nDefenseCount;
+    //};
+
+    //if (tecact == GAMETYPES::TECACT_JUMP)
+    //    m_nJumpPoint += pTechInfo->m_nPoints;
 };
 
 
@@ -167,19 +173,14 @@ void CCharaResult::NODE::Evaluate(void)
     m_nDefenseEval = EvaluateDefenseTech();
     m_nAerialEval = EvaluateAerialTech();
 
-    m_nPersonalPoint = m_nOffenseEval + m_nDefenseEval + m_nAerialEval;
+    m_nPersonalPoint = (m_nOffenseEval + m_nDefenseEval + m_nAerialEval);
     m_nPersonalEval = CGamePlayResult::EvaluateInt(m_nPersonalPoint, m_anPersonalEvalTable, COUNT_OF(m_anPersonalEvalTable));
 };
 
 
 int32 CCharaResult::NODE::EvaluateAerialTech(void)
 {
-    if (m_nOffenseActCount)
-        m_fOffenseRatio = float(m_nOffensePoint / m_nOffenseActCount);
-    else
-        m_fOffenseRatio = 0.0f;
-
-    return CGamePlayResult::EvaluateFloat(m_fOffenseRatio, m_afOffenseEvalTable, COUNT_OF(m_afOffenseEvalTable));
+    return CGamePlayResult::EvaluateInt(m_nAerialPoint, m_anAerialEvalTable, COUNT_OF(m_anAerialEvalTable));
 };
 
 
@@ -191,7 +192,8 @@ int32 CCharaResult::NODE::EvaluateDefenseTech(void)
 
 int32 CCharaResult::NODE::EvaluateOffenseTech(void)
 {
-    return CGamePlayResult::EvaluateInt(m_nAerialPoint, m_anAerialEvalTable, COUNT_OF(m_anAerialEvalTable));
+    m_fOffenseRatio = (m_nOffenseCount ? (float(m_nOffensePoint) / float(m_nOffenseCount)) : 0.0f);    
+    return CGamePlayResult::EvaluateFloat(m_fOffenseRatio, m_afOffenseEvalTable, COUNT_OF(m_afOffenseEvalTable));
 };
 
 
@@ -233,7 +235,7 @@ void CCharaResult::Evaluate(void)
 
     for (int32 i = 1; i < COUNT_OF(m_aNode); ++i)
     {
-        if (NODE::CompareEvaluation(m_aNode[m_nMVP], m_aNode[m_nMVP + 1]) < 0)
+        if (NODE::CompareEvaluation(m_aNode[m_nMVP], m_aNode[i]) < 0)
             m_nMVP = i;
     };
 };
@@ -248,10 +250,6 @@ int32 CCharaResult::GetMVP(void) const
 const CCharaResult::NODE& CCharaResult::Chara(int32 nIndex) const
 {
     ASSERT(nIndex >= 0 && nIndex < COUNT_OF(m_aNode));
-    
-    if (nIndex >= 0 && nIndex < COUNT_OF(m_aNode))
-        return m_aNode[nIndex];
-    else
-        return m_aNode[0];
-};
 
+    return (nIndex >= 0 && nIndex < COUNT_OF(m_aNode)) ? m_aNode[nIndex] : m_aNode[0];
+};

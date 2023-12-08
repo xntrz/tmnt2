@@ -2,7 +2,7 @@
 
 #include "Game/Component/GameMain/GameProperty.hpp"
 #include "Game/Component/Gimmick/GimmickQuery.hpp"
-#include "Game/Component/Gimmick/GimmickUtils.hpp"
+#include "Game/Component/Gimmick/Utils/GimmickUtils.hpp"
 #include "Game/Component/Gimmick/GimmickParam.hpp"
 #include "Game/Component/Gimmick/GimmickMotion.hpp"
 #include "Game/Component/Gimmick/MoveStrategy/CuttingGimmickMove.hpp"
@@ -29,7 +29,7 @@ CBridgePillarGimmick::CBridgePillarGimmick(const char* pszName, void* pParam)
 , m_step(0)
 , m_iLife(10)
 , m_hAtari(0)
-, m_pMotionController(nullptr)
+, m_pGimmickMotion(nullptr)
 {
     init(pParam);
 };
@@ -49,10 +49,10 @@ CBridgePillarGimmick::~CBridgePillarGimmick(void)
         m_hAtari = 0;
     };
 
-    if (m_pMotionController)
+    if (m_pGimmickMotion)
     {
-        delete m_pMotionController;
-        m_pMotionController = nullptr;
+        delete m_pGimmickMotion;
+        m_pGimmickMotion = nullptr;
     };
 };
 
@@ -154,10 +154,10 @@ void CBridgePillarGimmick::init(void* pParam)
     CModel* pBreakAtariModel = CModelManager::CreateModel("bpillar_b_a");
     ASSERT(pBreakAtariModel);
 
-    m_model.SetModel(CNormalGimmickModel::MODELKIND_VISUAL_NORMAL, pModel);
-    m_model.SetModel(CNormalGimmickModel::MODELKIND_ATARI_NORMAL, pAtariModel);
-    m_model.SetModel(CNormalGimmickModel::MODELKIND_VISUAL_BREAK, pBreakModel);
-    m_model.SetModel(CNormalGimmickModel::MODELKIND_ATARI_BREAK, pBreakAtariModel);
+    m_model.SetModel(CNormalGimmickModel::MODELTYPE_DRAW_NORMAL, pModel);
+    m_model.SetModel(CNormalGimmickModel::MODELTYPE_ATARI_NORMAL, pAtariModel);
+    m_model.SetModel(CNormalGimmickModel::MODELTYPE_DRAW_BREAK, pBreakModel);
+    m_model.SetModel(CNormalGimmickModel::MODELTYPE_ATARI_BREAK, pBreakAtariModel);
     m_model.SetPosition(&pInitParam->m_vPosition);
     RwV3d vRot = { 0.0f, CGimmickUtils::QuaternionToRotationY(&pInitParam->m_quat), 0.0f };
     m_model.SetRotation(&vRot);
@@ -181,11 +181,11 @@ void CBridgePillarGimmick::init(void* pParam)
             CMapCollisionModel::SetBoundingSphereRadius(m_hAtari, 20.0f);
     };
 
-    m_pMotionController = new CGimmickMotion(pBreakModel);
-    ASSERT(m_pMotionController);
+    m_pGimmickMotion = new CGimmickMotion(pBreakModel);
+    ASSERT(m_pGimmickMotion);
     CMotionManager::SetCurrentMotionSet("bridgepillar");
-    m_pMotionController->AddMotion("breakdown");
-    m_pMotionController->SetMotion("breakdown", 0.0f, 0.0f, 0.0f, false);
+    m_pGimmickMotion->AddMotion("breakdown");
+    m_pGimmickMotion->SetMotion("breakdown", 0.0f, 0.0f, 0.0f, false);
 };
 
 
@@ -199,7 +199,7 @@ void CBridgePillarGimmick::onBreakdown(void)
 {
     m_eState = STATE_DISAPPEAR;
     m_model.SetVisualBreak();
-    m_pMotionController->Start(1.0f);
+    m_pGimmickMotion->StartOne(1.0f);
     CGameSound::PlayObjectSE(this, SDCODE_SE(0x103F));
 };
 
@@ -300,10 +300,10 @@ void CBridgePillarGimmick::breakdown(void)
         break;
     };
 
-    m_pMotionController->Update();
+    m_pGimmickMotion->Update();
     m_fTimer += CGameProperty::GetElapsedTime();
 
-    if (m_pMotionController->GetEndTime() < m_fTimer)
+    if (m_pGimmickMotion->GetEndTime() < m_fTimer)
     {
         m_step = 0;
         m_fTimer = 0.0f;

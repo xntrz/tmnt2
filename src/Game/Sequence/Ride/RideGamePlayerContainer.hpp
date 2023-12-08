@@ -7,14 +7,14 @@
 class CRideGamePlayer;
 
 
-class CRideGamePlayerContainer : public IGamePlayerContainer
+class CRideGamePlayerContainer : public CGamePlayerContainer
 {
 public:
     CRideGamePlayerContainer(void);
     virtual ~CRideGamePlayerContainer(void);
-    virtual void AddPlayer(int32 nPlayerNo, PLAYERID::VALUE idPlayer, GAMETYPES::COSTUME costume) override;
-    virtual IGamePlayer& GamePlayer(int32 no) const override;
+    virtual CGamePlayer* GamePlayer(int32 no) const override;
     virtual int32 GetPlayerNum(void) const override;
+    virtual void AddPlayer(int32 nPlayerNo, PLAYERID::VALUE idPlayer, GAMETYPES::COSTUME costume) override;
 
 private:
     CRideGamePlayer* getRideGamePlayer(int32 no) const;

@@ -78,22 +78,18 @@ void CRideStageMessage::Period(void)
         {
             if (CRideStage::GetTime() > 1.0f)
             {
-                m_step = 1;
-                
-                if (CRideStage::m_bSpace)
-                    CMessageManager::Request(SEGROUPID::VALUE(160), PLAYERID::VALUE(-1));
-                else
-                    CMessageManager::Request(SEGROUPID::VALUE(159), PLAYERID::VALUE(-1));
+                ++m_step;
+                CMessageManager::Request(CRideStage::m_bSpace ? SEGROUPID::VALUE(160) : SEGROUPID::VALUE(159));
             };
         }
         break;
 
     case 1:
         {
-            if (CRideStage::GetTime() > 1.0f)
+            if (CRideStage::GetTime() > 166.0f)
             {
-                m_step = 2;
-                CMessageManager::Request(SEGROUPID::VALUE(158), PLAYERID::VALUE(-1));                
+                ++m_step;
+                CMessageManager::Request(SEGROUPID::VALUE(158));
             };
         }
         break;
@@ -142,7 +138,7 @@ void CRideStageContainer::MoveBasisPoint(void)
 {
     float dt = CGameProperty::GetElapsedTime();
     
-    m_vBasisVector.z = 14.7222f;
+    m_vBasisVector.z = 14.722222f;
 
     m_vBasisPoint.x += (m_vBasisVector.x * dt);
     m_vBasisPoint.y += (m_vBasisVector.y * dt);
@@ -295,8 +291,9 @@ static inline CRideStageContainer& RideStageContainer(void)
 
     for (int32 i = 0; i < CGameProperty::GetPlayerNum(); ++i)
     {
-        IGamePlayer& GamePlayer = CGameProperty::Player(i);
-        nScore += GamePlayer.GetScore(scorekind);
+        IGamePlayer* pGamePlayer = CGameProperty::GetGamePlayer(i);
+        nScore += static_cast<CRidePlayer*>(pGamePlayer->GetPlayer())->GetScore(scorekind);
+        pGamePlayer->Release();
     };
 
     return nScore;
@@ -322,7 +319,7 @@ static inline CRideStageContainer& RideStageContainer(void)
         
         CGameObject* pParent = CGameObjectManager::GetObject(pShot->GetParentHandle());
         if (pParent)
-            CGameObjectManager::SendMessage(pParent, RIDETYPES::MESSAGEID_SHOT_DESTROY);        
+            CGameObjectManager::SendMessage(pParent, RIDETYPES::MESSAGEID_SHOT_HIT);        
     };
 };
 
@@ -343,13 +340,16 @@ static inline CRideStageContainer& RideStageContainer(void)
 {
     for (int32 i = 0; i < CGameProperty::GetPlayerNum(); ++i)
     {
-        IGamePlayer& GamePlayer = CGameProperty::Player(i);
-
-        for (int32 i = 0; i < GamePlayer.GetCharacterNum(); ++i)
+        IGamePlayer* pGamePlayer = CGameProperty::GetGamePlayer(i);        
+        CRidePlayer* pRidePlayer = static_cast<CRidePlayer*>(pGamePlayer->GetPlayer());
+        
+        for (int32 j = 0; j < pRidePlayer->GetCharacterNum(); ++j)
         {
-            CRideCharacter* pRideChr = (CRideCharacter*)GamePlayer.GetCharacter(i);
+            CRideCharacter* pRideChr = static_cast<CRideCharacter*>(pRidePlayer->GetCharacter(j));
             CGameData::PlayResult().SetRideCharaPlaySecond(pRideChr->GetID(), pRideChr->GetPlaytime());
         };
+
+        pGamePlayer->Release();
     };
 };
 

@@ -30,13 +30,15 @@ public:
     CGimmickMove(void);
     virtual ~CGimmickMove(void);
     virtual RESULT OnMove(float dt);
-    void Start(void);
-    void Stop(void);
     MOVESTATE Move(float dt);
-    void SetPosition(const RwV3d* pPos);
-    void GetPosition(RwV3d* pvPosition) const;
-    void GetLook(RwV3d* pvLook) const;
     
+    inline void Start(void) { m_state = STATE_MOVING; };
+    inline void Stop(void) { m_state = STATE_NONE; };
+    inline void SetPosition(const RwV3d* pvPosition) { m_vPosition = *pvPosition; };
+    inline void GetPosition(RwV3d* pvPosition) const { *pvPosition = m_vPosition; };
+
+    inline void GetLook(RwV3d* pvLook) const { *pvLook = m_vLook; };
+
 protected:
     RwMatrix* m_pRotationMatrix;
     RwV3d m_vPosition;

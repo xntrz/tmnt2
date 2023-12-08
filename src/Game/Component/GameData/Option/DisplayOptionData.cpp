@@ -1,7 +1,7 @@
 #include "DisplayOptionData.hpp"
 #include "System/Common/System2D.hpp"
 
-#ifdef _TARGET_PC
+#ifdef TARGET_PC
 #include "System/PC/PCSpecific.hpp"
 #endif
 
@@ -22,32 +22,18 @@ void CDisplayOptionData::Initialize(void)
 {
     SetDefault();
 
-#ifdef _TARGET_PC
-    int32 iVideomodeNum = CPCSpecific::GetVideomodeNum();
-    int32 iVideomodeCur = CPCSpecific::GetVideomodeCur();
-    
-    m_pVideomode = new VIDEOMODE[iVideomodeNum];
-    ASSERT(m_pVideomode);
+#ifdef TARGET_PC
+    m_iVideomodeNum = CPCSpecific::GetVideomodeNum();
+    m_iVideomodeCur = CPCSpecific::GetVideomodeCur();    
+    m_pVideomode = new VIDEOMODE[m_iVideomodeNum];
 
-	m_iVideomodeNum = 0;
-    for (int32 i = 0, no = 0; i < iVideomodeNum; ++i)
+    for (int32 i = 0; i < m_iVideomodeNum; ++i)
     {
-        if (CPCSpecific::IsVideomodeWindow(i))
-            continue;
-        
-        int32 Width = 0;
-        int32 Height = 0;
-        int32 Depth = 0;
-        CPCSpecific::GetVideomode(i, Width, Height, Depth);
-        
-        std::sprintf(m_pVideomode[no].m_szName, "%d x %d x %d", Width, Height, Depth);
-        m_pVideomode[no].m_iVideomodeNo = i;
+		PC::VIDEOMODE vm;
 
-		if (i == iVideomodeCur)
-			m_iVideomodeCur = no;
-
-        ++no;
-        ++m_iVideomodeNum;
+		CPCSpecific::GetVideomode(i, vm);
+        
+		std::sprintf(m_pVideomode[i].m_szName, "%d x %d x %d", vm.w, vm.h, vm.d);
     };
 #endif
 };
@@ -55,7 +41,7 @@ void CDisplayOptionData::Initialize(void)
 
 void CDisplayOptionData::Terminate(void)
 {
-#ifdef _TARGET_PC
+#ifdef TARGET_PC
     if (m_pVideomode)
     {
         delete[] m_pVideomode;
@@ -72,6 +58,7 @@ void CDisplayOptionData::SetDefault(void)
 {
     m_bFontEffectFlag = true;
     m_bPlayerMarkerFlag = true;
+    m_bHelpFlag = true;
 };
 
 
@@ -89,17 +76,25 @@ bool CDisplayOptionData::IsValid(void) const
 
 void CDisplayOptionData::Snapshot(RAWDATA& rRawData) const
 {
-    rRawData.m_bFontEffectFlag = m_bFontEffectFlag;
-    rRawData.m_bPlayerMarkerFlag = m_bPlayerMarkerFlag;
-    rRawData.m_bHelpFlag = m_bHelpFlag;
+    rRawData.m_bFontEffectFlag      = m_bFontEffectFlag;
+    rRawData.m_bPlayerMarkerFlag    = m_bPlayerMarkerFlag;
+    rRawData.m_bHelpFlag            = m_bHelpFlag;
+
+#ifdef TARGET_PC    
+    rRawData.m_iVideomodeNo         = m_iVideomodeCur;
+#endif        
 };
 
 
 void CDisplayOptionData::Restore(const RAWDATA& rRawData)
 {
-    m_bFontEffectFlag = rRawData.m_bFontEffectFlag;
+    m_bFontEffectFlag   = rRawData.m_bFontEffectFlag;
     m_bPlayerMarkerFlag = rRawData.m_bPlayerMarkerFlag;
-    m_bHelpFlag = rRawData.m_bHelpFlag;
+    m_bHelpFlag         = rRawData.m_bHelpFlag;
+
+#ifdef TARGET_PC    
+    m_iVideomodeCur     = rRawData.m_iVideomodeNo;
+#endif
 };
 
 
@@ -139,57 +134,48 @@ bool CDisplayOptionData::IsHelpEnabled(void) const
 };
 
 
-int32 CDisplayOptionData::VideomodeNum(void)
+#ifdef TARGET_PC
+
+
+void CDisplayOptionData::SetVideomode(int32 No)
 {
-#ifdef _TARGET_PC    
-    return m_iVideomodeNum;
-#else
-    return -1;
-#endif  
+    ASSERT(No >= 0 && No < m_iVideomodeNum);
+    
+    m_iVideomodeCur = No;
 };
 
 
-int32 CDisplayOptionData::VideomodeCur(void)
+bool CDisplayOptionData::ApplyVideomode(void) const
 {
-#ifdef _TARGET_PC    
-    return m_iVideomodeCur;
-#else
-    return -1;
-#endif  
-};
-
-
-const char* CDisplayOptionData::VideomodeReso(int32 no)
-{
-#ifdef _TARGET_PC    
-    ASSERT((no >= 0) && (no < m_iVideomodeNum));
-    return m_pVideomode[no].m_szName;
-#else
-    return nullptr;
-#endif    
-};
-
-
-void CDisplayOptionData::VideomodeAssign(int32 no)
-{
-#ifdef _TARGET_PC  
-    m_iVideomodeCur = no;
-#endif    
-};
-
-
-bool CDisplayOptionData::VideomodeApply(void)
-{
-#ifdef _TARGET_PC  
-    ASSERT((m_iVideomodeCur >= 0) && (m_iVideomodeCur < m_iVideomodeNum));
-    if (CPCSpecific::SetVideomode(m_pVideomode[m_iVideomodeCur].m_iVideomodeNo))
+    ASSERT(m_iVideomodeCur >= 0 && m_iVideomodeCur < m_iVideomodeNum);
+    
+    if (CPCSpecific::SetVideomode(m_iVideomodeCur))
     {
-        CSystem2D::ScreenChanged();
+        CSystem2D::Reset();
         return true;
     };
 
     return false;
-#else
-    return false;
-#endif    
 };
+
+
+int32 CDisplayOptionData::GetVideomodeNum(void) const
+{
+    return m_iVideomodeNum;
+};
+
+
+int32 CDisplayOptionData::GetVideomodeCur(void) const
+{
+    return m_iVideomodeCur;
+};
+
+
+const char* CDisplayOptionData::GetVideomodeName(int32 No) const
+{
+    ASSERT(No >= 0 && No < m_iVideomodeNum);
+    
+    return m_pVideomode[No].m_szName;
+};
+
+#endif /* TARGET_PC */

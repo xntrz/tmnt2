@@ -1,42 +1,32 @@
 #include "TitleSequence.hpp"
 
+#include "Game/Component/GameData/GameData.hpp"
 #include "Game/System/2d/GameFont.hpp"
-#include "Game/System/2d/GameText.hpp"
 #include "Game/System/2d/MenuSound.hpp"
 #include "Game/System/2d/Animation2D.hpp"
-#include "Game/System/Sound/GameSound.hpp"
-#include "Game/System/Misc/ScreenFade.hpp"
 #include "Game/System/DataLoader/DataLoader.hpp"
-#include "Game/Component/GameData/GameData.hpp"
+#include "Game/System/Misc/ControllerMisc.hpp"
+#include "Game/System/Misc/ScreenFade.hpp"
 #include "Game/System/Misc/Gamepad.hpp"
+#include "Game/System/Misc/Timeout.hpp"
+#include "Game/System/Sound/GameSound.hpp"
+#include "Game/System/Text/GameText.hpp"
+#include "Game/ProcessList.hpp"
+#include "System/Common/Configure.hpp"
 #include "System/Common/Controller.hpp"
 #include "System/Common/System2D.hpp"
 #include "System/Common/Screen.hpp"
 #include "System/Common/SystemText.hpp"
-#include "System/Common/Process/ProcessList.hpp"
 #include "System/Common/File/FileID.hpp"
-
-
-namespace MENUITEMID
-{
-	enum VALUE
-	{
-		ID_GAME_NEW,
-		ID_GAME_CONTINUE,
-		ID_OPTIONS,
-		ID_QUIT,
-		ID_ARCADE,
-	};
-};
 
 
 /*static*/ CTitleSequence::MENUITEMINFO CTitleSequence::m_aMenuItemInfoTable[] =
 {
-	{ MENUITEMID::ID_GAME_NEW, 		GAMETEXT::VALUE(0x232), CTitleSequence::NEXT_SEQUENCE_GAME_NEW, 		true, 	true, 	},
-	{ MENUITEMID::ID_GAME_CONTINUE, GAMETEXT::VALUE(0x233), CTitleSequence::NEXT_SEQUENCE_GAME_CONTINUE, 	true, 	true, 	},
-	{ MENUITEMID::ID_OPTIONS, 		GAMETEXT::VALUE(0xD), 	CTitleSequence::NEXT_SEQUENCE_OPTIONS, 			true, 	true, 	},
-	{ MENUITEMID::ID_QUIT, 			GAMETEXT::VALUE(0xE), 	CTitleSequence::NEXT_SEQUENCE_QUIT, 			true, 	true, 	},
-	{ MENUITEMID::ID_ARCADE, 		GAMETEXT::VALUE(0x234), CTitleSequence::NEXT_SEQUENCE_ARCADE, 			false, 	false, 	},
+	{ MENUITEMID_GAME_NEW,		GAMETEXT(0x232),	CTitleSequence::NEXT_SEQUENCE_GAME_NEW,			true,	true,	},
+	{ MENUITEMID_GAME_CONTINUE,	GAMETEXT(0x233),	CTitleSequence::NEXT_SEQUENCE_GAME_CONTINUE,	true,	true,	},
+	{ MENUITEMID_OPTIONS,		GAMETEXT(0xD),		CTitleSequence::NEXT_SEQUENCE_OPTIONS, 			true,	true,	},
+	{ MENUITEMID_QUIT,			GAMETEXT(0xE),		CTitleSequence::NEXT_SEQUENCE_QUIT,				true,	true,	},
+	{ MENUITEMID_ARCADE,		GAMETEXT(0x234),	CTitleSequence::NEXT_SEQUENCE_ARCADE,			false,	false,	},
 };
 
 
@@ -64,30 +54,24 @@ CTitleSequence::~CTitleSequence(void)
 };
 
 
-bool CTitleSequence::OnAttach(const void* param)
+bool CTitleSequence::OnAttach(const void* pParam)
 {
 	m_NextSequence = NEXT_SEQUENCE_QUIT;
 	m_phase = PHASE_NONE;
 	m_iCurrentSelect = 0;
 	m_fTimer = 0.0f;
-
-#ifdef _TARGET_PC
-	m_aMenuItemInfoTable[MENUITEMID::ID_QUIT].m_bEnabled = true;
-	m_aMenuItemInfoTable[MENUITEMID::ID_QUIT].m_bVisible = true;
-#else
-	if (CGameData::Record().Secret().IsUnlockedSecret(SECRETID::ID_HOME_ARCADEGAME))
-	{
-		m_aMenuItemInfoTable[MENUITEMID::ID_ARCADE].m_bEnabled = true;
-		m_aMenuItemInfoTable[MENUITEMID::ID_ARCADE].m_bVisible = true;
-	};
-#endif	
-	m_aMenuItemInfoTable[MENUITEMID::ID_GAME_CONTINUE].m_bEnabled = (!CGameData::IsNewGame());
 	
+	SetMenuItem();
 	CAnim2DSequence::m_bDisplayLoading = false;
 		
-	CController::UnlockAllControllers();
+	UnlockAllControllers();
 	CGameData::Attribute().SetVirtualPad(CController::CONTROLLER_UNLOCKED_ON_VIRTUAL);
-	
+
+#ifdef BUILD_TRIAL
+	CTimeoutProcess::Enable(this, true);
+	CTimeoutProcess::Start(this);
+#endif
+
 	bool bResult = CAnim2DSequence::OnAttach(FILEID::ID_TITLE);
 	CDataLoader::Regist(FILEID::ID_TITLE2);
 	return bResult;
@@ -101,51 +85,79 @@ void CTitleSequence::OnDetach(void)
 };
 
 
-void CTitleSequence::OnMove(bool bRet, const void* param)
+void CTitleSequence::OnMove(bool bRet, const void* pReturnValue)
 {
-	if (bRet)
+	switch (m_animstep)
 	{
-		CController::UnlockAllControllers();
-		CGameData::Attribute().SetVirtualPad(CController::CONTROLLER_UNLOCKED_ON_VIRTUAL);
+	case ANIMSTEP_FADEIN:
+		{
+			if (CScreenFade::IsFading())
+				break;
+			
+			CGameSound::PlayBGM(SDCODE_BGM(0x3020));
+			m_pAnimation2D->FlashUnlockKeyEnable(true);
+		}
+		break;
+
+	case ANIMSTEP_DRAW:
+		{
+			if (bRet)
+			{
+				SetMenuItem();
+				CScreenFade::BlackIn(0.0f);
+			};
+
+			switch (m_phase)
+			{
+			case PHASE_NONE:
+				m_phase = PHASE_START;
+				break;
+
+			case PHASE_START:
+				CheckPressStart();
+				UpdateTimers();
+				UpdateDemo();
+				break;
+
+			case PHASE_CHOICE:
+				UpdateMenu();
+				UpdateTimers();
+				UpdateDemo();
+				break;
+
+			case PHASE_CHOICE_WARNING:
+				UpdateNewGameWarning();
+				break;
+
+			default:
+				ASSERT(false);
+				break;
+			};
+		}
+		break;
+
+	case ANIMSTEP_END:
+		{
+			if (bRet)
+			{
+				CConfigure::SetLaunchMode(TYPEDEF::CONFIG_LAUNCH_ARCADE);
+				Ret((const void*)PROCESSTYPES::LABEL_EOL);
+			}
+			else
+			{
+				Branch();
+			};
+		}
+		break;
 	};
 
-	CAnim2DSequence::OnMove(bRet, param);
-
-	if (m_step != STEP_DRAW)
-		return;
-
-	switch (m_phase)
-	{
-	case PHASE_NONE:
-		m_phase = PHASE_START;
-		break;
-
-	case PHASE_START:
-		CheckPressStart();
-		UpdateTimers();
-		UpdateDemo();
-		break;
-
-	case PHASE_CHOICE:
-		UpdateMenu();
-		UpdateTimers();
-		UpdateDemo();
-		break;
-
-	case PHASE_CHOICE_WARNING:
-		UpdateNewGameWarning();
-		break;
-
-	default:
-		ASSERT(false);
-		break;
-	};
+	CAnim2DSequence::OnMove(bRet, pReturnValue);
 };
 
 
 void CTitleSequence::OnDraw(void) const
 {
-    if (m_phase == PHASE_CHOICE && m_step == STEP_DRAW)
+	if ((m_phase == PHASE_CHOICE) && (m_animstep == ANIMSTEP_DRAW))
 		m_pAnimation2D->SetCenterAllStrings();
 	
 	CAnim2DSequence::OnDraw();
@@ -167,9 +179,11 @@ void CTitleSequence::OnDraw(void) const
 			if (!pMenuItemInfo->m_bVisible)
 				continue;
 
+			CGameFont::SetHeight(fHeight);
+
 			if (m_iCurrentSelect == i)
 			{
-				CGameFont::m_pFont->SetRGBA(
+				CGameFont::SetRGBA(
 					uint8(127.0f - Math::Cos(m_fTimer * 4.0f) * 127.0f),
 					255,
 					uint8(127.0f - Math::Cos(m_fTimer * 4.0f) * 127.0f),
@@ -178,57 +192,25 @@ void CTitleSequence::OnDraw(void) const
 			}
 			else if (pMenuItemInfo->m_bEnabled)
 			{
-				CGameFont::m_pFont->SetRGBA(255, 255, 0, 255);
+				CGameFont::SetRGBA(255, 255, 0, 255);
 			}
 			else
 			{
-				CGameFont::m_pFont->SetRGBA(96, 96, 0, 255);
+				CGameFont::SetRGBA(96, 96, 0, 255);
 			};
 
-			const wchar* pwszText = CGameText::GetText(GAMETEXT::VALUE(pMenuItemInfo->m_iStringID));
+			const wchar* pwszText = CGameText::GetText(GAMETEXT(pMenuItemInfo->m_iStringID));
 			x = CGameFont::GetStringWidth(pwszText, fHeight) * -0.5f;
-			CGameFont::m_pFont->Show(pwszText, fHeight, x, y);
+
+			CGameFont::SetHeight(fHeight);
+			CGameFont::Show(pwszText, x, y);
+
 			y += fHeight;
 			y += 10.0f;
 		};
 
 		CSystem2D::EndScene();
 	};
-};
-
-
-bool CTitleSequence::OnRet(void)
-{
-	switch (m_NextSequence)
-	{
-	case NEXT_SEQUENCE_GAME_NEW:
-		CGameData::OnNewGame();
-		Ret();
-		break;
-		
-	case NEXT_SEQUENCE_GAME_CONTINUE:
-		Ret();
-		break;
-		
-	case NEXT_SEQUENCE_DEMO:
-		Ret((const void*)PROCESSTYPES::LABEL_SEQ_STAGEDEMO);
-		break;
-
-	case NEXT_SEQUENCE_OPTIONS:
-		Ret((const void*)PROCESSTYPES::LABEL_SEQ_OPTION);
-		break;
-		
-	case NEXT_SEQUENCE_ARCADE:
-	case NEXT_SEQUENCE_QUIT:
-		Ret((const void*)PROCESSTYPES::LABEL_EOL);
-		break;
-
-	default:
-		ASSERT(false);
-		break;
-	};
-
-	return true;
 };
 
 
@@ -260,8 +242,8 @@ void CTitleSequence::OpenNewGameWarning(void)
 	m_Dialog.Set(0.0f, 0.0f, CSprite::m_fVirtualScreenW, 180.0f);
 
 	m_Dialog.SetText(
-		CSystemText::GetText(SYSTEXT::VALUE(121)),
-		CGameFont::GetScreenSize() * 0.0044f,
+		CSystemText::GetText(SYSTEXT(121)),
+		CGameFont::GetScreenHeightEx(TYPEDEF::VSCR_H / 2.0f),
 		{ 0xFF, 0xFF, 0xFF, 0xFF }
 	);
 	m_Dialog.Open();
@@ -282,7 +264,7 @@ void CTitleSequence::UpdateNewGameWarning(void)
 	{
 	case CDialog::STATUS_YES:
 		m_NextSequence = m_aMenuItemInfoTable[m_iCurrentSelect].m_nextseq;		
-		Ret();
+		BeginFadeout();
 		break;
 
 	case CDialog::STATUS_NO:
@@ -305,38 +287,34 @@ void CTitleSequence::UpdateMenu(void)
 		CMenuSound::PlaySE(CMenuSound::SOUND_ID_OK);
 		m_fTimer = 0.0f;
 
-		if (m_iCurrentSelect == MENUITEMID::ID_GAME_NEW						&&
-			m_aMenuItemInfoTable[MENUITEMID::ID_GAME_CONTINUE].m_bVisible	&&
-			m_aMenuItemInfoTable[MENUITEMID::ID_GAME_CONTINUE].m_bEnabled)
+		if (m_iCurrentSelect == MENUITEMID_GAME_NEW						&&
+			m_aMenuItemInfoTable[MENUITEMID_GAME_CONTINUE].m_bVisible	&&
+			m_aMenuItemInfoTable[MENUITEMID_GAME_CONTINUE].m_bEnabled)
 		{
-			//
-			//	If pressing new game while continue is available
-			//
-			
 			OpenNewGameWarning();
 		}
 		else
 		{
 			m_NextSequence = m_aMenuItemInfoTable[m_iCurrentSelect].m_nextseq;
-			Ret();
+			BeginFadeout();
 		};
 	}
 	else if (CController::GetDigitalTrigger(iController, CController::DIGITAL_CANCEL))
 	{
 		CMenuSound::PlaySE(CMenuSound::SOUND_ID_CANCEL);
 
-		int32 iSelect = GetSelectByItemIndex(MENUITEMID::ID_QUIT);
+		int32 iSelect = GetSelectByItemIndex(MENUITEMID_QUIT);
 		if (m_iCurrentSelect == iSelect)
 		{
 			m_NextSequence = NEXT_SEQUENCE_QUIT;
-			Ret();
+			BeginFadeout();
 		}
 		else
 		{
 			m_iCurrentSelect = iSelect;
 		};
 	}
-	else if (CController::GetDigitalTrigger(iController, CController::DIGITAL_UP))
+	else if (CController::GetDigitalTrigger(iController, CController::DIGITAL_LUP))
 	{
 		CMenuSound::PlaySE(CMenuSound::SOUND_ID_SELECT);
 		
@@ -344,10 +322,10 @@ void CTitleSequence::UpdateMenu(void)
 		
 		do
 		{
-			m_iCurrentSelect = Math::InvClamp(--m_iCurrentSelect, 0, COUNT_OF(m_aMenuItemInfoTable) - 1);
+			m_iCurrentSelect = InvClamp(--m_iCurrentSelect, 0, COUNT_OF(m_aMenuItemInfoTable) - 1);
 		} while (!m_aMenuItemInfoTable[m_iCurrentSelect].m_bEnabled);
 	}
-	else if (CController::GetDigitalTrigger(iController, CController::DIGITAL_DOWN))
+	else if (CController::GetDigitalTrigger(iController, CController::DIGITAL_LDOWN))
 	{
 		CMenuSound::PlaySE(CMenuSound::SOUND_ID_SELECT);
 
@@ -355,7 +333,7 @@ void CTitleSequence::UpdateMenu(void)
 		
 		do
 		{
-			m_iCurrentSelect = Math::InvClamp(++m_iCurrentSelect, 0, COUNT_OF(m_aMenuItemInfoTable) - 1);
+			m_iCurrentSelect = InvClamp(++m_iCurrentSelect, 0, COUNT_OF(m_aMenuItemInfoTable) - 1);
 		} while (!m_aMenuItemInfoTable[m_iCurrentSelect].m_bEnabled);
 	};
 };
@@ -368,7 +346,7 @@ void CTitleSequence::UpdateDemo(void)
 	if (m_fTimer > fElapsedTimeForDemo)
 	{
 		m_NextSequence = NEXT_SEQUENCE_DEMO;
-		Ret();
+		BeginFadeout();
 	};
 };
 
@@ -382,4 +360,54 @@ int32 CTitleSequence::GetSelectByItemIndex(int32 iItemIndex) const
 	};
 
 	return -1;
+};
+
+
+void CTitleSequence::SetMenuItem(void)
+{
+
+#ifdef TARGET_PC
+	m_aMenuItemInfoTable[MENUITEMID_QUIT].m_bEnabled = true;
+	m_aMenuItemInfoTable[MENUITEMID_QUIT].m_bVisible = true;
+#else
+	if (CGameData::Record().Secret().IsUnlockedSecret(SECRETID::ID_HOME_ARCADEGAME))
+	{
+		m_aMenuItemInfoTable[MENUITEMID_ARCADE].m_bEnabled = true;
+		m_aMenuItemInfoTable[MENUITEMID_ARCADE].m_bVisible = true;
+	};
+#endif	
+	m_aMenuItemInfoTable[MENUITEMID_GAME_CONTINUE].m_bEnabled = (!CGameData::IsNewGame());
+};
+
+
+void CTitleSequence::Branch(void)
+{
+	switch (m_NextSequence)
+	{
+	case NEXT_SEQUENCE_GAME_NEW:
+		CGameData::OnNewGame();
+		Ret();
+		break;
+
+	case NEXT_SEQUENCE_GAME_CONTINUE:
+		Ret();
+		break;
+
+	case NEXT_SEQUENCE_DEMO:
+		Ret((const void*)PROCLABEL_SEQ_PLAYDEMO);
+		break;
+
+	case NEXT_SEQUENCE_OPTIONS:
+		Ret((const void*)PROCLABEL_SEQ_OPTIONS);
+		break;
+
+	case NEXT_SEQUENCE_ARCADE:
+	case NEXT_SEQUENCE_QUIT:
+		Ret((const void*)PROCESSTYPES::LABEL_EOL);
+		break;
+
+	default:
+		ASSERT(false);
+		break;
+	};
 };

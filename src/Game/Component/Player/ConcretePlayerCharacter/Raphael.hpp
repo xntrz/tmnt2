@@ -8,6 +8,16 @@
 
 namespace Raphael
 {
+    const RwV3d BANDANA_OFFSET = { 0.0f, 0.15f, 0.05f };
+
+    namespace MOTIONNAMES
+    {
+        static const char* ATTACK_JUMP1 = "JAttack1";
+        static const char* ATTACK_JUMP2 = "JAttack2";
+        static const char* ATTACK_JUMP3 = "JAttack3";
+        static const char* PUSH         = "Push";
+    };
+
     class CAttackJump : public CStatus
     {
     protected:
@@ -27,13 +37,11 @@ namespace Raphael
         PHASE m_phase;
     };
 
-
     class CTouchdown : public PlayerStatus::CTouchdown
     {
     public:
         virtual void OnAttach(void) override;
     };
-
 
     class CAttackAAC : public PlayerStatus::CAttackAAC
     {
@@ -42,20 +50,17 @@ namespace Raphael
         virtual void OnAttach(void) override;
     };
     
-
     class CAttackAABBC : public PlayerStatus::CAttackAABBC
     {
     public:
         virtual void OnDischargeWave(void) override;
     };
 
-
     class CAttackB : public PlayerStatus::CAttackB
     {
     public:
         virtual void OnDischargeWave(MAGIC_GENERIC::STEP step) override;
     };
-
 
     class CPush : public CStatus
     {
@@ -73,5 +78,4 @@ class CRaphael : public CPlayerCharacter
 public:
     CRaphael(GAMETYPES::COSTUME costume);
     virtual ~CRaphael(void);
-    virtual void Run(void) override;
 };

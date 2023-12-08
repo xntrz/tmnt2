@@ -24,7 +24,7 @@ namespace PlayerStatus
 
     void CGuardReady::OnAttach(void)
     {
-        Character().ChangeMotion("G1");
+        Character().ChangeMotion(PLAYERTYPES::MOTIONNAMES::GUARD_READY);
         Character().ResetAcceleration();
         Character().ResetVelocity();
         Character().SetCharacterFlag(CHARACTERTYPES::FLAG_FIXED_DIRECTION, true);
@@ -64,7 +64,7 @@ namespace PlayerStatus
 
     void CGuard::OnAttach(void)
     {
-        Character().ChangeMotion("G2");
+        Character().ChangeMotion(PLAYERTYPES::MOTIONNAMES::GUARD);
     };
 
 
@@ -101,7 +101,7 @@ namespace PlayerStatus
     void CGuardBack::OnAttach(void)
     {
         Character().SetCharacterFlag(CHARACTERTYPES::FLAG_FIXED_DIRECTION, false);
-        Character().ChangeMotion("G2");
+        Character().ChangeMotion(PLAYERTYPES::MOTIONNAMES::GUARD);
         Character().SetDirectionFromVector(
             &Character().AttackParameter().m_vDirection
         );
@@ -179,7 +179,7 @@ namespace PlayerStatus
 
     void CGuardFinish::OnAttach(void)
     {
-        Character().ChangeMotion("G3");
+        Character().ChangeMotion(PLAYERTYPES::MOTIONNAMES::GUARD_FINISH);
     };
 
 

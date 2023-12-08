@@ -4,7 +4,16 @@
 #include "Game/System/Hit/Intersection.hpp"
 
 
-static void CheckWallJump(CMapCollision::COLLISIONPARAM* pCollisionParam, RpCollisionTriangle* pCollTriangle, RwV3d* pPos, float fDistance)
+static inline bool isFaceToFaceVector(const RwV3d* v1, const RwV3d* v2)
+{
+    float d = Math::Vec3_Dot(v1, v2);
+    float c = Math::Cos(MATH_DEG2RAD(135.0f));
+
+    return (c < d);
+};
+
+
+static inline void checkWallJump(CMapCollision::COLLISIONPARAM* pCollisionParam, RpCollisionTriangle* pCollTriangle, RwV3d* pPos, float fDistance)
 {
     if (fDistance >= pCollisionParam->m_mapwall.m_fDistance)
         return;
@@ -12,16 +21,13 @@ static void CheckWallJump(CMapCollision::COLLISIONPARAM* pCollisionParam, RpColl
     if (!pCollisionParam->m_pvVelocity)
         return;
 
-    float fD = Math::Vec3_Dot(pCollisionParam->m_pvVelocity, &pCollTriangle->normal);
-    float fC = Math::Cos(2.35619455575943f);
-    
-    if (fC < fD)
-    {
-        pCollisionParam->m_mapwall.m_fDistance = fDistance;
-        pCollisionParam->m_mapwall.m_bHit = true;
-        pCollisionParam->m_mapwall.m_vClosestPt = *pPos;
-        pCollisionParam->m_mapwall.m_vNormal = pCollTriangle->normal;
-    };
+    if (!isFaceToFaceVector(pCollisionParam->m_pvVelocity, &pCollTriangle->normal))
+        return;
+
+    pCollisionParam->m_mapwall.m_fDistance = fDistance;
+    pCollisionParam->m_mapwall.m_bHit = true;
+    pCollisionParam->m_mapwall.m_vClosestPt = *pPos;
+    pCollisionParam->m_mapwall.m_vNormal = pCollTriangle->normal;
 };
 
 
@@ -176,7 +182,7 @@ static void CheckWallJump(CMapCollision::COLLISIONPARAM* pCollisionParam, RpColl
         if (FLAG_TEST(pCollisionParam->m_checkflag, CWorldMap::CHECKFLAG_WALLJUMP) ||
             FLAG_TEST(attribute, MAPTYPES::ATTRIBUTE_JUMP))
         {
-            CheckWallJump(pCollisionParam, pCollTriangle, &vProjPos, fDist);            
+            checkWallJump(pCollisionParam, pCollTriangle, &vProjPos, fDist);            
         };
     }
     else
@@ -221,7 +227,7 @@ static void CheckWallJump(CMapCollision::COLLISIONPARAM* pCollisionParam, RpColl
             if (FLAG_TEST(pCollisionParam->m_checkflag, CWorldMap::CHECKFLAG_WALLJUMP) ||
                 FLAG_TEST(attribute, MAPTYPES::ATTRIBUTE_JUMP))
             {
-                CheckWallJump(pCollisionParam, pCollTriangle, &vProjPos, fDist);
+                checkWallJump(pCollisionParam, pCollTriangle, &vProjPos, fDist);
             };
         };
     };

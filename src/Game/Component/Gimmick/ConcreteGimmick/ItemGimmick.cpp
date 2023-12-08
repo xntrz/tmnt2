@@ -6,7 +6,7 @@
 #include "Game/Component/GameMain/GamePlayer.hpp"
 #include "Game/Component/GameMain/GameProperty.hpp"
 #include "Game/Component/GameMain/GameEvent.hpp"
-#include "Game/Component/Gimmick/GimmickUtils.hpp"
+#include "Game/Component/Gimmick/Utils/GimmickUtils.hpp"
 #include "Game/Component/Gimmick/GimmickParam.hpp"
 #include "Game/Component/Module/ModuleManager.hpp"
 #include "Game/Component/Module/CircleShadowModule.hpp"
@@ -39,14 +39,8 @@ CItemGimmick::CItemGimmick(const char* pszName, void* pParam)
     init(pParam);
     
     m_pModuleManager = new CModuleManager;
-    ASSERT(m_pModuleManager);
-
-    m_pModuleManager->Include(CCircleShadowModule::New(
-        this,
-        1.5f,
-        1.5f,
-        true
-    ));
+    m_pModuleManager->Include(CCircleShadowModule::New(this, 1.5f, 1.5f, true));
+    m_pModuleManager->Run(); // update shadow position to item
 };
 
 
@@ -111,8 +105,6 @@ void CItemGimmick::Draw(void) const
 
 void CItemGimmick::GetPosition(RwV3d* pvPosition) const
 {
-    ASSERT(pvPosition);
-
     *pvPosition = m_vPosition;
 };
 
@@ -167,7 +159,10 @@ void CItemGimmick::PostMove(void)
         
     case STATE_WAIT:
         {
-            if (checkItemGet() || (isTimelimitEnable() && m_fTimer > 20))
+            bool bIsGet = checkItemGet();
+            bool bIsTimeout = (isTimelimitEnable() && (m_fTimer > 20.0f));
+            
+            if (bIsGet || bIsTimeout)
             {
                 m_state = STATE_END;                
             }
@@ -419,13 +414,15 @@ bool CItemGimmick::checkItemGet(void)
     float fNearestDistance = TYPEDEF::FLOAT_MAX;
     int32 nPlayerNo = -1;
 
-    for (int32 i = 0; i < CGameProperty::GetPlayerNum(); ++i)
+	int32 nPlayerNum = CGameProperty::GetPlayerNum();
+    for (int32 i = 0; i < nPlayerNum; ++i)
     {
-        if (!CGameProperty::Player(i).IsAlive())
-            continue;
+		IGamePlayer* pGamePlayer = CGameProperty::Player(i);
+		if (!pGamePlayer->IsAlive())
+			continue;
 
         RwV3d vPosition = Math::VECTOR3_ZERO;
-        CGameProperty::Player(i).GetPosition(&vPosition);
+		pGamePlayer->GetPosition(&vPosition);
 
         RwV3d vDistance = Math::VECTOR3_ZERO;
         Math::Vec3_Sub(&vDistance, &vPosition, &m_vPosition);

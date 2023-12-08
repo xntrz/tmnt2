@@ -10,6 +10,6 @@ public:
 
     CNexusStageSequence(void);
     virtual ~CNexusStageSequence(void);
-    virtual bool OnAttach(const void* param) override;
+    virtual bool OnAttach(const void* pParam) override;
     virtual void OnDetach(void) override;    
 };

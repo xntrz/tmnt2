@@ -5,17 +5,17 @@
 #include "Game/Component/GameMain/AntiqueID.hpp"
 #include "Game/Component/GameMain/AreaInfo.hpp"
 #include "Game/System/2d/GameFont.hpp"
-#include "Game/System/2d/GameText.hpp"
+#include "Game/System/Text/GameText.hpp"
 #include "Game/System/2d/MenuController.hpp"
 #include "Game/System/2d/Animation2D.hpp"
 #include "Game/System/Sound/GameSound.hpp"
 #include "Game/System/Misc/ScreenFade.hpp"
 #include "Game/System/Texture/TextureManager.hpp"
+#include "Game/ProcessList.hpp"
 #include "System/Common/Controller.hpp"
 #include "System/Common/Sprite.hpp"
 #include "System/Common/Screen.hpp"
 #include "System/Common/System2D.hpp"
-#include "System/Common/Process/ProcessList.hpp"
 #include "System/Common/File/FileID.hpp"
 #include "System/Common/SystemTime.hpp"
 #include "System/Common/TextData.hpp"
@@ -281,128 +281,128 @@ static const char* s_apszAntiqueTex[] =
 };
 
 
-static GAMETEXT::VALUE s_aAntiqueText[] =
+static GAMETEXT s_aAntiqueText[] =
 {
-    GAMETEXT::VALUE(0x0),
-    GAMETEXT::VALUE(0x3B9),
-    GAMETEXT::VALUE(0x3BA),
-    GAMETEXT::VALUE(0x3BB),
-    GAMETEXT::VALUE(0x3BC),
-    GAMETEXT::VALUE(0x3BD),
-    GAMETEXT::VALUE(0x3BE),
-    GAMETEXT::VALUE(0x3BF),
-    GAMETEXT::VALUE(0x3C0),
-    GAMETEXT::VALUE(0x3C1),
-    GAMETEXT::VALUE(0x3C2),
-    GAMETEXT::VALUE(0x3C3),
-    GAMETEXT::VALUE(0x3C4),
-    GAMETEXT::VALUE(0x3C5),
-    GAMETEXT::VALUE(0x3C6),
-    GAMETEXT::VALUE(0x3C7),
-    GAMETEXT::VALUE(0x3C8),
-    GAMETEXT::VALUE(0x3C9),
-    GAMETEXT::VALUE(0x3CA),
-    GAMETEXT::VALUE(0x3CB),
-    GAMETEXT::VALUE(0x3CC),
-    GAMETEXT::VALUE(0x3CD),
-    GAMETEXT::VALUE(0x3CE),
-    GAMETEXT::VALUE(0x3CF),
-    GAMETEXT::VALUE(0x3D0),
-    GAMETEXT::VALUE(0x3D1),
-    GAMETEXT::VALUE(0x3D2),
-    GAMETEXT::VALUE(0x3D3),
-    GAMETEXT::VALUE(0x3D4),
-    GAMETEXT::VALUE(0x3D5),
-    GAMETEXT::VALUE(0x3D6),
-    GAMETEXT::VALUE(0x3D7),
-    GAMETEXT::VALUE(0x3D8),
-    GAMETEXT::VALUE(0x3D9),
-    GAMETEXT::VALUE(0x3DA),
-    GAMETEXT::VALUE(0x3DB),
-    GAMETEXT::VALUE(0x3DC),
-    GAMETEXT::VALUE(0x3DD),
-    GAMETEXT::VALUE(0x3DE),
-    GAMETEXT::VALUE(0x3DF),
-    GAMETEXT::VALUE(0x3E0),
-    GAMETEXT::VALUE(0x3E1),
-    GAMETEXT::VALUE(0x3E2),
-    GAMETEXT::VALUE(0x3E3),
-    GAMETEXT::VALUE(0x3E4),
-    GAMETEXT::VALUE(0x3E5),
-    GAMETEXT::VALUE(0x3E6),
-    GAMETEXT::VALUE(0x3E7),
-    GAMETEXT::VALUE(0x3E8),
-    GAMETEXT::VALUE(0x3E9),
-    GAMETEXT::VALUE(0x3EA),
-    GAMETEXT::VALUE(0x3EB),
-    GAMETEXT::VALUE(0x3EC),
-    GAMETEXT::VALUE(0x3ED),
-    GAMETEXT::VALUE(0x3EE),
-    GAMETEXT::VALUE(0x3EF),
+    GAMETEXT(0x0),
+    GAMETEXT(0x3B9),
+    GAMETEXT(0x3BA),
+    GAMETEXT(0x3BB),
+    GAMETEXT(0x3BC),
+    GAMETEXT(0x3BD),
+    GAMETEXT(0x3BE),
+    GAMETEXT(0x3BF),
+    GAMETEXT(0x3C0),
+    GAMETEXT(0x3C1),
+    GAMETEXT(0x3C2),
+    GAMETEXT(0x3C3),
+    GAMETEXT(0x3C4),
+    GAMETEXT(0x3C5),
+    GAMETEXT(0x3C6),
+    GAMETEXT(0x3C7),
+    GAMETEXT(0x3C8),
+    GAMETEXT(0x3C9),
+    GAMETEXT(0x3CA),
+    GAMETEXT(0x3CB),
+    GAMETEXT(0x3CC),
+    GAMETEXT(0x3CD),
+    GAMETEXT(0x3CE),
+    GAMETEXT(0x3CF),
+    GAMETEXT(0x3D0),
+    GAMETEXT(0x3D1),
+    GAMETEXT(0x3D2),
+    GAMETEXT(0x3D3),
+    GAMETEXT(0x3D4),
+    GAMETEXT(0x3D5),
+    GAMETEXT(0x3D6),
+    GAMETEXT(0x3D7),
+    GAMETEXT(0x3D8),
+    GAMETEXT(0x3D9),
+    GAMETEXT(0x3DA),
+    GAMETEXT(0x3DB),
+    GAMETEXT(0x3DC),
+    GAMETEXT(0x3DD),
+    GAMETEXT(0x3DE),
+    GAMETEXT(0x3DF),
+    GAMETEXT(0x3E0),
+    GAMETEXT(0x3E1),
+    GAMETEXT(0x3E2),
+    GAMETEXT(0x3E3),
+    GAMETEXT(0x3E4),
+    GAMETEXT(0x3E5),
+    GAMETEXT(0x3E6),
+    GAMETEXT(0x3E7),
+    GAMETEXT(0x3E8),
+    GAMETEXT(0x3E9),
+    GAMETEXT(0x3EA),
+    GAMETEXT(0x3EB),
+    GAMETEXT(0x3EC),
+    GAMETEXT(0x3ED),
+    GAMETEXT(0x3EE),
+    GAMETEXT(0x3EF),
 };
 
 
-static GAMETEXT::VALUE s_aAntiqueComment[] =
+static GAMETEXT s_aAntiqueComment[] =
 {
-    GAMETEXT::VALUE(0x0),
-    GAMETEXT::VALUE(0x427),
-    GAMETEXT::VALUE(0x428),
-    GAMETEXT::VALUE(0x429),
-    GAMETEXT::VALUE(0x42A),
-    GAMETEXT::VALUE(0x42B),
-    GAMETEXT::VALUE(0x42C),
-    GAMETEXT::VALUE(0x42D),
-    GAMETEXT::VALUE(0x42E),
-    GAMETEXT::VALUE(0x42F),
-    GAMETEXT::VALUE(0x430),
-    GAMETEXT::VALUE(0x431),
-    GAMETEXT::VALUE(0x432),
-    GAMETEXT::VALUE(0x433),
-    GAMETEXT::VALUE(0x434),
-    GAMETEXT::VALUE(0x435),
-    GAMETEXT::VALUE(0x436),
-    GAMETEXT::VALUE(0x437),
-    GAMETEXT::VALUE(0x438),
-    GAMETEXT::VALUE(0x439),
-    GAMETEXT::VALUE(0x43A),
-    GAMETEXT::VALUE(0x43B),
-    GAMETEXT::VALUE(0x43C),
-    GAMETEXT::VALUE(0x43D),
-    GAMETEXT::VALUE(0x43E),
-    GAMETEXT::VALUE(0x43F),
-    GAMETEXT::VALUE(0x440),
-    GAMETEXT::VALUE(0x441),
-    GAMETEXT::VALUE(0x442),
-    GAMETEXT::VALUE(0x443),
-    GAMETEXT::VALUE(0x444),
-    GAMETEXT::VALUE(0x445),
-    GAMETEXT::VALUE(0x446),
-    GAMETEXT::VALUE(0x447),
-    GAMETEXT::VALUE(0x448),
-    GAMETEXT::VALUE(0x449),
-    GAMETEXT::VALUE(0x44A),
-    GAMETEXT::VALUE(0x44B),
-    GAMETEXT::VALUE(0x44C),
-    GAMETEXT::VALUE(0x44D),
-    GAMETEXT::VALUE(0x44E),
-    GAMETEXT::VALUE(0x44F),
-    GAMETEXT::VALUE(0x450),
-    GAMETEXT::VALUE(0x451),
-    GAMETEXT::VALUE(0x452),
-    GAMETEXT::VALUE(0x453),
-    GAMETEXT::VALUE(0x454),
-    GAMETEXT::VALUE(0x455),
-    GAMETEXT::VALUE(0x456),
-    GAMETEXT::VALUE(0x457),
-    GAMETEXT::VALUE(0x458),
-    GAMETEXT::VALUE(0x459),
-    GAMETEXT::VALUE(0x45A),
-    GAMETEXT::VALUE(0x45B),
-    GAMETEXT::VALUE(0x45C),
-    GAMETEXT::VALUE(0x45D),
-    GAMETEXT::VALUE(0x3B3),
-    GAMETEXT::VALUE(0x3B5),
-    GAMETEXT::VALUE(0x3B6),
+    GAMETEXT(0x0),
+    GAMETEXT(0x427),
+    GAMETEXT(0x428),
+    GAMETEXT(0x429),
+    GAMETEXT(0x42A),
+    GAMETEXT(0x42B),
+    GAMETEXT(0x42C),
+    GAMETEXT(0x42D),
+    GAMETEXT(0x42E),
+    GAMETEXT(0x42F),
+    GAMETEXT(0x430),
+    GAMETEXT(0x431),
+    GAMETEXT(0x432),
+    GAMETEXT(0x433),
+    GAMETEXT(0x434),
+    GAMETEXT(0x435),
+    GAMETEXT(0x436),
+    GAMETEXT(0x437),
+    GAMETEXT(0x438),
+    GAMETEXT(0x439),
+    GAMETEXT(0x43A),
+    GAMETEXT(0x43B),
+    GAMETEXT(0x43C),
+    GAMETEXT(0x43D),
+    GAMETEXT(0x43E),
+    GAMETEXT(0x43F),
+    GAMETEXT(0x440),
+    GAMETEXT(0x441),
+    GAMETEXT(0x442),
+    GAMETEXT(0x443),
+    GAMETEXT(0x444),
+    GAMETEXT(0x445),
+    GAMETEXT(0x446),
+    GAMETEXT(0x447),
+    GAMETEXT(0x448),
+    GAMETEXT(0x449),
+    GAMETEXT(0x44A),
+    GAMETEXT(0x44B),
+    GAMETEXT(0x44C),
+    GAMETEXT(0x44D),
+    GAMETEXT(0x44E),
+    GAMETEXT(0x44F),
+    GAMETEXT(0x450),
+    GAMETEXT(0x451),
+    GAMETEXT(0x452),
+    GAMETEXT(0x453),
+    GAMETEXT(0x454),
+    GAMETEXT(0x455),
+    GAMETEXT(0x456),
+    GAMETEXT(0x457),
+    GAMETEXT(0x458),
+    GAMETEXT(0x459),
+    GAMETEXT(0x45A),
+    GAMETEXT(0x45B),
+    GAMETEXT(0x45C),
+    GAMETEXT(0x45D),
+    GAMETEXT(0x3B3),
+    GAMETEXT(0x3B5),
+    GAMETEXT(0x3B6),
 };
 
 
@@ -449,7 +449,7 @@ private:
 
     struct CTRLINFO
     {
-        GAMETEXT::VALUE IdText;
+        GAMETEXT IdText;
         RwV2d Position;
     };
 
@@ -489,11 +489,11 @@ private:
     float m_fWndOfsX;
     char m_szTextAntiqueTakenDate[256];
     RwV2d m_vTextAntiqueTakenDatePos;
-    GAMETEXT::VALUE m_idTextAntiqueName;
+    GAMETEXT m_idTextAntiqueName;
     Rt2dBBox m_bboxTextAntiqueName;
     AREAID::VALUE m_idAntiqueTakenArea;
     Rt2dBBox m_bboxTextAntiqueArea;
-    GAMETEXT::VALUE m_idTextAntiqueComment;
+    GAMETEXT m_idTextAntiqueComment;
     Rt2dBBox m_bboxTextAntiqueComment;
     int32 m_iTextAntiqueCommentLineNum;
     int32 m_iTextAntiqueCommentLineCur;
@@ -550,11 +550,11 @@ CAntiqueShop::CAntiqueShop(void)
 , m_fWndOfsX(0.0f)
 , m_szTextAntiqueTakenDate()
 , m_vTextAntiqueTakenDatePos(Math::VECTOR2_ZERO)
-, m_idTextAntiqueName(GAMETEXT::VALUE(0))
+, m_idTextAntiqueName(GAMETEXT(0))
 , m_bboxTextAntiqueName()
 , m_idAntiqueTakenArea(AREAID::ID_NONE)
 , m_bboxTextAntiqueArea()
-, m_idTextAntiqueComment(GAMETEXT::VALUE(0))
+, m_idTextAntiqueComment(GAMETEXT(0))
 , m_bboxTextAntiqueComment()
 , m_iTextAntiqueCommentLineNum(0)
 , m_iTextAntiqueCommentLineCur(0)
@@ -612,10 +612,10 @@ bool CAntiqueShop::Move(void)
                 m_pDlg->Open();
                 m_pDlg->SetStatus(CDialog::STATUS_NO);
                 
-                CMenuController::KeyLock(CController::DIGITAL_UP);
-                CMenuController::KeyLock(CController::DIGITAL_DOWN);
-                CMenuController::KeyLock(CController::DIGITAL_LEFT);
-                CMenuController::KeyLock(CController::DIGITAL_RIGHT);
+                CMenuController::KeyLock(CController::DIGITAL_LUP);
+                CMenuController::KeyLock(CController::DIGITAL_LDOWN);
+                CMenuController::KeyLock(CController::DIGITAL_LLEFT);
+                CMenuController::KeyLock(CController::DIGITAL_LRIGHT);
                 CMenuController::KeyLock(CController::DIGITAL_OK);
             };
         };
@@ -626,19 +626,19 @@ bool CAntiqueShop::Move(void)
         if (m_pDlg->GetStatus() == CDialog::STATUS_YES)
         {
             bResult = true;
-            CMenuController::KeyUnlock(CController::DIGITAL_UP);
-            CMenuController::KeyUnlock(CController::DIGITAL_DOWN);
-            CMenuController::KeyUnlock(CController::DIGITAL_LEFT);
-            CMenuController::KeyUnlock(CController::DIGITAL_RIGHT);
+            CMenuController::KeyUnlock(CController::DIGITAL_LUP);
+            CMenuController::KeyUnlock(CController::DIGITAL_LDOWN);
+            CMenuController::KeyUnlock(CController::DIGITAL_LLEFT);
+            CMenuController::KeyUnlock(CController::DIGITAL_LRIGHT);
             CMenuController::KeyUnlock(CController::DIGITAL_OK);
             AntiqueDispCtrl();
         }
         else
         {
-            CMenuController::KeyUnlock(CController::DIGITAL_UP);
-            CMenuController::KeyUnlock(CController::DIGITAL_DOWN);
-            CMenuController::KeyUnlock(CController::DIGITAL_LEFT);
-            CMenuController::KeyUnlock(CController::DIGITAL_RIGHT);
+            CMenuController::KeyUnlock(CController::DIGITAL_LUP);
+            CMenuController::KeyUnlock(CController::DIGITAL_LDOWN);
+            CMenuController::KeyUnlock(CController::DIGITAL_LLEFT);
+            CMenuController::KeyUnlock(CController::DIGITAL_LRIGHT);
             CMenuController::KeyUnlock(CController::DIGITAL_OK);
             AntiqueDispCtrl();
         };
@@ -666,30 +666,26 @@ void CAntiqueShop::Draw(void)
     
     CSystem2D::PopRenderState();
 
-    CGameFont::m_fHeight = 15.0f;
+	CGameFont::SetHeight(15.0f);
     if (m_bDispAboutAntiqText)
     {
         CGameFont::SetRGBA(255, 255, 255, 255);
-        CGameFont::m_pFont->Flow(
+        CGameFont::Flow(
             CGameText::GetText(m_idTextAntiqueName),
-            CGameFont::m_fHeight,
             &m_bboxTextAntiqueName,
             rt2dJUSTIFYCENTER
         );
-        CGameFont::m_pFont->Flow(
+        CGameFont::Flow(
             CAreaInfo::GetDispName(m_idAntiqueTakenArea),
-            CGameFont::m_fHeight,
             &m_bboxTextAntiqueArea
         );        
-        CGameFont::m_pFont->Show(
+        CGameFont::Show(
             m_szTextAntiqueTakenDate,
-            CGameFont::m_fHeight,
             m_vTextAntiqueTakenDatePos.x,
             m_vTextAntiqueTakenDatePos.y
         );
-        CGameFont::m_pFont->FlowEx(
+        CGameFont::FlowEx(
             CGameText::GetText(m_idTextAntiqueComment),
-            CGameFont::m_fHeight,
             m_iTextAntiqueCommentLineCur,
             &m_bboxTextAntiqueComment
         );
@@ -697,7 +693,7 @@ void CAntiqueShop::Draw(void)
         CGameFont::SetRGBA(255, 180, 0, 255);        
         wchar wszBuff[256];
         wszBuff[0] = UTEXT('\0');
-        CTextData::Sprintf(wszBuff, CGameText::GetText(GAMETEXT::VALUE(951)), m_idAntiqueSel);
+        CTextData::Sprintf(wszBuff, CGameText::GetText(GAMETEXT(951)), m_idAntiqueSel);
         CGameFont::Show(wszBuff, m_fWndOfsX - 55.0f, -140.0f);
     };
 
@@ -727,8 +723,8 @@ void CAntiqueShop::DlgCreate(void)
         m_pDlg->SetOpenAction(true);
         m_pDlg->SetController(CGameData::Attribute().GetVirtualPad());
         m_pDlg->SetTitle(
-            CGameText::GetText(GAMETEXT::VALUE(946)),
-            2.0f * (CGameFont::GetScreenSize() / 447.0f),
+            CGameText::GetText(GAMETEXT(946)),
+			CGameFont::GetScreenHeight() * 2.0f,
             { 0xFF, 0xFF, 0xFF, 0xFF }
         );
     };
@@ -885,26 +881,26 @@ void CAntiqueShop::AntiqueDispCtrl(void)
     if (m_pAnim2D->CheckMessageGetURL("PressUp"))
     {
         CGameSound::PlaySE(SDCODE_SE(0x1004));
-        m_iCursorV =  Math::InvClamp(m_iCursorV + 1, 0, 6);
+        m_iCursorV =  InvClamp(m_iCursorV + 1, 0, 6);
 		OUTPUT("cursor v=%d h=%d\n", m_iCursorV, m_iCursorH);
     }
     else if (m_pAnim2D->CheckMessageGetURL("PressDown"))
     {
         CGameSound::PlaySE(SDCODE_SE(0x1004));
-        m_iCursorV = Math::InvClamp(m_iCursorV - 1, 0, 6);
+        m_iCursorV = InvClamp(m_iCursorV - 1, 0, 6);
 		OUTPUT("cursor v=%d h=%d\n", m_iCursorV, m_iCursorH);
     }
     else if (m_pAnim2D->CheckMessageGetURL("PressLeft"))
     {
         CGameSound::PlaySE(SDCODE_SE(0x1004));
-        m_iCursorH = Math::InvClamp(m_iCursorH - 1, 0, 10 - 1);
+        m_iCursorH = InvClamp(m_iCursorH - 1, 0, 10 - 1);
         m_iTextAntiqueCommentLineCur = 0;
 		OUTPUT("cursor v=%d h=%d\n", m_iCursorV, m_iCursorH);
     }
     else if (m_pAnim2D->CheckMessageGetURL("PressRight"))
     {
         CGameSound::PlaySE(SDCODE_SE(0x1004));
-        m_iCursorH = Math::InvClamp(m_iCursorH + 1, 0, 10 - 1);
+        m_iCursorH = InvClamp(m_iCursorH + 1, 0, 10 - 1);
         m_iTextAntiqueCommentLineCur = 0;
 		OUTPUT("cursor v=%d h=%d\n", m_iCursorV, m_iCursorH);
     };
@@ -955,8 +951,8 @@ void CAntiqueShop::AntiqueDispCtrl(void)
 
 void CAntiqueShop::AntiqueOpen(void)
 {
-    CMenuController::KeyLock(CController::DIGITAL_UP);
-    CMenuController::KeyLock(CController::DIGITAL_DOWN);
+    CMenuController::KeyLock(CController::DIGITAL_LUP);
+    CMenuController::KeyLock(CController::DIGITAL_LDOWN);
 
     if (m_bAnimFlag)
     {
@@ -977,8 +973,8 @@ void CAntiqueShop::AntiqueClose(void)
         {
             m_bAnimFlag = false;
             m_iTextAntiqueCommentLineCur = 0;
-            CMenuController::KeyUnlock(CController::DIGITAL_UP);
-            CMenuController::KeyUnlock(CController::DIGITAL_DOWN);
+            CMenuController::KeyUnlock(CController::DIGITAL_LUP);
+            CMenuController::KeyUnlock(CController::DIGITAL_LDOWN);
         };
 
         m_fWndOfsX = float(m_uAnimCnt) * ABOUT_MOVE_INC - 640.0f;
@@ -1004,9 +1000,9 @@ void CAntiqueShop::AntiqueItemSet(void)
     m_aAboutSprite[0].Resize(512.0f, 512.0f);
 
     m_bDispAboutCtrlText = true;
-    m_aCtrlInfo[0] = { GAMETEXT::VALUE(947), { s_avAboutTextPos[0].x + m_fWndOfsX, s_avAboutTextPos[0].y } };
-    m_aCtrlInfo[1] = { GAMETEXT::VALUE(949), { s_avAboutTextPos[1].x + m_fWndOfsX, s_avAboutTextPos[1].y } };
-    m_aCtrlInfo[2] = { GAMETEXT::VALUE(950), { s_avAboutTextPos[2].x + m_fWndOfsX, s_avAboutTextPos[2].y } };
+    m_aCtrlInfo[0] = { GAMETEXT(947), { s_avAboutTextPos[0].x + m_fWndOfsX, s_avAboutTextPos[0].y } };
+    m_aCtrlInfo[1] = { GAMETEXT(949), { s_avAboutTextPos[1].x + m_fWndOfsX, s_avAboutTextPos[1].y } };
+    m_aCtrlInfo[2] = { GAMETEXT(950), { s_avAboutTextPos[2].x + m_fWndOfsX, s_avAboutTextPos[2].y } };
 
     for (int32 i = 1; i < COUNT_OF(m_aAboutSprite); ++i)
         m_aAboutSprite[i].SetDisplay(false);
@@ -1059,9 +1055,8 @@ void CAntiqueShop::AntiqueItemSet(void)
                 m_bboxTextAntiqueComment = s_aAboutBox[1];
                 m_bboxTextAntiqueComment.x += m_fWndOfsX;
 
-                m_iTextAntiqueCommentLineNum = CGameFont::m_pFont->CountFlowLine(
+                m_iTextAntiqueCommentLineNum = CGameFont::CountFlowLine(
                     CGameText::GetText(m_idTextAntiqueComment),
-                    CGameFont::m_fHeight,
                     m_bboxTextAntiqueComment.w
                 );
 
@@ -1072,7 +1067,7 @@ void CAntiqueShop::AntiqueItemSet(void)
                     m_aAboutSprite[8].Move(s_vAboutArrowDPos.x + m_fWndOfsX, s_vAboutArrowDPos.y);
                     m_aAboutSprite[8].Resize(16.0f, 16.0f);
 
-                    if (CController::GetDigitalTrigger(CGameData::Attribute().GetVirtualPad(), CController::DIGITAL_DOWN))
+                    if (CController::GetDigitalTrigger(CGameData::Attribute().GetVirtualPad(), CController::DIGITAL_LDOWN))
                     {
                         CGameSound::PlaySE(SDCODE_SE(0x1004));
                         m_iTextAntiqueCommentLineCur += 6;
@@ -1086,10 +1081,10 @@ void CAntiqueShop::AntiqueItemSet(void)
                     m_aAboutSprite[7].Move(s_vAboutArrowUPos.x + m_fWndOfsX, s_vAboutArrowUPos.y);
                     m_aAboutSprite[7].Resize(16.0f, 16.0f);
 
-                    if (CController::GetDigitalTrigger(CGameData::Attribute().GetVirtualPad(), CController::DIGITAL_UP))
+                    if (CController::GetDigitalTrigger(CGameData::Attribute().GetVirtualPad(), CController::DIGITAL_LUP))
                     {
                         CGameSound::PlaySE(SDCODE_SE(0x1004));                        
-                        m_iTextAntiqueCommentLineCur = Math::Max(m_iTextAntiqueCommentLineCur - 6, 0);
+                        m_iTextAntiqueCommentLineCur = Max(m_iTextAntiqueCommentLineCur - 6, 0);
                     };
                 };
 
@@ -1171,7 +1166,7 @@ CAntiqueShopSequence::~CAntiqueShopSequence(void)
 };
 
 
-bool CAntiqueShopSequence::OnAttach(const void* param)
+bool CAntiqueShopSequence::OnAttach(const void* pParam)
 {
     ASSERT(!s_pAntiqueShop);
     
@@ -1197,38 +1192,54 @@ void CAntiqueShopSequence::OnDetach(void)
         s_pAntiqueShop = nullptr;
     };
 
-    CGameSound::FadeOut(CGameSound::FADESPEED_FAST);
+    CGameSound::FadeOut(CGameSound::FADESPEED_SLOW);
     CAnim2DSequence::OnDetach();
 };
 
 
-void CAntiqueShopSequence::OnMove(bool bRet, const void* param)
+void CAntiqueShopSequence::OnMove(bool bRet, const void* pReturnValue)
 {
-    switch (m_step)
+    switch (m_animstep)
     {
-    case STEP_FADE_OUT:
+    case ANIMSTEP_FADEIN:
         {
             if (!CScreenFade::IsFading())
             {               
                 if (CGameData::Record().Antique().IsNewAntiqueExisted())
                 {
-                    int32 VoxCode[] = { SDCODE_VOICE(0x6000), SDCODE_VOICE(0x6000), SDCODE_VOICE(0x6002) };
+                    // 26 voice group
+                    int32 VoxCode [] = { SDCODE_VOICE(0x6000), SDCODE_VOICE(0x6001), SDCODE_VOICE(0x6002) };
                     int32 RndSel3 = Math::Rand() % 3;
-                    CGameSound::PlayVoice(VoxCode[RndSel3], PLAYERID::ID_LEO);
+                    CGameSound::PlayVoice(VoxCode[RndSel3]);
                 };
             };
         }
         break;
         
-    case STEP_DRAW:
+    case ANIMSTEP_DRAW:
         {
             if (s_pAntiqueShop->Move())
+                BeginFadeout();
+        }
+        break;
+
+    case ANIMSTEP_END:
+        {
+            if (!m_bUnlockCheckState)
+            {
+                m_bUnlockCheckState = true;
+                CGameData::OnEndAntiqueShop();
+                Call(PROCLABEL_SEQ_UNLOCK);
+            }
+            else
+            {
                 Ret();
+            };
         }
         break;
     };
 
-    CAnim2DSequence::OnMove(bRet, param);
+    CAnim2DSequence::OnMove(bRet, pReturnValue);
 };
 
 
@@ -1239,27 +1250,10 @@ void CAntiqueShopSequence::OnDraw(void) const
 };
 
 
-void CAntiqueShopSequence::BeginFadeOut(void)
+void CAntiqueShopSequence::BeginFadein(void)
 {
 	s_pAntiqueShop->Loaded(m_pAnimation2D);
     s_pAntiqueShop->AntiqueDispChange();
     CGameSound::PlayBGM(SDCODE_BGM(0x3023));
-    CAnim2DSequence::BeginFadeOut();
-};
-
-
-bool CAntiqueShopSequence::OnRet(void)
-{
-    if (!m_bUnlockCheckState)
-    {
-		m_bUnlockCheckState = true;
-        CGameData::OnEndAntiqueShop();
-        Call(PROCESSTYPES::LABEL_SEQ_UNLOCK);
-    }
-    else
-    {
-        Ret();
-    };
-
-    return true;
+    CAnim2DSequence::BeginFadein();
 };

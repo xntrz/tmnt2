@@ -1,7 +1,7 @@
 #include "MenuController.hpp"
 
+#include "Game/System/Misc/Gamepad.hpp"
 #include "Game/Component/GameData/GameData.hpp"
-#include "System/Common/Controller.hpp"
 
 
 /*static*/ const char* CMenuController::m_apszButtonLabel[] =
@@ -75,15 +75,15 @@
 
 /*static*/ uint32 CMenuController::m_auDigitalDataTable[] =
 {
-    CController::DIGITAL,
-    CController::DIGITAL,
-    CController::DIGITAL,
-    CController::DIGITAL,
-    CController::DIGITAL,
-    CController::DIGITAL,
-    CController::DIGITAL,
-    CController::DIGITAL,
-    CController::DIGITAL,
+    IPad::DIGITAL,
+    IPad::DIGITAL,
+    IPad::DIGITAL,
+    IPad::DIGITAL,
+    IPad::DIGITAL,
+    IPad::DIGITAL,
+    IPad::DIGITAL,
+    IPad::DIGITAL,
+    IPad::DIGITAL,
 };
 
 
@@ -105,44 +105,44 @@
 {
     for (int32 i = 0; i < COUNT_OF(m_auDigitalDataTable); ++i)
     {
-        uint32 uDigital = CController::DIGITAL;
+        uint32 uDigital = IPad::DIGITAL;
         
         switch (i)
         {
         case BUTTON_ID_UP:
-            uDigital = CController::DIGITAL_UP;
+            uDigital = IPad::DIGITAL_LUP;
             break;
             
         case BUTTON_ID_DOWN:
-            uDigital = CController::DIGITAL_DOWN;
+            uDigital = IPad::DIGITAL_LDOWN;
             break;
             
         case BUTTON_ID_LEFT:
-            uDigital = CController::DIGITAL_LEFT;
+            uDigital = IPad::DIGITAL_LLEFT;
             break;
             
         case BUTTON_ID_RIGHT:
-            uDigital = CController::DIGITAL_RIGHT;
+            uDigital = IPad::DIGITAL_LRIGHT;
             break;
             
         case BUTTON_ID_OK:
-            uDigital = CController::DIGITAL_OK;
+            uDigital = IPad::DIGITAL_OK;
             break;
             
         case BUTTON_ID_CANCEL:
-            uDigital = CController::DIGITAL_CANCEL;
+            uDigital = IPad::DIGITAL_CANCEL;
             break;
             
         case BUTTON_ID_SELECT:
-            uDigital = CController::DIGITAL_SELECT;
+            uDigital = IPad::DIGITAL_SELECT;
             break;
             
         case BUTTON_ID_START:
-            uDigital = CController::DIGITAL_START;
+            uDigital = IPad::DIGITAL_START;
             break;
             
         case BUTTON_ID_MENU:
-			uDigital = CController::DIGITAL_RIGHT_TRIGGER;
+            uDigital = IPadFunctionMask(IPad::FUNCTION_GUARD);
             break;
 
         default:
@@ -178,33 +178,33 @@
 
 /*static*/ CMenuController::BUTTON_ID CMenuController::GetPadToButtonID(uint32 uKey)
 {
-    if (uKey == CController::DIGITAL_OK)
+    if (uKey == IPad::DIGITAL_OK)
         return BUTTON_ID_OK;
 
-    if (uKey == CController::DIGITAL_CANCEL)
+    if (uKey == IPad::DIGITAL_CANCEL)
         return BUTTON_ID_CANCEL;
 
     switch (uKey)
     {
-    case CController::DIGITAL_UP:        
+    case IPad::DIGITAL_LUP:        
         return BUTTON_ID_UP;
 
-    case CController::DIGITAL_DOWN:
+    case IPad::DIGITAL_LDOWN:
         return BUTTON_ID_DOWN;
 
-    case CController::DIGITAL_LEFT:
+    case IPad::DIGITAL_LLEFT:
         return BUTTON_ID_LEFT;
 
-    case CController::DIGITAL_RIGHT:
+    case IPad::DIGITAL_LRIGHT:
         return BUTTON_ID_RIGHT;
 
-    case CController::DIGITAL_SELECT:
+    case IPad::DIGITAL_SELECT:
         return BUTTON_ID_SELECT;
 
-    case CController::DIGITAL_START:
+    case IPad::DIGITAL_START:
         return BUTTON_ID_START;
 
-    case CController::DIGITAL_RIGHT_TRIGGER:
+    case IPadFunctionMask(IPad::FUNCTION_GUARD):
         return BUTTON_ID_MENU;
 
     default:
@@ -282,7 +282,7 @@ void CMenuController::Trigger(Rt2dMaestro* pMaestro)
 {    
     ASSERT(pMaestro);
 
-    int32 iControllerMax = CController::Max() + 1;
+    int32 iControllerMax = IPad::Max() + 1;
     const int32 iControllerNo[CONTROLLER_ID_MAX] =
     {
 		CGameData::Attribute().GetVirtualPad(), 0, 1, 2, 3,
@@ -290,7 +290,7 @@ void CMenuController::Trigger(Rt2dMaestro* pMaestro)
 
     for (int32 i = 0; i < iControllerMax; ++i)
     {
-        uint32 uDigital = CController::GetDigitalTrigger(iControllerNo[i]);
+        uint32 uDigital = IPad::GetDigitalTrigger(iControllerNo[i]);
 		uint32 uResult = (m_aControllerEnableBit[i] & uDigital);
         if(uResult == 0)
             continue;
@@ -305,7 +305,7 @@ void CMenuController::Trigger(Rt2dMaestro* pMaestro)
 
 			if ((b1 || b2) && b3)
 			{
-				if (CController::GetDigitalTrigger(iControllerNo[i], m_auDigitalDataTable[j]))
+				if (IPad::GetDigitalTrigger(iControllerNo[i], m_auDigitalDataTable[j]))
 				{
 					if (bFlag)
 					{

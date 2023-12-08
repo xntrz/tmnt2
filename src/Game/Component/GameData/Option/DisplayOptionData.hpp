@@ -6,20 +6,21 @@
 class CDisplayOptionData
 {
 public:
+#ifdef TARGET_PC    
     struct VIDEOMODE
     {
-        int32 m_iVideomodeNo;
         char m_szName[64];
     };
-    
+#endif    
+
     struct RAWDATA
     {
-#ifdef _TARGET_PC
-        int32 m_iVideomodeNo;
-#endif        
         bool m_bFontEffectFlag;
         bool m_bPlayerMarkerFlag;
         bool m_bHelpFlag;
+#ifdef TARGET_PC
+        int32 m_iVideomodeNo;
+#endif
     };
 
 public:
@@ -32,25 +33,27 @@ public:
     bool IsValid(void) const;
     void Snapshot(RAWDATA& rRawData) const;
     void Restore(const RAWDATA& rRawData);
+    void SetEnableHelp(bool bSet);
     void SetEnableFontEffect(bool bSet);
     void SetEnablePlayerMarker(bool bSet);
+    bool IsHelpEnabled(void) const;
     bool IsEnabledFontEffect(void) const;
     bool IsEnabledPlayerMarker(void) const;
-    void SetEnableHelp(bool bSet);
-    bool IsHelpEnabled(void) const;
-    int32 VideomodeNum(void);
-    int32 VideomodeCur(void);
-    const char* VideomodeReso(int32 no);
-    void VideomodeAssign(int32 no);
-    bool VideomodeApply(void);
+#ifdef TARGET_PC    
+    void SetVideomode(int32 No);
+    bool ApplyVideomode(void) const;
+    int32 GetVideomodeNum(void) const;
+    int32 GetVideomodeCur(void) const;
+    const char* GetVideomodeName(int32 No) const;
+#endif
 
 private:
-#ifdef _TARGET_PC
+    bool m_bHelpFlag;
+    bool m_bFontEffectFlag;
+    bool m_bPlayerMarkerFlag;    
+#ifdef TARGET_PC
     VIDEOMODE* m_pVideomode;
     int32 m_iVideomodeNum;
     int32 m_iVideomodeCur;
 #endif
-    bool m_bHelpFlag;
-    bool m_bFontEffectFlag;
-    bool m_bPlayerMarkerFlag;    
 };

@@ -46,7 +46,7 @@ static const AREAID::VALUE s_aCrystalGreenExistsArea[] =
     AREAID::ID_AREA29, AREAID::ID_AREA30, AREAID::ID_AREA31, AREAID::ID_AREA38,
     AREAID::ID_AREA39, AREAID::ID_AREA50, AREAID::ID_AREA56, AREAID::ID_AREA26,
     AREAID::ID_AREA05, AREAID::ID_AREA44, AREAID::ID_AREA34, AREAID::ID_AREA35,
-    AREAID::ID_AREA32, AREAID::ID_MAX,
+    AREAID::ID_AREA32, AREAID::ID_AREA60_A,
 };
 
 
@@ -78,7 +78,7 @@ static const AREAID::VALUE s_aCrystalWhiteExistsArea[] =
 
 CItemRecord::CItemRecord(void)
 {
-    const int ss = BIT(0);
+    ;
 };
 
 
@@ -184,7 +184,7 @@ void CItemRecord::SetAreaCrystalTaken(GAMETYPES::CRYSTALTYPE crytype, AREAID::VA
 
 void CItemRecord::SetComebackTaken(void)
 {
-    m_iComebackNum = Math::Clamp(++m_iComebackNum, 0, 1);
+    m_iComebackNum = Clamp(++m_iComebackNum, 0, 1);
     ASSERT(m_iComebackNum >= 0 && m_iComebackNum <= 1);
 };
 
@@ -290,7 +290,9 @@ void CItemRecord::DebugSetCryTaken(GAMETYPES::CRYSTALTYPE crytype, int32 iCryNo,
     //  Used only for debug tests
     //
     
+#ifdef _DEBUG
     setCrystalFlag(crytype, iCryNo, bTaken);
+#endif    
 };
 
 

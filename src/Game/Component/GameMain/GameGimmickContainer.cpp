@@ -26,14 +26,7 @@ CGameGimmickContainer::~CGameGimmickContainer(void)
 
 CGameGimmick& CGameGimmickContainer::GameGimmick(int32 nIndex) const
 {
-    if (nIndex >= 0 && nIndex < GAMETYPES::GIMMICK_MAX)
-    {
-        return m_pGameGimmickTable[nIndex];
-    }
-    else
-    {
-        return CGameGimmick::Dummy();
-    };
+	return ((nIndex >= 0 && nIndex < GAMETYPES::GIMMICK_MAX) ? m_pGameGimmickTable[nIndex] : *CGameGimmick::Dummy());
 };
 
 

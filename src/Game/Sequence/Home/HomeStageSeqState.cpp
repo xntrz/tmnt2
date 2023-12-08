@@ -83,7 +83,7 @@ void CPlayHomeStageSeqState::OnAttach(CStageBaseSequence* pSeq, const void* pPar
 
     m_step = STEP_PLAY;
 
-    CScreenFade::StartOut();
+    CScreenFade::BlackIn();
 
     CHomeCharacter::Initialize();
 };
@@ -115,13 +115,13 @@ bool CPlayHomeStageSeqState::OnMove(CStageBaseSequence* pSeq)
 
     case STEP_PLAYEND:
         {
-            CGameSound::FadeOut(CGameSound::FADESPEED_FAST);
-            CScreenFade::StartIn();
-            m_step = STEP_FADEIN;
+            CGameSound::FadeOut(CGameSound::FADESPEED_SLOW);
+            CScreenFade::BlackOut();
+            m_step = STEP_FADEOUT;
         }
         break;
 
-    case STEP_FADEIN:
+    case STEP_FADEOUT:
         {
             if (!CScreenFade::IsFading())
                 m_step = STEP_END;

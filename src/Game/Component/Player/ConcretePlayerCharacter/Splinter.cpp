@@ -36,7 +36,7 @@ namespace Splinter
 
     void CAttackJump::OnAttach(void)
     {
-        Character().ChangeMotion("JAttack");
+        Character().ChangeMotion(Splinter::MOTIONNAMES::ATTACK_JUMP);
         CGameSound::PlayAttackSE(m_pPlayerChr);
     };
 
@@ -51,6 +51,11 @@ namespace Splinter
     {
         ;
     };
+
+    
+    //
+    // *********************************************************************************
+    //
 
 
     void CAttackAABBC::OnAttach(void)
@@ -135,6 +140,11 @@ namespace Splinter
         pBarrierMod->Appear();
         pBarrierMod->SetStepThree();
     };
+
+    
+    //
+    // *********************************************************************************
+    //
 
 
     void CAttackB::OnAttach(void)
@@ -239,8 +249,6 @@ namespace Splinter
 };
 
 
-
-
 CSplinter::CSplinter(GAMETYPES::COSTUME costume)
 : CPlayerCharacter("Splinter", PLAYERID::ID_SPL, costume)
 {
@@ -252,32 +260,31 @@ CSplinter::CSplinter(GAMETYPES::COSTUME costume)
     //
     
     CPlayerCharacter::PARAMETER parameter = { 0 };
-    parameter.m_chrparameter.m_bToon = true;
-    parameter.m_chrparameter.m_pszModelName = "splinter";
+    parameter.m_chrparameter.m_bToon            = true;
+    parameter.m_chrparameter.m_pszModelName     = "splinter";
     parameter.m_chrparameter.m_pszMotionSetName = "splinter";
-    parameter.m_feature.m_fWalkMoveSpeed = 2.0f;
-    parameter.m_feature.m_fLiftWalkMoveSpeed = 3.6f;
-    parameter.m_feature.m_fRunMoveSpeed = 5.2f;
-    parameter.m_feature.m_fDashMoveSpeed = 16.0f;
-    parameter.m_feature.m_fDashTime = 0.2f;
-    parameter.m_feature.m_fJumpInitializeSpeed = 7.5f;
-    parameter.m_feature.m_fAerialMoveSpeed = 5.2f;
-    parameter.m_feature.m_fAerialAcceleration = 12.0f;
-    parameter.m_feature.m_nKnifeAttachBoneID = CHARACTERTYPES::BONEID_RIGHT_WRIST;
+    parameter.m_feature.m_fWalkMoveSpeed        = 2.0f;
+    parameter.m_feature.m_fLiftWalkMoveSpeed    = 3.6f;
+    parameter.m_feature.m_fRunMoveSpeed         = 5.2f;
+    parameter.m_feature.m_fDashMoveSpeed        = 16.0f;
+    parameter.m_feature.m_fDashTime             = 0.2f;
+    parameter.m_feature.m_fJumpInitializeSpeed  = 7.5f;
+    parameter.m_feature.m_fAerialMoveSpeed      = 5.2f;
+    parameter.m_feature.m_fAerialAcceleration   = 12.0f;
+    parameter.m_feature.m_nKnifeAttachBoneID    = CHARACTERTYPES::BONEID_RIGHT_WRIST;
+
     parameter.m_pStateMachine = new CPlayerStateMachine(this, PLAYERTYPES::NORMALMAX);
     ASSERT(parameter.m_pStateMachine);
 
     CStatus::RegistDefaultForStateMachine(*parameter.m_pStateMachine);
 
-    parameter.m_pStateMachine->RegistStatus(PLAYERTYPES::STATUS_ATTACK_AABBC, new Splinter::CAttackAABBC);
-    parameter.m_pStateMachine->RegistStatus(PLAYERTYPES::STATUS_ATTACK_B, new Splinter::CAttackB);
-    parameter.m_pStateMachine->RegistStatus(PLAYERTYPES::STATUS_ATTACK_JUMP, new Splinter::CAttackJump);
+    parameter.m_pStateMachine->RegistStatus(PLAYERTYPES::STATUS_ATTACK_AABBC,   new Splinter::CAttackAABBC);
+    parameter.m_pStateMachine->RegistStatus(PLAYERTYPES::STATUS_ATTACK_B,       new Splinter::CAttackB);
+    parameter.m_pStateMachine->RegistStatus(PLAYERTYPES::STATUS_ATTACK_JUMP,    new Splinter::CAttackJump);
 
     Initialize(&parameter);
 
-    m_pModuleMan->Include(
-        CCircleShadowModule::New(this, 1.5f, 1.5f, true)
-    );
+    m_pModuleMan->Include(CCircleShadowModule::New(this, 1.5f, 1.5f, true));
 
     m_pModuleMan->Include(new CBarrierModule(new CPlayerTracer(this), this, 2.0f));
 };
@@ -286,10 +293,4 @@ CSplinter::CSplinter(GAMETYPES::COSTUME costume)
 CSplinter::~CSplinter(void)
 {
     ;
-};
-
-
-void CSplinter::Run(void)
-{
-    CPlayerCharacter::Run();
 };

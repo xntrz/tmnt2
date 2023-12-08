@@ -8,14 +8,13 @@
 #include "Game/Component/GameMain/GameProperty.hpp"
 #include "Game/System/Misc/Gamepad.hpp"
 #include "System/Common/Camera.hpp"
-#include "System/Common/Controller.hpp"
 
 
 class CMapCamera::CIntroduction
 {
 private:
     static const int32 DEMONUM = 3;
-    static const float DEMODURATION;
+	static const float DEMODURATION;
 
     struct DEMOCAMERAINFO
     {
@@ -27,8 +26,7 @@ private:
     
 public:
     CIntroduction(void);
-    ~CIntroduction(void);
-    void Set(void);
+    inline ~CIntroduction(void) {};
     void Skip(void);
     bool Update(RwV3d* pvEye, RwV3d* pvAt);
 
@@ -43,19 +41,19 @@ private:
 class CMapCamera::CVibration
 {
 public:
-    CVibration(void);
-    ~CVibration(void);
-    void Set(float fPower, float fTime, uint32 uFreq);
+    CVibration(float fPower, float fTime, int32 nFreq);
+    inline ~CVibration(void) {};
     void Period(void);
     void Update(RwV3d* pvEye, RwV3d* pvAt);
-    bool IsVibrating(void) const;
+    
+    inline bool IsVibrating(void) const { return (m_fTimer > 0.0f); };
 
 private:
     float m_fVibTime;
     float m_fVibPower;
     float m_fTimer;
     float m_fTheta;
-    uint32 m_uFreq;
+    int32 m_nFreq;
     RwV3d m_vVibration;
 };
 
@@ -68,32 +66,20 @@ CMapCamera::CIntroduction::CIntroduction(void)
 , m_nDemoID(0)
 , m_bEnd(false)
 {
-
-};
-
-
-CMapCamera::CIntroduction::~CIntroduction(void)
-{
-    ;
-};
-
-
-void CMapCamera::CIntroduction::Set(void)
-{
     for (int32 i = 0; i < COUNT_OF(m_aDemoCameraInfo); ++i)
     {
         char szPathName[16];
 
         szPathName[0] = '\0';
         std::sprintf(szPathName, "d%d", i);
-        
+
         int32 nPathEyeID = CCameraDataManager::GetPathIDFromName(szPathName);
         if (nPathEyeID < 0)
             break;
 
         szPathName[0] = '\0';
         std::sprintf(szPathName, "d%d_t", i);
-        
+
         int32 nPathLookatID = CCameraDataManager::GetPathIDFromName(szPathName);
         if (nPathLookatID < 0)
             break;
@@ -142,43 +128,26 @@ bool CMapCamera::CIntroduction::Update(RwV3d* pvEye, RwV3d* pvAt)
     pCameraInfo->m_fTimer += CGameProperty::GetElapsedTime();
 
     if (pCameraInfo->m_fTimer > (fDemoDurationTotal / float(m_nNumDemo)))
-    {
-        ++m_nDemoID;
-
-        if (m_nDemoID > (m_nNumDemo - 1))
-        {
-            m_bEnd = true;
-        };
-    };
+		m_bEnd = (++m_nDemoID > (m_nNumDemo - 1));   
 
     return true;
 };
 
 
-CMapCamera::CVibration::CVibration(void)
-: m_fVibTime(0.0f)
-, m_fVibPower(0.0f)
-, m_fTimer(0.0f)
+//
+// *********************************************************************************
+//
+
+
+CMapCamera::CVibration::CVibration(float fPower, float fTime, int32 nFreq)
+: m_fVibTime(fTime)
+, m_fVibPower(fPower)
+, m_fTimer(fTime)
 , m_fTheta(0.0f)
-, m_uFreq(0)
+, m_nFreq(nFreq)
 , m_vVibration(Math::VECTOR3_ZERO)
 {
     ;
-};
-
-
-CMapCamera::CVibration::~CVibration(void)
-{
-    ;
-};
-
-
-void CMapCamera::CVibration::Set(float fPower, float fTime, uint32 uFreq)
-{
-    m_fTimer = fTime;
-    m_fVibTime = fTime;
-    m_fVibPower = fPower;
-    m_uFreq = uFreq;
 };
 
 
@@ -191,7 +160,7 @@ void CMapCamera::CVibration::Period(void)
         m_vVibration = Math::VECTOR3_ZERO;
         m_vVibration.y = (fDltRadian * m_fVibPower);
 
-        m_fTheta += (CGameProperty::GetElapsedTime() * float(m_uFreq) * Math::PI2);
+        m_fTheta += (CGameProperty::GetElapsedTime() * float(m_nFreq) * Math::PI2);
         m_fTimer -= CGameProperty::GetElapsedTime();
     };
 };
@@ -210,10 +179,9 @@ void CMapCamera::CVibration::Update(RwV3d* pvEye, RwV3d* pvAt)
 };
 
 
-bool CMapCamera::CVibration::IsVibrating(void) const
-{
-    return (m_fTimer > 0.0f);
-};
+//
+// *********************************************************************************
+//
 
 
 /*static*/ float CMapCamera::m_fDefaultViewSize = 0.5f;
@@ -248,25 +216,13 @@ CMapCamera::CMapCamera(void)
     m_pCamera = CCamera::GetCamera();
     ASSERT(m_pCamera);
 
-    RwCamera* pCamera = m_pCamera->GetRwCamera();
-    RwFrame* pFrame = RwCameraGetFrameMacro(pCamera);
-    RwMatrix* pMatrix = RwFrameGetMatrixMacro(pFrame);
-
     const CWorldMap::MAPINFO* pMapInfo = CWorldMap::GetMapInfo();
-    if (pMapInfo)
-    {
-        SetFarClipPlane(pMapInfo->m_fFarClipDist);
-        SetNearClipPlane(pMapInfo->m_fNearClipDist);
-        SetFogDistance(pMapInfo->m_foginfo.m_fDist);
-    }
-    else
-    {
-        SetFarClipPlane(m_fDefaultClipFar);
-        SetNearClipPlane(m_fDefaultClipNear);
-        SetFogDistance(m_fDefaultFogDist);
-    };
+    
+    SetFarClipPlane(pMapInfo ? pMapInfo->m_fFarClipDist : m_fDefaultClipFar);
+    SetNearClipPlane(pMapInfo ? pMapInfo->m_fNearClipDist : m_fDefaultClipNear);
+    SetFogDistance(pMapInfo ? pMapInfo->m_foginfo.m_fDist : m_fDefaultFogDist);
 
-    SetViewWindow(m_fViewSize, TYPEDEF::DEFAULT_ASPECTRATIO);
+    SetViewWindow(m_fDefaultViewSize);
     SetLookat(&m_vDefaultEye, &m_vDefaultLookat);
     m_fRequestZoom = 1.0f;
     m_szCameraAreaName[0] = '\0';
@@ -299,6 +255,10 @@ bool CMapCamera::BeginScene(void)
 {
     ASSERT(m_pCamera);
 
+    //RwCamera* pCamera = m_pCamera->GetRwCamera();
+    //RwMatrix* pMatrix = RwFrameGetMatrixMacro(RwCameraGetFrameMacro(pCamera));
+    //ASSERT(rwMatrixIsOrthonormal(pMatrix, Math::EPSILON));
+
     return m_pCamera->BeginScene();
 };
 
@@ -317,9 +277,7 @@ void CMapCamera::WorldAddCamera(RpWorld* pWorld)
     ASSERT(m_pCamera);
 
     if (pWorld && m_pCamera)
-    {
         RpWorldAddCamera(pWorld, m_pCamera->GetRwCamera());
-    };
 };
 
 
@@ -329,9 +287,7 @@ void CMapCamera::WorldRemoveCamera(RpWorld* pWorld)
     ASSERT(m_pCamera);
 
     if (pWorld && m_pCamera)
-    {
         RpWorldRemoveCamera(pWorld, m_pCamera->GetRwCamera());
-    };
 };
 
 
@@ -347,17 +303,13 @@ void CMapCamera::Update(const RwV3d* pvAt, float fZoom)
 
     if (!CGameData::Attribute().IsPlayDemoMode())
     {
-        uint32 uDigitalTriggerUnlocked = CController::GetDigitalTrigger(CController::CONTROLLER_UNLOCKED_ON_VIRTUAL);
-        uint32 uDigitalTriggerLocked = CController::GetDigitalTrigger(CController::CONTROLLER_LOCKED_ON_VIRTUAL);
+        uint32 Digital = 0;
 
-        if (CGamepad::CheckFunction(uDigitalTriggerUnlocked, CGamepad::FUNCTION_SWITCH_CAM)
-            || CGamepad::CheckFunction(uDigitalTriggerLocked, CGamepad::FUNCTION_SWITCH_CAM))
-        {
-            int32 pathmode = m_pathmode;
-            ++pathmode;
-            pathmode %= PATHMODEMAX;
-            m_pathmode = PATHMODE(pathmode);
-        };
+        Digital |= IPad::GetDigitalTrigger(IPad::CONTROLLER_UNLOCKED_ON_VIRTUAL);
+        Digital |= IPad::GetDigitalTrigger(IPad::CONTROLLER_LOCKED_ON_VIRTUAL);
+
+        if (IPad::CheckFunction(Digital, IPad::FUNCTION_SWITCH_CAM))
+            m_pathmode = PATHMODE( (int32(m_pathmode) + 1) % PATHMODEMAX );
     };
 
     m_fRequestZoom = fZoom;
@@ -371,16 +323,21 @@ void CMapCamera::Update(const RwV3d* pvAt, float fZoom)
 
             m_vEye = pMatrix->pos;
             m_vAt = pMatrix->at;
+            
+            UpdateManualCamera(pvAt);
         }
-        UpdateManualCamera(pvAt);
         break;
 
     case MODE_AUTOCHANGE:
-        UpdateAutoChangeCamera(pvAt);
+        {
+            UpdateAutoChangeCamera(pvAt);
+        }        
         break;
         
     case MODE_INTRODUCTION:
-        IntroductionUpdate();
+        {
+            IntroductionUpdate();
+        }        
         break;
 
     default:
@@ -578,69 +535,81 @@ void CMapCamera::MakeSetCameraName(char* pszSetCameraName, const char* pszCamera
 
 void CMapCamera::UpdateManualCamera(const RwV3d* pvAt)
 {
-    float fSpeed = 25.0f * CGameProperty::GetElapsedTime();
-    int16 nAnalogRX = CController::GetAnalog(0, CController::ANALOG_LSTICK_X);
-    int16 nAnalogRY = CController::GetAnalog(0, CController::ANALOG_LSTICK_Y);
-
-    float rx = 0.0f;
-    float ry = 0.0f;
-
-    if (nAnalogRX >= 0)
-        rx = float(nAnalogRX / TYPEDEF::SINT16_MAX);
-    else
-        rx = -float(nAnalogRX / TYPEDEF::SINT16_MIN);
-
-    if (nAnalogRY >= 0)
-        ry = float(nAnalogRY / TYPEDEF::SINT16_MAX);
-    else
-        ry = -float(nAnalogRY / TYPEDEF::SINT16_MIN);
-
-    if (m_fPitch + ry >= 89.0f || m_fPitch + ry <= -89.0f)
-        ry = 0.0f;
+    float fMovSpeed = 20.0f * CGameProperty::GetElapsedTime();
+    float fRotSpeed = 100.0f * CGameProperty::GetElapsedTime();
     
-    m_fPitch += ry;
+    int32 iPad = CGameData::Attribute().GetVirtualPad();
+    float rx = (float)IPad::GetAnalog(iPad, IPad::ANALOG_RSTICK_X);
+    float ry = (float)IPad::GetAnalog(iPad, IPad::ANALOG_RSTICK_Y);
 
-    RwFrame* pFrame = RwCameraGetFrame(m_pCamera->GetRwCamera());    
+    rx = (rx >= 0.0f ? (rx / float(TYPEDEF::SINT16_MAX)) : -(rx / float(TYPEDEF::SINT16_MIN)));
+    ry = (ry >= 0.0f ? (ry / float(TYPEDEF::SINT16_MAX)) : -(ry / float(TYPEDEF::SINT16_MIN)));
+
+	float fYaw = rx;
+    float fPitch = ry;
+
+    if (m_fPitch + fPitch > 89.0f)
+        fPitch = 89.0f - m_fPitch;
+    else if (m_fPitch + fPitch < -89.0f)
+        fPitch = -89.0f - m_fPitch;
+
+    m_fPitch += fPitch;
+
+    RwFrame* pFrame = RwCameraGetFrame(m_pCamera->GetRwCamera());
+
+    //
+    //  Remove translation
+    //
     RwV3d vDelta = Math::VECTOR3_ZERO;
-    RwV3d vPos = *RwMatrixGetPos(RwFrameGetMatrix(pFrame));    
+    RwV3d vPos = *RwMatrixGetPos(RwFrameGetMatrix(pFrame));
     RwV3dScale(&vDelta, &vPos, -1.0f);
     RwFrameTranslate(pFrame, &vDelta, rwCOMBINEPOSTCONCAT);
-    
-    {
-        RwV3d vRight = *RwMatrixGetRight(RwFrameGetMatrix(pFrame));
-        RwFrameRotate(pFrame, &vRight, -ry * 2.0f, rwCOMBINEPOSTCONCAT);
-        RwFrameRotate(pFrame, &Math::VECTOR3_AXIS_Y, -rx * 2.0f, rwCOMBINEPOSTCONCAT);
-    }
-    
+
+    //
+    //  Rotate
+    //
+	{
+		RwV3d vRight = *RwMatrixGetRight(RwFrameGetMatrix(pFrame));
+		RwFrameRotate(pFrame, &vRight, -fPitch * fRotSpeed, rwCOMBINEPOSTCONCAT);
+		RwFrameRotate(pFrame, &Math::VECTOR3_AXIS_Y, -fYaw * fRotSpeed, rwCOMBINEPOSTCONCAT);
+	}
+
+    //
+    //  Restore translation
+    //
     RwFrameTranslate(pFrame, &vPos, rwCOMBINEPOSTCONCAT);
 
-    int32 iController = CGameData::Attribute().GetVirtualPad();
+    //
+    //  Forward / backward movement
+    //
+    RwV3d vAt = *RwMatrixGetAt(RwFrameGetMatrix(pFrame));
     
-    if (CController::GetDigital(iController, CController::DIGITAL_UP))
-    {
-        RwV3d vAt = *RwMatrixGetAt(RwFrameGetMatrix(pFrame));
-        RwV3dScale(&vAt, &vAt, fSpeed);
-        RwFrameTranslate(pFrame, &vAt, rwCOMBINEPOSTCONCAT);
-    }
-    else if (CController::GetDigital(iController, CController::DIGITAL_DOWN))
-    {
-        RwV3d vAt = *RwMatrixGetAt(RwFrameGetMatrix(pFrame));
-        RwV3dScale(&vAt, &vAt, -fSpeed);
-        RwFrameTranslate(pFrame, &vAt, rwCOMBINEPOSTCONCAT);
-    };
-    
-    if (CController::GetDigital(iController, CController::DIGITAL_RIGHT))
-    {
-        RwV3d vRight = *RwMatrixGetRight(RwFrameGetMatrix(pFrame));
-        RwV3dScale(&vRight, &vRight, -fSpeed);
-        RwFrameTranslate(pFrame, &vRight, rwCOMBINEPOSTCONCAT);
-    }
-    else if (CController::GetDigital(iController, CController::DIGITAL_LEFT))
-    {
-        RwV3d vRight = *RwMatrixGetRight(RwFrameGetMatrix(pFrame));
-        RwV3dScale(&vRight, &vRight, fSpeed);
-        RwFrameTranslate(pFrame, &vRight, rwCOMBINEPOSTCONCAT);
-    };
+	if (IPad::GetDigital(iPad, IPad::DIGITAL_LUP))
+	{
+        RwV3dScale(&vAt, &vAt, fMovSpeed);
+		RwFrameTranslate(pFrame, &vAt, rwCOMBINEPOSTCONCAT);
+	}
+	else if (IPad::GetDigital(iPad, IPad::DIGITAL_LDOWN))
+	{
+        RwV3dScale(&vAt, &vAt, -fMovSpeed);
+		RwFrameTranslate(pFrame, &vAt, rwCOMBINEPOSTCONCAT);
+	};
+
+    //
+    //  Left / right movement
+    //
+    RwV3d vRight = *RwMatrixGetRight(RwFrameGetMatrix(pFrame));
+
+	if (IPad::GetDigital(iPad, IPad::DIGITAL_LRIGHT))
+	{
+        RwV3dScale(&vRight, &vRight, -fMovSpeed);
+		RwFrameTranslate(pFrame, &vRight, rwCOMBINEPOSTCONCAT);
+	}
+	else if (IPad::GetDigital(iPad, IPad::DIGITAL_LLEFT))
+	{
+        RwV3dScale(&vRight, &vRight, fMovSpeed);
+		RwFrameTranslate(pFrame, &vRight, rwCOMBINEPOSTCONCAT);
+	};
 };
 
 
@@ -663,13 +632,9 @@ void CMapCamera::UpdatePathCamera(const RwV3d* pvAt, bool bExPath)
     vAt.y += m_fLookatOffsetY;
 
     if (m_bChangeMoment)
-    {
         m_vAt = vAt;
-    }
     else
-    {
         Math::Vec3_Lerp(&m_vAt, &m_vAt, &vAt, 0.2f);
-    };
 
     if (std::strcmp(m_szCameraAreaName, ""))
     {
@@ -684,19 +649,9 @@ void CMapCamera::UpdatePathCamera(const RwV3d* pvAt, bool bExPath)
     {
         m_fPathTime = CCameraDataManager::FindNearestPosValueLight(&m_vAt, nAtPathID, m_fPathTime);
 
-        if (CCameraDataManager::GetPathType(nAtPathID) == 1)
-        {
-            if (m_fPathTime > m_fPrePathTime)
-            {
-                if (m_fPathTime <= 0.00001f)
-                    m_fPathTime = 0.99f;
-            }
-            else if (m_fPrePathTime > m_fPrePathTime && m_fPrePathTime > 0.99f)
-            {
-                m_fPathTime = 0.00001f;
-            };
-        };
-            
+		if (CCameraDataManager::GetPathType(nAtPathID) == 1)
+			m_fPathTime = InvClamp(m_fPathTime, Math::EPSILON, 1.0f - Math::EPSILON);
+
         CCameraDataManager::GetSplinePos(&vEye, nEyePathID, m_fPathTime);
 
         if (bExPath)
@@ -726,7 +681,7 @@ void CMapCamera::UpdatePathCamera(const RwV3d* pvAt, bool bExPath)
 
         m_fPrePathTime = m_fPathTime;
 
-        RwV3d vNewEye = Math::VECTOR3_ZERO;
+        vNewEye = Math::VECTOR3_ZERO;
         vNewEye.x = m_vAt.x + ((vEye.x - m_vAt.x) * m_fRequestZoom);
         vNewEye.y = m_vAt.y + ((vEye.y - m_vAt.y) * m_fRequestZoom);
         vNewEye.z = m_vAt.z + ((vEye.z - m_vAt.z) * m_fRequestZoom);
@@ -754,25 +709,15 @@ void CMapCamera::UpdatePathCamera(const RwV3d* pvAt, bool bExPath)
 
 void CMapCamera::UpdateSetCamera(const RwV3d* pvAt)
 {
-    RwV3d vEye = Math::VECTOR3_ZERO;
-    RwV3d vAt = Math::VECTOR3_ZERO;
-    int32 nCamID = -1;
-    float fFOV = 0.0f;
-    char szSetCamera[32];
-
-    szSetCamera[0] = '\0';
-
-    vAt = *pvAt;
+	RwV3d vAt = *pvAt;
     vAt.y += m_fLookatOffsetY;
 
     if (m_bChangeMoment)
-    {
         m_vAt = vAt;
-    }
     else
-    {
         Math::Vec3_Lerp(&m_vAt, &m_vAt, &vAt, 0.4f);
-    };
+
+	int32 nCamID = -1;
 
     if (!std::strcmp(m_szCameraAreaName, ""))
     {
@@ -780,26 +725,28 @@ void CMapCamera::UpdateSetCamera(const RwV3d* pvAt)
     }
     else
     {
+		char szSetCamera[32];
+		szSetCamera[0] = '\0';
+
         MakeSetCameraName(szSetCamera, m_szCameraAreaName);
         nCamID = CCameraDataManager::GetSetCamIDNearestPosFromName(&m_vAt, szSetCamera);
     };
 
+	ASSERT(nCamID >= 0);
+
     if (nCamID >= 0)
     {
-        vEye = *CCameraDataManager::GetSetCamPosEye(nCamID);
+		RwV3d vEye = *CCameraDataManager::GetSetCamPosEye(nCamID);
+
         if (m_bChangeMoment)
-        {
             m_vEye = vEye;
-        }
         else
-        {
             Math::Vec3_Lerp(&m_vEye, &m_vEye, &vEye, 0.04f);
-        };
 
 		UpdateLookat();
 
-        fFOV = CCameraDataManager::GetSetCamFov(nCamID);
-        m_fViewSize += (Math::Tan(fFOV * 0.5f) - m_fViewSize) * 0.1f;
+        float fFOV = CCameraDataManager::GetSetCamFov(nCamID);
+		m_fViewSize += 0.1f * (Math::Tan(fFOV * TYPEDEF::DEFAULT_VIEWWINDOW) - m_fViewSize);
         SetViewWindow(m_fViewSize);
     };
 };
@@ -810,9 +757,7 @@ void CMapCamera::UpdateFixedCamera(const RwV3d* pvAt)
     int32 nCamID = -1;
 
     if (std::strcmp(m_szCameraAreaName, ""))
-    {
         nCamID = CCameraDataManager::GetSetCamIDNearestPosFromName(&m_vAt, m_szCameraAreaName);
-    };
 
     if (nCamID >= 0)
     {
@@ -847,9 +792,7 @@ void CMapCamera::UpdateFixedCamera(const RwV3d* pvAt)
 void CMapCamera::UpdateLookat(void)
 {
     if (m_pVibration)
-    {
         m_pVibration->Update(&m_vEye, &m_vAt);
-    };
     
     LookAt(&m_vEye, &m_vAt, &Math::VECTOR3_AXIS_Y);
 };
@@ -857,56 +800,52 @@ void CMapCamera::UpdateLookat(void)
 
 void CMapCamera::LookAt(const RwV3d* pvEye, const RwV3d* pvAt, const RwV3d* pvUp)
 {
-    ASSERT(m_pCamera);
-    
     RwMatrix matrix;
-    RwMatrixSetIdentityMacro(&matrix);
     Math::Matrix_LookAt(&matrix, pvEye, pvAt, pvUp);
-	matrix.flags = 3;
-    RwFrame* pCameraFrame = RwCameraGetFrame(m_pCamera->GetRwCamera());
-    ASSERT(pCameraFrame);
-    
-    RwFrameTransform(pCameraFrame, &matrix, rwCOMBINEREPLACE);
+	
+	//
+    //	TODO renderware assertion failed at AREA32 - matrix is not orhonormal
+    //
+    rwMatrixSetFlags(&matrix, rwMATRIXTYPEORTHONORMAL);
+
+    RwFrameTransform(RwCameraGetFrameMacro(m_pCamera->GetRwCamera()), &matrix, rwCOMBINEREPLACE);
 };
 
 
 void CMapCamera::Skip(void)
 {
     if (m_pIntroduction)
-    {
         m_pIntroduction->Skip();
-    };
 };
 
 
 void CMapCamera::SetLookat(const RwV3d* pvEye, const RwV3d* pvAt)
 {
-    RwMatrix matrix;
-    RwV3d vec = Math::VECTOR3_ZERO;
-
-    RwMatrixSetIdentityMacro(&matrix);
-
     m_vEye = *pvEye;
     m_vAt = *pvAt;
 
-    Math::Matrix_LookAt(&matrix, &m_vEye, &m_vAt, &Math::VECTOR3_AXIS_Y);
+    LookAt(&m_vEye, &m_vAt, &Math::VECTOR3_AXIS_Y);
 
-    RwFrame* pCameraFrame = RwCameraGetFrame(m_pCamera->GetRwCamera());    
-    RwFrameTransform(pCameraFrame, &matrix, rwCOMBINEREPLACE);
+    RwV3d vDir = Math::VECTOR3_ZERO;
+    Math::Vec3_Sub(&vDir, &m_vAt, &m_vEye);
 
-    Math::Vec3_Sub(&vec, &m_vAt, &m_vEye);
-
-    m_fHeight = Math::FAbs(vec.y);
-    m_fRotY = Math::ATan2(vec.x, vec.z);
+    m_fHeight = Math::FAbs(vDir.y);
+    m_fRotY = Math::ATan2(vDir.x, vDir.z);
     
-    vec.y = 0.0f;
-    m_fDist = Math::Vec3_Length(&vec);
+    vDir.y = 0.0f;
+    m_fDist = Math::Vec3_Length(&vDir);
 };
 
 
-void CMapCamera::SetCameraVibration(float fPower, float fTime, uint32 uFreq)
+void CMapCamera::SetCameraVibration(float fPower, float fTime, int32 nFreq)
 {
-    VibrationCreate(fPower, fTime, uFreq);
+    VibrationCreate(fPower, fTime, nFreq);
+};
+
+
+void CMapCamera::StopCameraVibration(void)
+{
+    VibrationDestroy();
 };
 
 
@@ -959,18 +898,22 @@ void CMapCamera::SetViewWindow(float fViewSize, float fAspect)
 void CMapCamera::SetCameraMode(MODE mode)
 {
     m_mode = mode;
-    m_bChangeMoment = true;
+	m_bChangeMoment = true;
     
     switch (m_mode)
     {
     case MODE_MANUAL:
         RwFrameSetIdentity(RwCameraGetFrame(m_pCamera->GetRwCamera()));
-        m_fPitch = 0.0f;
+		m_fPitch = 0.0f;
         break;
         
     case MODE_INTRODUCTION:
         IntroductionCreate();
         break;
+
+	case MODE_AUTOCHANGE:
+
+		break;
     };
 };
 
@@ -1022,7 +965,6 @@ float CMapCamera::CalcNiceZoon(RwV3d* avPos, int32 nNumPos)
         return 1.0f;
 
     RwMatrix* pViewMat = RwCameraGetViewMatrixMacro(m_pCamera->GetRwCamera());
-    ASSERT(pViewMat);
 
     float fMaxScrnX = 0.0f;
     float fMaxScrnY = 0.0f;
@@ -1030,18 +972,14 @@ float CMapCamera::CalcNiceZoon(RwV3d* avPos, int32 nNumPos)
     for (int32 i = 0; i < nNumPos; ++i)
     {
         RwV3d vScrnPos = Math::VECTOR3_ZERO;
-
         RwV3dTransformPoint(&vScrnPos, &avPos[i], pViewMat);
 
         if (vScrnPos.z > 0.0f)
         {
             float fTmp = 1.0f / vScrnPos.z;
 
-            vScrnPos.x = ((vScrnPos.x * fTmp) * 2.0f) - 1.0f;
-            vScrnPos.y = ((vScrnPos.y * fTmp) * 2.0f) - 1.0f;
-            
-            vScrnPos.x = Math::FAbs(vScrnPos.x);
-            vScrnPos.y = Math::FAbs(vScrnPos.y);
+            vScrnPos.x = Math::FAbs(((vScrnPos.x * fTmp) * 2.0f) - 1.0f);
+            vScrnPos.y = Math::FAbs(((vScrnPos.y * fTmp) * 2.0f) - 1.0f);
 
             if (fMaxScrnX < vScrnPos.x)
                 fMaxScrnX = vScrnPos.x;
@@ -1051,13 +989,7 @@ float CMapCamera::CalcNiceZoon(RwV3d* avPos, int32 nNumPos)
         };
     };
 
-    if (fMaxScrnX <= 1.0f && fMaxScrnY <= 1.0f)
-        return 1.0f;
-
-    float fZoom = Math::Max(fMaxScrnX, fMaxScrnY);
-    fZoom = Math::Clamp(fZoom, fZoom, 3.0f);
-
-    return fZoom;
+    return Clamp(Max(fMaxScrnX, fMaxScrnY), 1.0f, 3.0f);
 };
 
 
@@ -1104,11 +1036,7 @@ float CMapCamera::GetViewAreaRadius(void) const
 void CMapCamera::IntroductionCreate(void)
 {
     if (!m_pIntroduction)
-    {
         m_pIntroduction = new CIntroduction;
-        ASSERT(m_pIntroduction);
-        m_pIntroduction->Set();
-    };
 };
 
 
@@ -1145,14 +1073,10 @@ void CMapCamera::IntroductionUpdate(void)
 };
 
 
-void CMapCamera::VibrationCreate(float fPower, float fTime, uint32 uFreq)
+void CMapCamera::VibrationCreate(float fPower, float fTime, int32 nFreq)
 {
     if (!m_pVibration)
-    {
-        m_pVibration = new CVibration;
-        ASSERT(m_pVibration);
-        m_pVibration->Set(fPower, fTime, uFreq);
-    };
+        m_pVibration = new CVibration(fPower, fTime, nFreq);
 };
 
 
@@ -1170,8 +1094,7 @@ void CMapCamera::VibrationUpdate(void)
 {
     if (m_pVibration)
     {
-        m_pVibration->Period();
-        
+        m_pVibration->Period();        
         if (!m_pVibration->IsVibrating())
             VibrationDestroy();
     };

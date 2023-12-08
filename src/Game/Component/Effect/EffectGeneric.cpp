@@ -225,7 +225,6 @@ namespace EFFECT_GENERIC
 
     bool IsNeedWaterEffect(MAPTYPES::ATTRIBUTE attribute)
     {
-        return (FLAG_TEST(attribute, MAPTYPES::ATTRIBUTE_WATER) ||
-                FLAG_TEST(attribute, MAPTYPES::ATTRIBUTE_POISON));
+        return FLAG_TEST_ANY(attribute, MAPTYPES::ATTRIBUTE_WATER | MAPTYPES::ATTRIBUTE_POISON);
     };
 };

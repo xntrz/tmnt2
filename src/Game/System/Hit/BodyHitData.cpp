@@ -25,7 +25,7 @@ void CBodyHitData::InitData(const RwV3d* pPos, float fHitRadius)
     SetCurrentPos(pPos);
     SetHitRadius(fHitRadius);
     m_uHitID = 0;
-    m_uHitState = STATE_DEFAULT;
+    m_uHitState = 7;
 };
 
 
@@ -45,7 +45,10 @@ uint32 CBodyHitData::GetHitID(void) const
 
 void CBodyHitData::SetState(uint32 uState, bool bEnable)
 {
-    FLAG_CHANGE(m_uHitState, uState, bEnable);
+    if (bEnable)
+        FLAG_SET(m_uHitState, uState);
+    else
+        FLAG_CLEAR(m_uHitState, uState);
 };
 
 

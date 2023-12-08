@@ -2,6 +2,7 @@
 #include "NexusStageSequence.hpp"
 #include "NexusCamera.hpp"
 
+#include "Game/Component/Player/Player.hpp"
 #include "Game/Component/GameData/GameData.hpp"
 #include "Game/Component/GameMain/GameProperty.hpp"
 #include "Game/Component/GameMain/GamePlayer.hpp"
@@ -46,7 +47,7 @@ void CPlayNexusStageSeqState::OnAttach(CStageBaseSequence* pSeq, const void* pPa
     else
         pMapCamera->SetPathMode(CMapCamera::PATHMODE_SINGLEPLAYER);
 
-    CScreenFade::StartOut();
+    CScreenFade::BlackIn();
 
     CNexusEnemyIntroductionCamera* pCameraUpdater = new CNexusEnemyIntroductionCamera;
     ASSERT(pCameraUpdater);
@@ -144,7 +145,7 @@ bool CPlayNexusStageSeqState::OnMove(CStageBaseSequence* pSeq)
             case CGameStage::RESULT_RET_TITLE:
 			case CGameStage::RESULT_RET_STAGESEL:
                 {
-                    CGameSound::FadeOut(CGameSound::FADESPEED_FAST);
+                    CGameSound::FadeOut(CGameSound::FADESPEED_SLOW);
                     stage.BeginDemo();
 
                     m_step = STEP_FADEIN;
@@ -176,8 +177,8 @@ bool CPlayNexusStageSeqState::OnMove(CStageBaseSequence* pSeq)
             {
                 m_step = STEP_FADEWAIT;
                 m_fTime = 0.0f;
-                CGameSound::FadeOut(CGameSound::FADESPEED_FAST);
-                CScreenFade::StartIn();
+                CGameSound::FadeOut(CGameSound::FADESPEED_SLOW);
+                CScreenFade::BlackOut();
             };
         }
         break;
@@ -188,8 +189,8 @@ bool CPlayNexusStageSeqState::OnMove(CStageBaseSequence* pSeq)
             {
                 m_step = STEP_FADEWAIT;
                 m_fTime = 0.0f;
-                CGameSound::FadeOut(CGameSound::FADESPEED_FAST);
-                CScreenFade::StartIn();
+                CGameSound::FadeOut(CGameSound::FADESPEED_SLOW);
+                CScreenFade::BlackOut();
             };
         }
         break;
@@ -211,22 +212,34 @@ bool CPlayNexusStageSeqState::OnMove(CStageBaseSequence* pSeq)
 
 void CPlayNexusStageSeqState::RecoverHP(void)
 {
-    int32 nHP = int32( float(CGameProperty::Player(0).GetHPMax()) * 0.1f );
-    CGameProperty::Player(0).AddHP(nHP);
+    IGamePlayer* pGamePlayer = CGameProperty::Player(0);
+    
+    int32 nHP = int32(float(pGamePlayer->GetHPMax()) * 0.1f);    
+    pGamePlayer->AddHP(nHP);
 };
 
 
 void CPlayNexusStageSeqState::AwakePlayers(void)
 {
-    for (int32 i = 0; i < CGameProperty::GetPlayerNum(); ++i)
-        CGameProperty::Player(i).Awake();
+    int32 nPlayerNum = CGameProperty::GetPlayerNum();
+    for (int32 i = 0; i < nPlayerNum; ++i)
+    {
+        IGamePlayer* pGamePlayer = CGameProperty::Player(i);
+        CPlayer* pPlayer = pGamePlayer->GetPlayer();
+        pPlayer->Awake();
+    };
 };
 
 
 void CPlayNexusStageSeqState::SleepPlayers(void)
 {
-    for (int32 i = 0; i < CGameProperty::GetPlayerNum(); ++i)
-        CGameProperty::Player(i).Sleep();
+    int32 nPlayerNum = CGameProperty::GetPlayerNum();
+    for (int32 i = 0; i < nPlayerNum; ++i)
+    {
+        IGamePlayer* pGamePlayer = CGameProperty::Player(i);
+        CPlayer* pPlayer = pGamePlayer->GetPlayer();
+        pPlayer->Sleep();
+    };
 };
 
 

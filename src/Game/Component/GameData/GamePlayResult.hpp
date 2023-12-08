@@ -17,7 +17,7 @@ public:
     enum AREARESULT
     {
         AREARESULT_NONE = 0,
-        AREARESULT_CLEAR,
+        AREARESULT_GAMECLEAR,
         AREARESULT_GAMEOVER,
         AREARESULT_EXIT,
     };
@@ -31,14 +31,14 @@ public:
     enum EXITSUB
     {
         EXITSUB_NONE = 0,
-        EXITSUB_AREASEL,
-        EXITSUB_TITLE,
-        EXITSUB_CHARASEL,
+        EXITSUB_TO_TITLE,
+        EXITSUB_TO_CHARASEL,
+        EXITSUB_TO_AREASEL,
     };
 
-    struct NODESTAGE
+    struct STAGENODE
     {
-        int32 m_nMVP;
+        int32 m_mvp;
         CGameTime m_cleartime;
     };
 
@@ -65,7 +65,7 @@ public:
     void Evaluate(void);
     void TakePrize(AREAID::VALUE idArea);
     void ApplyToRecord(void);
-    void SetStageclearSecond(float fSeconds);
+    void SetStageClearSecond(float fSeconds);
     void SetRemainedHP(int32 iRemainHP);
     void SetRideCharaPlaySecond(PLAYERID::VALUE idPlayer, float fSeconds);
     void AddTotalItemCount(void);
@@ -93,8 +93,8 @@ public:
     GAMETYPES::CLEARRANK GetControlRank(int32 nIndex) const;
     GAMETYPES::CLEARRANK GetTrickRank(int32 nIndex) const;
     GAMETYPES::CLEARRANK GetShotRank(int32 nIndex) const;
-    int32 GetStageMVP(int32 nStage) const;
-    const CGameTime& GetStageCleartime(int32 nStage) const;
+    int32 GetStageMVP(int32 nIndex) const;
+    const CGameTime& GetStageCleartime(int32 nIndex) const;
 
 private:
     void initClearTimeEvalTable(AREAID::VALUE idArea);
@@ -103,7 +103,7 @@ private:
     int32 evaluateClearTime(void) const;
     int32 evaluateRemainingHP(void) const;
     int32 evaluateItem(void) const;
-    NODESTAGE* getCurrentStage(void);
+    STAGENODE* getCurrentStage(void);
     void takeOnePrize(AREAID::VALUE idArea, GAMETYPES::PRIZE prize);
 
 private:
@@ -116,24 +116,24 @@ private:
     AREARESULT m_result;
     CLEARSUB m_clearsub;
     EXITSUB m_exitsub;
-    GAMETYPES::CLEARRANK m_baserankNormal;
-    GAMETYPES::CLEARRANK m_baserankRide;
+    GAMETYPES::CLEARRANK m_baserank;
     bool m_bTakenRedCry;
     bool m_bTakenGreenCry;
     bool m_bTakenOrangeCry;
     bool m_bTakenWhiteCry;
     bool m_bTakenAntique;
     bool m_bTakenComeback;
-    CGameTime m_cleartimeTotal;
+    CGameTime m_cleartime;
     int32 m_nRemainingHP;
     int32 m_nMaxHP;
     int32 m_nTakenItemCount;
     int32 m_nTotalItemCount;
-    GAMETYPES::CLEARRANK m_totalrank;
+    GAMETYPES::CLEARRANK m_arearank;
     int32 m_nRidePrizeNo;
-    NODESTAGE m_aNodeStage[ GAMETYPES::STAGE_MAX ];
-    PLAYERID::VALUE m_aPlayerID[ GAMETYPES::CHARACTER_MAX ];
-    CCharaResult m_CharaResultNormal;
-    CRideCharaResult m_CharaResultRide;
-    uint32 m_auCleartimeEvalTable[ 4 ];
+    STAGENODE m_aStageNode[GAMETYPES::STAGE_MAX];
+    PLAYERID::VALUE m_aPlayerID[GAMETYPES::CHARACTER_MAX];
+    CCharaResult m_CharaResult;
+    CCharaResult m_StageResult;
+    CRideCharaResult m_RideResult;
+    uint32 m_aClearEvalTable[4];
 };

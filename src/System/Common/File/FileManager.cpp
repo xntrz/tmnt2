@@ -1,7 +1,46 @@
 #include "FileManager.hpp"
 #include "FileAccess.hpp"
 #include "FileTypes.hpp"
-#include "RwFileManager.hpp"
+
+
+CFileManager::CRequest::CRequest(const char* pszName, CFileAccess* pAccess)
+: m_pAccess(pAccess)
+, m_type(TYPE_NAME)
+{
+    m_data.name = new char[std::strlen(pszName) + 1];
+    std::strcpy(m_data.name, pszName);
+};
+
+
+CFileManager::CRequest::CRequest(int32 nID, CFileAccess* pAccess)
+: m_pAccess(pAccess)
+, m_type(TYPE_ID)
+{
+    m_data.id = nID;
+};
+
+
+void CFileManager::CRequest::Cleanup(void)
+{
+    switch (m_type)
+    {
+    case TYPE_NAME:
+        {
+            delete[] m_data.name;
+            m_data.name = nullptr;
+        }
+        break;
+
+    case TYPE_ID:
+        {
+            m_data.id = -1;
+        }
+        break;
+
+    default:
+        break;
+    };
+};
 
 
 /*static*/ CFileManager* CFileManager::m_pInstance = nullptr;
@@ -14,41 +53,9 @@
 };
 
 
-void CFileManager::REQUEST::SetName(const char* pszName)
-{
-    ASSERT(m_type == TYPE_NAME);
-
-    if (m_type == TYPE_NAME)
-    {
-        int32 nLen = std::strlen(pszName);
-        ASSERT(nLen < FILETYPES::FILE_NAME_MAX);
-
-        m_data.name = new char[nLen + 1];
-        ASSERT(m_data.name);
-
-        std::strcpy(m_data.name, pszName);
-    };    
-};
-
-
-void CFileManager::REQUEST::ClearName(void)
-{
-    ASSERT(m_type == TYPE_NAME);
-
-    if (m_type == TYPE_NAME)
-    {
-        ASSERT(m_data.name);
-        
-        delete[] m_data.name;
-        m_data.name = nullptr;
-    };
-};
-
-
 CFileManager::CFileManager(void)
 : m_state(STATE_IDLE)
-, m_RequestQueue(32)
-, m_pCurrentRequest(nullptr)
+, m_pReqCurrent(nullptr)
 {
     ASSERT(!m_pInstance);
     m_pInstance = this;
@@ -65,13 +72,13 @@ CFileManager::~CFileManager(void)
 
 bool CFileManager::Start(void)
 {
-    return CRwFileManager::Initialize();
+    return m_rwFileSystem.Initialize();
 };
 
 
 void CFileManager::Stop(void)
 {
-    CRwFileManager::Terminate();
+    m_rwFileSystem.Terminate();
 };
 
 
@@ -80,106 +87,79 @@ void CFileManager::Sync(void)
     if (m_state != STATE_LOADING)
         return;
 
-    ASSERT(!m_RequestQueue.empty());
-    
-    if (!m_pCurrentRequest)
-        m_pCurrentRequest = m_RequestQueue.peek();
+    ASSERT(!m_ReqQueue.empty());
 
-    ASSERT(m_pCurrentRequest);
+    if (!m_pReqCurrent)
+        m_pReqCurrent = &m_ReqQueue.front();
 
-    if (m_pCurrentRequest)
+    CFileAccess* pAccess = m_pReqCurrent->access();
+    switch (pAccess->Stat())
     {
-        CFileAccess* pAccess = m_pCurrentRequest->m_pAccessData;
-        ASSERT(pAccess);
-
-        switch (pAccess->Status())
+    case CFileAccess::STAT_PENDING:
         {
-        case CFileAccess::STATUS_PENDING:
+            switch (m_pReqCurrent->type())
             {
-                switch (m_pCurrentRequest->m_type)
-                {
-                case REQUEST::TYPE_ID:
-                    pAccess->Read(m_pCurrentRequest->m_data.id);
-                    break;
+            case CRequest::TYPE_ID:
+                pAccess->Open(m_pReqCurrent->id());
+                break;
 
-                case REQUEST::TYPE_NAME:
-                    pAccess->Read(m_pCurrentRequest->m_data.name);
-                    break;
+            case CRequest::TYPE_NAME:
+                pAccess->Open(m_pReqCurrent->name());
+                break;
 
-                default:
-                    ASSERT(false);
-                    break;
-                };
-            }
-            break;
+            default:
+                ASSERT(false);
+                break;
+            };
+        }
+        break;
 
-        case CFileAccess::STATUS_READING:
+    case CFileAccess::STAT_READING:
+        {
+            pAccess->Sync();
+        }
+        break;
+
+    case CFileAccess::STAT_READEND:
+    case CFileAccess::STAT_NOREAD:
+    case CFileAccess::STAT_ERROR:
+        {
+            if (pAccess->Stat() == CFileAccess::STAT_ERROR)
             {
-                pAccess->Sync();
-            }
-            break;
-
-        case CFileAccess::STATUS_READEND:
-        case CFileAccess::STATUS_NOREAD:
-            {
-                if (m_pCurrentRequest->m_type == REQUEST::TYPE_NAME)
-                    m_pCurrentRequest->ClearName();
+                ASSERT(false);
                 
-	            m_pCurrentRequest = nullptr;
+                char szBuffer[256];
                 
-                m_RequestQueue.pop();
-                if (m_RequestQueue.empty())
-                    m_state = STATE_IDLE;
-            }
-            break;
+                if (m_pReqCurrent->type() == CRequest::TYPE_ID)
+                    std::sprintf(szBuffer, "file id %d read error!", m_pReqCurrent->id());
+                else if (m_pReqCurrent->type() == CRequest::TYPE_NAME)
+                    std::sprintf(szBuffer, "file \"%s\" read error!", m_pReqCurrent->name());
+                else
+                    std::sprintf(szBuffer, "file read error!");
+                
+                Error(szBuffer);
+            };
 
-        case CFileAccess::STATUS_ERROR:
-            {
-                Error("Reading file error");
+            m_pReqCurrent->Cleanup();
+            m_pReqCurrent = nullptr;
 
-                if (m_pCurrentRequest->m_type == REQUEST::TYPE_NAME)
-                    m_pCurrentRequest->ClearName();
+            m_ReqQueue.pop();
+            if (m_ReqQueue.empty())
+                m_state = STATE_IDLE;
+        }
+        break;
 
-                m_pCurrentRequest = nullptr;
-
-                m_RequestQueue.pop();
-                if (m_RequestQueue.empty())
-                    m_state = STATE_IDLE;
-            }
-            break;
-
-        default:
-            ASSERT(false);
-            break;
-        };
+    default:
+        ASSERT(false);
+        break;
     };
 };
 
 
-void CFileManager::Error(const char* pszDescription)
+void CFileManager::RegistRequest(CRequest& Request)
 {
-    ;
-};
-
-
-void CFileManager::RegistRequest(const REQUEST& rRequest)
-{
-    CFileAccess* pAccess = rRequest.m_pAccessData;
-    ASSERT(pAccess);
-    pAccess->m_status = CFileAccess::STATUS_PENDING;
+    Request.access()->m_stat = CFileAccess::STAT_PENDING;
     
-    m_RequestQueue.push(&rRequest);
+    m_ReqQueue.push(Request);
     m_state = STATE_LOADING;
-};
-
-
-CFileAccess* CFileManager::AllocRequest(int32 nID, int32 nLabel)
-{
-    return nullptr;
-};
-
-
-CFileAccess* CFileManager::AllocRequest(const char* pszName, int32 nLabel)
-{
-    return nullptr;
 };

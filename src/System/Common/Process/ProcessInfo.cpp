@@ -5,7 +5,7 @@
 CProcessInfo::CProcessInfo(void)
 : m_iLabel(PROCESSTYPES::LABEL_EOL)
 , m_iPriority(PROCESSTYPES::PRIORITY_HIGH)
-, m_state(PROCESSTYPES::STATE_INVALID)
+, m_state(PROCESSTYPES::STATE_NONE)
 , m_pDispatcher(nullptr)
 {
 	;

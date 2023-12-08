@@ -50,9 +50,9 @@ void CDamageFloorModule::Run(void)
 				{
 					CPlayerCharacter* pPlayerChr = (CPlayerCharacter*)m_pCharacter;
 
-					CGamepad::StartVibration(
+					IGamepad::StartVibration(
 						pPlayerChr->GetPadID(),
-						CGamepad::VIBRATIONTYPE_LOW,
+						IGamepad::VIBRATIONTYPE_LOW,
 						0.2f
 					);
 				};

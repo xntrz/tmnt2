@@ -1,7 +1,7 @@
 #include "RideMineGimmick.hpp"
 
 #include "Game/Component/Effect/MagicManager.hpp"
-#include "Game/Component/Gimmick/GimmickUtils.hpp"
+#include "Game/Component/Gimmick/Utils/GimmickUtils.hpp"
 #include "Game/Component/Gimmick/GimmickParam.hpp"
 #include "Game/Component/Gimmick/MoveStrategy/RideMineGimmickMove.hpp"
 #include "Game/Component/GameMain/GameProperty.hpp"
@@ -28,7 +28,7 @@ CRideMineGimmick::CRideMineGimmick(const char* pszName, void* pParam)
     ASSERT(pModel);
     pModel->SetClippingEnable(false);
 
-    m_model.SetModel(CNormalGimmickModel::MODELKIND_VISUAL_NORMAL, pModel);
+    m_model.SetModel(CNormalGimmickModel::MODELTYPE_DRAW_NORMAL, pModel);
     m_model.SetPosition(&pInitParam->m_vPosition);
     m_model.UpdateFrame();
 

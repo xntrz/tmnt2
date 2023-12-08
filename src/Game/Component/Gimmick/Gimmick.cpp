@@ -39,15 +39,13 @@ void CGimmick::Run(void)
     if (m_pMoveStrategy)
     {
         if (m_pMoveStrategy->Move(CGameProperty::GetElapsedTime()) == CGimmickMove::MOVESTATE_TOUCHDOWN)
-        {
             OnTouchedDown();
-        };
 
         if (m_pModelStrategy)
         {
 			RwV3d vPosition = Math::VECTOR3_ZERO;
-
-			m_pMoveStrategy->GetPosition(&vPosition);
+            m_pMoveStrategy->GetPosition(&vPosition);
+            
             m_pModelStrategy->SetPosition(&vPosition);
         };
     };
@@ -90,9 +88,7 @@ void CGimmick::Draw(void) const
     RENDERSTATE_PUSH(rwRENDERSTATETEXTUREADDRESSV, rwTEXTUREADDRESSCLAMP);
 
     if (m_pModelStrategy)
-    {
         m_pModelStrategy->Draw();
-    };
 
     RENDERSTATE_POP(rwRENDERSTATETEXTUREADDRESSV);
     RENDERSTATE_POP(rwRENDERSTATETEXTUREADDRESSU);
@@ -110,13 +106,9 @@ void CGimmick::GetPosition(RwV3d* pvPosition) const
     ASSERT(pvPosition);
     
     if (m_pMoveStrategy)
-    {
         m_pMoveStrategy->GetPosition(pvPosition);
-    }
     else
-    {
         *pvPosition = Math::VECTOR3_ZERO;
-    };
 };
 
 
@@ -134,10 +126,8 @@ GIMMICKTYPES::FEATURE CGimmick::GetFeatures(void) const
 
 bool CGimmick::Query(CGimmickQuery* pQuery) const
 {
-    if (pQuery)
-    {
+    if (pQuery)   
         pQuery->Default(this);        
-    };
 
     return false;
 };
@@ -191,37 +181,13 @@ void CGimmick::OnAttackResult(CHitCatchData* pCatch)
 };
 
 
-bool CGimmick::IsSleep(void) const
-{
-    return (FLAG_TEST(GetObjectFlag(), GAMEOBJECTTYPES::FLAG_SLEEP));
-};
-
-
-void CGimmick::Init(GIMMICKID::VALUE idGimmick)
-{
-    m_id = idGimmick;
-};
-
-
-GIMMICKID::VALUE CGimmick::GetID(void) const
-{
-    return m_id;
-};
-
-
 void CGimmick::Release(void)
 {
     CGimmickManager::Release(this);
 };
 
 
-void CGimmick::SetModelStrategy(CGimmickModel* pModel)
+bool CGimmick::IsSleep(void) const
 {
-    m_pModelStrategy = pModel;
-};
-
-
-void CGimmick::SetMoveStrategy(CGimmickMove* pMove)
-{
-    m_pMoveStrategy = pMove;
+    return (FLAG_TEST(GetObjectFlag(), GAMEOBJECTTYPES::FLAG_SLEEP));
 };

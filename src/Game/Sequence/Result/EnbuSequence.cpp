@@ -16,6 +16,7 @@
 #include "Game/System/Motion/MotionManager.hpp"
 #include "Game/System/MotionParameter/MotionParameterManager.hpp"
 #include "Game/System/Map/WorldMap.hpp"
+#include "Game/System/Misc/DebugShape.hpp"
 #include "Game/System/Misc/ScreenFade.hpp"
 #include "Game/System/Misc/RenderStateManager.hpp"
 #include "System/Common/Screen.hpp"
@@ -52,7 +53,7 @@ CEnbuSequence::~CEnbuSequence(void)
 };
 
 
-bool CEnbuSequence::OnAttach(const void* param)
+bool CEnbuSequence::OnAttach(const void* pParam)
 {
     CTextureManager::GenerationInc();
     CBodyHitManager::Initialize();
@@ -65,6 +66,10 @@ bool CEnbuSequence::OnAttach(const void* param)
     CGameProperty::Initialize();
     CEffectManager::Initialize();
     CCharacterManager::Initialize();
+
+#ifdef _DEBUG
+    CDebugShape::Initialize();
+#endif
 
     CEnbuProc::Initialize();
     
@@ -84,6 +89,10 @@ void CEnbuSequence::OnDetach(void)
     CGameSound::FadeOut(CGameSound::FADESPEED_NORMAL);
 
     CEnbuProc::Terminate();
+
+#ifdef _DEBUG
+    CDebugShape::Terminate();
+#endif
 
     CCharacterManager::Terminate();
     CEffectManager::Terminate();
@@ -119,7 +128,7 @@ void CEnbuSequence::OnDetach(void)
 };
 
 
-void CEnbuSequence::OnMove(bool bRet, const void* param)
+void CEnbuSequence::OnMove(bool bRet, const void* pReturnValue)
 {
     switch (m_step)
     {
@@ -151,7 +160,7 @@ void CEnbuSequence::OnMove(bool bRet, const void* param)
                 RpWorldAddCamera(m_pWorld, m_pCamera->GetRwCamera());
                 RpWorldAddLight(m_pWorld, m_pLight);
 
-#ifdef _TARGET_PC
+#ifdef TARGET_PC
                 CToonManager::SetTextureSet("toonPC");
 #else
 #error Not implemented for current target
@@ -159,7 +168,7 @@ void CEnbuSequence::OnMove(bool bRet, const void* param)
                 CEnbuProc::Settings();
 
                 SetEnbuCameraInit();
-                CScreenFade::StartOut();
+                CScreenFade::BlackIn();
                 CGameSound::PlayBGM(SDCODE_BGM(12326));
                 
                 m_step = STEP_RUN;
@@ -198,8 +207,8 @@ void CEnbuSequence::OnMove(bool bRet, const void* param)
 
             if (CController::GetDigital(CController::CONTROLLER_LOCKED_ON_VIRTUAL, CController::DIGITAL_OK))
             {
-                CScreenFade::StartIn();
-                CGameSound::FadeOut(CGameSound::FADESPEED_FAST);
+                CScreenFade::BlackOut();
+                CGameSound::FadeOut(CGameSound::FADESPEED_SLOW);
                 m_step = STEP_END;
             };
         }

@@ -20,7 +20,7 @@ namespace PlayerStatus
         Character().SetDefaultFlags();
         Character().ResetVelocity();
         Character().ResetAcceleration();
-        Character().ChangeMotion("Idle");
+        Character().ChangeMotion(PLAYERTYPES::MOTIONNAMES::IDLE);
     };
 
 
@@ -55,7 +55,7 @@ namespace PlayerStatus
 
     void CWalk::OnAttach(void)
     {
-        Character().ChangeMotion("Walk");
+        Character().ChangeMotion(PLAYERTYPES::MOTIONNAMES::WALK);
     };
 
 
@@ -98,7 +98,7 @@ namespace PlayerStatus
 
     void CRun::OnAttach(void)
     {
-        Character().ChangeMotion("Run");
+        Character().ChangeMotion(PLAYERTYPES::MOTIONNAMES::RUN);
     };
 
 
@@ -186,7 +186,7 @@ namespace PlayerStatus
 
     void CDash::OnAttach(void)
     {
-        Character().ChangeMotion("Dash1");
+        Character().ChangeMotion(PLAYERTYPES::MOTIONNAMES::DASH);
 
         RwV3d vVelocity =
         {
@@ -199,8 +199,8 @@ namespace PlayerStatus
         Character().SetCharacterFlag(CHARACTERTYPES::FLAG_FIXED_DIRECTION, true);
 
         RwV3d vOffset = Math::VECTOR3_ZERO;
-        CEffectManager::PlayTrace("all_dash1", new CPlayerTracer(m_pPlayerChr), &vOffset);
-        CEffectManager::PlayTrace("all_dash2", new CPlayerTracer(m_pPlayerChr), &vOffset);
+        CEffectManager::PlayTrace(PLAYERTYPES::EFFECTNAMES::DASH, new CPlayerTracer(m_pPlayerChr), &vOffset);
+        CEffectManager::PlayTrace(PLAYERTYPES::EFFECTNAMES::DASH_SMOKE, new CPlayerTracer(m_pPlayerChr), &vOffset);
         
         CGameSound::PlayObjectSE(m_pPlayerChr, SDCODE_SE(4122));
     };
@@ -232,7 +232,7 @@ namespace PlayerStatus
 
     void CDashFinish::OnAttach(void)
     {
-        Character().ChangeMotion("Dash2");
+        Character().ChangeMotion(PLAYERTYPES::MOTIONNAMES::DASH_FINISH);
         Character().ResetVelocity();
     };
 
@@ -296,7 +296,7 @@ namespace PlayerStatus
 
     const char* CDownFront::GetMotionName(void) const
     {
-        return "YFrontFuttobi3";
+        return PLAYERTYPES::MOTIONNAMES::DOWN_FRONT;
     };
 
 
@@ -325,7 +325,7 @@ namespace PlayerStatus
 
     const char* CDownBack::GetMotionName(void) const
     {
-        return "YFrontFuttobi3";
+        return PLAYERTYPES::MOTIONNAMES::DOWN_BACK;
     };
 
 
@@ -394,7 +394,7 @@ namespace PlayerStatus
 
     const char* CTumblerFront::GetMotionName(void) const
     {
-        return "YFrontFuttobi4";
+        return PLAYERTYPES::MOTIONNAMES::TUMBLER_FRONT;
     };
 
 
@@ -417,6 +417,6 @@ namespace PlayerStatus
 
     const char* CTumblerBack::GetMotionName(void) const
     {
-        return "YFrontFuttobi4";
+        return PLAYERTYPES::MOTIONNAMES::TUMBLER_BACK;
     };
 };

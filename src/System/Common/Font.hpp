@@ -41,18 +41,9 @@ public:
     int32 GetDisplayLineString(wchar* dst, const wchar* src, float fHeight, float fWidth, int32 count) const;
     int32 CountFlowLine(const wchar* pwszString, float fHeight, float fWidth);
     void Show(const char* pszString, float fHeight, float x, float y);
+    void Show(const char* pszString, float fHeight, const RwV2d* pvPos);
     void Show(const wchar* pwszString, float fHeight, RwV2d* pPosition);
     void Show(const wchar* pwszString, float fHeight, float fPosX, float fPosY);
     void Flow(const wchar* pwszString, float fHeight, Rt2dBBox* pBBox, Rt2dJustificationType format = rt2dJUSTIFYLEFT);
     void FlowEx(const wchar* pwszString, float fHeight, int32 numLinePad, const Rt2dBBox* pBBox, Rt2dJustificationType format = rt2dJUSTIFYLEFT);
-};
-
-
-class CAnsiFont : public CFont
-{
-public:
-    CAnsiFont(Rt2dFont* pFont);
-    virtual ~CAnsiFont(void);
-    void Show(const char* pszString, float fHeight, float fX, float fY);
-    void Show(const char* pszString, float fHeight, RwV2d* pvPos);
 };

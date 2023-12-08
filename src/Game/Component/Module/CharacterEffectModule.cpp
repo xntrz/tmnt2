@@ -13,11 +13,11 @@
 
 namespace EFFECTNAME
 {
-    const char* STUN        = "all_piyori";
-    const char* SLEEP       = "all_sleep";
-    const char* WAKE        = "all_wake";
-    const char* BIND        = "all_nenshi1";
-    const char* BIND_OFF    = "all_nencut";
+    static const char* STUN        = "all_piyori";
+    static const char* SLEEP       = "all_sleep";
+    static const char* WAKE        = "all_wake";
+    static const char* BIND        = "all_nenshi1";
+    static const char* BIND_OFF    = "all_nencut";
 };
 
 

@@ -6,39 +6,39 @@ class CProcess;
 
 namespace PROCESSTYPES
 {
-	static const int32 LABEL_TOP			= 0;
-	static const int32 LABEL_EOL			= 0x7FFFFFFF;
-	static const int32 LABEL_PREV			= 0x7FFFFFFE;
+	static const int32 LABEL_TOP 			= 0;
+	static const int32 LABEL_EOL 			= ~(1 << 31);
+	static const int32 LABEL_PREV			= (1 << 31);
+	static const int32 LABEL_UNK0 			= -1;	// TODO unknown label -1
+	static const int32 LABEL_UNK1 			= -2;	// TODO unknown label -2
 
-	static const int32 PRIORITY_MIN			= 0;
+	static const int32 PRIORITY_MIN 		= 0;
+	static const int32 PRIORITY_MAX			= 8;	
 	static const int32 PRIORITY_HIGH		= PRIORITY_MIN;
-	static const int32 PRIORITY_MEDIUM		= 4;
-	static const int32 PRIORITY_LOW			= 7;
-	static const int32 PRIORITY_MAX			= 8;
-	static const int32 PRIORITY_CAPACITY	= 16;
-
-	static const int32 ACCESS_NONE			= 0x0;
-	static const int32 ACCESS_RUN			= 0x1;
-	static const int32 ACCESS_DRAW			= 0x2;
-	static const int32 ACCESS_ALL			= ACCESS_RUN | ACCESS_DRAW;
-
-	typedef CProcess*(*PFN_PROCESSINSTANCE)(void);
+	static const int32 PRIORITY_LOW			= PRIORITY_MAX - 1;
+	static const int32 PRIORITY_NORMAL		= PRIORITY_MAX / 2;
+	
+	static const int32 ACCESS_NONE			= 0;
+	static const int32 ACCESS_MOVE			= (1 << 0);
+	static const int32 ACCESS_DRAW			= (1 << 1);
+	static const int32 ACCESS_ALL			= ACCESS_MOVE | ACCESS_DRAW;
 
 	struct PROCESS
 	{
-		const char* m_pszName;
 		int32 m_iLabel;
 		int32 m_iPriority;
-		PFN_PROCESSINSTANCE m_pfnInstance;
+		CProcess* (*m_pfnInstance)(void);
 	};
 
 	enum STATE
 	{
-		STATE_INVALID,
+		STATE_NONE = 0,
 		STATE_START,
 		STATE_RUN,
 		STATE_PAUSE,
 		STATE_RESUME,
+		
+		STATE_NUM,
 	};
 
 	struct MAIL
@@ -51,17 +51,19 @@ namespace PROCESSTYPES
 			TYPE_DETACH,
 			TYPE_PAUSE,
 			TYPE_RESUME,
-			TYPE_RUN_ENABLE,
+			TYPE_MOVE_ENABLE,
 			TYPE_DRAW_ENABLE,
-			TYPE_RUN_DISABLE,
+			TYPE_MOVE_DISABLE,
 			TYPE_DRAW_DISABLE,
-			TYPE_EOL,
+			TYPE_EXIT,
+
+			TYPE_MAX,
 		};
 
 		TYPE m_type;
 		int32 m_iLabel;
 		const void* m_param;
 
-		static const MAIL EMPTY;
+		inline MAIL(void): m_type(TYPE_NONE), m_iLabel(LABEL_EOL), m_param(nullptr) {};
 	};
 };

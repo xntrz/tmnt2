@@ -16,7 +16,7 @@ CGameEnemyContainer::~CGameEnemyContainer(void)
 {
     if (m_pGameEnemyTable)
     {
-        delete [] m_pGameEnemyTable;
+        delete[] m_pGameEnemyTable;
         m_pGameEnemyTable = nullptr;
     };
 
@@ -26,14 +26,7 @@ CGameEnemyContainer::~CGameEnemyContainer(void)
 
 CGameEnemy& CGameEnemyContainer::GameEnemy(int32 nIndex) const
 {
-    if (nIndex >= 0 && nIndex < GAMETYPES::ENEMY_MAX)
-    {
-        return m_pGameEnemyTable[ nIndex ];
-    }
-    else
-    {
-        return CGameEnemy::Dummy();
-    };
+	return ((nIndex >= 0 && nIndex < GAMETYPES::ENEMY_MAX) ? m_pGameEnemyTable[nIndex] : *CGameEnemy::Dummy());
 };
 
 

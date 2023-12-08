@@ -13,6 +13,8 @@ class CGameObject;
 class CBarrierModule : public IModule
 {
 public:
+    static const char* BARRIER_MOTIONNAME;
+    
     enum STATE
     {
         STATE_APPEAR = 0,

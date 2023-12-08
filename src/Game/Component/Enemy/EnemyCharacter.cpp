@@ -491,7 +491,7 @@ void CEnemyCharacter::OnMessageTouchdown(float fHeight)
 
 void CEnemyCharacter::OnMessageCatchAttack(CHitAttackData* pAttack)
 {
-    ;
+	;
 };
 
 
@@ -566,15 +566,19 @@ CHARACTERTYPES::ATTACKRESULTTYPE CEnemyCharacter::OnDamage(CCharacterAttackCalcu
                     {
                         RwV3d vecVel = Math::VECTOR3_ZERO;                        
                         CharacterCompositor().GetVelocity(&vecVel);
-                        vecVel.y = 0.0f;                        
-                        float fSpeed = Math::Vec3_Length(&vecVel);
-                        vecVel.z = Math::FNegate(fSpeed);
-                        
-                        RwV3d vecDir = Math::VECTOR3_ZERO;
+                        vecVel.y = 0.0f;
+                            
+                        vecVel.z = Math::FNegate(Math::Vec3_Length(&vecVel));
+                        vecVel.y = CharacterCompositor().AttackParameter().m_vVelocity.y;
+                        vecVel.x = 0.0f;
+                
                         RwMatrix matRotY;
-                        RwMatrixSetIdentityMacro(&matRotY);
+                        RwMatrixSetIdentityMacro(&matRotY);                        
                         Math::Matrix_RotateY(&matRotY, CharacterCompositor().GetDirection() + Math::PI);
+
                         RwV3dTransformVector(&vecVel, &vecVel, &matRotY);
+
+                        RwV3d vecDir = Math::VECTOR3_AXIS_Z;
                         RwV3dTransformVector(&vecDir, &vecDir, &matRotY);
 
                         CharacterCompositor().AttackParameter().m_vVelocity = vecVel;

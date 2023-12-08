@@ -2,36 +2,25 @@
 #include "InputsDevice.hpp"
 
 
-/*static*/ uint32 CController::DIGITAL_OK = CController::DIGITAL_START | CController::DIGITAL_A;
-/*static*/ uint32 CController::DIGITAL_CANCEL = CController::DIGITAL_SELECT | CController::DIGITAL_B;
-/*static*/ const uint32 CController::DIGITAL_MASK = CController::DIGITAL_UP
-													| CController::DIGITAL_DOWN
-													| CController::DIGITAL_LEFT
-													| CController::DIGITAL_RIGHT
-													| CController::DIGITAL_A
-													| CController::DIGITAL_B
-													| CController::DIGITAL_X
-													| CController::DIGITAL_Y
-													| CController::DIGITAL_LEFT_BUMPER
-													| CController::DIGITAL_RIGHT_BUMPER
-													| CController::DIGITAL_LEFT_TRIGGER
-													| CController::DIGITAL_RIGHT_TRIGGER
-													| CController::DIGITAL_SELECT
-													| CController::DIGITAL_START
-													| CController::DIGITAL_LEFT_THUMB
-													| CController::DIGITAL_RIGHT_THUMB;
-
-
-/*static*/ uint32 CController::DigitalFunction(uint32 uDigital)
-{
-	return ((uDigital >> 16) & 0xFFFF);
-};
-
-
-/*static*/ uint32 CController::DigitalButton(uint32 uDigital)
-{
-	return (uDigital & 0xFFFF);
-};
+/*static*/ uint32 CController::DIGITAL_OK = CController::DIGITAL_RDOWN;
+/*static*/ uint32 CController::DIGITAL_CANCEL = CController::DIGITAL_RRIGHT;
+/*static*/ const uint32 CController::DIGITAL_MASK =
+	CController::DIGITAL_LUP 	|
+	CController::DIGITAL_LDOWN 	|
+	CController::DIGITAL_LLEFT 	|
+	CController::DIGITAL_LRIGHT |
+	CController::DIGITAL_RUP 	|
+	CController::DIGITAL_RDOWN 	|
+	CController::DIGITAL_RLEFT 	|
+	CController::DIGITAL_RRIGHT |
+	CController::DIGITAL_SELECT |
+	CController::DIGITAL_START 	|
+	CController::DIGITAL_L1 	|
+	CController::DIGITAL_L2 	|
+	CController::DIGITAL_L3 	|
+	CController::DIGITAL_R1 	|
+	CController::DIGITAL_R2 	|
+	CController::DIGITAL_R3;
 
 
 /*static*/ int32 CController::Max(void)
@@ -72,7 +61,7 @@
 	ASSERT(iController != CONTROLLER_LOCKED_ON_VIRTUAL && iController != CONTROLLER_UNLOCKED_ON_VIRTUAL);
 	ASSERT(iController < Max());
 	
-	return CInputsDevice::Instance().ControllerResource(iController).Info().m_state;
+	return CInputsDevice::Instance().ControllerResource(iController).Info().m_eState;
 };
 
 
@@ -113,7 +102,7 @@
 };
 
 
-/*static*/ uint32 CController::GetDigital(int32 iController, uint32 btn)
+/*static*/ bool CController::GetDigital(int32 iController, uint32 btn)
 {
 	return (GetDigital(iController) & btn) != 0;
 };
@@ -185,7 +174,7 @@
 };
 
 
-/*static*/ int16 CController::GetAnalog(int32 iController, int32 analog)
+/*static*/ int16 CController::GetAnalog(int32 iController, ANALOG analog)
 {
 	ASSERT(analog < ANALOG_NUM);
 	
@@ -199,9 +188,20 @@
 
 	default:
 		ASSERT(iController < Max());
-		ASSERT(analog >= 0 && analog < COUNT_OF(CInputsDevice::Instance().ControllerResource(iController).Info().m_aAnalog));
 		return CInputsDevice::Instance().ControllerResource(iController).Info().m_aAnalog[analog];
 	};
+};
+
+
+/*static*/ void CController::EnableStickToDigitalMapping(int32 iController, STICK stick, bool bEnable)
+{
+	if ((iController == CONTROLLER_LOCKED_ON_VIRTUAL) ||
+		(iController == CONTROLLER_UNLOCKED_ON_VIRTUAL))
+		return;
+
+	ASSERT(iController < Max());
+
+	CInputsDevice::Instance().ControllerResource(iController).EnableStickToDigitalMapping(stick, bEnable);
 };
 
 
@@ -212,15 +212,15 @@
 	if (!bEnable)
 		CInputsDevice::Instance().ControllerResource(iController).SetVibration(0, 0);
 	
-	CInputsDevice::Instance().ControllerResource(iController).SetVibrationEnable(bEnable);
+	CInputsDevice::Instance().ControllerResource(iController).EnableVibration(bEnable);
 };
 
 
-/*static*/ bool CController::StartVibration(int32 iController, uint32 uVibrationType, int32 iVibrationFrame)
+/*static*/ bool CController::StartVibration(int32 iController, uint32 uVibMax, int32 iVibFrame)
 {
 	ASSERT(iController < Max());
 	
-	CInputsDevice::Instance().ControllerResource(iController).SetVibration(uVibrationType, iVibrationFrame);
+	CInputsDevice::Instance().ControllerResource(iController).SetVibration(uVibMax, iVibFrame);
 	return true;
 };
 
@@ -241,95 +241,251 @@
 };
 
 
-/*static*/ void CController::EnableStickToDigitalMapping(int32 iController, STICK stick, bool bEnable)
+/*static*/ void CController::Mapping(int32 iController, ANALOG analogPhysical, ANALOG analogVirtual)
 {
-	if (iController != CONTROLLER_LOCKED_ON_VIRTUAL && iController != CONTROLLER_UNLOCKED_ON_VIRTUAL)
-	{
-		ASSERT(iController < Max());
-		
-		CInputsDevice::Instance().ControllerResource(iController).EnableStickToDigitalMapping(stick, bEnable);
-	};
+	ASSERT(iController < Max());
+
+	*CInputsDevice::Instance().ControllerResource(iController).GetAnalogMapping(analogPhysical) = analogVirtual;
 };
 
 
-/*static*/ int32 CController::LockTriggeredController(uint32 uButton)
+/*static*/ CController::ANALOG CController::GetMapping(int32 iController, ANALOG analogPhysical)
 {
-	for (int32 i = 0; i < Max(); ++i)
-	{
-		if (GetDigitalTrigger(i, uButton) && !IsLocked(i))
-			return LockAndSearchController(i);
-	};
+	ASSERT(iController < Max());
 
-	return CController::CONTROLLER_LOCKED_ON_VIRTUAL;
+	return *CInputsDevice::Instance().ControllerResource(iController).GetAnalogMapping(analogPhysical);
 };
 
 
-/*static*/ int32 CController::LockAndSearchController(int32 iController)
+/*static*/ uint32 IPhysicalController::ConvertAnalogStickToDigital(CController::STICK stick, int16 x, int16 y)
 {
-	if (iController < 0 || iController > Max())
-		iController = 0;
-
-	if (Lock(iController))
-		return GetController(GetPhysicalPort(iController));
-	else
-		return CController::CONTROLLER_LOCKED_ON_VIRTUAL;
-};
-
-
-/*static*/ void CController::UnlockAllControllers(void)
-{
-	for (int32 i = 0; i < Max(); ++i)
+	static uint32 dirbtnRightStick[4] =
 	{
-		if (IsLocked(i))
-			Unlock(i);
-	};
-};
-
-
-/*static*/ int32 CController::FindTriggeredController(uint32 uButton, bool bUnlocked)
-{
-	for (int32 i = 0; i < Max(); ++i)
-	{
-		if (GetDigitalTrigger(i, uButton) && (bUnlocked || !IsLocked(i)))
-			return i;
+		CController::DIGITAL_RUP,
+		CController::DIGITAL_RDOWN,
+		CController::DIGITAL_RLEFT,
+		CController::DIGITAL_RRIGHT,
 	};
 
-	//
-	//	NOTE: its invalid result, not a CONTROLLER_LOCKED_ON_VIRTUAL
-	//
-	return -1;
-};
-
-
-static int32 s_aiLockedPhysicalPort[4] =
-{
-	CController::CONTROLLER_LOCKED_ON_VIRTUAL,
-	CController::CONTROLLER_LOCKED_ON_VIRTUAL,
-	CController::CONTROLLER_LOCKED_ON_VIRTUAL,
-	CController::CONTROLLER_LOCKED_ON_VIRTUAL,
-};
-
-
-/*static*/ void CController::SaveLockedState(void)
-{
-	for (int32 i = 0; i < Max(); ++i)
+	static uint32 dirbtnLeftStick[4] =
 	{
-		if (IsLocked(i))
-			s_aiLockedPhysicalPort[i] = GetPhysicalPort(i);
+		CController::DIGITAL_LUP,
+		CController::DIGITAL_LDOWN,
+		CController::DIGITAL_LLEFT,
+		CController::DIGITAL_LRIGHT,
+	};
+
+	const int16 trigger_max = TYPEDEF::SINT16_MAX / 2;
+	const int16 trigger_min = TYPEDEF::SINT16_MIN / 2;
+
+	uint32 digital = 0;
+	uint32* dirbtn = (stick == CController::STICK_RIGHT ? dirbtnRightStick : dirbtnLeftStick);
+
+	if ((x <  trigger_min) ||
+		(x >= trigger_max) ||
+		(y <  trigger_min) ||
+		(y >= trigger_max))
+	{
+		if (x >= y)
+			digital = (-x >= y ? dirbtn[1] : dirbtn[3]);
 		else
-			s_aiLockedPhysicalPort[i] = CController::CONTROLLER_LOCKED_ON_VIRTUAL;
+			digital = (-x >= y ? dirbtn[2] : dirbtn[0]);
 	};
+
+	return digital;
 };
 
 
-/*static*/ void CController::RestoreLockedState(void)
+IPhysicalController::IPhysicalController(void)
 {
-	UnlockAllControllers();
-	
-	for (int32 i = 0; i < COUNT_OF(s_aiLockedPhysicalPort); ++i)
+	m_info = { 0 };
+	m_info.m_eState = CController::STATE_MAX;
+
+	uint32 aDigitalMapping[] =
 	{
-		if (s_aiLockedPhysicalPort[i] >= 0)
-			Lock(s_aiLockedPhysicalPort[i]);		
+  		CController::DIGITAL_LUP,
+		CController::DIGITAL_LDOWN,
+  		CController::DIGITAL_LLEFT,
+  		CController::DIGITAL_LRIGHT,
+  		CController::DIGITAL_RUP,
+  		CController::DIGITAL_RDOWN,
+  		CController::DIGITAL_RLEFT,
+  		CController::DIGITAL_RRIGHT,
+  		CController::DIGITAL_SELECT,
+  		CController::DIGITAL_START,
+  		CController::DIGITAL_L1,
+  		CController::DIGITAL_L2,
+  		CController::DIGITAL_L3,
+  		CController::DIGITAL_R1,
+  		CController::DIGITAL_R2,
+  		CController::DIGITAL_R3,
+	};
+
+	CController::ANALOG aAnalogMapping[] =
+	{
+		CController::ANALOG_LSTICK_X,
+		CController::ANALOG_LSTICK_Y,
+		CController::ANALOG_RSTICK_X,
+		CController::ANALOG_RSTICK_Y,
+		CController::ANALOG_RUP,
+		CController::ANALOG_RDOWN,
+		CController::ANALOG_RLEFT,
+		CController::ANALOG_RRIGHT,
+		CController::ANALOG_L1,
+		CController::ANALOG_L2,
+		CController::ANALOG_L3,
+		CController::ANALOG_R1,
+		CController::ANALOG_R2,
+		CController::ANALOG_R3,
+	};
+
+	static_assert(sizeof(aDigitalMapping) == (sizeof(m_aDigitalMapping) / 2), "check out");
+	static_assert(sizeof(aAnalogMapping) == sizeof(m_aAnalogMapping), "check out");
+
+	std::memcpy(m_aDigitalMapping, aDigitalMapping, sizeof(aDigitalMapping));
+	std::memcpy(m_aAnalogMapping, aAnalogMapping, sizeof(aAnalogMapping));
+};
+
+
+IPhysicalController::~IPhysicalController(void)
+{
+	;
+};
+
+
+void IPhysicalController::Update(void)
+{
+	//
+	//	Convert stick to digital
+	//
+	for (int32 i = 0; i < COUNT_OF(m_info.m_abStickToDigital); ++i)
+	{
+		if (m_info.m_abStickToDigital[i])
+			m_info.m_digital |= ConvertAnalogStickToDigital(CController::STICK(i), m_info.m_aAnalog[0], m_info.m_aAnalog[1]);
+	};
+
+	//
+	//	Apply analog mapping
+	//
+	int16 aAnalog[CController::ANALOG_NUM] = { 0 };
+	
+	for (int32 i = 0; i < COUNT_OF(aAnalog); ++i)
+		aAnalog[i] = m_info.m_aAnalog[m_aAnalogMapping[i]];
+
+	for (int32 i = 0; i < COUNT_OF(m_info.m_aAnalog); ++i)
+		m_info.m_aAnalog[i] = aAnalog[i];
+
+	//
+	//	Apply digital mapping
+	//
+	uint32 digital = 0;
+	
+	for (int32 i = 0; i < CController::DIGITAL_NUM; ++i)
+	{
+		if (m_info.m_digital & (1 << i))
+			digital |= m_aDigitalMapping[i];
+	};
+
+	//
+	//	Update digital
+	//
+	m_info.m_digital 		= digital;
+	m_info.m_digitalTrigger = m_info.m_digital & ~m_info.m_digitalOld;
+	m_info.m_digitalRelease = m_info.m_digitalOld & ~m_info.m_digital;
+	m_info.m_digitalRepeat 	= 0;
+
+	//
+	//	Update digital repeat
+	//
+	for (int32 i = 0; i < CController::DIGITAL_NUM; ++i)
+	{
+		static const int32 REPEAT_TIME_START = 12;
+		static const int32 REPEAT_DELAY_START = 6;
+		static const int32 REPEAT_DELAY_MIN = 2;
+
+		if (m_info.m_digital & (1 << i))
+		{
+			if (m_info.m_aDigitalRepeatTime[i] == REPEAT_TIME_START)
+				m_info.m_digitalRepeat |= (1 << i);
+
+			if (m_info.m_aDigitalRepeatTime[i]-- == 1)
+			{
+				m_info.m_digitalRepeat |= (1 << i);
+				m_info.m_aDigitalRepeatTime[i] = m_info.m_aDigitalRepeatDelay[i]--;
+				if (m_info.m_aDigitalRepeatDelay[i] < REPEAT_DELAY_MIN)
+					m_info.m_aDigitalRepeatDelay[i] = REPEAT_DELAY_MIN;
+			};
+		}
+		else
+		{
+			m_info.m_digitalRepeat &= ~(1 << i);
+			m_info.m_aDigitalRepeatTime[i] = REPEAT_TIME_START;
+			m_info.m_aDigitalRepeatDelay[i] = REPEAT_DELAY_START;
+		};
 	};
 };
 
+
+void IPhysicalController::Clear(void)
+{
+	m_info.m_digitalOld = m_info.m_digital;
+	
+	m_info.m_digital = 0;
+	m_info.m_digitalTrigger = 0;
+	m_info.m_digitalRelease = 0;
+	m_info.m_digitalRepeat = 0;
+
+	for (int32 i = 0; i < COUNT_OF(m_info.m_aAnalog); ++i)
+		m_info.m_aAnalog[i] = 0;
+};
+
+
+void IPhysicalController::SetVibration(uint32 uVibMax, int32 iVibFrame)
+{
+	ASSERT(iVibFrame >= 0);
+
+	m_info.m_uVibMax = (m_info.m_bVibEnable ? uVibMax : 0);
+	m_info.m_iVibFrame = (m_info.m_bVibEnable ? iVibFrame : 0);
+};
+
+
+void IPhysicalController::EnableVibration(bool bEnable)
+{
+	m_info.m_bVibEnable = bEnable;
+};
+
+
+void IPhysicalController::EnableStickToDigitalMapping(CController::STICK stick, bool bEnable)
+{
+	ASSERT(stick >= 0 && stick < CController::STICK_NUM);
+	
+	m_info.m_abStickToDigital[stick] = bEnable;
+};
+
+
+uint32* IPhysicalController::GetDigitalMapping(uint32 digital)
+{
+	//
+	//	Extract one button
+	//
+	
+	int32 i = 0;
+
+	while (!(digital & 1))
+	{
+		digital >>= 1;
+		++i;
+		
+		ASSERT(i < BITSOF(CController::DIGITAL));
+	};
+
+	return &m_aDigitalMapping[i];
+};
+
+
+CController::ANALOG* IPhysicalController::GetAnalogMapping(CController::ANALOG analogPhysical)
+{
+	ASSERT(analogPhysical >= 0 && analogPhysical < COUNT_OF(m_aAnalogMapping));
+	
+	return &m_aAnalogMapping[analogPhysical];
+};

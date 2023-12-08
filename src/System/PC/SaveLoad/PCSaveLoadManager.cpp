@@ -1,11 +1,12 @@
 #include "PCSaveLoadManager.hpp"
 #include "PCSaveLoadFlow.hpp"
 
+#include "../PCTypedefs.hpp"
+
 #include "System/Common/SaveLoad/SaveLoadData.hpp"
 #include "System/Common/SaveLoad/SaveLoadFrame.hpp"
 #include "System/Common/SystemText.hpp"
 #include "System/Common/Screen.hpp"
-#include "System/PC/File/PCFileStd.hpp"
 
 
 static CSaveLoadFrameBase* s_pSaveloadFrame = nullptr;
@@ -35,9 +36,9 @@ static CSaveLoadDataBase* s_pSaveloadData = nullptr;
 };
 
 
-/*static*/ void CPCSaveLoadManager::SetMessage(MESSAGEID id)
+/*static*/ void CPCSaveLoadManager::SetMsg(MESSAGEID id)
 {    
-    Frame().SetMessage(GetMessage(id));
+    Frame().SetMessage(GetMsg(id));
 };
 
 
@@ -47,7 +48,7 @@ static CSaveLoadDataBase* s_pSaveloadData = nullptr;
 };
 
 
-/*static*/ const wchar* CPCSaveLoadManager::GetMessage(MESSAGEID id)
+/*static*/ const wchar* CPCSaveLoadManager::GetMsg(MESSAGEID id)
 {
     static const int32 s_aSystemMessageTable[] =
     {
@@ -71,7 +72,7 @@ static CSaveLoadDataBase* s_pSaveloadData = nullptr;
     ASSERT(id >= 0 && id < MESSAGEIDMAX);
     ASSERT(id >= 0 && id < COUNT_OF(s_aSystemMessageTable));
 
-    return CSystemText::GetText(SYSTEXT::VALUE(s_aSystemMessageTable[id]));
+    return CSystemText::GetText(SYSTEXT(s_aSystemMessageTable[id]));
 };
 
 
@@ -89,13 +90,13 @@ static CSaveLoadDataBase* s_pSaveloadData = nullptr;
     ASSERT(id >= 0 && id < TITLEIDMAX);
     ASSERT(id >= 0 && id < COUNT_OF(s_aSystemTitleTable));
 
-    return CSystemText::GetText(SYSTEXT::VALUE(s_aSystemTitleTable[id]));
+    return CSystemText::GetText(SYSTEXT(s_aSystemTitleTable[id]));
 };
 
 
 /*static*/ void CPCSaveLoadManager::InitializeFrame(MESSAGEID msgid, TITLEID titleid)
 {
-    Frame().Start(GetMessage(msgid), GetTitle(titleid));
+    Frame().Start(GetMsg(msgid), GetTitle(titleid));
     Frame().SetModeMessage();
 };
 
@@ -124,10 +125,8 @@ static CSaveLoadDataBase* s_pSaveloadData = nullptr;
 
 CPCQuestManager::CPCQuestManager(CPCSaveLoadManager::MESSAGEID msgid)
 {
-    CPCSaveLoadManager::SetMessage(msgid);
-    CPCSaveLoadManager::Frame().SetModeSelect(
-        CSaveLoadFrameBase::SELECTITEM_YES
-    );
+    CPCSaveLoadManager::SetMsg(msgid);
+    CPCSaveLoadManager::Frame().SetModeSelect(CSaveLoadFrameBase::SELECTITEM_YES);
 };
 
 
@@ -159,11 +158,8 @@ CPCQuestManager::RESULT CPCQuestManager::Proc(void)
 
 CPCWarningManager::CPCWarningManager(CPCSaveLoadManager::MESSAGEID msgid)
 {
-    CPCSaveLoadManager::SetMessage(msgid);
-    CPCSaveLoadManager::Frame().SetModeError(
-        CSaveLoadFrameBase::PADBTN_OK,
-        2.0f
-    );
+    CPCSaveLoadManager::SetMsg(msgid);
+    CPCSaveLoadManager::Frame().SetModeError(CSaveLoadFrameBase::PADBTN_OK, 2.0f);
 };
 
 
@@ -213,83 +209,6 @@ CPCSaveLoadManagerBase::~CPCSaveLoadManagerBase(void)
 };
 
 
-bool CPCSaveLoadManagerBase::LoadFile(void)
-{
-    bool bResult = false;
-
-    void* hFile = stdf_open(FILENAME, "rb");
-    if (hFile)
-    {
-        uint32 uFileSize = 0;
-        void* pFileData = nullptr;
-
-        stdf_seek(hFile, 0, stdf_seek_end);
-        uFileSize = stdf_tell(hFile);
-        stdf_seek(hFile, 0, stdf_seek_begin);
-
-        if (uFileSize)
-        {
-            pFileData = new char[uFileSize];
-            ASSERT(pFileData);
-
-            if (pFileData)
-            {
-                uint32 uReaded = stdf_read(hFile, pFileData, uFileSize);
-                ASSERT(uReaded > 0);
-
-                CPCSaveLoadManager::Data().Initialize(pFileData, uFileSize);
-                
-                bResult = true;
-            };
-
-            delete [] pFileData;
-            pFileData = nullptr;
-        };
-
-        stdf_close(hFile);
-        hFile = nullptr;
-    };
-
-    return bResult;
-};
-
-
-bool CPCSaveLoadManagerBase::SaveFile(void)
-{
-    void* hFile = stdf_open(FILENAME, "wb");
-    if (hFile)
-    {
-        CPCSaveLoadManager::Data().Initialize();
-        
-        uint32 uWritten = stdf_write(
-            hFile,
-            CPCSaveLoadManager::Data().GetData(),
-            CPCSaveLoadManager::Data().GetSize()
-        );
-
-        ASSERT(uWritten > 0);
-
-        stdf_close(hFile);
-        return true;
-    };
-
-    return false;
-};
-
-
-bool CPCSaveLoadManagerBase::IsExistFile(void)
-{
-    void* hFile = stdf_open(FILENAME, "rb");
-    if (hFile)
-    {
-        stdf_close(hFile);
-        return true;
-    };
-
-    return false;
-};
-
-
 void CPCSaveLoadManagerBase::SetStep(int32 step)
 {
     m_step = step;
@@ -314,19 +233,33 @@ void CPCSaveLoadManagerBase::SyncTime(void)
 };
 
 
+void CPCSaveLoadManagerBase::MakeFilePath(char* pszFilepathBuff) const
+{
+    char szMyPath[MAX_PATH];
+    szMyPath[0] = '\0';
+
+    GetModulePath(szMyPath);
+
+    std::sprintf(pszFilepathBuff, "%s%s", szMyPath, FILENAME);
+};
+
+
+bool CPCSaveLoadManagerBase::CheckFileExist(void) const
+{
+    char szFilepath[MAX_PATH];
+    szFilepath[0] = '\0';
+
+    MakeFilePath(szFilepath);
+
+    return (RwFexist(szFilepath) > 0);
+};
+
+
 CPCLoadManager::CPCLoadManager(void)
 : m_status(STATUS_OK)
 {
     m_step = STEP_INTRO;
-    CPCSaveLoadManager::SetMessage(
-        CPCSaveLoadManager::MESSAGEID_LOAD_CHECK
-    );
-};
-
-
-CPCLoadManager::~CPCLoadManager(void)
-{
-    ;
+    CPCSaveLoadManager::SetMsg(CPCSaveLoadManager::MESSAGEID_LOAD_CHECK);
 };
 
 
@@ -346,10 +279,10 @@ bool CPCLoadManager::Proc(void)
         
     case STEP_READ:
         m_step = STEP_DISP_CHECK;        
-        if (IsExistFile())
+        if (CheckFileExist())
         {
             CSaveLoadFlow::m_bNewSave = false;
-            if (LoadFile())
+            if (FileLoad())
             {
                 if (CPCSaveLoadManager::Data().IsValid())
                     m_status = STATUS_OK;
@@ -385,7 +318,7 @@ bool CPCLoadManager::Proc(void)
         {
             m_step = STEP_DISP_LOAD;
             CPCSaveLoadManager::SetTitle(CPCSaveLoadManager::TITLEID_LOAD);
-            CPCSaveLoadManager::SetMessage(CPCSaveLoadManager::MESSAGEID_LOAD_NOW);
+            CPCSaveLoadManager::SetMsg(CPCSaveLoadManager::MESSAGEID_LOAD_NOW);
         };
         break;
         
@@ -445,18 +378,55 @@ bool CPCLoadManager::Proc(void)
 };
 
 
-CPCSaveManager::CPCSaveManager(void)
+bool CPCLoadManager::FileLoad(void) const
 {
-    m_step = STEP_INTRO;
-    CPCSaveLoadManager::SetMessage(
-        CPCSaveLoadManager::MESSAGEID_SAVE_NOW
-    );
+	bool bResult = false;
+
+    char szFilepath[MAX_PATH];
+    szFilepath[0] = '\0';
+
+    MakeFilePath(szFilepath);
+
+    void* hFile = RwFopen(szFilepath, "rb");
+	if (!hFile)
+		return bResult;
+
+    uint32 uReaded = 0;
+    uint32 uFileSize = 0;
+    void* pFileData = nullptr;
+
+    RwFseek(hFile, 0, SEEK_END);
+	uFileSize = uint32(RwFtell(hFile));
+    RwFseek(hFile, 0, SEEK_SET);
+
+    if (uFileSize)
+    {
+        pFileData = new char[uFileSize];    
+        if (pFileData)
+        {
+            uReaded = RwFread(pFileData, sizeof(uint8), uFileSize, hFile);
+			if (uReaded == uFileSize)
+			{
+                CPCSaveLoadManager::Data().Initialize(pFileData, uFileSize);
+				bResult = true;
+			};
+        };
+
+        delete[] pFileData;
+        pFileData = nullptr;
+    };
+
+    RwFclose(hFile);
+    hFile = nullptr;
+
+	return bResult;
 };
 
 
-CPCSaveManager::~CPCSaveManager(void)
+CPCSaveManager::CPCSaveManager(void)
 {
-    ;
+    m_step = STEP_INTRO;
+    CPCSaveLoadManager::SetMsg(CPCSaveLoadManager::MESSAGEID_SAVE_NOW);
 };
 
 
@@ -476,7 +446,7 @@ bool CPCSaveManager::Proc(void)
         
     case STEP_WRITE:
         m_step = STEP_DISP_WRITE;
-        if (SaveFile())
+        if (FileSave())
             m_msgid = CPCSaveLoadManager::MESSAGEID_SAVE_OK;
         else
             m_msgid = CPCSaveLoadManager::MESSAGEID_SAVE_FAIL;      
@@ -515,4 +485,31 @@ bool CPCSaveManager::Proc(void)
     };
 
     return bResult;
+};
+
+
+bool CPCSaveManager::FileSave(void) const
+{
+    char szFilepath[MAX_PATH];
+    szFilepath[0] = '\0';
+
+    MakeFilePath(szFilepath);
+
+    void* hFile = RwFopen(szFilepath, "wb");
+    if (!hFile)
+        return false;
+
+    CPCSaveLoadManager::Data().Initialize();
+
+    uint32 uWritten = RwFwrite(
+        CPCSaveLoadManager::Data().GetData(),
+        CPCSaveLoadManager::Data().GetSize(),
+        sizeof(uint8),
+        hFile
+    );
+
+    RwFclose(hFile);
+    hFile = nullptr;
+
+    return (uWritten > 0);
 };

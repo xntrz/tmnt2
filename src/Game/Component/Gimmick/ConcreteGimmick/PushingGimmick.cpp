@@ -3,7 +3,7 @@
 #include "Game/Component/Effect/EffectManager.hpp"
 #include "Game/Component/GameMain/GameProperty.hpp"
 #include "Game/Component/Gimmick/GimmickQuery.hpp"
-#include "Game/Component/Gimmick/GimmickUtils.hpp"
+#include "Game/Component/Gimmick/Utils/GimmickUtils.hpp"
 #include "Game/Component/Gimmick/GimmickParam.hpp"
 #include "Game/Component/Gimmick/MoveStrategy/PushingGimmickMove.hpp"
 #include "Game/Component/Player/PlayerCharacter.hpp"
@@ -103,23 +103,24 @@ void CPushingGimmick::PostMove(void)
                     m_bSE = true;
                 };
 
-                if (m_fEffectTimer > 0.7f)
+                if (m_fEffectTimer >= 0.7f)
                 {
                     m_fEffectTimer -= 0.7f;
 
-                    RwV3d vDirection = { vVelocity.x, 0.0f, vVelocity.z, };
+                    RwV3d vDirection = { vVelocity.z, 0.0f, -vVelocity.x, };
                     RwV3d vPosition = Math::VECTOR3_ZERO;
 
-                    float fDirection = Math::ATan2(vDirection.x, vDirection.z);
+                    float fDirection = Math::ATan2(-vVelocity.x, -vVelocity.z);
                     Math::Vec3_Normalize(&vDirection, &vDirection);
-                    Math::Vec3_Add(&vPosition, &vPostPos, &vDirection);
+                    Math::Vec3_Add(&vPosition, &m_vPrePos, &vDirection);
 
                     uint32 hEffect = CEffectManager::Play(EFFECTID::ID_ALL_DASH2, &vPosition, fDirection);
                     if (hEffect)
                         CEffectManager::SetScale(hEffect, 1.5f);
 
+
                     Math::Vec3_Scale(&vDirection, &vDirection, -1.0f);
-                    Math::Vec3_Add(&vPosition, &vPostPos, &vDirection);
+                    Math::Vec3_Add(&vPosition, &m_vPrePos, &vDirection);
 
                     hEffect = CEffectManager::Play(EFFECTID::ID_ALL_DASH2, &vPosition, fDirection);
                     if (hEffect)
@@ -200,8 +201,8 @@ void CPushingGimmick::init(void* pParam)
     ASSERT(pModelDisp);
     ASSERT(pModelAtari);
 
-    m_model.SetModel(CNormalGimmickModel::MODELKIND_VISUAL_NORMAL, pModelDisp);
-    m_model.SetModel(CNormalGimmickModel::MODELKIND_ATARI_NORMAL, pModelAtari);
+    m_model.SetModel(CNormalGimmickModel::MODELTYPE_DRAW_NORMAL, pModelDisp);
+    m_model.SetModel(CNormalGimmickModel::MODELTYPE_ATARI_NORMAL, pModelAtari);
 
     RwV3d vRotation = Math::VECTOR3_ZERO;
     vRotation.y = CGimmickUtils::QuaternionToRotationY(&pInitParam->m_quat);

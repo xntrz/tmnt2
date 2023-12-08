@@ -81,24 +81,6 @@ static uint32 s_uReferenceCount = 0;
 };
 
 
-/*static*/ bool CSystem2D::ScreenChanged(void)
-{
-    if (!s_uReferenceCount)
-        return false;
-
-    Rt2dDeviceSetMetric(
-        CSprite::m_fVirtualScreenX,
-        CSprite::m_fVirtualScreenY,
-        CSprite::m_fVirtualScreenW,
-        CSprite::m_fVirtualScreenH
-    );
-    
-    ASSERT(s_pDefaultCamera);
-    s_pCurrentCamera = s_pDefaultCamera;
-    return Rt2dDeviceSetCamera(s_pDefaultCamera->GetRwCamera()) != 0;
-};
-
-
 /*static*/ void CSystem2D::PushRenderState(void)
 {
     RENDERSTATE_PUSH(rwRENDERSTATEZTESTENABLE, false);
@@ -125,25 +107,20 @@ static uint32 s_uReferenceCount = 0;
 };
 
 
-/*static*/ float CSystem2D::VirtualScreenWidth(void)
+/*static*/ bool CSystem2D::Reset(void)
 {
-    return CSprite::m_fVirtualScreenW;
-};
+    if (!s_uReferenceCount)
+        return false;
 
+    Rt2dDeviceSetMetric(
+        CSprite::m_fVirtualScreenX,
+        CSprite::m_fVirtualScreenY,
+        CSprite::m_fVirtualScreenW,
+        CSprite::m_fVirtualScreenH
+    );
 
-/*static*/ float CSystem2D::VirtualScreenHeight(void)
-{
-    return CSprite::m_fVirtualScreenH;
-};
-
-
-/*static*/ float CSystem2D::VirtualScreenX(void)
-{
-    return CSprite::m_fVirtualScreenX;
-};
-
-
-/*static*/ float CSystem2D::VirtualScreenY(void)
-{
-    return CSprite::m_fVirtualScreenY;
+    ASSERT(s_pDefaultCamera);
+    s_pCurrentCamera = s_pDefaultCamera;
+    
+    return Rt2dDeviceSetCamera(s_pDefaultCamera->GetRwCamera()) != 0;
 };

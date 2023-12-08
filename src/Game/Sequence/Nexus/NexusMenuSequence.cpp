@@ -142,7 +142,7 @@ CNexusMenuSequence::~CNexusMenuSequence(void)
 };
 
 
-bool CNexusMenuSequence::OnAttach(const void* param)
+bool CNexusMenuSequence::OnAttach(const void* pParam)
 {
     m_nexusmenu = NEXUSMENU_NONE;
     return CAnim2DSequence::OnAttach(FILEID::ID_NEXUSMENU);
@@ -156,74 +156,77 @@ void CNexusMenuSequence::OnDetach(void)
 };
 
 
-void CNexusMenuSequence::OnMove(bool bRet, const void* param)
+void CNexusMenuSequence::OnMove(bool bRet, const void* pReturnValue)
 {
-    switch (m_step)
+    switch (m_animstep)
     {
-    case STEP_FADE_OUT:
-		if (!CScreenFade::IsFading())
-            CGameSound::PlayBGM(SDCODE_BGM(12321));
-        break;
-
-    case STEP_DRAW:
-        if (menuMessageProc())
-            Ret();
-        break;
-    };
-
-    CAnim2DSequence::OnMove(bRet, param);
-};
-
-
-bool CNexusMenuSequence::OnRet(void)
-{
-    CGameSound::FadeOut(CGameSound::FADESPEED_FAST);
-    
-    if (m_nexusmenu == NEXUSMENU_EXIT)
-    {
-        Ret();
-    }
-    else
-    {
-        AREAID::VALUE idArea = AREAID::ID_NONE;
-        
-        switch (m_nexusmenu)
+    case ANIMSTEP_FADEIN:
         {
-        case NEXUSMENU_KITTY_OPEN:
-            idArea = AREAID::ID_AREA60_A;
-            break;
+            if (!CScreenFade::IsFading())
+                CGameSound::PlayBGM(SDCODE_BGM(12321));
+        }
+        break;
 
-        case NEXUSMENU_MONSTER_OPEN:
-            idArea = AREAID::ID_AREA60_B;
-            break;
+    case ANIMSTEP_DRAW:
+        {
+            if (menuMessageProc())
+                BeginFadeout();
+        }
+        break;
 
-        case NEXUSMENU_FOOT_COMBAT:
-            idArea = AREAID::ID_AREA60_C;
-            break;
+    case ANIMSTEP_END:
+        {
+            CGameSound::FadeOut(CGameSound::FADESPEED_SLOW);
 
-        case NEXUSMENU_BATTLE_NEXUS:
-            idArea = AREAID::ID_AREA60_D;
-            break;
+            if (m_nexusmenu == NEXUSMENU_EXIT)
+            {
+                Ret();
+            }
+            else
+            {
+                AREAID::VALUE idArea = AREAID::ID_NONE;
 
-        default:
-            ASSERT(false);
-            break;
-        };
+                switch (m_nexusmenu)
+                {
+                case NEXUSMENU_KITTY_OPEN:
+                    idArea = AREAID::ID_AREA60_A;
+                    break;
 
-        GAMETYPES::NEXUSID idNexus = CAreaInfo::GetNexusID(idArea);
-        ASSERT(idNexus >= 0 && idNexus < GAMETYPES::NEXUSID_NUM);
+                case NEXUSMENU_MONSTER_OPEN:
+                    idArea = AREAID::ID_AREA60_B;
+                    break;
 
-        CGameData::Record().Nexus().SetTournamentState(idNexus, CNexusRecord::STATE_NORMAL);
-        CGameData::PlayParam().SetStartArea(idArea, 0);
-        
-        Ret();
+                case NEXUSMENU_FOOT_COMBAT:
+                    idArea = AREAID::ID_AREA60_C;
+                    break;
+
+                case NEXUSMENU_BATTLE_NEXUS:
+                    idArea = AREAID::ID_AREA60_D;
+                    break;
+
+                default:
+                    ASSERT(false);
+                    break;
+                };
+
+                GAMETYPES::NEXUSID idNexus = CAreaInfo::GetNexusID(idArea);
+                ASSERT(idNexus >= 0 && idNexus < GAMETYPES::NEXUSID_NUM);
+
+                CGameData::Record().Nexus().SetTournamentState(idNexus, CNexusRecord::STATE_NORMAL);
+                CGameData::PlayParam().SetStartArea(idArea, 0);
+
+                Ret();
+            };
+
+        }
+        break;
     };
 
-    return true;
+    CAnim2DSequence::OnMove(bRet, pReturnValue);
 };
 
 
-void CNexusMenuSequence::BeginFadeOut(void)
+void CNexusMenuSequence::BeginFadein(void)
 {
     //
     // Replace all text before it will be converted to unicode
@@ -232,7 +235,7 @@ void CNexusMenuSequence::BeginFadeOut(void)
     replaceText();
     replaceTexture();
 
-    CAnim2DSequence::BeginFadeOut();
+    CAnim2DSequence::BeginFadein();
 };
 
 
@@ -449,14 +452,14 @@ bool CNexusMenuSequence::menuMessageProc(void)
 
 void CNexusMenuSequence::pressFlashKeyByNexusState(GAMETYPES::NEXUSID idNexus)
 {
-    CMenuController::KeyLock(CController::DIGITAL_UP);
-    CMenuController::KeyLock(CController::DIGITAL_DOWN);
+    CMenuController::KeyLock(CController::DIGITAL_LUP);
+    CMenuController::KeyLock(CController::DIGITAL_LDOWN);
 
     if (CGameData::Record().Nexus().GetTournamentState(idNexus) == CNexusRecord::STATE_NONE)
-        m_pAnimation2D->FlashKeyPress(CController::DIGITAL_DOWN);
+        m_pAnimation2D->FlashKeyPress(CController::DIGITAL_LDOWN);
     else
-        m_pAnimation2D->FlashKeyPress(CController::DIGITAL_UP);
+        m_pAnimation2D->FlashKeyPress(CController::DIGITAL_LUP);
 
-    CMenuController::KeyUnlock(CController::DIGITAL_UP);
-    CMenuController::KeyUnlock(CController::DIGITAL_DOWN);
+    CMenuController::KeyUnlock(CController::DIGITAL_LUP);
+    CMenuController::KeyUnlock(CController::DIGITAL_LDOWN);
 };

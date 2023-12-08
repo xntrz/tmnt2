@@ -9,38 +9,31 @@ class CPCFramework;
 class CPCSystem
 {
 public:
-    static LRESULT CALLBACK WndProcRouter(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
+    static const char* WNDNAME;
+    
+public:
+    static CPCSystem& Instance(void);
     
     CPCSystem(CPCFramework* pFramework);
-    ~CPCSystem(void);
-    bool Initialize(void);
-    void Terminate(void);
-    void Run(void);
-    void WindowShow(bool bFullscreen);
-    void WindowHide(bool bFullscreen);
-    void CursorShow(bool bState);
-    bool IsCursorHidden(void) const;
-    
+    virtual ~CPCSystem(void);
+    virtual bool Initialize(void);
+    virtual void Terminate(void);
+    virtual bool Run(void);
+    virtual bool CheckOS(void);
+    virtual bool WindowCreate(void);
+    virtual void WindowDestroy(void);
+
+    inline void SetFocused(bool bSet) { m_bFocused = bSet; };
+    inline bool IsFocused(void) const { return m_bFocused; };
+    inline CPCFramework& Framework(void) { return *m_pFramework; };
+
 private:
-    bool CheckOS(void);
-    bool WindowCreate(void);
-    void WindowDestroy(void);
-    LRESULT CALLBACK WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
-    void OnActivate(HWND hWnd, uint32 state, HWND hwndActDeact, BOOL fMinimized);
-    void OnSize(HWND hWnd, uint32 state, int32 w, int32 h);
-    void OnSizing(HWND hWnd, RECT* pRect);
-    void OnClose(HWND hWnd);
-    void OnDestroy(HWND hWnd);
-    bool OnSetCursor(HWND hWnd, HWND hWndCursor, uint32 codeHitTest, uint32 ms);
-    
-private:
+    static CPCSystem* m_pInstance;
     CPCFramework* m_pFramework;
     char m_szOsName[64];
     STICKYKEYS m_StickyKeys;
     TOGGLEKEYS m_ToggleKeys;
     FILTERKEYS m_FilterKeys;
-    int32 m_iCursorRef;
     BOOL m_bScreenSavingEnabled;
-    bool m_bIsForeground;
-    bool m_bCursorState;
+    bool m_bFocused;
 };

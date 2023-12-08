@@ -7,19 +7,27 @@ static char s_argvvdelim = '=';
 static char s_argkey = '-';
 
 
-/*static*/ CConfigure::LAUNCHMODE CConfigure::m_launchmode = CConfigure::LAUNCHMODE_NORMAL;
-
-
-/*static*/ void CConfigure::InitLaunchmode(LAUNCHMODE launcmode)
-{
-    m_launchmode = launcmode;
-};
+/*static*/ TYPEDEF::CONFIG_LAUNCH CConfigure::m_launchmode = TYPEDEF::CONFIG_LAUNCH_NORMAL;
+/*static*/ TYPEDEF::CONFIG_LANG CConfigure::m_language;
+/*static*/ TYPEDEF::CONFIG_TV CConfigure::m_tvmode;
 
 
 /*static*/ void CConfigure::InitArgs(int32 argc, char* argv[])
 {
     s_argv = argv;
     s_argc = argc;
+};
+
+
+/*static*/ void CConfigure::InitLanguange(void)
+{
+    ;
+};
+
+
+/*static*/ void CConfigure::InitTVMode(void)
+{
+    ;
 };
 
 
@@ -75,4 +83,35 @@ static char s_argkey = '-';
     };
 
     return false;
+};
+
+
+/*static*/ void CConfigure::SetLaunchMode(TYPEDEF::CONFIG_LAUNCH launch)
+{
+    ASSERT(
+        (launch == TYPEDEF::CONFIG_LAUNCH_NORMAL)   ||
+        (launch == TYPEDEF::CONFIG_LAUNCH_ARCADE)   ||
+        (launch == TYPEDEF::CONFIG_LAUNCH_TVCHANGE) ||
+        (launch == TYPEDEF::CONFIG_LAUNCH_DASHBOARD)
+    );
+    
+    m_launchmode = launch;
+};
+
+
+/*static*/ TYPEDEF::CONFIG_LAUNCH CConfigure::GetLaunchMode(void)
+{
+    return m_launchmode;
+};
+
+
+/*static*/ TYPEDEF::CONFIG_LANG CConfigure::GetLanguage(void)
+{
+    return m_language;
+};
+
+
+/*static*/ TYPEDEF::CONFIG_TV CConfigure::GetTVMode(void)
+{
+    return m_tvmode;
 };

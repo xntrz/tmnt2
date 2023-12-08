@@ -24,8 +24,8 @@ namespace PlayerUtil
     {
         ASSERT(pPlayerChr);
 
-        return (pPlayerChr->GetID() == PLAYERID::ID_RAP ||
-                pPlayerChr->GetID() == PLAYERID::ID_CAS);
+        return ((pPlayerChr->GetID() == PLAYERID::ID_RAP) ||
+                (pPlayerChr->GetID() == PLAYERID::ID_CAS));
     };
 
 

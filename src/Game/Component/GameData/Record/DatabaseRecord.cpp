@@ -212,7 +212,5 @@ void CDatabaseRecord::setItemState(DBITEMID::VALUE idItem, STATE state)
     ASSERT(idItem >= 0 && idItem < COUNT_OF(m_aState));
 
     m_aState[idItem] = state;
-    
-    OUTPUT(" %s proc! Item: %d, state: %d\n", __FUNCTION__, idItem, state);
 };
 

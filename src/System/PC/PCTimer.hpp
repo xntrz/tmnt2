@@ -14,8 +14,9 @@ public:
     CPCTimer(void);
     virtual ~CPCTimer(void);
     uint32 ElapsedTime(void) const;
-    uint32 GranularitySecond(void) const;
-    uint32 GranularityMillisecond(void) const;
+
+    inline uint32 GranularitySecond(void) const { return m_uGranularitySecond; };
+    inline uint32 GranularityMillisecond(void) const { return m_uGranularityMillisecond; };
     
 private:
     static CPCTimer* m_pInstance;

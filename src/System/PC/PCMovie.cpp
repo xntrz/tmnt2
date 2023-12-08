@@ -9,6 +9,8 @@ CPCMovie::CPCMovie(int32 iWidth, int32 iHeight, int32 iMaxBps, bool bUsePalMode)
 : CMovie(iWidth, iHeight, iMaxBps, bUsePalMode)
 , m_pRaster(nullptr)
 {
+    CPCSpecific::FrameSkipEnable(false);
+    
     m_pRaster = CreateRaster(1024, 512);
     ASSERT(m_pRaster);
 };
@@ -21,6 +23,8 @@ CPCMovie::~CPCMovie(void)
         RwRasterDestroy(m_pRaster);
         m_pRaster = nullptr;
     };
+
+    CPCSpecific::FrameSkipEnable(true);
 };
 
 

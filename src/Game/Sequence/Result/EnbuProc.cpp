@@ -4,7 +4,7 @@
 #include "Game/Component/GameMain/GameProperty.hpp"
 #include "Game/Component/Module/BandanaModule.hpp"
 #include "Game/System/2d/GameFont.hpp"
-#include "Game/System/2d/GameText.hpp"
+#include "Game/System/Text/GameText.hpp"
 #include "Game/System/Character/Character.hpp"
 #include "Game/System/Model/Model.hpp"
 #include "Game/System/Model/ModelManager.hpp"
@@ -59,7 +59,7 @@ private:
 
 
 CEnbuProc_Container::CEnbuProc_Container(void)
-: m_idPlayerMvp(PLAYERID::ID_INVALID)
+: m_idPlayerMvp(PLAYERID::ID_MAX)
 , m_Costume(GAMETYPES::COSTUME_NONE)
 , m_RankMvp(GAMETYPES::CLEARRANK_NONE)
 , m_RankTotal(GAMETYPES::CLEARRANK_NONE)
@@ -321,9 +321,9 @@ void CEnbuProc_Container::Draw2D(void)
 
     if (m_bFlagIdle)
     {
-        const wchar* pwszText = CGameText::GetText(GAMETEXT::VALUE(801));
+        const wchar* pwszText = CGameText::GetText(GAMETEXT(801));
 
-        CGameFont::m_fHeight = CGameFont::GetScreenSize() / 149.0f;
+		CGameFont::SetHeight(CGameFont::GetScreenHeightEx(TYPEDEF::VSCR_H / 3.0f));
         CGameFont::SetRGBA(255, 180, 0, 255);
         CGameFont::Show(
             pwszText,
@@ -333,9 +333,9 @@ void CEnbuProc_Container::Draw2D(void)
     }
     else
     {
-        const wchar* pwszText = CGameText::GetText(GAMETEXT::VALUE(800));
+        const wchar* pwszText = CGameText::GetText(GAMETEXT(800));
 
-        CGameFont::m_fHeight = CGameFont::GetScreenSize() / 179.0f;
+		CGameFont::SetHeight(CGameFont::GetScreenHeightEx(TYPEDEF::VSCR_H / 2.5f));
         CGameFont::SetRGBA(255, 180, 0, 255);
         CGameFont::Show(
             pwszText,
@@ -346,35 +346,35 @@ void CEnbuProc_Container::Draw2D(void)
         switch (m_idPlayerMvp)
         {
         case PLAYERID::ID_LEO:
-            pwszText = CGameText::GetText(GAMETEXT::VALUE(17));
+            pwszText = CGameText::GetText(GAMETEXT(17));
             break;
 
         case PLAYERID::ID_RAP:
-            pwszText = CGameText::GetText(GAMETEXT::VALUE(18));
+            pwszText = CGameText::GetText(GAMETEXT(18));
             break;
 
         case PLAYERID::ID_MIC:
-            pwszText = CGameText::GetText(GAMETEXT::VALUE(19));
+            pwszText = CGameText::GetText(GAMETEXT(19));
             break;
             
         case PLAYERID::ID_DON:
-            pwszText = CGameText::GetText(GAMETEXT::VALUE(20));
+            pwszText = CGameText::GetText(GAMETEXT(20));
             break;
 
         case PLAYERID::ID_SLA:
-            pwszText = CGameText::GetText(GAMETEXT::VALUE(24));
+            pwszText = CGameText::GetText(GAMETEXT(24));
             break;
 
         case PLAYERID::ID_CAS:
-            pwszText = CGameText::GetText(GAMETEXT::VALUE(22));
+            pwszText = CGameText::GetText(GAMETEXT(22));
             break;
 
         case PLAYERID::ID_KAR:
-            pwszText = CGameText::GetText(GAMETEXT::VALUE(23));
+            pwszText = CGameText::GetText(GAMETEXT(23));
             break;
 
         case PLAYERID::ID_SPL:
-            pwszText = CGameText::GetText(GAMETEXT::VALUE(21));
+            pwszText = CGameText::GetText(GAMETEXT(21));
             break;
 
         default:
@@ -382,13 +382,9 @@ void CEnbuProc_Container::Draw2D(void)
             break;
         };
 
-        CGameFont::m_fHeight = CGameFont::GetScreenSize() / 179.0f;
+		CGameFont::SetHeight(CGameFont::GetScreenHeightEx(TYPEDEF::VSCR_H / 2.5f));
         CGameFont::SetRGBA(PLAYERID::GetColor(m_idPlayerMvp));
-        CGameFont::Show(
-            pwszText,
-            -(CGameFont::GetStringWidth(pwszText) * 0.5f),
-            65.0f
-        );
+        CGameFont::Show(pwszText, -(CGameFont::GetStringWidth(pwszText) * 0.5f), 65.0f);
     };
 
     CSystem2D::PopRenderState();
@@ -443,7 +439,15 @@ void CEnbuProc_Container::EnbuBgDraw(void)
     RENDERSTATE_POP(rwRENDERSTATESRCBLEND);
     RENDERSTATE_POP(rwRENDERSTATEZWRITEENABLE);
 
-    float fStep = 16.0f;
+    float fStep = 0.0f;
+    
+    GAMETYPES::CLEARRANK MvpRank = CGameData::PlayResult().GetPersonalRank(CGameData::PlayResult().GetMVP());
+    if (MvpRank == GAMETYPES::CLEARRANK_E)
+        fStep = 4.0f;
+    else if (MvpRank < GAMETYPES::CLEARRANK_A)
+        fStep = 8.0f;
+    else
+        fStep = 16.0f; // S / SS
 
     m_afAnimOfsX[0] += (fStep * 4.0f);
     if (m_afAnimOfsX[0] >= 1024.0f)

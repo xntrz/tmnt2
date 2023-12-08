@@ -35,15 +35,34 @@ void CGameLoader::loadObjectRecursive(CGameObjLoadInfo& rInfo, int32 nDepth)
     ASSERT(nDepth < LOAD_DEPTH_MAX);
 
     for (int32 i = 0; i < rInfo.GetDependObjInfoNum(); ++i)
-        loadObjectRecursive(*rInfo.GetDependObjInfo(i), nDepth + 1);
+        loadObjectRecursive(rInfo.GetDependObjInfo(i), nDepth + 1);
 
-    int32 nFileID = rInfo.GetFileID();
+    switch (m_mode)
+    {
+    case MODE_NORMAL:
+        {
+            int32 fid = rInfo.GetFileID();
+            if (fid != FILEID::ID_INVALID)
+                CDataLoader::Regist(fid);
+        }
+        break;
 
-    ASSERT(nFileID != FILEID::ID_INVALID);
-    ASSERT(nFileID >= 0 && nFileID < FILEID::ID_MAX);
-    
-    if (nFileID != FILEID::ID_INVALID)
-        CDataLoader::Regist(nFileID);
+    case MODE_MAKE_INTERGRAL_LIST:
+        {
+            ASSERT(false);
+        }
+        break;
+
+    default:
+        ASSERT(false);
+        break;
+    };
+};
+
+
+/*static*/ void CGameLoader::SetMode(MODE mode)
+{
+    Instance().m_mode = mode;
 };
 
 
@@ -79,4 +98,22 @@ void CGameLoader::loadObjectRecursive(CGameObjLoadInfo& rInfo, int32 nDepth)
 {
     CEnbuLoadInfo info(idPlayer, costume);
     Instance().loadObjectRecursive(info);
+};
+
+
+/*static*/ void CGameLoader::LoadEnemy(ENEMYID::VALUE idEnemy)
+{
+    ;
+};
+
+
+/*static*/ void CGameLoader::LoadEffect(EFFECTID::VALUE idEffect)
+{
+    ;
+};
+
+
+/*static*/ void CGameLoader::LoadMap(MAPID::VALUE idMap)
+{
+    ;
 };

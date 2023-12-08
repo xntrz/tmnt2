@@ -4,7 +4,101 @@
 namespace PLAYERTYPES
 {
     static const int32 WALLJUMP_MAX = 5;
-    
+
+    namespace MOTIONNAMES
+    {
+        //
+        //  Attack
+        //
+        static const char* ATTACK_A            = "A";
+        static const char* ATTACK_AA           = "AA";
+        static const char* ATTACK_AAB          = "AAB";
+        static const char* ATTACK_AAC          = "AAC";
+        static const char* ATTACK_AABB         = "AABB";
+        static const char* ATTACK_AABC         = "AABC";
+        static const char* ATTACK_AABBB        = "AABBB";
+        static const char* ATTACK_AABBC        = "AABBC";
+        static const char* ATTACK_B            = "B";
+        static const char* ATTACK_RUN          = "RunAttack";
+        static const char* ATTACK_KNIFE        = "Shuriken";
+        static const char* ATTACK_KNIFE_JUMP   = "JShuriken";
+
+        //
+        //  Basic
+        //
+        static const char* IDLE            = "Idle";
+        static const char* WALK            = "Walk";
+        static const char* RUN             = "Run";
+        static const char* DASH            = "Dash1";
+        static const char* DASH_FINISH     = "Dash2";
+        static const char* DOWN_FRONT      = "YFrontFuttobi3";
+        static const char* DOWN_BACK       = "YFrontFuttobi3";
+        static const char* TUMBLER_FRONT   = "YFrontFuttobi4";
+        static const char* TUMBLER_BACK    = "YFrontFuttobi4";
+
+        //
+        //  Damage
+        //
+        static const char* KNOCK_FRONT                 = "YFront";
+        static const char* KNOCK_BACK                  = "YBack";
+        static const char* FLYAWAY_FRONT               = "YFrontFuttobi1";
+        static const char* FLYAWAY_BACK                = "YBackFuttobi1";
+        static const char* FLYAWAY_BOUND_FRONT         = "YFrontFuttobi2";
+        static const char* FLYAWAY_BOUND_BACK          = "YBackFuttobi2";
+        static const char* CRASHWALL_FRONT             = "YWall1";
+        static const char* CRASHWALL_BACK              = "YWall1";
+        static const char* CRASHWALL_TOUCHDOWN_FRONT   = "YWall2";
+        static const char* CRASHWALL_TOUCHDOWN_BACK    = "YWall2";
+        static const char* DINDLE                      = "BiriBiri";
+        static const char* STUN                        = "Piyori";
+        static const char* SLEEP                       = "Piyori";
+        static const char* BIND                        = "BiriBiri";
+
+        //
+        //  Guard
+        //
+        static const char* GUARD_READY     = "G1";
+        static const char* GUARD           = "G2";
+        static const char* GUARD_FINISH    = "G3";
+        
+        //
+        //  Jump
+        //
+        static const char* JUMP_READY  = "J1";
+        static const char* JUMP        = "J2";
+        static const char* JUMP_2ND    = "JDouble";
+        static const char* JUMP_WALL   = "JWall";
+        static const char* AERIAL      = "J2";
+        static const char* TOUCHDOWN   = "J3";
+
+        //
+        //  Throw
+        //
+        static const char* LIFT_CHALLENGE      = "Nage1";
+        static const char* LIFT_SUCCESS        = "Nage2";
+        static const char* LIFT                = "NageIdle";
+        static const char* LIFT_WALK           = "NageWalk";
+        static const char* THROW               = "Nage3";
+        static const char* THROW_BACK          = "NageBack";
+        static const char* THROW_COMBINATION   = "Nage3";
+        static const char* CAUGHT              = "NagerarePose";
+        static const char* LIFTED              = "Nage3";
+        static const char* LIFTED_WALK         = "Nage3";
+        static const char* THROWN_BACK         = "Nage3";
+        static const char* THROWN_COMBINATION1 = "NagerareTag1";
+        static const char* THROWN_COMBINATION2 = "NagerareTag2";
+    };
+
+    namespace EFFECTNAMES
+    {
+        static const char* DASH                = "all_dash1";
+        static const char* DASH_SMOKE          = "all_dash2";
+        static const char* PASSIVE             = "all_dash2";
+        static const char* CRASH_WALL          = "all_pitan";
+        static const char* JUMP_WALL           = "all_jump";
+        static const char* THROW_COMBINATION   = "all_tag";
+    };
+
     enum STATUS
     {
         STATUS_INVALID = -1,
@@ -106,13 +200,13 @@ namespace PLAYERTYPES
 
     enum CHARGEPHASE
     {
-        CHARGEPHASE_ZERO,
+        CHARGEPHASE_ZERO = 0,
         CHARGEPHASE_1ST,
         CHARGEPHASE_2ND,
         CHARGEPHASE_3RD,
     };
 
-    enum FLAG
+    enum FLAG : uint32
     {
         FLAG_NONE                   = 0x0,
         FLAG_JUMP_2ND               = 0x1,
@@ -155,7 +249,7 @@ namespace PLAYERTYPES
         bool m_bItemEffectExists;
     };
 
-    enum ATTRIBUTE
+    enum ATTRIBUTE : uint32
     {
         ATTRIBUTE_NONE              = 0x0,
         ATTRIBUTE_ATTACK_POWER_UP   = 0x1,

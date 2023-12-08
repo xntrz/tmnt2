@@ -29,9 +29,9 @@ CGraphicsDevice::CGraphicsDevice(void)
 , m_pCamera(nullptr)
 , m_ClearColor(DEFAULT_CLEAR_COLOR)
 , m_bFlipEnable(true)
-, m_iFlipInterval(FLIPINTERVAL_DEFAULT)
+, m_iFlipInterval(0)
 {
-    ;
+	;
 };
 
 
@@ -57,11 +57,11 @@ bool CGraphicsDevice::Initialize(void)
         return false;
     };
 
-    if (!AttachPlugin())
-    {
-        OUTPUT("attach plugin failed");
-        return false;
-    };        
+	if (!AttachPlugin())
+	{
+		OUTPUT("attach plugin failed");
+		return false;
+	};
 
     RwEngineOpenParams params;
     params.displayID = Configure();
@@ -82,10 +82,7 @@ bool CGraphicsDevice::Initialize(void)
         OUTPUT("RwEngineSetVideoMode failed");
         return false;
     };
-
-    ASSERT(((RwGlobals*)RwEngineInstance)->dOpenDevice.fpRenderStateGet);
-    ASSERT(((RwGlobals*)RwEngineInstance)->dOpenDevice.fpRenderStateSet);
-
+    
     return true;
 };
 
@@ -123,7 +120,12 @@ bool CGraphicsDevice::Start(void)
     };
 
     CRenderState::Initialize();
-    CCamera::Initialize();
+
+    if (!CreateFrameBuffer())
+    {
+        OUTPUT("CreateFrameBuffer failed");
+        return false;
+    };
 
     if (!CreateCamera())
     {
@@ -132,14 +134,8 @@ bool CGraphicsDevice::Start(void)
     };
 
     ASSERT(!CCamera::CameraDefault());
+    
     CCamera::SetCameraDefault(m_pCamera);
-
-    if (!CreateFrameBuffer())
-    {
-        OUTPUT("CreateFrameBuffer failed");
-        return false;
-    };
-
     CScreen::AttachDevice(this);
     SetFlipInterval(m_iFlipInterval);
 
@@ -158,7 +154,6 @@ void CGraphicsDevice::Stop(void)
 
     DestroyCamera();
 
-    CCamera::Terminate();
 #ifdef RWDEBUG
     CDebug::StopRwDebug();
     RtCharsetClose();
@@ -204,11 +199,11 @@ void CGraphicsDevice::Flip(void)
 };
 
 
-void CGraphicsDevice::SetFlipInterval(int32 iFlipInterval)
+void CGraphicsDevice::SetFlipInterval(int32 nVsyncCount)
 {
-    if (iFlipInterval >= FLIPINTERVAL_DEFAULT && iFlipInterval <= FLIPINTERVAL_30)
+    if (nVsyncCount >= 0 && nVsyncCount <= 2)
     {
-        m_iFlipInterval = iFlipInterval;
+        m_iFlipInterval = nVsyncCount;
         CScreen::DeviceChanged();
     };
 };
@@ -222,85 +217,70 @@ int32 CGraphicsDevice::Subsystem(void)
 
 bool CGraphicsDevice::AttachPlugin(void)
 {
-    bool bResult = false;
+    if (!RpWorldPluginAttach())
+        return false;
+    
+    if (!RtAnimInitialize())
+        return false;
 
-    try
-    {
-        if (!RpWorldPluginAttach())
-            throw std::exception("World");
+    if (!RpHAnimPluginAttach())
+        return false;
 
-        if (!RtAnimInitialize())
-            throw std::exception("Anim");
+    if (!RpSkinPluginAttach())
+        return false;
 
-        if (!RpHAnimPluginAttach())
-            throw std::exception("HAnim");
+    //
+    // TODO Attach RpToon plugin
+    //
+    //if (!RpToonPluginAttach())
+    //    ASSERT(false);
 
-        if (!RpSkinPluginAttach())
-            throw std::exception("Skin");
+    if (!RpCollisionPluginAttach())
+        return false;
 
-        //
-        // TODO Attach RpToon plugin
-        //
-        //if (!RpToonPluginAttach())
-        //    ASSERT(false);
+    if (!RpPVSPluginAttach())
+        return false;
 
-        if (!RpCollisionPluginAttach())
-            throw std::exception("Collision");
+    if (!RpLODAtomicPluginAttach())
+        return false;
 
-        if (!RpPVSPluginAttach())
-            throw std::exception("Pvs");
+    if (!RpRandomPluginAttach())
+        return false;
 
-        if (!RpLODAtomicPluginAttach())
-            throw std::exception("LODAtomic");
+    if (!RpMatFXPluginAttach())
+        return false;
 
-        if (!RpRandomPluginAttach())
-            throw std::exception("Random");
-
-        if (!RpMatFXPluginAttach())
-            throw std::exception("MatFX");
-
-        if (!RpUVAnimPluginAttach())
-            throw std::exception("UVAnim");
-
-        bResult = true;
-    }
-    catch (std::exception& e)
-    {
-		REF(e);
-        OUTPUT(" Failed to attach plugin: %s\n", e.what());
-        bResult = false;
-    };
-
-    return bResult;
+    if (!RpUVAnimPluginAttach())
+        return false;
+	
+    return true;
 };
 
 
-bool CGraphicsDevice::CreateFrameBuffer(int32 iWidth, int32 iHeight, bool bFullscreen)
+bool CGraphicsDevice::CreateFrameBuffer(void)
 {
     ASSERT(!m_pFrameBuffer);
     ASSERT(!m_pZBuffer);
-    
+
     RwVideoMode Videomode = { 0 };
 	RwEngineGetVideoModeInfo(&Videomode, RwEngineGetCurrentVideoMode());
 
-    if (iWidth == 0 || iHeight == 0)
-    {
-        iWidth = Videomode.width;
-        iHeight = Videomode.height;
+    int32 vmw = Videomode.width;
+    int32 vmh = Videomode.height;
 
-        if (ScreenWidth() < iWidth)
-            iWidth = ScreenWidth();
-		
-        if (ScreenHeight() < iHeight)
-            iHeight = ScreenHeight();
-    };
+    if (ScreenWidth() < vmw)
+        vmw = ScreenWidth();
 
-    m_pFrameBuffer = RwRasterCreate(iWidth, iHeight, 0, rwRASTERTYPECAMERA);
+    if (ScreenHeight() < vmh)
+        vmh = ScreenHeight();
+
+    m_pFrameBuffer = RwRasterCreate(vmw, vmh, 0, rwRASTERTYPECAMERA);
 	ASSERT(m_pFrameBuffer);
     if (!m_pFrameBuffer)
         return false;
 
-    m_pZBuffer = RwRasterCreate(iWidth, iHeight, 0, rwRASTERTYPEZBUFFER);
+    m_pZBuffer = RwRasterCreate(vmw, vmh, 0, rwRASTERTYPEZBUFFER);
+    ASSERT(m_pZBuffer);
     if (!m_pZBuffer)
     {
         RwRasterDestroy(m_pFrameBuffer);
@@ -308,27 +288,11 @@ bool CGraphicsDevice::CreateFrameBuffer(int32 iWidth, int32 iHeight, bool bFulls
         return false;
     };
 
-    //ASSERT(m_pCamera);
-    CCamera::FramebufferChanged(m_pFrameBuffer, m_pZBuffer);
-    //RwCameraSetRaster(m_pCamera, m_pFrameBuffer);
-    //RwCameraSetZRaster(m_pCamera, m_pZBuffer);
-
-    RwV2d ViewWindow;
-    ViewWindow.x = TYPEDEF::DEFAULT_VIEWWINDOW;
-    ViewWindow.y = TYPEDEF::DEFAULT_VIEWWINDOW / TYPEDEF::DEFAULT_ASPECTRATIO;
-    RwCameraSetViewWindow(m_pCamera, &ViewWindow);
-
-    CScreen::DeviceChanged();
-
-	OUTPUT(
-		"Creating framebuffer with size %d x %d"
-		"(aspect ratio : %f, pixel aspect ratio: %d:%d\n",
-		iWidth,
-		iHeight,
-		float(Videomode.width) / float(Videomode.height),
-		Videomode.width / Math::Gcd(Videomode.width, Videomode.height),
-		Videomode.height / Math::Gcd(Videomode.width, Videomode.height)
-	);
+	if (m_pCamera)
+	{
+		RwCameraSetRasterMacro(m_pCamera, m_pFrameBuffer);
+        RwCameraSetZRasterMacro(m_pCamera, m_pZBuffer);
+    };
 
     return true;
 };
@@ -336,29 +300,33 @@ bool CGraphicsDevice::CreateFrameBuffer(int32 iWidth, int32 iHeight, bool bFulls
 
 void CGraphicsDevice::DestroyFrameBuffer(void)
 {
-    //ASSERT(m_pFrameBuffer);
-    //ASSERT(m_pZBuffer);
+	if (m_pZBuffer)
+	{
+		RwCameraSetZRasterMacro(m_pCamera, nullptr);
+		RwRasterDestroy(m_pZBuffer);
+		m_pZBuffer = nullptr;
+	};
 
-    if(m_pZBuffer)
-        RwRasterDestroy(m_pZBuffer);
-    
-    if (m_pFrameBuffer)
-        RwRasterDestroy(m_pFrameBuffer);
-
-    CCamera::FramebufferChanged(nullptr, nullptr);
-
-    m_pFrameBuffer = m_pZBuffer = nullptr;
+	if (m_pFrameBuffer)
+	{
+		RwCameraSetRasterMacro(m_pCamera, nullptr);
+		RwRasterDestroy(m_pFrameBuffer);
+		m_pFrameBuffer = nullptr;
+	};
 };
 
 
 bool CGraphicsDevice::CreateCamera(void)
-{    
+{
     ASSERT(!m_pCamera);
 
     m_pCamera = RwCameraCreate();
     if (!m_pCamera)
         return false;
-    
+
+    RwCameraSetRasterMacro(m_pCamera, m_pFrameBuffer);
+    RwCameraSetZRasterMacro(m_pCamera, m_pZBuffer);
+
     RwFrame* pRwFrame = RwFrameCreate();
     if (!pRwFrame)
     {
@@ -367,18 +335,27 @@ bool CGraphicsDevice::CreateCamera(void)
         return false;
     };
 
+    RwCameraSetFrameMacro(m_pCamera, pRwFrame);
     RwFrameSetIdentity(pRwFrame);
-    RwCameraSetFrame(m_pCamera, pRwFrame);
-    RwCameraSetNearClipPlane(m_pCamera, 0.1f);
-    RwCameraSetFarClipPlane(m_pCamera, 100.0f);
+    RwCameraSetNearClipPlane(m_pCamera, TYPEDEF::DEFAULT_CLIP_NEAR);
+    RwCameraSetFarClipPlane(m_pCamera, TYPEDEF::DEFAULT_CLIP_FAR);
+
+    RwV2d ViewWindow;
+    ViewWindow.x = TYPEDEF::DEFAULT_VIEWWINDOW;
+    ViewWindow.y = TYPEDEF::DEFAULT_VIEWWINDOW / TYPEDEF::DEFAULT_ASPECTRATIO;
+    RwCameraSetViewWindow(m_pCamera, &ViewWindow);
     
+    RwCameraClear(m_pCamera, &m_ClearColor, rwCAMERACLEARIMAGE | rwCAMERACLEARZ);
+    RwCameraShowRaster(m_pCamera, nullptr, rwRASTERFLIPWAITVSYNC);
+
     return true;
 };
 
 
 void CGraphicsDevice::DestroyCamera(void)
 {
-    ASSERT(m_pCamera);
+	if (!m_pCamera)
+		return;
 
     RwFrame* pRwFrame = RwCameraGetFrame(m_pCamera);
     RwCameraSetFrame(m_pCamera, nullptr);
@@ -388,17 +365,6 @@ void CGraphicsDevice::DestroyCamera(void)
     RwCameraSetZRaster(m_pCamera, nullptr);
     RwCameraDestroy(m_pCamera);
     m_pCamera = nullptr;
-};
-
-
-void CGraphicsDevice::CurrentVideomode(int32& iWidth, int32& iHeigh, int32& iDepth)
-{
-    RwVideoMode Videomode;
-    RwEngineGetVideoModeInfo(&Videomode, RwEngineGetCurrentVideoMode());
-
-    iWidth = Videomode.width;
-    iHeigh = Videomode.height;
-    iDepth = Videomode.depth;
 };
 
 

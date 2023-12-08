@@ -19,7 +19,7 @@ private:
     {
         STEP_PLAY = 0,
         STEP_PLAYEND,
-        STEP_FADEIN,
+        STEP_FADEOUT,
         STEP_END,
     };
 

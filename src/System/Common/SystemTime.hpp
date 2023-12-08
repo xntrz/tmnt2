@@ -66,12 +66,10 @@ class IClockDevice;
 
 class CSystemTime
 {
-private:
-    CSystemTime(void);
-    ~CSystemTime(void);
-
 public:
     static CSystemTime& Instance(void);
+    
+    CSystemTime(void);
     void AttachClock(IClockDevice* pIClockDevice);
     void DetachClock(void);
     CTimeObj GetLocalTime(void);

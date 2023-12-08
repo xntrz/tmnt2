@@ -5,6 +5,13 @@
 #include "Game/System/Texture/TextureManager.hpp"
 
 
+#ifdef _DEBUG
+#define MODEL_CLUMP_NUM (256)
+#else
+#define MODEL_CLUMP_NUM (80)
+#endif
+
+
 class CClumpContainer
 {
 public:
@@ -38,7 +45,7 @@ public:
     CClump* FindClump(const char* pszName);
     
 private:
-    CClump m_aClump[80];
+    CClump m_aClump[MODEL_CLUMP_NUM];
     CList<CClump> m_listFree;
     CList<CClump> m_listUse;
     int32 m_iGeneration;
@@ -252,13 +259,13 @@ static inline CClumpContainer& ClumpContainer(void)
     ASSERT(pszName);
 
     CClumpContainer::CClump* pClump = ClumpContainer().GetClump(pszName);
-    ASSERT(pClump);
-    
     if (pClump)
     {
         CModel* pModel = new CModel(pClump->GetName(), pClump->Clone());
         ASSERT(pModel);
+        
         ++s_nNumAllocatedModels;
+        
         return pModel;
     };
 

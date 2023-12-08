@@ -94,108 +94,102 @@ uint32 CGameRecord::GetInitDate(void) const
 
 uint32 CGameRecord::GetAchievedPoint(void)
 {
+    //
+    //  Total achieved points in percent
+    //
     uint32 uResult = 0;
 
+    //
+    //  Calc unlocked character points
+    //  Max points: 8
+    //
+    for (int32 i = 0; i < 4; ++i)
     {
-		//
-		//	8
-		//
-
-        for (int32 i = 0; i < 4; ++i)
-        {
-            SECRETID::VALUE idSecret = SECRETID::VALUE(SECRETID::ID_CHARACTER_CASEY + i);
-            if (Secret().IsUnlockedSecret(idSecret))
-                uResult += 2;
-        };
-    }
-
-    {
-        //
-        //  4
-        //
-        
-        int32 nNumTakenAntique = 0;
-        
-        for (int32 i = ANTIQUEID::ID_FIRST; i < ANTIQUEID::ID_MAX; ++i)
-        {
-            if (Antique().IsAntiqueTaken(ANTIQUEID::VALUE(i)))
-                ++nNumTakenAntique;
-        };
-        
-        if (nNumTakenAntique >= 13)
-            ++uResult;
-        if (nNumTakenAntique >= 27)
-            ++uResult;
-        if (nNumTakenAntique >= 41)
-            ++uResult;
-        if (nNumTakenAntique >= 55)
+        SECRETID::VALUE idSecret = SECRETID::VALUE(SECRETID::ID_CHARACTER_CASEY + i);
+        if (Secret().IsUnlockedSecret(idSecret))
             uResult += 2;
-    }
+    };
 
+    //
+    //  Calc antique taken points
+    //  Max points: 5
+    //
+    int32 nNumTakenAntique = 0;
+
+    for (int32 i = ANTIQUEID::ID_FIRST; i < ANTIQUEID::ID_MAX; ++i)
     {
-        //
-        //  5
-        //
-        
-        int32 nDBCounter = Database().CountUnlockedItemInGroup(CDatabaseRecord::GROUP_CHARACTER);
-        nDBCounter += Database().CountUnlockedItemInGroup(CDatabaseRecord::GROUP_ENEMY);
-        nDBCounter += Database().CountUnlockedItemInGroup(CDatabaseRecord::GROUP_ART);
-        nDBCounter += Database().CountUnlockedItemInGroup(CDatabaseRecord::GROUP_ETC);
-        
-        if (nDBCounter >= 9)
-            ++uResult;
-        if (nDBCounter >= 19)
-            ++uResult;
-        if (nDBCounter >= 29)
-            ++uResult;
-        if (nDBCounter >= 39)
-            uResult += 2;
-    }
+        if (Antique().IsAntiqueTaken(ANTIQUEID::VALUE(i)))
+            ++nNumTakenAntique;
+    };
 
+    if (nNumTakenAntique >= 13)
+        ++uResult;
+    if (nNumTakenAntique >= 27)
+        ++uResult;
+    if (nNumTakenAntique >= 41)
+        ++uResult;
+    if (nNumTakenAntique >= 55)
+        uResult += 2;
+
+    //
+    //  Calc database points
+    //  Max points: 5
+    //
+    int32 nDBCounter = Database().CountUnlockedItemInGroup(CDatabaseRecord::GROUP_CHARACTER);
+    nDBCounter += Database().CountUnlockedItemInGroup(CDatabaseRecord::GROUP_ENEMY);
+    nDBCounter += Database().CountUnlockedItemInGroup(CDatabaseRecord::GROUP_ART);
+    nDBCounter += Database().CountUnlockedItemInGroup(CDatabaseRecord::GROUP_ETC);
+
+    if (nDBCounter >= 9)
+        ++uResult;
+    if (nDBCounter >= 19)
+        ++uResult;
+    if (nDBCounter >= 29)
+        ++uResult;
+    if (nDBCounter >= 39)
+        uResult += 2;
+
+    //
+    //  Calc area clear points
+    //  Max points: 53
+    //  NOTE: exclude home area --> (AREAID::NORMALMAX - AREAID::NORMALSTART) - 1
+    //
+    for (int32 i = AREAID::NORMALSTART; i < AREAID::NORMALMAX; ++i)
     {
-        //
-        //  53
-        //
-        
-        for (int32 i = AREAID::NORMALSTART; i < AREAID::NORMALMAX; ++i)
-        {
-            if (i == AREAID::HOME)
-                continue;
+        if (i == AREAID::HOME)
+            continue;
 
-            if (Area().GetAreaClearRank(AREAID::VALUE(i)) > GAMETYPES::CLEARRANK_NONE)
-                ++uResult;
-        };
-    }
+        if (Area().GetAreaClearRank(AREAID::VALUE(i)) > GAMETYPES::CLEARRANK_NONE)
+            ++uResult;
+    };
 
+    //
+    //  Calc crystal taken points
+    //  Max points: 24
+    //
+    for (int32 i = 1; i < GAMETYPES::CRYSTALTYPE_NUM; ++i)
     {
-        //
-        //  24
-        //
-        
-        for (int32 i = 1; i < GAMETYPES::CRYSTALTYPE_NUM; ++i)
-        {
-            int32 nCryNum = Item().GetCrystalNum(GAMETYPES::CRYSTALTYPE(i));
-            uResult += (2 * (nCryNum / 10));
-        };
-    }
+        int32 nCryNum = Item().GetCrystalNum(GAMETYPES::CRYSTALTYPE(i));
+        uResult += (2 * (nCryNum / 10));
+    };
 
-    {
-        //
-        //  5
-        //
-        
-        if (Nexus().GetTournamentState(GAMETYPES::NEXUSID_KITTY_OPEN) >= CNexusRecord::STATE_CLEAR)
-            ++uResult;
+    //
+    //  Calc nexus clear points
+    //  Max points: 5
+    //
+    if (Nexus().GetTournamentState(GAMETYPES::NEXUSID_KITTY_OPEN) >= CNexusRecord::STATE_CLEAR)
+        ++uResult;
 
-        if (Nexus().GetTournamentState(GAMETYPES::NEXUSID_MONSTER_OPEN) >= CNexusRecord::STATE_CLEAR)
-            ++uResult;
+    if (Nexus().GetTournamentState(GAMETYPES::NEXUSID_MONSTER_OPEN) >= CNexusRecord::STATE_CLEAR)
+        ++uResult;
 
-        if (Nexus().GetTournamentState(GAMETYPES::NEXUSID_FOOT_COMBAT) >= CNexusRecord::STATE_CLEAR)
-            ++uResult;
+    if (Nexus().GetTournamentState(GAMETYPES::NEXUSID_FOOT_COMBAT) >= CNexusRecord::STATE_CLEAR)
+        ++uResult;
 
-        if (Nexus().GetTournamentState(GAMETYPES::NEXUSID_BATTLE_NEXUS) >= CNexusRecord::STATE_CLEAR)
-            uResult += 2;
-    }
+    if (Nexus().GetTournamentState(GAMETYPES::NEXUSID_BATTLE_NEXUS) >= CNexusRecord::STATE_CLEAR)
+        uResult += 2;
+
+    ASSERT(uResult >= 0 && uResult <= 100);
 
     return uResult;
 };

@@ -11,11 +11,6 @@
 
 namespace Leonardo
 {
-    static const RwV3d BANDANA_OFFSET = { 0.0f, 0.15f, 0.05f };
-    static const RwV3d JUMPATTACK_VELOCITY = { 0.0f, -7.5f, 12.5f };
-    static const RwV3d CHARGE_ATTACK_LOCAL_POSITION = { 0.0f, 0.145f, 1.0f };
-
-    
     bool CAttackJump::IsEnableChangeStatus(PLAYERTYPES::STATUS status)
     {
         PLAYERTYPES::STATUS aStatusArray[] =
@@ -33,10 +28,10 @@ namespace Leonardo
 
     void CAttackJump::OnAttach(void)
     {
-        Character().ChangeMotion("JAttack");
+        Character().ChangeMotion(Leonardo::MOTIONNAMES::ATTACK_JUMP);
 
         RwV3d vVelocity = Math::VECTOR3_ZERO;
-        Character().RotateVectorByDirection(&vVelocity, &JUMPATTACK_VELOCITY);
+        Character().RotateVectorByDirection(&vVelocity, &Leonardo::JUMPATTACK_VELOCITY);
 		Character().SetVelocity(&vVelocity);
 
         Character().SetCharacterFlag(CHARACTERTYPES::FLAG_FIXED_MODEL_ROTATION, false);
@@ -82,7 +77,7 @@ namespace Leonardo
         RwV3d vPos = Math::VECTOR3_ZERO;
         
         Character().GetBodyPosition(&vPosBody);
-        Character().RotateVectorByDirection(&vDir, &CHARGE_ATTACK_LOCAL_POSITION);
+        Character().RotateVectorByDirection(&vDir, &Leonardo::CHARGE_ATTACK_LOCAL_POSITION);
 
         Math::Vec3_Add(&vPos, &vDir, &vPosBody);
         
@@ -107,7 +102,7 @@ namespace Leonardo
         RwV3d vPos = Math::VECTOR3_ZERO;
 
         Character().GetBodyPosition(&vPosBody);
-        Character().RotateVectorByDirection(&vDir, &CHARGE_ATTACK_LOCAL_POSITION);
+        Character().RotateVectorByDirection(&vDir, &Leonardo::CHARGE_ATTACK_LOCAL_POSITION);
 
         Math::Vec3_Add(&vPos, &vDir, &vPosBody);
 
@@ -150,6 +145,7 @@ CLeonardo::CLeonardo(GAMETYPES::COSTUME costume)
     parameter.m_feature.m_fAerialMoveSpeed      = 5.2f;
     parameter.m_feature.m_fAerialAcceleration   = 12.0f;
     parameter.m_feature.m_nKnifeAttachBoneID    = CHARACTERTYPES::BONEID_RIGHT_WRIST;
+
     parameter.m_pStateMachine = new CPlayerStateMachine(this, PLAYERTYPES::NORMALMAX);
     ASSERT(parameter.m_pStateMachine);
 
@@ -161,9 +157,7 @@ CLeonardo::CLeonardo(GAMETYPES::COSTUME costume)
 
     Initialize(&parameter);
 
-    m_pModuleMan->Include(
-        CCircleShadowModule::New(this, 1.5f, 1.5f, true)
-    );
+    m_pModuleMan->Include(CCircleShadowModule::New(this, 1.5f, 1.5f, true));
 
     if (costume != GAMETYPES::COSTUME_SAMURAI)
     {
@@ -181,10 +175,4 @@ CLeonardo::CLeonardo(GAMETYPES::COSTUME costume)
 CLeonardo::~CLeonardo(void)
 {
     ;
-};
-
-
-void CLeonardo::Run(void)
-{
-    CPlayerCharacter::Run();
 };

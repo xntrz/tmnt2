@@ -1,4 +1,5 @@
 #pragma once
+#ifdef TARGET_PC
 
 #include "OptionTypes.hpp"
 
@@ -25,7 +26,7 @@ public:
     bool AssignDownKey(OPTIONTYPES::KEYFUNC func);
     int32 GetAssignedKey(OPTIONTYPES::KEYFUNC func) const;
     const char* GetKeyName(int32 iDIKey) const;
-    void InitializeGamepadMapping(void);
+    void AssignButton(void);
     
 private:
     void assignDefaultKey(void);
@@ -34,5 +35,7 @@ private:
 
 private:
     int32 m_aiKeyAssign[OPTIONTYPES::KEYFUNCMAX];
-    uint32 m_auButtonAssign[OPTIONTYPES::KEYFUNCMAX - 4];
+    uint32 m_auButtonAssign[OPTIONTYPES::KEYFUNCMAX - 4];   // exclude up/down/left/right
 };
+
+#endif /* TARGET_PC */

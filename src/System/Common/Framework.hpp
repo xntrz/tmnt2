@@ -12,9 +12,11 @@ class CProcessDispatcher;
 class CFramework
 {
 public:
-    static CFramework* GetConcreteInstance(void);
-    static bool StartAndRun(void);
-    
+    static void Startup();
+    static void Shutdown();
+    static CFramework* GetConcreteInstance();
+    static bool StartAndRun();
+
     CFramework(void);
     virtual ~CFramework(void);
     virtual bool Initialize(void);

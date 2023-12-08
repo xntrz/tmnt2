@@ -15,13 +15,9 @@
 
 namespace Slashuur
 {
-    static const RwV3d CHARGE_ATTACK_LOCAL_POSITION = { 0.0f, 0.0f, 1.0f };
-    static const RwV3d BANDANA_OFFSET = { -0.02f, 0.237f, -0.038f };
-
-    
     bool CAttackJump::IsEnableChangeStatus(PLAYERTYPES::STATUS status)
     {
-        PLAYERTYPES::STATUS aStatusArray [] =
+        PLAYERTYPES::STATUS aStatusArray[] =
         {
             PLAYERTYPES::STATUS_JUMP,
             PLAYERTYPES::STATUS_JUMP_2ND,
@@ -36,7 +32,7 @@ namespace Slashuur
 
     void CAttackJump::OnAttach(void)
     {
-        Character().ChangeMotion("JAttack");
+        Character().ChangeMotion(Slashuur::MOTIONNAMES::ATTACK_JUMP);
 
         RwV3d vVelocity = Math::VECTOR3_ZERO;
         Character().GetVelocity(&vVelocity);
@@ -58,6 +54,11 @@ namespace Slashuur
         ;
     };
 
+    
+    //
+    // *********************************************************************************
+    //
+
 
     void CAttackAABBC::OnDischargeWave(void)
     {
@@ -65,12 +66,17 @@ namespace Slashuur
         RwV3d vPositionLocal = Math::VECTOR3_ZERO;
 
         Character().GetBodyPosition(&vPosition);
-        Character().RotateVectorByDirection(&vPositionLocal, &CHARGE_ATTACK_LOCAL_POSITION);
+        Character().RotateVectorByDirection(&vPositionLocal, &Slashuur::CHARGE_ATTACK_LOCAL_POSITION);
 
         Math::Vec3_Add(&vPosition, &vPosition, &vPositionLocal);
 
         MAGIC_GENERIC::ChargeAttackSlashuur(&vPosition, Character().GetDirection(), m_pPlayerChr, MAGIC_GENERIC::STEP_THREE);
     };
+
+    
+    //
+    // *********************************************************************************
+    //
 
 
     void CAttackB::OnDischargeWave(MAGIC_GENERIC::STEP step)
@@ -79,7 +85,7 @@ namespace Slashuur
         RwV3d vPositionLocal = Math::VECTOR3_ZERO;
 
         Character().GetBodyPosition(&vPosition);
-        Character().RotateVectorByDirection(&vPositionLocal, &CHARGE_ATTACK_LOCAL_POSITION);
+        Character().RotateVectorByDirection(&vPositionLocal, &Slashuur::CHARGE_ATTACK_LOCAL_POSITION);
 
         Math::Vec3_Add(&vPosition, &vPosition, &vPositionLocal);
 
@@ -100,32 +106,31 @@ CSlashuur::CSlashuur(GAMETYPES::COSTUME costume)
 	//
 
     CPlayerCharacter::PARAMETER parameter = { 0 };
-    parameter.m_chrparameter.m_bToon = true;
-    parameter.m_chrparameter.m_pszModelName = "slashuur";
+    parameter.m_chrparameter.m_bToon            = true;
+    parameter.m_chrparameter.m_pszModelName     = "slashuur";
     parameter.m_chrparameter.m_pszMotionSetName = "slashuur";
-    parameter.m_feature.m_fWalkMoveSpeed = 2.0f;
-    parameter.m_feature.m_fLiftWalkMoveSpeed = 3.6f;
-    parameter.m_feature.m_fRunMoveSpeed = 5.2f;
-    parameter.m_feature.m_fDashMoveSpeed = 16.0f;
-    parameter.m_feature.m_fDashTime = 0.2f;
-    parameter.m_feature.m_fJumpInitializeSpeed = 7.5f;
-    parameter.m_feature.m_fAerialMoveSpeed = 5.2f;
-    parameter.m_feature.m_fAerialAcceleration = 12.0f;
-    parameter.m_feature.m_nKnifeAttachBoneID = CHARACTERTYPES::BONEID_RIGHT_WRIST;
+    parameter.m_feature.m_fWalkMoveSpeed        = 2.0f;
+    parameter.m_feature.m_fLiftWalkMoveSpeed    = 3.6f;
+    parameter.m_feature.m_fRunMoveSpeed         = 5.2f;
+    parameter.m_feature.m_fDashMoveSpeed        = 16.0f;
+    parameter.m_feature.m_fDashTime             = 0.2f;
+    parameter.m_feature.m_fJumpInitializeSpeed  = 7.5f;
+    parameter.m_feature.m_fAerialMoveSpeed      = 5.2f;
+    parameter.m_feature.m_fAerialAcceleration   = 12.0f;
+    parameter.m_feature.m_nKnifeAttachBoneID    = CHARACTERTYPES::BONEID_RIGHT_WRIST;
+    
     parameter.m_pStateMachine = new CPlayerStateMachine(this, PLAYERTYPES::NORMALMAX);
     ASSERT(parameter.m_pStateMachine);
 
     CStatus::RegistDefaultForStateMachine(*parameter.m_pStateMachine);
 
-    parameter.m_pStateMachine->RegistStatus(PLAYERTYPES::STATUS_ATTACK_JUMP, new Slashuur::CAttackJump);
-    parameter.m_pStateMachine->RegistStatus(PLAYERTYPES::STATUS_ATTACK_AABBC, new Slashuur::CAttackAABBC);
-    parameter.m_pStateMachine->RegistStatus(PLAYERTYPES::STATUS_ATTACK_B, new Slashuur::CAttackB);
+    parameter.m_pStateMachine->RegistStatus(PLAYERTYPES::STATUS_ATTACK_JUMP,    new Slashuur::CAttackJump);
+    parameter.m_pStateMachine->RegistStatus(PLAYERTYPES::STATUS_ATTACK_AABBC,   new Slashuur::CAttackAABBC);
+    parameter.m_pStateMachine->RegistStatus(PLAYERTYPES::STATUS_ATTACK_B,       new Slashuur::CAttackB);
 
     Initialize(&parameter);
 
-    m_pModuleMan->Include(
-        CCircleShadowModule::New(this, 1.5f, 1.5f, true)
-    );
+    m_pModuleMan->Include(CCircleShadowModule::New(this, 1.5f, 1.5f, true));
 
     m_pModuleMan->Include(new CBandanaModule(
         this,
@@ -140,10 +145,4 @@ CSlashuur::CSlashuur(GAMETYPES::COSTUME costume)
 CSlashuur::~CSlashuur(void)
 {
     ;
-};
-
-
-void CSlashuur::Run(void)
-{
-    CPlayerCharacter::Run();
 };

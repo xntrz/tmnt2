@@ -20,7 +20,7 @@ public:
         WEATHER_SANDER,
     };
 
-    enum CHECKFLAG
+    enum CHECKFLAG : uint32
     {
         CHECKFLAG_NONE      = 0x0,
         CHECKFLAG_WALLJUMP  = 0x1,

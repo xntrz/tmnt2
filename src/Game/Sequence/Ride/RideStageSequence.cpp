@@ -25,7 +25,7 @@ CRideStageSequence::~CRideStageSequence(void)
 };
 
 
-bool CRideStageSequence::OnAttach(const void* param)
+bool CRideStageSequence::OnAttach(const void* pParam)
 {
     if (CGameData::PlayParam().GetStage() == STAGEID::ID_ST22R ||
         CGameData::PlayParam().GetStage() == STAGEID::ID_ST32R)
@@ -33,7 +33,7 @@ bool CRideStageSequence::OnAttach(const void* param)
     else
         CRideStage::m_bSpace = false;
 
-    CStageBaseSequence::OnAttach(param);
+    CStageBaseSequence::OnAttach(pParam);
 
     RegisterStateObject(STATE_LOAD, new CLoadRideStageSeqState(CGameData::PlayParam().GetStage()), true);
     RegisterStateObject(STATE_INTRO, new CIntroStageSeqState, true);

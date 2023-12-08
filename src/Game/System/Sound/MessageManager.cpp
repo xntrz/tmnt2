@@ -10,17 +10,38 @@
 #include "System/Common/Sprite.hpp"
 
 
+static const float APPEAR_TIME      = 0.5f;
+static const float SHOW_TIME        = 4.0f;
+static const float DISAPPEAR_TIME   = 0.5f;
+
+static const RwV2d s_vBasePosition      = { 0.0f, 336.0f };
+static const RwV2d s_vStringBoxWH       = { 488.0f, 70.0f };
+static const RwV3d s_vStringBoxOffset   = { 75.0f, 72.0f };
+
+static const RwRGBA s_initialTextRGBA   = { 0xFF, 0xFF, 0xFF, 0x00 };
+static const RwRGBA s_lastTextRGBA      = { 0xFF, 0xFF, 0xFF, 0xFF };
+static const RwRGBA s_initialVertexRGBA = { 0x00 };
+static const RwRGBA s_aLastVerexRGBA[6 * 2] =
+{
+    { 0x00, 0x00, 0x00, 0x36 },
+    { 0x00, 0x00, 0x00, 0x36 },
+    { 0x00, 0x00, 0x00, 0x36 },
+    { 0x00, 0x00, 0x00, 0x36 },
+    { 0x00 },
+    { 0x00 },
+
+    { 0x00, 0x00, 0x00, 0xD6 },
+    { 0x00, 0x00, 0x00, 0xD6 },
+    { 0x00, 0x00, 0x00, 0x59 },
+    { 0x00, 0x00, 0x00, 0x59 },
+    { 0x00 },
+    { 0x00 },
+};
+
+
 class CMessageContainer
 {
 private:
-    static const float APPEAR_TIME;
-    static const float SHOW_TIME;
-    static const float DISAPPEAR_TIME;
-    static const RwRGBA s_initialTextRGBA;
-    static const RwRGBA s_lastTextRGBA;
-    static const RwRGBA s_initialVertexRGBA;
-    static const RwRGBA s_aLastVerexRGBA[6 * 2];
-
     enum STATE
     {
         STATE_IDLE = 0,
@@ -55,7 +76,6 @@ private:
     float getStringBoxHeight(void);
     bool isHelpEnable(void);
     bool isValidID(SEGROUPID::VALUE idGroup);
-    void calcAnchorAndPos(void);
     
 private:
     SEGROUPID::VALUE m_TextSeGroupID;
@@ -68,34 +88,6 @@ private:
     bool m_SeGroupIDPlayFlag[SEGROUPID::ID_MAX];
     int32 m_StageKind;
     int32 m_NumStringLines;
-    RwV2d m_vBasePosition;
-    RwV2d m_vStringBoxWH;
-    RwV2d m_vStringBoxOffset;
-    float m_fFontW;
-};
-
-
-/*static*/ const float CMessageContainer::APPEAR_TIME = 0.5f;
-/*static*/ const float CMessageContainer::SHOW_TIME = 4.0f;
-/*static*/ const float CMessageContainer::DISAPPEAR_TIME = 0.5f;
-/*static*/ const RwRGBA CMessageContainer::s_initialTextRGBA = { 0xFF, 0xFF, 0xFF, 0x00 };
-/*static*/ const RwRGBA CMessageContainer::s_lastTextRGBA = { 0xFF, 0xFF, 0xFF, 0xFF };
-/*static*/ const RwRGBA CMessageContainer::s_initialVertexRGBA = { 0x00 };
-/*static*/ const RwRGBA CMessageContainer::s_aLastVerexRGBA[6 * 2] =
-{
-    { 0x00, 0x00, 0x00, 0x36 },
-    { 0x00, 0x00, 0x00, 0x36 },
-    { 0x00, 0x00, 0x00, 0x36 },
-    { 0x00, 0x00, 0x00, 0x36 },
-    { 0x00 },
-    { 0x00 },
-
-    { 0x00, 0x00, 0x00, 0xD6 },
-    { 0x00, 0x00, 0x00, 0xD6 },
-    { 0x00, 0x00, 0x00, 0x59 },
-    { 0x00, 0x00, 0x00, 0x59 },
-    { 0x00 },
-    { 0x00 },
 };
 
 
@@ -110,12 +102,8 @@ CMessageContainer::CMessageContainer(void)
 , m_SeGroupIDPlayFlag()
 , m_StageKind(getStageKind())
 , m_NumStringLines(0)
-, m_vBasePosition(Math::VECTOR2_ZERO)
-, m_vStringBoxWH(Math::VECTOR2_ZERO)
-, m_vStringBoxOffset(Math::VECTOR2_ZERO)
-, m_fFontW(0.0f)
 {
-    calcAnchorAndPos();
+    ;
 };
 
 
@@ -214,7 +202,7 @@ bool CMessageContainer::Request(SEGROUPID::VALUE idGroup, PLAYERID::VALUE idPlay
 {
     if (isValidID(idGroup))
     {
-        if (CVoiceManager::SetVoice(idGroup, bIsHelpID))
+        if (CVoiceManager::SetVoice(idGroup, idPlayer, bIsHelpID))
         {
             OnlyTextRequest(idGroup);
             m_SeGroupIDPlayFlag[idGroup] = true;
@@ -229,7 +217,7 @@ bool CMessageContainer::Request(SEGROUPID::VALUE idGroup, PLAYERID::VALUE idPlay
 bool CMessageContainer::OnlyTextRequest(SEGROUPID::VALUE idGroup)
 {
     if (!isHelpEnable())
-        return false;
+        return false;    
 
     if (!SEGROUPID::GetGameText(idGroup))
         return false;
@@ -237,10 +225,13 @@ bool CMessageContainer::OnlyTextRequest(SEGROUPID::VALUE idGroup)
     m_TextSeGroupID = idGroup;
     m_fTimer = 0.0f;
     m_State = STATE_APPEAR;
-    calcAnchorAndPos();
+    
     messageSet();
     vertexSet();
-    std::memset(m_aVerticesColor, 0x00, sizeof(m_aVerticesColor));
+    
+    for (int32 i = 0; i < COUNT_OF(m_aVerticesColor); ++i)
+        m_aVerticesColor[i] = s_initialVertexRGBA;
+    
     m_MsgColor = { 0xFF, 0xFF, 0xFF, 0x00 };
     
     CGameSound::PlaySE(SDCODE_SE(0x100D));
@@ -263,13 +254,9 @@ void CMessageContainer::drawWindow(void)
 
 void CMessageContainer::drawMessage(void)
 {
-	float fHeight = CGameFont::GetScreenSize() / (((CSprite::VIRTUALSCREEN_DEFAULT_H / float(CScreen::Height())) * m_fFontW) * 1.25f);
-    CGameFont::m_pFont->SetRGBA(m_MsgColor);
-    CGameFont::m_pFont->Flow(
-        CGameText::GetText(SEGROUPID::GetGameText(m_TextSeGroupID)),
-        fHeight,
-        &m_MsgBBox
-    );
+	CGameFont::SetHeight(CGameFont::GetScreenHeightEx(TYPEDEF::VSCR_H / 2.0f));
+	CGameFont::SetRGBA(m_MsgColor);
+    CGameFont::Flow(CGameText::GetText(SEGROUPID::GetGameText(m_TextSeGroupID)), &m_MsgBBox);
 };
 
 
@@ -331,9 +318,16 @@ void CMessageContainer::messageSet(void)
     float sw = float(CScreen::Width());
     float sh = float(CScreen::Height());
 
-    m_MsgBBox.x = (((m_vBasePosition.x + m_vStringBoxOffset.x) * (sw / 640.0f)) * (640.0f / sw)) - 320.0f;
-    m_MsgBBox.y = ((((m_vBasePosition.y + m_vStringBoxOffset.y) * (sh / m_fFontW)) * (480.0f / sh)) - 240.0f) * -1.0f;
-    m_MsgBBox.w = m_vStringBoxWH.x;
+    m_MsgBBox.x = (s_vBasePosition.x + s_vStringBoxOffset.x) * (sw / TYPEDEF::VSCR_W);  // to real screen
+    m_MsgBBox.x *= (CSprite::m_fVirtualScreenW / sw);                                   // to virt screen
+	m_MsgBBox.x -= -CSprite::m_fVirtualScreenX;
+
+    m_MsgBBox.y = (s_vBasePosition.y + s_vStringBoxOffset.y) * (sh / TYPEDEF::VSCR_H);  // to real screen
+    m_MsgBBox.y *= (CSprite::m_fVirtualScreenH / sh);                                   // to virt screen
+	m_MsgBBox.y -= -CSprite::m_fVirtualScreenY;
+	m_MsgBBox.y *= -1.0f;
+
+    m_MsgBBox.w = s_vStringBoxWH.x;
     m_MsgBBox.h = getStringBoxHeight();
 };
 
@@ -343,21 +337,21 @@ void CMessageContainer::vertexSet(void)
 	float sw = float(CScreen::Width());
 	float sh = float(CScreen::Height());
     float fOfsY = 0.0f;
-    float fHeight = CGameFont::GetScreenSize() / m_fFontW;
+    float fHeight = CGameFont::GetHeight();
     
     if (m_NumStringLines < 4)
     {
-        fOfsY = m_vBasePosition.y;
+        fOfsY = s_vBasePosition.y;
     }
     else
     {
-        fOfsY = m_vBasePosition.y - (float(m_NumStringLines - 3) * fHeight);
+        fOfsY = s_vBasePosition.y - (float(m_NumStringLines - 3) * fHeight);
         if (fOfsY < 0.0f)
             fOfsY = 0.0f;
     };
 
-    float x0 = m_vBasePosition.x;
-    float x1 = m_vBasePosition.x + sw;
+    float x0 = s_vBasePosition.x;
+    float x1 = s_vBasePosition.x + sw;
     float y0 = fOfsY + (sh - fOfsY);
     float y1 = fOfsY + (0.1f * (sh - fOfsY));
     float z = RwIm2DGetNearScreenZ();
@@ -376,8 +370,8 @@ void CMessageContainer::vertexSet(void)
     
     for (int32 i = 0; i < COUNT_OF(aPos); ++i)
     {
-		m_aVertices[i].x = aPos[i].x * (sw / 640.0f);
-		m_aVertices[i].y = aPos[i].y * (sh / 480.0f);
+        m_aVertices[i].x = aPos[i].x * (sw / TYPEDEF::VSCR_W); // to real screen pos
+		m_aVertices[i].y = aPos[i].y * (sh / TYPEDEF::VSCR_H); // to real screen pos
         m_aVertices[i].z = z;
     };
 };
@@ -445,18 +439,15 @@ int32 CMessageContainer::getStageKind(void)
 
 float CMessageContainer::getStringBoxHeight(void)
 {
-    float sh = float(CScreen::Height());
+    CGameFont::SetHeight(CGameFont::GetScreenHeightEx(TYPEDEF::VSCR_H / 2.0f));
 
-    float fHeight = CGameFont::GetScreenSize() / m_fFontW;
-    GAMETEXT::VALUE idText = SEGROUPID::GetGameText(m_TextSeGroupID);
-    const wchar* pwszText = CGameText::GetText(idText);
-    
-    m_NumStringLines = CGameFont::m_pFont->CountFlowLine(pwszText, fHeight, m_fFontW);
+    m_NumStringLines = CGameFont::CountFlowLine(CGameText::GetText(SEGROUPID::GetGameText(m_TextSeGroupID)), s_vStringBoxWH.x);
     if (m_NumStringLines < 3)
         return 70.0f;
 
-    float fResult = (m_NumStringLines - 3) * fHeight + 70.0f;
-    ASSERT(fResult < 400.0f);
+    float fResult = (m_NumStringLines - 3) * CGameFont::GetHeight() + 70.0f;
+    ASSERT(fResult < 400.0f, "%d", (m_NumStringLines - 3));
+
     return fResult;
 };
 
@@ -469,25 +460,13 @@ bool CMessageContainer::isHelpEnable(void)
 
 bool CMessageContainer::isValidID(SEGROUPID::VALUE idGroup)
 {
-    if (!isHelpEnable() || SEGROUPID::IsCallFree(idGroup))
-        return false;
+    if (isHelpEnable() || !SEGROUPID::IsHelpID(idGroup))
+    {
+        if (SEGROUPID::IsCallFree(idGroup) || !m_SeGroupIDPlayFlag[idGroup])
+            return true;
+    };
 
-    if (!SEGROUPID::IsCallFree(idGroup))
-        return false;
-
-    if (m_SeGroupIDPlayFlag[idGroup])
-        return false;
-
-    return true;
-};
-
-
-void CMessageContainer::calcAnchorAndPos(void)
-{
-	m_vBasePosition = { 0.0f, 336.0f };
-	m_vStringBoxWH = { 488.0f, 70.0f };
-	m_vStringBoxOffset = { 75.0f, 72.0f };
-	m_fFontW = 448.0f;
+    return false;
 };
 
 

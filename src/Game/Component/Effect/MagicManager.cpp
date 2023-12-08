@@ -5,6 +5,13 @@
 #include "Game/System/GameObject/GameObjectManager.hpp"
 
 
+#ifdef _DEBUG
+#define MAGIC_MAX_NUM (256)
+#else
+#define MAGIC_MAX_NUM (100)
+#endif
+
+
 class CMagicList
 {
 private:
@@ -84,9 +91,9 @@ CMagicList::CMagicList(int32 nNum)
 
     for (int32 i = 0; i < m_nMagicListNum; ++i)
     {
-        m_paMagicWork[ i ].m_pMagic = nullptr;
-        m_paMagicWork[ i ].m_fSortZ = 0.0f;
-        m_listWorkPool.push_back(&m_paMagicWork[ i ]);
+        m_paMagicWork[i].m_pMagic = nullptr;
+        m_paMagicWork[i].m_fSortZ = 0.0f;
+        m_listWorkPool.push_back(&m_paMagicWork[i]);
     };
 };
 
@@ -255,9 +262,11 @@ CMagicContainer::CMagicContainer(void)
 , m_pListMagicDisplay(nullptr)
 , m_pooltype(POOLTYPE_COMMON)
 {
-    m_pListCommonMagicPool = new CMagicList(30);
-    m_pListAttachedMagicPool = new CMagicList(30);
-    m_pListMagicDisplay = new CMagicList(15);
+    const int32 MagicNum = MAGIC_MAX_NUM;
+    
+    m_pListCommonMagicPool = new CMagicList(MagicNum);
+    m_pListAttachedMagicPool = new CMagicList(MagicNum);
+    m_pListMagicDisplay = new CMagicList(MagicNum);
 
     ASSERT(m_pListAttachedMagicPool);
     ASSERT(m_pListCommonMagicPool);
@@ -804,37 +813,6 @@ void CMagicManager::CParameter::SetSoundPlay(bool bSet)
 };
 
 
-/*static*/ bool CMagicManager::IsChargeAttack(uint32 hMagic)
-{
-    bool bResult = false;
-    
-    CMagic* pMagic = MagicFromHandle(hMagic);
-    if (!pMagic)
-        return bResult;
-
-    static const char* s_apszSpEffectNameList[] =
-    {
-        "leo_sp",
-        "rap_sp",
-        "mic_sp_ball",
-        "kar_sp",
-        "cas_sp_ball",
-        "sla_sp",
-    };
-
-    for (int32 i = 0; i < COUNT_OF(s_apszSpEffectNameList); ++i)
-    {
-        if (!std::strcmp(pMagic->GetName(), s_apszSpEffectNameList[i]))
-        {
-            bResult = true;
-            break;
-        };
-    };
-
-    return bResult;
-};
-
-
 /*static*/ void CMagicManager::Finish(uint32 hMagic)
 {
     CMagic* pMagic = MagicFromHandle(hMagic);
@@ -851,4 +829,26 @@ void CMagicManager::CParameter::SetSoundPlay(bool bSet)
         if (MagicContainer().IsExist(pMagic))
             pMagic->End();
     };
+};
+
+
+/*static*/ bool CMagicManager::IsChargeAttack(CMagic* pMagic)
+{
+    static const char* s_apszSpEffectNameList[] =
+    {
+        "leo_sp",
+        "rap_sp",
+        "mic_sp_ball",
+        "kar_sp",
+        "cas_sp_ball",
+        "sla_sp",
+    };
+
+    for (int32 i = 0; i < COUNT_OF(s_apszSpEffectNameList); ++i)
+    {
+        if (!std::strcmp(pMagic->GetName(), s_apszSpEffectNameList[i]))
+            return true;
+    };
+
+    return false;
 };

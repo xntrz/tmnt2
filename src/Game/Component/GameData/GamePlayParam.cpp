@@ -40,7 +40,7 @@
 void CGamePlayParam::CHARAINFO::Init(void)
 {
     m_Costume       = GAMETYPES::COSTUME_NONE;
-    m_CharacterID   = PLAYERID::ID_INVALID;
+    m_CharacterID   = PLAYERID::ID_MAX;
     m_iPlayerNo     = -1;
 };
 
@@ -53,7 +53,7 @@ void CGamePlayParam::PLAYERCONTEXT::Init(int32 no)
     m_iDamage       = 0;
     m_iShurikenNum  = 0;
     m_iShurikenMax  = 0;
-    m_CharacterID   = PLAYERID::ID_INVALID;
+    m_CharacterID   = PLAYERID::ID_MAX;
     m_iCharacterNum = 0;
 };
 

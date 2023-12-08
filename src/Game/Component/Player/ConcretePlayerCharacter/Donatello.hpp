@@ -8,6 +8,23 @@
 
 namespace Donatello
 {
+    const RwV3d BANDANA_OFFSET = { 0.0f, 0.15f, 0.05f };
+
+    namespace MOTIONNAMES
+    {
+        static const char* CONSOLE1        = "Panel1";
+        static const char* CONSOLE2        = "Panel2";
+        static const char* CONSOLE3        = "Panel3";
+        static const char* ATTACK_LASER    = "Shuriken";
+        static const char* ATTACK_JUMP1    = "JAttack1";
+        static const char* ATTACK_JUMP2    = "JAttack2";
+    };
+
+    namespace EFFECTNAMES
+    {
+        static const char* LASER_BEAM = "don_laser_beam";
+    };
+
     class CAttackJump : public CStatus
     {
     public:
@@ -20,13 +37,9 @@ namespace Donatello
     class CAttackLaser : public PlayerStatus::CAttackKnife
     {
     public:
+        virtual void OnAttach(void) override;
         virtual void OnRun(void) override;
-    };
-
-    class CAttackLaserJump : public PlayerStatus::CAttackKnifeJump
-    {
-    public:        
-        virtual void OnRun(void) override;
+        void ShootingLaser(void);
     };
 
     class CTouchdown : public PlayerStatus::CTouchdown
@@ -95,7 +108,5 @@ class CDonatello : public CPlayerCharacter
 public:
     CDonatello(GAMETYPES::COSTUME costume);
     virtual ~CDonatello(void);
-    virtual void Run(void) override;
     virtual void OnChangeMotion(void) override;
-    virtual void ShootingKnife(void) override;
 };

@@ -1,5 +1,8 @@
 #include "GimmickFactory.hpp"
 #include "GimmickParam.hpp"
+#ifdef _DEBUG
+#include "GimmickDebug.hpp"
+#endif
 
 #include "ConcreteGimmick/SystemGimmick.hpp"
 #include "ConcreteGimmick/EventCheckGimmick.hpp"
@@ -27,18 +30,52 @@
 #include "ConcreteGimmick/MadCarGimmick.hpp"
 #include "ConcreteGimmick/MadCarGimmickManager.hpp"
 #include "ConcreteGimmick/FallGimmick.hpp"
+#include "ConcreteGimmick/BreakableCarGimmick.hpp"
+#include "ConcreteGimmick/BreakableGimmick.hpp"
+#include "ConcreteGimmick/FallRubbleGimmick.hpp"
+#include "ConcreteGimmick/FallRubbleGimmickManager.hpp"
+#include "ConcreteGimmick/RollingRockGimmick.hpp"
+#include "ConcreteGimmick/UtromGimmick.hpp"
+#include "ConcreteGimmick/FenceGimmick.hpp"
+#include "ConcreteGimmick/FenceGimmickManager.hpp"
+#include "ConcreteGimmick/CrumbleFloorGimmick.hpp"
+#include "ConcreteGimmick/GSMachineGimmick.hpp"
+#include "ConcreteGimmick/PillarGimmick.hpp"
+#include "ConcreteGimmick/MineGimmick.hpp"
+#include "ConcreteGimmick/BeltConveyorGimmick.hpp"
+#include "ConcreteGimmick/SeesawGimmick.hpp"
+#include "ConcreteGimmick/GuillotineGimmick.hpp"
+#include "ConcreteGimmick/DoorGimmick.hpp"
+#include "ConcreteGimmick/GeneratorGimmick.hpp"
+#include "ConcreteGimmick/EggGimmick.hpp"
+#include "ConcreteGimmick/CaveGimmick.hpp"
+#include "ConcreteGimmick/SpaceShipGimmick.hpp"
+#include "ConcreteGimmick/CrystalGimmick.hpp"
+#include "ConcreteGimmick/ElevatorGimmick.hpp"
+#include "ConcreteGimmick/GearGimmick.hpp"
+#include "ConcreteGimmick/PistonGimmick.hpp"
+#include "ConcreteGimmick/PropellerGimmick.hpp"
+#include "ConcreteGimmick/HatchGimmick.hpp"
+#include "ConcreteGimmick/GateGimmick.hpp"
+#include "ConcreteGimmick/ApproachingTrailerGimmick.hpp"
 
 #include "Game/Component/GameData/GameData.hpp"
 
 
 /*static*/ CGimmick* CGimmickFactory::Create(GIMMICKID::VALUE idGimmick, int32 subid, void* pParam)
-{
-    CGimmick* pGimmick = nullptr;
-    
+{    
     ASSERT(pParam);
-    GIMMICKPARAM::GIMMICK_COMMON_HEAD* pHeader = (GIMMICKPARAM::GIMMICK_COMMON_HEAD*)pParam;
-    const char* pszName = pHeader->m_szName;
     
+    GIMMICKPARAM::GIMMICK_COMMON_HEAD* pHeader = static_cast<GIMMICKPARAM::GIMMICK_COMMON_HEAD*>(pParam);
+    const char* pszName = pHeader->m_szName;
+
+    CGimmick* pGimmick = nullptr;
+
+#ifdef _DEBUG
+    if (CGimmickDebug::DISABLE_GENERERATOR && (idGimmick >= GIMMICKID::GENERATORSTART) && (idGimmick < GIMMICKID::GENERATOREND))
+        return pGimmick;
+#endif    
+
     switch (idGimmick)
     {
     //
@@ -139,6 +176,7 @@
         break;
         
     case GIMMICKID::ID_E_UTRVOL:
+        pGimmick = new CUtromAreaCheckGimmick(pszName, pParam);
         break;
         
     case GIMMICKID::ID_E_DONLSR:
@@ -158,25 +196,34 @@
     //   Generator
     //
     case GIMMICKID::ID_G_SET:
+        pGimmick = new CEnemySettingGimmick(pszName, pParam);
         break;
         
     case GIMMICKID::ID_G_GROUND:
     case GIMMICKID::ID_G_AIR:
+        pGimmick = new CEnemyGeneratePointGimmick(pszName, pParam);
         break;
         
     case GIMMICKID::ID_G_EGG:
+        pGimmick = new CEggGimmick(pszName, pParam);
         break;
         
     case GIMMICKID::ID_G_CAVE:
+        pGimmick = new CCaveGimmick(pszName, pParam);
         break;
         
     case GIMMICKID::ID_G_DOOR:
+        pGimmick = new CDoorGimmick(pszName, pParam);
         break;
         
     case GIMMICKID::ID_G_CAR:
+        //
+        //  Not exist
+        //
         break;
         
     case GIMMICKID::ID_G_SSHIPS:
+        pGimmick = new CSpaceShipGimmick(pszName, pParam);
         break;
 
 
@@ -189,12 +236,15 @@
         break;
         
     case GIMMICKID::ID_N_BRKCAR:
+        pGimmick = new CBreakableCarGimmick(pszName, pParam);
         break;
         
     case GIMMICKID::ID_N_BRKOBJ:
+        pGimmick = new CBreakableGimmick(pszName, pParam);
         break;
         
     case GIMMICKID::ID_N_ROLOBJ:
+        pGimmick = new CRollingRockGimmick(pszName, pParam);
         break;
         
     case GIMMICKID::ID_N_MVFLLI:
@@ -218,11 +268,13 @@
         break;
         
     case GIMMICKID::ID_N_SWIPIL:
+        pGimmick = new CSwitchPillarGimmick(pszName, pParam);
         break;
         
     case GIMMICKID::ID_N_BRKPIL:
     case GIMMICKID::ID_N_SHKPIL:
     case GIMMICKID::ID_N_NORPIL:
+        pGimmick = new CPillarGimmick(pszName, pParam);
         break;
         
     case GIMMICKID::ID_N_RAPROC:
@@ -246,12 +298,15 @@
         break;
         
     case GIMMICKID::ID_N_CRYSTL:
+        pGimmick = new CCrystalGimmick(pszName, pParam);
         break;
         
     case GIMMICKID::ID_N_GUILLO:
+        pGimmick = new CGuillotineGimmick(pszName, pParam);
         break;
         
     case GIMMICKID::ID_N_SEESAW:
+        pGimmick = new CSeesawGimmick(pszName, pParam);
         break;
         
     case GIMMICKID::ID_N_FALOBJ:
@@ -259,6 +314,9 @@
         break;
         
     case GIMMICKID::ID_N_METEO:
+        //
+        //  Not exist
+        //
         break;
         
     case GIMMICKID::ID_N_DOOR:
@@ -266,6 +324,7 @@
         break;
         
     case GIMMICKID::ID_N_UTROM:
+        pGimmick = new CUtromGimmick(pszName, pParam);
         break;
         
     case GIMMICKID::ID_N_LASER:
@@ -273,9 +332,11 @@
         break;
         
     case GIMMICKID::ID_N_MINE:
+        pGimmick = new CMineGimmick(pszName, pParam);
         break;
         
     case GIMMICKID::ID_N_BELCON:
+        pGimmick = new CBeltConveyorGimmick(pszName, pParam);
         break;
         
     case GIMMICKID::ID_N_STOPER:
@@ -336,40 +397,90 @@
     //  Koyuu
     //
     case GIMMICKID::ID_K_M12N:
+        pGimmick = new CCrumbleFloorGimmick(pszName, pParam);
         break;
         
     case GIMMICKID::ID_K_M02N:
     case GIMMICKID::ID_K_M05N:
+        pGimmick = new CElevatorGimmick(pszName, pParam);
         break;
         
     case GIMMICKID::ID_K_M38B:
+        pGimmick = new CFenceGimmick(pszName, pParam);
         break;
         
     case GIMMICKID::ID_K_M38BMAN:
+        pGimmick = new CFenceGimmickManager(pszName, pParam);
         break;
         
     case GIMMICKID::ID_K_M17N:
+        {
+            GIMMICKPARAM::GIMMICK_BASIC* pInitParam = static_cast<GIMMICKPARAM::GIMMICK_BASIC*>(pParam);
+            
+            if (!std::strcmp(pInitParam->m_szName, "GMKM17N_A_0"))
+            {
+                std::strcpy(pInitParam->m_szName, "gsmachine00");
+                pInitParam->m_subid = 0;
+            };
+
+            if (!std::strcmp(pInitParam->m_szName, "GMKM17N_A_1"))
+            {
+                std::strcpy(pInitParam->m_szName, "gsmachine01");
+                pInitParam->m_subid = 1;
+            };
+
+            if (!std::strcmp(pInitParam->m_szName, "GMKM17N_A_2"))
+            {
+                std::strcpy(pInitParam->m_szName, "gsmachine02");
+                pInitParam->m_subid = 2;
+            };
+
+            if (!std::strcmp(pInitParam->m_szName, "GMKM17N_A_3"))
+            {
+                std::strcpy(pInitParam->m_szName, "gsmachine03");
+                pInitParam->m_subid = 3;
+            };
+
+            pGimmick = new CGSMachineGimmick(pszName, pParam);
+        }
         break;
         
     case GIMMICKID::ID_K_M43N:
+        {
+            GIMMICKPARAM::GIMMICK_BASIC* pInitParam = static_cast<GIMMICKPARAM::GIMMICK_BASIC*>(pParam);
+
+            if (!std::strcmp(pInitParam->m_szName, "GMKM43N_A_0"))
+            {
+                std::strcpy(pInitParam->m_szName, "AppTrailer");
+                pInitParam->m_subid = 0;
+            };
+
+            pGimmick = new CApproachingTrailerGimmick(pszName, pParam);
+        }
         break;
         
     case GIMMICKID::ID_K_M28NGR:
+        pGimmick = new CGearGimmick(pszName, pParam);
         break;
         
     case GIMMICKID::ID_K_M28NPT:
+        pGimmick = new CPistonGimmick(pszName, pParam);
         break;
         
     case GIMMICKID::ID_K_M28NPR:
+        pGimmick = new CPropellerGimmick(pszName, pParam);
         break;
         
     case GIMMICKID::ID_K_M28OB:
+        pGimmick = new CHatchGimmick(pszName, pParam);
         break;
         
     case GIMMICKID::ID_K_M28OBR:
+        pGimmick = new CFallRubbleGimmick(pszName, pParam);
         break;
         
     case GIMMICKID::ID_K_M28OBRM:
+        pGimmick = new CFallRubbleGimmickManager(pszName, pParam);
         break;
         
     case GIMMICKID::ID_K_M44N:
@@ -385,6 +496,7 @@
         break;
         
     case GIMMICKID::ID_K_M23N:
+        pGimmick = new CGateGimmick(pszName, pParam);
         break;
         
     case GIMMICKID::ID_K_M04N:

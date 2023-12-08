@@ -7,6 +7,15 @@
 
 namespace Leonardo
 {
+    const RwV3d BANDANA_OFFSET                  = { 0.0f, 0.15f, 0.05f };
+    const RwV3d JUMPATTACK_VELOCITY             = { 0.0f, -7.5f, 12.5f };
+    const RwV3d CHARGE_ATTACK_LOCAL_POSITION    = { 0.0f, 0.145f, 1.0f };
+
+    namespace MOTIONNAMES
+    {
+        static const char* ATTACK_JUMP = "JAttack";
+    };
+    
     class CAttackJump : public CStatus
     {
     public:
@@ -16,13 +25,11 @@ namespace Leonardo
         virtual void OnRun(void) override;
     };
 
-
     class CAttackAABBC : public PlayerStatus::CAttackAABBC
     {
     public:
         virtual void OnDischargeWave(void) override;
     };
-    
 
     class CAttackB : public PlayerStatus::CAttackB
     {
@@ -37,5 +44,4 @@ class CLeonardo : public CPlayerCharacter
 public:
     CLeonardo(GAMETYPES::COSTUME costume);
     virtual ~CLeonardo(void);
-    virtual void Run(void) override;
 };

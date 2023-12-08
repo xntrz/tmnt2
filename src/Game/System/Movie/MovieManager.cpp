@@ -1,10 +1,9 @@
 #include "MovieManager.hpp"
 #include "MovieDataManager.hpp"
 
-#include "Game/Component/GameMain/MovieID.hpp"
 #include "System/Common/Movie.hpp"
 
-#ifdef _TARGET_PC
+#ifdef TARGET_PC
 #include "System/PC/PCMovie.hpp"
 #else
 #error Not implemented for current target
@@ -35,12 +34,19 @@ static int32 s_iMovieID = -1;
     {
         ASSERT(!s_pMovie);
         
+        int32 sw = int32(TYPEDEF::VSCR_W);
+        int32 sh = int32(TYPEDEF::VSCR_H);
+        int32 bps = 0x200000;
+        bool paltv = false;
+
         CMovie* pMovie = nullptr;
-#ifdef _TARGET_PC
-        pMovie = new CPCMovie(640, 448, 0x200000, false);
+        
+#ifdef TARGET_PC
+        pMovie = new CPCMovie(sw, sh, bps, paltv);
 #else
 #error Not implemented for current target
 #endif
+        
         ASSERT(pMovie);
         
         s_pMovie = pMovie;

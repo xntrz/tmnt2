@@ -5,6 +5,8 @@ namespace PLAYERID
 {
     enum VALUE
     {
+        ID_INVALID = -1,
+        
         ID_LEO = 0,
         ID_RAP,
         ID_MIC,
@@ -15,7 +17,6 @@ namespace PLAYERID
         ID_SPL,
 
         ID_MAX,
-        ID_INVALID = ID_MAX,
         ID_START = ID_LEO,
     };
 

@@ -39,23 +39,21 @@ void CAmbientLightModule::Run(void)
 
     CModel* pModel = m_pCharacter->GetModel();
     ASSERT(pModel);
-    RwRGBA ColorModel = pModel->GetColor();
-
+    
     const CCharacter::COLLISIONGROUNDINFO* pGroundInfo = m_pCharacter->GetCollisionGround();
     ASSERT(pGroundInfo);
-	pModel->SetColor(pGroundInfo->m_Color);
-	return;
 
+    RwRGBA ColorModel = pModel->GetColor();
     RwRGBA ColorGnd = pGroundInfo->m_Color;
     RwRGBAReal ColorGndReal = { 0.0f, 0.0f, 0.0f, 0.0f };
 
-    RwRGBARealFromRwRGBA(&ColorGndReal, &ColorGnd);
+    RwRGBARealFromRwRGBAMacro(&ColorGndReal, &ColorGnd);
 
     if (!Math::FEqual(ColorGndReal.red, m_ColorTo.red)      ||
         !Math::FEqual(ColorGndReal.green, m_ColorTo.green)  ||
         !Math::FEqual(ColorGndReal.blue, m_ColorTo.blue))
     {
-        RwRGBARealFromRwRGBA(&m_ColorFrom, &ColorModel);
+        RwRGBARealFromRwRGBAMacro(&m_ColorFrom, &ColorModel);
         
         m_ColorTo = ColorGndReal;
         m_fElapsedTime = 0.0f;
@@ -63,7 +61,7 @@ void CAmbientLightModule::Run(void)
 
     if (Math::FEqual(m_fElapsedTime, 0.0f))
     {
-        RwRGBAFromRwRGBAReal(&ColorModel, &m_ColorFrom);
+        RwRGBAFromRwRGBARealMacro(&ColorModel, &m_ColorFrom);
     }
     else if (m_fElapsedTime < 0.5f)
     {
@@ -72,11 +70,11 @@ void CAmbientLightModule::Run(void)
         Delta.green = m_ColorFrom.green + ((m_ColorTo.green - m_ColorFrom.green)* (m_fElapsedTime / 0.5f));
         Delta.blue  = m_ColorFrom.blue  + ((m_ColorTo.blue  - m_ColorFrom.blue) * (m_fElapsedTime / 0.5f));
 
-        RwRGBAFromRwRGBAReal(&ColorModel, &Delta);
+        RwRGBAFromRwRGBARealMacro(&ColorModel, &Delta);
     }
     else
     {
-        RwRGBAFromRwRGBAReal(&ColorModel, &m_ColorTo);
+        RwRGBAFromRwRGBARealMacro(&ColorModel, &m_ColorTo);
     };
 
     ColorModel.alpha = 0xFF;

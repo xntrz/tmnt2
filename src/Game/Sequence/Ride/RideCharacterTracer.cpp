@@ -7,7 +7,7 @@ CRideCharacterTracer::CRideCharacterTracer(CRideCharacter* pRideChr)
 , m_vPosition(Math::VECTOR3_ZERO)
 {
     ASSERT(m_pRideChr);
-    m_pRideChr->GetPosition(&m_vPosition);
+    m_pRideChr->GetBodyPosition(&m_vPosition);
 };
 
 
@@ -28,7 +28,7 @@ void CRideCharacterTracer::GetPosition(RwV3d* pvPosition)
     ASSERT(pvPosition);
     
     if (m_pRideChr->IsEnableMove())
-        m_pRideChr->GetPosition(&m_vPosition);
+        m_pRideChr->GetBodyPosition(&m_vPosition);
 
     *pvPosition = m_vPosition;
 };

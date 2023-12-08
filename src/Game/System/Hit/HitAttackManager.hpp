@@ -6,11 +6,13 @@ class CHitCatchData;
 
 
 class CHitAttackManager
-{
+{    
 public:
-    static bool m_bDebugDrawHitSphere;
-        
-public:
+#ifdef _DEBUG    
+    static bool m_bDebugDrawSphereAttack;
+    static bool m_bDebugDrawSphereCatch;
+#endif
+    
     static void Initialize(void);
     static void Terminate(void);
     static void Period(void);

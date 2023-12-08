@@ -2,140 +2,80 @@
 #include "Gamepad.hpp"
 
 #include "System/Common/Controller.hpp"
+
+#ifdef TARGET_PC
 #include "System/PC/PCSpecific.hpp"
+#endif
 
 
-CPadStream::CPadStream(void)
-: m_mode(MODE_NONE)
-, m_pStream(nullptr)
+class CPadStream::CPadFileStream
 {
-    ;
-};
-
-
-CPadStream::~CPadStream(void)
-{
-    Close();
-};
-
-
-bool CPadStream::Open(MODE mode, STAGEID::VALUE idStage, int32 nPadNo)
-{
-	m_mode = mode;
-#ifdef _TARGET_PC
-    switch (mode)
+public:
+    friend CPadStream;
+    
+    enum FILEMODE
     {
-    case MODE_RECORD:
-        m_pStream = new CPCPadFileStream(CPadFileStream::FILEMODE_RECORD, idStage, nPadNo);
-        break;
+        FILEMODE_RECORD = 0,
+        FILEMODE_PLAY,
 
-    case MODE_PLAY:
-        m_pStream = new CPCPadFileStream(CPadFileStream::FILEMODE_PLAY, idStage, nPadNo);
-        break;
-
-    default:
-        ASSERT(false);
-        break;
+        FILEMODEMAX,
     };
+
+    struct packed
+    {
+        uint32 m_uDigital;
+        int16 m_iAnalogX;
+        int16 m_iAnalogY;
+    };
+
+public:
+    CPadFileStream(void);
+    virtual ~CPadFileStream(void);
+    virtual void GetInput(CPadStream::MODE mode, void* pInput, uint32 uInputSize);
+    virtual void SetPacked(int32 iController);
+    virtual void GetPacked(void);
+    uint32 Convert(uint32 data);
+    uint32 Convert(uint16 data);
+    void Play(void);
+    void Record(int32 iController);
+    void GotoTop(void);
+    void ClearPacked(void);
+    bool IsEnd(void) const;
+    void AllocBuffer(uint32 uBuffSize);
+
+protected:
+    packed* m_pPacked;
+    packed m_packed;
+    uint32 m_uDigital;
+    uint32 m_uDigitalOld;
+    uint32 m_uTrigger;
+    int16 m_iAnalogX;
+    int16 m_iAnalogY;
+    uint32 m_uEndFrame;
+    uint32 m_uFrame;
+    void* m_pFile;
+    void* m_pRecBuff;
+    uint32 m_uRecBuffSize;
+};
+
+
+#ifdef TARGET_PC
+class CPadStream::CPCPadFileStream final : public CPadStream::CPadFileStream
+{
+public:
+    CPCPadFileStream(FILEMODE filemode, STAGEID::VALUE idStage, int32 nControllerNo);
+    virtual ~CPCPadFileStream(void);
+    virtual void GetInput(CPadStream::MODE mode, void* pInput, uint32 uInputSize) override;
+    virtual void SetPacked(int32 iController) override;
+    virtual void GetPacked(void) override;
+};
 #else
 #error Not implemented for current target
 #endif
 
-    return (m_pStream != nullptr);
-};
 
 
-void CPadStream::Close(void)
-{
-    if (m_pStream)
-    {
-        delete m_pStream;
-        m_pStream = nullptr;
-    };
-
-    m_mode = MODE_NONE;
-};
-
-
-void CPadStream::GetPad(int32 iController)
-{
-    switch (m_mode)
-    {
-    case MODE_RECORD:
-        {
-            ASSERT(m_pStream);
-            
-            m_pStream->Record(iController);
-            if (m_pStream->IsEnd())
-            {
-                CPadStreamSwitch::m_bEnd = true;
-            };
-        };
-        break;
-
-    case MODE_PLAY:
-        {
-            ASSERT(m_pStream);
-
-            m_pStream->Play();
-            if (m_pStream->IsEnd())
-            {
-                CPadStreamSwitch::m_bEnd = true;
-            };
-        };
-        break;
-    };
-};
-
-
-int16 CPadStream::GetAnalogX(int32 iController)
-{
-    if (m_mode == MODE_PLAY)
-        return m_pStream->m_iAnalogX;
-    else
-        return CController::GetAnalog(iController, CController::ANALOG_LSTICK_X);
-};
-
-
-int16 CPadStream::GetAnalogY(int32 iController)
-{
-    if (m_mode == MODE_PLAY)
-        return m_pStream->m_iAnalogY;
-    else
-        return CController::GetAnalog(iController, CController::ANALOG_LSTICK_Y);
-};
-
-
-uint32 CPadStream::GetDigital(int32 iController)
-{
-    if (m_mode == MODE_PLAY)
-        return m_pStream->m_uDigital;
-    else
-        return CController::GetDigital(iController);
-};
-
-
-uint32 CPadStream::GetDigitalTrigger(int32 iController)
-{
-    if (m_mode == MODE_PLAY)
-        return m_pStream->m_uTrigger;
-    else
-        return CController::GetDigitalTrigger(iController);
-};
-
-
-void CPadStream::GetInput(void* pInput, uint32 uInputSize)
-{
-    if (m_mode != MODE_NONE)
-        m_pStream->GetInput(m_mode, pInput, uInputSize);
-};
-
-
-/*static*/ bool CPadStreamSwitch::m_bEnd = false;
-/*static*/ CPadStream::MODE CPadStreamSwitch::m_mode = CPadStream::MODE_NONE;
-
-
-CPadFileStream::CPadFileStream(void)
+CPadStream::CPadFileStream::CPadFileStream(void)
 : m_pPacked(nullptr)
 , m_packed({ 0 })
 , m_uDigital(0)
@@ -143,7 +83,7 @@ CPadFileStream::CPadFileStream(void)
 , m_uTrigger(0)
 , m_iAnalogX(0)
 , m_iAnalogY(0)
-, m_uEndFrame(3600)
+, m_uEndFrame(60 * 60)  // 60 seconds each for 60 frames
 , m_uFrame(0)
 , m_pFile(nullptr)
 {
@@ -151,8 +91,17 @@ CPadFileStream::CPadFileStream(void)
 };
 
 
-CPadFileStream::~CPadFileStream(void)
+CPadStream::CPadFileStream::~CPadFileStream(void)
 {
+#ifdef _DEBUG    
+    if (m_pRecBuff)
+    {
+        delete[] m_pRecBuff;
+        m_pRecBuff = nullptr;
+        m_uRecBuffSize = 0;
+    };
+#endif
+    
     if (m_pFile)
     {
         RwFclose(m_pFile);
@@ -161,27 +110,39 @@ CPadFileStream::~CPadFileStream(void)
 };
 
 
-void CPadFileStream::GetInput(CPadStream::MODE mode, void* pInput, uint32 uInputSize)
+void CPadStream::CPadFileStream::GetInput(CPadStream::MODE mode, void* pInput, uint32 uInputSize)
 {
     ;
 };
 
 
-void CPadFileStream::SetPacked(int32 iController)
+void CPadStream::CPadFileStream::SetPacked(int32 iController)
 {
     ASSERT(m_pPacked);
 
+#ifdef TARGET_PS2
+    m_pPacked->m_uDigital = Convert(uint16(CController::GetDigital(iController)));
+#elif TARGET_PC
     m_pPacked->m_uDigital = CController::GetDigital(iController);
+#else
+#error Not implemented for current target
+#endif    
     m_pPacked->m_iAnalogX = CController::GetAnalog(iController, CController::ANALOG_LSTICK_X);
     m_pPacked->m_iAnalogY = CController::GetAnalog(iController, CController::ANALOG_LSTICK_Y);
 };
 
 
-void CPadFileStream::GetPacked(void)
+void CPadStream::CPadFileStream::GetPacked(void)
 {
     ASSERT(m_pPacked);
 
+#ifdef TARGET_PS2
+    m_uDigital = Convert(uint32(m_pPacked->m_uDigital));
+#elif TARGET_PC
     m_uDigital = m_pPacked->m_uDigital;
+#else
+#error Not implemented for current target
+#endif    
     m_uTrigger = m_uDigital & ~(m_uDigitalOld);
     m_uDigitalOld = m_uDigital;
     m_iAnalogX = m_pPacked->m_iAnalogX;
@@ -189,19 +150,19 @@ void CPadFileStream::GetPacked(void)
 };
 
 
-uint32 CPadFileStream::Convert(uint32 data)
+uint32 CPadStream::CPadFileStream::Convert(uint32 data)
 {
     return data;
 };
 
 
-uint32 CPadFileStream::Convert(uint16 data)
+uint32 CPadStream::CPadFileStream::Convert(uint16 data)
 {
-    return CGamepad::ConvertToVirtualButton(data);
+    return IGamepad::ConvertToVirtualButton(data);
 };
 
 
-void CPadFileStream::Play(void)
+void CPadStream::CPadFileStream::Play(void)
 {
     if (IsEnd() || RwFeof(m_pFile) == 1)
     {
@@ -216,7 +177,7 @@ void CPadFileStream::Play(void)
 };
 
 
-void CPadFileStream::Record(int32 iController)
+void CPadStream::CPadFileStream::Record(int32 iController)
 {
     if (IsEnd())
     {
@@ -232,7 +193,7 @@ void CPadFileStream::Record(int32 iController)
 };
 
 
-void CPadFileStream::GotoTop(void)
+void CPadStream::CPadFileStream::GotoTop(void)
 {
     m_pPacked = &m_packed;
     m_uFrame = 0;
@@ -240,7 +201,7 @@ void CPadFileStream::GotoTop(void)
 };
 
 
-void CPadFileStream::ClearPacked(void)
+void CPadStream::CPadFileStream::ClearPacked(void)
 {
     m_uDigital = 0;
     m_uDigitalOld = 0;
@@ -250,21 +211,27 @@ void CPadFileStream::ClearPacked(void)
 };
 
 
-bool CPadFileStream::IsEnd(void) const
+bool CPadStream::CPadFileStream::IsEnd(void) const
 {
     return (m_uFrame >= m_uEndFrame);
 };
 
 
-void CPadFileStream::AllocBuffer(uint32 uBuffSize)
+void CPadStream::CPadFileStream::AllocBuffer(uint32 uBuffSize)
 {
-    ;    
+#ifdef _DEBUG
+    m_uRecBuffSize = uBuffSize;
+    m_pRecBuff = new uint8[m_uRecBuffSize];
+#endif    
 };
 
 
-CPCPadFileStream::CPCPadFileStream(FILEMODE filemode, STAGEID::VALUE idStage, int32 nControllerNo)
+#ifdef TARGET_PC
+
+CPadStream::CPCPadFileStream::CPCPadFileStream(FILEMODE filemode, STAGEID::VALUE idStage, int32 nControllerNo)
 {
     const char* pszFilemode = nullptr;
+    
     char szFilePath[256];
     szFilePath[0] = '\0';
 
@@ -272,16 +239,14 @@ CPCPadFileStream::CPCPadFileStream(FILEMODE filemode, STAGEID::VALUE idStage, in
     {
     case FILEMODE_RECORD:
         {
-            char szDrive[256];
-            char szDir[256];
-            char szModulePath[256];
-
+            char szDrive[MAX_PATH];
             szDrive[0] = '\0';
-            szDir[0] = '\0';
-            szModulePath[0] = '\0';
 
-            CPCSpecific::GetModulePath(szModulePath, sizeof(szModulePath));
-            _splitpath(szModulePath, szDrive, szDrive, nullptr, nullptr);
+            char szDir[MAX_PATH];
+            szDir[0] = '\0';
+
+            GetModulePathSplit(szDrive, szDir, nullptr, nullptr);
+
             sprintf(
                 szFilePath,
                 "%s%s..\\..\\..\\data\\Common\\Demo\\PC\\demo%03d%d.dat",
@@ -289,7 +254,8 @@ CPCPadFileStream::CPCPadFileStream(FILEMODE filemode, STAGEID::VALUE idStage, in
                 szDir,
                 idStage,
                 nControllerNo
-            );
+            );            
+            pszFilemode = "wb";
         }
         break;
 
@@ -311,24 +277,28 @@ CPCPadFileStream::CPCPadFileStream(FILEMODE filemode, STAGEID::VALUE idStage, in
 };
 
 
-CPCPadFileStream::~CPCPadFileStream(void)
+CPadStream::CPCPadFileStream::~CPCPadFileStream(void)
 {
     ;
 };
 
 
-void CPCPadFileStream::GetInput(CPadStream::MODE mode, void* pInput, uint32 uInputSize)
+void CPadStream::CPCPadFileStream::GetInput(CPadStream::MODE mode, void* pInput, uint32 uInputSize)
 {
     switch (mode)
     {
     case CPadStream::MODE_RECORD:
-        std::memcpy(m_pPacked, pInput, uInputSize);
-        m_pPacked = (packed*)((uint8*)m_pPacked + uInputSize);
+        {
+            std::memcpy(m_pPacked, pInput, uInputSize);
+            m_pPacked = (packed*)((uint8*)m_pPacked + uInputSize);
+        }
         break;
 
     case CPadStream::MODE_PLAY:
-        ASSERT(m_pFile);
-        RwFread(pInput, uInputSize, 1, m_pFile);
+        {
+            ASSERT(m_pFile);
+            RwFread(pInput, uInputSize, 1, m_pFile);
+        }
         break;
 
     default:
@@ -338,13 +308,111 @@ void CPCPadFileStream::GetInput(CPadStream::MODE mode, void* pInput, uint32 uInp
 };
 
 
-void CPCPadFileStream::SetPacked(int32 iController)
+void CPadStream::CPCPadFileStream::SetPacked(int32 iController)
 {
     CPadFileStream::SetPacked(iController);
 };
 
 
-void CPCPadFileStream::GetPacked(void)
+void CPadStream::CPCPadFileStream::GetPacked(void)
 {
     CPadFileStream::GetPacked();
 };
+
+#endif /* TARGET_PC */
+
+
+CPadStream::CPadStream(void)
+: m_mode(MODE_NONE)
+, m_pStream(nullptr)
+{
+    ;
+};
+
+
+CPadStream::~CPadStream(void)
+{
+    Close();
+};
+
+
+bool CPadStream::Open(MODE mode, STAGEID::VALUE idStage, int32 iController)
+{
+    m_mode = mode;
+    
+#ifdef TARGET_PC
+    m_pStream = new CPCPadFileStream(mode == MODE_RECORD ? CPadFileStream::FILEMODE_RECORD : CPadFileStream::FILEMODE_PLAY, idStage, iController);
+#else
+#error Not implemented for current target
+#endif
+
+    return (m_pStream != nullptr);
+};
+
+
+void CPadStream::Close(void)
+{
+    if (m_pStream)
+    {
+        delete m_pStream;
+        m_pStream = nullptr;
+    };
+
+    m_mode = MODE_NONE;
+};
+
+
+void CPadStream::GetPad(int32 iController)
+{   
+    switch (m_mode)
+    {
+    case MODE_RECORD:
+		ASSERT(m_pStream);
+        m_pStream->Record(iController);
+		if (m_pStream->IsEnd())
+			CPadStreamSwitch::m_bEnd = true;
+        break;
+
+    case MODE_PLAY:
+		ASSERT(m_pStream);
+        m_pStream->Play();
+		if (m_pStream->IsEnd())
+			CPadStreamSwitch::m_bEnd = true;
+        break;
+    };
+};
+
+
+int16 CPadStream::GetAnalogX(int32 iController)
+{
+    return (m_mode == MODE_PLAY ? m_pStream->m_iAnalogX : CController::GetAnalog(iController, CController::ANALOG_LSTICK_X));
+};
+
+
+int16 CPadStream::GetAnalogY(int32 iController)
+{
+    return (m_mode == MODE_PLAY ? m_pStream->m_iAnalogY : CController::GetAnalog(iController, CController::ANALOG_LSTICK_Y));
+};
+
+
+uint32 CPadStream::GetDigital(int32 iController)
+{
+    return (m_mode == MODE_PLAY ? m_pStream->m_uDigital : CController::GetDigital(iController));
+};
+
+
+uint32 CPadStream::GetDigitalTrigger(int32 iController)
+{
+    return (m_mode == MODE_PLAY ? m_pStream->m_uTrigger : CController::GetDigitalTrigger(iController));
+};
+
+
+void CPadStream::GetInput(void* pInput, uint32 uInputSize)
+{
+    if (m_mode != MODE_NONE)
+        m_pStream->GetInput(m_mode, pInput, uInputSize);
+};
+
+
+/*static*/ bool CPadStreamSwitch::m_bEnd = false;
+/*static*/ CPadStream::MODE CPadStreamSwitch::m_mode = CPadStream::MODE_NONE;

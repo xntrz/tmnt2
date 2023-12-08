@@ -60,7 +60,7 @@ public:
     static void SetSpeed(uint32 hMagic, const RwV3d* pvVector);
     static void SetSpeed(uint32 hMagic, float fDirection, float fSpeed);
     static void SetSpeed(uint32 hMagic, float fSpeed);
-    static bool IsChargeAttack(uint32 hMagic);
     static void Finish(uint32 hMagic);
     static void End(uint32 hMagic);
+    static bool IsChargeAttack(CMagic* pMagic);
 };

@@ -36,8 +36,8 @@ public:
         int32 m_nTrickCount;
         float m_fTrickRatio;
         int32 m_nTrickEval;
-        int32 m_nKillCount;
-        int32 m_nKillEval;
+        int32 m_nShotCount;
+        int32 m_nShotEval;
         int32 m_nPersonalPoint;
         int32 m_nPersonalEval;
     };

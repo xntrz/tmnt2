@@ -4,10 +4,22 @@
 #include "RenderState.hpp"
 
 
-/*static*/ float CSprite::VIRTUALSCREEN_DEFAULT_X = -(640.0f * 0.5f);
-/*static*/ float CSprite::VIRTUALSCREEN_DEFAULT_Y = -(480.0f * 0.5f);
-/*static*/ float CSprite::VIRTUALSCREEN_DEFAULT_W = 640.0f;
-/*static*/ float CSprite::VIRTUALSCREEN_DEFAULT_H = 480.0f;
+static inline float SinFloat(float x)
+{
+    return std::sin(x);
+};
+
+
+static inline float CosFloat(float x)
+{
+    return std::cos(x);
+};
+
+
+/*static*/ float CSprite::VIRTUALSCREEN_DEFAULT_X = -(TYPEDEF::DEFAULT_SCREEN_WIDTH * 0.5f);
+/*static*/ float CSprite::VIRTUALSCREEN_DEFAULT_Y = -(TYPEDEF::DEFAULT_SCREEN_HEIGHT * 0.5f);
+/*static*/ float CSprite::VIRTUALSCREEN_DEFAULT_W = TYPEDEF::DEFAULT_SCREEN_WIDTH;
+/*static*/ float CSprite::VIRTUALSCREEN_DEFAULT_H = TYPEDEF::DEFAULT_SCREEN_HEIGHT;
 /*static*/ float CSprite::m_fVirtualScreenX = 0.0f;
 /*static*/ float CSprite::m_fVirtualScreenY = 0.0f;
 /*static*/ float CSprite::m_fVirtualScreenW = 0.0f;
@@ -25,8 +37,8 @@
 
 /*static*/ void CSprite::GetRealScreenPos(float* x, float* y)
 {
-	*x = ((*x - m_fVirtualScreenX) / m_fVirtualScreenW) * CScreen::Width();
-	*y = ((*y - m_fVirtualScreenY) / m_fVirtualScreenH) * CScreen::Height();
+	*x = ((*x - m_fVirtualScreenX) / m_fVirtualScreenW) * float(CScreen::Width());
+	*y = ((*y - m_fVirtualScreenY) / m_fVirtualScreenH) * float(CScreen::Height());
 };
 
 
@@ -52,8 +64,8 @@ CSprite::CSprite(void)
 : m_fX(0.0f)
 , m_fY(0.0f)
 , m_fZ(RwIm2DGetNearScreenZ())
-, m_fW(float(CScreen::Width()))
-, m_fH(float(CScreen::Height()))
+, m_fW(0.0f)
+, m_fH(0.0f)
 , m_fOffsetX(0.5f)
 , m_fOffsetY(0.5f)
 , m_Color({0xFF, 0xFF, 0xFF, 0xFF})
@@ -65,13 +77,20 @@ CSprite::CSprite(void)
 , m_pTexture(nullptr)
 , m_bCameraCheckFlag(false)
 {
-	;
+    SetScreenSize();
 };
 
 
 CSprite::~CSprite(void)
 {
     ;
+};
+
+
+void CSprite::SetScreenSize(void)
+{
+    m_fW = float(CScreen::Width());
+    m_fH = float(CScreen::Height());
 };
 
 
@@ -129,11 +148,11 @@ void CSprite::SetTextureAndResize(RwTexture* pTexture)
 {
     SetTexture(pTexture);
     
-    RwRaster* pRwRaster = RwTextureGetRaster(m_pTexture);
+    RwRaster* pRwRaster = RwTextureGetRasterMacro(m_pTexture);
     ASSERT(pRwRaster);
     
-	m_fW = float(RwRasterGetWidth(pRwRaster));
-	m_fH = float(RwRasterGetHeight(pRwRaster));
+	m_fW = float(RwRasterGetWidthMacro(pRwRaster));
+	m_fH = float(RwRasterGetHeightMacro(pRwRaster));
 };
 
 
@@ -164,11 +183,11 @@ void CSprite::SetPositionAndSize(float x, float y, float w, float h)
     ASSERT(m_fVirtualScreenW != 0.0f);
     ASSERT(m_fVirtualScreenH != 0.0f);
 
-    m_fX = (x - m_fVirtualScreenX) / m_fVirtualScreenW * CScreen::Width();
-    m_fY = (y - m_fVirtualScreenY) / m_fVirtualScreenH * CScreen::Height();
+    m_fX = (x - m_fVirtualScreenX) / m_fVirtualScreenW * float(CScreen::Width());
+    m_fY = (y - m_fVirtualScreenY) / m_fVirtualScreenH * float(CScreen::Height());
 
-    m_fW = CScreen::Width() / m_fVirtualScreenW * w;
-    m_fH = CScreen::Height() / m_fVirtualScreenH * h;
+    m_fW = float(CScreen::Width()) / m_fVirtualScreenW * w;
+    m_fH = float(CScreen::Height()) / m_fVirtualScreenH * h;
 };
 
 
@@ -187,12 +206,11 @@ void CSprite::Resize(float w, float h)
     ASSERT(m_fVirtualScreenW != 0.0f);
     ASSERT(m_fVirtualScreenH != 0.0f);
 
-
     float scaleW = float(CScreen::Width()) / VIRTUALSCREEN_DEFAULT_W;
     float scaleH = float(CScreen::Height()) / VIRTUALSCREEN_DEFAULT_H;
 
 	m_fW = (w * scaleW);
-	m_fH = (h * scaleH);;
+	m_fH = (h * scaleH);
 };
 
 
@@ -204,7 +222,7 @@ void CSprite::ResizeStrict(float w, float h)
     float scaleW = float(CScreen::Width()) / VIRTUALSCREEN_DEFAULT_W;
     float scaleH = float(CScreen::Height()) / VIRTUALSCREEN_DEFAULT_H;
 
-    float scale = Math::Min(scaleW, scaleH);
+    float scale = Min(scaleW, scaleH);
 
     m_fW = (w * scale);
     m_fH = (h * scale);
@@ -230,106 +248,106 @@ void CSprite::Move(float x, float y)
 
 void CSprite::Draw(void) const
 {
-    if (CCamera::CameraCurrent())
+    if (!CCamera::CameraCurrent())
+        return;
+
+    RwIm2DVertex aVertices[4];
+
+    float x0 = m_fX - (m_fOffsetX * m_fW);
+    float y0 = m_fY - (m_fOffsetY * m_fH);
+    float x1 = x0 + m_fW;
+    float y1 = y0 + m_fH;
+
+    RwV2d xy_vertex[4] =
     {
-        RwIm2DVertex aVertices[4];
-
-        float x0 = m_fX - (m_fOffsetX * m_fW);
-        float y0 = m_fY - (m_fOffsetY * m_fH);
-        float x1 = x0 + m_fW;
-        float y1 = y0 + m_fH;
-
-        RwV2d xy_vertex[4] =
-        {
-            { x0, y1, },
-            { x0, y0, },
-            { x1, y1, },
-            { x1, y0, },
-        };
-        
-        RwV2d uv_vertex[4] =
-        {
-            { m_fU0, m_fV1, },
-            { m_fU0, m_fV0, },
-            { m_fU1, m_fV1, },
-            { m_fU1, m_fV0, },
-        };
-
-        float z = RwIm2DGetNearScreenZ();
-        float rhw = 1.0f / RwCameraGetNearClipPlane(CCamera::CameraCurrent());
-        uint32 color = RWRGBALONG(m_Color.red, m_Color.green, m_Color.blue, m_Color.alpha);
-
-        for (int32 i = 0; i < COUNT_OF(aVertices); ++i)
-        {
-            aVertices[i].x = xy_vertex[i].x;
-            aVertices[i].y = xy_vertex[i].y;
-            aVertices[i].z = m_fZ;
-            aVertices[i].u = uv_vertex[i].x;
-            aVertices[i].v = uv_vertex[i].y;
-            aVertices[i].rhw = 0.0f;// rhw;
-            aVertices[i].emissiveColor = color;
-        };
-
-		if (m_pTexture)
-            RENDERSTATE_PUSH(rwRENDERSTATETEXTURERASTER, RwTextureGetRaster(m_pTexture));	
-
-        RwIm2DRenderPrimitive(rwPRIMTYPETRISTRIP, aVertices, COUNT_OF(aVertices));
+        { x0, y1, },
+        { x0, y0, },
+        { x1, y1, },
+        { x1, y0, },
     };
+
+    RwV2d uv_vertex[4] =
+    {
+        { m_fU0, m_fV1, },
+        { m_fU0, m_fV0, },
+        { m_fU1, m_fV1, },
+        { m_fU1, m_fV0, },
+    };
+
+    float z = RwIm2DGetNearScreenZMacro();
+    float rhw = 1.0f / RwCameraGetNearClipPlaneMacro(CCamera::CameraCurrent());
+    uint32 color = RWRGBALONG(m_Color.red, m_Color.green, m_Color.blue, m_Color.alpha);
+
+    for (int32 i = 0; i < COUNT_OF(aVertices); ++i)
+    {
+        aVertices[i].x = xy_vertex[i].x;
+        aVertices[i].y = xy_vertex[i].y;
+        aVertices[i].z = m_fZ;
+        aVertices[i].u = uv_vertex[i].x;
+        aVertices[i].v = uv_vertex[i].y;
+        aVertices[i].rhw = rhw;
+        aVertices[i].emissiveColor = color;
+    };
+
+    if (m_pTexture)
+        RENDERSTATE_PUSH(rwRENDERSTATETEXTURERASTER, RwTextureGetRasterMacro(m_pTexture));
+
+    RwIm2DRenderPrimitive(rwPRIMTYPETRISTRIP, aVertices, COUNT_OF(aVertices));
 };
 
 
 void CSprite::DrawRotate(void) const
 {
-    if (CCamera::CameraCurrent())
+    if (!CCamera::CameraCurrent())
+        return;
+
+    RwIm2DVertex aVertices[4];
+
+    float x0 = m_fX - (m_fOffsetX * m_fW);
+    float y0 = m_fY - (m_fOffsetY * m_fH);
+    float x1 = x0 + m_fW;
+    float y1 = y0 + m_fH;
+
+    RwV2d xy_vertex[4] =
     {
-        RwIm2DVertex aVertices[4];
-
-        float x0 = m_fX - (m_fOffsetX * m_fW);
-        float y0 = m_fY - (m_fOffsetY * m_fH);
-        float x1 = x0 + m_fW;
-        float y1 = y0 + m_fH;
-
-        RwV2d xy_vertex[4] =
-        {
-            { x0, y1, },
-            { x0, y0, },
-            { x1, y1, },
-            { x1, y0, },
-        };
-
-        RwV2d uv_vertex[4] =
-        {
-            { m_fU0, m_fV1, },
-            { m_fU0, m_fV0, },
-            { m_fU1, m_fV1, },
-            { m_fU1, m_fV0, },
-        };
-
-        float z = RwIm2DGetNearScreenZ();
-        float rhw = 1.0f / RwCameraGetNearClipPlane(CCamera::CameraCurrent());
-        uint32 color = RWRGBALONG(m_Color.red, m_Color.green, m_Color.blue, m_Color.alpha);
-        
-        for (int32 i = 0; i < COUNT_OF(aVertices); ++i)
-        {
-            float tmp_x = xy_vertex[i].x - (x0 + (m_fW * 0.5f));
-            float tmp_y = xy_vertex[i].y - (y0 + (m_fH * 0.5f));
-
-            float x = std::cos(m_fRotate) * (tmp_x) - std::sin(m_fRotate) * (tmp_y) + (x0 + (m_fW * 0.5f));
-            float y = std::sin(m_fRotate) * (tmp_x) + std::cos(m_fRotate) * (tmp_y) + (y0 + (m_fH * 0.5f));
-            
-            aVertices[i].x = x;
-            aVertices[i].y = y;
-            aVertices[i].z = m_fZ;
-            aVertices[i].u = uv_vertex[i].x;
-            aVertices[i].v = uv_vertex[i].y;
-            aVertices[i].rhw = 0.0f;// rhw;
-            aVertices[i].emissiveColor = color;
-        };
-
-        if (m_pTexture)
-            RENDERSTATE_PUSH(rwRENDERSTATETEXTURERASTER, RwTextureGetRaster(m_pTexture));
-
-        RwIm2DRenderPrimitive(rwPRIMTYPETRISTRIP, aVertices, COUNT_OF(aVertices));
+        { x0, y1, },
+        { x0, y0, },
+        { x1, y1, },
+        { x1, y0, },
     };
+
+    RwV2d uv_vertex[4] =
+    {
+        { m_fU0, m_fV1, },
+        { m_fU0, m_fV0, },
+        { m_fU1, m_fV1, },
+        { m_fU1, m_fV0, },
+    };
+
+    float z = RwIm2DGetNearScreenZMacro();
+    float rhw = 1.0f / RwCameraGetNearClipPlaneMacro(CCamera::CameraCurrent());
+    uint32 color = RWRGBALONG(m_Color.red, m_Color.green, m_Color.blue, m_Color.alpha);
+
+    for (int32 i = 0; i < COUNT_OF(aVertices); ++i)
+    {
+        float tmp_x = xy_vertex[i].x - (x0 + (m_fW * 0.5f));
+        float tmp_y = xy_vertex[i].y - (y0 + (m_fH * 0.5f));
+
+        float x = CosFloat(m_fRotate) * (tmp_x) - SinFloat(m_fRotate) * (tmp_y) + (x0 + (m_fW * 0.5f));
+        float y = SinFloat(m_fRotate) * (tmp_x) + CosFloat(m_fRotate) * (tmp_y) + (y0 + (m_fH * 0.5f));
+
+        aVertices[i].x = x;
+        aVertices[i].y = y;
+        aVertices[i].z = m_fZ;
+        aVertices[i].u = uv_vertex[i].x;
+        aVertices[i].v = uv_vertex[i].y;
+        aVertices[i].rhw = rhw;
+        aVertices[i].emissiveColor = color;
+    };
+
+    if (m_pTexture)
+        RENDERSTATE_PUSH(rwRENDERSTATETEXTURERASTER, RwTextureGetRasterMacro(m_pTexture));
+
+    RwIm2DRenderPrimitive(rwPRIMTYPETRISTRIP, aVertices, COUNT_OF(aVertices));
 };
 

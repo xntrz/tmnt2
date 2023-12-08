@@ -174,12 +174,12 @@ int32 CRidePlayerLoadInfo::GetFileID(void) const
 
 bool CRidePlayerLoadInfo::MakeFileName(char* pszFilenameBuff) const
 {
-    bool bResult = false;
+    pszFilenameBuff[0] = '\0';
+    
     const char* pszPlayerName = PLAYERID::GetName(m_idPlayer);
 
     if (GetSpaceFlag())
     {
-        bResult = true;
         std::sprintf(
             pszFilenameBuff,
             "%s%s/%s_ship.list",
@@ -193,7 +193,6 @@ bool CRidePlayerLoadInfo::MakeFileName(char* pszFilenameBuff) const
         switch (m_costume)
         {
         case GAMETYPES::COSTUME_NONE:
-            bResult = true;
             std::sprintf(
                 pszFilenameBuff,
                 "%s%s/%s.list",
@@ -204,7 +203,6 @@ bool CRidePlayerLoadInfo::MakeFileName(char* pszFilenameBuff) const
             break;
 
         case GAMETYPES::COSTUME_SAMURAI:
-            bResult = true;
             std::sprintf(
                 pszFilenameBuff,
                 "%s%s/%s_EXa.list",
@@ -215,7 +213,6 @@ bool CRidePlayerLoadInfo::MakeFileName(char* pszFilenameBuff) const
             break;
 
         case GAMETYPES::COSTUME_NEXUS:
-            bResult = true;
             std::sprintf(
                 pszFilenameBuff,
                 "%s%s/%s_EXb.list",
@@ -227,7 +224,7 @@ bool CRidePlayerLoadInfo::MakeFileName(char* pszFilenameBuff) const
         };
     };
 
-    return bResult;
+    return (pszFilenameBuff[0] != '\0');
 };
 
 

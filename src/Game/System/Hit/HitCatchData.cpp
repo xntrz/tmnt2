@@ -206,7 +206,7 @@ const RwV3d* CHitCatchData::GetHitPos(void)
         {
             const RwLine* pLine = m_pHitAttackData->GetLine();
             float fDist = m_pHitAttackData->GetHitDistance();
-            fDist = Math::Clamp(fDist, 0.0f, 1.0f);
+            fDist = Clamp(fDist, 0.0f, 1.0f);
 
             Math::Vec3_Sub(&m_vHitPos, &pLine->end, &pLine->start);
             Math::Vec3_Multiply(&m_vHitPos, &m_vHitPos, fDist);

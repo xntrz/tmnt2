@@ -9,7 +9,7 @@
 
 CWindowObject::CMessageText::CMessageText(void)
 : m_pwszText(nullptr)
-, m_fHeight(CGameFont::GetScreenSize())
+, m_fHeight(CGameFont::GetScreenHeight())
 , m_Color({0xFF, 0xFF, 0xFF, 0xFF})
 {
     ;
@@ -58,9 +58,9 @@ void CWindowObject::CMessageText::Draw(const Rt2dBBox& bbox) const
 {
     if (m_pwszText)
     {
-        CGameFont::m_pFont->SetRGBA(m_Color);
-        CGameFont::m_pFont->Flow(m_pwszText, m_fHeight, (Rt2dBBox*)&bbox);
-		//CGameFont::m_pFont->Show(m_pwszText, m_fHeight, bbox.x, bbox.y);
+		CGameFont::SetHeight(m_fHeight);
+        CGameFont::SetRGBA(m_Color);
+        CGameFont::Flow(m_pwszText, (Rt2dBBox*)&bbox);
     };
 };
 

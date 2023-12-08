@@ -19,6 +19,7 @@ public:
         CATEGORY_SPACE,
         CATEGORY_JAPAN,
         CATEGORY_UNDERGROUND,
+        CATEGORY_ZERO,
 
         CATEGORY_DEFAULT = CATEGORY_NY,
     };

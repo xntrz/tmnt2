@@ -70,7 +70,7 @@ class CLeonardoAccumulateModule : public CAccumulateModule
 {
 public:
     CLeonardoAccumulateModule(CCharacter* pCharacter);
-    virtual ~CLeonardoAccumulateModule(void);
+    virtual ~CLeonardoAccumulateModule(void) {};
 
 private:
     CAccumulateUnit m_aAccumulateUnit[2];
@@ -81,7 +81,7 @@ class CRaphaelAccumulateModule : public CAccumulateModule
 {
 public:
     CRaphaelAccumulateModule(CCharacter* pCharacter);
-    virtual ~CRaphaelAccumulateModule(void);
+    virtual ~CRaphaelAccumulateModule(void) {};
 
 private:
     CAccumulateUnit m_aAccumulateUnit[2];
@@ -92,7 +92,7 @@ class CMichelangeroAccumulateModule : public CAccumulateModule
 {
 public:
     CMichelangeroAccumulateModule(CCharacter* pCharacter);
-    virtual ~CMichelangeroAccumulateModule(void);
+    virtual ~CMichelangeroAccumulateModule(void) {};
 
 private:
     CAccumulateUnit m_aAccumulateUnit[4];
@@ -103,7 +103,7 @@ class CDonatelloAccumulateModule : public CAccumulateModule
 {
 public:
     CDonatelloAccumulateModule(CCharacter* pCharacter);
-    virtual ~CDonatelloAccumulateModule(void);
+    virtual ~CDonatelloAccumulateModule(void) {};
 
 private:
     CAccumulateUnit m_aAccumulateUnit[1];
@@ -114,7 +114,7 @@ class CSlashuurAccumulateModule : public CAccumulateModule
 {
 public:
     CSlashuurAccumulateModule(CCharacter* pCharacter);
-    virtual ~CSlashuurAccumulateModule(void);
+    virtual ~CSlashuurAccumulateModule(void) {};
 
 private:
     CAccumulateUnit m_aAccumulateUnit[5];
@@ -125,7 +125,7 @@ class CCaseyAccumulateModule : public CAccumulateModule
 {
 public:
     CCaseyAccumulateModule(CCharacter* pCharacter);
-    virtual ~CCaseyAccumulateModule(void);
+    virtual ~CCaseyAccumulateModule(void) {};
 
 private:
     CAccumulateUnit m_aAccumulateUnit[2];
@@ -136,7 +136,7 @@ class CKaraiAccumulateModule : public CAccumulateModule
 {
 public:
     CKaraiAccumulateModule(CCharacter* pCharacter);
-    virtual ~CKaraiAccumulateModule(void);
+    virtual ~CKaraiAccumulateModule(void) {};
 
 private:
     CAccumulateUnit m_aAccumulateUnit[2];
@@ -147,7 +147,7 @@ class CSplinterAccumulateModule : public CAccumulateModule
 {
 public:
     CSplinterAccumulateModule(CCharacter* pCharacter);
-    virtual ~CSplinterAccumulateModule(void);
+    virtual ~CSplinterAccumulateModule(void) {};
 
 private:
     CAccumulateUnit m_aAccumulateUnit[2];

@@ -1,25 +1,25 @@
 #pragma once
 
 #include "FileManager.hpp"
+#include "FileID.hpp"
+
+#include "AdxFileAccess.hpp"
+
 #include "cri_adxf.h"
-
-
-class CAdxRwFileSystem;
-class CAdxFileAccess;
 
 
 class CAdxFileManager : public CFileManager
 {
 public:
-    enum
+    enum FILETYPE
     {
-        LABELADX_ID = 0,
-        LABELADX_NAME,
-        LABELADX_EXTEND,        
+        FILETYPE_ID = 0,
+        
+        FILETYPE_EXTEND,
     };
     
 public:
-    static CAdxFileManager& Instance(void);
+    static bool LoadPartition(int32 ptid, const char* fname, void* dir, void* ptinfo);
     
     CAdxFileManager(void);
     virtual ~CAdxFileManager(void);
@@ -27,22 +27,17 @@ public:
     virtual void Stop(void) override;
     virtual void Sync(void) override;
     virtual void Reset(void) override;
-    virtual CFileAccess* AllocRequest(int32 nID, int32 nLabel) override;
-    virtual CFileAccess* AllocRequest(const char* pszName, int32 nLabel) override;
+    virtual CFileAccess* AllocRequest(int32 nType, const void* pTypeData) override;
     virtual bool SetupThreadSystem(void);
     virtual void ShutdownThreadSystem(void);
     virtual bool LoadPartitionCommon(void);
     virtual bool LoadPartitionLang(void);
     virtual bool LoadPartition(int32 PrId, const char* FName, void* PtInfo);
-    virtual void GarbageCollection(void);
     virtual bool SetupFileSystem(void) = 0;
     virtual void ShutdownFileSystem(void) = 0;
 
 private:
-    CAdxRwFileSystem* m_pAdxRwFileSystem;
-    CAdxFileAccess* m_paAdxFileAccess;
-    CList<CAdxFileAccess> m_listAdxFileAccessPool;
-    CList<CAdxFileAccess> m_listAdxFileAccessAlloc;
+    CAdxFileAccess m_aAdxFileAccess[FILEID::ID_MAX];  
     char m_ptinfoCommon[ADXF_CALC_PTINFO_REAL_SIZE(237)];
     char m_ptinfoLang[ADXF_CALC_PTINFO_REAL_SIZE(1)];
 };

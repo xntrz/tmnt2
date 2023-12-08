@@ -81,10 +81,10 @@
     //
     //  Shot
     //
-    if (NodeA.m_nKillEval < NodeB.m_nKillEval)
+    if (NodeA.m_nShotEval < NodeB.m_nShotEval)
         return -1;
 
-    if (NodeA.m_nKillEval > NodeB.m_nKillEval)
+    if (NodeA.m_nShotEval > NodeB.m_nShotEval)
         return 1;
     
     //
@@ -122,8 +122,8 @@ void CRideCharaResult::NODE::Clear(void)
     m_nTrickCount       = 0;
     m_fTrickRatio       = 0.0f;
     m_nTrickEval        = 0;
-    m_nKillCount        = 0;
-    m_nKillEval         = 0;
+    m_nShotCount        = 0;
+    m_nShotEval         = 0;
     m_nPersonalPoint    = 0;
     m_nPersonalEval     = 0;
 };
@@ -154,7 +154,7 @@ void CRideCharaResult::NODE::AddRideAction(GAMETYPES::RIDEACT rideact)
         break;
 
     case GAMETYPES::RIDEACT_KILL:
-        ++m_nKillCount;
+        ++m_nShotCount;
         break;
 
     default:
@@ -173,12 +173,12 @@ void CRideCharaResult::NODE::Evaluate(MODE mode)
     {
     case MODE_TRICKRACE:
         m_nTrickEval = EvaluateTrick();
-        m_nKillEval = 0;
+        m_nShotEval = 0;
         break;
 
     case MODE_SHOTRACE:
-        m_nKillEval = EvaluateShot();
         m_nTrickEval = 0;
+        m_nShotEval = EvaluateShot();
         break;
 
     default:
@@ -186,14 +186,14 @@ void CRideCharaResult::NODE::Evaluate(MODE mode)
         break;
     };
 
-    m_nPersonalPoint = (m_nCoinEval + m_nControlEval + m_nTrickEval + m_nKillEval);
+    m_nPersonalPoint = (m_nCoinEval + m_nControlEval + m_nTrickEval + m_nShotEval);
     m_nPersonalEval = CGamePlayResult::EvaluateInt(m_nPersonalPoint, m_anPersonalEvalTable, COUNT_OF(m_anPersonalEvalTable));
 };
 
 
 int32 CRideCharaResult::NODE::EvaluateCoin(void)
 {
-    m_nCoinPoint = 100 * (m_nScoreSilverCount + 5 * m_nScoreGoldCount);
+    m_nCoinPoint = (500 * m_nScoreGoldCount) + (100 * m_nScoreSilverCount);
     return CGamePlayResult::EvaluateInt(m_nCoinPoint, m_anCoinEvalTable, COUNT_OF(m_anCoinEvalTable));
 };
 
@@ -217,7 +217,7 @@ int32 CRideCharaResult::NODE::EvaluateTrick(void)
 
 int32 CRideCharaResult::NODE::EvaluateShot(void)
 {
-    return CGamePlayResult::EvaluateInt(m_nKillCount, m_anShotEvalTable, COUNT_OF(m_anShotEvalTable));
+    return CGamePlayResult::EvaluateInt(m_nShotCount, m_anShotEvalTable, COUNT_OF(m_anShotEvalTable));
 };
 
 
@@ -277,13 +277,7 @@ void CRideCharaResult::Evaluate(void)
     MODE mode = GetMode();
     
     for (int32 i = 0; i < COUNT_OF(m_aNode); ++i)
-    {
         m_aNode[i].Evaluate(mode);
-        
-        m_nTotalSilverCoin  += m_aNode[i].m_nScoreSilverCount;
-        m_nTotalGoldCoin    += m_aNode[i].m_nScoreGoldCount;
-        m_nTotalCoinPoint   += m_aNode[i].m_nCoinPoint;
-    };
 
     m_nMVP = 0;
 
@@ -291,6 +285,17 @@ void CRideCharaResult::Evaluate(void)
     {
         if (NODE::CompareEvaluation(m_aNode[m_nMVP], m_aNode[i]) < 0)
             m_nMVP = i;
+    };
+
+    m_nTotalGoldCoin = 0;
+    m_nTotalSilverCoin = 0;
+    m_nTotalCoinPoint = 0;
+
+    for (int32 i = 0; i < COUNT_OF(m_aNode); ++i)
+    {
+        m_nTotalGoldCoin    += m_aNode[i].m_nScoreGoldCount;
+        m_nTotalSilverCoin  += m_aNode[i].m_nScoreSilverCount;
+        m_nTotalCoinPoint   += m_aNode[i].m_nCoinPoint;
     };
 };
 

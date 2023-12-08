@@ -3,9 +3,9 @@
 #include "System/Common/Process/Process.hpp"
 
 
-class CSoftwareReset : public CProcess
+class CSoftwareResetProcess : public CProcess
 {
-private:
+public:
     enum MODE
     {
         MODE_NORMAL = 0,
@@ -34,23 +34,26 @@ private:
     
 public:
     static CProcess* Instance(void);
-    static bool Initialize(CProcess* pCurrent);
-    static void Terminate(CProcess* pCurrent);
+    static bool Initialize(CProcess* pSender, MODE mode);
+    static void Terminate(CProcess* pSender);
+    static void SetEnable(CProcess* pSender, bool bState);
 
-    CSoftwareReset(void);
-    virtual ~CSoftwareReset(void);
+    CSoftwareResetProcess(void);
+    virtual ~CSoftwareResetProcess(void);
     virtual bool Attach(void) override;
     virtual void Detach(void) override;
     virtual void Move(void) override;
     virtual void Draw(void) const override;
 
-private:    
+private:
+    static bool postPrivateMessage(CProcess* pSender, MESSAGE* pMsg);
     void execReset(void);
     void messageProc(void);
-    void clear(void);
+    void clear(MODE mode);
     
 private:
     static bool m_bEnable;
+    static float m_fResetResponseSec;
     float m_fKeyTimer;
     int32 m_iRootSeqLabel;
     MODE m_mode;

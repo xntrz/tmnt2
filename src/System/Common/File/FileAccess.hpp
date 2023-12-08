@@ -6,28 +6,28 @@ class CFileAccess
 public:
     friend class CFileManager;
 
-    enum STATUS
+    enum STAT
     {
-        STATUS_NOREAD = 0,
-        STATUS_PENDING,
-        STATUS_READING,
-        STATUS_READEND,
-        STATUS_ERROR
+        STAT_NOREAD = 0,
+        STAT_PENDING,
+        STAT_READING,
+        STAT_READEND,
+        STAT_ERROR
     };
 
 public:
     CFileAccess(void);
     virtual ~CFileAccess(void);
-    virtual bool Read(const char* pszName);
-    virtual bool Read(int32 nID);
+    virtual bool Open(const char* name);
+    virtual bool Open(int32 id);
     virtual void Clear(void);
     virtual void Sync(void);
-    virtual STATUS Status(void) const;
-    virtual uint32 Size(void) const;
+    virtual STAT Stat(void) const;
     virtual void* Data(void) const;
+    virtual uint32 Size(void) const;
 
 protected:
+    STAT m_stat;
     void* m_pBuffer;
     uint32 m_uBufferSize;
-    STATUS m_status;
 };

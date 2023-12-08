@@ -1,26 +1,24 @@
 #include "CharacterSelectSequence.hpp"
 
+#include "Game/Component/GameData/GameData.hpp"
 #include "Game/Component/GameMain/GameTypes.hpp"
 #include "Game/Component/Player/PlayerID.hpp"
-#include "Game/System/Texture/TextureManager.hpp"
-#include "Game/System/Sound/GameSound.hpp"
-#include "Game/System/2d/GameText.hpp"
 #include "Game/System/2d/GameFont.hpp"
+#include "Game/System/Misc/ControllerMisc.hpp"
 #include "Game/System/Misc/ScreenFade.hpp"
-#include "Game/Component/GameData/GameData.hpp"
 #include "Game/System/Misc/RenderStateManager.hpp"
+#include "Game/System/Misc/Timeout.hpp"
+#include "Game/System/Sound/GameSound.hpp"
+#include "Game/System/Text/GameText.hpp"
+#include "Game/System/Texture/TextureManager.hpp"
+#include "Game/ProcessList.hpp"
 #include "System/Common/Controller.hpp"
 #include "System/Common/Sprite.hpp"
 #include "System/Common/Screen.hpp"
 #include "System/Common/System2D.hpp"
-#include "System/Common/Process/ProcessList.hpp"
 #include "System/Common/File/FileID.hpp"
 #include "System/Common/RenderState.hpp"
 #include "System/Common/TextData.hpp"
-
-
-#define CALC_ORG_X(w, x) (x + (w / 2))
-#define CALC_ORG_Y(h, y) (y + (h / 2))
 
 
 class CPlayerSelectWorkPool
@@ -151,7 +149,7 @@ CPlayerSelectWorkPool::CPlayerSelectWorkPool(void)
         m_aCharacterInfo[i].m_bEnable = PLAYERID::IsEnabled(PLAYERID::VALUE(i));
         m_aCharacterInfo[i].m_iLockPlayer = -1;
 
-        m_nChrMax = Math::Clamp(++m_nChrMax, 0, 4);
+        m_nChrMax = Clamp(++m_nChrMax, 0, 4);
     };
 
     for (int32 i = 0; i < COUNT_OF(m_aPlayerInfo); ++i)
@@ -272,7 +270,7 @@ void CPlayerSelectWorkPool::Move(void)
             PopStackCharacter(i);
             LimitCheck();
         }
-        else if (CController::GetDigitalTrigger(iController, CController::DIGITAL_LEFT))
+        else if (CController::GetDigitalTrigger(iController, CController::DIGITAL_LLEFT))
         {
             CGameSound::PlaySE(SDCODE_SE(4100));
             pPlayerInfo->m_CursorAnimDir = PLAYERINFO::ANIMDIR_LEFT;
@@ -281,10 +279,10 @@ void CPlayerSelectWorkPool::Move(void)
 
             do
             {
-                pPlayerInfo->m_iCursor = Math::InvClamp(--pPlayerInfo->m_iCursor, 0, COUNT_OF(m_aPlayerInfo) - 1);
+                pPlayerInfo->m_iCursor = InvClamp(--pPlayerInfo->m_iCursor, 0, COUNT_OF(m_aPlayerInfo) - 1);
             } while (!m_aCharacterInfo[ GetRealCursor(i) ].m_bEnable);
         }
-        else if (CController::GetDigitalTrigger(iController, CController::DIGITAL_RIGHT))
+        else if (CController::GetDigitalTrigger(iController, CController::DIGITAL_LRIGHT))
         {
             CGameSound::PlaySE(SDCODE_SE(4100));
             pPlayerInfo->m_CursorAnimDir = PLAYERINFO::ANIMDIR_RIGHT;
@@ -293,20 +291,20 @@ void CPlayerSelectWorkPool::Move(void)
 
             do
             {
-                pPlayerInfo->m_iCursor = Math::InvClamp(++pPlayerInfo->m_iCursor, 0, COUNT_OF(m_aPlayerInfo) - 1);
+                pPlayerInfo->m_iCursor = InvClamp(++pPlayerInfo->m_iCursor, 0, COUNT_OF(m_aPlayerInfo) - 1);
             } while (!m_aCharacterInfo[ GetRealCursor(i) ].m_bEnable);
         }
-        else if (CController::GetDigitalTrigger(iController, CController::DIGITAL_UP) ||
-            CController::GetDigitalTrigger(iController, CController::DIGITAL_DOWN))
+        else if (CController::GetDigitalTrigger(iController, CController::DIGITAL_LUP) ||
+            CController::GetDigitalTrigger(iController, CController::DIGITAL_LDOWN))
         {
             if (m_aCharacterInfo[ pPlayerInfo->m_iCursor + 4 ].m_bEnable)
                 pPlayerInfo->m_bSecret = !pPlayerInfo->m_bSecret;
         }
-        else if (CController::GetDigital(iController, CController::DIGITAL_LEFT_BUMPER))
+        else if (CController::GetDigital(iController, CController::DIGITAL_L1))
         {
             m_aCostumeSelect[iController] = GAMETYPES::COSTUME_NEXUS;
         }
-        else if (CController::GetDigital(iController, CController::DIGITAL_RIGHT_BUMPER))
+        else if (CController::GetDigital(iController, CController::DIGITAL_R1))
         {
             m_aCostumeSelect[iController] = GAMETYPES::COSTUME_SAMURAI;
         }
@@ -824,16 +822,13 @@ void CPlayerSelectWorkPool::DrawConfirmCheck(void)
     m_sprite.Resize(CSprite::m_fVirtualScreenW, 128.0f);
     m_sprite.Draw();
 
-    CGameFont::m_pFont->SetRGBA(255, 255, 255, 255);
-    CGameFont::m_pFont->Show(
-        CGameText::GetText(GAMETEXT::VALUE(762)),
-        CGameFont::GetScreenSize() / 179.0f,
-        -220.0f,
-        -80.0f
-    );
+    CGameFont::SetRGBA(255, 255, 255, 255);
 
-    const wchar* pwszOk = CGameText::GetText(GAMETEXT::VALUE(1226));
-    const wchar* pwszCancel = CGameText::GetText(GAMETEXT::VALUE(9));
+	CGameFont::SetHeight(CGameFont::GetScreenHeightEx(TYPEDEF::VSCR_H / 2.5f));
+    CGameFont::Show(CGameText::GetText(GAMETEXT(762)), -220.0f, -80.0f);
+
+    const wchar* pwszOk = CGameText::GetText(GAMETEXT(1226));
+    const wchar* pwszCancel = CGameText::GetText(GAMETEXT(9));
 
     wchar wszBuffer[256];
     wszBuffer[0] = UTEXT('\0');
@@ -842,12 +837,8 @@ void CPlayerSelectWorkPool::DrawConfirmCheck(void)
 	CTextData::StrCat(wszBuffer, UTEXT("   "));
     CTextData::StrCat(wszBuffer, pwszCancel);
 
-    CGameFont::m_pFont->Show(
-        wszBuffer,
-        CGameFont::GetScreenSize() / 220.0f,
-        -200.0f,
-        -50.0f
-    );
+	CGameFont::SetHeight(CGameFont::GetScreenHeightEx(TYPEDEF::VSCR_H / 2.0f));
+    CGameFont::Show(wszBuffer, -200.0f, -50.0f);
 };
 
 
@@ -890,7 +881,7 @@ void CPlayerSelectWorkPool::TextureLoad(void)
     m_pTextureName[5]       = CTextureManager::GetRwTexture("chsel_name_cas");
     m_pTextureName[6]       = CTextureManager::GetRwTexture("chsel_name_kar");
     m_pTextureName[7]       = CTextureManager::GetRwTexture("chsel_name_spl");    
-#ifdef _TARGET_PC    
+#ifdef TARGET_PC    
     m_pTexturePressStart    = CTextureManager::GetRwTexture("chsel_pressstart_ps");
 #else
 #error Not implemented for current target
@@ -952,7 +943,7 @@ bool CPlayerSelectWorkPool::PopStackCharacter(int32 iPlayerNo)
         int32 iChrIndex = GetCharacterIndex(pPlayerInfo->m_aStackPlayerID[pPlayerInfo->m_iCharacterNum - 1]);
         
         --pPlayerInfo->m_iCharacterNum;
-        pPlayerInfo->m_aStackPlayerID[pPlayerInfo->m_iCharacterNum] = PLAYERID::ID_INVALID;
+        pPlayerInfo->m_aStackPlayerID[pPlayerInfo->m_iCharacterNum] = PLAYERID::ID_MAX;
         pPlayerInfo->m_aStackCostume[pPlayerInfo->m_iCharacterNum] = GAMETYPES::COSTUME_NONE;
         
 		if (iChrIndex >= 4)
@@ -987,7 +978,7 @@ void CPlayerSelectWorkPool::UnselectCharacterSearch(int32 iPlayerNo)
 	do
 	{
 
-		pPlayerInfo->m_iCursor = Math::InvClamp(++pPlayerInfo->m_iCursor, 0, COUNT_OF(m_aPlayerInfo) - 1);
+		pPlayerInfo->m_iCursor = InvClamp(++pPlayerInfo->m_iCursor, 0, COUNT_OF(m_aPlayerInfo) - 1);
 		pPlayerInfo->m_CursorAnimDir = PLAYERINFO::ANIMDIR_RIGHT;
 		pPlayerInfo->m_uAnimCharChangeFrame = 0;
 
@@ -1023,31 +1014,26 @@ void CPlayerSelectWorkPool::Confirm(void)
 
 void CPlayerSelectWorkPool::LimitCheck(void)
 {
-    int32 iCharacterMax = 0;
-    int32 iNumLockedPads = 0;
+    int32 iLockedCounter = 0;
 
     for (int32 i = 0; i < CController::Max(); ++i)
     {
         if (CController::IsLocked(i))
-            ++iNumLockedPads;
+            ++iLockedCounter;
     };
 
-    iNumLockedPads = Math::Clamp(iNumLockedPads, 0, int32(GAMETYPES::PLAYERS_MAX));    
-    iCharacterMax = (GAMETYPES::PLAYERS_MAX + 1) - iNumLockedPads;
-    iCharacterMax = Math::Clamp(iCharacterMax, 0, int32(GAMETYPES::PLAYERS_MAX));
+    iLockedCounter = Clamp(iLockedCounter, 0, int32(GAMETYPES::PLAYERS_MAX));
 
-	int32 pop = 0;
+    int32 iSelectMax = GAMETYPES::PLAYERS_MAX;
+    if (iLockedCounter)
+        iSelectMax = (GAMETYPES::PLAYERS_MAX - (iLockedCounter - 1));        
+
     for (int32 i = 0; i < COUNT_OF(m_aPlayerInfo); ++i)
     {
-		int32 pop_x = 0;
-		while (m_aPlayerInfo[i].m_iCharacterNum > iCharacterMax)
-		{
+		while (m_aPlayerInfo[i].m_iCharacterNum > iSelectMax)
             PopStackCharacter(i);
-			++pop_x;
-		};
 
-		m_aPlayerInfo[i].m_iCharacterMax = iCharacterMax -pop;
-		pop = pop_x;
+        m_aPlayerInfo[i].m_iCharacterMax = iSelectMax;
     };
 };
 
@@ -1067,7 +1053,7 @@ void CPlayerSelectWorkPool::PadCheck(void)
 {
     if (CController::GetDigitalTrigger(CController::CONTROLLER_UNLOCKED_ON_VIRTUAL, CController::DIGITAL_OK))
     {
-        if (CController::LockTriggeredController(CController::DIGITAL_OK) != -1)
+        if (LockTriggeredController(CController::DIGITAL_OK) != -1)
         {
             LimitCheck();
             CGameSound::PlaySE(SDCODE_SE(4098));
@@ -1213,15 +1199,19 @@ CCharacterSelectSequence::~CCharacterSelectSequence(void)
 };
 
 
-bool CCharacterSelectSequence::OnAttach(const void* param)
+bool CCharacterSelectSequence::OnAttach(const void* pParam)
 {
     m_pWorkPool = new CPlayerSelectWorkPool;
     ASSERT(m_pWorkPool);
     m_pWorkPool->Attach();
 
+#ifdef BUILD_TRIAL
+    CTimeoutProcess::Enable(this, true);
+    CTimeoutProcess::Start(this);
+#endif    
     CGameData::Attribute().SetInteractive(true);
     
-    CController::UnlockAllControllers();
+    UnlockAllControllers();
     m_pWorkPool->LimitCheck();
 
     return CAnim2DSequence::OnAttach(FILEID::ID_CHARSELECT);
@@ -1242,26 +1232,52 @@ void CCharacterSelectSequence::OnDetach(void)
 };
 
 
-void CCharacterSelectSequence::OnMove(bool bRet, const void* param)
+void CCharacterSelectSequence::OnMove(bool bRet, const void* pReturnValue)
 {
-    switch (m_step)
+    switch (m_animstep)
     {
-    case STEP_FADE_OUT:
-        m_pWorkPool->Move();
-        if (!CScreenFade::IsFading())
-            CGameSound::PlayBGM(SDCODE_BGM(12321));            
+    case ANIMSTEP_FADEIN:
+        {
+            m_pWorkPool->Move();
+            
+            if (!CScreenFade::IsFading())
+                CGameSound::PlayBGM(SDCODE_BGM(12321));
+        }
         break;
 	
-    case STEP_DRAW:	
-        m_pWorkPool->Move();
-        
-        if (m_pWorkPool->IsEnded())
-            Ret();
+    case ANIMSTEP_DRAW:
+        {
+            m_pWorkPool->Move();
 
+            if (m_pWorkPool->IsEnded())
+            {
+                CGameSound::FadeOut(CGameSound::FADESPEED_SLOW);
+                BeginFadeout();
+            };
+        }
+        break;
+
+    case ANIMSTEP_END:
+        {
+            if (m_pWorkPool->IsConfirmed())
+            {
+                m_pWorkPool->Confirm();
+                CGameData::Attribute().SetVirtualPad(CController::CONTROLLER_LOCKED_ON_VIRTUAL);
+                Ret();
+            }
+            else if (m_pWorkPool->IsReturned())
+            {
+                Ret((const void*)PROCLABEL_SEQ_TITLE);
+            }
+            else
+            {
+                Ret();
+            };
+        }
         break;
     };
 
-    CAnim2DSequence::OnMove(bRet, param);
+    CAnim2DSequence::OnMove(bRet, pReturnValue);
 };
 
 
@@ -1274,25 +1290,4 @@ void CCharacterSelectSequence::OnDraw(void) const
         m_pWorkPool->TextureLoad();
         m_pWorkPool->Draw();
     };
-};
-
-
-bool CCharacterSelectSequence::OnRet(void)
-{
-    if (m_pWorkPool->IsConfirmed())
-    {
-        m_pWorkPool->Confirm();
-        CGameData::Attribute().SetVirtualPad(CController::CONTROLLER_LOCKED_ON_VIRTUAL);
-        Ret();
-    }
-    else if (m_pWorkPool->IsReturned())
-    {
-        Ret((const void*)PROCESSTYPES::LABEL_SEQ_TITLE);
-	}
-	else
-	{
-		Ret();
-	};
-
-    return true;
 };

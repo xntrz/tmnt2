@@ -120,7 +120,7 @@ CMadCarGimmick::CMadCarGimmick(const char* pszName, void* pParam)
     CModel* pModel = CModelManager::CreateModel(s_aMadCarSubinfo[m_subid].m_pszModelName);
     ASSERT(pModel);
     pModel->SetLightingEnable(false);    
-    m_model.SetModel(CNormalGimmickModel::MODELKIND_VISUAL_NORMAL, pModel);
+    m_model.SetModel(CNormalGimmickModel::MODELTYPE_DRAW_NORMAL, pModel);
     m_model.SetPosition(&vPos);
     m_model.UpdateFrame();
     SetModelStrategy(&m_model);

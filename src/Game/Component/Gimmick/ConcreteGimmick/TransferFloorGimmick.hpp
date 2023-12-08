@@ -27,21 +27,21 @@ class CLinearTransferFloorGimmick final : public CTransferFloorGimmick
 {
 public:
     CLinearTransferFloorGimmick(const char* pszName, void* pParam);
-    virtual ~CLinearTransferFloorGimmick(void);
+    virtual ~CLinearTransferFloorGimmick(void) {};
 };
 
 class CPathTransferFloorGimmick final : public CTransferFloorGimmick
 {
 public:
     CPathTransferFloorGimmick(const char* pszName, void* pParam);
-    virtual ~CPathTransferFloorGimmick(void);
+    virtual ~CPathTransferFloorGimmick(void) {};
 };
 
 class CRotateTransferFloorGimmick final : public CTransferFloorGimmick
 {
 public:
     CRotateTransferFloorGimmick(const char* pszName, void* pParam);
-    virtual ~CRotateTransferFloorGimmick(void);
+    virtual ~CRotateTransferFloorGimmick(void) {};
     virtual void PreMove(void) override;
     virtual void PostMove(void) override;
     virtual void OnReceiveEvent(const char* pszSender, GIMMICKTYPES::EVENTTYPE eventtype) override;

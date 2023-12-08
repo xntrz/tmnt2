@@ -32,44 +32,6 @@ CTransferFloorGimmickMove::RESULT CTransferFloorGimmickMove::OnMove(float dt)
 };
 
 
-void CTransferFloorGimmickMove::SetVelocity(const RwV3d* pvVelocity)
-{
-    ASSERT(pvVelocity);
-    m_vVelocity = *pvVelocity;
-};
-
-
-void CTransferFloorGimmickMove::StartTransfer(void)
-{
-    if (m_phase == PHASE_NONE)
-        m_phase = PHASE_MOVE;
-};
-
-
-void CTransferFloorGimmickMove::SetMoveTime(float t)
-{
-    m_fMoveTime = t;
-};
-
-
-void CTransferFloorGimmickMove::SetStopTime(float t)
-{
-    m_fStopTime = t;
-};
-
-
-void CTransferFloorGimmickMove::SetKind(int32 kind)
-{
-    m_type = kind;
-};
-
-
-int32 CTransferFloorGimmickMove::GetKind(void) const
-{
-	return m_type;
-};
-
-
 CLinearTransferFloorGimmickMove::CLinearTransferFloorGimmickMove(void)
 : m_vStartPosition(Math::VECTOR3_ZERO)
 , m_vGoalPosition(Math::VECTOR3_ZERO)
@@ -159,20 +121,6 @@ CLinearTransferFloorGimmickMove::RESULT CLinearTransferFloorGimmickMove::OnMove(
     };
 
     return CTransferFloorGimmickMove::OnMove(dt);
-};
-
-
-void CLinearTransferFloorGimmickMove::SetStartPosition(const RwV3d* pvPosition)
-{
-    ASSERT(pvPosition);
-    m_vStartPosition = *pvPosition;
-};
-
-
-void CLinearTransferFloorGimmickMove::SetGoalPosition(const RwV3d* pvPosition)
-{
-    ASSERT(pvPosition);
-    m_vGoalPosition = *pvPosition;
 };
 
 
@@ -288,37 +236,28 @@ CRotateTransferFloorGimmickMove::~CRotateTransferFloorGimmickMove(void)
 
 CRotateTransferFloorGimmickMove::RESULT CRotateTransferFloorGimmickMove::OnMove(float dt)
 {
-    if (m_type == 3)
-    {
-        if (m_fRoundTime > 0.0f)
-        {
-            float fStep = Math::PI2 / m_fRoundTime;
-            
-            if (!m_bTurnRight)
-                fStep *= -1.0f;
-            
-            m_vRotation.y += fStep * dt;
-            m_vRotation.y = Math::RadianCorrect(m_vRotation.y);
-        };
-    };
+    RESULT ret = RESULT_NONE;
     
-    return RESULT_NONE;
+    if (m_type != 3)
+        return ret;
+
+    if (m_fRoundTime <= 0.0f)
+        return ret;
+
+    float fStep = Math::PI2 / m_fRoundTime;
+
+    if (!m_bTurnRight)
+        fStep *= -1.0f;
+
+    m_vRotation.y += fStep * dt;
+    m_vRotation.y = Math::RadianCorrect(m_vRotation.y);
+    
+    return ret;
 };
 
 
 void CRotateTransferFloorGimmickMove::SetRoundTime(float t)
 {
-    m_fRoundTime = t;
-};
-
-
-void CRotateTransferFloorGimmickMove::SetRotAxis(RwMatrix* mat)
-{
-    m_vRotAxis = Math::VECTOR3_AXIS_Y;
-};
-
-
-void CRotateTransferFloorGimmickMove::GetRotation(RwV3d* pvRot)
-{    
-	*pvRot = m_vRotation;
+    m_bTurnRight = (t < 0.0f);
+    m_fRoundTime = (t >= 0.0f ? t : -t);
 };

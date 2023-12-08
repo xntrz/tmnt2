@@ -1,9 +1,9 @@
 #pragma once
 
-#include "PathGimmickMove.hpp"
+#include "PathMoveGimmickMove.hpp"
 
 
-class CMadCarGimmickMove final : public CPathGimmickMove
+class CMadCarGimmickMove final : public CPathMoveGimmickMove
 {
 public:
     CMadCarGimmickMove(void);

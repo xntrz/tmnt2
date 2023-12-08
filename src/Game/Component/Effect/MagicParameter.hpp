@@ -41,6 +41,9 @@ public:
     void SetReflectEffectName(const char* pszName);
     void SetVanishMagicName(const char* pszName);
 
+    inline const char* GetBaseEffectName(void) const { return m_pszBaseEffectName; };
+    
+
 private:
     const char* m_pszBaseEffectName;
     MAGICTYPES::FEATURE m_feature;

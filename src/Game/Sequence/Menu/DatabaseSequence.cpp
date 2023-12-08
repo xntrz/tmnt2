@@ -1,6 +1,6 @@
 #include "DatabaseSequence.hpp"
 
-#include "System/Common/Process/ProcessList.hpp"
+#include "Game/ProcessList.hpp"
 
 
 class CDatabaseSequence_Container
@@ -75,7 +75,7 @@ CDatabaseSequence::~CDatabaseSequence(void)
 };
 
 
-bool CDatabaseSequence::OnAttach(const void* param)
+bool CDatabaseSequence::OnAttach(const void* pParam)
 {
     if (!s_pDatabaseSequence_Container)
         s_pDatabaseSequence_Container = new CDatabaseSequence_Container;
@@ -94,22 +94,22 @@ void CDatabaseSequence::OnDetach(void)
 };
 
 
-void CDatabaseSequence::OnMove(bool bRet, const void* param)
+void CDatabaseSequence::OnMove(bool bRet, const void* pReturnValue)
 {
     if (bRet)
     {
-        if (param)
-            m_iLabelCurrent = int32(param);
+        if (pReturnValue)
+            m_iLabelCurrent = int32(pReturnValue);
         else
             m_iLabelCurrent = DatabaseBranch(m_iLabelCurrent);
     }
     else
     {
-        m_iLabelCurrent = PROCESSTYPES::LABEL_SEQ_DATABASE;
+        m_iLabelCurrent = PROCLABEL_SEQ_DATABASE;
     };
 
     bool bResult = false;
-    if (m_iLabelCurrent == PROCESSTYPES::LABEL_SEQ_HOME)
+    if (m_iLabelCurrent == PROCLABEL_SEQ_HOME)
         bResult = Ret();
     else
         bResult = Call(m_iLabelCurrent);
@@ -127,14 +127,14 @@ int32 CDatabaseSequence::DatabaseBranch(int32 iLabel)
 {
     switch (iLabel)
     {
-    case PROCESSTYPES::LABEL_SEQ_DATABASE:
-        return PROCESSTYPES::LABEL_SEQ_UNLOCK;
+    case PROCLABEL_SEQ_DATABASE:
+        return PROCLABEL_SEQ_UNLOCK;
 
-    case PROCESSTYPES::LABEL_SEQ_DATABASEVIEWER:
-        return PROCESSTYPES::LABEL_SEQ_DATABASE;
+    case PROCLABEL_SEQ_DATABASEVIEWER:
+        return PROCLABEL_SEQ_DATABASE;
 
-    case PROCESSTYPES::LABEL_SEQ_UNLOCK:
-        return PROCESSTYPES::LABEL_SEQ_HOME;
+    case PROCLABEL_SEQ_UNLOCK:
+        return PROCLABEL_SEQ_HOME;
 
     default:
         return PROCESSTYPES::LABEL_EOL;

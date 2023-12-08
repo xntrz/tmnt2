@@ -8,6 +8,12 @@
 
 namespace Casey
 {
+    namespace MOTIONNAMES
+    {
+        static const char* PUSH         = "Push";
+        static const char* ATTACK_JUMP  = "JAttack";
+    };
+    
     class CAttackJump : public CStatus
     {
     public:
@@ -17,20 +23,17 @@ namespace Casey
         virtual void OnRun(void) override;
     };
 
-
     class CAttackAABBC : public PlayerStatus::CAttackAABBC
     {
     public:
         virtual void OnDischargeWave(void) override;
     };
 
-
     class CAttackB : public PlayerStatus::CAttackB
     {
     public:
         virtual void OnDischargeWave(MAGIC_GENERIC::STEP step) override;
     };
-
 
     class CPush : public CStatus
     {
@@ -48,6 +51,6 @@ class CCasey : public CPlayerCharacter
 public:
     CCasey(GAMETYPES::COSTUME costume);
     virtual ~CCasey(void);
-    virtual void Run(void) override;
+    virtual void OnChangeMotion(void) override;
     virtual void ShootingKnife(void) override;
 };

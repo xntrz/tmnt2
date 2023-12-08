@@ -1,45 +1,41 @@
 #pragma once
 
+#include "PCFileAccess.hpp"
+#include "PCRwFileSystem.hpp"
+
 #include "System/Common/File/AdxFileManager.hpp"
 
-class CPCPhyFileAccess;
-class CPCRcFileAccess;
+#include <list>
 
 
 class CPCFileManager final : public CAdxFileManager
 {
 public:
-    enum
-    {
-        LABELPCBEGIN = LABELADX_EXTEND,
-        LABELPC_RESID,
-    };
-    
-public:
     CPCFileManager(void);
     virtual ~CPCFileManager(void);
     virtual bool Start(void) override;
     virtual void Stop(void) override;
+    virtual void Sync(void) override;
     virtual void Error(const char* pszDescription) override;
-    virtual CFileAccess* AllocRequest(int32 nID, int32 nLabel) override;
-    virtual CFileAccess* AllocRequest(const char* pszName, int32 nLabel) override;
-    virtual void GarbageCollection(void) override;
+    virtual CFileAccess* AllocRequest(int32 nType, const void* pTypeData) override;
     virtual bool SetupFileSystem(void) override;
     virtual void ShutdownFileSystem(void) override;
 
 private:
-    CFileAccess* AllocFileRc(int32 nID);
-    CFileAccess* AllocFilePhy(const char* pszFilename);
-    void SetupWorkingDir(void);
+    void SetAfsPath(void);
+    void SetAfsOverrideFlag(void);
+    void SetCwd(void);
+    void PhyAccessInit(void);
+    void PhyAccessTerm(void);
+    void PhyAccessSync(void);
+    CPCPhyFileAccess* PhyAccessAlloc(const char* pszFilename);
 
-private:    
-    CPCPhyFileAccess* m_paPCPhyFileAccess;
-    CList<CPCPhyFileAccess> m_listPCPhyFileAccessPool;
-    CList<CPCPhyFileAccess> m_listPCPhyFileAccessAlloc;
-    CPCRcFileAccess* m_paPCRcFileAccess;
-    CList<CPCRcFileAccess> m_listPCRcFileAccessPool;
-    CList<CPCRcFileAccess> m_listPCRcFileAccessAlloc;
-    bool m_bAfsOverrideFlag;
+private:
+    CPCRwFileSystem m_rwFileSystemPC;
+    CPCPhyFileAccess m_aPhyFAccessPool[32];
+    std::list<CPCPhyFileAccess*> m_listPhyFAccessFree;
+    std::list<CPCPhyFileAccess*> m_listPhyFAccessAlloc;
     void* m_adxfic;
-    char m_szPath[256];
+    bool m_bAfsOverrideFlag;
+    char m_szAfsPath[256];
 };

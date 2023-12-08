@@ -129,10 +129,8 @@ MWPLY CMovie::CreateHandle(char** ppWorkArea, int32 iWidth, int32 iHeight, int32
 {
     MwsfdInitPrm iprm;
     std::memset(&iprm, 0x00, sizeof(iprm));    
-    iprm.vhz = MWSFD_VHZ_50_00;
-    if (!bUsePalMode)
-        iprm.vhz = MWSFD_VHZ_59_94;
-	iprm.disp_cycle = 1;
+    iprm.vhz = (bUsePalMode ? MWSFD_VHZ_50_00 : MWSFD_VHZ_59_94);
+    iprm.disp_cycle = 1;
 	iprm.disp_latency = 1;
     mwPlyInitSfdFx(&iprm);
 
@@ -141,7 +139,7 @@ MWPLY CMovie::CreateHandle(char** ppWorkArea, int32 iWidth, int32 iHeight, int32
     cprm.max_bps = iMaxBps;
     cprm.ftype = MWSFD_FTYPE_SFD;
     cprm.compo_mode = 0;
-    cprm.nfrm_pool_wk = 1;
+    cprm.nfrm_pool_wk = 3;
     cprm.max_stm = 1;
     cprm.max_width = iWidth;
     cprm.max_height = iHeight;

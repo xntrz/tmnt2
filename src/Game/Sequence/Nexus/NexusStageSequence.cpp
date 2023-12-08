@@ -22,11 +22,11 @@ CNexusStageSequence::~CNexusStageSequence(void)
 };
 
 
-bool CNexusStageSequence::OnAttach(const void* param)
+bool CNexusStageSequence::OnAttach(const void* pParam)
 {
     CGameData::Attribute().SetGamemode(GAMETYPES::GAMEMODE_NEXUS);
 
-    CStageBaseSequence::OnAttach(param);
+    CStageBaseSequence::OnAttach(pParam);
 
     RegisterStateObject(STATE_LOAD, new CLoadStageSeqState(CGameData::PlayParam().GetStage()), true);
     if (CGameData::PlayParam().IsFirstStage())

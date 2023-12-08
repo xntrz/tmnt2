@@ -23,7 +23,7 @@ void CProcessMail::CMailBox::Clear(int32 iLabel)
 	{
 		if (m_aMailes[i].m_iLabel == iLabel)
 		{
-			m_aMailes[i] = PROCESSTYPES::MAIL::EMPTY;
+			m_aMailes[i] = PROCESSTYPES::MAIL();
 			--m_size;
 		};
 	};
@@ -33,8 +33,9 @@ void CProcessMail::CMailBox::Clear(int32 iLabel)
 void CProcessMail::CMailBox::Clear(void)
 {
 	m_size = 0;
+	
 	for (int32 i = 0; i < COUNT_OF(m_aMailes); ++i)
-		m_aMailes[i] = PROCESSTYPES::MAIL::EMPTY;
+		m_aMailes[i] = PROCESSTYPES::MAIL();
 };
 
 
@@ -48,8 +49,9 @@ bool CProcessMail::CMailBox::Accept(PROCESSTYPES::MAIL& mail)
 		if (m_aMailes[i].m_iLabel != PROCESSTYPES::LABEL_EOL)
 		{
 			mail = m_aMailes[i];
-			m_aMailes[i] = PROCESSTYPES::MAIL::EMPTY;
+			m_aMailes[i] = PROCESSTYPES::MAIL();
 			--m_size;
+			
 			return true;
 		};
 	};
@@ -70,8 +72,9 @@ bool CProcessMail::CMailBox::Accept(int32 iReceiver, PROCESSTYPES::MAIL& mail)
 		if (m_aMailes[i].m_iLabel == iReceiver)
 		{
 			mail = m_aMailes[i];
-			m_aMailes[i] = PROCESSTYPES::MAIL::EMPTY;
+			m_aMailes[i] = PROCESSTYPES::MAIL();
 			--m_size;
+			
 			return true;
 		};
 	};
@@ -130,7 +133,7 @@ CProcessMail::~CProcessMail(void)
 
 bool CProcessMail::Send(int32 iReceiver, PROCESSTYPES::MAIL::TYPE type, const void* param)
 {
-	PROCESSTYPES::MAIL mail = PROCESSTYPES::MAIL::EMPTY;
+	PROCESSTYPES::MAIL mail;
 
 	mail.m_iLabel	= iReceiver;
 	mail.m_type		= type;

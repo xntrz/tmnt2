@@ -47,6 +47,7 @@ public:
     CParticle(void);
     ~CParticle(void);
     void Copy(const CParticle* pParticle);
+    void ConvertEndian(PEFINFO::PARTICLEINFO* pParticleInfo);
     void ReadParticleData(PEFINFO::PARTICLEINFO* pParticleInfo);
     void Initialize(void);
     void StartParticle(void);
@@ -69,7 +70,6 @@ public:
     void SetMatrixDirection(RwMatrix* pMatrix, const RwV3d* pvLookVec);
     void DeleteElement(void);
     void SetColorToVertex(const RwRGBA& color);
-    void ConvertEndian(PEFINFO::PARTICLEINFO* pParticlInfo);
     bool GetMyTexture(void);
     void SetMyTexture(RwTexture* pTexture);
     void SetVertexInfo(RwIm3DVertex* aVertexList, RwCamera* pCamera, TRANSITION* pTransition, uint32 uStartPos);
@@ -85,7 +85,7 @@ public:
     void TransitionSize(TRANSITION* pTransition);
     void TransitionScale(TRANSITION* pTransition);
     void TransitionAcceleration(TRANSITION* pTransition);
-    void TransitionRotation(TRANSITION* pTransition, const RwV3d* pvVec);
+    void TransitionRotation(TRANSITION* pTransition, const RwV3d* pCameraPos);
     float GetSortZ(RwCamera* pCamera, RwV3d* pvPosition);
     void SortZ(RwCamera* pCamera);
     void AddRandomStartPos(RwV3d* pvStartPos, RwV3d* pvRandElement, uint32 uRandomFlag);

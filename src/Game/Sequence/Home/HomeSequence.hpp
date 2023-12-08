@@ -10,9 +10,9 @@ public:
 
     CHomeSequence(void);
     virtual ~CHomeSequence(void);
-    virtual bool OnAttach(const void* param) override;
+    virtual bool OnAttach(const void* pParam) override;
     virtual void OnDetach(void) override;
-    virtual void OnMove(bool bRet, const void* param) override;
+    virtual void OnMove(bool bRet, const void* pReturnValue) override;
     virtual void OnDraw(void) const override;
     int32 Branch(int32 iLabel, const void* param);
     

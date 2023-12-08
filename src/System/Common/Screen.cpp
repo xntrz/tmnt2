@@ -25,9 +25,7 @@ static CGraphicsDevice* s_pDevice = nullptr;
 
 
 /*static*/ void CScreen::DetachDevice(void)
-{
-    ASSERT(s_pDevice);
-    
+{   
     s_pDevice = nullptr;
 };
 
@@ -40,12 +38,13 @@ static CGraphicsDevice* s_pDevice = nullptr;
         s_iHeight = s_pDevice->ScreenHeight();
         s_iDepth = s_pDevice->ScreenDepth();
 
-        int32 iFlipInterval = s_pDevice->GetFlipInternval();        
-        if (iFlipInterval == CGraphicsDevice::FLIPINTERVAL_DEFAULT)
-            iFlipInterval = CGraphicsDevice::FLIPINTERVAL_60;
+        int32 nVsyncCount = s_pDevice->GetFlipInternval();        
+        if (nVsyncCount == 0)
+            nVsyncCount = 1;
         
-        s_fFramerate = 60.0f / float(iFlipInterval);
+        s_fFramerate = 60.0f / float(nVsyncCount);
         ASSERT(s_fFramerate > 0.0f);
+        
         s_fTimerStride = 1.0f / s_fFramerate;
     };
 };
@@ -59,11 +58,11 @@ static CGraphicsDevice* s_pDevice = nullptr;
 };
 
 
-/*static*/ void CScreen::SetFlipInterval(int32 iFlipInterval)
+/*static*/ void CScreen::SetFlipInterval(int32 nVsyncCount)
 {
     ASSERT(s_pDevice);
     
-    s_pDevice->SetFlipInterval(iFlipInterval);
+    s_pDevice->SetFlipInterval(nVsyncCount);
 };
 
 
@@ -77,7 +76,7 @@ static CGraphicsDevice* s_pDevice = nullptr;
 
 /*static*/ void CScreen::SetClearColor(const RwRGBA& rColor)
 {
-    s_pDevice->SetClearColor(&rColor);
+    SetClearColor(&rColor);
 };
 
 
@@ -122,28 +121,4 @@ static CGraphicsDevice* s_pDevice = nullptr;
 /*static*/ int32 CScreen::Height(void)
 {
     return s_iHeight;
-};
-
-
-/*static*/ int32 CScreen::VirtualWidth(void)
-{
-    return int32(CSprite::m_fVirtualScreenW);
-};
-
-
-/*static*/ int32 CScreen::VirtualHeight(void)
-{
-    return int32(CSprite::m_fVirtualScreenH);
-};
-
-
-/*static*/ float CScreen::VirtualPixelW(void)
-{
-    return float(s_iWidth) * (1.0f / CSprite::m_fVirtualScreenW);
-};
-
-
-/*static*/ float CScreen::VirtualPixelH(void)
-{
-    return float(s_iHeight) * (1.0f / CSprite::m_fVirtualScreenH);
 };

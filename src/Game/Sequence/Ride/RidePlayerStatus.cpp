@@ -112,7 +112,49 @@ namespace RidePlayerStatus
 
     void CGroundCommon::OnRun(void)
     {
-        ;
+        switch (StateMachine().CurrentStatus())
+        {
+        case PLAYERTYPES::RIDESTATUS_RUN:
+            {
+                if (RideCharacter().PadInfo().m_fStickX > 0.4f)
+                    StateMachine().ChangeStatus(PLAYERTYPES::RIDESTATUS_RIGHT);
+                else if (RideCharacter().PadInfo().m_fStickX < -0.4f)
+                    StateMachine().ChangeStatus(PLAYERTYPES::RIDESTATUS_LEFT);
+                else if (RideCharacter().PadInfo().m_fStickY > 0.4f)
+                    StateMachine().ChangeStatus(PLAYERTYPES::RIDESTATUS_SPEED_UP);
+                else if (RideCharacter().PadInfo().m_fStickY < -0.4f)
+                    StateMachine().ChangeStatus(PLAYERTYPES::RIDESTATUS_SPEED_DOWN);
+            }
+            break;
+
+        case PLAYERTYPES::RIDESTATUS_RIGHT:
+            {
+                if (RideCharacter().PadInfo().m_fStickX < 0.4f)
+                    StateMachine().ChangeStatus(PLAYERTYPES::RIDESTATUS_RUN);
+            }
+            break;
+
+        case PLAYERTYPES::RIDESTATUS_LEFT:
+            {
+                if (RideCharacter().PadInfo().m_fStickX > -0.4f)
+                    StateMachine().ChangeStatus(PLAYERTYPES::RIDESTATUS_RUN);
+            }
+            break;
+
+        case PLAYERTYPES::RIDESTATUS_SPEED_UP:
+            {
+                if (RideCharacter().PadInfo().m_fStickY < 0.4f)
+                    StateMachine().ChangeStatus(PLAYERTYPES::RIDESTATUS_RUN);
+            }
+            break;
+
+        case PLAYERTYPES::RIDESTATUS_SPEED_DOWN:
+            {
+                if (RideCharacter().PadInfo().m_fStickY > -0.4f)
+                    StateMachine().ChangeStatus(PLAYERTYPES::RIDESTATUS_RUN);
+            }
+            break;
+        };        
     };
 
 
@@ -251,14 +293,14 @@ namespace RidePlayerStatus
         RideCharacter().SetEnableCatchHit(false);
         RideCharacter().SetGravityEnable(false);
         RideCharacter().SetEffectDrawEnable(false);
-        RideCharacter().ResetTurnDirection();
+        RideCharacter().SetTurnDirection(0.0f);
         RideCharacter().OnCrashWall();
         
         if (Math::RandFloat() < 0.5f)
             CMessageManager::Request(SEGROUPID::VALUE(161), RideCharacter().GetID());
 
         CGameEvent::SetPlayerRideAction(RideCharacter().GetPlayerNo(), GAMETYPES::RIDEACT_WALL_CRASH);
-        CGamepad::StartVibration(RideCharacter().GetPadID(), CGamepad::VIBRATIONTYPE_HARD, 0.2f);
+        IGamepad::StartVibration(RideCharacter().GetPadID(), IGamepad::VIBRATIONTYPE_HARD, 0.2f);
         ChangeMotion(GetID());
     };
 
@@ -577,14 +619,14 @@ namespace RidePlayerStatus
         RideCharacter().SetEnableCatchHit(false);
         RideCharacter().SetGravityEnable(false);
         RideCharacter().SetEffectDrawEnable(false);
-        RideCharacter().ResetTurnDirection();
+        RideCharacter().SetTurnDirection(0.0f);
         RideCharacter().OnCrashWall();
 
         if (Math::RandFloat() < 0.5f)
             CMessageManager::Request(SEGROUPID::VALUE(161), RideCharacter().GetID());
 
         CGameEvent::SetPlayerRideAction(RideCharacter().GetPlayerNo(), GAMETYPES::RIDEACT_WALL_CRASH);
-        CGamepad::StartVibration(RideCharacter().GetPadID(), CGamepad::VIBRATIONTYPE_HARD, 0.2f);
+        IGamepad::StartVibration(RideCharacter().GetPadID(), IGamepad::VIBRATIONTYPE_HARD, 0.2f);
         ChangeMotion(GetID());
     };
 

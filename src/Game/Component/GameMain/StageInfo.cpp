@@ -194,7 +194,7 @@ struct CStageInfo::INFO
 
 /*static*/ float CStageInfo::GetEnemyAppearDistance(STAGEID::VALUE idStage)
 {
-    if (idStage = STAGEID::ID_ST31NB)   // spasmosaur area
+    if (idStage == STAGEID::ID_ST31NB)   // spasmosaur area
         return 200.0f;
     else
         return 25.0f;

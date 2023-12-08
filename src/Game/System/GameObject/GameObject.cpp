@@ -57,7 +57,10 @@ void CGameObject::Period(void)
 
 void CGameObject::SetObjectFlag(GAMEOBJECTTYPES::FLAG flag, bool bSet)
 {
-    FLAG_CHANGE(m_objflag, flag, bSet);
+    if (bSet)
+        FLAG_SET(m_objflag, flag);
+    else
+        FLAG_CLEAR(m_objflag, flag);
 };
 
 

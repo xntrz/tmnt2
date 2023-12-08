@@ -1,5 +1,5 @@
 #include "NormalStageSequence.hpp"
-#include "StageSeqState.hpp"
+#include "NormalStageSeqState.hpp"
 
 #include "Game/Component/GameMain/StageInfo.hpp"
 #include "Game/Component/GameData/GameData.hpp"
@@ -24,11 +24,11 @@ CNormalStageSequence::~CNormalStageSequence(void)
 };
 
 
-bool CNormalStageSequence::OnAttach(const void* param)
+bool CNormalStageSequence::OnAttach(const void* pParam)
 {
-    CStageBaseSequence::OnAttach(param);
+    CStageBaseSequence::OnAttach(pParam);
 
-    RegisterStateObject(STATE_LOAD, new CLoadStageSeqState(CGameData::PlayParam().GetStage()), true);
+    RegisterStateObject(STATE_LOAD, new CLoadNormalStageSeqState(CGameData::PlayParam().GetStage()), true);
     if(CGameData::PlayParam().IsFirstStage())
         RegisterStateObject(STATE_INTRO, new CIntroStageSeqState, true);    
     RegisterStateObject(STATE_PLAY, new CPlayStageSeqState, true);

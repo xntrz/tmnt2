@@ -429,7 +429,7 @@ void CPlayerCharacter::OnMessageAttackResult(CHitCatchData* pCatch)
 
 void CPlayerCharacter::OnMessageReceivedDamage(int32 nDamage)
 {
-    CGameProperty::Player(m_nPlayerNo).AddHP(-nDamage);
+	CGameProperty::Player(m_nPlayerNo)->AddHP(-nDamage);
 };
 
 
@@ -519,7 +519,7 @@ CHARACTERTYPES::ATTACKRESULTTYPE CPlayerCharacter::OnDamage(CCharacterAttackCalc
         AttackResult != CHARACTERTYPES::ATTACKRESULTTYPE_GUARD_IMPACT)
     {
         SetConfusionEnable(true, 4.0f);                
-        CGamepad::StartVibration(GetPadID(), CGamepad::VIBRATIONTYPE_NORMAL, 0.2f);
+        IGamepad::StartVibration(GetPadID(), IGamepad::VIBRATIONTYPE_NORMAL, 0.2f);
     };
 
     if (AttackResult &&
@@ -588,13 +588,8 @@ void CPlayerCharacter::OnMessageCombination(void* pParam)
 
 
 void CPlayerCharacter::OnSteppedDeathFloor(void)
-{	
-    int32 iController = -1;
-
-    if (m_nPlayerIndex = !- 1)
-        iController = CGameProperty::Player(m_nPlayerIndex).GetPadID();
-
-	CGamepad::StartVibration(iController, CGamepad::VIBRATIONTYPE_HARD, 0.2f);
+{
+	IGamepad::StartVibration(GetPadID(), IGamepad::VIBRATIONTYPE_HARD, 0.2f);
 
 	if (FLAG_TEST(m_collisionGroundInfo.m_attribute, MAPTYPES::ATTRIBUTE_DOBON))
 		CEffectManager::Play(EFFECTID::ID_ALL_W_DOBON, &m_vPosition);
@@ -605,10 +600,14 @@ void CPlayerCharacter::OnSteppedDeathFloor(void)
 
 int32 CPlayerCharacter::GetPlayerIndex(void) const
 {
-    for (int32 i = 0; i < CGameProperty::GetPlayerNum(); ++i)
+	int32 nPlayerNum = CGameProperty::GetPlayerNum();
+    for (int32 i = 0; i < nPlayerNum; ++i)
     {
-        if (CGameProperty::Player(i).IsIncludedCharacter(m_idPlayer))
-            return i;
+		IGamePlayer* pGamePlayer = CGameProperty::Player(i);
+		CPlayer* pPlayer = pGamePlayer->GetPlayer();
+
+		if (pPlayer->IsIncludedCharacter(m_idPlayer))
+			return i;
     };
 
     return -1;
@@ -637,7 +636,7 @@ void CPlayerCharacter::ShootingKnife(void)
     CShotManager::Shot(SHOTID::ID_KNIFE_PLAYER, &vPosition, m_fDirection, this, 0.26f, 5.0f);
 
     if (!IsAttributeFlagSet(PLAYERTYPES::ATTRIBUTE_INNUMERABLE_KNIFE))
-        CGameProperty::Player(m_nPlayerNo).AddShurikenNum(-1);
+        CGameProperty::Player(m_nPlayerNo)->AddShurikenNum(-1);
 };
 
 
@@ -794,9 +793,7 @@ void CPlayerCharacter::OnAttach(CPlayerCharacter* pBeforeCharacter, bool bChange
         if (pGroundInfo->m_bHit &&
             pGroundInfo->m_hittype == MAPTYPES::HITTYPE_GIMMICK)
         {
-            pToGimmickMod->SetPrevGimmickObjName(
-                pGroundInfo->m_gimmickinfo.m_szGimmickObjName
-            );
+            pToGimmickMod->SetPrevGimmickObjName(pGroundInfo->m_gimmickinfo.m_szGimmickObjName);
         }
         else
         {
@@ -818,11 +815,7 @@ void CPlayerCharacter::OnAttach(CPlayerCharacter* pBeforeCharacter, bool bChange
     if (bChangeEffectEnable)
     {
         RwV3d vOffset = Math::VECTOR3_ZERO;
-        CEffectManager::PlayTrace(
-            EFFECTID::ID_BARRIER_START,
-            new CPlayerTracer(this),
-            &vOffset
-        );
+        CEffectManager::PlayTrace(EFFECTID::ID_BARRIER_START, new CPlayerTracer(this), &vOffset);
     };
 
     CBandanaModule* pBandanaMod = (CBandanaModule*)GetModule(MODULETYPE::BANDANA);
@@ -877,7 +870,7 @@ void CPlayerCharacter::RotateDirection(float fDirection)
 
     fDirectionDiff = Math::RadianCorrect(fDirectionDiff);    
     ASSERT(Math::FAbs(fDirectionDiff) <= Math::PI);
-    fDirectionDiff = Math::Clamp(fDirectionDiff, -fRotateDirectionMax, fRotateDirectionMax);
+    fDirectionDiff = Clamp(fDirectionDiff, -fRotateDirectionMax, fRotateDirectionMax);
 
     SetDirection(m_fDirection + fDirectionDiff);
 };
@@ -1369,7 +1362,7 @@ void CPlayerCharacter::ReplayMotion(void)
 
 void CPlayerCharacter::SetAerialMotionTime(float fTime)
 {
-    float fT = Math::Clamp(m_vVelocity.y / fTime, -1.0f, 1.0f);
+    float fT = Clamp(m_vVelocity.y / fTime, -1.0f, 1.0f);
     
     SetMotionTime(
         GetMotionEndTime() * (fT * -0.5f + 0.5f)
@@ -1577,7 +1570,7 @@ bool CPlayerCharacter::IsEnableAttackKnife(void) const
     if (CGameData::Record().Secret().IsUnlockedSecret(SECRETID::ID_CHEATCODE_SHURIKEN))
         return true;
     
-    if (CGameProperty::Player(m_nPlayerNo).GetShurikenNum() <= 0)
+    if (CGameProperty::Player(m_nPlayerNo)->GetShurikenNum() <= 0)
         return false;
 
     return !IsPlayerFlagSet(PLAYERTYPES::FLAG_DISABLE_THROW_KNIFE);
@@ -1587,25 +1580,32 @@ bool CPlayerCharacter::IsEnableAttackKnife(void) const
 bool CPlayerCharacter::IsEnableAttackKnifeJump(void) const
 {
     ASSERT(m_pStateMachine);
-    
-    return (
-        CGameData::Record().Secret().GetAerialLevel() >= 1 &&
-        IsEnableAttackKnife() &&
-        IsPlayerFlagSet(PLAYERTYPES::FLAG_AERIAL_STATUS) &&
-        (GetStatus() != PLAYERTYPES::STATUS_ATTACK_KNIFE_JUMP || m_pStateMachine->GetStatusDuration() > 0.15f)
-    );
+
+    bool bIsTechLevelOK         = (CGameData::Record().Secret().GetAerialLevel() >= 1);
+    bool bIsEnableAttackKnife   = IsEnableAttackKnife();
+    bool bIsInAerial            = IsPlayerFlagSet(PLAYERTYPES::FLAG_AERIAL_STATUS);
+    bool bIsNotSameStatus       = (GetStatus() != PLAYERTYPES::STATUS_ATTACK_KNIFE_JUMP);
+    bool bIsNotOnCooldown       = (m_pStateMachine->GetStatusDuration() > 0.15f);
+
+    return (bIsTechLevelOK && bIsEnableAttackKnife && bIsInAerial && (bIsNotSameStatus || bIsNotOnCooldown));
 };
 
 
 void CPlayerCharacter::SetPlayerFlag(PLAYERTYPES::FLAG flag, bool bSet)
 {
-    FLAG_CHANGE(m_playerflag, flag, bSet);
+    if (bSet)
+        FLAG_SET(m_playerflag, flag);
+    else
+        FLAG_CLEAR(m_playerflag, flag);
 };
 
 
 void CPlayerCharacter::SetAttributeFlag(PLAYERTYPES::ATTRIBUTE flag, bool bSet)
 {
-    FLAG_CHANGE(m_attribute, flag, bSet);
+    if (bSet)
+        FLAG_SET(m_attribute, flag);
+    else
+        FLAG_CLEAR(m_attribute, flag);
 };
 
 

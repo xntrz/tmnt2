@@ -81,12 +81,12 @@ class CCameraChangeGimmick : public CGimmick
 protected:
     enum STEP
     {
-        STEP_IDLE,
-        STEP_FADEIN,
-        STEP_FADEIN_CHECK,
-        STEP_REPLACE,
+        STEP_IDLE = 0,
         STEP_FADEOUT,
         STEP_FADEOUT_CHECK,
+        STEP_REPLACE,
+        STEP_FADEIN,
+        STEP_FADEIN_CHECK,
         STEP_RELEASE,
     };
 
@@ -125,7 +125,7 @@ protected:
 
     enum SUBID
     {
-        SUBID_PLAY_TRIGGER,
+        SUBID_PLAY_TRIGGER = 0,
         SUBID_PLAY_INSTANT,
     };
 
@@ -184,7 +184,7 @@ class CReplaceGimmick : public CGimmick
 protected:
     enum SUBID
     {
-        SUBID_FALL_REPLACE,
+        SUBID_FALL_REPLACE = 0,
         SUBID_START_REPLACE,
     };
 

@@ -8,7 +8,7 @@
 #include "Game/Component/GameMain/GameEvent.hpp"
 #include "Game/Component/GameMain/StageInfo.hpp"
 #include "Game/Component/Gimmick/GimmickManager.hpp"
-#include "Game/Component/Gimmick/GimmickUtils.hpp"
+#include "Game/Component/Gimmick/Utils/GimmickUtils.hpp"
 #include "Game/Component/Gimmick/GimmickInfo.hpp"
 #include "Game/Component/Gimmick/GimmickParam.hpp"
 #include "Game/Component/Gimmick/MoveStrategy/ThrowingGimmickMove.hpp"
@@ -80,13 +80,6 @@ CThrowingGimmick::CThrowingGimmick(const char* pszName, void* pParam)
     m_pModuleManager = new CModuleManager;
     ASSERT(m_pModuleManager);
 
-	//float r = m_pKindinfo->m_fShadowRadius;
-	//if (m_subid == SUBID_THROWING::TRASHBOX_L ||
-	//	m_subid == SUBID_THROWING::TRASHBOX_S)
-	//{
-	//	r = 1.5f;
-	//};
-
 	m_pModuleManager->Include(CCircleShadowModule::New(
 		this,
 		m_pKindinfo->m_fShadowRadius,
@@ -137,19 +130,19 @@ void CThrowingGimmick::MessageProc(int32 nMessageID, void* pParam)
     switch (nMessageID)
     {
     case CHARACTERTYPES::MESSAGEID_CATCH:
-        OnCatch((int32*)pParam);
+        OnCatch(static_cast<CHitCatchData::RESULT*>(pParam));
         break;
 
     case CHARACTERTYPES::MESSAGEID_LIFT:
-        OnLift((CCharacter::MSG_LIFT_INFO*)pParam);
+        OnLift(static_cast<CCharacter::MSG_LIFT_INFO*>(pParam));
         break;
 
     case CHARACTERTYPES::MESSAGEID_THROW:
-        OnThrow((RwV3d*)pParam);
+        OnThrow(static_cast<RwV3d*>(pParam));
         break;
 
     case CHARACTERTYPES::MESSAGEID_MISSTHROW:
-        OnMissThrow((RwV3d*)pParam);
+        OnMissThrow(static_cast<RwV3d*>(pParam));
         break;
     };
 };
@@ -279,28 +272,26 @@ void CThrowingGimmick::OnCatchAttack(CHitAttackData* pAttack)
         if (m_nLife < 0)
         {
             onBreak();
-
             if (m_type != TYPE_ITEMBOX)
             {
-                if (!(Math::Rand() % 3) && pAttacker->GetType() == GAMEOBJECTTYPE::CHARACTER)
+                if (!(Math::Rand() % 3)
+                    && (pAttacker->GetType() == GAMEOBJECTTYPE::CHARACTER)
+                    && (static_cast<CCharacter*>(pAttacker)->GetCharacterType() == CCharacter::TYPE_PLAYER))
                 {
-                    CCharacter* pCharacter = (CCharacter*)pAttacker;
-                    if (pCharacter->GetCharacterType() == CCharacter::TYPE_PLAYER)
-                        CMessageManager::Request(SEGROUPID::VALUE(9), PLAYERID::VALUE(-1));
-                };
+                    CMessageManager::Request(SEGROUPID::VALUE(9), PLAYERID::VALUE(-1));
+                };                
             };
         };
     };
 };
 
 
-void CThrowingGimmick::OnCatch(int32* piStatus)
+void CThrowingGimmick::OnCatch(CHitCatchData::RESULT* pResult)
 {
-    if (*piStatus == CHitCatchData::RESULT_THROWFRONT ||
-        *piStatus == CHitCatchData::RESULT_THROWBACK)
+    if ((*pResult == CHitCatchData::RESULT_THROWFRONT) ||
+        (*pResult == CHitCatchData::RESULT_THROWBACK))
     {
-        RwV3d vRotation = Math::VECTOR3_ZERO;
-        m_pThrowingMove->SetRotation(&vRotation);
+        m_pThrowingMove->SetRotation(&Math::VECTOR3_ZERO);
 
         if (m_pBodyHitData)
             m_pBodyHitData->SetState(CBodyHitData::STATE_ENABLE, false);
@@ -338,63 +329,33 @@ void CThrowingGimmick::OnMissThrow(RwV3d* pvVelocity)
 {
 	setThrowingParam(pvVelocity);
     m_state = STATE_THROWN;
-
-    if (!(Math::Rand() % 3))
-    {
-        switch (m_subid)
-        {
-        case SUBID_THROWING::DRUM:
-        case SUBID_THROWING::DRUM_1:
-            CMessageManager::Request(SEGROUPID::VALUE(14), PLAYERID::VALUE(-1));
-            break;
-            
-        case SUBID_THROWING::DRUM_EKITAI:
-            CMessageManager::Request(SEGROUPID::VALUE(16), PLAYERID::VALUE(-1));
-            break;
-            
-        case SUBID_THROWING::DRUM_SLEEP:
-            CMessageManager::Request(SEGROUPID::VALUE(18), PLAYERID::VALUE(-1));
-            break;
-
-        default:
-            CMessageManager::Request(SEGROUPID::VALUE(19), PLAYERID::VALUE(-1));
-            break;
-        };
-    };
 };
 
 
 void CThrowingGimmick::OnThrow(RwV3d* pvVelocity)
 {
     setThrowingParam(pvVelocity);
-
-    if (Math::Rand() % 3)
-    {
-        m_state = STATE_THROWN;
-    }
-    else
+    m_state = STATE_THROWN;
+    
+    if (!(Math::Rand() % 3))
     {
         switch (m_subid)
         {
         case SUBID_THROWING::DRUM:
         case SUBID_THROWING::DRUM_1:
-            CMessageManager::Request(SEGROUPID::VALUE(14), PLAYERID::VALUE(-1));
-            m_state = STATE_THROWN;
+            CMessageManager::Request(SEGROUPID::VALUE(14));
             break;
-            
+
         case SUBID_THROWING::DRUM_EKITAI:
-            CMessageManager::Request(SEGROUPID::VALUE(16), PLAYERID::VALUE(-1));
-            m_state = STATE_THROWN;
+            CMessageManager::Request(SEGROUPID::VALUE(16));
             break;
-            
+
         case SUBID_THROWING::DRUM_SLEEP:
-            CMessageManager::Request(SEGROUPID::VALUE(18), PLAYERID::VALUE(-1));
-            m_state = STATE_THROWN;
+            CMessageManager::Request(SEGROUPID::VALUE(18));
             break;
 
         default:
-            CMessageManager::Request(SEGROUPID::VALUE(19), PLAYERID::VALUE(-1));
-            m_state = STATE_THROWN;
+            CMessageManager::Request(SEGROUPID::VALUE(19));
             break;
         };
     };
@@ -433,7 +394,7 @@ void CThrowingGimmick::init(void* pParam)
 
     CModel* pDispModel = CModelManager::CreateModel(m_pKindinfo->m_pszModelName);
     ASSERT(pDispModel);
-    m_model.SetModel(CNormalGimmickModel::MODELKIND_VISUAL_NORMAL, pDispModel);
+    m_model.SetModel(CNormalGimmickModel::MODELTYPE_DRAW_NORMAL, pDispModel);
 
     if (!std::strcmp(m_pKindinfo->m_pszAtariModelName, ATARI_NAME_EMPTY))
     {
@@ -451,7 +412,7 @@ void CThrowingGimmick::init(void* pParam)
     {
         CModel* pAtariModel = CModelManager::CreateModel(m_pKindinfo->m_pszAtariModelName);
         ASSERT(pAtariModel);
-        m_model.SetModel(CNormalGimmickModel::MODELKIND_ATARI_NORMAL, pAtariModel);
+        m_model.SetModel(CNormalGimmickModel::MODELTYPE_ATARI_NORMAL, pAtariModel);
 
         if (m_model.GetCollisionModelClump())
         {
@@ -675,15 +636,18 @@ void CThrowingGimmick::setBreakEffect(void)
         {
         case SUBID_THROWING::DRUM:
         case SUBID_THROWING::DRUM_1:
-            CMessageManager::Request(SEGROUPID::VALUE(13), PLAYERID::VALUE(-1));
+            CMessageManager::Request(SEGROUPID::VALUE(13));
             break;
             
         case SUBID_THROWING::DRUM_EKITAI:
-            CMessageManager::Request(SEGROUPID::VALUE(15), PLAYERID::VALUE(-1));
+            CMessageManager::Request(SEGROUPID::VALUE(15));
             break;
             
         case SUBID_THROWING::DRUM_SLEEP:
-            CMessageManager::Request(SEGROUPID::VALUE(17), PLAYERID::VALUE(-1));
+            CMessageManager::Request(SEGROUPID::VALUE(17));
+            break;
+
+        default:
             break;
         };
     };
@@ -703,27 +667,36 @@ void CThrowingGimmick::setKagaribiBreakEffect(void)
 
     m_hKagaribiEffect = CEffectManager::Play(EFFECTID::ID_FLAME_MAP, &vPosition);
     ASSERT(m_hKagaribiEffect);
+    
     if (m_hKagaribiEffect)
-            CEffectManager::SetScale(m_hKagaribiEffect, 2.0f);
+        CEffectManager::SetScale(m_hKagaribiEffect, 2.0f);
 };
 
 
 void CThrowingGimmick::setDefaultBreakEffect(void)
 {
-    EFFECTID::VALUE idEffect = EFFECTID::ID_UNKNOWN;
-    MAGICID::VALUE idMagic = MAGICID::ID_UNKNOWN;
+	STAGEID::VALUE      idStage = CGameData::PlayParam().GetStage();
+	MAPID::VALUE        idMap = CStageInfo::GetMapID(idStage);
+	CMapInfo::CATEGORY  catMap = CMapInfo::GetCategory(idMap);
+    
+	EFFECTID::VALUE idEffect = EFFECTID::ID_UNKNOWN;    
+	MAGICID::VALUE	idMagic = MAGICID::ID_UNKNOWN;   
+
     float fScale = 1.0f;
     int32 nNumEffect = 1;
 
     if (m_type == TYPE_ITEMBOX)
     {
-        if (m_subid == SUBID_ITEMBOX::VASE)
+        if (m_subid != SUBID_ITEMBOX::VASE)
         {
-            idEffect = EFFECTID::ID_CERAMICS;
+            if ((catMap == CMapInfo::CATEGORY_SPACE) || (catMap == CMapInfo::CATEGORY_ZERO))
+                idEffect = EFFECTID::ID_METAL;
+            else
+                idEffect = EFFECTID::ID_WOOD;
         }
         else
         {
-            idEffect = EFFECTID::ID_WOOD;
+            idEffect = EFFECTID::ID_CERAMICS;
         };
     }
     else
@@ -747,7 +720,12 @@ void CThrowingGimmick::setDefaultBreakEffect(void)
             break;
 
         case SUBID_THROWING::BOX:
-            idEffect = EFFECTID::ID_WOOD;
+            {
+                if ((catMap == CMapInfo::CATEGORY_SPACE) || (catMap == CMapInfo::CATEGORY_ZERO))
+                    idEffect = EFFECTID::ID_METAL;
+                else
+                    idEffect = EFFECTID::ID_WOOD;
+            }
             break;
 
         case SUBID_THROWING::VASE:
@@ -769,12 +747,12 @@ void CThrowingGimmick::setDefaultBreakEffect(void)
             break;
 
         case SUBID_THROWING::DESK:
-            idEffect = EFFECTID::ID_WOOD;
+            idEffect = (catMap == CMapInfo::CATEGORY_JAPAN ? EFFECTID::ID_WOOD : EFFECTID::ID_METAL);
             nNumEffect = 3;
             break;
 
         case SUBID_THROWING::CHAIR:
-            idEffect = EFFECTID::ID_METAL;
+            idEffect = (catMap == CMapInfo::CATEGORY_JAPAN ? EFFECTID::ID_WOOD : EFFECTID::ID_METAL);
             break;
 
         case SUBID_THROWING::CANDLESTICK:
@@ -783,28 +761,35 @@ void CThrowingGimmick::setDefaultBreakEffect(void)
         case SUBID_THROWING::TRASHBOX_S:
             idEffect = EFFECTID::ID_DUSTBOX;
             break;
+
+        default:
+            break;
         };
     };
 
     RwV3d vPosition = Math::VECTOR3_ZERO;
     m_pThrowingMove->GetPosition(&vPosition);
-    vPosition.y += m_pKindinfo->m_fHitAttackRadius;
 
     if (idMagic != MAGICID::ID_UNKNOWN)
     {
+        vPosition.y += m_pKindinfo->m_fRadius;        
+
         CMagicManager::CParameter param;
         param.SetPositon(&vPosition);
 
         uint32 hMagic = CMagicManager::Play(idMagic, &param);
         ASSERT(hMagic);
+        
         if (hMagic)
             CMagicManager::SetScale(hMagic, fScale);
     }
-    else if (idEffect != EFFECTID::ID_UNKNOWN && nNumEffect > 0)
+    else if (idEffect != EFFECTID::ID_UNKNOWN)
     {
         for (int32 i = 0; i < nNumEffect; ++i)
         {
             uint32 hEffect = CEffectManager::Play(idEffect, &vPosition);
+            ASSERT(hEffect);
+            
             if (hEffect)
                 CEffectManager::SetScale(hEffect, fScale);
             
@@ -826,9 +811,9 @@ void CThrowingGimmick::setThrowingParam(RwV3d* pvVelocity)
     RwV3d vRotVelocity = Math::VECTOR3_ZERO;
     m_pThrowingMove->GetRotVelocity(&vRotVelocity);
 
-    vRotVelocity.x = vVelocity.z * 0.17453294f;
-    vRotVelocity.y = (float((Math::Rand() % TYPEDEF::UINT32_MAX) / TYPEDEF::UINT32_MAX) * 200.0f - 100.0f) * 0.017453294f;
-    vRotVelocity.z = vVelocity.x * 0.17453294f;
+    vRotVelocity.x = MATH_DEG2RAD(vVelocity.z);
+	vRotVelocity.y = MATH_DEG2RAD(float((Math::Rand() % TYPEDEF::UINT32_MAX) / TYPEDEF::UINT32_MAX) * 200.0f - 100.0f);
+    vRotVelocity.z = MATH_DEG2RAD(vVelocity.x);
 
 	m_pThrowingMove->SetRotVelocity(&vRotVelocity);
 };
@@ -839,20 +824,16 @@ void CThrowingGimmick::updateModule(void)
     if (m_pModuleManager)
     {
         m_pModuleManager->Run();
-        CCircleShadowModule* pCircleShadowMod = (CCircleShadowModule*)m_pModuleManager->GetModule(MODULETYPE::CIRCLE_SHADOW);
+        
+        CCircleShadowModule* pCircleShadowMod = static_cast<CCircleShadowModule*>(m_pModuleManager->GetModule(MODULETYPE::CIRCLE_SHADOW));
         if (pCircleShadowMod)
         {
-            if ((m_state == STATE_WAIT ||
-                m_state == STATE_LIFTED ||
-                m_state == STATE_THROWN) &&
-                !std::strcmp(m_pKindinfo->m_pszAtariModelName, ATARI_NAME_EMPTY))
-            {
-                pCircleShadowMod->SetEnable(true);
-            }
-            else
-            {
-                pCircleShadowMod->SetEnable(false);
-            };
+            bool bIsWaiting = (m_state == STATE_WAIT);
+            bool bIsLifted = (m_state == STATE_LIFTED);
+            bool bIsThrown = (m_state == STATE_THROWN);
+            bool bIsAtariModelEmpty = (std::strcmp(m_pKindinfo->m_pszAtariModelName, ATARI_NAME_EMPTY) == 0);
+
+            pCircleShadowMod->SetEnable(bIsWaiting && bIsAtariModelEmpty || bIsLifted || bIsThrown);
         };
     };
 };
@@ -863,20 +844,21 @@ void CThrowingGimmick::updateKagaribiFireEffect(void)
     if (m_hKagaribiEffect)
     {
         RwV3d vRotation = Math::VECTOR3_ZERO;
-        RwV3d vPosition = Math::VECTOR3_ZERO;
         m_pThrowingMove->GetRotation(&vRotation);
+        
+        RwV3d vPosition = Math::VECTOR3_ZERO;
         m_pThrowingMove->GetPosition(&vPosition);
         
         RwMatrix matrix;
         Math::Matrix_Rotate(&matrix, &vRotation);
         
-        RwV3d vOffset = { 0.0f, 2.0f, 0.0f };
-        RwV3d vEffectPosition = Math::VECTOR3_ZERO;
-        RwV3dTransformPoint(&vEffectPosition, &vOffset, &matrix);
+        RwV3d vEffectOfs = { 0.0f, 2.0f, 0.0f };
+        RwV3d vEffectPos = Math::VECTOR3_ZERO;
+        RwV3dTransformPoint(&vEffectPos, &vEffectOfs, &matrix);
 
-        Math::Vec3_Add(&vEffectPosition, &vEffectPosition, &vPosition);
+        Math::Vec3_Add(&vEffectPos, &vEffectPos, &vPosition);
         
-        CEffectManager::SetPosition(m_hKagaribiEffect, &vEffectPosition);
+        CEffectManager::SetPosition(m_hKagaribiEffect, &vEffectPos);
     };
 };
 
@@ -990,12 +972,12 @@ void CThrowingGimmick::setLiftGimmickPosition(RwV3d* pvPosition, CCharacter::MSG
     ASSERT(pvPosition);
     ASSERT(pInfo);
 
-    STAGEID::VALUE idStageNow = CGameData::PlayParam().GetStage();
-    MAPID::VALUE idMapNow = CStageInfo::GetMapID(idStageNow);
-    CMapInfo::CATEGORY MapType = CMapInfo::GetCategory(idMapNow);
+    STAGEID::VALUE      idStageNow  = CGameData::PlayParam().GetStage();
+    MAPID::VALUE        idMapNow    = CStageInfo::GetMapID(idStageNow);
+    CMapInfo::CATEGORY  catMap      = CMapInfo::GetCategory(idMapNow);
 
     float fOffsetH = 0.0f;
-    
+
     switch (m_type)
     {
     case TYPE_NORMAL:
@@ -1006,10 +988,7 @@ void CThrowingGimmick::setLiftGimmickPosition(RwV3d* pvPosition, CCharacter::MSG
             case SUBID_THROWING::DRUM_1:
             case SUBID_THROWING::DRUM_EKITAI:
             case SUBID_THROWING::DRUM_SLEEP:
-                if (MapType != CMapInfo::CATEGORY_SPACE)
-                    fOffsetH = 0.5f;
-                else
-                    fOffsetH = 0.3f;                
+                fOffsetH = ((catMap == CMapInfo::CATEGORY_SPACE) || (catMap == CMapInfo::CATEGORY_ZERO)) ? 0.3f : 0.5f;
                 break;
 
             case SUBID_THROWING::TRASHBOX_L:
@@ -1054,22 +1033,15 @@ void CThrowingGimmick::setLiftGimmickPosition(RwV3d* pvPosition, CCharacter::MSG
 
 bool CThrowingGimmick::isPlayerEnableLift(const CGameObject* pGameObject)
 {
-	return true;
-
-    if (m_pKindinfo->m_bHeavy)
-        return false;
-    
     if (pGameObject->GetType() != GAMEOBJECTTYPE::CHARACTER)
         return false;
 
-    CCharacter* pCharacter = (CCharacter*)pGameObject;
-    if (pCharacter->GetCharacterType() != CCharacter::TYPE_PLAYER)
+    if (static_cast<const CCharacter*>(pGameObject)->GetCharacterType() != CCharacter::TYPE_PLAYER)
         return false;
 
-    CPlayerCharacter* pPlayerCharacter = (CPlayerCharacter*)pCharacter;
-    if (!PlayerUtil::IsPowerfullCharacter(pPlayerCharacter))
-        return false;
+    if (m_pKindinfo->m_bHeavy)
+        return PlayerUtil::IsPowerfullCharacter(static_cast<const CPlayerCharacter*>(pGameObject));
 
-    return true;
+    return (m_fTimerPlayerRideOnJudge > CGameProperty::GetElapsedTime());
 };
 

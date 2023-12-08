@@ -358,12 +358,6 @@ CLeonardoAccumulateModule::CLeonardoAccumulateModule(CCharacter* pCharacter)
 };
 
 
-CLeonardoAccumulateModule::~CLeonardoAccumulateModule(void)
-{
-    ;
-};
-
-
 CRaphaelAccumulateModule::CRaphaelAccumulateModule(CCharacter* pCharacter)
 : CAccumulateModule(pCharacter)
 {
@@ -394,12 +388,6 @@ CRaphaelAccumulateModule::CRaphaelAccumulateModule(CCharacter* pCharacter)
 
     RegistUnit(&m_aAccumulateUnit[0]);
     RegistUnit(&m_aAccumulateUnit[1]);
-};
-
-
-CRaphaelAccumulateModule::~CRaphaelAccumulateModule(void)
-{
-    ;
 };
 
 
@@ -458,12 +446,6 @@ CMichelangeroAccumulateModule::CMichelangeroAccumulateModule(CCharacter* pCharac
 };
 
 
-CMichelangeroAccumulateModule::~CMichelangeroAccumulateModule(void)
-{
-    ;
-};
-
-
 CDonatelloAccumulateModule::CDonatelloAccumulateModule(CCharacter* pCharacter)
 : CAccumulateModule(pCharacter)
 {
@@ -483,12 +465,6 @@ CDonatelloAccumulateModule::CDonatelloAccumulateModule(CCharacter* pCharacter)
     m_aAccumulateUnit[0].SetRadius(0.15f);
 
     RegistUnit(&m_aAccumulateUnit[0]);
-};
-
-
-CDonatelloAccumulateModule::~CDonatelloAccumulateModule(void)
-{
-    ;
 };
 
 
@@ -558,12 +534,6 @@ CSlashuurAccumulateModule::CSlashuurAccumulateModule(CCharacter* pCharacter)
 };
 
 
-CSlashuurAccumulateModule::~CSlashuurAccumulateModule(void)
-{
-    ;
-};
-
-
 CCaseyAccumulateModule::CCaseyAccumulateModule(CCharacter* pCharacter)
 : CAccumulateModule(pCharacter)
 {
@@ -594,12 +564,6 @@ CCaseyAccumulateModule::CCaseyAccumulateModule(CCharacter* pCharacter)
 
     RegistUnit(&m_aAccumulateUnit[0]);
     RegistUnit(&m_aAccumulateUnit[1]);
-};
-
-
-CCaseyAccumulateModule::~CCaseyAccumulateModule(void)
-{
-    ;
 };
 
 
@@ -636,12 +600,6 @@ CKaraiAccumulateModule::CKaraiAccumulateModule(CCharacter* pCharacter)
 };
 
 
-CKaraiAccumulateModule::~CKaraiAccumulateModule(void)
-{
-    ;
-};
-
-
 CSplinterAccumulateModule::CSplinterAccumulateModule(CCharacter* pCharacter)
 : CAccumulateModule(pCharacter)
 {
@@ -661,10 +619,4 @@ CSplinterAccumulateModule::CSplinterAccumulateModule(CCharacter* pCharacter)
     m_aAccumulateUnit[0].SetRadius(0.15f);
 
     RegistUnit(&m_aAccumulateUnit[0]);
-};
-
-
-CSplinterAccumulateModule::~CSplinterAccumulateModule(void)
-{
-    ;
 };

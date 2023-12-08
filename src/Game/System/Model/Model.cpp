@@ -167,13 +167,13 @@ RpAtomic* CSetLightingEnableFunctor::operator()(RpAtomic* pAtomic)
     uint32 GeometryFlags = RpGeometryGetFlags(pGeometry);
 	if (m_bEnable)
 	{
-		FLAG_CHANGE(GeometryFlags, rpGEOMETRYPRELIT, false);
-		FLAG_CHANGE(GeometryFlags, rpGEOMETRYLIGHT, true);
+        FLAG_CLEAR(GeometryFlags, rpGEOMETRYPRELIT);
+        FLAG_SET(GeometryFlags, rpGEOMETRYLIGHT);
 	}
 	else
 	{
-		FLAG_CHANGE(GeometryFlags, rpGEOMETRYPRELIT, true);
-		FLAG_CHANGE(GeometryFlags, rpGEOMETRYLIGHT, false);
+        FLAG_SET(GeometryFlags, rpGEOMETRYPRELIT);
+        FLAG_CLEAR(GeometryFlags, rpGEOMETRYLIGHT);
 	};
     RpGeometrySetFlags(pGeometry, GeometryFlags);
 
@@ -395,7 +395,10 @@ void CModel::SetPartsDrawEnable(int32 index, bool bEnable)
     ASSERT(pAtomic);
 
     uint32 AtomicFlags = RpAtomicGetFlags(pAtomic);
-    FLAG_CHANGE(AtomicFlags, rpATOMICRENDER, bEnable);
+    if (bEnable)
+        FLAG_SET(AtomicFlags, rpATOMICRENDER);
+    else
+        FLAG_CLEAR(AtomicFlags, rpATOMICRENDER);
     RpAtomicSetFlags(pAtomic, AtomicFlags);
 };
 
@@ -540,94 +543,6 @@ void CModel::ForAllMaterialCallback(IMaterialCallbackFunctor* pFunctor)
     ASSERT(m_pClump);
     
     RpClumpForAllAtomics(m_pClump, CallbackAtomicForMaterialCallback, pFunctor);
-};
-
-
-void CModel::SetPosition(const RwV3d& rPos)
-{
-    m_vPosition = rPos;
-};
-
-
-void CModel::SetPosition(const RwV3d* pPos)
-{
-    ASSERT(pPos);
-    
-    m_vPosition = *pPos;
-};
-
-
-void CModel::SetRotation(const RwV3d& rRot)
-{
-    m_vRotation = rRot;
-};
-
-
-void CModel::SetRotation(const RwV3d* pRot)
-{
-    ASSERT(pRot);
-    
-    m_vRotation = *pRot;
-};
-
-
-void CModel::SetClippingEnable(bool bEnable)
-{
-    m_bClippingEnable = bEnable;
-};
-
-
-void CModel::SetDrawEnable(bool bEnable)
-{
-    m_bDrawEnable = bEnable;
-};
-
-
-bool CModel::IsDrawEnable(void) const
-{
-    return m_bDrawEnable;
-};
-
-
-void CModel::SetBoundingSphereOffset(const RwV3d* pvBSOffset)
-{
-    ASSERT(pvBSOffset);
-    
-    m_vBSphereOffset = *pvBSOffset;
-};
-
-
-void CModel::GetPosition(RwV3d* pvPosition) const
-{
-    ASSERT(pvPosition);
-
-    *pvPosition = m_vPosition;
-};
-
-
-void CModel::GetRotation(RwV3d* pvRotation) const
-{
-    ASSERT(pvRotation);
-
-    *pvRotation = m_vRotation;
-};
-
-
-RwRGBA CModel::GetColor(void) const
-{
-    return m_MaterialColor;
-};
-
-
-void CModel::SetColor(const RwRGBA& color)
-{
-    m_MaterialColor = color;
-};
-
-
-void CModel::SetBoundingSphereRadius(float r)
-{
-    m_BSphere.radius = r;
 };
 
 

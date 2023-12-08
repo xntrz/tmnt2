@@ -1,148 +1,135 @@
 #include "Gamepad.hpp"
-#include "Keyboard.hpp"
+#include "ControllerMisc.hpp"
 
 #include "Game/Component/GameData/GameData.hpp"
 #include "System/Common/Controller.hpp"
 #include "System/Common/Screen.hpp"
 
 
-/*static*/ int32 CGamepad::Invalid(void)
-{
-    return CController::CONTROLLER_LOCKED_ON_VIRTUAL;
-};
+/*static*/ int32 IGamepad::m_aLockedPhysicalPort[] = { -1, -1, -1, -1 };
 
 
-/*static*/ int32 CGamepad::Max(void)
-{
-    return CController::Max();
-};
-
-
-/*static*/ bool CGamepad::CheckFunction(uint32 uDigital, FUNCTION function)
+/*static*/ bool IGamepad::CheckFunction(uint32 uDigital, FUNCTION function)
 {
     ASSERT(function >= 0 && function < FUNCTION_MAX);
 
-    return FLAG_TEST(uDigital, BIT(CController::FUNCTIONAL_BEGIN + function));
+    return FLAG_TEST(uDigital, uint32(1 << (16 + function)));
 };
 
 
-/*static*/ void CGamepad::AppendButtonFunction(int32 iController, FUNCTION function, uint32 uBasicButton)
+/*static*/ void IGamepad::ClearAllButtonFunction(int32 iController)
 {
-    if (iController >= 0 && iController < CController::Max())
+    if (isExist(iController))
+    {
+        const int32 iFunctionMax = BITSOF(CController::DIGITAL) / 2;
+
+        for (int32 i = 0; i < iFunctionMax; ++i)
+            CController::Mapping(iController, 1 << i, 1 << i);        
+    };    
+};
+
+
+/*static*/ void IGamepad::AppendButtonFunction(int32 iController, uint32 uBasicButton, FUNCTION function)
+{
+    if (isExist(iController))
     {
         ASSERT(function >= 0 && function < FUNCTION_MAX);
         ASSERT(uBasicButton != 0);
 
         uint32 uDigitalMapping = CController::GetMapping(iController, uBasicButton);
-        uint32 uVirtualButton = (1 << (function + CController::FUNCTIONAL_BEGIN)) | uDigitalMapping;
-        
+        uint32 uVirtualButton = IPadFunctionMask(function) | uDigitalMapping;
+
         CController::Mapping(iController, uBasicButton, uVirtualButton);
     };
 };
 
 
-/*static*/ void CGamepad::ClearAllButtonFunction(int32 iController)
+/*static*/ uint32 IGamepad::ConvertToVirtualButton(uint32 uBasicButton)
 {
-    if (iController >= 0 && iController < CController::Max())
+#ifdef _TARGET_PS2    
+    static uint32 s_aDefaultFuncToDigitMapping[] =
     {
-        const int32 iFunctionMax = BITSOF(CController::DIGITAL) / 2;
+        CController::DIGITAL_RDOWN,
+        CController::DIGITAL_RLEFT,
+        CController::DIGITAL_RUP,
+        CController::DIGITAL_RRIGHT,
+        CController::DIGITAL_L1,
+        CController::DIGITAL_R1,
+        CController::DIGITAL_L2,
+        CController::DIGITAL_LUP,
+        CController::DIGITAL_LDOWN
+    };
 
-        for (int32 i = 0; i < iFunctionMax; ++i)
-        {
-            CController::Mapping(
-                iController,
-                1 << i,
-                1 << i
-            );
-        };
-    };    
+    static_assert(COUNT_OF(s_aDefaultFuncToDigitMapping) == FUNCTION_MAX, "update me");
+
+    uint32 uVirtualButton = 0;
+
+    for (int32 i = 0; i < FUNCTION_MAX; ++i)
+    {
+        if (FLAG_TEST(s_aDefaultFuncToDigitMapping[i], uBasicButton))
+            uVirtualButton |= IPadFunctionMask(i);
+    };
+
+    return uVirtualButton;
+#else
+    return 0;
+#endif
 };
 
 
-/*static*/ bool CGamepad::StartVibration(int32 iController, VIBRATIONTYPE type, float fTime)
+/*static*/ bool IGamepad::StartVibration(int32 iController, VIBRATIONTYPE type, float fTime)
 {
     ASSERT(type >= 0 && type < VIBRATIONTYPE_MAX);
     ASSERT(fTime >= 0.0f);
     
-    if (iController >= 0 && iController < CController::Max() &&
-        !CGameData::Attribute().IsPlayDemoMode())
+    if (isExist(iController) && !CGameData::Attribute().IsPlayDemoMode())
     {
-        static const uint32 VibrationTypeValue[] =
+        static const uint32 aVibMax[] =
         {
+#ifdef TARGET_PC
             0x3FFF,
             0x7FFF,
             0xBFFF,
+#else
+#error Not implemented for current target
+#endif
         };
 
-        static_assert(COUNT_OF(VibrationTypeValue) == VIBRATIONTYPE_MAX, "update me");
+        static_assert(COUNT_OF(aVibMax) == VIBRATIONTYPE_MAX, "update me");
 
-        int32 iVibrateFrames = int32(float(CScreen::Framerate()) * fTime);
-        if (iVibrateFrames > 0)
-            return CController::StartVibration(iController, VibrationTypeValue[type], iVibrateFrames);
+        int32 VibFrames = int32(CScreen::Framerate() * fTime);
+        if (VibFrames > 0)
+            return CController::StartVibration(iController, aVibMax[type], VibFrames);
     };
 
     return false;
 };
 
 
-/*static*/ void CGamepad::EnableStickToDigitalMapping(bool bEnable)
+/*static*/ void IGamepad::SaveLockedState(void)
 {
-    for (int32 i = 0; i < CController::Max(); ++i)
-    {
-#ifdef _TARGET_PC
-        if (CController::GetPhysicalPort(i) == CKeyboard::GetPort())
-            CController::EnableStickToDigitalMapping(i, CController::STICK_LEFT, false);
-        else
-            CController::EnableStickToDigitalMapping(i, CController::STICK_LEFT, bEnable);            
-#else
-        CController::EnableStickToDigitalMapping(i, CController::STICK_LEFT, bEnable);
-#endif        
-    };
+    int32 iControllerMax = Max();
+
+    for (int32 i = 0; i < iControllerMax; ++i)
+        m_aLockedPhysicalPort[i] = (IsLocked(i) ? GetPhysicalPort(i) : -1);
 };
 
 
-/*static*/ uint32 CGamepad::ConvertToVirtualButton(uint32 uBasicButton)
+/*static*/ void IGamepad::RestoreLockedState(void)
 {
-    static uint32 DefaultFunctionToDigitalMapping[] =
-    {
-        CController::DIGITAL_A,
-        CController::DIGITAL_B,
-        CController::DIGITAL_Y,
-        CController::DIGITAL_X,
-        CController::DIGITAL_LEFT_BUMPER, 
-        CController::DIGITAL_LEFT_TRIGGER,
-        CController::DIGITAL_RIGHT_BUMPER,
-        CController::DIGITAL_LEFT_THUMB,  
-        CController::DIGITAL_RIGHT_THUMB, 
-    };
-
-    static_assert(COUNT_OF(DefaultFunctionToDigitalMapping) == FUNCTION_MAX, "update me");
-
-    uint32 uVirtualButton = 0;
+    UnlockAllControllers();
     
-    for (int32 i = 0; i < FUNCTION_MAX; ++i)
+    int32 iControllerMax = Max();
+
+    for (int32 i = 0; i < iControllerMax; ++i)
     {
-        if (FLAG_TEST(DefaultFunctionToDigitalMapping[i], uBasicButton))
-            uVirtualButton |= (1 << (i + CController::FUNCTIONAL_BEGIN));
+        if (m_aLockedPhysicalPort[i] != -1)
+            IGamepad::Lock(IGamepad::GetController(m_aLockedPhysicalPort[i]));
     };
-
-    return uVirtualButton;
 };
 
 
-/*static*/ bool CGamepad::IsKeyboard(int32 iController)
+/*static*/ bool IGamepad::isExist(int32 iController)
 {
-    return (CKeyboard::GetPort() == CController::GetPhysicalPort(iController));
-};
-
-
-/*static*/ int32 CGamepad::GetKeyboardController(void)
-{
-    return CController::GetController(CKeyboard::GetPort());
-};
-
-
-/*static*/ void CGamepad::DigitalCancelToFunction(bool bEnable)
-{
-    FLAG_CHANGE(CController::DIGITAL_CANCEL, CController::DIGITAL_B, bEnable);
+    return (iController >= 0 && iController < Max());
 };

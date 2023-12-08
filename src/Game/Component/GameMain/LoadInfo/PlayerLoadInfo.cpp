@@ -129,42 +129,22 @@ int32 CPlayerLoadInfo::GetFileID(void) const
 
 bool CPlayerLoadInfo::MakeFileName(char* pszFilenameBuff) const
 {
-    bool bResult = false;
+    pszFilenameBuff[0] = '\0';
+    
     const char* pszPlayerName = PLAYERID::GetName(m_idPlayer);
-
+    
     switch (m_costume)
     {
     case GAMETYPES::COSTUME_NONE:
-        bResult = true;
-        std::sprintf(
-            pszFilenameBuff,
-            "%s%s/%s.list",
-            LISTFILE_PATH,
-            pszPlayerName,
-            pszPlayerName
-        );
+        std::sprintf(pszFilenameBuff, "%s%s/%s.list", LISTFILE_PATH, pszPlayerName, pszPlayerName);
         break;
 
     case GAMETYPES::COSTUME_SAMURAI:
-        bResult = true;
-        std::sprintf(
-            pszFilenameBuff,
-            "%s%s/%s_EXa.list",
-            LISTFILE_PATH,
-            pszPlayerName,
-            pszPlayerName
-        );
+        std::sprintf(pszFilenameBuff, "%s%s/%s_EXa.list", LISTFILE_PATH, pszPlayerName, pszPlayerName);
         break;
 
     case GAMETYPES::COSTUME_NEXUS:
-        bResult = true;
-        std::sprintf(
-            pszFilenameBuff,
-            "%s%s/%s_EXb.list",
-            LISTFILE_PATH,
-            pszPlayerName,
-            pszPlayerName
-        );
+        std::sprintf(pszFilenameBuff, "%s%s/%s_EXb.list", LISTFILE_PATH, pszPlayerName, pszPlayerName);
         break;
 
     default:
@@ -172,5 +152,5 @@ bool CPlayerLoadInfo::MakeFileName(char* pszFilenameBuff) const
         break;
     };
 
-    return bResult;
+    return (pszFilenameBuff[0] != '\0');
 };

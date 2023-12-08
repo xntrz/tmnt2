@@ -19,9 +19,6 @@
 
 namespace Donatello
 {
-    static const RwV3d BANDANA_OFFSET = { 0.0f, 0.15f, 0.05f };
-
-
     bool CAttackJump::IsEnableChangeStatus(PLAYERTYPES::STATUS status)
     {
         PLAYERTYPES::STATUS aStatusArray[] =
@@ -39,7 +36,7 @@ namespace Donatello
 
     void CAttackJump::OnAttach(void)
     {
-        Character().ChangeMotion("JAttack1");
+        Character().ChangeMotion(Donatello::MOTIONNAMES::ATTACK_JUMP1);
 
         RwV3d vVelocity = Math::VECTOR3_ZERO;
         Character().GetVelocity(&vVelocity);
@@ -59,13 +56,27 @@ namespace Donatello
         ;
     };
 
+    
+    //
+    // *********************************************************************************
+    //
+
+
+    void CAttackLaser::OnAttach(void)
+    {
+        Character().ChangeMotion(Donatello::MOTIONNAMES::ATTACK_LASER);
+        Character().ResetAcceleration();
+        Character().ResetVelocity();
+        Character().SetPlayerFlag(PLAYERTYPES::FLAG_DISABLE_THROW_KNIFE, true);
+    };
+    
 
     void CAttackLaser::OnRun(void)
     {
         if (Character().IsCharacterFlagSet(CHARACTERTYPES::FLAG_OCCURED_TIMING))
         {
             CGameEvent::SetPlayerTechnicalAction(Character().GetPlayerNo(), GAMETYPES::TECACT_KNIFE);
-            Character().ShootingKnife();
+            ShootingLaser();
         };
 
         if (Character().IsMotionEnd())
@@ -73,28 +84,59 @@ namespace Donatello
     };
 
 
-    void CAttackLaserJump::OnRun(void)
+    void CAttackLaser::ShootingLaser(void)
     {
-        if (Character().IsCharacterFlagSet(CHARACTERTYPES::FLAG_OCCURED_TIMING))
-        {
-            Character().ShootingKnife();
-            CGameEvent::SetPlayerTechnicalAction(
-                Character().GetPlayerNo(),
-                GAMETYPES::TECACT_KNIFE_JUMP
-            );
+        RwV3d vChrPos = Math::VECTOR3_ZERO;
+        Character().GetPosition(&vChrPos);
+        
+        RwV3d vPosition = *Character().GetModel()->GetBonePositionFromID(Character().Feature().m_nKnifeAttachBoneID);
+        RwV3d vLocalPos = Math::VECTOR3_ZERO;
 
-            Character().SetPlayerFlag(PLAYERTYPES::FLAG_DISABLE_THROW_KNIFE, false);
+        Math::Vec3_Sub(&vLocalPos, &vPosition, &vChrPos);
+        float fBuffY = vLocalPos.y;
+        vLocalPos.y = 0.0f;
+
+        float fLen = Math::Vec3_Length(&vLocalPos);
+        if (fLen > 0.6f)
+        {
+            vLocalPos.x *= 0.5f / fLen;
+            vLocalPos.z *= 0.5f / fLen;
+            vLocalPos.y = fBuffY;
+
+            Math::Vec3_Add(&vPosition, &vLocalPos, &vChrPos);
         };
+
+        RwV3d vDirection = Math::VECTOR3_AXIS_Z;
+        Character().RotateVectorByDirection(&vDirection, &vDirection);
+
+        uint32 hMagic = CMagicManager::Play(Donatello::EFFECTNAMES::LASER_BEAM, &vPosition, &vDirection, &Character(), true);
+        ASSERT(hMagic);
+        
+        if (hMagic)
+            CMagicManager::SetStatusTime(hMagic, 4.0f);
+
+        if (!Character().IsAttributeFlagSet(PLAYERTYPES::ATTRIBUTE_INNUMERABLE_KNIFE))
+            CGameProperty::Player(Character().GetPlayerNo())->AddShurikenNum(-1);
     };
 
 
+    //
+    // *********************************************************************************
+    //
+
+    
     void CTouchdown::OnAttach(void)
     {
         PlayerStatus::CTouchdown::OnAttach();
 
         if (Character().GetStatusPrev() == PLAYERTYPES::STATUS_ATTACK_JUMP)
-            Character().ChangeMotion("JAttack2");
+            Character().ChangeMotion(Donatello::MOTIONNAMES::ATTACK_JUMP2);
     };
+
+
+    //
+    // *********************************************************************************
+    //
 
 
     void CAttackAABBC::OnAttach(void)
@@ -181,6 +223,11 @@ namespace Donatello
     };
 
 
+    //
+    // *********************************************************************************
+    //
+
+    
     void CAttackB::OnAttach(void)
     {
         PlayerStatus::CAttackB::OnAttach();
@@ -282,6 +329,11 @@ namespace Donatello
     };
 
 
+    //
+    // *********************************************************************************
+    //
+
+    
     bool CConsole::IsEnableChangeStatus(PLAYERTYPES::STATUS status)
     {
         PLAYERTYPES::STATUS aStatusArray[] =
@@ -299,7 +351,7 @@ namespace Donatello
     
     void CConsole::OnAttach(void)
     {
-        Character().ChangeMotion("Panel1");
+        Character().ChangeMotion(Donatello::MOTIONNAMES::CONSOLE1);
 
         const CPlayerCharacter::COLLISIONWALLINFO* pWallInfo = Character().GetCollisionWall();
         ASSERT(pWallInfo);
@@ -340,7 +392,7 @@ namespace Donatello
             {
                 if (Character().IsMotionEnd())
                 {
-                    Character().ChangeMotion("Panel2");
+                    Character().ChangeMotion(Donatello::MOTIONNAMES::CONSOLE2);
                     m_iMotionStep = 1;
                 };
             }
@@ -350,7 +402,7 @@ namespace Donatello
             {
                 if (CGameProperty::GetTotalElapsedTime() - m_fStartTimer > 1.0f)
                 {
-                    Character().ChangeMotion("Panel3");
+                    Character().ChangeMotion(Donatello::MOTIONNAMES::CONSOLE3);
                     m_iMotionStep = 2;
                 };
             }
@@ -384,36 +436,34 @@ CDonatello::CDonatello(GAMETYPES::COSTUME costume)
     //
     
     CPlayerCharacter::PARAMETER parameter = { 0 };
-    parameter.m_chrparameter.m_bToon = true;
-    parameter.m_chrparameter.m_pszModelName = "donatello";
+    parameter.m_chrparameter.m_bToon            = true;
+    parameter.m_chrparameter.m_pszModelName     = "donatello";
     parameter.m_chrparameter.m_pszMotionSetName = "donatello";
-    parameter.m_feature.m_fWalkMoveSpeed = 2.0f;
-    parameter.m_feature.m_fLiftWalkMoveSpeed = 3.6f;
-    parameter.m_feature.m_fRunMoveSpeed = 5.2f;
-    parameter.m_feature.m_fDashMoveSpeed = 16.0f;
-    parameter.m_feature.m_fDashTime = 0.2f;
-    parameter.m_feature.m_fJumpInitializeSpeed = 7.5f;
-    parameter.m_feature.m_fAerialMoveSpeed = 5.2f;
-    parameter.m_feature.m_fAerialAcceleration = 12.0f;
-    parameter.m_feature.m_nKnifeAttachBoneID = CHARACTERTYPES::BONEID_RIGHT_WRIST;
-    parameter.m_pStateMachine = new CPlayerStateMachine(this, PLAYERTYPES::NORMALMAX);
+    parameter.m_feature.m_fWalkMoveSpeed        = 2.0f;
+    parameter.m_feature.m_fLiftWalkMoveSpeed    = 3.6f;
+    parameter.m_feature.m_fRunMoveSpeed         = 5.2f;
+    parameter.m_feature.m_fDashMoveSpeed        = 16.0f;
+    parameter.m_feature.m_fDashTime             = 0.2f;
+    parameter.m_feature.m_fJumpInitializeSpeed  = 7.5f;
+    parameter.m_feature.m_fAerialMoveSpeed      = 5.2f;
+    parameter.m_feature.m_fAerialAcceleration   = 12.0f;
+    parameter.m_feature.m_nKnifeAttachBoneID    = CHARACTERTYPES::BONEID_RIGHT_WRIST;
+
+    parameter.m_pStateMachine = new CPlayerStateMachine(this, PLAYERTYPES::STATUS::NORMALMAX);
     ASSERT(parameter.m_pStateMachine);
 
     CStatus::RegistDefaultForStateMachine(*parameter.m_pStateMachine);
 
-    parameter.m_pStateMachine->RegistStatus(PLAYERTYPES::STATUS_ATTACK_KNIFE, new Donatello::CAttackLaser);
-    parameter.m_pStateMachine->RegistStatus(PLAYERTYPES::STATUS_ATTACK_KNIFE_JUMP, new Donatello::CAttackLaserJump);
-    parameter.m_pStateMachine->RegistStatus(PLAYERTYPES::STATUS_ATTACK_AABBC, new Donatello::CAttackAABBC);
-    parameter.m_pStateMachine->RegistStatus(PLAYERTYPES::STATUS_ATTACK_B, new Donatello::CAttackB);
-    parameter.m_pStateMachine->RegistStatus(PLAYERTYPES::STATUS_TOUCHDOWN, new Donatello::CTouchdown);
-    parameter.m_pStateMachine->RegistStatus(PLAYERTYPES::STATUS_ATTACK_JUMP, new Donatello::CAttackJump);
-    parameter.m_pStateMachine->RegistStatus(PLAYERTYPES::STATUS_CONSOLE, new Donatello::CConsole);
+    parameter.m_pStateMachine->RegistStatus(PLAYERTYPES::STATUS_ATTACK_KNIFE,   new Donatello::CAttackLaser);
+    parameter.m_pStateMachine->RegistStatus(PLAYERTYPES::STATUS_ATTACK_AABBC,   new Donatello::CAttackAABBC);
+    parameter.m_pStateMachine->RegistStatus(PLAYERTYPES::STATUS_ATTACK_B,       new Donatello::CAttackB);
+    parameter.m_pStateMachine->RegistStatus(PLAYERTYPES::STATUS_TOUCHDOWN,      new Donatello::CTouchdown);
+    parameter.m_pStateMachine->RegistStatus(PLAYERTYPES::STATUS_ATTACK_JUMP,    new Donatello::CAttackJump);
+    parameter.m_pStateMachine->RegistStatus(PLAYERTYPES::STATUS_CONSOLE,        new Donatello::CConsole);
 
     Initialize(&parameter);
 
-    m_pModuleMan->Include(
-        CCircleShadowModule::New(this, 1.5f, 1.5f, true)
-    );
+    m_pModuleMan->Include(CCircleShadowModule::New(this, 1.5f, 1.5f, true));
 
     if (costume != GAMETYPES::COSTUME_SAMURAI)
     {
@@ -436,50 +486,9 @@ CDonatello::~CDonatello(void)
 };
 
 
-void CDonatello::Run(void)
-{
-    CPlayerCharacter::Run();
-};
-
-
 void CDonatello::OnChangeMotion(void)
 {
     CPlayerCharacter::OnChangeMotion();
 
-    if (CGameData::Record().Secret().IsDonLazerEnabled())
-        m_pModel->SetPartsDrawEnable(0, true);
-    else
-        m_pModel->SetPartsDrawEnable(0, false);
-};
-
-
-void CDonatello::ShootingKnife(void)
-{
-    RwV3d vPosition = *m_pModel->GetBonePositionFromID(Feature().m_nKnifeAttachBoneID);
-    RwV3d vLocalPos = Math::VECTOR3_ZERO;
-
-    Math::Vec3_Sub(&vLocalPos, &vPosition, &m_vPosition);
-    float fBuffY = vLocalPos.y;
-    vLocalPos.y = 0.0f;
-
-    float fLen = Math::Vec3_Length(&vLocalPos);
-    if (fLen > 0.6f)
-    {
-        vLocalPos.x *= 0.5f / fLen;
-        vLocalPos.z *= 0.5f / fLen;
-        vLocalPos.y = fBuffY;
-
-        Math::Vec3_Add(&vPosition, &vLocalPos, &m_vPosition);
-    };
-
-    RwV3d vDirection = Math::VECTOR3_AXIS_Z;
-    RotateVectorByDirection(&vDirection, &vDirection);
-
-    uint32 hMagic = CMagicManager::Play("don_laser_beam", &vPosition, &vDirection, this, true);
-    ASSERT(hMagic);
-    if (hMagic)
-        CMagicManager::SetStatusTime(hMagic, 4.0f);
-
-    if (!IsAttributeFlagSet(PLAYERTYPES::ATTRIBUTE_INNUMERABLE_KNIFE))
-        CGameProperty::Player(GetPlayerNo()).AddShurikenNum(-1);
+    m_pModel->SetPartsDrawEnable(0, CGameData::Record().Secret().IsDonLazerEnabled());
 };

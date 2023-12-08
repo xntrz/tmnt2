@@ -5,21 +5,23 @@
 #include "SystemText.hpp"
 
 #include "Process/ProcessDispatcher.hpp"
-#include "Process/ProcessList.hpp"
 #include "File/FileManager.hpp"
 
-#ifdef _TARGET_PC
+#ifdef TARGET_PC
 #include "System/PC/PCFramework.hpp"
 #else
 #error Not implemented for current target
 #endif
 
 
+extern const PROCESSTYPES::PROCESS g_aProcessList[];
+
+
 /*static*/ CFramework* CFramework::GetConcreteInstance(void)
 {
     CFramework* pFramework = nullptr;
 
-#ifdef _TARGET_PC
+#ifdef TARGET_PC
     pFramework = new CPCFramework;
 #else
 #error Not implemented for current target
@@ -95,6 +97,7 @@ bool CFramework::Initialize(void)
 
     m_pProcessDispatcher = new CProcessDispatcher(g_aProcessList);
     ASSERT(m_pProcessDispatcher);
+    
     return m_pProcessDispatcher->Start();
 };
 

@@ -2,9 +2,9 @@
 
 
 CFileAccess::CFileAccess(void)
-    : m_pBuffer(nullptr)
-    , m_uBufferSize(0)
-    , m_status(STATUS_NOREAD)
+: m_pBuffer(nullptr)
+, m_uBufferSize(0)
+, m_stat(STAT_NOREAD)
 {
     ;
 };
@@ -17,13 +17,13 @@ CFileAccess::~CFileAccess(void)
 };
 
 
-bool CFileAccess::Read(const char* pszName)
+bool CFileAccess::Open(const char* name)
 {
     return false;
 };
 
 
-bool CFileAccess::Read(int32 nID)
+bool CFileAccess::Open(int32 id)
 {
     return false;
 };
@@ -41,9 +41,9 @@ void CFileAccess::Sync(void)
 };
 
 
-CFileAccess::STATUS CFileAccess::Status(void) const
+CFileAccess::STAT CFileAccess::Stat(void) const
 {
-    return m_status;
+    return m_stat;
 };
 
 

@@ -4,7 +4,7 @@
 #include "Game/Component/GameData/GameData.hpp"
 #include "Game/Component/GameMain/MovieID.hpp"
 #include "Game/System/Misc/ScreenFade.hpp"
-#include "System/Common/Process/ProcessList.hpp"
+#include "Game/ProcessList.hpp"
 
 
 /*static*/ CProcess* CEndingSequence::Instance(void)
@@ -27,9 +27,9 @@ CEndingSequence::~CEndingSequence(void)
 };
 
 
-bool CEndingSequence::OnAttach(const void* param)
+bool CEndingSequence::OnAttach(const void* pParam)
 {
-    m_iType = int32(param);
+    m_iType = int32(pParam);
     m_step = STEP_INIT;
     return true;
 };
@@ -41,7 +41,7 @@ void CEndingSequence::OnDetach(void)
 };
 
 
-void CEndingSequence::OnMove(bool bRet, const void* param)
+void CEndingSequence::OnMove(bool bRet, const void* pReturnValue)
 {
     PostSequence();
     Branch();
@@ -63,7 +63,7 @@ void CEndingSequence::PostSequence(void)
         break;
         
     case STEP_MOVIE:
-        CScreenFade::StartIn(0.0f);
+        CScreenFade::BlackOut(0.0f);
         m_step = STEP_STAFFROLL;
         break;
         
@@ -101,20 +101,20 @@ void CEndingSequence::Branch(void)
 
     case STEP_MOVIE:
         {
-            CScreenFade::StartOut(0.0f);
+            CScreenFade::BlackIn(0.0f);
 
             switch (m_iType)
             {
             case GAMETYPES::ENDINGTYPE_STORY:
-                Call(PROCESSTYPES::LABEL_SEQ_MOVIE, false, (const void*)MOVIEID::VALUE(70));
+                Call(PROCLABEL_SEQ_MOVIE, (const void*)MOVIEID::VALUE(70));
                 break;
 
             case GAMETYPES::ENDINGTYPE_NEXUS:
-                Call(PROCESSTYPES::LABEL_SEQ_MOVIE, false, (const void*)MOVIEID::VALUE(77));
+                Call(PROCLABEL_SEQ_MOVIE, (const void*)MOVIEID::VALUE(77));
                 break;
 
             case GAMETYPES::ENDINGTYPE_SHOP:
-                Call(PROCESSTYPES::LABEL_SEQ_MOVIE, false, (const void*)MOVIEID::VALUE(78));
+                Call(PROCLABEL_SEQ_MOVIE, (const void*)MOVIEID::VALUE(78));
                 break;
 
             default:
@@ -126,8 +126,8 @@ void CEndingSequence::Branch(void)
 
     case STEP_STAFFROLL:
         {
-            CScreenFade::StartOut(0.0f);
-            Call(PROCESSTYPES::LABEL_SEQ_STAFFROLL);
+            CScreenFade::BlackIn(0.0f);
+            Call(PROCLABEL_SEQ_STAFFROLL);
         }
         break;
 
@@ -136,7 +136,7 @@ void CEndingSequence::Branch(void)
             if (m_iType == GAMETYPES::ENDINGTYPE_STORY)
             {
                 CGameData::PlayResult().SetResultType(GAMETYPES::RESULTTYPE_ENDING);
-                Call(PROCESSTYPES::LABEL_SEQ_RESULT);
+                Call(PROCLABEL_SEQ_RESULT);
             };
         }
         break;
@@ -144,16 +144,16 @@ void CEndingSequence::Branch(void)
     case STEP_UNLOCK:
         {
             CGameData::OnEndEnding();
-            Call(PROCESSTYPES::LABEL_SEQ_UNLOCK);
+            Call(PROCLABEL_SEQ_UNLOCK);
         }
         break;
 
     case STEP_SAVE:
         {
             if (CGameData::Option().Play().IsAutosaveEnabled())
-                Call(PROCESSTYPES::LABEL_SEQ_SAVELOADAUTO);
+                Call(PROCLABEL_SEQ_SAVELOADAUTO);
             else
-                Call(PROCESSTYPES::LABEL_SEQ_SAVELOADMENUSAVE);
+                Call(PROCLABEL_SEQ_SAVELOADMENUSAVE);
         }
         break;
 

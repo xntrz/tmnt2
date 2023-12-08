@@ -5,6 +5,11 @@
 
 namespace ENEMYTYPES
 {
+    enum MOTIONNAMES
+    {
+
+    };
+
     struct CHARACTERISTIC
     {
         float m_fThinkingFrequency;
@@ -112,7 +117,7 @@ namespace ENEMYTYPES
         int32 m_iPattern;
     };
 
-    enum FLAG
+    enum FLAG : uint32
     {
         FLAG_NONE           = 0x0,
         FLAG_DEATH_STATUS   = 0x2,

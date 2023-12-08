@@ -15,4 +15,5 @@ public:
     static uint8 GetFrequency(int32 index, int32 num);
     static int32 GetFrequencyMax(int32 index);
     static const ENEMYTYPES::CHARACTERISTIC& GetAICharacteristic(int32 index);
+    static bool Exist(ENEMYID::VALUE id);
 };

@@ -69,7 +69,11 @@ public:
     virtual void OnTouchedDown(void) override;
     virtual void OnAttackResult(CHitCatchData* pCatch) override;
     void SetBodyHitRadiusAutoChangeEnable(bool bEnable);
-    
+
+    inline void SetPower(int32 nAmount)         { m_nPower = nAmount; };
+    inline void SetInterval(float fInterval)    { m_fInterval = fInterval; };
+    inline void SetTarget(uint32 target)        { m_target = target; };
+
 private:
     void move(void);
     void fallGimmickCtrl(void);
@@ -83,7 +87,7 @@ private:
 
 private:
     CNormalGimmickModel m_model;
-    CFallGimmickMove* m_pMove;
+    CFallGimmickMove* m_pFallMove;
     CModuleManager* m_pModuleManager;
     uint32 m_target;
     SUBID m_eSubid;

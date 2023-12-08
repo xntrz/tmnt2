@@ -1,7 +1,7 @@
 #include "MadCarGimmickManager.hpp"
 #include "MadCarGimmick.hpp"
 
-#include "Game/Component/Gimmick/MoveStrategy/PathGimmickMove.hpp"
+#include "Game/Component/Gimmick/MoveStrategy/PathMoveGimmickMove.hpp"
 #include "Game/Component/Gimmick/GimmickParam.hpp"
 #include "Game/Component/Gimmick/GimmickInfo.hpp"
 #include "Game/Component/Gimmick/GimmickManager.hpp"
@@ -110,7 +110,7 @@ CMadCarGimmickManager::CMadCarGimmickManager(const char* pszName, void* pParam)
         m_anCarCreated[i] = 0;
 
     {
-        CPathGimmickMove PathMove;
+        CPathMoveGimmickMove PathMove;
         for (int32 i = m_nPathStart; i < m_nPathEnd; ++i)
             s_aMadCarManPathInfo[i].m_fPathLength = PathMove.GetPathLength(s_aMadCarManPathInfo[i].m_pszPathName);
     }

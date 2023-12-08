@@ -39,9 +39,9 @@ public:
 public:
     static void Initialize(CSaveLoadFrameBase* pFrame, CSaveLoadDataBase* pData);
     static void Terminate(void);
-    static void SetMessage(MESSAGEID id);
+    static void SetMsg(MESSAGEID id);
     static void SetTitle(TITLEID id);
-    static const wchar* GetMessage(MESSAGEID id);
+    static const wchar* GetMsg(MESSAGEID id);
     static const wchar* GetTitle(TITLEID id);
     static void InitializeFrame(MESSAGEID msgid, TITLEID titleid);
     static void TerminateFrame(void);
@@ -85,14 +85,13 @@ public:
     CPCSaveLoadManagerBase(void);
     virtual ~CPCSaveLoadManagerBase(void);
     virtual bool Proc(void) = 0;
-    virtual bool LoadFile(void);
-    virtual bool SaveFile(void);
-    virtual bool IsExistFile(void);
     void SetStep(int32 step);
     void SetSubStep(int32 substep);
     void SetMessage(CPCSaveLoadManager::MESSAGEID msgid);
     void SyncTime(void);
-
+    void MakeFilePath(char* pszFilepathBuff) const;
+    bool CheckFileExist(void) const;
+    
 protected:
     CPCWarningManager* m_pWarning;
     CPCQuestManager* m_pQuest;
@@ -108,7 +107,7 @@ class CPCLoadManager : public CPCSaveLoadManagerBase
 protected:
     enum STEP
     {
-        STEP_INTRO,
+        STEP_INTRO = 0,
         STEP_READ,
         STEP_DISP_CHECK,
         STEP_DISP_LOAD,
@@ -126,8 +125,9 @@ protected:
 
 public:
     CPCLoadManager(void);
-    virtual ~CPCLoadManager(void);
+    virtual ~CPCLoadManager(void) {};
     virtual bool Proc(void);
+    bool FileLoad(void) const;
 
 protected:
     STATUS m_status;
@@ -139,7 +139,7 @@ class CPCSaveManager : public CPCSaveLoadManagerBase
 protected:
     enum STEP
     {
-        STEP_INTRO,
+        STEP_INTRO = 0,
         STEP_WRITE,
         STEP_DISP_WRITE,
         STEP_DISP_WARN,
@@ -148,6 +148,7 @@ protected:
 
 public:
     CPCSaveManager(void);
-    virtual ~CPCSaveManager(void);
+    virtual ~CPCSaveManager(void) {};
     virtual bool Proc(void);
+    bool FileSave(void) const;
 };

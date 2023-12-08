@@ -8,6 +8,7 @@
 #include "ConcretePlayerStatus/PlayerStatusDamage.hpp"
 #include "ConcretePlayerStatus/PlayerStatusThrow.hpp"
 
+
 /*static*/ bool CStatus::IsWithinStatusFromArray(
     PLAYERTYPES::STATUS         status,
     const PLAYERTYPES::STATUS*  pStatusArray,
@@ -74,8 +75,8 @@
     statemachine.RegistStatus(PLAYERTYPES::STATUS_ATTACK_AABB,      new PlayerStatus::CAttackAABB);
     statemachine.RegistStatus(PLAYERTYPES::STATUS_ATTACK_AABC,      new PlayerStatus::CAttackAABC);
     statemachine.RegistStatus(PLAYERTYPES::STATUS_ATTACK_AABBB,     new PlayerStatus::CAttackAABBB);
-    //statemachine.RegistStatus(PLAYERTYPES::STATUS_ATTACK_AABBC, new PlayerStatus::CAttackAABBC);
-    //statemachine.RegistStatus(PLAYERTYPES::STATUS_ATTACK_B, new PlayerStatus::CAttackB);
+    statemachine.RegistStatus(PLAYERTYPES::STATUS_ATTACK_AABBC,     new PlayerStatus::CAttackAABBC);
+    statemachine.RegistStatus(PLAYERTYPES::STATUS_ATTACK_B,         new PlayerStatus::CAttackB);
     statemachine.RegistStatus(PLAYERTYPES::STATUS_ATTACK_B_CHARGE,  new PlayerStatus::CAttackBCharge);
     statemachine.RegistStatus(PLAYERTYPES::STATUS_ATTACK_KNIFE,     new PlayerStatus::CAttackKnife);
     statemachine.RegistStatus(PLAYERTYPES::STATUS_ATTACK_KNIFE_JUMP,new PlayerStatus::CAttackKnifeJump);

@@ -1,7 +1,7 @@
 #include "Light.hpp"
 
 #include "Game/Component/GameMain/GameProperty.hpp"
-#include "Game/Component/Gimmick/GimmickUtils.hpp"
+#include "Game/Component/Gimmick/Utils/GimmickUtils.hpp"
 #include "Game/System/Map/MapCamera.hpp"
 #include "Game/System/Texture/TextureManager.hpp"
 #include "System/Common/Screen.hpp"

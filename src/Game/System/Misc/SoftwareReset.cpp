@@ -1,65 +1,90 @@
 #include "SoftwareReset.hpp"
 
 #include "Game/Component/GameData/GameData.hpp"
+#include "Game/ProcessList.hpp"
 #include "System/Common/Screen.hpp"
+#include "System/Common/Configure.hpp"
 #include "System/Common/Controller.hpp"
 #include "System/Common/Process/ProcessMail.hpp"
-#include "System/Common/Process/ProcessList.hpp"
 #include "System/Common/Process/ProcessDispatcher.hpp"
 #include "System/Common/Process/Sequence.hpp"
 
 
-/*static*/ bool CSoftwareReset::m_bEnable = false;
+/*static*/ bool CSoftwareResetProcess::m_bEnable = false;
+/*static*/ float CSoftwareResetProcess::m_fResetResponseSec = 0.0f;
 
 
-/*static*/ CProcess* CSoftwareReset::Instance(void)
+/*static*/ CProcess* CSoftwareResetProcess::Instance(void)
 {
-    return new CSoftwareReset;
+    return new CSoftwareResetProcess;
 };
 
 
-/*static*/ bool CSoftwareReset::Initialize(CProcess* pCurrent)
+/*static*/ bool CSoftwareResetProcess::Initialize(CProcess* pSender, MODE mode)
 {
-    return pCurrent->Mail().Send(PROCESSTYPES::LABEL_SOFTWARERESET, PROCESSTYPES::MAIL::TYPE_ATTACH);
+    bool bResult = pSender->Mail().Send(PROCLABEL_SOFTWARERESET, PROCESSTYPES::MAIL::TYPE_ATTACH);
+    if (bResult)
+    {
+        static MESSAGE s_message = {};
+
+        s_message.m_type = MESSAGE::TYPE_MODE;
+        s_message.m_param.m_mode = mode;
+
+        bResult = postPrivateMessage(pSender, &s_message);
+    };
+
+    return bResult;
 };
 
 
-/*static*/ void CSoftwareReset::Terminate(CProcess* pCurrent)
+/*static*/ void CSoftwareResetProcess::Terminate(CProcess* pSender)
 {
-    pCurrent->Mail().Send(PROCESSTYPES::LABEL_SOFTWARERESET, PROCESSTYPES::MAIL::TYPE_DETACH);
+    pSender->Mail().Send(PROCLABEL_SOFTWARERESET, PROCESSTYPES::MAIL::TYPE_DETACH);
 };
 
 
-CSoftwareReset::CSoftwareReset(void)
+/*static*/ void CSoftwareResetProcess::SetEnable(CProcess* pSender, bool bState)
+{
+    m_bEnable = bState;
+};
+
+
+/*static*/ bool CSoftwareResetProcess::postPrivateMessage(CProcess* pSender, MESSAGE* pMsg)
+{
+	return pSender->Mail().Send(PROCLABEL_SOFTWARERESET, PROCESSTYPES::MAIL::TYPE_MSG, pMsg);
+};
+
+
+CSoftwareResetProcess::CSoftwareResetProcess(void)
 : m_fKeyTimer(0.0f)
-, m_iRootSeqLabel(0)
+, m_iRootSeqLabel(PROCESSTYPES::LABEL_TOP)
 , m_mode(MODE_NORMAL)
 {
     ;
 };
 
 
-CSoftwareReset::~CSoftwareReset(void)
+CSoftwareResetProcess::~CSoftwareResetProcess(void)
 {
     ;
 };
 
 
-bool CSoftwareReset::Attach(void)
+bool CSoftwareResetProcess::Attach(void)
 {
-    clear();
+    clear(MODE_NORMAL);
     messageProc();
 	return true;
 };
 
 
-void CSoftwareReset::Detach(void)
+void CSoftwareResetProcess::Detach(void)
 {
     ;
 };
 
 
-void CSoftwareReset::Move(void)
+void CSoftwareResetProcess::Move(void)
 {
     messageProc();
 
@@ -69,11 +94,11 @@ void CSoftwareReset::Move(void)
         if (m_mode == MODE_DEBUGMENU)
             iController = CController::CONTROLLER_UNLOCKED_ON_VIRTUAL;
 
-        if (CController::GetDigital(iController, CController::DIGITAL_LEFT_BUMPER) &&
-            CController::GetDigital(iController, CController::DIGITAL_RIGHT_BUMPER))
+        if (CController::GetDigital(iController, CController::DIGITAL_SELECT) &&
+            CController::GetDigital(iController, CController::DIGITAL_START))
         {
             m_fKeyTimer += CScreen::TimerStride();
-            if (m_fKeyTimer >= 0.0f)
+            if (m_fKeyTimer >= m_fResetResponseSec)
                 execReset();
         }
         else
@@ -88,25 +113,25 @@ void CSoftwareReset::Move(void)
 };
 
 
-void CSoftwareReset::Draw(void) const
+void CSoftwareResetProcess::Draw(void) const
 {
     ;
 };
 
 
-void CSoftwareReset::execReset(void)
+void CSoftwareResetProcess::execReset(void)
 {
-    clear();
-    
+    clear(m_mode);
+
     int32 iCurrentSeq = CSequence::GetCurrently();
     CSequence& SeqProc = (CSequence&)Info().Process(iCurrentSeq);
-    SeqProc.Kill(m_iRootSeqLabel);
+    SeqProc.Kill(m_iRootSeqLabel); 
 };
 
 
-void CSoftwareReset::messageProc(void)
+void CSoftwareResetProcess::messageProc(void)
 {
-    PROCESSTYPES::MAIL mail = PROCESSTYPES::MAIL::EMPTY;
+    PROCESSTYPES::MAIL mail;
 
     while (Mail().Recv(mail))
     {
@@ -145,10 +170,18 @@ void CSoftwareReset::messageProc(void)
 };
 
 
-void CSoftwareReset::clear(void)
+void CSoftwareResetProcess::clear(MODE mode)
 {
-    m_bEnable = false;
+#ifdef _DEBUG
+    m_mode = mode;
+#else
     m_mode = MODE_NORMAL;
+#endif    
+    m_bEnable = false;
     m_fKeyTimer = 0.0f;
-    m_iRootSeqLabel = 0;
+#ifdef _DEBUG    
+    m_iRootSeqLabel = (m_mode == MODE_DEBUGMENU ? PROCLABEL_SEQ_DBGMENU : PROCLABEL_SEQ_GAMEMAIN);
+#else
+    m_iRootSeqLabel = PROCLABEL_SEQ_GAMEMAIN;
+#endif    
 };

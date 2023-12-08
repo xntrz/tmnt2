@@ -13,14 +13,16 @@
 #include "System/Common/RenderState.hpp"
 
 
+
+/*static*/ const char* CBarrierModule::BARRIER_MOTIONNAME = "Barrier";
+/*static*/ CList<CBarrierModule> CBarrierModule::m_listDraw;
+
+
 /*static*/ void CBarrierModule::DrawAll(void)
 {
     for (CBarrierModule& it : m_listDraw)
         it.DrawBarrier();
 };
-
-
-/*static*/ CList<CBarrierModule> CBarrierModule::m_listDraw;
 
 
 CBarrierModule::CBarrierModule(CTracer* pTracer, CGameObject* pObject, float fRadius)
@@ -171,7 +173,7 @@ void CBarrierModule::Run(void)
             Attack.SetPower(m_nPower);
             Attack.SetTarget(m_target);
             Attack.SetAntiguard(CHitAttackData::ANTIGUARD_INVALID);
-            Attack.SetMotion("Barrier");
+            Attack.SetMotion(BARRIER_MOTIONNAME);
             Attack.SetStatus(CHitAttackData::STATUS_FLYAWAY);
 
             if (m_pObject->GetType() == GAMEOBJECTTYPE::CHARACTER)

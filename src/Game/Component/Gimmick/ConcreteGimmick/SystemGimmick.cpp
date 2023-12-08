@@ -5,7 +5,7 @@
 #include "Game/Component/GameMain/GameEvent.hpp"
 #include "Game/Component/GameMain/GamePlayer.hpp"
 #include "Game/Component/Gimmick/GimmickParam.hpp"
-#include "Game/Component/Gimmick/GimmickUtils.hpp"
+#include "Game/Component/Gimmick/Utils/GimmickUtils.hpp"
 #include "Game/Component/Gimmick/GimmickManager.hpp"
 #include "Game/Component/Gimmick/GimmickQuery.hpp"
 #include "Game/Component/Gimmick/GimmickDebug.hpp"
@@ -40,7 +40,7 @@ CAndSwitchGimmick::CAndSwitchGimmick(const char* pszName, void* pParam)
 
 CAndSwitchGimmick::~CAndSwitchGimmick(void)
 {
-    ;
+	;
 };
 
 
@@ -52,12 +52,8 @@ void CAndSwitchGimmick::PostMove(void)
         {
             if (checkSwitch())
             {
-                CGimmickManager::PostEvent(
-                    m_szEventGimmick,
-                    GetName(),
-                    GIMMICKTYPES::EVENTTYPE_ACTIVATE
-                );
-                
+                CGimmickManager::PostEvent(m_szTargetGimmick, GetName(), GIMMICKTYPES::EVENTTYPE_ACTIVATE);
+
                 m_privatestate = PRIVATESTATE_END;
             };
         }
@@ -68,7 +64,7 @@ void CAndSwitchGimmick::PostMove(void)
 
 bool CAndSwitchGimmick::checkSwitch(void)
 {
-    CGimmick* pEventGimmick = CGimmickManager::Find(m_szTargetGimmick);
+	CGimmick* pEventGimmick = CGimmickManager::Find(m_szEventGimmick);
     if (pEventGimmick)
     {
         CStateGimmickQuery query(GIMMICKTYPES::QUERY_SYS_SWITCH);
@@ -91,7 +87,7 @@ void CGroupGimmick::CHILDNODE::Init(const char* pszName)
 {
     ASSERT(pszName);
     ASSERT(std::strlen(pszName) < COUNT_OF(m_szName));
-    
+
     std::strcpy(m_szName, pszName);
 };
 
@@ -110,8 +106,8 @@ CGimmick* CGroupGimmick::CHILDNODE::GetGimmick(void) const
         ASSERT(pGameObject->GetType() == GAMEOBJECTTYPE::GIMMICK);
         CGimmick* pGimmick = (CGimmick*)pGameObject;
         return pGimmick;
-    };
-
+	};
+	
     return nullptr;
 };
 
@@ -140,7 +136,7 @@ CGroupGimmick::~CGroupGimmick(void)
 {
     if (m_pChildArray)
     {
-        delete [] m_pChildArray;
+        delete[] m_pChildArray;
         m_pChildArray = nullptr;
         
         m_nChildNum = 0;
@@ -155,6 +151,7 @@ bool CGroupGimmick::Query(CGimmickQuery* pQuery) const
     for (int32 i = 0; i < m_nChildNum; ++i)
     {
         CGimmick* pGimmick = GetChild(i);
+
         if (pGimmick && pGimmick->Query(pQuery))
             bResult = true;
     };
@@ -166,13 +163,7 @@ bool CGroupGimmick::Query(CGimmickQuery* pQuery) const
 void CGroupGimmick::OnReceiveEvent(const char* pszSender, GIMMICKTYPES::EVENTTYPE eventtype)
 {
     for (int32 i = 0; i < m_nChildNum; ++i)
-    {
-        CGimmickManager::PostEvent(
-            getChildNode(i)->GetName(),
-            pszSender,
-            eventtype
-        );
-    };
+        CGimmickManager::PostEvent(getChildNode(i)->GetName(), pszSender, eventtype);
 };
 
 
@@ -297,23 +288,23 @@ void CCameraChangeGimmick::PostMove(void)
     {
     case STEP_IDLE:
         break;
-        
-    case STEP_FADEIN:
+
+    case STEP_FADEOUT:
         {
-            CScreenFade::StartIn(1.0f);
-            m_step = STEP_FADEIN_CHECK;
+            CScreenFade::BlackOut(1.0f);
+            m_step = STEP_FADEOUT_CHECK;
             if (CGameData::PlayParam().GetStage() == STAGEID::ID_ST43N)
                 CGameSound::FadeOut(CGameSound::FADESPEED_NORMAL);
         }
         break;
-        
-    case STEP_FADEIN_CHECK:
+
+    case STEP_FADEOUT_CHECK:
         {
             if (!CScreenFade::IsFading())
-                m_step = STEP_REPLACE;            
+                m_step = STEP_REPLACE;
         }
         break;
-        
+
     case STEP_REPLACE:
         {
             ReplacePlayers();
@@ -331,20 +322,22 @@ void CCameraChangeGimmick::PostMove(void)
                 CGameSound::PlayBGM(SDCODE_BGM(12315));
             };
 
-            m_step = STEP_FADEOUT;
+            m_step = STEP_FADEIN;
         }
         break;
-        
-    case STEP_FADEOUT:
-        CScreenFade::StartOut(1.0f);
-        m_step = STEP_FADEOUT_CHECK;
+
+    case STEP_FADEIN:
+        {
+            CScreenFade::BlackIn(1.0f);
+            m_step = STEP_FADEIN_CHECK;
+        }
         break;
-        
-    case STEP_FADEOUT_CHECK:
+
+    case STEP_FADEIN_CHECK:
         {
             if (!CScreenFade::IsFading())
                 m_step = STEP_RELEASE;
-        }     
+        }
         break;
         
     case STEP_RELEASE:
@@ -366,7 +359,7 @@ void CCameraChangeGimmick::OnReceiveEvent(const char* pszSender, GIMMICKTYPES::E
             ASSERT(std::strcmp(pszSender, "") != 0);
 
             std::strcpy(m_szSenderGimmick, pszSender);
-            m_step = STEP_FADEIN;
+            m_step = STEP_FADEOUT;
         };
     };
 };
@@ -388,7 +381,8 @@ void CCameraChangeGimmick::ReplacePlayers(void)
     Math::Vec3_Normalize(&vTmp, &m_vRotation);
     Math::Vec3_Scale(&vTmp, &vTmp, 1.5f);
 
-    for (int32 i = 0; i < CGameProperty::GetPlayerNum(); ++i)
+	int32 nPlayerNum = CGameProperty::GetPlayerNum();
+    for (int32 i = 0; i < nPlayerNum; ++i)
     {
         RwMatrix matrix;
         RwMatrixSetIdentityMacro(&matrix);
@@ -401,15 +395,13 @@ void CCameraChangeGimmick::ReplacePlayers(void)
         float fHeight = CWorldMap::GetMapHeight(&vPosition);
         
         if (FLAG_TEST(CWorldMap::GetCollisionResultAttribute(), MAPTYPES::ATTRIBUTE_DEATH))
-        {
             vPosition = m_vPosition;
-        }
         else
-        {
             vPosition.y = fHeight;
-        };
 
-        CGameProperty::Player(i).Relocation(&vPosition, m_fRotationY, true);
+		IGamePlayer* pGamePlayer = CGameProperty::GetGamePlayer(i);
+		pGamePlayer->Relocation(&vPosition, m_fRotationY, true);
+		pGamePlayer->Release();
     };
 };
 
@@ -550,12 +542,12 @@ CInvisibleWallGimmick::CInvisibleWallGimmick(const char* pszName, void* pParam)
 
     CModel* pAtariModel = CModelManager::CreateModel(apszModel[pWallParam->m_subid]);
     ASSERT(pAtariModel);
-    m_model.SetModel(CNormalGimmickModel::MODELKIND_ATARI_NORMAL, pAtariModel);
+    m_model.SetModel(CNormalGimmickModel::MODELTYPE_ATARI_NORMAL, pAtariModel);
     
 #ifdef _DEBUG    
     CModel* pDispModel = CModelManager::CreateModel(apszModel[pWallParam->m_subid]);
     ASSERT(pDispModel);
-    m_model.SetModel(CNormalGimmickModel::MODELKIND_VISUAL_NORMAL, pDispModel);
+    m_model.SetModel(CNormalGimmickModel::MODELTYPE_DRAW_NORMAL, pDispModel);
 #endif
     
     RwV3d vRotate = Math::VECTOR3_ZERO;
@@ -763,8 +755,9 @@ void CInvisibleWallGimmick::termCollision(void)
     }
     else
     {
-        IGamePlayer& Gameplayer = CGameProperty::Player(nPlayerNo);
-        Gameplayer.Relocation(pvPosition, Gameplayer.GetRotY(), bProtect);
+        IGamePlayer* pGamePlayer = CGameProperty::GetGamePlayer(nPlayerNo);
+        pGamePlayer->Relocation(pvPosition, pGamePlayer->GetRotY(), bProtect);
+		pGamePlayer->Release();
     };
 };
 
@@ -852,7 +845,9 @@ void CReplaceGimmick::OnReplacePlayer(int32 nPlayerNo, bool bProtect)
         vPosition.y = fHeight;
     };
 
-    CGameProperty::Player(nPlayerNo).Relocation(&vPosition, m_fRotationY, true);
+	IGamePlayer* pGamePlayer = CGameProperty::GetGamePlayer(nPlayerNo);
+	pGamePlayer->Relocation(&vPosition, m_fRotationY, bProtect);
+	pGamePlayer->Release();
 };
 
 

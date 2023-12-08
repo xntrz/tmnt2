@@ -6,7 +6,7 @@
 #include "cri_adxf.h"
 
 
-static ADXF s_adxf = 0;
+/*static*/ ADXF CAdxFileAccess::m_adxf = 0;
 
 
 /*static*/ bool CAdxFileAccess::IsExists(const char* pszFilename)
@@ -42,39 +42,47 @@ CAdxFileAccess::~CAdxFileAccess(void)
 };
 
 
-bool CAdxFileAccess::Read(const char* pszName)
+bool CAdxFileAccess::Open(const char* name)
 {
-    s_adxf = ADXF_Open(pszName, nullptr);
-    if (!s_adxf)
-        return false;
+    bool bResult = true;
+
+    if (!m_uReferenceCount++)
+    {
+        m_adxf = ADXF_Open(name, nullptr);
+        bResult = (m_adxf ? ReadNoWait() : false);
+    };
     
-    return ReadNw();
+    return bResult;    
 };
 
 
-bool CAdxFileAccess::Read(int32 Id)
+bool CAdxFileAccess::Open(int32 id)
 {
-    ASSERT(Id >= 0 && Id < FILEID::ID_MAX);
+    ASSERT(id >= 0 && id < FILEID::ID_MAX);
 
-    int32 PtId = 0;
-    int32 FileId = 0;
-    
-    if (Id >= 237)
+    bool bResult = true;
+
+    if (!m_uReferenceCount++)
     {
-        PtId = 1;
-        FileId = Id - 237;
-    }
-    else
-    {
-        PtId = 0;
-		FileId = Id;
+        int32 PtId = 0;
+        int32 FileId = 0;
+
+        if (id >= 237)
+        {
+            PtId = 1;
+            FileId = id - 237;
+        }
+        else
+        {
+            PtId = 0;
+            FileId = id;
+        };
+
+        m_adxf = ADXF_OpenAfs(PtId, FileId);
+        bResult = (m_adxf ? ReadNoWait() : false);        
     };
 
-    s_adxf = ADXF_OpenAfs(PtId, FileId);
-    if (!s_adxf)
-        return false;
-
-    return ReadNw();
+    return bResult;
 };
 
 
@@ -90,35 +98,35 @@ void CAdxFileAccess::Clear(void)
             m_uBufferSize = 0;
         };
 
-        if (s_adxf)
+        if (m_adxf)
         {
-            ADXF_Close(s_adxf);
-            s_adxf = 0;
+            ADXF_Close(m_adxf);
+            m_adxf = 0;
         };
 
-        m_status = STATUS_NOREAD;
+        m_stat = STAT_NOREAD;
     };
 };
 
 
 void CAdxFileAccess::Sync(void)
 {
-    if (s_adxf)
+    if (m_adxf)
     {
-        int32 AdxfStat = ADXF_GetStat(s_adxf);
+        int32 AdxfStat = ADXF_GetStat(m_adxf);
         switch (AdxfStat)
         {
         case ADXF_STAT_STOP:
         case ADXF_STAT_ERROR:
-            m_status = STATUS_ERROR;
+            m_stat = STAT_ERROR;
             break;
 
         case ADXF_STAT_READING:
-            m_status = STATUS_READING;
+            m_stat = STAT_READING;
             break;
 
         case ADXF_STAT_READEND:
-            m_status = STATUS_READEND;
+            m_stat = STAT_READEND;
             break;
 
         default:
@@ -128,29 +136,23 @@ void CAdxFileAccess::Sync(void)
     }
     else
     {
-        m_status = STATUS_ERROR;
+        m_stat = STAT_ERROR;
     };    
 };
 
 
-bool CAdxFileAccess::ReadNw(void)
+bool CAdxFileAccess::ReadNoWait(void)
 {
-    if (m_status > STATUS_PENDING)
-    {
-        ++m_uReferenceCount;
-        return true;
-    };
-
-    ++m_uReferenceCount;
-
-    int32 FSizeSct = ADXF_GetFsizeSct(s_adxf);
-    int32 FSizeByte = ADXF_GetFsizeByte(s_adxf);
+    int32 FSizeSct = ADXF_GetFsizeSct(m_adxf);
+    int32 FSizeByte = ADXF_GetFsizeByte(m_adxf);
 
     m_pBuffer = new char[FSizeByte];
     m_uBufferSize = FSizeByte;
     
-    ADXF_ReadNw(s_adxf, FSizeSct, m_pBuffer);
-    m_status = STATUS_READING;
+    if (ADXF_ReadNw(m_adxf, FSizeSct, m_pBuffer))
+        m_stat = STAT_READING;
+    else
+        m_stat = STAT_ERROR;
     
-    return true;
+    return (m_stat == STAT_READING);
 };

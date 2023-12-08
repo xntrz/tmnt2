@@ -5,6 +5,7 @@
 #include "Game/System/2d/GameFont.hpp"
 #include "System/Common/RenderState.hpp"
 #include "System/Common/System2D.hpp"
+#include "System/Common/Sprite.hpp"
 
 
 class CDebugShapeContainer
@@ -64,6 +65,8 @@ private:
         };
 
         TYPE m_type;
+        float m_fTime;
+        float m_fTimeEnd;
         union SHAPEDATA
         {
             SHAPE_SPHERE    sphere;
@@ -71,15 +74,13 @@ private:
             SHAPE_PLANE     plane;
             SHAPE_BOX       box;
             LABEL           label;
-        } m_data;
-        float m_fTime;
-        float m_fTimeEnd;
+        } m_data;        
     };
 
 public:
     CDebugShapeContainer(void);
     ~CDebugShapeContainer(void);
-    void Run(void);
+    void Run(float dt);
     void FrameBegin(void);
     void FrameEnd(void);
     void ClearPerFrameData(void);
@@ -119,7 +120,7 @@ private:
     int32 m_nIndexMax;
 	int32 m_nIndexOffset;
 	int32 m_nIndexAccum;
-	int32 m_nShapeNum;
+    int32 m_nShapeNum;
 };
 
 
@@ -165,9 +166,13 @@ CDebugShapeContainer::~CDebugShapeContainer(void)
 };
 
 
-void CDebugShapeContainer::Run(void)
+void CDebugShapeContainer::Run(float dt)
 {
-    ;
+    for (SHAPE& it : m_listShapeAlloc3D)
+        it.m_fTime += dt;
+
+	for (SHAPE& it : m_listShapeAlloc2D)
+		it.m_fTime += dt;
 };
 
 
@@ -187,7 +192,6 @@ void CDebugShapeContainer::ClearPerFrameData(void)
 {
     CleanupShapeList(m_listShapeAlloc2D);
     CleanupShapeList(m_listShapeAlloc3D);
-    m_nShapeNum = 0;
 
     m_nIndexOffset = 0;
     m_nIndexAccum = 0;
@@ -257,7 +261,6 @@ void CDebugShapeContainer::ShowSphere(const RwSphere* pSphere, const RwRGBA& rCo
     SHAPE* pShape = ShapeAlloc(SHAPE::TYPE_SPHERE);
     ASSERT(pShape);
 
-    pShape->m_type = SHAPE::TYPE_SPHERE;
     pShape->m_data.sphere.m_Color       = rColor;
     pShape->m_data.sphere.m_fRadius     = pSphere->radius;
     pShape->m_data.sphere.m_vPosition   = pSphere->center;
@@ -271,7 +274,6 @@ void CDebugShapeContainer::ShowLine(const RwLine* pLine, const RwRGBA& rColorSta
     SHAPE* pShape = ShapeAlloc(SHAPE::TYPE_LINE);
     ASSERT(pShape);
 
-    pShape->m_type = SHAPE::TYPE_LINE;
     pShape->m_data.line.m_vStart        = pLine->start;
     pShape->m_data.line.m_vEnd          = pLine->end;
     pShape->m_data.line.m_ColorStart    = rColorStart;
@@ -285,8 +287,7 @@ void CDebugShapeContainer::ShowPlane(const RwV3d aPoint[4], const RwRGBA& rColor
     
     SHAPE* pShape = ShapeAlloc(SHAPE::TYPE_PLANE);
     ASSERT(pShape);
-
-    pShape->m_type = SHAPE::TYPE_PLANE;
+    
     pShape->m_data.plane.m_Color = rColor;
     pShape->m_data.plane.m_vPoint[0] = aPoint[0];
     pShape->m_data.plane.m_vPoint[1] = aPoint[1];
@@ -302,7 +303,6 @@ void CDebugShapeContainer::ShowBox(const RwV3d aPoint[8], const RwRGBA& rColor)
     SHAPE* pShape = ShapeAlloc(SHAPE::TYPE_BOX);
 	ASSERT(pShape);
 
-	pShape->m_type = SHAPE::TYPE_BOX;
 	pShape->m_data.box.m_Color = rColor;
 	pShape->m_data.box.m_vPoint[0] = aPoint[0];
 	pShape->m_data.box.m_vPoint[1] = aPoint[1];
@@ -323,7 +323,6 @@ void CDebugShapeContainer::ShowLabel(const RwV3d* pvPosition, const char* pszLab
     SHAPE* pShape = ShapeAlloc(SHAPE::TYPE_LABEL);
     ASSERT(pShape);
 
-    pShape->m_type = SHAPE::TYPE_LABEL;
     std::strcpy(pShape->m_data.label.m_szLabel, pszLabel);
     pShape->m_data.label.m_Color        = rColor;
     pShape->m_data.label.m_fHeight      = fHeight;
@@ -339,14 +338,17 @@ CDebugShapeContainer::SHAPE* CDebugShapeContainer::ShapeAlloc(SHAPE::TYPE type)
         return nullptr;
 
     SHAPE* pNode = m_listShapePool.front();
-    ASSERT(pNode);
-    m_listShapePool.erase(pNode);
+    m_listShapePool.erase(pNode);    
     if (IsShape2D(type))
         m_listShapeAlloc2D.push_back(pNode);
     else
         m_listShapeAlloc3D.push_back(pNode);
 
-	++m_nShapeNum;
+    pNode->m_type = type;
+    pNode->m_fTime = 0.0f;
+    pNode->m_fTimeEnd = CDebugShape::m_fDuration;
+
+    ++m_nShapeNum;
     
     return pNode;
 };
@@ -358,11 +360,18 @@ void CDebugShapeContainer::CleanupShapeList(CList<SHAPE>& list)
     while (it)
     {
         SHAPE* pShape = &(*it);
-        it = list.erase(it);
-        m_listShapePool.push_back(pShape);
+        if (pShape->m_fTime >= pShape->m_fTimeEnd)
+        {
+            it = list.erase(it);
+            m_listShapePool.push_back(pShape);
 
-        ASSERT(m_nShapeNum > 0);
-        --m_nShapeNum;
+            ASSERT(m_nShapeNum > 0);
+            --m_nShapeNum;
+        }
+        else
+        {
+            ++it;
+        };
     };
 };
 
@@ -530,11 +539,12 @@ void CDebugShapeContainer::DrawLabel(LABEL* pLabel)
         RwRGBA TextColor = pLabel->m_Color;
         RwV2d vTextPosition = Math::VECTOR2_ZERO;
 
-        vTextPosition.x = CSystem2D::VirtualScreenX() + (vScPos.x * CSystem2D::VirtualScreenWidth());
-        vTextPosition.y = CSystem2D::VirtualScreenY() + (vScPos.y * CSystem2D::VirtualScreenHeight());
+        vTextPosition.x = CSprite::m_fVirtualScreenX + (vScPos.x * CSprite::m_fVirtualScreenW);
+        vTextPosition.y = CSprite::m_fVirtualScreenY + (vScPos.y * CSprite::m_fVirtualScreenH);
 
-        CGameFont::m_pFont->SetRGBA(TextColor.red, TextColor.green, TextColor.blue, TextColor.alpha);
-        CGameFont::m_pFont->Show(pLabel->m_szLabel, fHeight, vTextPosition.x, vTextPosition.y);
+		CGameFont::SetHeight(fHeight);
+        CGameFont::SetRGBA(TextColor.red, TextColor.green, TextColor.blue, TextColor.alpha);
+        CGameFont::Show(pLabel->m_szLabel, vTextPosition.x, vTextPosition.y);
     };
 };
 
@@ -669,6 +679,7 @@ static inline CDebugShapeContainer& DebugShapeContainer(void)
 
 
 /*static*/ float CDebugShape::m_fLabelHeight = 12.0f;
+/*static*/ float CDebugShape::m_fDuration = 0.0f;
 
 
 /*static*/ void CDebugShape::Initialize(void)
@@ -690,9 +701,9 @@ static inline CDebugShapeContainer& DebugShapeContainer(void)
 };
 
 
-/*static*/ void CDebugShape::Period(void)
+/*static*/ void CDebugShape::Period(float dt)
 {
-    DebugShapeContainer().Run();
+    DebugShapeContainer().Run(dt);
 };
 
 

@@ -4,7 +4,7 @@
 #include "Game/Component/GameMain/SecretInfo.hpp"
 #include "Game/Component/GameMain/AreaInfo.hpp"
 
-#ifdef _TARGET_PC
+#ifdef TARGET_PC
 #include "System/PC/PCSetting.hpp"
 #endif
 
@@ -65,18 +65,7 @@ static COptionData::RAWDATA s_OptionBackup;
 
     Option().Apply();
     
-    m_bNewGame = Record().Area().IsNewGame();
-
-#ifdef _TARGET_PC
-    //
-    //  TODO remove me when OptionSequence is done
-    //
-    //Option().Play().SetClassicInput(CPCSetting::m_bFlagClassicPad);
-    //Option().Play().SetEnableAutosave(CPCSetting::m_bFlagAutosave);
-    //Option().Play().SetEnableHelp(CPCSetting::m_bFlagHelp);
-    //Option().Play().SetDifficulty(GAMETYPES::DIFFICULTY(CPCSetting::m_iDifficulty));
-    //Option().Display().SetEnableFontEffect(CPCSetting::m_bFlagFontEffect);
-#endif    
+    m_bNewGame = Record().Area().IsNewGame(); 
 };
 
 
@@ -183,7 +172,7 @@ static COptionData::RAWDATA s_OptionBackup;
 {
     PlayResult().Evaluate();
     
-    if (PlayResult().GetAreaResult() == CGamePlayResult::AREARESULT_CLEAR)
+    if (PlayResult().GetAreaResult() == CGamePlayResult::AREARESULT_GAMECLEAR)
         PlayResult().TakePrize(PlayParam().GetArea());    
 };
 

@@ -1,15 +1,12 @@
 #include "LoadingDisplay.hpp"
 
+#include "Game/ProcessList.hpp"
 #include "Game/System/2d/GameFont.hpp"
-#include "Game/System/2d/GameText.hpp"
+#include "Game/System/Text/GameText.hpp"
 #include "System/Common/Screen.hpp"
 #include "System/Common/TextData.hpp"
 #include "System/Common/Process/ProcessDispatcher.hpp"
 #include "System/Common/Process/ProcessMail.hpp"
-#include "System/Common/Process/ProcessList.hpp"
-
-
-/*static*/ CLoadingDisplay::MESSAGE CLoadingDisplay::m_message;
 
 
 /*static*/ CProcess* CLoadingDisplay::Instance(void)
@@ -20,42 +17,45 @@
 
 /*static*/ bool CLoadingDisplay::Initialize(CProcess* pCurrent)
 {
-    return pCurrent->Mail().Send(PROCESSTYPES::LABEL_LOADINGDISPLAY, PROCESSTYPES::MAIL::TYPE_ATTACH);
+    return pCurrent->Mail().Send(PROCLABEL_LOADDISP, PROCESSTYPES::MAIL::TYPE_ATTACH);
 };
 
 
 /*static*/ void CLoadingDisplay::Terminate(CProcess* pCurrent)
 {
-    pCurrent->Mail().Send(PROCESSTYPES::LABEL_LOADINGDISPLAY, PROCESSTYPES::MAIL::TYPE_DETACH);
+    pCurrent->Mail().Send(PROCLABEL_LOADDISP, PROCESSTYPES::MAIL::TYPE_DETACH);
 };
 
 
 /*static*/ bool CLoadingDisplay::Start(CProcess* pSender, MODE mode)
 {
-    m_message.m_type = MESSAGE::TYPE_START;
-    m_message.m_mode = mode;
+    static MESSAGE s_message;
 
-    return postPrivateMessage(pSender, &m_message);
+    s_message.m_type = MESSAGE::TYPE_START;
+    s_message.m_mode = mode;
+
+    return postPrivateMessage(pSender, &s_message);
 };
 
 
 /*static*/ void CLoadingDisplay::Stop(CProcess* pSender)
 {
-    m_message.m_type = MESSAGE::TYPE_STOP;
+    static MESSAGE s_message;
+    
+    s_message.m_type = MESSAGE::TYPE_STOP;
 
-    postPrivateMessage(pSender, &m_message);
+    postPrivateMessage(pSender, &s_message);
 };
 
 
 /*static*/ bool CLoadingDisplay::postPrivateMessage(CProcess* pSender, MESSAGE* pMessage)
 {
-    PROCESSTYPES::MAIL mail = PROCESSTYPES::MAIL::EMPTY;
-
-    mail.m_type = PROCESSTYPES::MAIL::TYPE_MSG;
-    mail.m_iLabel = PROCESSTYPES::LABEL_LOADINGDISPLAY;
-    mail.m_param = pMessage;
-
-    return pSender->Mail().Send(mail);
+    bool bResult = false;
+    
+    if (pSender->Info().IsProcessExist(PROCLABEL_LOADDISP))
+        bResult = pSender->Mail().Send(PROCLABEL_LOADDISP, PROCESSTYPES::MAIL::TYPE_MSG, pMessage);
+    
+    return bResult;
 };
 
 
@@ -128,18 +128,19 @@ void CLoadingDisplay::Draw(void) const
 
     ASSERT(pwszPhase);
     
-    const wchar* pwszText = CGameText::GetText(GAMETEXT::VALUE(3));
+    const wchar* pwszText = CGameText::GetText(GAMETEXT(3));
     CTextData::StrCpy(wszBuffer, pwszText);
     CTextData::StrCat(wszBuffer, pwszPhase);
 
-    CGameFont::m_pFont->SetRGBA(216, 255, 0, 255);
-    CGameFont::m_pFont->Show(wszBuffer, 28.0f, -250.0f, 192.0f);
+	CGameFont::SetHeight(28.0f);
+    CGameFont::SetRGBA(216, 255, 0, 255);
+    CGameFont::Show(wszBuffer, -250.0f, 192.0f);
 };
 
 
 void CLoadingDisplay::messageProc(void)
 {
-    PROCESSTYPES::MAIL mail = PROCESSTYPES::MAIL::EMPTY;
+    PROCESSTYPES::MAIL mail;
     
     while (Mail().Recv(mail))
     {

@@ -331,10 +331,11 @@ static inline CUVAnimManager& UVAnimManager(void)
 /*static*/ void CUVAnim::DestroyAnimatedMaterialsList(void* hList)
 {
     ASSERT(hList);
-    ASSERT(s_nUVAnimAllocated > 0);
 
     RwSList* pList = (RwSList*)hList;
     rwSListDestroy(pList);
+    
+    ASSERT(s_nUVAnimAllocated > 0);
     --s_nUVAnimAllocated;
 };
 

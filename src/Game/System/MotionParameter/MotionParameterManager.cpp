@@ -4,6 +4,13 @@
 #include "Game/System/Hit/HitAttackData.hpp"
 
 
+#ifdef _DEBUG
+#define MOTION_PACKAGE_NUM (256)
+#else
+#define MOTION_PACKAGE_NUM (16)
+#endif
+
+
 class CBinaryReader final
 {
 public:
@@ -55,7 +62,7 @@ public:
     CPackage* AllocPackage(void);
 
 private:
-    CPackage m_aPackage[16];
+    CPackage m_aPackage[MOTION_PACKAGE_NUM];
     CList<CPackage> m_listPackageFree;
     CList<CPackage> m_listPackageAlloc;
     int32 m_iGeneration;

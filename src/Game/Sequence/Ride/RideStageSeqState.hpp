@@ -7,7 +7,6 @@ class CLoadRideStageSeqState : public CLoadStageSeqState
 {
 public:
     CLoadRideStageSeqState(STAGEID::VALUE idStage);
-    virtual ~CLoadRideStageSeqState(void);
     virtual void LoadPlayers(void) override;
 };
 

@@ -15,7 +15,7 @@ CMapModelCtrlGimmick::CMapModelCtrlGimmick(const char* pszName, void* pParam)
     CModel* pModel = CModelManager::CreateModel("m53f_pillar");
     ASSERT(pModel);
 
-    m_model.SetModel(CNormalGimmickModel::MODELKIND_ATARI_NORMAL, pModel);
+    m_model.SetModel(CNormalGimmickModel::MODELTYPE_ATARI_NORMAL, pModel);
 
     RwV3d vRot = Math::VECTOR3_ZERO;
     RwV3d vPos = Math::VECTOR3_ZERO;

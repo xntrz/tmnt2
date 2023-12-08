@@ -1,37 +1,29 @@
 #include "Debug.hpp"
 
 
-// 
-//  Message tags:
-//      [RW]    - RenderWare debug messages
-//         - System module debug messages
-//        - Game module debug messages 
-//      [AFS]   - Afs archive subsystem messages
-//      [SND]   - Sound subsystem messages
-//      [MOV]   - Movie subsystem messages
-// 
-
-
 #ifdef RWDEBUG
+static bool s_bRwDebugAssertSupressFlag = false;
+
 static void RwDebugMsgEndpoint(RwDebugType type, const RwChar* string)
 {
     switch (type)
 	{
     case RwDebugType::rwDEBUGASSERT:
-        //OUTPUT("[RW::TRACE] %s\n", string);
-        ASSERT(false, string);
-		break;
+        if (!s_bRwDebugAssertSupressFlag)
+            ASSERT(false, string);
+        else
+            OUTPUT("[rwDEBUGASSERT] %s\n", string);
+        break;
 
     case RwDebugType::rwDEBUGTRACE:
-        //OUTPUT("[RW::TRACE] %s\n", string);
         break;
         
     case RwDebugType::rwDEBUGMESSAGE:
-        //OUTPUT("[RW::MSG] %s\n", string);
+        //OUTPUT("[rwDEBUGMESSAGE] %s\n", string);
         break;
         
     case RwDebugType::rwDEBUGERROR:
-		OUTPUT("[RW::ERROR] %s\n", string);
+        OUTPUT("[rwDEBUGERROR] %s\n", string);
 		break;
 
 	default:
@@ -42,21 +34,21 @@ static void RwDebugMsgEndpoint(RwDebugType type, const RwChar* string)
 #endif
 
 
-/*static*/ void(*CDebug::CallbackOutput)(const char* fname, int32 fline, const char* format, ...) = nullptr;
-/*static*/ void(*CDebug::CallbackFatal)(const char* reason, ...) = nullptr;
+/*static*/ void(*CDebug::Output)(const char* fname, int32 fline, const char* format, ...) = nullptr;
+/*static*/ void(*CDebug::Fatal)(const char* reason, ...) = nullptr;
 
 
 /*static*/ void CDebug::Initialize(void)
 {
-    CallbackOutput = nullptr;
-    CallbackFatal = nullptr;
+    Output = nullptr;
+    Fatal = nullptr;
 };
 
 
 /*static*/ void CDebug::Terminate(void)
 {
-    CallbackOutput = nullptr;
-    CallbackFatal = nullptr;
+    Output = nullptr;
+    Fatal = nullptr;
 };
 
 
@@ -65,6 +57,7 @@ static void RwDebugMsgEndpoint(RwDebugType type, const RwChar* string)
 #ifdef RWDEBUG    
     RwDebugSetHandler(RwDebugMsgEndpoint);
     RwDebugSetTraceState(TRUE);
+    s_bRwDebugAssertSupressFlag = false;
 #endif
 };
 
@@ -78,6 +71,14 @@ static void RwDebugMsgEndpoint(RwDebugType type, const RwChar* string)
 };
 
 
+/*static*/ void CDebug::SupressRwDebugAssert(bool bSupress)
+{
+#ifdef RWDEBUG
+    s_bRwDebugAssertSupressFlag = bSupress;
+#endif    
+};
+
+
 /*static*/ void CDebug::Assert(const char* expression, const char* fname, int32 fline)
 {
     Assert(expression, fname, fline, "Unknown error.\nProgram is ended compulsorily.\n");
@@ -88,7 +89,8 @@ static void RwDebugMsgEndpoint(RwDebugType type, const RwChar* string)
 {
     static char buff[4096] = { 0 };
 
-    int32 written = sprintf_s(buff, sizeof(buff),
+    int32 written = std::sprintf(
+        buff,
         "Assertion!\n"
         "\n"
         "Expression: %s\n"
@@ -103,10 +105,10 @@ static void RwDebugMsgEndpoint(RwDebugType type, const RwChar* string)
     {
         va_list vl;
         va_start(vl, format);
-        written += vsprintf_s(buff + written, sizeof(buff) - written, format, vl);
+        written += std::vsprintf(buff + written, format, vl);
         va_end(vl);
     };
 
-	CallbackOutput(fname, fline, buff);
-    CallbackFatal(buff);
+	Output(fname, fline, buff);
+    Fatal(buff);
 };

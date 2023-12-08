@@ -3,36 +3,13 @@
 #include "System/Common/File/FileAccess.hpp"
 
 
-class CPCPhyFileAccess :
-    public CFileAccess,
-    public CListNode<CPCPhyFileAccess>
+class CPCPhyFileAccess : public CFileAccess
 {
 public:
-    static bool IsExists(const char* path);
+    static bool IsExists(const char* pszFilename);
     
-    CPCPhyFileAccess(void);
-    virtual ~CPCPhyFileAccess(void);
-    virtual bool Read(const char* pszName) override;
-    virtual bool Read(int32 nID) override;
+    inline CPCPhyFileAccess(void) {};
+    virtual ~CPCPhyFileAccess(void) {};
+    virtual bool Open(const char* pszFilename) override;
     virtual void Clear(void) override;
-    bool Write(const char* pszName, const char* data, int32 datalen);
-
-private:
-    void* m_hFile;
-};
-
-
-class CPCRcFileAccess :
-    public CFileAccess,
-    public CListNode<CPCRcFileAccess>
-{
-public:
-    CPCRcFileAccess(void);
-    virtual ~CPCRcFileAccess(void);
-    virtual bool Read(const char* pszName) override;
-    virtual bool Read(int32 nID) override;
-    virtual void Clear(void) override;    
-
-private:
-    void* m_hData;
 };

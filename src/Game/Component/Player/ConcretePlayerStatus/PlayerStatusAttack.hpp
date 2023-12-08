@@ -83,7 +83,7 @@ namespace PlayerStatus
         virtual void OnAttach(void) override;
         virtual void OnDetach(void) override;
         virtual void OnRun(void) override;
-        virtual void OnDischargeWave(void) = 0;
+        virtual void OnDischargeWave(void) {};
     };
 
 
@@ -94,7 +94,7 @@ namespace PlayerStatus
         virtual void OnAttach(void) override;
         virtual void OnDetach(void) override;
         virtual void OnRun(void) override;
-        virtual void OnDischargeWave(MAGIC_GENERIC::STEP step) = 0;
+        virtual void OnDischargeWave(MAGIC_GENERIC::STEP step) {};
         void CallDischargeWave(void);
     };
 

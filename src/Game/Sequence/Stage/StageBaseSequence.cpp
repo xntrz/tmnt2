@@ -4,6 +4,7 @@
 #include "Game/Component/GameData/GameData.hpp"
 #include "Game/System/Misc/LoadingDisplay.hpp"
 #include "Game/System/Misc/ScreenFade.hpp"
+#include "Game/System/Misc/ControllerMisc.hpp"
 #include "Game/System/Misc/Gamepad.hpp"
 #include "Game/System/Sound/GameSound.hpp"
 
@@ -28,11 +29,11 @@ CStageBaseSequence::~CStageBaseSequence(void)
 };
 
 
-bool CStageBaseSequence::OnAttach(const void* param)
+bool CStageBaseSequence::OnAttach(const void* pParam)
 {
     m_GameStage.Initialize();
     setupState();
-    CScreenFade::StartIn(0.0f);
+    CScreenFade::BlackOut(0.0f);
     
     CGameData::OnBeginStage(CGameData::PlayParam().GetStage());
 
@@ -41,16 +42,16 @@ bool CStageBaseSequence::OnAttach(const void* param)
         CStageInfo::GetCameraUpdateType(idStage)
     );
     
-    CGamepad::EnableStickToDigitalMapping(false);
-    CGamepad::DigitalCancelToFunction(false);
+	EnableStickToDirButton(false);
+
     return true;
 };
 
 
 void CStageBaseSequence::OnDetach(void)
 {
-    CGamepad::DigitalCancelToFunction(true);
-    CGamepad::EnableStickToDigitalMapping(true);
+	EnableStickToDirButton(true);
+
     CLoadingDisplay::Stop(this);
     CGameData::Attribute().SetInteractive(false);
     m_GameStage.Stop();
@@ -65,20 +66,24 @@ void CStageBaseSequence::OnDetach(void)
 };
 
 
-void CStageBaseSequence::OnMove(bool bRet, const void* param)
+void CStageBaseSequence::OnMove(bool bRet, const void* pReturnValue)
 {
     if (runState())
-    {
         OnStateDetached(m_state);
-    };
 
-	if(GetState() >= STATE_INTRO)
-		m_GameStage.Period();
+	//
+    //	TODO: something about camera bug here dont remember what exactly yet
+    //  
+    //  stage map camera required being update at least once before intro
+    //  for setting at/eye pos for correct view if no demo present
+    //  (comment/uncomment this and look at japan shredder fight(AREAID::ID_AREA38) intro camera pos)
+    //
+
+	//if(GetState() >= STATE_INTRO)
+	m_GameStage.Period();
     
     if (GetState() >= STATE_END)
-    {
         Ret();
-    };
 };
 
 
@@ -171,6 +176,12 @@ void CStageBaseSequence::setupState(void)
 
 void CStageBaseSequence::cleanupState(void)
 {
+    if (m_pCurrentStateObj)
+    {
+        m_pCurrentStateObj->OnDetach(this);
+        m_pCurrentStateObj = nullptr;
+    };
+    
     for (int32 i = 0; i < COUNT_OF(m_aStateNode); ++i)
     {
         if (m_aStateNode[i].m_bAutoDelete)

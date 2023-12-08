@@ -4,11 +4,12 @@
 #include "Game/System/GameObject/GameObjectManager.hpp"
 
 
-/*static*/ CGameGimmick& CGameGimmick::Dummy(void)
+/*static*/ CGameGimmick CGameGimmick::m_dummy;
+
+
+/*static*/ CGameGimmick* CGameGimmick::Dummy(void)
 {
-    static CGameGimmick s_DummyGameGimmick;
-    
-    return s_DummyGameGimmick;
+    return &m_dummy;
 };
 
 
@@ -89,29 +90,20 @@ void CGameGimmick::Sleep(void)
 
 bool CGameGimmick::IsSleep(void) const
 {
-    if (IsAlive())
-    {
-        return Gimmick().IsSleep();
-    }
-    else
-    {
-        return true;
-    };
+	return (IsAlive() ? Gimmick().IsSleep() : true);
 };
 
 
 bool CGameGimmick::IsAbleToSleep(void) const
 {
-    return FLAG_TEST(Gimmick().GetFeatures(), GAMEOBJECTTYPES::FLAG_SLEEP);
+    return FLAG_TEST(Gimmick().GetFeatures(), GIMMICKTYPES::FEATURE_SLEEP);
 };
 
 
 void CGameGimmick::Resume(void)
 {
     if (IsAlive())
-    {
         CGameObjectManager::SendMessage(m_pGimmick, GAMEOBJECTTYPES::MESSAGEID_AWAKE);
-    };
 };
 
 

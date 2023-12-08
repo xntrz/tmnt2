@@ -4,24 +4,22 @@
 class CCamera
 {
 public:
-    static void Initialize(void);
-    static void Terminate(void);
-    static void FramebufferChanged(RwRaster* pBuffer, RwRaster* pZBuffer);
-    static void SetCameraCurrent(RwCamera* pRwCamera);
-    static void SetCameraDefault(RwCamera* pRwCamera);
     static CCamera* GetCamera(void);
     static RwCamera* CloneCamera(RwCamera* pRwCamera);
-    static RwCamera* CameraCurrent(void);
-    static RwCamera* CameraDefault(void);
+    
+    inline static void SetCameraCurrent(RwCamera* pRwCamera) { m_pCameraCurrent = pRwCamera; };
+    inline static void SetCameraDefault(RwCamera* pRwCamera) { m_pCameraDefault = pRwCamera; };
+    inline static RwCamera* CameraCurrent(void) { return m_pCameraCurrent; };
+    inline static RwCamera* CameraDefault(void) { return m_pCameraDefault; };
 
     CCamera(RwCamera* pRwCamera);
     virtual ~CCamera(void);
     bool BeginScene(void);
     bool EndScene(void);
     void Release(void);
-    RwCamera* GetRwCamera(void) const;
-    RwCamera* GetRwCameraOld(void) const;
-
+    
+    inline RwCamera* GetRwCamera(void) const { return m_pCamera; };
+    
 private:
     static RwCamera* m_pCameraCurrent;
     static RwCamera* m_pCameraDefault;

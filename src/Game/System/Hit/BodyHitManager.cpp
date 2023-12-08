@@ -42,10 +42,14 @@ bool CBodyHitContainer::Check(CBodyHitData* pBodyHitData, const RwV3d* pMoveVelo
     ASSERT(pResult);
 
 #ifdef _DEBUG
-    RwSphere sphere;
-    sphere.center = *pBodyHitData->GetCurrentPos();
-    sphere.radius = pBodyHitData->GetHitRadius();
-    //CDebugShape::ShowSphere(&sphere);
+    if (CBodyHitManager::m_bDebugDrawSphere)
+    {
+        RwSphere sphere;
+        sphere.center = *pBodyHitData->GetCurrentPos();
+        sphere.radius = pBodyHitData->GetHitRadius();
+        
+        CDebugShape::ShowSphere(&sphere);
+    };
 #endif
 
     if (!pBodyHitData->IsEnableState(CBodyHitData::STATE_ENABLE))
@@ -58,7 +62,7 @@ bool CBodyHitContainer::Check(CBodyHitData* pBodyHitData, const RwV3d* pMoveVelo
     RwV3d vMinVelocity = vMoveBuff;
     float fMoveLengthSQ = Math::Vec3_Dot(pMoveVelocity, pMoveVelocity);
     float fMinMoveLengthSQ = fMoveLengthSQ;
-
+    
     for (CBodyHitData& it : m_listHitAlloc)
     {
         bool b1 = (&it == pBodyHitData);
@@ -66,10 +70,19 @@ bool CBodyHitContainer::Check(CBodyHitData* pBodyHitData, const RwV3d* pMoveVelo
         bool b3 = (pBodyHitData->GetHitID() != CBodyHitData::INVALID_HIT_ID);
         bool b4 = it.IsEnableState(CBodyHitData::STATE_ENABLE);
         bool b5 = (it.IsEnableState(CBodyHitData::STATE_SELF_TO_OTHER) && it.IsEnableState(CBodyHitData::STATE_SELF_TO_OTHER));
-        
-        if (!b1 && (!b2 || !b3) && b4 && b5)
-        {
 
+        // IF not same hit data
+        // IF not same hit id OR invalid id
+        // IF enabled
+        // IF both hit data is set SELF TO OTHER
+        // TODO body hit state
+        if (
+            !b1 && (!b2 || !b3) && b4 && it.IsEnableState(4) &&
+            (!pBodyHitData->IsEnableState(1u) && !it.IsEnableState(1u)
+            || !pBodyHitData->IsEnableState(2u) && !it.IsEnableState(2u)
+            || pBodyHitData->IsEnableState(1u) && it.IsEnableState(2u))
+            )
+        {
             RwV3d vHit = Math::VECTOR3_ZERO;
             RwV3d vZero = Math::VECTOR3_ZERO;
 
@@ -125,16 +138,11 @@ bool CBodyHitContainer::Check(CBodyHitData* pBodyHitData, const RwV3d* pMoveVelo
         };        
     };
 
-    if (fMinMoveLengthSQ > fMoveLengthSQ ||
-        Math::FEqual(fMinMoveLengthSQ, fMoveLengthSQ))
-    {
+    if (fMinMoveLengthSQ >= fMoveLengthSQ)
         return false;
-    };
 
     if (fMinMoveLengthSQ <= 0.0f)
-    {
         Math::Vec3_Add(&vMinVelocity, &vMinVelocity, &vMoveBuff);
-    };
 
     *pResult = vMinVelocity;
     
@@ -193,6 +201,11 @@ static inline CBodyHitContainer& BodyHitContainer(void)
     ASSERT(s_pBodyHitContainer);
     return *s_pBodyHitContainer;
 };
+
+
+#ifdef _DEBUG    
+/*static*/ bool CBodyHitManager::m_bDebugDrawSphere = false;
+#endif
 
 
 /*static*/ void CBodyHitManager::Initialize(void)

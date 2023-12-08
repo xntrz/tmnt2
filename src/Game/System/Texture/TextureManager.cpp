@@ -1,11 +1,16 @@
 #include "TextureManager.hpp"
 
 
+#ifdef _DEBUG
+#define TEXTURE_SET_NUM (256)
+#else
+#define TEXTURE_SET_NUM (32)
+#endif
+
+
 class CTextureContainer
 {
 private:
-    static const int32 TEXTURESET_MAX = 32;
-    
     class CTextureSet : public CListNode<CTextureSet>
     {
     private:
@@ -61,7 +66,7 @@ public:
     void GarbageCollection(void);
 
 private:
-    CTextureSet m_aTextureSet[TEXTURESET_MAX];
+    CTextureSet m_aTextureSet[TEXTURE_SET_NUM];
     CList<CTextureSet> m_listFree;
     CList<CTextureSet> m_listUsing;
     CTextureSet* m_pCurrentSet;
@@ -402,6 +407,10 @@ void CTextureContainer::GarbageCollection(void)
 		if ((*it).Generation() > m_iGeneration)
 		{
 			CTextureSet* pTextureSet = &*it++;
+
+			if (m_pCurrentSet == pTextureSet)
+				m_pCurrentSet = nullptr;
+
 			FreeTextureSet(pTextureSet);
 		}
 		else

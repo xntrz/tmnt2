@@ -30,7 +30,7 @@ namespace PlayerStatus
     {
 		PLAYERTYPES::STATUS status = Character().GetStatusPrev();
 		Character().SetLastGroundingStatus(status);
-        Character().ChangeMotion("J1");
+        Character().ChangeMotion(PLAYERTYPES::MOTIONNAMES::JUMP_READY);
         Character().ResetVelocity();
         Character().SetCharacterFlag(CHARACTERTYPES::FLAG_FIXED_MODEL_ROTATION, true);
     };
@@ -81,7 +81,7 @@ namespace PlayerStatus
 
     void CJump::OnAttach(void)
     {
-        Character().ChangeMotion("J2");
+        Character().ChangeMotion(PLAYERTYPES::MOTIONNAMES::JUMP);
         
         RwV3d vVelocity = Math::VECTOR3_ZERO;
         switch (Character().GetLastGroundingStatus())
@@ -151,7 +151,7 @@ namespace PlayerStatus
 
     void CJump2nd::OnAttach(void)
     {
-        Character().ChangeMotion("JDouble");
+        Character().ChangeMotion(PLAYERTYPES::MOTIONNAMES::JUMP_2ND);
 
         RwV3d vVelocity = Math::VECTOR3_ZERO;        
         if (Character().GetStatusPrev() == PLAYERTYPES::STATUS_AERIAL_MOVE)
@@ -171,10 +171,7 @@ namespace PlayerStatus
         Character().SetCharacterFlag(CHARACTERTYPES::FLAG_FIXED_MODEL_ROTATION, false);
         Character().SetPlayerFlag(PLAYERTYPES::FLAG_JUMP_2ND, false);
 
-        CGameEvent::SetPlayerTechnicalAction(
-            Character().GetPlayerNo(),
-            GAMETYPES::TECACT_JUMP_DOUBLE
-        );
+        CGameEvent::SetPlayerTechnicalAction(Character().GetPlayerNo(), GAMETYPES::TECACT_JUMP_DOUBLE);
 
         CGameSound::PlayObjectSE(m_pPlayerChr, SDCODE_SE(4124));
 
@@ -222,13 +219,14 @@ namespace PlayerStatus
 
     void CJumpWall::OnAttach(void)
     {
-        Character().ChangeMotion("JWall");
         Character().SetCharacterFlag(CHARACTERTYPES::FLAG_FIXED_DIRECTION, false);
 
         const CCharacter::COLLISIONWALLINFO* pWallInfo = Character().GetCollisionWall();
         ASSERT(pWallInfo);
         ASSERT(pWallInfo->m_bHit);
         ASSERT(pWallInfo->m_bJumpWallHit);
+
+        Character().ChangeMotion(PLAYERTYPES::MOTIONNAMES::JUMP_WALL);
 
         RwV3d vWallNormal = pWallInfo->m_vJumpWallNormal;
         vWallNormal.y = 0.0f;
@@ -251,12 +249,9 @@ namespace PlayerStatus
 
         RwV3d vFootPos = Math::VECTOR3_ZERO;
         Character().GetFootPosition(&vFootPos);
-        CEffectManager::Play("all_jump", &vFootPos);
+        CEffectManager::Play(PLAYERTYPES::EFFECTNAMES::JUMP_WALL, &vFootPos);
         
-        CGameEvent::SetPlayerTechnicalAction(
-            Character().GetPlayerNo(),
-            GAMETYPES::TECACT_JUMP_WALL
-        );
+        CGameEvent::SetPlayerTechnicalAction(Character().GetPlayerNo(), GAMETYPES::TECACT_JUMP_WALL);
 
         Character().NotifyWallJumpSuccess();
         
@@ -387,7 +382,7 @@ namespace PlayerStatus
     void CAerialCommon::OnAttach(void)
     {
         if (!Character().IsPlayerFlagSet(PLAYERTYPES::FLAG_AERIAL_STATUS))
-            Character().ChangeMotion("J2");
+            Character().ChangeMotion(PLAYERTYPES::MOTIONNAMES::AERIAL);
 
         Character().SetCharacterFlag(CHARACTERTYPES::FLAG_FIXED_MODEL_ROTATION, true);
         
@@ -463,7 +458,7 @@ namespace PlayerStatus
 
     void CTouchdown::OnAttach(void)
     {
-        Character().ChangeMotion("J3");
+        Character().ChangeMotion(PLAYERTYPES::MOTIONNAMES::TOUCHDOWN);
         
         Character().ResetVelocity();
         Character().ResetAcceleration();

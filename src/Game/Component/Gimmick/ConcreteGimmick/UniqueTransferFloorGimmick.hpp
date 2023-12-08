@@ -11,7 +11,7 @@ class CUniqueTransferFloorGimmickModel final : public CGimmickModel
 public:
     enum MODELTYPE
     {
-        MODELTYPE_DISP,
+        MODELTYPE_DISP = 0,
         MODELTYPE_ATARI0,
         MODELTYPE_ATARI1,
 

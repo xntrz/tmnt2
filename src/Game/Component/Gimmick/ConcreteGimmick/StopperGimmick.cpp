@@ -1,7 +1,7 @@
 #include "StopperGimmick.hpp"
 #include "PushingGimmick.hpp"
 
-#include "Game/Component/Gimmick/GimmickUtils.hpp"
+#include "Game/Component/Gimmick/Utils/GimmickUtils.hpp"
 #include "Game/Component/Gimmick/GimmickParam.hpp"
 #include "Game/System/Map/MapCollisionModel.hpp"
 #include "Game/System/Hit/BodyHitData.hpp"
@@ -34,8 +34,8 @@ CStopperGimmick::CStopperGimmick(const char* pszName, void* pParam)
 
         pModelDisp->SetLightingEnable(false);
 
-        m_model.SetModel(CNormalGimmickModel::MODELKIND_VISUAL_NORMAL, pModelDisp);
-        m_model.SetModel(CNormalGimmickModel::MODELKIND_ATARI_NORMAL, pModelAtari);
+        m_model.SetModel(CNormalGimmickModel::MODELTYPE_DRAW_NORMAL, pModelDisp);
+        m_model.SetModel(CNormalGimmickModel::MODELTYPE_ATARI_NORMAL, pModelAtari);
 
         RwV3d vRotation = Math::VECTOR3_ZERO;        
         RwMatrix matrix;

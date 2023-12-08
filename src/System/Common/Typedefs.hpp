@@ -1,8 +1,10 @@
 #pragma once
 
 #ifdef _MSC_VER
-#pragma warning(disable : 4200)
-#pragma warning(disable : 4996)
+#pragma warning(disable : 4200) // nonstandard extension used: zero-sized array in struct/union
+#pragma warning(disable : 4996) // function or variable may be unsafe
+#pragma warning(disable : 4100) // unreferenced formal parameter
+#pragma warning(disable : 4189) // local variable is initialized but not referenced
 #endif
 
 //
@@ -11,7 +13,6 @@
 #define SDCODE_SE(SeCode) 		(SeCode)
 #define SDCODE_BGM(BgmCode) 	(BgmCode)
 #define SDCODE_VOICE(VoiceCode) (VoiceCode)
-#define MOVIECODE(MovieCode) 	(MovieCode)
 
 #include "rwcore.h"
 #include "rpworld.h"
@@ -25,11 +26,10 @@
 #include "rpcollis.h"
 
 #include <cstdlib>
-#include <exception>
-#include <string>
+#include <cstring>
 #include <vector>
 #include <limits>
-
+#include <algorithm>
 
 typedef char int8;
 typedef short int16;
@@ -40,52 +40,42 @@ typedef unsigned short uint16;
 typedef unsigned int uint32;
 typedef unsigned long long uint64;
 
-#ifdef _TARGET_PC
+#ifdef TARGET_PC
 typedef wchar_t wchar;
 #define UTEXT(text)	L##text
-#elif defined _TARGET_PS2
+#elif defined TARGET_PS2
 typedef unsigned int wchar;
 #define UTEXT(text)	text
+#else
+#error Current target is not set
 #endif
 
 #include "MemoryStd.hpp"
 #include "Debug.hpp"
 
-#include "System/Utils/List.hpp"
-#include "System/Utils/Queue.hpp"
-#include "System/Utils/Math.hpp"
-
+#define UNUSED(var) 					(do { (void)(var); } while (0))
 #define CHECK_SIZE(type, targetSize)	static_assert(sizeof(type) == targetSize, "incorrect size")
 #define RWRGBALONGEX(rwrgba) 			(RWRGBALONG(rwrgba.red, rwrgba.green, rwrgba.blue, rwrgba.alpha))
 #define REF(p)          				(p)
 #define STR(s)                      	#s
 #define COUNT_OF(ptr)	            	int32(sizeof(ptr) / sizeof(ptr[0]))
 
-#define ALIGN_CHECK(v, a) 				((uint32(v) & ((uint32(a) - 1u))) == 0u)
-#define ALIGN_ADJUST(v, a) 				(uint32(a) - (uint32(v) & (uint32(a) - 1u)))
-#define ALIGN_ROUND_DOWN(v, a) 			(uint32(v) & ~(uint32(a) - 1u))
-#define ALIGN_ROUND_UP(v, a) 			((uint32(v) + (uint32(a) - 1u)) & ~(uint32(a) - 1u))
+#define ALIGN_CHECK(v, a) 				(((v) & (((a) - 1u))) == 0u)
+#define ALIGN_ADJUST(v, a) 				((a) - ((v) & ((a) - 1u)))
+#define ALIGN_ROUND_DOWN(v, a) 			((v) & ~((a) - 1u))
+#define ALIGN_ROUND_UP(v, a) 			(((v) + ((a) - 1u)) & ~((a) - 1u))
 #define ALIGN(v, a) 					(ALIGN_ROUND_UP(v, a))
 
 #define BIT(no)			            	(1 << (no))
 #define BITSOF(var)		            	(sizeof(var) << 3)
-#define BIT_SET(bitfield, no)       	(bitfield |= (1 << no))
-#define BIT_CLEAR(bitfield, no)     	(bitfield &= ~(1 << no))
-#define BIT_TEST(bitfield, no)    		((bitfield >> no) & 1)
+#define BIT_SET(bitfield, no)       	((bitfield) |= (1 << (no)))
+#define BIT_CLEAR(bitfield, no)     	((bitfield) &= ~(1 << (no)))
+#define BIT_TEST(bitfield, no)    		((bitfield >> (no)) & 1)
 
 #define FLAG_SET(flagfield, flag)		((flagfield) |= (flag))
 #define FLAG_CLEAR(flagfield, flag)		((flagfield) &= (~flag))
-#define FLAG_TEST(flagfield, flag)		((flagfield & flag) == flag)
-#define FLAG_TEST_ANY(flagfield, flag)	((flagfield & flag) != 0)
-#define FLAG_CHANGE(flagfield, flag, set)	\
-do											\
-{											\
-if (set)									\
-	flagfield |= (flag);					\
-else										\
-	flagfield &= (~flag);					\
-}											\
-while (0)
+#define FLAG_TEST(flagfield, flag)		(((flagfield) & (flag)) == (flag))
+#define FLAG_TEST_ANY(flagfield, flag)	(((flagfield) & (flag)) != 0)
 
 #define ENUM_TO_FLAG(T)																\
 	inline T operator~ (T a) { return (T)~(int32)a; }								\
@@ -105,26 +95,6 @@ while (0)
 	inline friend T& operator&= (T& a, T b) { return (T&)((int32&)a &= (int32)b); }	\
 	inline friend T& operator^= (T& a, T b) { return (T&)((int32&)a ^= (int32)b); }
 
-#define SWAP2(val)					\
-	(((val) >> 8) & 0x00FF) | 		\
-	(((val) << 8) & 0xFF00)
-
-#define SWAP4(val)					\
-	(((val) >> 24) & 0x000000FF) |	\
-	(((val) >> 8)  & 0x0000FF00) | 	\
-	(((val) << 8)  & 0x00FF0000) | 	\
-	(((val) << 24) & 0xFF000000)
-
-#define SWAP8(val)							\
-	(((val) >> 56) & 0x00000000000000FF) |	\
-	(((val) >> 40) & 0x000000000000FF00) | 	\
-	(((val) >> 24) & 0x0000000000FF0000) |	\
-	(((val) >> 8)  & 0x00000000FF000000) | 	\
-	(((val) << 8)  & 0x000000FF00000000) |	\
-	(((val) << 24) & 0x0000FF0000000000) |	\
-	(((val) << 40) & 0x00FF000000000000) |	\
-	(((val) << 56) & 0xFF00000000000000)
-
 #ifdef UINT8_MAX
 #undef UINT8_MAX
 #endif
@@ -141,14 +111,87 @@ while (0)
 #undef UINT64_MAX
 #endif
 
+#ifdef min
+#undef min
+#endif
+
+#ifdef max
+#undef max
+#endif
+
+
+template<class T>
+inline T Clamp(T val, T min, T max)
+{
+	return (
+		val > max ?
+		max :
+		(val < min ? min : val)
+	);
+};
+
+
+template<class T>
+inline T InvClamp(T val, T min, T max)
+{
+	return (
+		val > max ?
+		min :
+		(val < min ? max : val)
+	);
+};
+
+
+template<class T>
+inline T Max(T a, T b)
+{
+	return (a > b ? a : b);
+};
+
+
+template<class T>
+inline T Min(T a, T b)
+{
+	return (a < b ? a : b);
+};
+
+
 namespace TYPEDEF
 {
-	static const float DEFAULT_SCREEN_WIDTH = 640.0f;
-	static const float DEFAULT_SCREEN_HEIGHT= 480.0f;
-	static const float DEFAULT_ASPECTRATIO 	= (DEFAULT_SCREEN_WIDTH / DEFAULT_SCREEN_HEIGHT);
-	static const float DEFAULT_VIEWWINDOW 	= (0.5f);
-	static const float DEFAULT_CLIP_FAR 	= 100.0f;
-	static const float DEFAULT_CLIP_NEAR 	= 0.1f;
+	enum CONFIG_TV
+	{
+		CONFIG_TV_NTSC = 0,
+		CONFIG_TV_PAL,
+	};
+	
+	enum CONFIG_LANG
+	{
+		CONFIG_LANG_ENGLISH = 0,
+		CONFIG_LANG_GERMAN,
+		CONFIG_LANG_FRENCH,
+		CONFIG_LANG_SPANISH,
+		CONFIG_LANG_ITALIAN,
+	};
+
+	enum CONFIG_LAUNCH
+	{
+		CONFIG_LAUNCH_NORMAL = 0,
+		CONFIG_LAUNCH_ARCADE,
+		CONFIG_LAUNCH_TVCHANGE,
+		CONFIG_LAUNCH_DASHBOARD,
+	};
+
+	static const float 	DEFAULT_SCREEN_WIDTH 	= 640.0f;
+	static const float 	DEFAULT_SCREEN_HEIGHT	= 480.0f;
+	static const float 	DEFAULT_ASPECTRATIO 	= (DEFAULT_SCREEN_WIDTH / DEFAULT_SCREEN_HEIGHT);
+	static const float 	DEFAULT_VIEWWINDOW 		= (0.5f);
+	static const float 	DEFAULT_CLIP_FAR 		= 100.0f;
+	static const float 	DEFAULT_CLIP_NEAR 		= 0.1f;
+
+	static const float 	VSCR_W 		= 640.0f;			// virtual screen w
+	static const float 	VSCR_H 		= 448.0f;			// virtual screen h
+	static const float 	VSCR_X 		= -(VSCR_W * 0.5f);	// virtual screen x
+	static const float 	VSCR_Y		= -(VSCR_H * 0.5f);	// virtual screen y
 
 	static const float 	FLOAT_MIN 	= std::numeric_limits<float>::min();
 	static const float 	FLOAT_MAX 	= std::numeric_limits<float>::max();

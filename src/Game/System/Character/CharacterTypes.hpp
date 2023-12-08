@@ -89,7 +89,7 @@ namespace CHARACTERTYPES
         ATTACKTYPE_PARTY_ATTACK,
     };
 
-    enum FLAG
+    enum FLAG : uint32
     {
         FLAG_NONE                           = 0x0,
         FLAG_FIXED_DIRECTION                = 0x1,
@@ -106,7 +106,7 @@ namespace CHARACTERTYPES
         FLAG_DEFAULT = FLAG_FIXED_DIRECTION | FLAG_FIXED_MODEL_ROTATION | FLAG_INVALID_HIT_CATCH,
     };
 
-    enum DEFENCERSTATUSFLAG
+    enum DEFENCERSTATUSFLAG : uint32
     {
         DEFENCERSTATUSFLAG_NONE                 = 0x0,
         DEFENCERSTATUSFLAG_AERIAL               = 0x1,

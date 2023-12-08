@@ -2,7 +2,7 @@
 
 #include "Game/Component/Gimmick/GimmickMotion.hpp"
 #include "Game/Component/Gimmick/GimmickParam.hpp"
-#include "Game/Component/Gimmick/GimmickUtils.hpp"
+#include "Game/Component/Gimmick/Utils/GimmickUtils.hpp"
 #include "Game/System/Motion/MotionManager.hpp"
 #include "Game/System/Map/MapCollisionModel.hpp"
 #include "Game/System/Model/ModelManager.hpp"
@@ -37,8 +37,8 @@ CRideShutterGimmick::CRideShutterGimmick(const char* pszName, void* pParam)
     CGimmickUtils::QuaternionToRotationMatrix(&mat, &pInitParam->m_quat);
     CGimmickUtils::MatrixToRotation(&mat, &vRotation);
     
-    m_model.SetModel(CNormalGimmickModel::MODELKIND_VISUAL_NORMAL, pModel);
-    m_model.SetModel(CNormalGimmickModel::MODELKIND_ATARI_NORMAL, pModelAtari);
+    m_model.SetModel(CNormalGimmickModel::MODELTYPE_DRAW_NORMAL, pModel);
+    m_model.SetModel(CNormalGimmickModel::MODELTYPE_ATARI_NORMAL, pModelAtari);
     m_model.SetPosition(&pInitParam->m_vPosition);
     m_model.SetRotation(&vRotation);
     m_model.UpdateFrame();
@@ -48,14 +48,14 @@ CRideShutterGimmick::CRideShutterGimmick(const char* pszName, void* pParam)
     CMotionManager::SetCurrentMotionSet("shutter");
     m_pMotionController->AddMotion("close");
     m_pMotionController->SetMotion("close", 0.0f, 0.0f, 0.0f, false);
-    m_pMotionController->Start(1.0f);
+    m_pMotionController->StartOne(1.0f);
 
     m_pMotionControllerAtari = new CGimmickMotion(pModelAtari);
     ASSERT(m_pMotionControllerAtari);
     CMotionManager::SetCurrentMotionSet("shutter");
     m_pMotionControllerAtari->AddMotion("close");
     m_pMotionControllerAtari->SetMotion("close", 0.0f, 0.0f, 0.0f, false);
-    m_pMotionControllerAtari->Start(1.0f);
+    m_pMotionControllerAtari->StartOne(1.0f);
 
     SetModelStrategy(&m_model);
     

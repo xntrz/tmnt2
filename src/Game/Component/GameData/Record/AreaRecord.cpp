@@ -439,8 +439,11 @@ void CAreaRecord::SetAreaOpened(AREAID::VALUE idArea)
         return;
 
     NODEAREA& nodearea = m_aNodeArea[idArea];
-	if(nodearea.m_state == STATE_NONE)
-		nodearea.m_state = STATE_OPEN;
+    if (nodearea.m_state == STATE_NONE)
+    {
+        nodearea.m_state = STATE_OPEN;
+        nodearea.m_rootflag = 0;
+    };
 };
 
 

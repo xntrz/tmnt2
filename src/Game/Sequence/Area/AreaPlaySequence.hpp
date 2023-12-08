@@ -28,9 +28,9 @@ public:
 
     CAreaPlaySequence(void);
     virtual ~CAreaPlaySequence(void);
-    virtual bool OnAttach(const void* param) override;
+    virtual bool OnAttach(const void* pParam) override;
     virtual void OnDetach(void) override;
-    virtual void OnMove(bool bRet, const void* param) override;
+    virtual void OnMove(bool bRet, const void* pReturnValue) override;
     virtual void OnDraw(void) const override;
 
 private:
@@ -46,4 +46,7 @@ private:
     STAGEID::VALUE m_idLastStage;
     STEP m_step;
     int32 m_substep;
+#ifdef _DEBUG
+    bool m_bSkipAllMovies;
+#endif
 };

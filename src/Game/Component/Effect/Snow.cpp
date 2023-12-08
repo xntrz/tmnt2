@@ -112,8 +112,9 @@ void CSnow::Run(void)
         vBuffer.x = pParticle->m_vPosition.x - m_vBasisPosition.x;
         vBuffer.y = pParticle->m_vPosition.z - m_vBasisPosition.z;
 
-        if (pParticle->m_fTime > pParticle->m_fLifespan ||
-            Math::Vec2_Length(&vBuffer) > m_fRadius)
+        bool bIsDead = (pParticle->m_fTime > pParticle->m_fLifespan);
+        bool bIsOutOfScreen = (Math::Vec2_Length(&vBuffer) > m_fRadius);        
+        if (bIsDead || bIsOutOfScreen)
             Generate(pParticle);
         
         Math::Vec3_Scale(
@@ -286,8 +287,6 @@ void CSnow::SetRideFlag(bool bSet)
 
 void CSnow::CalcWind(void)
 {
-	//return;
-
     if (m_nSettingNum >= 3)
     {
         RwV3d vDirection = Math::VECTOR3_ZERO;
@@ -307,7 +306,7 @@ void CSnow::Generate(PARTICLE* pParticle)
     if (m_fRadius >= 0.0f)
     {
         pParticle->m_vPosition.x = m_vBasisPosition.x + ((Math::Rand() % uint32(m_fRadius + m_fRadius)) - m_fRadius);
-        pParticle->m_vPosition.y = m_vBasisPosition.y + ((Math::Rand() % uint32(m_fHeight)) - m_fRadius);
+        pParticle->m_vPosition.y = m_vBasisPosition.y + (Math::Rand() % uint32(m_fHeight));
         pParticle->m_vPosition.z = m_vBasisPosition.z + ((Math::Rand() % uint32(m_fRadius + m_fRadius)) - m_fRadius);
     };
 
@@ -493,7 +492,7 @@ static CSnow& Snow(void)
     if (!pTexture)
     {
         CTextureManager::SetCurrentTextureSet("snow_ef");
-        RwTexture* pTexture = CTextureManager::GetRwTexture("snowstorm1");
+        pTexture = CTextureManager::GetRwTexture("snowstorm1");
     };
 
     ASSERT(pTexture);
@@ -521,7 +520,7 @@ static CSnow& Snow(void)
     if (!pTexture)
     {
         CTextureManager::SetCurrentTextureSet("snow_ef");
-        RwTexture* pTexture = CTextureManager::GetRwTexture("snowstorm1");
+		pTexture = CTextureManager::GetRwTexture("snowstorm1");
     };
 
     ASSERT(pTexture);

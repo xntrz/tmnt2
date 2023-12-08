@@ -17,6 +17,7 @@ protected:
         PROCESSTYPE_ATTACK,
         PROCESSTYPE_DAMAGE,
         PROCESSTYPE_DRAW_MODEL,
+        
         PROCESSTYPENUM,
     };
     

@@ -8,6 +8,14 @@
 
 namespace Slashuur
 {
+    const RwV3d CHARGE_ATTACK_LOCAL_POSITION    = { 0.0f, 0.0f, 1.0f };
+    const RwV3d BANDANA_OFFSET                  = { -0.02f, 0.237f, -0.038f };
+
+    namespace MOTIONNAMES
+    {
+        static const char* ATTACK_JUMP = "JAttack";
+    };
+
     class CAttackJump : public CStatus
     {
     public:
@@ -17,13 +25,11 @@ namespace Slashuur
         virtual void OnRun(void) override;
     };
 
-
     class CAttackAABBC : public PlayerStatus::CAttackAABBC
     {
     public:
         virtual void OnDischargeWave(void) override;
     };
-
 
     class CAttackB : public PlayerStatus::CAttackB
     {
@@ -38,5 +44,4 @@ class CSlashuur : public CPlayerCharacter
 public:
     CSlashuur(GAMETYPES::COSTUME costume);
     virtual ~CSlashuur(void);
-    virtual void Run(void) override;
 };

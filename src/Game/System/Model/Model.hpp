@@ -54,19 +54,30 @@ public:
     void ForAllChildrenFrameCallback(IFrameCallbackFunctor* pFunctor);
     void ForAllAtomicCallback(IAtomicCallbackFunctor* pFunctor);
     void ForAllMaterialCallback(IMaterialCallbackFunctor* pFunctor);
-    void SetPosition(const RwV3d& rPos);
-    void SetPosition(const RwV3d* pPos);
-    void SetRotation(const RwV3d& rRot);
-    void SetRotation(const RwV3d* pRot);
-    void SetClippingEnable(bool bEnable);
-    void SetDrawEnable(bool bEnable);
-    bool IsDrawEnable(void) const;
-    void SetBoundingSphereOffset(const RwV3d* pvBSOffset);
-    void GetPosition(RwV3d* pvPosition) const;
-    void GetRotation(RwV3d* pvRotation) const;
-    RwRGBA GetColor(void) const;
-    void SetColor(const RwRGBA& color);
-    void SetBoundingSphereRadius(float r);
+
+    inline void SetPosition(const RwV3d& rPos) { m_vPosition = rPos; };
+    inline void SetPosition(const RwV3d* pPos) { m_vPosition = *pPos; };
+    inline void GetPosition(RwV3d* pvPosition) const{ *pvPosition = m_vPosition; };
+    
+    inline void SetRotation(const RwV3d& rRot){ m_vRotation = rRot; };
+    inline void SetRotation(const RwV3d* pRot){ m_vRotation = *pRot; };
+    inline void GetRotation(RwV3d* pvRotation) const { *pvRotation = m_vRotation; };
+    
+    inline void SetDrawEnable(bool bEnable){ m_bDrawEnable = bEnable; };
+    inline bool IsDrawEnable(void) const { return m_bDrawEnable; };
+    
+    inline RwRGBA GetColor(void) const  { return m_MaterialColor; };
+    inline void SetColor(const RwRGBA& color) { m_MaterialColor = color; };
+    
+    inline void SetClippingEnable(bool bEnable) { m_bClippingEnable = bEnable; };
+    inline bool IsClippingEnable(void) const { return m_bClippingEnable; };
+    
+    inline void SetBoundingSphereOffset(const RwV3d* pvBSOffset) { m_vBSphereOffset = *pvBSOffset; };
+    inline void SetBoundingSphereRadius(float r) { m_BSphere.radius = r; };
+    
+    inline const char* GetName(void) const { return m_pszName; };
+
+
 
 protected:
     static RwFrame* CallbackFrame(RwFrame* frame, void* data);

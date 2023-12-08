@@ -23,12 +23,13 @@ public:
     CTransferFloorGimmickMove(void);
     virtual ~CTransferFloorGimmickMove(void);
     virtual RESULT OnMove(float dt) override;
-    void SetVelocity(const RwV3d* pvVelocity);
-    void StartTransfer(void);
-    void SetMoveTime(float t);
-    void SetStopTime(float t);
-    void SetKind(int32 kind);
-    int32 GetKind(void) const;
+    
+    inline void SetVelocity(const RwV3d* pvVelocity) { m_vVelocity = *pvVelocity; };
+    inline void StartTransfer(void) { m_phase = (m_phase == PHASE_NONE ? PHASE_MOVE : PHASE_NONE); };
+    inline void SetMoveTime(float t) { m_fMoveTime = t; };
+    inline void SetStopTime(float t) { m_fStopTime = t; };
+    inline void SetKind(int32 kind) { m_type = kind; };
+    inline int32 GetKind(void) const { return m_type; };
 
 protected:
     float m_fMoveTime;
@@ -47,9 +48,10 @@ public:
     CLinearTransferFloorGimmickMove(void);
     virtual ~CLinearTransferFloorGimmickMove(void);
     virtual RESULT OnMove(float dt) override;
-    void SetStartPosition(const RwV3d* pvPosition);
-    void SetGoalPosition(const RwV3d* pvPosition);
     
+    inline void SetStartPosition(const RwV3d* pvPosition) { m_vStartPosition = *pvPosition; };
+    inline void SetGoalPosition(const RwV3d* pvPosition) { m_vGoalPosition = *pvPosition; };
+
 protected:
     RwV3d m_vStartPosition;
     RwV3d m_vGoalPosition;
@@ -77,9 +79,10 @@ public:
     virtual ~CRotateTransferFloorGimmickMove(void);
     virtual RESULT OnMove(float dt) override;
     void SetRoundTime(float t);
-    void SetRotAxis(RwMatrix* mat);    
-    void GetRotation(RwV3d* pvRot);
     
+    inline void SetRotAxis(RwMatrix* mat) { m_vRotAxis = Math::VECTOR3_AXIS_Y; };    
+    inline void GetRotation(RwV3d* pvRot) const { *pvRot = m_vRotation; };
+
 protected:
     float m_fRoundTime;
     RwV3d m_vRotAxis;

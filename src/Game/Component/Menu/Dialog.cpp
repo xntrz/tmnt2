@@ -2,7 +2,7 @@
 
 #include "Game/System/2d/MenuSound.hpp"
 #include "Game/System/2d/GameFont.hpp"
-#include "Game/System/2d/GameText.hpp"
+#include "Game/System/Text/GameText.hpp"
 #include "System/Common/Controller.hpp"
 #include "System/Common/Screen.hpp"
 
@@ -62,28 +62,28 @@ void CDialog::DrawInWindow(const Rt2dBBox& bbox) const
         m_Text.Draw(bboxText);
     };
 
-    const wchar* pwszYes = CGameText::GetText(GAMETEXT::VALUE(1));
-    if (m_status == STATUS_YES)
-        CGameFont::m_pFont->SetRGBA(0, 255, 0, 255);
-    else
-        CGameFont::m_pFont->SetRGBA(255, 180, 0, 255);
+	CGameFont::SetHeight(20.0f);
 
-    CGameFont::m_pFont->Show(
+    const wchar* pwszYes = CGameText::GetText(GAMETEXT(1));
+    if (m_status == STATUS_YES)
+        CGameFont::SetRGBA(0, 255, 0, 255);
+    else
+        CGameFont::SetRGBA(255, 180, 0, 255);
+
+    CGameFont::Show(
         pwszYes,
-        20.0f,
         m_bboxDraw.x - m_bboxDraw.w * 0.15f,
         m_bboxDraw.h * 0.3f + m_bboxDraw.y
     );
     
-    const wchar* pwszNo = CGameText::GetText(GAMETEXT::VALUE(2));
+    const wchar* pwszNo = CGameText::GetText(GAMETEXT(2));
     if (m_status == STATUS_NO)
-        CGameFont::m_pFont->SetRGBA(0, 255, 0, 255);
+        CGameFont::SetRGBA(0, 255, 0, 255);
     else
-        CGameFont::m_pFont->SetRGBA(255, 180, 0, 255);
+        CGameFont::SetRGBA(255, 180, 0, 255);
 
-    CGameFont::m_pFont->Show(
+    CGameFont::Show(
         pwszNo,
-        20.0f,
         m_bboxDraw.w * 0.15f + m_bboxDraw.x,
         m_bboxDraw.h * 0.3f + m_bboxDraw.y
     );
@@ -99,15 +99,15 @@ void CDialog::Input(void)
 
 	int32 status = m_status;
 
-    if (CController::GetDigitalTrigger(m_iController, CController::DIGITAL_LEFT))
+    if (CController::GetDigitalTrigger(m_iController, CController::DIGITAL_LLEFT))
     {
         CMenuSound::PlaySE(CMenuSound::SOUND_ID_SELECT);
-		m_status = STATUS(Math::InvClamp(--status, 0, 1));
+		m_status = STATUS(InvClamp(--status, 0, 1));
     }
-    else if (CController::GetDigitalTrigger(m_iController, CController::DIGITAL_RIGHT))
+    else if (CController::GetDigitalTrigger(m_iController, CController::DIGITAL_LRIGHT))
     {
         CMenuSound::PlaySE(CMenuSound::SOUND_ID_SELECT);
-		m_status = STATUS(Math::InvClamp(++status, 0, 1));
+		m_status = STATUS(InvClamp(++status, 0, 1));
     }
     else if (CController::GetDigitalTrigger(m_iController, CController::DIGITAL_OK))
     {

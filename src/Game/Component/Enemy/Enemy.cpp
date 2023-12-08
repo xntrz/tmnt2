@@ -3,10 +3,14 @@
 
 #include "Game/Component/GameMain/GameProperty.hpp"
 #include "Game/Component/GameMain/GameEvent.hpp"
+#include "Game/System/Misc/DebugShape.hpp"
 
 
 static CEnemyCharacter* CreateEnemyCharacter(ENEMYID::VALUE id)
 {
+    if (!ENEMYID::GetImplementProgress(id))
+        return nullptr;
+    
     return nullptr;
 };
 
@@ -17,36 +21,53 @@ static CEnemyCharacter* CreateEnemyCharacter(ENEMYID::VALUE id)
 
 /*static*/ CEnemy* CEnemy::New(const ENEMYTYPES::CREATEINFO* pCreateInfo)
 {
-    if (!ENEMYID::GetImplementProgress(pCreateInfo->m_idEnemy))
-        return nullptr;
-    
     char szEnemyName[GAMEOBJECTTYPES::NAME_MAX];
     szEnemyName[0] = '\0';
+    
     std::sprintf(szEnemyName, "s%03d_%04d", pCreateInfo->m_idEnemy, m_iUniqueCount);
+
+#ifdef _DEBUG
+	OUTPUT(
+		"Creating \"%s\" (\"%s\") enemy at %03f | %03f | %03f\n",
+        ENEMYID::GetName(pCreateInfo->m_idEnemy),
+        szEnemyName,
+        pCreateInfo->m_vPosition.x,
+		pCreateInfo->m_vPosition.y,
+		pCreateInfo->m_vPosition.z
+	);
+
+	RwSphere sphere = { 0 };
+	sphere.center = pCreateInfo->m_vPosition;
+	sphere.radius = 0.5f;
+
+	CDebugShape::m_fDuration = 3.0f;
+    CDebugShape::ShowSphere(&sphere, { 0xFF, 0xFF, 0x00, 0xFF });
+    CDebugShape::ShowLabel(&pCreateInfo->m_vPosition, ENEMYID::GetName(pCreateInfo->m_idEnemy));
+    CDebugShape::m_fDuration = 0.0f;
+#endif    
 
     CEnemyCharacter::PreInitialize(pCreateInfo);
     CEnemyCharacter* pEnemyCharacter = CreateEnemyCharacter(pCreateInfo->m_idEnemy);
-    if (pEnemyCharacter)
+    if (!pEnemyCharacter)
+        return nullptr;
+
+    CEnemy* pEnemy = new CEnemy(szEnemyName, pCreateInfo->m_idEnemy, pEnemyCharacter);
+    if (pEnemy)
     {
-        CEnemy* pEnemy = new CEnemy(szEnemyName, pCreateInfo->m_idEnemy, pEnemyCharacter);
-        if (pEnemy)
-        {
-            pEnemyCharacter->SetOwner(pEnemy->GetHandle());
-            ++m_iRefCount;
-            ++m_iUniqueCount;
+        pEnemyCharacter->SetOwner(pEnemy->GetHandle());
+        
+        ++m_iRefCount;
+        ++m_iUniqueCount;
 
-            CGameEvent::SetEnemyCreated(pEnemy);
-
-            return pEnemy;
-        }
-        else
-        {
-            delete pEnemyCharacter;
-            pEnemyCharacter = nullptr;
-        };
+        CGameEvent::SetEnemyCreated(pEnemy);
+    }
+    else
+    {
+        delete pEnemyCharacter;
+        pEnemyCharacter = nullptr;
     };
 
-    return nullptr;
+    return pEnemy;
 };
 
 

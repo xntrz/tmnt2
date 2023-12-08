@@ -2,7 +2,7 @@
 
 #include "Game/Component/GameMain/GameProperty.hpp"
 #include "Game/Component/Gimmick/GimmickQuery.hpp"
-#include "Game/Component/Gimmick/GimmickUtils.hpp"
+#include "Game/Component/Gimmick/Utils/GimmickUtils.hpp"
 #include "Game/Component/Gimmick/GimmickParam.hpp"
 #include "Game/Component/Gimmick/GimmickManager.hpp"
 #include "Game/Component/Effect/EffectGeneric.hpp"
@@ -42,9 +42,9 @@ CConsoleGimmick::CConsoleGimmick(const char* pszName, void* pParam)
     ASSERT(pModelOff);
     ASSERT(pModelAtari);
 
-    m_model.SetModel(CNormalGimmickModel::MODELKIND_VISUAL_NORMAL, pModelOn);
-    m_model.SetModel(CNormalGimmickModel::MODELKIND_VISUAL_BREAK, pModelOff);
-    m_model.SetModel(CNormalGimmickModel::MODELKIND_ATARI_NORMAL, pModelAtari);
+    m_model.SetModel(CNormalGimmickModel::MODELTYPE_DRAW_NORMAL, pModelOn);
+    m_model.SetModel(CNormalGimmickModel::MODELTYPE_DRAW_BREAK, pModelOff);
+    m_model.SetModel(CNormalGimmickModel::MODELTYPE_ATARI_NORMAL, pModelAtari);
     
     m_vPosition = pInitParam->m_vPosition;
     RwV3d vRotation = Math::VECTOR3_ZERO;
@@ -83,7 +83,6 @@ CConsoleGimmick::~CConsoleGimmick(void)
 
 void CConsoleGimmick::GetPosition(RwV3d* pvPosition) const
 {
-    ASSERT(pvPosition);
     *pvPosition = m_vPosition;
 };
 

@@ -1,17 +1,21 @@
 #pragma once
 
+#include "PCTypedefs.hpp"
+
 #include "System/Common/Framework.hpp"
 
 
 class CPCSystem;
 class CPCTimer;
-class CPCFrameSkipController;
 class CPCGraphicsDevice;
 class CPCSoundDevice;
 
 
 class CPCFramework final : public CFramework
 {
+private:
+    class CFrameSkipController;
+    
 public:
     static CPCFramework& Instance(void);
     
@@ -22,8 +26,13 @@ public:
     virtual void Run(void) override;
     virtual void Move(void) override;
     virtual void Render(void) override;
-    void UpdateSize(int32 iWidth, int32 iHeight);
+    virtual void FlipNoSync(void);  // makes gfx flip without subsystems sync
     CPCGraphicsDevice& GraphicsDevice(void);
+    bool SetVideomode(int32 No);
+    bool GetVideomode(int32 No, PC::VIDEOMODE& vm);
+    int32 GetVideomodeCur(void);
+    int32 GetVideomodeNum(void);
+    void SetSkipEnable(bool bState);
 
 private:
     static CPCFramework* m_pInstance;
@@ -31,5 +40,6 @@ private:
     CPCTimer* m_pTimer;
     CPCGraphicsDevice* m_pPCGraphicsDevice;
     CPCSoundDevice* m_pPCSoundDevice;
-    bool m_bStarted;
+    CFrameSkipController* m_pFrameSkipController;
+    bool m_bFrameworkInitStatus;
 };

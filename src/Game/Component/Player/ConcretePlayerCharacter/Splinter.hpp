@@ -8,6 +8,11 @@
 
 namespace Splinter
 {
+    namespace MOTIONNAMES
+    {
+        static const char* ATTACK_JUMP = "JAttack";
+    };
+    
     class CAttackJump : public CStatus
     {
     public:
@@ -64,5 +69,4 @@ class CSplinter : public CPlayerCharacter
 public:
     CSplinter(GAMETYPES::COSTUME costume);
     virtual ~CSplinter(void);
-    virtual void Run(void) override;
 };

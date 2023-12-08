@@ -276,6 +276,12 @@ void CUnicodeFont::Show(const char* pszString, float fHeight, float x, float y)
 };
 
 
+void CUnicodeFont::Show(const char* pszString, float fHeight, const RwV2d* pvPos)
+{
+    Show(pszString, fHeight, pvPos->x, pvPos->y);
+};
+
+
 void CUnicodeFont::Show(const wchar* pwszString, float fHeight, RwV2d* pPosition)
 {
     ASSERT(m_pFont);
@@ -359,58 +365,3 @@ void CUnicodeFont::FlowEx(const wchar* pwszString, float fHeight, int32 numLineP
         };
     };
 };
-
-
-CAnsiFont::CAnsiFont(Rt2dFont* pFont)
-: CFont(pFont)
-{
-    ;
-};
-
-
-CAnsiFont::~CAnsiFont(void)
-{
-    ;
-};
-
-
-void CAnsiFont::Show(const char* pszString, float fHeight, float fX, float fY)
-{
-    ASSERT(m_pFont);
-    ASSERT(pszString);
-
-    RwV2d Anchor;
-    float x = 0.0f;
-    float y = 0.0f;
-    float w = 0.0f;
-    float h = 0.0f;
-
-    Rt2dDeviceGetMetric(&x, &y, &w, &h);
-
-    Anchor.x = fX;
-    Anchor.y = y + y + h - fY;
-
-    if (!Rt2dFontShow(m_pFont, (const RwChar*)pszString, fHeight, &Anchor, m_pBrush))
-        ASSERT(false);
-};
-
-
-void CAnsiFont::Show(const char* pszString, float fHeight, RwV2d* pvPos)
-{
-    ASSERT(m_pFont);
-    ASSERT(pszString);
-    ASSERT(pvPos);
-
-    float x = 0.0f;
-    float y = 0.0f;
-    float w = 0.0f;
-    float h = 0.0f;
-
-    Rt2dDeviceGetMetric(&x, &y, &w, &h);
-
-    pvPos->y = y + y + h - pvPos->y;
-    if (!Rt2dFontShow(m_pFont, (RwChar*)pszString, fHeight, pvPos, m_pBrush))
-        ASSERT(false);
-    pvPos->y = y + y + h - pvPos->y;
-};
-

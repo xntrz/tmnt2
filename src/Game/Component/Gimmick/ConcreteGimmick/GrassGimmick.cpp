@@ -1,7 +1,7 @@
 #include "GrassGimmick.hpp"
 
 #include "Game/Component/GameMain/GameProperty.hpp"
-#include "Game/Component/Gimmick/GimmickUtils.hpp"
+#include "Game/Component/Gimmick/Utils/GimmickUtils.hpp"
 #include "Game/Component/Gimmick/GimmickParam.hpp"
 #include "Game/Component/Gimmick/MoveStrategy/CuttingGimmickMove.hpp"
 #include "Game/Component/Effect/EffectManager.hpp"
@@ -136,8 +136,8 @@ void CGrassGimmick::init(void* pParam)
     CModel* pBreakModel = CModelManager::CreateModel(kindinfo().m_pszBreakModelName);
     ASSERT(pBreakModel);        
 
-    m_model.SetModel(CNormalGimmickModel::MODELKIND_VISUAL_NORMAL, pModel);
-    m_model.SetModel(CNormalGimmickModel::MODELKIND_VISUAL_BREAK, pBreakModel);
+    m_model.SetModel(CNormalGimmickModel::MODELTYPE_DRAW_NORMAL, pModel);
+    m_model.SetModel(CNormalGimmickModel::MODELTYPE_DRAW_BREAK, pBreakModel);
     m_model.SetPosition(&pInitParam->m_vPosition);
 
     RwV3d vRotation = Math::VECTOR3_ZERO;
@@ -205,7 +205,7 @@ void CGrassGimmick::breakdown(void)
 
 void CGrassGimmick::disappear(void)
 {
-    CModel* pModel = m_model.GetModel(CNormalGimmickModel::MODELKIND_VISUAL_BREAK);
+    CModel* pModel = m_model.GetModel(CNormalGimmickModel::MODELTYPE_DRAW_BREAK);
     ASSERT(pModel);
 
     RwRGBA Color = { 0xFF, 0xFF, 0xFF, 0xFF };

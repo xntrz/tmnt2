@@ -2,7 +2,7 @@
 
 #include "Game/Component/GameMain/GameProperty.hpp"
 #include "Game/Component/Gimmick/GimmickQuery.hpp"
-#include "Game/Component/Gimmick/GimmickUtils.hpp"
+#include "Game/Component/Gimmick/Utils/GimmickUtils.hpp"
 #include "Game/Component/Gimmick/GimmickParam.hpp"
 #include "Game/Component/Gimmick/GimmickManager.hpp"
 #include "Game/System/Character/Character.hpp"
@@ -32,8 +32,8 @@ CSwitchGimmick::CSwitchGimmick(const char* pszName, void* pParam)
     CModel* pModelOff = CModelManager::CreateModel("switch_off");
     ASSERT(pModelOff);
 
-    m_model.SetModel(CNormalGimmickModel::MODELKIND_VISUAL_NORMAL, pModelOn);
-    m_model.SetModel(CNormalGimmickModel::MODELKIND_VISUAL_BREAK, pModelOff);
+    m_model.SetModel(CNormalGimmickModel::MODELTYPE_DRAW_NORMAL, pModelOn);
+    m_model.SetModel(CNormalGimmickModel::MODELTYPE_DRAW_BREAK, pModelOff);
 
     RwV3d vRotation = Math::VECTOR3_ZERO;
     vRotation.y = CGimmickUtils::QuaternionToRotationY(&pInitParam->m_quat);
@@ -88,6 +88,7 @@ void CSwitchGimmick::PostMove(void)
     {
         CModel* pModel = m_model.GetVisualModel();
         ASSERT(pModel);
+
         RwV3d vPosition = Math::VECTOR3_ZERO;
         pModel->GetPosition(&vPosition);
         

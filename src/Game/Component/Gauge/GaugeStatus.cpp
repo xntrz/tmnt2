@@ -126,8 +126,8 @@ void CGaugeStatus_Container::Period(void)
         uint32 uDigitalTriggerUnlocked = CController::GetDigitalTrigger(CController::CONTROLLER_UNLOCKED_ON_VIRTUAL);
         uint32 uDigitalTriggerLocked = CController::GetDigitalTrigger(CController::CONTROLLER_LOCKED_ON_VIRTUAL);
 		
-        if (CGamepad::CheckFunction(uDigitalTriggerUnlocked, CGamepad::FUNCTION_SWITCH_GAUGE)
-            || CGamepad::CheckFunction(uDigitalTriggerLocked, CGamepad::FUNCTION_SWITCH_GAUGE))
+        if (IGamepad::CheckFunction(uDigitalTriggerUnlocked, IGamepad::FUNCTION_SWITCH_GAUGE)
+            || IGamepad::CheckFunction(uDigitalTriggerLocked, IGamepad::FUNCTION_SWITCH_GAUGE))
         {
             m_bWakuCheck = !m_bWakuCheck;
         };
@@ -262,8 +262,8 @@ void CGaugeStatus_Container::StatusWakuDisp(void)
 
     for (int32 i = 0; i < CGameProperty::GetPlayerNum(); ++i)
     {
-        IGamePlayer& player = CGameProperty::Player(i);
-        if (!player.IsAlive())
+        IGamePlayer* pGamePlayer = CGameProperty::Player(i);
+        if (!pGamePlayer->IsAlive())
             continue;
 
         RwV2d* pvScreenPos = &m_aScreenPosBuff[i];
@@ -281,6 +281,8 @@ void CGaugeStatus_Container::StatusWakuDisp(void)
 
 float CGaugeStatus_Container::StatusWakuDispSub(int32 nPlayerNo, float fX, float fY)
 {
+	IGamePlayer* pGamePlayer = CGameProperty::GetGamePlayer(nPlayerNo);
+
     float afStoreX[4] =
     {
         30.0f,
@@ -289,12 +291,12 @@ float CGaugeStatus_Container::StatusWakuDispSub(int32 nPlayerNo, float fX, float
         72.0f,
     };
 
-    m_aSprite[ 1 ].SetRGBA(PLAYERID::GetColor(CGameProperty::Player(nPlayerNo).GetCurrentCharacterID()));
+	m_aSprite[1].SetRGBA(PLAYERID::GetColor(pGamePlayer->GetCurrentCharacterID()));
 
     if (!m_bWakuSayonara)
         StatusWakuDispSub_Parts(0, 1, fX, fY, 20.0f, 80.0f);
     float fBuffX = fX - 2.0f;
-    float store_x = afStoreX[CGameProperty::Player(nPlayerNo).GetCharacterNum() - 1];
+    float store_x = afStoreX[pGamePlayer->GetCharacterNum() - 1];
 
     fX -= store_x;
 
@@ -322,7 +324,7 @@ float CGaugeStatus_Container::StatusWakuDispSub(int32 nPlayerNo, float fX, float
         y = fY + 11.0f;
         m_aSprite[5].Move(x, y);
         m_aSprite[5].Resize(64.0f, 32.0f);
-        m_aSprite[5].SetRGBA(PLAYERID::GetColor(CGameProperty::Player(nPlayerNo).GetCurrentCharacterID()));
+        m_aSprite[5].SetRGBA(PLAYERID::GetColor(pGamePlayer->GetCurrentCharacterID()));
         m_aSprite[5].SetUV(
             0.0f,
             (nPlayerNo * 32.0f) * 0.0078125f,
@@ -331,16 +333,16 @@ float CGaugeStatus_Container::StatusWakuDispSub(int32 nPlayerNo, float fX, float
         );
         m_aSprite[5].Draw();
 
-        IGamePlayer& gameplayer = CGameProperty::Player(nPlayerNo);
-
-        CharacterIconDisp(nPlayerNo, &gameplayer, fBuffX, fY);
+        CharacterIconDisp(nPlayerNo, pGamePlayer, fBuffX, fY);
 
         SetNumColor(8, nPlayerNo);
-        NumDraw(8, fBuffX + 5.0f, fY + 43.0f, 255, "%02d", gameplayer.GetShurikenNum());
+        NumDraw(8, fBuffX + 5.0f, fY + 43.0f, 255, "%02d", pGamePlayer->GetShurikenNum());
 
         SetNumColor(9, nPlayerNo);
-        NumDraw(9, fBuffX + 6.0f, fY + 29.0f, 255, "-%04d", gameplayer.GetDamage());
+        NumDraw(9, fBuffX + 6.0f, fY + 29.0f, 255, "-%04d", pGamePlayer->GetDamage());
     };
+
+	pGamePlayer->Release();
 
 	return fX;
 };
@@ -398,7 +400,7 @@ void CGaugeStatus_Container::CharacterIconDisp(int32 nPlayerNo, IGamePlayer* pGa
 
     for (int32 i = 0; i < nCharacterNum; ++i)
     {
-        switch (CGameProperty::Player(nPlayerNo).GetCharacterID(nStart))
+        switch (pGameplayer->GetCharacterID(nStart))
         {
         case PLAYERID::ID_LEO:
         case PLAYERID::ID_SLA:
@@ -464,15 +466,15 @@ void CGaugeStatus_Container::PlayerMarkerDisp(int32 nPlayerNo)
     {
         fMarkerPosY = GetMarkerPosY(nPlayerNo) + 0.25f;
 
-        if (CGameProperty::Player(nPlayerNo).GetStatus() == PLAYERTYPES::RIDESTATUS_CRASH_WALL ||
-            CGameProperty::Player(nPlayerNo).GetStatus() == PLAYERTYPES::RIDESTATUS_SHIP_CRASH)
+        if (CGameProperty::Player(nPlayerNo)->GetStatus() == PLAYERTYPES::RIDESTATUS_CRASH_WALL ||
+            CGameProperty::Player(nPlayerNo)->GetStatus() == PLAYERTYPES::RIDESTATUS_SHIP_CRASH)
             return;
     };
     
     RwV3d vScreenPos = Math::VECTOR3_ZERO;
     RwV3d vPlayerPos = Math::VECTOR3_ZERO;
 
-    CGameProperty::Player(nPlayerNo).GetPosition(&vPlayerPos);
+    CGameProperty::Player(nPlayerNo)->GetPosition(&vPlayerPos);
     vPlayerPos.y += fMarkerPosY;
 
     RwMatrix matrix;
@@ -522,7 +524,7 @@ void CGaugeStatus_Container::PlayerMarkerDisp(int32 nPlayerNo)
 
     CGaugeManager::SetGaugeAlphaMode(CGaugeManager::ALPHAMODE_ALPHA);
 
-    m_SpriteMarker.SetRGBA(PLAYERID::GetColor(CGameProperty::Player(nPlayerNo).GetCurrentCharacterID()));
+    m_SpriteMarker.SetRGBA(PLAYERID::GetColor(CGameProperty::Player(nPlayerNo)->GetCurrentCharacterID()));
     m_SpriteMarker.SetPositionAndSizeRealScreen(vScreenPos.x, vScreenPos.y + 18.0f, 32.0f, 18.0f);
     m_SpriteMarker.SetUV(
         0.0f,
@@ -540,7 +542,7 @@ void CGaugeStatus_Container::PlayerMarkerDisp(int32 nPlayerNo)
         );
         fRotate += Math::PI;
 
-        m_SpriteMarkerArr.SetRGBA(PLAYERID::GetColor(CGameProperty::Player(nPlayerNo).GetCurrentCharacterID()));
+        m_SpriteMarkerArr.SetRGBA(PLAYERID::GetColor(CGameProperty::Player(nPlayerNo)->GetCurrentCharacterID()));
         m_SpriteMarkerArr.SetRotate(fRotate);
         m_SpriteMarkerArr.SetPositionAndSizeRealScreen(vScreenPos.x, vScreenPos.y + 32.0f, 16.0f, 16.0f);
         m_SpriteMarkerArr.SetUV(0.0f, 0.0f, 1.0f, 1.0f);
@@ -555,7 +557,7 @@ float CGaugeStatus_Container::GetMarkerPosY(int32 nPlayerNo) const
         CGameData::PlayParam().GetArea() == AREAID::ID_AREA32)
         return 0.6f;
 
-    if (CGameProperty::Player(nPlayerNo).GetCurrentCharacterID() == PLAYERID::ID_SLA)
+    if (CGameProperty::Player(nPlayerNo)->GetCurrentCharacterID() == PLAYERID::ID_SLA)
         return 1.2f;
     else
         return 1.7f;
@@ -865,7 +867,7 @@ void CGaugeStatus_Container::SetNumColor(int32 nFontNo, int32 nPlayerNo)
     {
     case 8:
         {
-            if (CGameProperty::Player(nPlayerNo).GetShurikenNum() > 0)
+            if (CGameProperty::Player(nPlayerNo)->GetShurikenNum() > 0)
                 nColorNo = 1;
             else
                 nColorNo = 2;
@@ -882,11 +884,11 @@ void CGaugeStatus_Container::SetNumColor(int32 nFontNo, int32 nPlayerNo)
 
                 for (int32 i = 0; i < CGameProperty::GetPlayerNum(); ++i)
                 {
-                    IGamePlayer& player = CGameProperty::Player(i);
-                    if (!player.IsAlive())
+                    IGamePlayer* pGamePlayer = CGameProperty::Player(i);
+                    if (!pGamePlayer->IsAlive())
                         continue;
 
-                    int32 nDamage = player.GetDamage();
+                    int32 nDamage = pGamePlayer->GetDamage();
                     if (nDamage)
                     {
                         if (nDamage == nWorstDamage)

@@ -5,7 +5,7 @@
 #include "Game/Component/GameMain/GameEvent.hpp"
 #include "Game/Component/GameMain/GamePlayer.hpp"
 #include "Game/Component/Gimmick/GimmickParam.hpp"
-#include "Game/Component/Gimmick/GimmickUtils.hpp"
+#include "Game/Component/Gimmick/Utils/GimmickUtils.hpp"
 #include "Game/Component/Gimmick/GimmickManager.hpp"
 #include "Game/Component/Gimmick/GimmickQuery.hpp"
 #include "Game/Component/Gimmick/GimmickDebug.hpp"
@@ -748,12 +748,15 @@ CPlayerAreaCheckGimmick::~CPlayerAreaCheckGimmick(void)
 bool CPlayerAreaCheckGimmick::CheckArea(void)
 {
     int32 nNumSuccessCheck = 0;
+	int32 nPlayerNum = CGameProperty::GetPlayerNum();
 
-    for (int32 i = 0; i < CGameProperty::GetPlayerNum(); i++)
+    for (int32 i = 0; i < nPlayerNum; i++)
     {
         RwV3d vPosition = Math::VECTOR3_ZERO;
         
-        CGameProperty::Player(i).GetPosition(&vPosition);
+		IGamePlayer* pGamePlayer = CGameProperty::GetGamePlayer(i);
+		pGamePlayer->GetPosition(&vPosition);
+		pGamePlayer->Release();
 
         bool bResult = IsInsideArea(&vPosition);
         if (bResult)
@@ -966,48 +969,6 @@ bool CBrokenCheckGimmick::CheckEvent(void)
     };
 
     return false;
-};
-
-
-//
-// *********************************************************************************
-//
-
-
-CUtromAreaCheckGimmick::CUtromAreaCheckGimmick(const char* pszName, void* pParam)
-: CGimmick(pszName, pParam)
-{
-    ;
-};
-
-
-CUtromAreaCheckGimmick::~CUtromAreaCheckGimmick(void)
-{
-    ;
-};
-
-
-void CUtromAreaCheckGimmick::PostMove(void)
-{
-    ;
-};
-
-
-void CUtromAreaCheckGimmick::OnReceiveEvent(const char* pszSender, GIMMICKTYPES::EVENTTYPE eventtype)
-{
-    ;
-};
-
-
-void CUtromAreaCheckGimmick::AreaCheckInit(void)
-{
-    ;
-};
-
-
-void CUtromAreaCheckGimmick::AreaCheckOn(void)
-{
-    ;
 };
 
 

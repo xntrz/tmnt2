@@ -179,8 +179,10 @@ static int32 SdSetDamageGetKoeHigh(int32 DefenderId, int32 Rnd)
     };
 
     static_assert(COUNT_OF(KoeHighCodeArray) == PLAYERID::ID_MAX, "update me");
+    
     ASSERT(DefenderId >= 0 && DefenderId < COUNT_OF(KoeHighCodeArray));
-
+    ASSERT(Rnd >= 0 && Rnd < 3);
+    
     return KoeHighCodeArray[DefenderId][Rnd];
 };
 
@@ -200,8 +202,10 @@ static inline int32 SdSetDamageGetKoeLow(int32 DefenderId, int32 Rnd)
     };
 
     static_assert(COUNT_OF(KoeLowCodeArray) == PLAYERID::ID_MAX, "update me");
+    
     ASSERT(DefenderId >= 0 && DefenderId < COUNT_OF(KoeLowCodeArray));
-
+    ASSERT(Rnd >= 0 && Rnd < 3);
+    
     return KoeLowCodeArray[DefenderId][Rnd];
 };
 
@@ -1381,22 +1385,19 @@ static void SdSetAttackEnemy(const SE_ATTACK_PARAM* pParam)
 
 /*static*/ bool CGameSound::IsIDPlaying(PLAYERID::VALUE idPlayer)
 {
-    bool bResult = false;
-    
     for (int32 i = 0; i < COUNT_OF(m_aVoiceHist); ++i)
     {
-        if (m_aVoiceHist[i].m_PlayerID == idPlayer)
-        {
-            if ((m_aVoiceHist[i].m_nVoiceCode != SD_NOCODE) &&
-                (SoundVoxCodeChk(int32(idPlayer) % 1) == m_aVoiceHist[i].m_nVoiceCode))
-            {
-                bResult = true;
-                break;
-            };
-        };
+        if (m_aVoiceHist[i].m_PlayerID != idPlayer)
+            continue;
+
+        if (m_aVoiceHist[i].m_nVoiceCode == SD_NOCODE)
+            continue;
+
+        if (SoundVoxCodeCheck(int32(idPlayer) & 1) == m_aVoiceHist[i].m_nVoiceCode)
+            return true;
     };
 
-    return bResult;
+    return false;
 };
 
 
@@ -1426,6 +1427,7 @@ static void SdSetAttackEnemy(const SE_ATTACK_PARAM* pParam)
 /*static*/ void CGameSound::Pause(void)
 {
     ASSERT(m_nPauseLevel >= 0);
+    
     if (!m_nPauseLevel++)
         SoundSet(0x402);
 };
@@ -1433,7 +1435,8 @@ static void SdSetAttackEnemy(const SE_ATTACK_PARAM* pParam)
 
 /*static*/ void CGameSound::Resume(void)
 {
-    ASSERT(m_nPauseLevel >= 0);
+    ASSERT(m_nPauseLevel > 0);
+    
     if (!--m_nPauseLevel)
         SoundSet(0x403);
 };
@@ -1442,6 +1445,7 @@ static void SdSetAttackEnemy(const SE_ATTACK_PARAM* pParam)
 /*static*/ void CGameSound::AttachCamera(RwCamera* pCamera)
 {
     ASSERT(pCamera);
+    
     m_pCamera = pCamera;
 };
 
@@ -1588,64 +1592,80 @@ static void SdSetAttackEnemy(const SE_ATTACK_PARAM* pParam)
 {
     static const int32 aPlayerHitSE[] =
     {
+        // leo
         SDCODE_SE(0x10A9),
         SDCODE_SE(0x10AA),
         SDCODE_SE(0x10AB),
         SDCODE_SE(0x10AC),
+
+        // rap
         SDCODE_SE(0x10B1),
         SDCODE_SE(0x10B2),
         SDCODE_SE(0x10B3),
         SDCODE_SE(0x10B4),
+
+        // mic
         SDCODE_SE(0x10B9),
         SDCODE_SE(0x10BA),
         SDCODE_SE(0x10BB),
         SDCODE_SE(0x10BC),
+
+        // don
         SDCODE_SE(0x10C2),
         SDCODE_SE(0x10C3),
         SDCODE_SE(0x10C4),
         SDCODE_SE(0x10C5),
-        SDCODE_SE(0x10C5),
-        SDCODE_SE(0x10C5),
-        SDCODE_SE(0x10C5),
-        SDCODE_SE(0x10C5),
+
+        // sla
+        SDCODE_SE(0x10AC),
+        SDCODE_SE(0x10AC),
+        SDCODE_SE(0x10AC),
+        SDCODE_SE(0x10AC),
+
+        // cas
         SDCODE_SE(0x10B4),
         SDCODE_SE(0x10B4),
         SDCODE_SE(0x10B4),
         SDCODE_SE(0x10B4),
+
+        // kar
         SDCODE_SE(0x10AC),
         SDCODE_SE(0x10AC),
         SDCODE_SE(0x10AC),
         SDCODE_SE(0x10AC),
-        SDCODE_SE(0x10AC),
-        SDCODE_SE(0x10AC),
-        SDCODE_SE(0x10AC),
-        SDCODE_SE(0x10AC),
+
+        // spl
+        SDCODE_SE(0x10C5),
+        SDCODE_SE(0x10C5),
+        SDCODE_SE(0x10C5),
+        SDCODE_SE(0x10C5),
     };
 
     static_assert(COUNT_OF(aPlayerHitSE) == (PLAYERID::ID_MAX * 4), "update me");
 
-    if (pObjDefender->GetType() == GAMEOBJECTTYPE::GIMMICK)
+    if (pObjDefender->GetType() != GAMEOBJECTTYPE::GIMMICK)
+        return;
+
+    if (pObjAttacker->GetType() != GAMEOBJECTTYPE::CHARACTER)
+        return;
+    
+    const CGimmick* pDefender = reinterpret_cast<const CGimmick*>(pObjDefender);
+    const CCharacter* pAttacker = reinterpret_cast<const CCharacter*>(pObjAttacker);
+    
+    if (pAttacker->GetCharacterType() != CCharacter::TYPE_PLAYER)
+        return;
+
+    const CPlayerCharacter* pPlayer = reinterpret_cast<const CPlayerCharacter*>(pAttacker);
+
+    const int32* pSE = &aPlayerHitSE[pPlayer->GetID() * 4];
+
+    if ((pDefender->GetID() == GIMMICKID::ID_G_SSHIPS) ||
+        (pDefender->GetID() == GIMMICKID::ID_N_BRKCAR))
     {
-        CGimmick* pDefenderGimmick = (CGimmick*)pObjDefender;
-
-        if (pObjAttacker->GetType() == GAMEOBJECTTYPE::CHARACTER)
-        {
-            CCharacter* pAttackerChr = (CCharacter*)pObjAttacker;
-            if (pAttackerChr->GetCharacterType() == CCharacter::TYPE_PLAYER)
-            {
-                CPlayerCharacter* pAttackerPlayerChr = (CPlayerCharacter*)pAttackerChr;
-
-                const int32* pSE = &aPlayerHitSE[pAttackerPlayerChr->GetID() * 4];
-                
-                if ((pDefenderGimmick->GetID() == GIMMICKID::ID_G_SSHIPS) ||
-                    (pDefenderGimmick->GetID() == GIMMICKID::ID_N_BRKCAR))
-                {
-                    RwV3d vGimmickPos = Math::VECTOR3_ZERO;
-                    pDefenderGimmick->GetPosition(&vGimmickPos);
-                    PlayPositionSE(&vGimmickPos, pSE[2], 0);
-                };
-            };
-        };
+        RwV3d vGimmickPos = Math::VECTOR3_ZERO;
+        pDefender->GetPosition(&vGimmickPos);
+        
+        PlayPositionSE(&vGimmickPos, pSE[2], 0);
     };
 };
 
@@ -1698,37 +1718,37 @@ static void SdSetAttackEnemy(const SE_ATTACK_PARAM* pParam)
 
 /*static*/ void CGameSound::SetBgmConfig(int32 value)
 {
-    m_nBgmConfig = value;
+    m_nBgmConfig = convertToRawConfig(value);
 };
 
 
 /*static*/ int32 CGameSound::GetBgmConfig(void)
 {
-    return m_nBgmConfig;
+    return convertToVolume(m_nBgmConfig);
 };
 
 
 /*static*/ void CGameSound::SetSeConfig(int32 value)
 {
-    m_nSeConfig = value;
+    m_nSeConfig = convertToRawConfig(value);
 };
 
 
 /*static*/ int32 CGameSound::GetSeConfig(void)
 {
-    return m_nSeConfig;
+    return convertToVolume(m_nSeConfig);
 };
 
 
 /*static*/ void CGameSound::SetVoiceConfig(int32 value)
 {
-    m_nVoiceConfig = value;
+    m_nVoiceConfig = convertToRawConfig(value);
 };
 
 
 /*static*/ int32 CGameSound::GetVoiceConfig(void)
 {
-    return m_nVoiceConfig;
+    return convertToVolume(m_nVoiceConfig);
 };
 
 
@@ -2220,6 +2240,6 @@ static void SdSetAttackEnemy(const SE_ATTACK_PARAM* pParam)
 
 /*static*/ int32 CGameSound::convertToRawConfig(int32 nVolume)
 {
-    return VOLUME_MAX - Math::Clamp(nVolume, 0, 10);
+    return VOLUME_MAX - Clamp(nVolume, 0, 10);
 };
 

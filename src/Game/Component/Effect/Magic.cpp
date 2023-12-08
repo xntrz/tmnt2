@@ -242,7 +242,7 @@ CMagic* CMagic::Clone(void)
         CLocus* pLocus = new CLocus(m_locusinfo.m_nNumPoint, m_locusinfo.m_Color);
         ASSERT(pLocus);
         pLocus->SetDrawEnable(true);
-        pLocus->SetAlphaBasis(m_locusinfo.m_uAlphaBasis);
+		pLocus->SetAlphaBasis(uint8(m_locusinfo.m_uAlphaBasis));
 
         pMagic->m_apLocus[LOCUSKIND_VER] = pLocus;
     };
@@ -252,7 +252,7 @@ CMagic* CMagic::Clone(void)
         CLocus* pLocus = new CLocus(m_locusinfo.m_nNumPoint, m_locusinfo.m_Color);
         ASSERT(pLocus);
         pLocus->SetDrawEnable(true);
-        pLocus->SetAlphaBasis(m_locusinfo.m_uAlphaBasis);
+		pLocus->SetAlphaBasis(uint8(m_locusinfo.m_uAlphaBasis));
 
         pMagic->m_apLocus[LOCUSKIND_HOR] = pLocus;
     };
@@ -350,7 +350,7 @@ void CMagic::SetParameter(CMagicParameter* pMagicParameter)
         CLocus* pLocus = new CLocus(m_locusinfo.m_nNumPoint, m_locusinfo.m_Color);
         ASSERT(pLocus);
         pLocus->SetDrawEnable(true);
-        pLocus->SetAlphaBasis(m_locusinfo.m_uAlphaBasis);
+		pLocus->SetAlphaBasis(uint8(m_locusinfo.m_uAlphaBasis));
 
         m_apLocus[LOCUSKIND_VER] = pLocus;
     };
@@ -360,7 +360,7 @@ void CMagic::SetParameter(CMagicParameter* pMagicParameter)
         CLocus* pLocus = new CLocus(m_locusinfo.m_nNumPoint, m_locusinfo.m_Color);
         ASSERT(pLocus);
         pLocus->SetDrawEnable(true);
-        pLocus->SetAlphaBasis(m_locusinfo.m_uAlphaBasis);
+		pLocus->SetAlphaBasis(uint8(m_locusinfo.m_uAlphaBasis));
 
         m_apLocus[LOCUSKIND_HOR] = pLocus;
     };
@@ -375,8 +375,8 @@ void CMagic::SetFeature(MAGICTYPES::FEATURE feature)
 
 void CMagic::AddFeature(MAGICTYPES::FEATURE feature)
 {
-    uint32 flagfield = m_feature;    
-    FLAG_CHANGE(flagfield, feature, true);
+    uint32 flagfield = m_feature;
+    FLAG_SET(flagfield, feature);
     m_feature = MAGICTYPES::FEATURE(flagfield);
 };
 

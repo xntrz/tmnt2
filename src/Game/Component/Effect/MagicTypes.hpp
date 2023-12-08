@@ -36,9 +36,10 @@ namespace MAGICTYPES
         uint32 m_uAlphaBasis;
     };
 
-    enum FEATURE
+    enum FEATURE : uint32
     {
         FEATURE_NONE                    = 0x0,
+        
         FEATURE_BODY                    = 0x1,
         FEATURE_ATTACK                  = 0x2,
         FEATURE_COLLISION_HIT           = 0x4,
@@ -68,9 +69,21 @@ namespace MAGICTYPES
         FEATURE_APPEAR_HORIZON          = 0x4000000,
         FEATURE_LOST_IMMEDIATE          = 0x8000000,
 
-        FEATURE_HITOBJECT               = FEATURE_COLLISION_MAP | FEATURE_COLLISION_CHARA | FEATURE_COLLISION_MAPOBJECT,
-        FEATURE_HITOBJECT_VANISH        = FEATURE_COLLISION_MAP_HIT | FEATURE_COLLISION_CHARA_HIT | FEATURE_COLLISION_MAPOBJECT_HIT,
-        FEATURE_ENABLE_ATTACK           = FEATURE_COLLISION_ATTACKED | FEATURE_COLLISION_ATTACKED_HIT,
-        FEATURE_PLAYER_ATTACK           = FEATURE_ATTACK | FEATURE_PARENT | FEATURE_ATTACK_TO_ENEMY | FEATURE_ATTACK_TO_MAPOBJ | FEATURE_COLLISION_CHANGE_SIZE,
+        FEATURE_HITOBJECT               = FEATURE_COLLISION_MAP
+                                        | FEATURE_COLLISION_CHARA
+                                        | FEATURE_COLLISION_MAPOBJECT,
+
+        FEATURE_HITOBJECT_VANISH        = FEATURE_COLLISION_MAP_HIT
+                                        | FEATURE_COLLISION_CHARA_HIT
+                                        | FEATURE_COLLISION_MAPOBJECT_HIT,
+
+        FEATURE_ENABLE_ATTACK           = FEATURE_COLLISION_ATTACKED
+                                        | FEATURE_COLLISION_ATTACKED_HIT,
+
+        FEATURE_PLAYER_ATTACK           = FEATURE_ATTACK
+                                        | FEATURE_PARENT
+                                        | FEATURE_ATTACK_TO_ENEMY
+                                        | FEATURE_ATTACK_TO_MAPOBJ
+                                        | FEATURE_COLLISION_CHANGE_SIZE,
     };
 };

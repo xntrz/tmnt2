@@ -1,6 +1,8 @@
 #include "PCTimer.hpp"
 #include "PCTypedefs.hpp"
 
+#include <timeapi.h>
+
 
 class CPCTimer::IGetTimeFunctor
 {
@@ -12,22 +14,18 @@ public:
 class CPCTimer::CGetTimeFunctorOS final : public CPCTimer::IGetTimeFunctor
 {
 public:
-    CGetTimeFunctorOS(void)
-    {
-        timeBeginPeriod(1);
-    };
+    inline CGetTimeFunctorOS(void) { timeBeginPeriod(1); };
+    virtual ~CGetTimeFunctorOS(void) { timeEndPeriod(1); };
+    virtual uint32 operator()(void) const override { return timeGetTime(); };
+};
 
-    
-    virtual ~CGetTimeFunctorOS(void)
-    {
-        timeEndPeriod(1);
-    };
 
-    
-    virtual uint32 operator()(void) const override
-    {
-        return timeGetTime();
-    };
+class CPCTimer::CGetTimeFunctorCPU final : public CPCTimer::IGetTimeFunctor
+{
+public:
+    inline CGetTimeFunctorCPU(void) {};
+    virtual ~CGetTimeFunctorCPU(void) {};
+    virtual uint32 operator()(void) const override { return uint32(__rdtsc()); };
 };
 
 
@@ -45,8 +43,16 @@ CPCTimer::CPCTimer(void)
 {
     ASSERT(!m_pInstance);
     m_pInstance = this;
-    
-    m_pGetTimerFunctor = new CGetTimeFunctorOS;
+
+    int Registers[4] = { 0 };   // EAX, EBX, ECX, EDX
+    int Function = 1;           // EAX=1: Processor Info and Feature Bits
+    __cpuid(Registers, Function);
+
+    if ((Registers[3] & (1 << 4)) != 0) //  EDX bit 4 - tsc - Time Stamp Counter and RDTSC instruction
+        m_pGetTimerFunctor = new CGetTimeFunctorCPU;
+    else
+        m_pGetTimerFunctor = new CGetTimeFunctorOS;
+
     ASSERT(m_pGetTimerFunctor);
 
     HANDLE hCurrentThread = GetCurrentThread();
@@ -92,16 +98,4 @@ CPCTimer::~CPCTimer(void)
 uint32 CPCTimer::ElapsedTime(void) const
 {
     return ((*m_pGetTimerFunctor)() - m_uTimeStart);
-};
-
-
-uint32 CPCTimer::GranularitySecond(void) const
-{
-    return m_uGranularitySecond;
-};
-
-
-uint32 CPCTimer::GranularityMillisecond(void) const
-{
-    return m_uGranularityMillisecond;
 };

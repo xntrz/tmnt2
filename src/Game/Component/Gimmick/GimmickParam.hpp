@@ -122,4 +122,38 @@ namespace GIMMICKPARAM
         RwV3d m_vRotAxis;
         float m_fRoundTime;
     };
+
+    struct GIMMICK_GUILLOTINE : public GIMMICK_BASIC
+    {
+        float m_fAmplitude;
+        float m_fRoundTime;
+        float m_fRadius;
+    };
+
+    struct GIMMICK_ENEMY_PLACE : public GIMMICK_BASIC
+    {
+        int32 m_enemyID;
+        int32 m_enemyPattern;
+        float m_fEnemyRange;
+    };
+
+    struct GIMMICK_ENEMY_APPEARANCE_SINGLE : public GIMMICK_BASIC
+    {
+        int32 m_numTotal;
+        float m_fIntervalTime;
+        int32 m_numAppearMax;
+        int32 m_enemyID;
+        int32 m_enemyPattern;
+        float m_fEnemyRange;
+    };
+
+    struct GIMMICK_ENEMY_APPEARANCE_MULTIPLE : public GIMMICK_BASIC
+    {
+        int32 m_numTotal;
+        float m_fIntervalTime;
+        int32 m_numAppearanceEnemyMax;
+        int32 m_numAppearanceEnemyOnSameTime;
+        int32 m_enemySetID;
+        float m_fEnemyRange;
+    };
 };

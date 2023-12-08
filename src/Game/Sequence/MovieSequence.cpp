@@ -27,9 +27,9 @@ CMovieSequence::~CMovieSequence(void)
 };
 
 
-bool CMovieSequence::OnAttach(const void* param)
+bool CMovieSequence::OnAttach(const void* pParam)
 {
-    OUTPUT("%s. MovieID: %d\n", __FUNCTION__, param);
+    OUTPUT("%s. MovieID: %d\n", __FUNCTION__, pParam);
     
     m_bOwner = false;
     m_pMovie = CMovieManager::GetMovieInstance();
@@ -37,7 +37,7 @@ bool CMovieSequence::OnAttach(const void* param)
     if (!m_pMovie)
     {
         m_bOwner = true;
-        CMovieManager::PreCreateMovieInstance(int32(param));
+        CMovieManager::PreCreateMovieInstance(int32(pParam));
         m_pMovie = CMovieManager::GetMovieInstance();        
     };
 
@@ -68,19 +68,23 @@ void CMovieSequence::OnDetach(void)
 };
 
 
-void CMovieSequence::OnMove(bool bRet, const void* param)
+void CMovieSequence::OnMove(bool bRet, const void* pReturnValue)
 {
-    if (!m_pMovie)
-        Ret();
+    if (m_pMovie)
+    {
+        int32 iController = CGameData::Attribute().GetVirtualPad();
+        if (CController::GetDigitalTrigger(iController, CController::DIGITAL_OK))
+            Ret();
 
-    int32 iController = CGameData::Attribute().GetVirtualPad();
-    if (CController::GetDigitalTrigger(iController, CController::DIGITAL_OK))
-        Ret();
+        if (m_pMovie->IsEnded())
+            Ret();
 
-    if (m_pMovie->IsEnded())
+        m_pMovie->Update();
+    }
+    else
+    {
         Ret();
-
-    m_pMovie->Update();
+    };
 };
 
 

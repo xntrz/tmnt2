@@ -3,15 +3,6 @@
 
 namespace OPTIONTYPES
 {
-    enum DISPLAYMODE
-    {
-        DISPLAYMODE_FULLSCREEN = 0,
-        DISPLAYMODE_FULLWINDOW,
-        DISPLAYMODE_WINDOW,
-
-        DISPLAYMODEMAX,
-    };
-
     enum VOLUMETYPE
     {
         VOLUMETYPE_SE = 0,

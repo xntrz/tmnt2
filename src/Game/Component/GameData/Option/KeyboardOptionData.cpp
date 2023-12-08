@@ -1,9 +1,11 @@
 #include "KeyboardOptionData.hpp"
 
+#ifdef TARGET_PC
+
 #include "Game/Component/GameData/GameData.hpp"
-#include "Game/System/Misc/Keyboard.hpp"
 #include "System/Common/Controller.hpp"
-#include "System/PC/PCPhysicalControllerScancode.hpp"
+#include "System/PC/PCPhysicalControllerKey.hpp"
+#include "System/PC/PCSpecific.hpp"
 
 
 CKeyboardOptionData::CKeyboardOptionData(void)
@@ -20,7 +22,27 @@ CKeyboardOptionData::~CKeyboardOptionData(void)
 
 void CKeyboardOptionData::Initialize(void)
 {
-    SetDefault();
+    struct FIXEDINFO
+    {
+        uint32 m_uDigital;
+        int32 m_scancode;
+    };
+
+    static const FIXEDINFO s_aFixedInfo[] =
+    {
+        { CController::DIGITAL_LUP,     DIK_UP     },
+        { CController::DIGITAL_LDOWN,   DIK_DOWN   },
+        { CController::DIGITAL_LLEFT,   DIK_LEFT   },
+        { CController::DIGITAL_LRIGHT,  DIK_RIGHT  },
+        { CController::DIGITAL_START,   DIK_RETURN },
+        { CController::DIGITAL_SELECT,  DIK_ESCAPE },
+    };
+
+    for (int32 i = 0; i < COUNT_OF(s_aFixedInfo); ++i)
+        CPCSpecific::MapDigitalFixed(s_aFixedInfo[i].m_uDigital, s_aFixedInfo[i].m_scancode);
+
+    assignDefaultButton();
+    assignDefaultKey();
 };
 
 
@@ -32,28 +54,7 @@ void CKeyboardOptionData::Terminate(void)
 
 void CKeyboardOptionData::SetDefault(void)
 {
-    struct FIXEDINFO
-    {
-        uint32 m_uDigital;
-        int32 m_scancode;
-    };
-
-    static const FIXEDINFO s_aFixedInfo[] =
-    {
-        { CController::DIGITAL_UP,      KEYCODE::KEY_UP     },
-        { CController::DIGITAL_DOWN,    KEYCODE::KEY_DOWN   },
-        { CController::DIGITAL_LEFT,    KEYCODE::KEY_LEFT   },
-        { CController::DIGITAL_RIGHT,   KEYCODE::KEY_RIGHT  },
-        { CController::DIGITAL_START,   KEYCODE::KEY_RETURN },
-        { CController::DIGITAL_SELECT,  KEYCODE::KEY_ESCAPE },
-    };
-
-    for (int32 i = 0; i < COUNT_OF(s_aFixedInfo); ++i)
-        CKeyboard::MapDigitalFixed(s_aFixedInfo[i].m_uDigital, s_aFixedInfo[i].m_scancode);
-
-    assignDefaultButton();
     assignDefaultKey();
-    Apply();
 };
 
 
@@ -62,16 +63,16 @@ void CKeyboardOptionData::Apply(void)
     for (int32 i = 0; i < COUNT_OF(m_auButtonAssign); ++i)
     {
         if (m_auButtonAssign[i])
-            CKeyboard::MapDigital(m_auButtonAssign[i], m_aiKeyAssign[i]);
+            CPCSpecific::MapDigital(m_auButtonAssign[i], m_aiKeyAssign[i]);
     };
 
-    CKeyboard::MapAnalog(
+    CPCSpecific::MapAnalog(
         CController::ANALOG_LSTICK_X,
 		m_aiKeyAssign[OPTIONTYPES::KEYFUNC_LEFT],
 		m_aiKeyAssign[OPTIONTYPES::KEYFUNC_RIGHT]
     );
     
-    CKeyboard::MapAnalog(
+    CPCSpecific::MapAnalog(
         CController::ANALOG_LSTICK_Y,
 		m_aiKeyAssign[OPTIONTYPES::KEYFUNC_UP],
 		m_aiKeyAssign[OPTIONTYPES::KEYFUNC_DOWN]
@@ -127,8 +128,15 @@ bool CKeyboardOptionData::AssignDownKey(OPTIONTYPES::KEYFUNC func)
 {
     ASSERT(func >= 0 && func < OPTIONTYPES::KEYFUNCMAX);
     
-    int32 iDIKey = CKeyboard::GetDownKey();
-    if (!iDIKey || !CKeyboard::IsKeyValid(iDIKey))
+    int32 iDIKey = CPCSpecific::GetDownKey();
+    
+    if (iDIKey == -1)
+        return false;
+
+    if (iDIKey == 0)
+        return false;
+
+    if (!CPCSpecific::IsKeyValid(iDIKey))
         return false;
 
     if (m_aiKeyAssign[func] == iDIKey)
@@ -148,29 +156,23 @@ int32 CKeyboardOptionData::GetAssignedKey(OPTIONTYPES::KEYFUNC func) const
 
 const char* CKeyboardOptionData::GetKeyName(int32 iDIKey) const
 {
-    static const char* EMPTYKEY = "";
-
-    const char* pszResult = CKeyboard::GetKeyName(iDIKey);
-    
-    if (!pszResult)
-        pszResult = EMPTYKEY;
-
-    return pszResult;
+    const char* pszResult = CPCSpecific::GetKeyName(iDIKey);
+    return (pszResult ? pszResult : "");
 };
 
 
-void CKeyboardOptionData::InitializeGamepadMapping(void)
+void CKeyboardOptionData::AssignButton(void)
 {
-    int32 iPort = CKeyboard::GetPort();
+    int32 iPort = CPCSpecific::GetKeyboradPort();
+    
     if ((iPort >= 0) && (iPort < CGameData::Option().GamepadNum()))
     {
-
         for (int32 i = 0; i < OPTIONTYPES::BTNFUNCMAX; ++i)
             m_auButtonAssign[i] = CGameData::Option().Gamepad(iPort).GetAssignedButton(OPTIONTYPES::BTNFUNC(i));
     }
     else
     {
-        
+        assignDefaultButton();
     };
 
     Apply();
@@ -179,42 +181,42 @@ void CKeyboardOptionData::InitializeGamepadMapping(void)
 
 void CKeyboardOptionData::assignDefaultKey(void)
 {
-    static const uint32 s_aiDefaultKey[] =
+    static const int32 s_aDefaultKey[] =
     {
-        KEYCODE::KEY_F,         //  A
-        KEYCODE::KEY_D,         //  B
-        KEYCODE::KEY_R,         //  Shuriken
-        KEYCODE::KEY_SPACE,     //  Jump
-        KEYCODE::KEY_E,         //  Dash
-        KEYCODE::KEY_S,         //  Guard
-        KEYCODE::KEY_LSHIFT,    //  Chara change
-        KEYCODE::KEY_F1,        //  Camera change
-        KEYCODE::KEY_F2,        //  Gauge change
-        KEYCODE::KEY_NUMPAD8,   //  Up
-        KEYCODE::KEY_NUMPAD2,   //  Down
-        KEYCODE::KEY_NUMPAD4,   //  Left
-        KEYCODE::KEY_NUMPAD6,   //  Right
+        DIK_F,         //  A
+        DIK_D,         //  B
+        DIK_R,         //  Shot
+        DIK_SPACE,     //  Jump
+        DIK_E,         //  Dash
+        DIK_S,         //  Guard
+        DIK_LSHIFT,    //  Chara change
+        DIK_F1,        //  Camera change
+        DIK_F2,        //  Gauge change
+        DIK_NUMPAD8,   //  Up
+        DIK_NUMPAD2,   //  Down
+        DIK_NUMPAD4,   //  Left
+        DIK_NUMPAD6,   //  Right
     };
 
-    static_assert(COUNT_OF(s_aiDefaultKey) == OPTIONTYPES::KEYFUNCMAX, "update me");
-    static_assert(COUNT_OF(s_aiDefaultKey) == COUNT_OF(m_aiKeyAssign), "update me");
-    
+    static_assert(COUNT_OF(s_aDefaultKey) == OPTIONTYPES::KEYFUNCMAX, "update me");
+    static_assert(COUNT_OF(s_aDefaultKey) == COUNT_OF(m_aiKeyAssign), "update me");
+
     for (int32 i = 0; i < COUNT_OF(m_aiKeyAssign); ++i)
-        m_aiKeyAssign[i] = s_aiDefaultKey[i];
+        m_aiKeyAssign[i] = s_aDefaultKey[i];
 };
 
 
 void CKeyboardOptionData::assignDefaultButton(void)
 {
-    m_auButtonAssign[OPTIONTYPES::KEYFUNC_ATTACK_A] = CController::DIGITAL_A;
-    m_auButtonAssign[OPTIONTYPES::KEYFUNC_ATTACK_B] = CController::DIGITAL_B;
-    m_auButtonAssign[OPTIONTYPES::KEYFUNC_SHURIKEN] = CController::DIGITAL_Y;
-    m_auButtonAssign[OPTIONTYPES::KEYFUNC_JUMP] = CController::DIGITAL_X;
-    m_auButtonAssign[OPTIONTYPES::KEYFUNC_DASH] = CController::DIGITAL_LEFT_BUMPER;
-    m_auButtonAssign[OPTIONTYPES::KEYFUNC_GUARD] = CController::DIGITAL_RIGHT_BUMPER;
-    m_auButtonAssign[OPTIONTYPES::KEYFUNC_CHANGE_CHARA] = CController::DIGITAL_RIGHT_TRIGGER;
-    m_auButtonAssign[OPTIONTYPES::KEYFUNC_CHANGE_CAMERA] = CController::DIGITAL_LEFT_THUMB;
-    m_auButtonAssign[OPTIONTYPES::KEYFUNC_CHANGE_GAUGE] = CController::DIGITAL_RIGHT_THUMB;
+    m_auButtonAssign[OPTIONTYPES::KEYFUNC_ATTACK_A]         = CController::DIGITAL_RDOWN;
+    m_auButtonAssign[OPTIONTYPES::KEYFUNC_ATTACK_B]         = CController::DIGITAL_RLEFT;
+    m_auButtonAssign[OPTIONTYPES::KEYFUNC_SHURIKEN]         = CController::DIGITAL_RUP;
+    m_auButtonAssign[OPTIONTYPES::KEYFUNC_JUMP]             = CController::DIGITAL_RRIGHT;
+    m_auButtonAssign[OPTIONTYPES::KEYFUNC_DASH]             = CController::DIGITAL_L1;
+    m_auButtonAssign[OPTIONTYPES::KEYFUNC_GUARD]            = CController::DIGITAL_R1;
+    m_auButtonAssign[OPTIONTYPES::KEYFUNC_CHANGE_CHARA]     = CController::DIGITAL_L2;
+    m_auButtonAssign[OPTIONTYPES::KEYFUNC_CHANGE_CAMERA]    = CController::DIGITAL_R3;
+    m_auButtonAssign[OPTIONTYPES::KEYFUNC_CHANGE_GAUGE]     = CController::DIGITAL_L3;
 };
 
 
@@ -228,3 +230,5 @@ OPTIONTYPES::KEYFUNC CKeyboardOptionData::findFunction(int32 key) const
 
     return OPTIONTYPES::KEYFUNCMAX;
 };
+
+#endif /* TARGET_PC */

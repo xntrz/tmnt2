@@ -5,11 +5,12 @@ class CDebugShape
 {
 public:
     static float m_fLabelHeight;
+    static float m_fDuration;
     
 public:
     static void Initialize(void);
     static void Terminate(void);
-    static void Period(void);
+    static void Period(float dt);
     static void FrameBegin(void);
     static void FrameEnd(void);
     static void Draw3D(void);

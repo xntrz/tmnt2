@@ -2,7 +2,7 @@
 
 #include "Game/Component/GameData/GameData.hpp"
 #include "Game/Component/Menu/Dialog.hpp"
-#include "Game/System/2d/GameText.hpp"
+#include "Game/System/Text/GameText.hpp"
 #include "Game/System/Misc/ScreenFade.hpp"
 
 
@@ -27,7 +27,7 @@ CNexusRetrySequence::~CNexusRetrySequence(void)
 };
 
 
-bool CNexusRetrySequence::OnAttach(const void* param)
+bool CNexusRetrySequence::OnAttach(const void* pParam)
 {
     m_step = STEP_START;
     m_bRetryFlag = false;
@@ -38,10 +38,10 @@ bool CNexusRetrySequence::OnAttach(const void* param)
     ASSERT(m_pDlg);
 
     m_pDlg->Set(0.0f, 0.0f, 640.0f, 128.0f);
-    m_pDlg->SetText(CGameText::GetText(GAMETEXT::VALUE(930)), 16.0f, { 0xFF, 0xFF, 0xFF, 0xFF });
+    m_pDlg->SetText(CGameText::GetText(GAMETEXT(930)), 16.0f, { 0xFF, 0xFF, 0xFF, 0xFF });
     m_pDlg->SetOpenAction(false);
     
-    CScreenFade::StartIn(0.0f);
+    CScreenFade::BlackOut(0.0f);
 
     return true;
 };
@@ -50,7 +50,7 @@ bool CNexusRetrySequence::OnAttach(const void* param)
 void CNexusRetrySequence::OnDetach(void)
 {
     CGameData::Attribute().SetInteractive(false);
-    CScreenFade::StartOut(0.0f);
+    CScreenFade::BlackIn(0.0f);
     
     if (m_pDlg)
     {
@@ -60,13 +60,13 @@ void CNexusRetrySequence::OnDetach(void)
 };
 
 
-void CNexusRetrySequence::OnMove(bool bRet, const void* param)
+void CNexusRetrySequence::OnMove(bool bRet, const void* pReturnValue)
 {
     switch (m_step)
     {
     case STEP_START:
         {
-            CScreenFade::StartOut();
+            CScreenFade::BlackIn();
             m_pDlg->Open();
             m_step = STEP_FADEOUT;
         }
@@ -88,7 +88,7 @@ void CNexusRetrySequence::OnMove(bool bRet, const void* param)
             {
                 m_bRetryFlag = (m_pDlg->GetStatus() == CDialog::STATUS_YES ? true : false);
                 m_step = STEP_FADEIN;
-                CScreenFade::StartIn();
+                CScreenFade::BlackOut();
             };
         }
         break;

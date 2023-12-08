@@ -4,6 +4,9 @@
 #include "GamePlayerContainer.hpp"
 #include "GameEnemyContainer.hpp"
 #include "GameGimmickContainer.hpp"
+#include "GamePlayer.hpp"
+#include "GameEnemy.hpp"
+#include "GameGimmick.hpp"
 
 #include "Game/System/Map/MapCamera.hpp"
 #include "Game/System/Map/WorldMap.hpp"
@@ -80,12 +83,14 @@ static inline CGamePropertyObject& GamePropertyObject(void)
 
 /*static*/ void CGameProperty::SetCurrentRwCamera(RwCamera* pRwCamera)
 {
+    ASSERT(pRwCamera);
     GamePropertyObject().SetRwCamera(pRwCamera);
 };
 
 
 /*static*/ void CGameProperty::SetMapCamera(CMapCamera* pMapCamera)
 {
+    ASSERT(pMapCamera);
     GamePropertyObject().SetMapCamera(pMapCamera);
 };
 
@@ -158,24 +163,21 @@ static inline CGamePropertyObject& GamePropertyObject(void)
 };
 
 
-/*static*/ void CGameProperty::SetCameraVibration(float fPower, float fTime, uint32 uFreq)
+/*static*/ void CGameProperty::SetCameraVibration(float fPower, float fTime, int32 nFreq)
 {
     CMapCamera* pMapCamera = GamePropertyObject().GetMapCamera();
     ASSERT(pMapCamera);
 
-    pMapCamera->SetCameraVibration(fPower, fTime, uFreq);
+    pMapCamera->SetCameraVibration(fPower, fTime, nFreq);
 };
 
 
-/*static*/ int32 CGameProperty::GetPlayerNum(void)
+/*static*/ void CGameProperty::StopCameraVibration(void)
 {
-    return GamePropertyObject().PlayerContainer().GetPlayerNum();
-};
+    CMapCamera* pMapCamera = GamePropertyObject().GetMapCamera();
+    ASSERT(pMapCamera);
 
-
-/*static*/ int32 CGameProperty::GetPlayerMax(void)
-{
-    return GAMETYPES::PLAYERS_MAX;
+    pMapCamera->StopCameraVibration();
 };
 
 
@@ -185,9 +187,30 @@ static inline CGamePropertyObject& GamePropertyObject(void)
 };
 
 
-/*static*/ IGamePlayer& CGameProperty::Player(int32 no)
+/*static*/ IGamePlayer* CGameProperty::Player(int32 no)
 {
     return GamePropertyObject().PlayerContainer().GamePlayer(no);
+};
+
+
+/*static*/ IGamePlayer* CGameProperty::GetGamePlayer(int32 no)
+{
+    IGamePlayer* pGamePlayer = GamePropertyObject().PlayerContainer().GamePlayer(no);
+    pGamePlayer->AddRef();
+    return pGamePlayer;
+};
+
+
+/*static*/ int32 CGameProperty::GetPlayerNum(void)
+{
+    return GamePropertyObject().PlayerContainer().GetPlayerNum();
+};
+
+
+/*static*/ CEnemy* CGameProperty::GetEnemy(int32 no)
+{
+    CGameEnemy& GameEnemy = GamePropertyObject().EnemyContainer().GameEnemy(no);
+    return (GameEnemy.IsAlive() ? GameEnemy.GetEnemy() : nullptr);
 };
 
 
@@ -197,19 +220,14 @@ static inline CGamePropertyObject& GamePropertyObject(void)
 };
 
 
-/*static*/ CGameEnemy& CGameProperty::Enemy(int32 no)
+/*static*/ CGimmick* CGameProperty::GetGimmick(int32 no)
 {
-    return GamePropertyObject().EnemyContainer().GameEnemy(no);
+    CGameGimmick& GameGimmick = GamePropertyObject().GimmickContainer().GameGimmick(no);
+    return (GameGimmick.IsAlive() ? GameGimmick.GetGimmick() : nullptr);
 };
 
 
 /*static*/ int32 CGameProperty::GetGimmickMax(void)
 {
     return GAMETYPES::GIMMICK_MAX;
-};
-
-
-/*static*/ CGameGimmick& CGameProperty::Gimmick(int32 no)
-{
-    return GamePropertyObject().GimmickContainer().GameGimmick(no);
 };

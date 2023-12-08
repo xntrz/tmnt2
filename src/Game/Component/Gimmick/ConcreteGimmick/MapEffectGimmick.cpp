@@ -2,7 +2,7 @@
 
 #include "Game/Component/GameMain/GameProperty.hpp"
 #include "Game/Component/Gimmick/GimmickParam.hpp"
-#include "Game/Component/Gimmick/GimmickUtils.hpp"
+#include "Game/Component/Gimmick/Utils/GimmickUtils.hpp"
 #include "Game/Component/Effect/EffectManager.hpp"
 #include "Game/Component/Effect/MagicManager.hpp"
 #include "Game/Component/Effect/Light.hpp"

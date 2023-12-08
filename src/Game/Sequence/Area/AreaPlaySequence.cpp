@@ -4,7 +4,8 @@
 #include "Game/Component/GameMain/StageInfo.hpp"
 #include "Game/Component/GameMain/AreaInfo.hpp"
 #include "Game/System/Misc/ScreenFade.hpp"
-#include "System/Common/Process/ProcessList.hpp"
+#include "Game/System/Misc/Timeout.hpp"
+#include "Game/ProcessList.hpp"
 
 
 /*static*/ CProcess* CAreaPlaySequence::Instance(void)
@@ -17,6 +18,9 @@ CAreaPlaySequence::CAreaPlaySequence(void)
 : m_idLastStage(STAGEID::ID_NONE)
 , m_step(STEP_NONE)
 , m_substep(0)
+#ifdef _DEBUG
+, m_bSkipAllMovies(false)
+#endif
 {
     ;
 };
@@ -28,11 +32,22 @@ CAreaPlaySequence::~CAreaPlaySequence(void)
 };
 
 
-bool CAreaPlaySequence::OnAttach(const void* param)
+bool CAreaPlaySequence::OnAttach(const void* pParam)
 {
     m_idLastStage = STAGEID::ID_NONE;
     changeStep(STEP_STAGESTART);
+    
     CGameData::OnBeginArea();
+
+#ifdef BUILD_TRIAL
+    CTimeoutProcess::Enable(this, true);
+    CTimeoutProcess::Start(this);
+#endif        
+
+#ifdef _DEBUG
+    m_bSkipAllMovies = bool(pParam != nullptr);
+#endif    
+
     return true;
 };
 
@@ -43,7 +58,7 @@ void CAreaPlaySequence::OnDetach(void)
 };
 
 
-void CAreaPlaySequence::OnMove(bool bRet, const void* param)
+void CAreaPlaySequence::OnMove(bool bRet, const void* pReturnValue)
 {
     switch (m_step)
     {
@@ -61,7 +76,7 @@ void CAreaPlaySequence::OnMove(bool bRet, const void* param)
             else
             {
                 changeStep(STEP_STAGERUN);
-                CScreenFade::StartIn(0.0f);
+                CScreenFade::BlackOut(0.0f);
             };
         }
         break;
@@ -108,12 +123,12 @@ void CAreaPlaySequence::OnMove(bool bRet, const void* param)
         {
             if (m_substep)
             {
-                CScreenFade::StartIn(0.0f);
+                CScreenFade::BlackOut(0.0f);
 
                 CGamePlayParam::AREAPLAYMODE playmode = CGameData::PlayParam().GetAreaPlaymode();
                 if (playmode == CGamePlayParam::AREAPLAYMODE_ONE_STAGE)
                 {
-                    CGameData::PlayResult().SetAreaResult(CGamePlayResult::AREARESULT_CLEAR);
+                    CGameData::PlayResult().SetAreaResult(CGamePlayResult::AREARESULT_GAMECLEAR);
                     changeStep(STEP_EOL);
                 }
                 else
@@ -124,7 +139,7 @@ void CAreaPlaySequence::OnMove(bool bRet, const void* param)
                     }
                     else
                     {
-                        CGameData::PlayResult().SetAreaResult(CGamePlayResult::AREARESULT_CLEAR);
+                        CGameData::PlayResult().SetAreaResult(CGamePlayResult::AREARESULT_GAMECLEAR);
                         changeStep(STEP_RESULT);
                     };
                 };
@@ -192,7 +207,7 @@ void CAreaPlaySequence::OnMove(bool bRet, const void* param)
         {
             if (m_substep)
             {
-                CScreenFade::StartIn(0.0f);
+                CScreenFade::BlackOut(0.0f);
                 changeStep(STEP_AUTOSAVE);
             }
             else
@@ -218,7 +233,7 @@ void CAreaPlaySequence::OnMove(bool bRet, const void* param)
                 if (!CGameData::PlayResult().IsEnding())
                 {
                     if (CGameData::Option().Play().IsAutosaveEnabled())
-                        Call(PROCESSTYPES::LABEL_SEQ_SAVELOADAUTO);
+                        Call(PROCLABEL_SEQ_SAVELOADAUTO);
                 };
 
                 ++m_substep;
@@ -278,19 +293,19 @@ void CAreaPlaySequence::callStageSequence(STAGEID::VALUE idStage)
     switch (CStageInfo::GetMode(m_idLastStage))
     {
     case GAMETYPES::STAGEMODE_NORMAL:
-        Call(PROCESSTYPES::LABEL_SEQ_STAGENORMAL);
+        Call(PROCLABEL_SEQ_NORMALSTAGE);
         break;
 
     case GAMETYPES::STAGEMODE_RIDE:
-        Call(PROCESSTYPES::LABEL_SEQ_STAGERIDE);
+        Call(PROCLABEL_SEQ_RIDESTAGE);
         break;
 
     case GAMETYPES::STAGEMODE_NEXUS:
-        Call(PROCESSTYPES::LABEL_SEQ_STAGENEXUS);
+        Call(PROCLABEL_SEQ_NEXUSSTAGE);
         break;
 
     case GAMETYPES::STAGEMODE_PLAYDEMO:
-        Call(PROCESSTYPES::LABEL_SEQ_STAGEDEMO);
+        Call(PROCLABEL_SEQ_PLAYDEMO);
         break;
 
     default:
@@ -307,7 +322,7 @@ void CAreaPlaySequence::callResultSequence(void)
     case GAMETYPES::STAGEMODE_NORMAL:
     case GAMETYPES::STAGEMODE_NEXUS:
     case GAMETYPES::STAGEMODE_RIDE:
-        Call(PROCESSTYPES::LABEL_SEQ_RESULT);
+        Call(PROCLABEL_SEQ_RESULT);
         break;
 
     default:
@@ -323,7 +338,7 @@ void CAreaPlaySequence::callEnbuSequence(void)
     {
     case GAMETYPES::STAGEMODE_NORMAL:
 	case GAMETYPES::STAGEMODE_RIDE:
-        Call(PROCESSTYPES::LABEL_SEQ_ENBU);
+        Call(PROCLABEL_SEQ_ENBU);
         break;
     };
 };
@@ -331,13 +346,18 @@ void CAreaPlaySequence::callEnbuSequence(void)
 
 void CAreaPlaySequence::callUnlockSequence(void)
 {
-    Call(PROCESSTYPES::LABEL_SEQ_UNLOCK);
+    Call(PROCLABEL_SEQ_UNLOCK);
 };
 
 
 void CAreaPlaySequence::callMovieSequence(MOVIEID::VALUE idMovie)
 {
-    CScreenFade::StartOut(0.0f);
-    Call(PROCESSTYPES::LABEL_SEQ_MOVIE, false, (const void*)idMovie);
+#ifdef _DEBUG
+    if (m_bSkipAllMovies)
+        return;
+#endif
+    
+    CScreenFade::BlackIn(0.0f);
+    Call(PROCLABEL_SEQ_MOVIE, (const void*)idMovie);
 };
 

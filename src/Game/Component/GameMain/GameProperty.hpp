@@ -7,8 +7,8 @@
 
 class CMapCamera;
 class IGamePlayer;
-class CGameEnemy;
-class CGameGimmick;
+class CEnemy;
+class CGimmick;
 
 
 class CGameProperty
@@ -27,13 +27,14 @@ public:
 	static void GetCameraViewMatrix(RwMatrix* pMatrix);
 	static void GetCameraFrameMatrix(RwMatrix* pMatrix);
 	static bool AdjustWithinMoveBoundary(RwV3d* pvOut, RwV3d* pvIn);
-	static void SetCameraVibration(float fPower, float fTime, uint32 uFreq);
-	static int32 GetPlayerNum(void);
-	static int32 GetPlayerMax(void);
+	static void SetCameraVibration(float fPower, float fTime, int32 nFreq);
+	static void StopCameraVibration(void);
 	static void AddPlayerCharacter(int32 nPlayerNo, PLAYERID::VALUE idPlayer, GAMETYPES::COSTUME costume);
-	static IGamePlayer& Player(int32 no);
+	static IGamePlayer* Player(int32 no); // does not increment ref count
+	static IGamePlayer* GetGamePlayer(int32 no); // increments ref count (require manually call Release())
+	static int32 GetPlayerNum(void);
+	static CEnemy* GetEnemy(int32 no); // may return nullptr if not alive
 	static int32 GetEnemyMax(void);
-	static CGameEnemy& Enemy(int32 no);
+	static CGimmick* GetGimmick(int32 no); // may return nullptr if not alive
 	static int32 GetGimmickMax(void);
-	static CGameGimmick& Gimmick(int32 no);
 };

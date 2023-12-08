@@ -1,83 +1,87 @@
 #include "ScreenFade.hpp"
-#include "System/Common/Process/ProcessMail.hpp"
-#include "System/Common/Process/ProcessList.hpp"
-#include "System/Common/Process/ProcessDispatcher.hpp"
-#include "System/Common/Process/Sequence.hpp"
+
 #include "Game/Component/Menu/MessageWindow.hpp"
+#include "Game/ProcessList.hpp"
+#include "System/Common/Process/ProcessMail.hpp"
 #include "System/Common/Screen.hpp"
 #include "System/Common/System2D.hpp"
 #include "System/Common/Camera.hpp"
-#include "System/Common/Process/ProcessDispatcher.hpp"
-#include "System/Common/Process/ProcessList.hpp"
 
 
-class CScreenFadeCtrl
+class CScreenFade::CScreenFadeController final
 {
 public:
-    static const RwRGBA DEFAULT_COLOR;
+    static void Color4B_Lerp(RwRGBA& result, const RwRGBA& c1, const RwRGBA& c2, float t);
     
-public:
-    CScreenFadeCtrl(void);
-    ~CScreenFadeCtrl(void);
-    void Move(void);
+    CScreenFadeController(void);
+    ~CScreenFadeController(void);
+    void Period(void);
     void Draw(void) const;
-    void Start(float fFadeTime, bool bOut);
-    void SetColor(uint8 r, uint8 g, uint8 b);
-    bool IsFading(void);
+    void Start(float fFadeTime, bool bDraw);
 
-private:
-    void updateColor(void);
+    inline void SetColor(const RwRGBA& start, const RwRGBA& end) { m_colorStart = start;  m_colorEnd = end; };
+    inline bool IsFading(void) const { return m_bIsFading; };
+    inline bool IsDrawing(void) const { return (m_bIsFading || m_bDrawFlag); };
 
 private:
     RwRGBA m_color;
+    RwRGBA m_colorStart;
+    RwRGBA m_colorEnd;
     float m_fFadeTime;
     float m_fTime;
-    uint8 m_AlphaBasis;
-    uint8 m_AlphaBasisStart;
-    uint8 m_AlphaBasisEnd;
     bool m_bIsFading;
+    bool m_bDrawFlag;
 };
 
 
-/*static*/ const RwRGBA CScreenFadeCtrl::DEFAULT_COLOR = { 0x00, 0x00, 0x00, 0xFF };
+/*static*/ void CScreenFade::CScreenFadeController::Color4B_Lerp(RwRGBA& result, const RwRGBA& c1, const RwRGBA& c2, float t)
+{
+	result.red      = RwUInt8(Math::Lerp(float(c1.red),     float(c2.red),      t));
+	result.green    = RwUInt8(Math::Lerp(float(c1.green),   float(c2.green),    t));
+	result.blue     = RwUInt8(Math::Lerp(float(c1.blue),    float(c2.blue),     t));
+	result.alpha    = RwUInt8(Math::Lerp(float(c1.alpha),   float(c2.alpha),    t));
+};
 
 
-CScreenFadeCtrl::CScreenFadeCtrl(void)
-: m_color(DEFAULT_COLOR)
+CScreenFade::CScreenFadeController::CScreenFadeController(void)
+: m_color({ 0 })
+, m_colorStart({ 0 })
+, m_colorEnd({ 0 })
 , m_fFadeTime(0.0f)
 , m_fTime(0.0f)
-, m_AlphaBasis(0)
-, m_AlphaBasisStart(0)
-, m_AlphaBasisEnd(0)
 , m_bIsFading(false)
+, m_bDrawFlag(false)
 {
     ;
 };
 
 
-CScreenFadeCtrl::~CScreenFadeCtrl(void)
+CScreenFade::CScreenFadeController::~CScreenFadeController(void)
 {
     ;
 };
 
 
-void CScreenFadeCtrl::Move(void)
+void CScreenFade::CScreenFadeController::Period(void)
 {
-    if (!m_bIsFading)
+    if (!IsFading())
         return;
 
-    m_fTime += CScreen::TimerStride();
+    m_fTime     += CScreen::TimerStride();
     m_bIsFading = (m_fTime < m_fFadeTime);
-    m_fTime = Math::Clamp(m_fTime, 0.0f, m_fFadeTime);
-    
-    updateColor();
+    m_fTime     = Clamp(m_fTime, 0.0f, m_fFadeTime);
+
+	if (Math::FEqual(m_fFadeTime, 0.0f))
+		m_color = m_colorEnd;
+    else
+        Color4B_Lerp(m_color, m_colorStart, m_colorEnd, m_fTime / m_fFadeTime);    
 };
 
 
-void CScreenFadeCtrl::Draw(void) const
+void CScreenFade::CScreenFadeController::Draw(void) const
 {
-	if (!m_AlphaBasis)
-		return;
+    if (!(IsFading() || IsDrawing()))
+        return;
 
     if (!CCamera::CameraCurrent())
         return;
@@ -87,7 +91,7 @@ void CScreenFadeCtrl::Draw(void) const
     float h = float(CScreen::Height());
 	float z = RwIm2DGetNearScreenZ();
 	float rhw = 1.0f / RwCameraGetNearClipPlane(CCamera::CameraCurrent());
-    uint32 color = RWRGBALONG(m_color.red, m_color.green, m_color.blue, m_AlphaBasis);
+    uint32 color = RWRGBALONG(m_color.red, m_color.green, m_color.blue, m_color.alpha);
     
     aVertices[0].x = 0.0f;
     aVertices[0].y = h;
@@ -128,155 +132,175 @@ void CScreenFadeCtrl::Draw(void) const
 };
 
 
-void CScreenFadeCtrl::Start(float fFadeTime, bool bOut)
+void CScreenFade::CScreenFadeController::Start(float fFadeTime, bool bDraw)
 {
-    if (bOut)
-    {
-        m_AlphaBasisStart   = 0;
-        m_AlphaBasisEnd     = 255;
-    }
-    else
-    {
-        m_AlphaBasisStart   = 255;
-        m_AlphaBasisEnd     = 0;
-    };
-    
-    m_bIsFading = true;
-    m_AlphaBasis = 0;
     m_fFadeTime = fFadeTime;
-    m_fTime = 0.0f;
-
-    updateColor();
+    m_fTime     = 0.0f;
+    m_bIsFading = true;
+    m_bDrawFlag = bDraw;
+    m_color     = (Math::FEqual(m_fFadeTime, 0.0f) ? m_colorEnd : m_colorStart);
 };
-
-
-void CScreenFadeCtrl::SetColor(uint8 r, uint8 g, uint8 b)
-{
-    m_color = { r, g, b, 0 };
-};
-
-
-bool CScreenFadeCtrl::IsFading(void)
-{
-    return m_bIsFading;
-};
-
-
-void CScreenFadeCtrl::updateColor(void)
-{
-	if (Math::FEqual(m_fFadeTime, 0.0f))
-		m_AlphaBasis = m_AlphaBasisEnd;
-	else
-		m_AlphaBasis = uint8(Math::Lerp(float(m_AlphaBasisStart), float(m_AlphaBasisEnd), m_fTime / m_fFadeTime));
-};
-
-
-static CScreenFadeCtrl* s_pScreenFadeCtrl = nullptr;
 
 
 /*static*/ float CScreenFade::DEFAULT_FADE_TIME = 0.5f;
+/*static*/ CScreenFade::CScreenFadeController* CScreenFade::m_pScreenFade = nullptr;
 
 
-/*static*/ CProcess* CScreenFade::Instance(void)
+/*static*/ bool CScreenFade::Initialize(void)
 {
-    return new CScreenFade;
+    ASSERT(!m_pScreenFade);
+    
+    if (!m_pScreenFade)
+        m_pScreenFade = new CScreenFadeController;
+
+	return true;
 };
 
 
-/*static*/ bool CScreenFade::Initialize(CProcess* pCurrent)
+/*static*/ void CScreenFade::Terminate(void)
 {
-    return pCurrent->Mail().Send(PROCESSTYPES::LABEL_SCREENFADE, PROCESSTYPES::MAIL::TYPE_ATTACH);
+    ASSERT(m_pScreenFade);
+
+    if (m_pScreenFade)
+    {
+        delete m_pScreenFade;
+        m_pScreenFade = nullptr;
+    };    
 };
 
 
-/*static*/ void CScreenFade::Terminate(CProcess* pCurrent)
+/*static*/ void CScreenFade::Period(void)
 {
-    pCurrent->Mail().Send(PROCESSTYPES::LABEL_SCREENFADE, PROCESSTYPES::MAIL::TYPE_DETACH);
+    (m_pScreenFade ? m_pScreenFade->Period() : (void)0);
 };
 
 
-/*static*/ void CScreenFade::StartOut(float fFadeTime)
+/*static*/ void CScreenFade::Draw(void)
 {
-	if (s_pScreenFadeCtrl)
-		s_pScreenFadeCtrl->Start(fFadeTime, false);
-};
-
-
-/*static*/ void CScreenFade::StartIn(float fFadeTime)
-{
-	if (s_pScreenFadeCtrl)
-		s_pScreenFadeCtrl->Start(fFadeTime, true);
-};
-
-
-/*static*/ void CScreenFade::SetColor(uint8 r, uint8 g, uint8 b)
-{
-	if (s_pScreenFadeCtrl)
-		s_pScreenFadeCtrl->SetColor(r, g, b);
-};
-
-
-/*static*/ void CScreenFade::ResetColor(void)
-{
-	if (s_pScreenFadeCtrl)
-		s_pScreenFadeCtrl->SetColor(
-			CScreenFadeCtrl::DEFAULT_COLOR.red,
-			CScreenFadeCtrl::DEFAULT_COLOR.green,
-			CScreenFadeCtrl::DEFAULT_COLOR.blue
-		);
+    (m_pScreenFade ? m_pScreenFade->Draw() : (void)0);
 };
 
 
 /*static*/ bool CScreenFade::IsFading(void)
 {
-	if (s_pScreenFadeCtrl)
-		return s_pScreenFadeCtrl->IsFading();
-	else
-		return false;
+    return (m_pScreenFade ? m_pScreenFade->IsFading() : false);
 };
 
 
-CScreenFade::CScreenFade(void)
+/*static*/ bool CScreenFade::IsDrawing(void)
 {
-    ;
+    return (m_pScreenFade ? m_pScreenFade->IsDrawing() : false);
 };
 
 
-CScreenFade::~CScreenFade(void)
+/*static*/ void CScreenFade::BlackIn(float fTime)
 {
-    ;
-};
-
-
-bool CScreenFade::Attach(void)
-{
-    s_pScreenFadeCtrl = new CScreenFadeCtrl;
-    CMessageWindow::Initialize();
-    return true;
-};
-
-
-void CScreenFade::Detach(void)
-{
-    CMessageWindow::Terminate();
-    if (s_pScreenFadeCtrl)
+    if (m_pScreenFade)
     {
-        delete s_pScreenFadeCtrl;
-        s_pScreenFadeCtrl = nullptr;
+        RwRGBA start= { 0x00, 0x00, 0x00, 0xFF };
+        RwRGBA end  = { 0x00, 0x00, 0x00, 0x00 };
+        
+        m_pScreenFade->SetColor(start, end);
+        m_pScreenFade->Start(fTime, false);
     };
 };
 
 
-void CScreenFade::Move(void)
+/*static*/ void CScreenFade::BlackOut(float fTime)
 {
-    s_pScreenFadeCtrl->Move();
+    if (m_pScreenFade)
+    {
+        RwRGBA start= { 0x00, 0x00, 0x00, 0x00 };
+        RwRGBA end  = { 0x00, 0x00, 0x00, 0xFF };
+        
+        m_pScreenFade->SetColor(start, end);
+        m_pScreenFade->Start(fTime, true);
+    };
+};
+
+
+/*static*/ void CScreenFade::WhiteIn(float fTime)
+{
+    if (m_pScreenFade)
+    {
+        RwRGBA start= { 0xFF, 0xFF, 0xFF, 0xFF };
+        RwRGBA end  = { 0xFF, 0xFF, 0xFF, 0x00 };
+        
+        m_pScreenFade->SetColor(start, end);
+        m_pScreenFade->Start(fTime, false);
+    };
+};
+
+
+/*static*/ void CScreenFade::WhiteOut(float fTime)
+{
+    if (m_pScreenFade)
+    {
+        RwRGBA start= { 0xFF, 0xFF, 0xFF, 0x00 };
+        RwRGBA end  = { 0xFF, 0xFF, 0xFF, 0xFF };
+        
+        m_pScreenFade->SetColor(start, end);
+        m_pScreenFade->Start(fTime, true);
+    };
+};
+
+
+/*static*/ CProcess* CScreenFadeProcess::Instance(void)
+{
+    return new CScreenFadeProcess;
+};
+
+
+/*static*/ bool CScreenFadeProcess::Initialize(CProcess* pCurrent)
+{
+    return pCurrent->Mail().Send(PROCLABEL_SCREENFADE, PROCESSTYPES::MAIL::TYPE_ATTACH);
+};
+
+
+/*static*/ void CScreenFadeProcess::Terminate(CProcess* pCurrent)
+{
+    pCurrent->Mail().Send(PROCLABEL_SCREENFADE, PROCESSTYPES::MAIL::TYPE_DETACH);
+};
+
+
+CScreenFadeProcess::CScreenFadeProcess(void)
+{
+    ;
+};
+
+
+CScreenFadeProcess::~CScreenFadeProcess(void)
+{
+    ;
+};
+
+
+bool CScreenFadeProcess::Attach(void)
+{
+    if (CScreenFade::Initialize())
+        CMessageWindow::Initialize();
+    
+    return true;
+};
+
+
+void CScreenFadeProcess::Detach(void)
+{
+    CMessageWindow::Terminate();
+    CScreenFade::Terminate();
+};
+
+
+void CScreenFadeProcess::Move(void)
+{
+    CScreenFade::Period();
     CMessageWindow::Move();
 };
 
 
-void CScreenFade::Draw(void) const
+void CScreenFadeProcess::Draw(void) const
 {
     CMessageWindow::DrawNormal();
-    s_pScreenFadeCtrl->Draw();
+    CScreenFade::Draw();
     CMessageWindow::DrawFront();
 };

@@ -11,10 +11,10 @@
 class CCircleShadowModuleForCharacter final : public CCircleShadowModule
 {
 public:
-    CCircleShadowModuleForCharacter(CCharacter* pCharacter, float w, float h);
-    virtual ~CCircleShadowModuleForCharacter(void);
-    virtual void GetPosition(RwV3d* pvPosition) const override;
-    virtual float GetDirection(void) const override;
+    CCircleShadowModuleForCharacter(CCharacter* pCharacter, float w, float h) : CCircleShadowModule(w, h), m_pCharacter(pCharacter) {};
+    virtual ~CCircleShadowModuleForCharacter(void) {};
+    virtual void GetPosition(RwV3d* pvPosition) const override { return m_pCharacter->GetBodyPosition(pvPosition); };
+    virtual float GetDirection(void) const override { return m_pCharacter->GetDirection(); };
 
 private:
     CCharacter* m_pCharacter;
@@ -24,65 +24,13 @@ private:
 class CCircleShadowModuleForGimmick final : public CCircleShadowModule
 {
 public:
-    CCircleShadowModuleForGimmick(CGimmick* pGimmick, float w, float h);
-    virtual ~CCircleShadowModuleForGimmick(void);
-    virtual void GetPosition(RwV3d* pvPosition) const override;
-    virtual float GetDirection(void) const override;
+    CCircleShadowModuleForGimmick(CGimmick* pGimmick, float w, float h) : CCircleShadowModule(w, h), m_pGimmick(pGimmick) {};
+    virtual ~CCircleShadowModuleForGimmick(void) {};
+    virtual void GetPosition(RwV3d* pvPosition) const override { return m_pGimmick->GetPosition(pvPosition); };
+    virtual float GetDirection(void) const override { return 0.0f; };
 
 private:
     CGimmick* m_pGimmick;
-};
-
-
-CCircleShadowModuleForCharacter::CCircleShadowModuleForCharacter(CCharacter* pCharacter, float w, float h)
-: CCircleShadowModule(w, h)
-, m_pCharacter(pCharacter)
-{
-    ASSERT(m_pCharacter);
-};
-
-
-CCircleShadowModuleForCharacter::~CCircleShadowModuleForCharacter(void)
-{
-    ;
-};
-
-
-void CCircleShadowModuleForCharacter::GetPosition(RwV3d* pvPosition) const
-{
-    m_pCharacter->GetBodyPosition(pvPosition);
-};
-
-
-float CCircleShadowModuleForCharacter::GetDirection(void) const
-{
-    return m_pCharacter->GetDirection();
-};
-
-
-CCircleShadowModuleForGimmick::CCircleShadowModuleForGimmick(CGimmick* pGimmick, float w, float h)
-: CCircleShadowModule(w, h)
-, m_pGimmick(pGimmick)
-{
-    ASSERT(m_pGimmick);   
-};
-
-
-CCircleShadowModuleForGimmick::~CCircleShadowModuleForGimmick(void)
-{
-    ;
-};
-
-
-void CCircleShadowModuleForGimmick::GetPosition(RwV3d* pvPosition) const
-{
-    m_pGimmick->GetPosition(pvPosition);
-};
-
-
-float CCircleShadowModuleForGimmick::GetDirection(void) const
-{
-    return 0.0f;
 };
 
 
@@ -134,9 +82,6 @@ CCircleShadowModule::CCircleShadowModule(float w, float h)
 : IModule(MODULETYPE::CIRCLE_SHADOW)
 , m_pTexture(nullptr)
 , m_bEnable(true)
-#ifdef _DEBUG
-, m_wh(w)
-#endif
 {
     RwMatrixSetIdentityMacro(&m_matrix);
     
@@ -171,7 +116,7 @@ void CCircleShadowModule::Run(void)
         return;
 
     float fCharacterHeight = vPosition.y - fHeight;
-    fCharacterHeight = Math::Clamp(fCharacterHeight, 0.0f, 5.0f);
+    fCharacterHeight = Clamp(fCharacterHeight, 0.0f, 5.0f);
 
     float fScale = (1.0f - 0.5f * (fCharacterHeight * 0.2f));
     uint8 uAlphaBasis = uint8(255.0f - 191.0f * (fCharacterHeight * 0.2f));

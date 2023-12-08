@@ -2,7 +2,7 @@
 
 #include "Game/Component/GameMain/GameProperty.hpp"
 #include "Game/Component/Gimmick/GimmickQuery.hpp"
-#include "Game/Component/Gimmick/GimmickUtils.hpp"
+#include "Game/Component/Gimmick/Utils/GimmickUtils.hpp"
 #include "Game/Component/Gimmick/GimmickParam.hpp"
 #include "Game/Component/Gimmick/GimmickMotion.hpp"
 #include "Game/System/Map/MapCollisionModel.hpp"
@@ -84,8 +84,8 @@ CNormalDoorGimmick::CNormalDoorGimmick(const char* pszName, void* pParam)
         ASSERT(m_hAtari);
     };
 
-    m_model.SetModel(CNormalGimmickModel::MODELKIND_VISUAL_NORMAL, pModelDisp);
-    m_model.SetModel(CNormalGimmickModel::MODELKIND_ATARI_NORMAL, pModelColl);
+    m_model.SetModel(CNormalGimmickModel::MODELTYPE_DRAW_NORMAL, pModelDisp);
+    m_model.SetModel(CNormalGimmickModel::MODELTYPE_ATARI_NORMAL, pModelColl);
     SetModelStrategy(&m_model);
 
     m_pMotion = new CGimmickMotion(pModelDisp);
@@ -122,7 +122,7 @@ void CNormalDoorGimmick::PreMove(void)
         {
             if (m_bStart)
             {
-                m_pMotion->Start(1.0f);
+                m_pMotion->StartOne(1.0f);
                 m_fMotionRemainTime = m_pMotion->GetEndTime();
                 m_state = STATE_OPENING;
                 m_bStart = false;

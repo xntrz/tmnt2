@@ -3,16 +3,16 @@
 
 #include "Game/Component/GameData/GameData.hpp"
 #include "Game/System/2d/GameFont.hpp"
-#include "Game/System/2d/GameText.hpp"
+#include "Game/System/Text/GameText.hpp"
 #include "Game/System/2d/Animation2D.hpp"
 #include "Game/System/2d/MenuController.hpp"
 #include "Game/System/Sound/GameSound.hpp"
 #include "Game/System/Misc/RenderStateManager.hpp"
 #include "Game/System/Texture/TextureManager.hpp"
+#include "Game/ProcessList.hpp"
 #include "System/Common/Controller.hpp"
 #include "System/Common/Sprite.hpp"
 #include "System/Common/System2D.hpp"
-#include "System/Common/Process/ProcessList.hpp"
 #include "System/Common/File/FileID.hpp"
 #include "System/Common/RenderState.hpp"
 #include "System/Common/Screen.hpp"
@@ -95,7 +95,7 @@ CDatabase_Container::~CDatabase_Container(void)
 
 const wchar* CDatabase_Container::GetDatabaseName(WNDTYPE Wndtype, int32 ItemNo)
 {
-    const wchar* pwszStr;
+	const wchar* pwszStr = nullptr;
 
     switch (Wndtype)
     {
@@ -104,46 +104,46 @@ const wchar* CDatabase_Container::GetDatabaseName(WNDTYPE Wndtype, int32 ItemNo)
             switch (ItemNo)
             {
             case 2:
-                pwszStr = CGameText::GetText(GAMETEXT::VALUE(0x18));
+                pwszStr = CGameText::GetText(GAMETEXT(0x18));
                 break;
 
             case 3:
             case 4:
-                pwszStr = CGameText::GetText(GAMETEXT::VALUE(0x12));
+                pwszStr = CGameText::GetText(GAMETEXT(0x12));
                 break;
 
             case 5:
-                pwszStr = CGameText::GetText(GAMETEXT::VALUE(0x16));
+                pwszStr = CGameText::GetText(GAMETEXT(0x16));
                 break;
 
             case 6:
             case 7:
-                pwszStr = CGameText::GetText(GAMETEXT::VALUE(0x13));
+                pwszStr = CGameText::GetText(GAMETEXT(0x13));
                 break;
 
             case 8:
-                pwszStr = CGameText::GetText(GAMETEXT::VALUE(0x17));
+                pwszStr = CGameText::GetText(GAMETEXT(0x17));
                 break;
 
             case 9:
             case 10:
-                pwszStr = CGameText::GetText(GAMETEXT::VALUE(0x14));
+                pwszStr = CGameText::GetText(GAMETEXT(0x14));
                 break;
 
             case 11:
-                pwszStr = CGameText::GetText(GAMETEXT::VALUE(0x15));
+                pwszStr = CGameText::GetText(GAMETEXT(0x15));
                 break;
 
             case 12:
-                pwszStr = CGameText::GetText(GAMETEXT::VALUE(0x19));
+                pwszStr = CGameText::GetText(GAMETEXT(0x19));
                 break;
 
             case 13:
-                pwszStr = CGameText::GetText(GAMETEXT::VALUE(0xDA));
+                pwszStr = CGameText::GetText(GAMETEXT(0xDA));
                 break;
 
             default:
-                pwszStr = CGameText::GetText(GAMETEXT::VALUE(0x11));
+                pwszStr = CGameText::GetText(GAMETEXT(0x11));
                 break;
             }
         }
@@ -154,48 +154,48 @@ const wchar* CDatabase_Container::GetDatabaseName(WNDTYPE Wndtype, int32 ItemNo)
             switch (ItemNo)
             {
             case 0:
-                pwszStr = CGameText::GetText(GAMETEXT::VALUE(0xDD));
+                pwszStr = CGameText::GetText(GAMETEXT(0xDD));
                 break;
 
             case 1:
-                pwszStr = CGameText::GetText(GAMETEXT::VALUE(0xE0));
+                pwszStr = CGameText::GetText(GAMETEXT(0xE0));
                 break;
 
             case 2:
-                pwszStr = CGameText::GetText(GAMETEXT::VALUE(0xCB));
+                pwszStr = CGameText::GetText(GAMETEXT(0xCB));
                 break;
 
             case 3:
-                pwszStr = CGameText::GetText(GAMETEXT::VALUE(0xCF));
+                pwszStr = CGameText::GetText(GAMETEXT(0xCF));
                 break;
 
             case 4:
-                pwszStr = CGameText::GetText(GAMETEXT::VALUE(0xD0));
+                pwszStr = CGameText::GetText(GAMETEXT(0xD0));
                 break;
 
             case 5:
-                pwszStr = CGameText::GetText(GAMETEXT::VALUE(0xE1));
+                pwszStr = CGameText::GetText(GAMETEXT(0xE1));
                 break;
 
             case 6:
-                pwszStr = CGameText::GetText(GAMETEXT::VALUE(0xD6));
+                pwszStr = CGameText::GetText(GAMETEXT(0xD6));
                 break;
 
             case 7:
-                pwszStr = CGameText::GetText(GAMETEXT::VALUE(0xD7));
+                pwszStr = CGameText::GetText(GAMETEXT(0xD7));
                 break;
 
             case 8:
-                pwszStr = CGameText::GetText(GAMETEXT::VALUE(0xD5));
+                pwszStr = CGameText::GetText(GAMETEXT(0xD5));
                 break;
 
             case 9:
             case 10:
-                pwszStr = CGameText::GetText(GAMETEXT::VALUE(0x37A));
+                pwszStr = CGameText::GetText(GAMETEXT(0x37A));
                 break;
 
             case 11:
-                pwszStr = CGameText::GetText(GAMETEXT::VALUE(0x379));
+                pwszStr = CGameText::GetText(GAMETEXT(0x379));
                 break;
 
             default:
@@ -210,35 +210,35 @@ const wchar* CDatabase_Container::GetDatabaseName(WNDTYPE Wndtype, int32 ItemNo)
             switch (ItemNo)
             {
             case 0:
-                pwszStr = CGameText::GetText(GAMETEXT::VALUE(0x388));
+                pwszStr = CGameText::GetText(GAMETEXT(0x388));
                 break;
 
             case 1:
-                pwszStr = CGameText::GetText(GAMETEXT::VALUE(0x389));
+                pwszStr = CGameText::GetText(GAMETEXT(0x389));
                 break;
 
             case 2:
-                pwszStr = CGameText::GetText(GAMETEXT::VALUE(0x38A));
+                pwszStr = CGameText::GetText(GAMETEXT(0x38A));
                 break;
 
             case 3:
-                pwszStr = CGameText::GetText(GAMETEXT::VALUE(0x38B));
+                pwszStr = CGameText::GetText(GAMETEXT(0x38B));
                 break;
 
             case 4:
-                pwszStr = CGameText::GetText(GAMETEXT::VALUE(0x37B));
+                pwszStr = CGameText::GetText(GAMETEXT(0x37B));
                 break;
 
             case 5:
-                pwszStr = CGameText::GetText(GAMETEXT::VALUE(0x37C));
+                pwszStr = CGameText::GetText(GAMETEXT(0x37C));
                 break;
 
             case 6:
-                pwszStr = CGameText::GetText(GAMETEXT::VALUE(0x37D));
+                pwszStr = CGameText::GetText(GAMETEXT(0x37D));
                 break;
 
             case 7:
-                pwszStr = CGameText::GetText(GAMETEXT::VALUE(0x37E));
+                pwszStr = CGameText::GetText(GAMETEXT(0x37E));
                 break;
 
             default:
@@ -256,11 +256,11 @@ const wchar* CDatabase_Container::GetDatabaseName(WNDTYPE Wndtype, int32 ItemNo)
             case 1:
             case 2:
             case 3:
-                pwszStr = CGameText::GetText(GAMETEXT::VALUE(0x387));
+                pwszStr = CGameText::GetText(GAMETEXT(0x387));
                 break;
 
             case 4:
-                pwszStr = CGameText::GetText(GAMETEXT::VALUE(0x37F));
+                pwszStr = CGameText::GetText(GAMETEXT(0x37F));
                 break;
 
             default:
@@ -321,8 +321,8 @@ void CDatabase_Container::DB_DrawText(WNDTYPE Wndtype)
     
     if (Wndtype == WNDTYPE_MAIN)
     {
-        CGameFont::m_fHeight = (CGameFont::GetScreenSize() / 447.0f) * 1.75f;
-        
+		CGameFont::SetHeight(CGameFont::GetScreenHeight() * 1.75f);
+
         const int32 CategoryNum = 4;
         for (int32 i = 0; i < CategoryNum; ++i)
         {
@@ -339,7 +339,7 @@ void CDatabase_Container::DB_DrawText(WNDTYPE Wndtype)
 
             if (IsDbCategoryUnlocked(CDatabaseRecord::GROUP(i)))
             {
-                const wchar* pwszStr = CGameText::GetText(GAMETEXT::VALUE(i + 0x376));
+                const wchar* pwszStr = CGameText::GetText(GAMETEXT(i + 0x376));
                 CGameFont::SetRGBA(255, 180, 0, 255);
                 CGameFont::Show(
                     pwszStr,
@@ -382,7 +382,7 @@ void CDatabase_Container::DB_DrawText(WNDTYPE Wndtype)
 
         const TEXTINFO* TextInfo = &aTextInfo[Wndtype - 2];
 
-        CGameFont::m_fHeight = (CGameFont::GetScreenSize() / 447.0f) * 1.75f;
+		CGameFont::SetHeight(CGameFont::GetScreenHeight() * 1.5f);
 
         int32 ColumnNo = 0;
         int32 ColumnMax = TextInfo->ColumnsNum - 1;
@@ -404,7 +404,7 @@ void CDatabase_Container::DB_DrawText(WNDTYPE Wndtype)
                 Rt2dBBox BBox = { x, (OfsY - (float(ColumnItem) * 60.0f)), 150.0f, 40.0f };
                 const wchar* pwszStr = GetDatabaseName(Wndtype, i);
                 CGameFont::SetRGBA(255, 180, 0, 255);
-                CGameFont::m_pFont->Flow(pwszStr, CGameFont::m_fHeight, &BBox);
+                CGameFont::Flow(pwszStr, &BBox);
                 
                 if (!IsDbViewerNew(DBITEMID::VALUE(DbItem)))
                     DB_DrawNewIcon(x, y);
@@ -415,7 +415,7 @@ void CDatabase_Container::DB_DrawText(WNDTYPE Wndtype)
                 CGameFont::Show("?????", x, y);
             };
 		
-            ColumnNo = Math::InvClamp(ColumnNo + 1, 0, ColumnMax);
+            ColumnNo = InvClamp(ColumnNo + 1, 0, ColumnMax);
             ++DbItem;
             ColumnItem = ((i + 1) / TextInfo->ColumnsNum);
         };
@@ -700,7 +700,7 @@ CDatabase::~CDatabase(void)
 };
 
 
-bool CDatabase::OnAttach(const void* param)
+bool CDatabase::OnAttach(const void* pParam)
 {
     if (!s_pDatabase_Container)
         s_pDatabase_Container = new CDatabase_Container;
@@ -722,70 +722,84 @@ void CDatabase::OnDetach(void)
         s_pDatabase_Container = nullptr;
     };
 
-    CGameSound::FadeOut(CGameSound::FADESPEED_FAST);
+    CGameSound::FadeOut(CGameSound::FADESPEED_SLOW);
     
     CAnim2DSequence::OnDetach();
 };
 
 
-void CDatabase::OnMove(bool bRet, const void* param)
+void CDatabase::OnMove(bool bRet, const void* pReturnValue)
 {
-    CAnim2DSequence::OnMove(bRet, param);
-    if (m_step != STEP_DRAW)
-        return;
-    
-    int32 iMessageNo = 0;
-    
-    if (m_pAnimation2D->CheckMessageGetURL("Home"))
-    {
-        m_bGotoViewerFlag = false;
-        Ret();
-    }
-    else if (IsAnim2DMessageList(s_apszTextOnStr, COUNT_OF(s_apszTextOnStr), &iMessageNo))
-    {
-        m_iSelWindowType = (iMessageNo + 1);
-    }
-    else if (IsAnim2DMessageList(s_apszTextOffStr, COUNT_OF(s_apszTextOffStr), &iMessageNo))
-    {
-        m_iSelWindowType = 0;
-    }
-    else if (IsAnim2DMessageList(s_apszCategoryStr, COUNT_OF(s_apszCategoryStr), &iMessageNo))
-    {
-        CMenuController::KeyLock(CController::DIGITAL_UP);
-        CMenuController::KeyLock(CController::DIGITAL_DOWN);
+    CAnim2DSequence::OnMove(bRet, pReturnValue);
 
-        if (s_pDatabase_Container->IsDbCategoryUnlocked(CDatabaseRecord::GROUP(iMessageNo)))
-            m_pAnimation2D->FlashKeyPress(CController::DIGITAL_UP);
-        else
-            m_pAnimation2D->FlashKeyPress(CController::DIGITAL_DOWN);
-
-        CMenuController::KeyUnlock(CController::DIGITAL_UP);
-        CMenuController::KeyUnlock(CController::DIGITAL_DOWN);
-    }
-    else if (IsAnim2DMessageList(s_apszViewerNoStr, COUNT_OF(s_apszViewerNoStr), &iMessageNo))
+    switch (m_animstep)
     {
-        CMenuController::KeyLock(CController::DIGITAL_UP);
-        CMenuController::KeyLock(CController::DIGITAL_DOWN);
-
-        if (s_pDatabase_Container->IsDbViewerUnlocked(DBITEMID::VALUE(iMessageNo + 1)))
+    case ANIMSTEP_DRAW:
         {
-            CDatabaseSequence::SetDBViewerNo(iMessageNo + 1);
-            s_pDatabase_Container->DB_SunadokeiSet(CDatabase_Container::SUNADOKEI_STATE_ROTATE);
-            m_pAnimation2D->FlashKeyPress(CController::DIGITAL_UP);
+            int32 iMessageNo = 0;
+
+            if (m_pAnimation2D->CheckMessageGetURL("Home"))
+            {
+                m_bGotoViewerFlag = false;
+                BeginFadeout();
+            }
+            else if (IsAnim2DMessageList(s_apszTextOnStr, COUNT_OF(s_apszTextOnStr), &iMessageNo))
+            {
+                m_iSelWindowType = (iMessageNo + 1);
+            }
+            else if (IsAnim2DMessageList(s_apszTextOffStr, COUNT_OF(s_apszTextOffStr), &iMessageNo))
+            {
+                m_iSelWindowType = 0;
+            }
+            else if (IsAnim2DMessageList(s_apszCategoryStr, COUNT_OF(s_apszCategoryStr), &iMessageNo))
+            {
+                CMenuController::KeyLock(CController::DIGITAL_LUP);
+                CMenuController::KeyLock(CController::DIGITAL_LDOWN);
+
+                if (s_pDatabase_Container->IsDbCategoryUnlocked(CDatabaseRecord::GROUP(iMessageNo)))
+                    m_pAnimation2D->FlashKeyPress(CController::DIGITAL_LUP);
+                else
+                    m_pAnimation2D->FlashKeyPress(CController::DIGITAL_LDOWN);
+
+                CMenuController::KeyUnlock(CController::DIGITAL_LUP);
+                CMenuController::KeyUnlock(CController::DIGITAL_LDOWN);
+            }
+            else if (IsAnim2DMessageList(s_apszViewerNoStr, COUNT_OF(s_apszViewerNoStr), &iMessageNo))
+            {
+                CMenuController::KeyLock(CController::DIGITAL_LUP);
+                CMenuController::KeyLock(CController::DIGITAL_LDOWN);
+
+                if (s_pDatabase_Container->IsDbViewerUnlocked(DBITEMID::VALUE(iMessageNo + 1)))
+                {
+                    CDatabaseSequence::SetDBViewerNo(iMessageNo + 1);
+                    s_pDatabase_Container->DB_SunadokeiSet(CDatabase_Container::SUNADOKEI_STATE_ROTATE);
+                    m_pAnimation2D->FlashKeyPress(CController::DIGITAL_LUP);
+                }
+                else
+                {
+                    m_pAnimation2D->FlashKeyPress(CController::DIGITAL_LDOWN);
+                };
+
+                CMenuController::KeyUnlock(CController::DIGITAL_LUP);
+                CMenuController::KeyUnlock(CController::DIGITAL_LDOWN);
+            }
+            else if (m_pAnimation2D->CheckMessageGetURL("Loading"))
+            {
+                CGameSound::PlaySE(SDCODE_SE(0x1002));
+                m_bGotoViewerFlag = true;
+                BeginFadeout();
+            };
         }
-        else
-        {
-            m_pAnimation2D->FlashKeyPress(CController::DIGITAL_DOWN);
-        };
+        break;
 
-        CMenuController::KeyUnlock(CController::DIGITAL_UP);
-        CMenuController::KeyUnlock(CController::DIGITAL_DOWN);
-    }
-    else if (m_pAnimation2D->CheckMessageGetURL("Loading"))
-    {
-        Ret();
-        CGameSound::PlaySE(SDCODE_SE(0x1002));
-        m_bGotoViewerFlag = true;
+    case ANIMSTEP_END:
+        {
+            if (m_bGotoViewerFlag)
+                Ret((const void*)PROCLABEL_SEQ_DATABASEVIEWER);
+            else
+                Ret();
+        }
+        break;
     };
 };
 
@@ -832,7 +846,7 @@ void CDatabase::OnDraw(void) const
 };
 
 
-void CDatabase::BeginFadeOut(void)
+void CDatabase::BeginFadein(void)
 {
     m_pAnimation2D->SetText("DATABASE_END", "Return Home?");
 
@@ -975,16 +989,5 @@ void CDatabase::BeginFadeOut(void)
     
     CGameSound::PlayBGM(SDCODE_BGM(0x3024));
     
-    CAnim2DSequence::BeginFadeOut();
-};
-
-
-bool CDatabase::OnRet(void)
-{
-    if (m_bGotoViewerFlag)
-        Ret((const void*)PROCESSTYPES::LABEL_SEQ_DATABASEVIEWER);
-    else
-        Ret();
-
-    return true;
+    CAnim2DSequence::BeginFadein();
 };

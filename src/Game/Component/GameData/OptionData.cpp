@@ -19,8 +19,9 @@ void COptionData::Initialize(void)
 {
     m_iGamepadNum = CController::Max();
     ASSERT(m_iGamepadNum > 0);
+    ASSERT(m_iGamepadNum <= COUNT_OF(RAWDATA::m_aGamepad));
 
-    m_paGamepad = new CGamepadOptionData[ 8 ];
+    m_paGamepad = new CGamepadOptionData[m_iGamepadNum];
     ASSERT(m_paGamepad);
 
     m_play.Initialize();
@@ -30,7 +31,7 @@ void COptionData::Initialize(void)
     for (int32 i = 0; i < m_iGamepadNum; ++i)
         m_paGamepad[i].Initialize(i);
 
-#ifdef _TARGET_PC
+#ifdef TARGET_PC
     m_keyboard.Initialize();
 #endif
 
@@ -40,6 +41,17 @@ void COptionData::Initialize(void)
 
 void COptionData::Terminate(void)
 {
+#ifdef TARGET_PC
+    m_keyboard.Terminate();
+#endif
+
+    for (int32 i = 0; i < m_iGamepadNum; ++i)
+        m_paGamepad[i].Terminate();
+    
+    m_display.Terminate();
+    m_sound.Terminate();
+    m_play.Terminate();
+
     if (m_paGamepad)
     {
         delete[] m_paGamepad;
@@ -60,7 +72,7 @@ void COptionData::Snapshot(RAWDATA& rRawData) const
     for (int32 i = 0; i < m_iGamepadNum; ++i)
         m_paGamepad[i].Snapshot(rRawData.m_aGamepad[i]);
 
-#ifdef _TARGET_PC
+#ifdef TARGET_PC
     m_keyboard.Snapshot(rRawData.m_keyboard);
 #endif 
 };
@@ -77,7 +89,7 @@ void COptionData::Restore(const RAWDATA& rRawData)
     for (int32 i = 0; i < m_iGamepadNum; ++i)
         m_paGamepad[i].Restore(rRawData.m_aGamepad[i]);
 
-#ifdef _TARGET_PC
+#ifdef TARGET_PC
     m_keyboard.Restore(rRawData.m_keyboard);
 #endif    
 };
@@ -92,7 +104,7 @@ void COptionData::Apply(void)
     for (int32 i = 0; i < m_iGamepadNum; ++i)
         m_paGamepad[i].Apply();
 
-#ifdef _TARGET_PC
+#ifdef TARGET_PC
     m_keyboard.Apply();
 #endif    
 };
@@ -126,10 +138,14 @@ CGamepadOptionData& COptionData::Gamepad(int32 no)
 {
     ASSERT(no >= 0 && no < CController::Max());
     
+#ifdef TARGET_PC
+    return m_paGamepad[no];
+#elif TARGET_PS2
     int32 iPort = CController::GetPhysicalPort(no);
-    ASSERT(iPort >= 0 && iPort < m_iGamepadNum);
-
-    return *&m_paGamepad[iPort];
+    return m_paGamepad[iPort];
+#else    
+#error Not implemented for current target
+#endif
 };
 
 

@@ -6,6 +6,7 @@
 
 class CMadCarGimmickMove;
 
+
 class CMadCarGimmick final : public CGimmick
 {
 private:

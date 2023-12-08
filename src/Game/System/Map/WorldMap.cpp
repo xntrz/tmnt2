@@ -129,23 +129,20 @@ void CWorldMapManager::OnLoaded(void)
 {
     if (m_pMapInfo)
     {
+        RwV3d vRotation =
+        {
+            MATH_DEG2RAD(m_pMapInfo->m_vLightDirection.x) + Math::PI05,
+            MATH_DEG2RAD(m_pMapInfo->m_vLightDirection.y),
+            MATH_DEG2RAD(m_pMapInfo->m_vLightDirection.z),
+        };
+        
         RwMatrix matrix;
-        RwV3d vRotation = Math::VECTOR3_ZERO;
-
         RwMatrixSetIdentityMacro(&matrix);
-
-        vRotation.x = m_pMapInfo->m_vLightDirection.x * 0.0174f + 1.570f;
-        vRotation.y = m_pMapInfo->m_vLightDirection.y * 0.0174f;
-        vRotation.z = m_pMapInfo->m_vLightDirection.z * 0.0174f;
-
         Math::Matrix_Rotate(&matrix, &vRotation);
 
         SetDirectionLightMatrix(&matrix);
 
-        CRenderStateManager::SetFogParam(
-			bool(m_pMapInfo->m_foginfo.m_bEnable > 0), 
-			m_pMapInfo->m_foginfo.m_Color
-		);
+        CRenderStateManager::SetFogParam(bool(m_pMapInfo->m_foginfo.m_bEnable > 0),  m_pMapInfo->m_foginfo.m_Color);
         CScreen::SetClearColor(m_pMapInfo->m_foginfo.m_Color);
 
         switch (m_pMapInfo->m_weather)
@@ -165,20 +162,8 @@ void CWorldMapManager::OnLoaded(void)
         CScreen::SetClearColor({ 0x00, 0x00, 0x00, 0x00 });
     };
 
-    RwRGBAReal DirectionLightColor;
-    DirectionLightColor.red = 1.0f;
-    DirectionLightColor.green = 1.0f;
-    DirectionLightColor.blue = 1.0f;
-    DirectionLightColor.alpha = 1.0f;
-
-    RwRGBAReal AmbientLightColor;
-    AmbientLightColor.red = 0.6f;
-    AmbientLightColor.green = 0.6f;
-    AmbientLightColor.blue = 0.6f;
-    AmbientLightColor.alpha = 1.0f;
-    
-    SetAmbientLightColor(AmbientLightColor);
-    SetDirectionLightColor(DirectionLightColor);
+    SetDirectionLightColor({ 1.0f, 1.0f, 1.0f, 1.0f });
+    SetAmbientLightColor({ 0.6f, 0.6f, 0.6f, 1.0f });
 
     if (m_hUVAnim)
         CUVAnim::InitUVAnim(m_hUVAnim);    
@@ -201,8 +186,8 @@ void CWorldMapManager::ReadWorldBsp(const void* pBuffer, uint32 uBufferSize)
     SetWorldMapEnvironment();
 
     uint32 uWorldFlags = RpWorldGetFlagsMacro(m_pWorld);
-    FLAG_CHANGE(uWorldFlags, rpWORLDPRELIT, true);
-    FLAG_CHANGE(uWorldFlags, rpWORLDLIGHT, false);
+    FLAG_SET(uWorldFlags, rpWORLDPRELIT);
+    FLAG_CLEAR(uWorldFlags, rpWORLDLIGHT);
     RpWorldSetFlagsMacro(m_pWorld, uWorldFlags);
 
     if (bUVExists)
@@ -269,7 +254,7 @@ void CWorldMapManager::SetWorldMapEnvironment(void)
 {
     CreateLight();
     
-#ifdef _TARGET_PC
+#ifdef TARGET_PC
     //D3DRS_AMBIENT
     RwD3D9SetRenderState(139, 0xFFFFFFFF);
 #else
@@ -295,7 +280,7 @@ void CWorldMapManager::CreateLight(void)
         RpWorldAddLight(m_pWorld, m_pLightAmbient);
         
         uint32 uLightAmbientFlags = RpLightGetFlagsMacro(m_pLightAmbient);
-        FLAG_CHANGE(uLightAmbientFlags, rpLIGHTLIGHTWORLD, false);
+        FLAG_CLEAR(uLightAmbientFlags, rpLIGHTLIGHTWORLD);
         RpLightSetFlagsMacro(m_pLightAmbient, uLightAmbientFlags);        
     };
 
@@ -314,7 +299,7 @@ void CWorldMapManager::CreateLight(void)
             RpWorldAddLight(m_pWorld, m_pLightDirection);
 
             uint32 uLightDirectionFlags = RpLightGetFlagsMacro(m_pLightDirection);
-            FLAG_CHANGE(uLightDirectionFlags, rpLIGHTLIGHTWORLD, false);
+            FLAG_CLEAR(uLightDirectionFlags, rpLIGHTLIGHTWORLD);
             RpLightSetFlagsMacro(m_pLightDirection, uLightDirectionFlags);            
         };
     };
@@ -751,7 +736,7 @@ bool CWorldMapManager::CheckCollisionCharacterHeight(RwV3d* pPos, RwV3d* pNewPos
 
     while (pPos->y <= pCollisionResult->m_vClosestPt.y)
     {
-        if (pCollisionResult->m_vNormal.y >= 0.5f || !bLimitNormalY)
+        if ((pCollisionResult->m_vNormal.y >= 0.5f) || !bLimitNormalY)
         {
             pNewPos->x = pPos->x;
             pNewPos->y = pCollisionResult->m_vClosestPt.y;
@@ -759,19 +744,20 @@ bool CWorldMapManager::CheckCollisionCharacterHeight(RwV3d* pPos, RwV3d* pNewPos
 
             if (pCollisionResult->m_type == MAPTYPES::HITTYPE_GIMMICK)
             {
-                if (pCollisionResult->m_mapobj.m_pLTM && !Math::Vec3_IsEmpty(&pCollisionResult->m_mapobj.m_vRotate))
+                if (pCollisionResult->m_mapobj.m_pLTM && !Math::Vec3_IsEqual(&pCollisionResult->m_mapobj.m_vRotate, &Math::VECTOR3_ZERO))
                 {
-                    RwV3d vLocalPos = Math::VECTOR3_ZERO;
-                    RwV3d vAfterPos = Math::VECTOR3_ZERO;
                     RwMatrix invLTM;
-                    RwMatrix matrix;
-
                     RwMatrixSetIdentityMacro(&invLTM);
-                    RwMatrixSetIdentityMacro(&matrix);
-
                     RwMatrixInvert(&invLTM, pCollisionResult->m_mapobj.m_pLTM);
+
+                    RwV3d vLocalPos = Math::VECTOR3_ZERO;
                     RwV3dTransformPoint(&vLocalPos, pNewPos, &invLTM);
+
+                    RwMatrix matrix;
+                    RwMatrixSetIdentityMacro(&matrix);
                     Math::Matrix_Rotate(&matrix, &pCollisionResult->m_mapobj.m_vRotate);
+                    
+					RwV3d vAfterPos = Math::VECTOR3_ZERO;
                     RwV3dTransformPoint(&vAfterPos, &vLocalPos, &matrix);
                     RwV3dTransformPoint(&vAfterPos, &vAfterPos, pCollisionResult->m_mapobj.m_pLTM);
 
@@ -786,10 +772,9 @@ bool CWorldMapManager::CheckCollisionCharacterHeight(RwV3d* pPos, RwV3d* pNewPos
 
             if (pCollisionResult->m_attribute == MAPTYPES::ATTRIBUTE_SLIP)
             {
-                RwV3d vSlipVec = Math::VECTOR3_ZERO;
-
-                Math::Vec3_Scale(&vSlipVec, &pCollisionResult->m_vNormal, 0.07f);
-                Math::Vec3_Add(pNewPos, pNewPos, &vSlipVec);
+				pNewPos->x += (pCollisionResult->m_vNormal.x * 0.07f);
+				pNewPos->y += ((-pCollisionResult->m_vNormal.y) * 0.07f);
+				pNewPos->z += (pCollisionResult->m_vNormal.z * 0.07f);				
             };
 
             bResult = true;

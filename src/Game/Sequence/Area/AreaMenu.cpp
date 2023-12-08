@@ -4,7 +4,7 @@
 #include "Game/Component/GameMain/AreaInfo.hpp"
 #include "Game/Component/GameMain/AreaID.hpp"
 #include "Game/System/Sound/GameSound.hpp"
-#include "Game/System/2d/GameText.hpp"
+#include "Game/System/Text/GameText.hpp"
 #include "Game/System/2d/GameFont.hpp"
 #include "Game/System/Texture/TextureManager.hpp"
 #include "System/Common/RenderState.hpp"
@@ -187,14 +187,14 @@ AREATYPES::NEXTSEQUENCE CAreaMenu_Container::AreaMenuSelect_Sub(void)
                 break;
             };
 
-            if (CController::GetDigitalTrigger(iController, CController::DIGITAL_UP))
+            if (CController::GetDigitalTrigger(iController, CController::DIGITAL_LUP))
             {
-                m_nSubCursor = Math::InvClamp(--m_nSubCursor, 0, m_nSubMenuItemCount - 1);
+                m_nSubCursor = InvClamp(--m_nSubCursor, 0, m_nSubMenuItemCount - 1);
                 CGameSound::PlaySE(SDCODE_SE(4100));
             }
-            else if (CController::GetDigitalTrigger(iController, CController::DIGITAL_DOWN))
+            else if (CController::GetDigitalTrigger(iController, CController::DIGITAL_LDOWN))
             {
-                m_nSubCursor = Math::InvClamp(++m_nSubCursor, 0, m_nSubMenuItemCount - 1);
+                m_nSubCursor = InvClamp(++m_nSubCursor, 0, m_nSubMenuItemCount - 1);
                 CGameSound::PlaySE(SDCODE_SE(4100));
             }
             else if (CController::GetDigitalTrigger(iController, CController::DIGITAL_CANCEL))
@@ -224,26 +224,26 @@ AREATYPES::NEXTSEQUENCE CAreaMenu_Container::AreaMenuSelect_Sub(void)
 
             int32 nSubMenuItemCount = (m_nSubCursorPage ? COMBOPAGEMAX - 1 : COMBOPAGEMAX);
             
-            if (CController::GetDigitalTrigger(iController, CController::DIGITAL_UP))
+            if (CController::GetDigitalTrigger(iController, CController::DIGITAL_LUP))
             {
-                m_nSubCursor = Math::InvClamp(--m_nSubCursor, 0, nSubMenuItemCount - 1);
+                m_nSubCursor = InvClamp(--m_nSubCursor, 0, nSubMenuItemCount - 1);
                 CGameSound::PlaySE(SDCODE_SE(4100));
             }
-            else if (CController::GetDigitalTrigger(iController, CController::DIGITAL_DOWN))
+            else if (CController::GetDigitalTrigger(iController, CController::DIGITAL_LDOWN))
             {
-                m_nSubCursor = Math::InvClamp(++m_nSubCursor, 0, nSubMenuItemCount - 1);
+                m_nSubCursor = InvClamp(++m_nSubCursor, 0, nSubMenuItemCount - 1);
                 CGameSound::PlaySE(SDCODE_SE(4100));
             }
-            else if (CController::GetDigitalTrigger(iController, CController::DIGITAL_LEFT))
+            else if (CController::GetDigitalTrigger(iController, CController::DIGITAL_LLEFT))
             {
-                m_nSubCursorPage = Math::InvClamp(--m_nSubCursorPage, 0, 1);
+                m_nSubCursorPage = InvClamp(--m_nSubCursorPage, 0, 1);
                 CGameSound::PlaySE(SDCODE_SE(4100));
 				if (m_nSubCursorPage && (m_nSubCursor == (nSubMenuItemCount - 1)))
 					--m_nSubCursor;
             }
-            else if (CController::GetDigitalTrigger(iController, CController::DIGITAL_RIGHT))
+            else if (CController::GetDigitalTrigger(iController, CController::DIGITAL_LRIGHT))
             {
-                m_nSubCursorPage = Math::InvClamp(++m_nSubCursorPage, 0, 1);
+                m_nSubCursorPage = InvClamp(++m_nSubCursorPage, 0, 1);
                 CGameSound::PlaySE(SDCODE_SE(4100));
                 if (m_nSubCursorPage && (m_nSubCursor == (nSubMenuItemCount - 1)))
                     --m_nSubCursor;
@@ -268,14 +268,14 @@ AREATYPES::NEXTSEQUENCE CAreaMenu_Container::AreaMenuSelect_Sub(void)
             if (!m_bMenuDispFlag)
                 return AREATYPES::NEXTSEQUENCE_AREA;
 
-            if (CController::GetDigitalTrigger(iController, CController::DIGITAL_UP))
+            if (CController::GetDigitalTrigger(iController, CController::DIGITAL_LUP))
             {
-                m_nCursor = Math::InvClamp(--m_nCursor, 0, m_nMenuItemCount - 1);
+                m_nCursor = InvClamp(--m_nCursor, 0, m_nMenuItemCount - 1);
                 CGameSound::PlaySE(SDCODE_SE(4100));
             }
-            else if (CController::GetDigitalTrigger(iController, CController::DIGITAL_DOWN))
+            else if (CController::GetDigitalTrigger(iController, CController::DIGITAL_LDOWN))
             {
-                m_nCursor = Math::InvClamp(++m_nCursor, 0, m_nMenuItemCount - 1);
+                m_nCursor = InvClamp(++m_nCursor, 0, m_nMenuItemCount - 1);
                 CGameSound::PlaySE(SDCODE_SE(4100));
             }
             else if (CController::GetDigitalTrigger(iController, CController::DIGITAL_CANCEL))
@@ -442,24 +442,24 @@ void CAreaMenu_Container::AreaInfoMenuDraw_Sub(void)
         
         if (idAreaCur == AREAID::HOME)
         {
-            CGameFont::m_pFont->SetRGBA(255, 255, 255, 255);
-            CGameFont::m_pFont->Show(
+			CGameFont::SetHeight(CGameFont::GetScreenHeightEx(TYPEDEF::VSCR_H / 2.0f));
+            CGameFont::SetRGBA(255, 255, 255, 255);
+            CGameFont::Show(
                 CAreaInfo::GetDispName(idAreaCur),
-                CGameFont::GetScreenSize() / 223.0f,
                 s_aWindowPos[nWindowNo].x + 60.0f,
                 s_aWindowPos[nWindowNo].y + 50.0f
             );
             
-            CGameFont::m_pFont->SetRGBA(134, 238, 0, 255);
+			CGameFont::SetHeight(CGameFont::GetScreenHeightEx(TYPEDEF::VSCR_H / 1.85f));
+            CGameFont::SetRGBA(134, 238, 0, 255);
 
             float fOffsetX = 70.0f;
             float fOffsetY = 70.0f;
 
             if (CGameData::Record().Antique().GetShopState())
             {
-                CGameFont::m_pFont->Show(
-                    CGameText::GetText(GAMETEXT::VALUE(1224)),
-                    CGameFont::GetScreenSize() / 242.16f,
+                CGameFont::Show(
+                    CGameText::GetText(GAMETEXT(1224)),
                     s_aWindowPos[nWindowNo].x + fOffsetX,
                     s_aWindowPos[nWindowNo].y + fOffsetY
                 );
@@ -468,9 +468,8 @@ void CAreaMenu_Container::AreaInfoMenuDraw_Sub(void)
 
             if (CGameData::Record().Nexus().GetNexusState())
             {
-                CGameFont::m_pFont->Show(
-                    CGameText::GetText(GAMETEXT::VALUE(1223)),
-                    CGameFont::GetScreenSize() / 242.16f,
+                CGameFont::Show(
+                    CGameText::GetText(GAMETEXT(1223)),
                     s_aWindowPos[nWindowNo].x + fOffsetX,
                     s_aWindowPos[nWindowNo].y + fOffsetY
                 );
@@ -479,9 +478,8 @@ void CAreaMenu_Container::AreaInfoMenuDraw_Sub(void)
 
             if (CGameData::Record().Database().GetDatabaseState())
             {
-                CGameFont::m_pFont->Show(
-                    CGameText::GetText(GAMETEXT::VALUE(1225)),
-                    CGameFont::GetScreenSize() / 242.16f,
+                CGameFont::Show(
+                    CGameText::GetText(GAMETEXT(1225)),
                     s_aWindowPos[nWindowNo].x + fOffsetX,
                     s_aWindowPos[nWindowNo].y + fOffsetY
                 );
@@ -495,23 +493,23 @@ void CAreaMenu_Container::AreaInfoMenuDraw_Sub(void)
             s_wszEpisodeBuffer[0]   = UTEXT('\0');
             s_wszEpisodeNoBuffer[0] = UTEXT('\0');
 
-            CUnicodeFont::ConvertToUnicode(s_wszEpisodeNoBuffer, CAreaInfo::GetEpisode(idAreaCur));
+            CGameFont::ConvertToUnicode(s_wszEpisodeNoBuffer, CAreaInfo::GetEpisode(idAreaCur));
             
-            const wchar* pszText = CGameText::GetText(GAMETEXT::VALUE(752));    // EPISODE
+            const wchar* pszText = CGameText::GetText(GAMETEXT(752));    // EPISODE
             CTextData::Sprintf(s_wszEpisodeBuffer, UTEXT("%s %s"), pszText, s_wszEpisodeNoBuffer);
         
-            CGameFont::m_pFont->SetRGBA(255, 170, 0, 255);
-            CGameFont::m_pFont->Show(
+			CGameFont::SetHeight(CGameFont::GetScreenHeightEx(TYPEDEF::VSCR_H / 2.0f));
+
+            CGameFont::SetRGBA(255, 170, 0, 255);
+            CGameFont::Show(
                 s_wszEpisodeBuffer,
-                CGameFont::GetScreenSize() / 223.0f,
                 s_aWindowPos[nWindowNo].x + 60.0f,
                 s_aWindowPos[nWindowNo].y + 65.0f
             );
             
-            CGameFont::m_pFont->SetRGBA(255, 255, 255, 255);
-            CGameFont::m_pFont->Show(
+            CGameFont::SetRGBA(255, 255, 255, 255);
+            CGameFont::Show(
                 CAreaInfo::GetDispName(idAreaCur),
-                CGameFont::GetScreenSize() / 223.0f,
                 s_aWindowPos[nWindowNo].x + 60.0f,
                 s_aWindowPos[nWindowNo].y + 85.0f
             );
@@ -577,7 +575,7 @@ void CAreaMenu_Container::AreaMenuDisp(void)
     if (m_bMenuDispFlag)
     {
         if (m_SubmenuType == SUBMENUTYPE_NONE)
-            m_fCursorRot = Math::InvClamp(m_fCursorRot + 0.1f, 0.0f, 360.0f);
+            m_fCursorRot = InvClamp(m_fCursorRot + 0.1f, 0.0f, 360.0f);
 
         m_sprite.ResetUV();
         m_sprite.SetRGBA(255, 255, 255, AlphaBasis);
@@ -592,9 +590,9 @@ void CAreaMenu_Container::AreaMenuDisp(void)
     for (int32 i = 0; i < m_nMenuItemCount; ++i)
     {
         if (m_nCursor == i)
-            CGameFont::m_pFont->SetRGBA(50, 200, 0, AlphaBasis);
+            CGameFont::SetRGBA(50, 200, 0, AlphaBasis);
         else
-            CGameFont::m_pFont->SetRGBA(255, 170, 0, AlphaBasis);
+            CGameFont::SetRGBA(255, 170, 0, AlphaBasis);
         
         if (m_bMenuDispFlag)
         {
@@ -605,9 +603,9 @@ void CAreaMenu_Container::AreaMenuDisp(void)
                 float(uAnimDur)
             );
             
-            CGameFont::m_pFont->Show(
+			CGameFont::SetHeight(CGameFont::GetScreenHeightEx(TYPEDEF::VSCR_H / 2.15f));
+            CGameFont::Show(
                 GetAreaMenuName(m_aMenuItemTable[i]),
-                CGameFont::GetScreenSize() / 208.0f,
                 fPosX,
                 (i * 25.0f) - 129.0f
             );            
@@ -679,7 +677,7 @@ void CAreaMenu_Container::MenuDispSub_Station(void)
     CSystem2D::PushRenderState();
     if (m_bSubMenuDispFlag)
     {
-        m_fSubCursorRot = Math::InvClamp(m_fSubCursorRot + 0.1f, 0.0f, 360.0f);
+        m_fSubCursorRot = InvClamp(m_fSubCursorRot + 0.1f, 0.0f, 360.0f);
 
         m_sprite.ResetUV();
         m_sprite.SetRGBA(255, 255, 255, AlphaBasis);
@@ -697,9 +695,9 @@ void CAreaMenu_Container::MenuDispSub_Station(void)
     for (int32 i = 0; i < m_nSubMenuItemCount; ++i)
     {
         if (m_nSubCursor == i)
-            CGameFont::m_pFont->SetRGBA(50, 200, 0, AlphaBasis);
+            CGameFont::SetRGBA(50, 200, 0, AlphaBasis);
         else
-            CGameFont::m_pFont->SetRGBA(255, 170, 0, AlphaBasis);
+            CGameFont::SetRGBA(255, 170, 0, AlphaBasis);
 
         if (m_bSubMenuDispFlag)
         {
@@ -709,10 +707,11 @@ void CAreaMenu_Container::MenuDispSub_Station(void)
                 float(m_SubMenuAnimCount),
                 float(uAnimDur)
             );
+
+			CGameFont::SetHeight(CGameFont::GetScreenHeightEx(TYPEDEF::VSCR_H / 2.15f));
             
-            CGameFont::m_pFont->Show(
+            CGameFont::Show(
                 GetStationName(m_aSubMenuItemTable[i]),
-                CGameFont::GetScreenSize() / 208.0f,
                 fPosX,
                 (m_nCursor * 25.0f) + (i * 25.0f) - 79.0f
             );
@@ -762,7 +761,7 @@ void CAreaMenu_Container::MenuDispSub_Combo(void)
     CSystem2D::PushRenderState();
     if (m_bSubMenuDispFlag)
     {
-        m_fSubCursorRot = Math::InvClamp(m_fSubCursorRot + 0.1f, 0.0f, 360.0f);
+        m_fSubCursorRot = InvClamp(m_fSubCursorRot + 0.1f, 0.0f, 360.0f);
 
         m_sprite.ResetUV();
         m_sprite.SetRGBA(255, 255, 255, AlphaBasis);
@@ -788,14 +787,14 @@ void CAreaMenu_Container::MenuDispSub_Combo(void)
 
 
     int32 nPageElements = (m_nSubCursorPage ? COMBOPAGEMAX - 1 : COMBOPAGEMAX);
-    int32 nComboNameText = (m_nSubCursorPage ? GAMETEXT::VALUE(1204) : GAMETEXT::VALUE(1197));
+    int32 nComboNameText = (m_nSubCursorPage ? GAMETEXT(1204) : GAMETEXT(1197));
     
     for (int32 i = 0; i < nPageElements; ++i, ++nComboNameText)
     {
         if (m_nSubCursor == i)
-            CGameFont::m_pFont->SetRGBA(50, 200, 0, AlphaBasis);
+            CGameFont::SetRGBA(50, 200, 0, AlphaBasis);
         else
-            CGameFont::m_pFont->SetRGBA(128, 128, 128, AlphaBasis);
+            CGameFont::SetRGBA(128, 128, 128, AlphaBasis);
 
         if (m_bSubMenuDispFlag)
         {
@@ -805,25 +804,13 @@ void CAreaMenu_Container::MenuDispSub_Combo(void)
                 float(m_SubMenuAnimCount),
                 float(uAnimDur)
             );
+
+			CGameFont::SetHeight(CGameFont::GetScreenHeightEx(TYPEDEF::VSCR_H / 2.15f));
             
             if (IsComboMenuSecret(i + (COMBOPAGEMAX * m_nSubCursorPage)))
-            {
-                CGameFont::m_pFont->Show(
-                    CGameText::GetText(GAMETEXT::VALUE(nComboNameText)),
-                    CGameFont::GetScreenSize() / 208.0f,
-                    fPosX,
-                    (i * 25.0f) - 109.0f
-                );
-            }
+                CGameFont::Show(CGameText::GetText(GAMETEXT(nComboNameText)), fPosX, (i * 25.0f) - 109.0f);
             else
-            {
-                CGameFont::m_pFont->Show(
-                    CGameText::GetText(GAMETEXT::VALUE(901)),
-                    CGameFont::GetScreenSize() / 208.0f,
-                    fPosX,
-                    (i * 25.0f) - 109.0f
-                );
-            };
+                CGameFont::Show(CGameText::GetText(GAMETEXT(901)), fPosX, (i * 25.0f) - 109.0f);            
         };
     };
 
@@ -854,7 +841,7 @@ void CAreaMenu_Container::MenuDispSub_Combo(void)
         { COMBOTYPE_A, COMBOTYPE_A, COMBOTYPE_B, COMBOTYPE_B, COMBOTYPE_C, },
     };
     
-    int32 nComboDescText = (m_nSubCursorPage ? GAMETEXT::VALUE(1217) : GAMETEXT::VALUE(1210));
+    int32 nComboDescText = (m_nSubCursorPage ? GAMETEXT(1217) : GAMETEXT(1210));
     int32 nSubCursorReal = (m_nSubCursor + (COMBOPAGEMAX * m_nSubCursorPage));
     
     if (m_bSubMenuDispFlag && IsComboMenuSecret(nSubCursorReal))
@@ -866,13 +853,10 @@ void CAreaMenu_Container::MenuDispSub_Combo(void)
             bbox.y = -370.0f;
             bbox.w = 400.0f;
             bbox.h = 300.0f;
-            
-            CGameFont::m_pFont->SetRGBA(0, 128, 200, 255);
-            CGameFont::m_pFont->Flow(
-                CGameText::GetText(GAMETEXT::VALUE(nComboDescText + m_nSubCursor)),
-                CGameFont::GetScreenSize() / 271.0f,
-                &bbox
-            );
+
+			CGameFont::SetHeight(CGameFont::GetScreenHeightEx(TYPEDEF::VSCR_H / 1.65f));
+            CGameFont::SetRGBA(0, 128, 200, 255);
+            CGameFont::Flow(CGameText::GetText(GAMETEXT(nComboDescText + m_nSubCursor)), &bbox);
         }
         else
         {
@@ -1111,16 +1095,16 @@ void CAreaMenu_Container::WindowDisp(WINDOWTYPE type, float x, float y, float w,
 
 const wchar* CAreaMenu_Container::GetAreaMenuName(int32 nMenuNo)
 {
-    static const GAMETEXT::VALUE s_aAreaMenuGametext[] =
+    static const GAMETEXT s_aAreaMenuGametext[] =
     {
-        GAMETEXT::VALUE(741),
-        GAMETEXT::VALUE(742),
-        GAMETEXT::VALUE(744),
-        GAMETEXT::VALUE(745),
-        GAMETEXT::VALUE(746),
-        GAMETEXT::VALUE(747),
-        GAMETEXT::VALUE(748),
-        GAMETEXT::VALUE(749),
+        GAMETEXT(741),
+        GAMETEXT(742),
+        GAMETEXT(744),
+        GAMETEXT(745),
+        GAMETEXT(746),
+        GAMETEXT(747),
+        GAMETEXT(748),
+        GAMETEXT(749),
     };
 
     static_assert(COUNT_OF(s_aAreaMenuGametext) == MAINMAX, "update me");
@@ -1141,25 +1125,25 @@ const wchar* CAreaMenu_Container::GetStationName(int32 nWarpNo)
     switch (nWarpNo)
     {
     case WARP_NY:
-        return CGameText::GetText(GAMETEXT::VALUE(89));
+        return CGameText::GetText(GAMETEXT(89));
         
     case WARP_DHO:
-        return CGameText::GetText(GAMETEXT::VALUE(90));
+        return CGameText::GetText(GAMETEXT(90));
         
     case WARP_TRI:
-        return CGameText::GetText(GAMETEXT::VALUE(91));
+        return CGameText::GetText(GAMETEXT(91));
         
     case WARP_JPN:
-        return CGameText::GetText(GAMETEXT::VALUE(92));
+        return CGameText::GetText(GAMETEXT(92));
         
     case WARP_FNY:
         if (CGameData::Record().Area().GetAreaState(AREAID::ID_AREA50) == CAreaRecord::STATE_CLEAR)
-            return CGameText::GetText(GAMETEXT::VALUE(95));
+            return CGameText::GetText(GAMETEXT(95));
         else
-            return CGameText::GetText(GAMETEXT::VALUE(93));
+            return CGameText::GetText(GAMETEXT(93));
 
     case WARP_KUR:
-        return CGameText::GetText(GAMETEXT::VALUE(94));
+        return CGameText::GetText(GAMETEXT(94));
 
     default:
         ASSERT(false);

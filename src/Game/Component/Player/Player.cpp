@@ -78,12 +78,12 @@ void CPlayer::Run(void)
     if (!IsEnableCharacterChanging())
         return;
 
-    if (m_nControllerNo >= CGamepad::Max())
+    if (m_nControllerNo >= IGamepad::Max())
         return;
 
 	uint32 uDigitalTrigger = CController::GetDigitalTrigger(m_nControllerNo);
 
-    if (CGamepad::CheckFunction(uDigitalTrigger, CGamepad::FUNCTION_SWITCH_CHR))
+    if (IGamepad::CheckFunction(uDigitalTrigger, IGamepad::FUNCTION_SWITCH_CHR))
     {
         ChangeNextCharacter();
     };
@@ -162,7 +162,7 @@ PLAYERID::VALUE CPlayer::GetCharacterID(int32 nIndex) const
     if (pPlayerChr)
         return pPlayerChr->GetID();
     else
-        return PLAYERID::ID_INVALID;
+        return PLAYERID::ID_MAX;
 };
 
 

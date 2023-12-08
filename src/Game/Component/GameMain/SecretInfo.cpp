@@ -550,7 +550,7 @@ struct CSecretInfo::PASSWORDINFO
 
     static const AREASECRET s_aAreaSecret[] =
     {
-#ifndef _TARGET_PC
+#ifndef TARGET_PC
         { AREAID::ID_AREA45, SECRETID::ID_HOME_ARCADEGAME               },
 #endif
         { AREAID::ID_AREA34, SECRETID::ID_HOME_SAMURAI_LEO,             },

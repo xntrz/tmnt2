@@ -7,7 +7,7 @@ class CEnemy;
 class CGameEnemy
 {
 public:
-    static CGameEnemy& Dummy(void);
+    static CGameEnemy* Dummy(void);
     
     CGameEnemy(void);
     ~CGameEnemy(void);
@@ -23,6 +23,8 @@ public:
     CEnemy& Enemy(void) const;
 
 private:
+    static CGameEnemy m_dummy;
+    
     uint32 m_hObj;
     CEnemy* m_pEnemy;
     RwV3d m_vPosition;

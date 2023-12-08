@@ -14,12 +14,9 @@
 
 namespace Karai
 {
-    static const RwV3d CHARGE_ATTACK_LOCAL_POSITION = { 0.0f, 0.025f, 1.0f };
-
-    
     bool CAttackJump::IsEnableChangeStatus(PLAYERTYPES::STATUS status)
     {
-        PLAYERTYPES::STATUS aStatusArray [] =
+        PLAYERTYPES::STATUS aStatusArray[] =
         {
             PLAYERTYPES::STATUS_JUMP,
             PLAYERTYPES::STATUS_JUMP_2ND,
@@ -34,7 +31,7 @@ namespace Karai
 
     void CAttackJump::OnAttach(void)
     {
-        Character().ChangeMotion("JAttack");
+        Character().ChangeMotion(Karai::MOTIONNAMES::ATTACK_JUMP);
         
         RwV3d vVelocity = Math::VECTOR3_ZERO;
         Character().GetVelocity(&vVelocity);
@@ -56,6 +53,11 @@ namespace Karai
         ;
     };
 
+    
+    //
+    // *********************************************************************************
+    //
+
 
     void CAttackAABBC::OnDischargeWave(void)
     {
@@ -63,12 +65,17 @@ namespace Karai
         RwV3d vPositionLocal = Math::VECTOR3_ZERO;
         
         Character().GetBodyPosition(&vPosition);
-        Character().RotateVectorByDirection(&vPositionLocal, &CHARGE_ATTACK_LOCAL_POSITION);
+        Character().RotateVectorByDirection(&vPositionLocal, &Karai::CHARGE_ATTACK_LOCAL_POSITION);
 
         Math::Vec3_Add(&vPosition, &vPosition, &vPositionLocal);
 
         MAGIC_GENERIC::ChargeAttackKarai(&vPosition, Character().GetDirection(), m_pPlayerChr, MAGIC_GENERIC::STEP_THREE);
     };
+
+    
+    //
+    // *********************************************************************************
+    //
 
 
     void CAttackB::OnDischargeWave(MAGIC_GENERIC::STEP step)
@@ -77,7 +84,7 @@ namespace Karai
         RwV3d vPositionLocal = Math::VECTOR3_ZERO;
 
         Character().GetBodyPosition(&vPosition);
-        Character().RotateVectorByDirection(&vPositionLocal, &CHARGE_ATTACK_LOCAL_POSITION);
+        Character().RotateVectorByDirection(&vPositionLocal, &Karai::CHARGE_ATTACK_LOCAL_POSITION);
 
         Math::Vec3_Add(&vPosition, &vPosition, &vPositionLocal);
 
@@ -98,44 +105,37 @@ CKarai::CKarai(GAMETYPES::COSTUME costume)
     //
     
     CPlayerCharacter::PARAMETER parameter = { 0 };
-    parameter.m_chrparameter.m_bToon = true;
-    parameter.m_chrparameter.m_pszModelName = "karai";
+    parameter.m_chrparameter.m_bToon            = true;
+    parameter.m_chrparameter.m_pszModelName     = "karai";
     parameter.m_chrparameter.m_pszMotionSetName = "karai";
-    parameter.m_feature.m_fWalkMoveSpeed = 2.0f;
-    parameter.m_feature.m_fLiftWalkMoveSpeed = 3.6f;
-    parameter.m_feature.m_fRunMoveSpeed = 5.2f;
-    parameter.m_feature.m_fDashMoveSpeed = 16.0f;
-    parameter.m_feature.m_fDashTime = 0.2f;
-    parameter.m_feature.m_fJumpInitializeSpeed = 7.5f;
-    parameter.m_feature.m_fAerialMoveSpeed = 5.2f;
-    parameter.m_feature.m_fAerialAcceleration = 12.0f;
-    parameter.m_feature.m_nKnifeAttachBoneID = CHARACTERTYPES::BONEID_RIGHT_WRIST;
-    parameter.m_pStateMachine = new CPlayerStateMachine(this, PLAYERTYPES::NORMALMAX);
+    parameter.m_feature.m_fWalkMoveSpeed        = 2.0f;
+    parameter.m_feature.m_fLiftWalkMoveSpeed    = 3.6f;
+    parameter.m_feature.m_fRunMoveSpeed         = 5.2f;
+    parameter.m_feature.m_fDashMoveSpeed        = 16.0f;
+    parameter.m_feature.m_fDashTime             = 0.2f;
+    parameter.m_feature.m_fJumpInitializeSpeed  = 7.5f;
+    parameter.m_feature.m_fAerialMoveSpeed      = 5.2f;
+    parameter.m_feature.m_fAerialAcceleration   = 12.0f;
+    parameter.m_feature.m_nKnifeAttachBoneID    = CHARACTERTYPES::BONEID_RIGHT_WRIST;
+
+    parameter.m_pStateMachine = new CPlayerStateMachine(this, PLAYERTYPES::STATUS::NORMALMAX);
     ASSERT(parameter.m_pStateMachine);
 
     CStatus::RegistDefaultForStateMachine(*parameter.m_pStateMachine);
 
-    parameter.m_pStateMachine->RegistStatus(PLAYERTYPES::STATUS_ATTACK_JUMP, new Karai::CAttackJump);
-    parameter.m_pStateMachine->RegistStatus(PLAYERTYPES::STATUS_ATTACK_AABBC, new Karai::CAttackAABBC);
-    parameter.m_pStateMachine->RegistStatus(PLAYERTYPES::STATUS_ATTACK_B, new Karai::CAttackB);
+    parameter.m_pStateMachine->RegistStatus(PLAYERTYPES::STATUS_ATTACK_JUMP,    new Karai::CAttackJump);
+    parameter.m_pStateMachine->RegistStatus(PLAYERTYPES::STATUS_ATTACK_AABBC,   new Karai::CAttackAABBC);
+    parameter.m_pStateMachine->RegistStatus(PLAYERTYPES::STATUS_ATTACK_B,       new Karai::CAttackB);
 
     Initialize(&parameter);
 
-    m_pModuleMan->Include(
-        CCircleShadowModule::New(this, 1.5f, 1.5f, true)
-    );
+    m_pModuleMan->Include(CCircleShadowModule::New(this, 1.5f, 1.5f, true));
 };
 
 
 CKarai::~CKarai(void)
 {
     ;
-};
-
-
-void CKarai::Run(void)
-{
-    CPlayerCharacter::Run();
 };
 
 
@@ -161,5 +161,5 @@ void CKarai::ShootingKnife(void)
     CShotManager::Shot(SHOTID::ID_KUNAI_PLAYER, &vPosition, m_fDirection, this, 0.26f, 5.0f);
 
     if (!IsAttributeFlagSet(PLAYERTYPES::ATTRIBUTE_INNUMERABLE_KNIFE))
-        CGameProperty::Player(GetPlayerNo()).AddShurikenNum(-1);
+        CGameProperty::Player(GetPlayerNo())->AddShurikenNum(-1);
 };

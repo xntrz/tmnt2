@@ -2,6 +2,44 @@
 #include "ProcessMail.hpp"
 
 
+class CSequence::CPrivate
+{
+public:
+	struct MESSAGE
+	{
+		enum TYPE
+		{
+			TYPE_NONE = 0,
+			TYPE_JUMP,
+			TYPE_CALL,
+			TYPE_RET,
+			TYPE_KILL,
+			TYPE_MAX,
+		};
+
+		int32 m_id;
+		const void* m_param;
+		TYPE m_type;
+		int32 m_iLabelParent;
+		int32 m_iLabelChild;
+		int32 m_iLabelPrev;
+	};
+
+	typedef MESSAGE* PMESSAGE;
+
+	static bool m_bMemCheck;
+	static MESSAGE m_SeqMsg;
+
+	int32 MESSAGE_ID;
+	int32 m_iLabelParent;
+	int32 m_iLabelChild;
+	int32 m_iLabelPrev;
+};
+
+
+/*static*/ bool CSequence::CPrivate::m_bMemCheck;
+
+
 /*static*/ CSequence::CPrivate::MESSAGE CSequence::CPrivate::m_SeqMsg =
 {
 	/*m_id*/			0,
@@ -16,18 +54,32 @@
 /*static*/ int32 CSequence::m_iLabelCurrently = PROCESSTYPES::LABEL_EOL;
 
 
-CSequence::CSequence(void)
+/*static*/ int32 CSequence::GetCurrently(void)
 {
-	m_private.MESSAGE_ID	= 'SEQM';
-	m_private.m_iLabelParent= PROCESSTYPES::LABEL_EOL;
-	m_private.m_iLabelChild = PROCESSTYPES::LABEL_EOL;
-	m_private.m_iLabelPrev	= PROCESSTYPES::LABEL_EOL;
+	return m_iLabelCurrently;
+};
+
+
+CSequence::CSequence(void)
+: m_pPrivate(nullptr)
+{
+	m_pPrivate = new CPrivate;
+	ASSERT(m_pPrivate);
+	
+	m_pPrivate->MESSAGE_ID 		= 'SEQM';
+	m_pPrivate->m_iLabelParent	= PROCESSTYPES::LABEL_EOL;
+	m_pPrivate->m_iLabelChild 	= PROCESSTYPES::LABEL_EOL;
+	m_pPrivate->m_iLabelPrev	= PROCESSTYPES::LABEL_EOL;
 };
 
 
 CSequence::~CSequence(void)
 {
-	;
+	if (m_pPrivate)
+	{
+		delete m_pPrivate;
+		m_pPrivate = nullptr;
+	};
 };
 
 
@@ -35,31 +87,37 @@ bool CSequence::Attach(void)
 {
 	ASSERT(Info().State() == PROCESSTYPES::STATE_START);
 
-	PROCESSTYPES::MAIL mail = PROCESSTYPES::MAIL::EMPTY;
-	if (Mail().Recv(mail))
-	{
+	bool bResult = false;
+	const void* param = nullptr;
+	
+	PROCESSTYPES::MAIL mail;
+	if (Mail().Recv(mail) && (mail.m_type == PROCESSTYPES::MAIL::TYPE_MSG))
+	{	
 		CPrivate::MESSAGE* pMsg = CPrivate::PMESSAGE(mail.m_param);
 		ASSERT(pMsg->m_id == Private().MESSAGE_ID);
+
 		switch (pMsg->m_type)
 		{
 		case CPrivate::MESSAGE::TYPE_JUMP:
 		case CPrivate::MESSAGE::TYPE_CALL:
-			m_private.m_iLabelParent= pMsg->m_iLabelParent;
-			m_private.m_iLabelChild = pMsg->m_iLabelChild;
-			m_private.m_iLabelPrev	= pMsg->m_iLabelPrev;
-			m_iLabelCurrently = Info().Label();
-			return OnAttach(pMsg->m_param);
+			{
+				param = pMsg->m_param;
+
+				Private().m_iLabelParent= pMsg->m_iLabelParent;
+				Private().m_iLabelChild	= pMsg->m_iLabelChild;
+				Private().m_iLabelPrev	= pMsg->m_iLabelPrev;			
+			}
+			break;
 
 		default:
 			ASSERT(false);
 			return false;
 		};
-	}
-	else
-	{
-		m_iLabelCurrently = Info().Label();
-		return OnAttach();
 	};
+
+	m_iLabelCurrently = Info().Label();
+	
+	return OnAttach(param);
 };
 
 
@@ -71,23 +129,32 @@ void CSequence::Detach(void)
 
 void CSequence::Move(void)
 {
-	PROCESSTYPES::MAIL mail = PROCESSTYPES::MAIL::EMPTY;
+	PROCESSTYPES::MAIL mail;
 
-	if (Info().State() == PROCESSTYPES::STATE_RESUME && Mail().Recv(mail))
+	if (Info().State() == PROCESSTYPES::STATE_RESUME
+		&& Mail().Recv(mail)
+		&& (mail.m_type == PROCESSTYPES::MAIL::TYPE_MSG))
 	{
 		CPrivate::MESSAGE* pMsg = CPrivate::PMESSAGE(mail.m_param);
 		ASSERT(pMsg->m_id == Private().MESSAGE_ID);
+
 		switch (pMsg->m_type)
 		{
 		case CPrivate::MESSAGE::TYPE_RET:
-			m_private.m_iLabelChild = PROCESSTYPES::LABEL_EOL;
-			m_iLabelCurrently = Info().Label();
-			OnMove(true, pMsg->m_param);
-			DisposeMessage();
+			{
+				Private().m_iLabelChild = PROCESSTYPES::LABEL_EOL;
+				
+				m_iLabelCurrently = Info().Label();
+				
+				OnMove(true, pMsg->m_param);
+				DisposeMessage();
+			}
 			break;
 
 		case CPrivate::MESSAGE::TYPE_KILL:
-			Kill(pMsg->m_iLabelParent, pMsg->m_param);
+			{
+				Kill(pMsg->m_iLabelParent, pMsg->m_param);
+			}			
 			break;
 
 		default:
@@ -97,7 +164,7 @@ void CSequence::Move(void)
 	}
 	else
 	{
-		OnMove();
+		OnMove(false, nullptr);
 		DisposeMessage();
 	};
 };
@@ -109,44 +176,47 @@ void CSequence::Draw(void) const
 };
 
 
-bool CSequence::Call(int32 iLabel, bool bKeepDraw, const void* param)
+bool CSequence::Call(int32 iLabel, const void* pParam, bool bDrawEnable)
 {
-	CPrivate::m_SeqMsg.m_id				= Private().MESSAGE_ID;
-	CPrivate::m_SeqMsg.m_param			= param;
-	CPrivate::m_SeqMsg.m_type			= CPrivate::MESSAGE::TYPE_CALL;
-	CPrivate::m_SeqMsg.m_iLabelParent	= Info().Label();
-	CPrivate::m_SeqMsg.m_iLabelChild	= PROCESSTYPES::LABEL_EOL;
-	CPrivate::m_SeqMsg.m_iLabelPrev		= PROCESSTYPES::LABEL_EOL;
+	CPrivate::MESSAGE* pMsg = &CPrivate::m_SeqMsg;
 
-	m_private.m_iLabelChild = iLabel;
+	pMsg->m_id 			= Private().MESSAGE_ID;
+	pMsg->m_param 		= pParam;
+	pMsg->m_type 		= CPrivate::MESSAGE::TYPE_CALL;
+	pMsg->m_iLabelParent= Info().Label();
+	pMsg->m_iLabelChild = PROCESSTYPES::LABEL_EOL;
+	pMsg->m_iLabelPrev 	= PROCESSTYPES::LABEL_EOL;
+
+	Private().m_iLabelChild = iLabel;
 
 	if (!Mail().Send(Info().Label(), PROCESSTYPES::MAIL::TYPE_PAUSE))
 		return false;
-	
-	if (bKeepDraw)
+
+	if (bDrawEnable)
 		Mail().Send(Info().Label(), PROCESSTYPES::MAIL::TYPE_DRAW_ENABLE);
 
 	if (!Mail().Send(iLabel, PROCESSTYPES::MAIL::TYPE_ATTACH))
 		return false;
 
-	if (!Mail().Send(iLabel, PROCESSTYPES::MAIL::TYPE_MSG, &CPrivate::m_SeqMsg))
-		return false;
+	Mail().Send(iLabel, PROCESSTYPES::MAIL::TYPE_MSG, pMsg);
 
 	return true;
 };
 
 
-bool CSequence::Jump(int32 iLabel, const void* param)
+bool CSequence::Jump(int32 iLabel, const void* pParam)
 {
 	if (iLabel == PROCESSTYPES::LABEL_PREV)
 		iLabel = Private().m_iLabelPrev;
 
-	CPrivate::m_SeqMsg.m_id				= Private().MESSAGE_ID;
-	CPrivate::m_SeqMsg.m_param			= param;
-	CPrivate::m_SeqMsg.m_type			= CPrivate::MESSAGE::TYPE_JUMP;
-	CPrivate::m_SeqMsg.m_iLabelParent	= Private().m_iLabelParent;
-	CPrivate::m_SeqMsg.m_iLabelChild	= Private().m_iLabelChild;
-	CPrivate::m_SeqMsg.m_iLabelPrev		= Info().Label();
+	CPrivate::MESSAGE* pMsg = &CPrivate::m_SeqMsg;
+
+	pMsg->m_id 			= Private().MESSAGE_ID;
+	pMsg->m_param 		= pParam;
+	pMsg->m_type 		= CPrivate::MESSAGE::TYPE_JUMP;
+	pMsg->m_iLabelParent= Private().m_iLabelParent;
+	pMsg->m_iLabelChild = Private().m_iLabelChild;
+	pMsg->m_iLabelPrev 	= Info().Label();
 
 	if (!Mail().Send(Info().Label(), PROCESSTYPES::MAIL::TYPE_DETACH))
 		return false;
@@ -154,55 +224,54 @@ bool CSequence::Jump(int32 iLabel, const void* param)
 	if (!Mail().Send(iLabel, PROCESSTYPES::MAIL::TYPE_ATTACH))
 		return false;
 
-	if (!Mail().Send(iLabel, PROCESSTYPES::MAIL::TYPE_MSG, &CPrivate::m_SeqMsg))
-		return false;
+	Mail().Send(iLabel, PROCESSTYPES::MAIL::TYPE_MSG, pMsg);
 
 	return true;
 };
 
 
-bool CSequence::Kill(int32 iLabel, const void* param)
+bool CSequence::Kill(int32 iBackToLabel, const void* pReturnValue)
 {
-	if (iLabel == Private().m_iLabelParent)
-		return Ret(param);
+	CPrivate::MESSAGE* pMsg = &CPrivate::m_SeqMsg;
 
-	CPrivate::m_SeqMsg.m_id				= Private().MESSAGE_ID;
-	CPrivate::m_SeqMsg.m_param			= param;
-	CPrivate::m_SeqMsg.m_type			= CPrivate::MESSAGE::TYPE_KILL;
-	CPrivate::m_SeqMsg.m_iLabelParent	= iLabel;
-	CPrivate::m_SeqMsg.m_iLabelChild	= PROCESSTYPES::LABEL_EOL;
-	CPrivate::m_SeqMsg.m_iLabelPrev		= PROCESSTYPES::LABEL_EOL;
+	pMsg->m_id 			= Private().MESSAGE_ID;
+	pMsg->m_param 		= pReturnValue;
+	pMsg->m_type 		= CPrivate::MESSAGE::TYPE_KILL;
+	pMsg->m_iLabelParent= iBackToLabel;
+	pMsg->m_iLabelChild = PROCESSTYPES::LABEL_EOL;
+	pMsg->m_iLabelPrev 	= PROCESSTYPES::LABEL_EOL;
 
-	if (Mail().Send(Info().Label(), PROCESSTYPES::MAIL::TYPE_DETACH))
-	{
-		if (Mail().Send(Private().m_iLabelParent, PROCESSTYPES::MAIL::TYPE_RESUME))
-			Mail().Send(Private().m_iLabelParent, PROCESSTYPES::MAIL::TYPE_MSG, &CPrivate::m_SeqMsg);
+	if (iBackToLabel == Private().m_iLabelParent)
+		return Ret(pReturnValue);
 
-		return true;
-	};
+	if (!Mail().Send(Info().Label(), PROCESSTYPES::MAIL::TYPE_DETACH))
+		return false;
 
-	return false;
+	if (Mail().Send(Private().m_iLabelParent, PROCESSTYPES::MAIL::TYPE_RESUME))
+		Mail().Send(Private().m_iLabelParent, PROCESSTYPES::MAIL::TYPE_MSG, pMsg);
+		
+	return true;
 };
 
 
-bool CSequence::Ret(const void* param)
+bool CSequence::Ret(const void* pReturnValue)
 {
-	CPrivate::m_SeqMsg.m_id				= Private().MESSAGE_ID;
-	CPrivate::m_SeqMsg.m_param			= param;
-	CPrivate::m_SeqMsg.m_type			= CPrivate::MESSAGE::TYPE_RET;
-	CPrivate::m_SeqMsg.m_iLabelParent	= PROCESSTYPES::LABEL_EOL;
-	CPrivate::m_SeqMsg.m_iLabelChild	= PROCESSTYPES::LABEL_EOL;
-	CPrivate::m_SeqMsg.m_iLabelPrev		= PROCESSTYPES::LABEL_EOL;
+	CPrivate::MESSAGE* pMsg = &CPrivate::m_SeqMsg;
+	
+	pMsg->m_id 			= Private().MESSAGE_ID;
+	pMsg->m_param 		= pReturnValue;
+	pMsg->m_type 		= CPrivate::MESSAGE::TYPE_RET;
+	pMsg->m_iLabelParent= PROCESSTYPES::LABEL_EOL;
+	pMsg->m_iLabelChild = PROCESSTYPES::LABEL_EOL;
+	pMsg->m_iLabelPrev 	= PROCESSTYPES::LABEL_EOL;
 
-	if (Mail().Send(Info().Label(), PROCESSTYPES::MAIL::TYPE_DETACH))
-	{
-		if (Mail().Send(Private().m_iLabelParent, PROCESSTYPES::MAIL::TYPE_RESUME))
-			Mail().Send(Private().m_iLabelParent, PROCESSTYPES::MAIL::TYPE_MSG, &CPrivate::m_SeqMsg);
+	if (!Mail().Send(Info().Label(), PROCESSTYPES::MAIL::TYPE_DETACH))
+		return false;
 
-		return true;
-	};
+	if (Mail().Send(Private().m_iLabelParent, PROCESSTYPES::MAIL::TYPE_RESUME))
+		Mail().Send(Private().m_iLabelParent, PROCESSTYPES::MAIL::TYPE_MSG, pMsg);
 
-	return false;
+	return true;
 };
 
 
@@ -220,19 +289,7 @@ int32 CSequence::Parent(void) const
 
 void CSequence::DisposeMessage(void)
 {
-	PROCESSTYPES::MAIL mail = PROCESSTYPES::MAIL::EMPTY;
+	PROCESSTYPES::MAIL mail;
 	while (Mail().Recv(mail))
 		;	
-};
-
-
-/*static*/ int32 CSequence::GetCurrently(void)
-{
-	return m_iLabelCurrently;
-};
-
-
-const CSequence::CPrivate& CSequence::Private(void) const
-{
-	return m_private;
 };

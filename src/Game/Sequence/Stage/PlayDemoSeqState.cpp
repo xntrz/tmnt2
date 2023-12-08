@@ -5,7 +5,7 @@
 #include "Game/System/Map/MapCamera.hpp"
 #include "Game/System/Misc/ScreenFade.hpp"
 #include "Game/System/Misc/PadStream.hpp"
-#include "System/Common/Controller.hpp"
+#include "Game/System/Misc/Gamepad.hpp"
 
 
 void CPlayDemoStageSeqState::OnAttach(CStageBaseSequence* pSeq, const void* pParam)
@@ -21,7 +21,7 @@ void CPlayDemoStageSeqState::OnAttach(CStageBaseSequence* pSeq, const void* pPar
     else
         pMapCamera->SetPathMode(CMapCamera::PATHMODE_SINGLEPLAYER);
 
-    CScreenFade::StartOut();
+    CScreenFade::BlackIn();
     m_fTime = 0.0f;
     m_step = STEP_PLAY;
 };
@@ -52,20 +52,20 @@ bool CPlayDemoStageSeqState::OnMove(CStageBaseSequence* pSeq)
             {
 				m_fTime += CGameProperty::GetElapsedTime();
 
-				if (stage.GetResult() ||
-					CPadStreamSwitch::m_bEnd ||
-					m_fTime >= 58.0f ||
-					CController::GetDigitalTrigger(CController::CONTROLLER_UNLOCKED_ON_VIRTUAL, CController::DIGITAL_OK))
-				{
+                bool bIsStageEnd    = (stage.GetResult() != CGameStage::RESULT_NONE);
+                bool bIsPadStreamEnd= (CPadStreamSwitch::m_bEnd);
+                bool bIsTimeout     = (m_fTime > 58.0f);
+                bool bIsUserStopRq  = (IPad::GetDigitalTrigger(IPad::CONTROLLER_UNLOCKED_ON_VIRTUAL, IPad::DIGITAL_OK));
+
+                if (bIsStageEnd || bIsPadStreamEnd || bIsTimeout || bIsUserStopRq)
                     m_step = STEP_PLAYEND;
-				};
             };
         }
         break;
 
     case STEP_PLAYEND:
         {
-            CScreenFade::StartIn();
+            CScreenFade::BlackOut();
             m_step = STEP_FADEIN;
         }
         break;

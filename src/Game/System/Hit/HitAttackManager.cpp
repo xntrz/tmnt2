@@ -10,6 +10,13 @@
 #include "Game/System/Misc/DebugShape.hpp"
 
 
+#ifdef _DEBUG
+#define DATA_POOL_SIZE (128)
+#else
+#define DATA_POOL_SIZE (128)
+#endif
+
+
 class CHitRecordContainer;
 
 
@@ -81,8 +88,8 @@ public:
     bool IsHit(const CHitCatchData* pHitCatchData);
 
 private:
-    CAttackDataRecord m_aAttackDataRecord[64];
-    CCatchDataRecord m_aCatchDataRecord[64];
+    CAttackDataRecord m_aAttackDataRecord[DATA_POOL_SIZE];
+    CCatchDataRecord m_aCatchDataRecord[DATA_POOL_SIZE];
     CList<CAttackDataRecord> m_listAttackPool;
     CList<CCatchDataRecord> m_listCatchPool;
     CList<CAttackDataRecord>* m_pListOld;
@@ -111,8 +118,8 @@ public:
     bool IsHitTarget(const CHitAttackData* pAttack, const CHitCatchData* pCatch) const;
 
 private:
-    CHitAttackData m_aHitAttackData[64];
-    CHitCatchData m_aHitCatchData[64];
+    CHitAttackData m_aHitAttackData[DATA_POOL_SIZE];
+    CHitCatchData m_aHitCatchData[DATA_POOL_SIZE];
     CList<CHitAttackData> m_listAttackPool;
     CList<CHitCatchData> m_listCatchPool;
     CList<CHitAttackData> m_listAttackAlloc;
@@ -776,7 +783,10 @@ static inline CHitAttackContainer& HitAttackContainer(void)
 };
 
 
-/*static*/ bool CHitAttackManager::m_bDebugDrawHitSphere = false;
+#ifdef _DEBUG
+/*static*/ bool CHitAttackManager::m_bDebugDrawSphereAttack = false;
+/*static*/ bool CHitAttackManager::m_bDebugDrawSphereCatch = false;
+#endif
 
 
 /*static*/ void CHitAttackManager::Initialize(void)
@@ -829,8 +839,9 @@ static inline CHitAttackContainer& HitAttackContainer(void)
 /*static*/ void CHitAttackManager::RegistAttack(const CHitAttackData* pHitAttack)
 {
     ASSERT(pHitAttack);
+    
 #ifdef _DEBUG
-    if (m_bDebugDrawHitSphere)
+    if (m_bDebugDrawSphereAttack)
     {
         RwSphere sphere = { 0 };
         
@@ -851,7 +862,8 @@ static inline CHitAttackContainer& HitAttackContainer(void)
 
         CDebugShape::ShowSphere(&sphere, { 0xFF, 0xFF, 0x00, 0xFF });
     };
-#endif    
+#endif   
+    
     ASSERT(pHitAttack->GetObject());
     HitAttackContainer().RegistAttack(pHitAttack);
 };
@@ -860,8 +872,9 @@ static inline CHitAttackContainer& HitAttackContainer(void)
 /*static*/ void CHitAttackManager::RegistCatch(const CHitCatchData* pHitCatch)
 {
     ASSERT(pHitCatch);
+    
 #ifdef _DEBUG
-    if (m_bDebugDrawHitSphere)
+    if (m_bDebugDrawSphereCatch)
     {
         RwSphere sphere = { 0 };
 
@@ -879,6 +892,7 @@ static inline CHitAttackContainer& HitAttackContainer(void)
         CDebugShape::ShowSphere(&sphere, { 0xFF, 0x00, 0xFF, 0xFF });
     };
 #endif
+    
     ASSERT(pHitCatch->GetObject());
     HitAttackContainer().RegistCatch(pHitCatch);
 };

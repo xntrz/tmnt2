@@ -9,10 +9,11 @@
 #include "Game/Component/GameMain/MapInfo.hpp"
 #include "Game/Component/Menu/Dialog.hpp"
 #include "Game/System/Sound/GameSound.hpp"
-#include "Game/System/2d/GameText.hpp"
+#include "Game/System/Text/GameText.hpp"
 #include "Game/System/2d/GameFont.hpp"
 #include "Game/System/Misc/ScreenFade.hpp"
 #include "Game/System/Texture/TextureManager.hpp"
+#include "Game/ProcessList.hpp"
 #include "System/Common/File/FileID.hpp"
 #include "System/Common/RenderState.hpp"
 #include "System/Common/Sprite.hpp"
@@ -20,7 +21,6 @@
 #include "System/Common/Controller.hpp"
 #include "System/Common/SystemText.hpp"
 #include "System/Common/TextData.hpp"
-#include "System/Common/Process/ProcessList.hpp"
 
 
 class CAreaWorkPool
@@ -33,7 +33,7 @@ public:
         DIRECTION_LEFT,
         DIRECTION_RIGHT,
 
-        DIRECTIONUM,
+        DIRECTIONNUM,
     };
 
     enum ANIMATION
@@ -48,9 +48,9 @@ public:
         enum
         {
             STEP_NONE = 0,
-            STEP_FADEOUT,
-            STEP_SIZEIN,
             STEP_FADEIN,
+            STEP_SIZEIN,
+            STEP_FADEOUT,
         };
 
         int32 m_nStep;
@@ -121,6 +121,29 @@ private:
 
 
 CAreaWorkPool::CAreaWorkPool(void)
+: m_NextSequence(AREATYPES::NEXTSEQUENCE_NONE)
+, m_vKamePos(Math::VECTOR2_ZERO)
+, m_OldArea(AREAID::ID_NONE)
+, m_NewArea(AREAID::ID_NONE)
+, m_NowArea(AREAID::ID_NONE)
+, m_ClearedArea(AREAID::ID_NONE)
+, m_Direction(DIRECTION_UP)
+, m_bMenuOpenFlag(false)
+, m_bStationWarpFlag(false)
+, m_bAreaDiskFlag(false)
+, m_bTextureSettingFlag(false)
+, m_AreaSelTexture()
+, m_AreaLineTexture()
+, m_AreaTextTexture()
+, m_sprite()
+, m_aClearAnim()
+, m_fClearAnimRot(0.0f)
+, m_Animation(ANIMATION_NONE)
+, m_KameMoveAnimCount(0)
+, m_KameIconAnimCount(0)
+, m_bKameClearRotAnimFlag(false)
+, m_KameIconAnimFlag(false)
+, m_bMenuInfoDispFlag(false)
 {
     ;
 };
@@ -163,6 +186,12 @@ void CAreaWorkPool::Attach(void)
     GetAreaPosition(&m_vKamePos, m_NewArea);
 
     m_bMenuInfoDispFlag = false;
+    
+    m_bAreaDiskFlag = false;
+
+#ifdef _DEBUG        
+    DebugAreaChanged();
+#endif
 };
 
 
@@ -173,7 +202,16 @@ void CAreaWorkPool::Detach(void)
 
 
 bool CAreaWorkPool::Move(void)
-{    
+{
+#ifdef _DEBUG    
+    if (CAreaSequence::m_bDebugClearAnimRequest)
+    {
+        CAreaSequence::m_bDebugClearAnimRequest = false;
+        DebugStartPlayClearAnim();
+        return false;
+    };
+#endif
+    
     m_bMenuInfoDispFlag = false;
     
     if (m_bMenuOpenFlag)
@@ -220,62 +258,53 @@ bool CAreaWorkPool::Move(void)
     m_bMenuInfoDispFlag = true;
     int32 iController = CGameData::Attribute().GetVirtualPad();
 
-    if (CController::GetDigitalTrigger(iController, CController::DIGITAL_UP))
+    if (CController::GetDigitalTrigger(iController, CController::DIGITAL_LUP))
     {
         AreaMoveAnimationInit(DIRECTION_UP);
         m_Direction = DIRECTION_UP;
     }
-    else if (CController::GetDigitalTrigger(iController, CController::DIGITAL_DOWN))
+    else if (CController::GetDigitalTrigger(iController, CController::DIGITAL_LDOWN))
     {
         AreaMoveAnimationInit(DIRECTION_DOWN);
         m_Direction = DIRECTION_DOWN;
     }
-    else if (CController::GetDigitalTrigger(iController, CController::DIGITAL_LEFT))
+    else if (CController::GetDigitalTrigger(iController, CController::DIGITAL_LLEFT))
     {
         AreaMoveAnimationInit(DIRECTION_LEFT);
         m_Direction = DIRECTION_LEFT;
     }
-    else if (CController::GetDigitalTrigger(iController, CController::DIGITAL_RIGHT))
+    else if (CController::GetDigitalTrigger(iController, CController::DIGITAL_LRIGHT))
     {
         AreaMoveAnimationInit(DIRECTION_RIGHT);
         m_Direction = DIRECTION_RIGHT;
     }
     else if (CController::GetDigitalTrigger(iController, CController::DIGITAL_OK))
     {
-        if (CAreaSequence::m_bDebugClearAnim)
+        if (m_NowArea >= AREAID::NORMALMAX)
         {
-            DebugStartPlayClearAnim();
-            return false;
-        }
-        else
-        {
-            if (m_NowArea >= AREAID::NORMALMAX)
+            if (m_NowArea >= AREAID::WARPSTART && m_NowArea < AREAID::WARPMAX)
             {
-                if (m_NowArea >= AREAID::WARPSTART && m_NowArea < AREAID::WARPMAX)
-                {
-                    CGameSound::PlaySE(SDCODE_SE(4112));
-                    m_NextSequence = AREATYPES::NEXTSEQUENCE_AREA;
-                    return true;
-                }
-
-                if (m_NowArea != AREAID::ID_MNY_STN)
-                    return false;
-
-                CGameSound::PlaySE(SDCODE_SE(4098));
+                CGameSound::PlaySE(SDCODE_SE(4112));
                 m_NextSequence = AREATYPES::NEXTSEQUENCE_AREA;
                 return true;
             }
-            else
-            {
-                CGameSound::PlaySE(SDCODE_SE(8196));
-                m_NextSequence = AREATYPES::NEXTSEQUENCE_AREA;
-                return true;
-            };
-        };     
-    }
-    else if (CController::GetDigitalTrigger(iController, CController::DIGITAL_LEFT_BUMPER))
-    {
 
+            if (m_NowArea != AREAID::ID_MNY_STN)
+                return false;
+
+            CGameSound::PlaySE(SDCODE_SE(4098));
+            m_NextSequence = AREATYPES::NEXTSEQUENCE_AREA;
+            return true;
+        }
+        else
+        {
+            CGameSound::PlaySE(SDCODE_SE(8196));
+            m_NextSequence = AREATYPES::NEXTSEQUENCE_AREA;
+            return true;
+        };
+    }
+    else if (CController::GetDigitalTrigger(iController, CController::DIGITAL_R1))
+    {
         m_bMenuOpenFlag = true;
         CAreaMenu::AreaMenuInit();
     };
@@ -851,7 +880,6 @@ void CAreaWorkPool::AreaLineDisp(int32 nIndex)
         break;
 
     default:
-        //ASSERT(false);
         break;
     };
 
@@ -989,7 +1017,7 @@ void CAreaWorkPool::KameIconDisp(void)
         m_sprite.SetOffset(0.0f, 0.0f);
         m_sprite.Resize(32.0f, 32.0f);
 
-        for (int32 i = 0; i < DIRECTIONUM; ++i)
+        for (int32 i = 0; i < DIRECTIONNUM; ++i)
         {
             if (!CheckAreaMove(m_NowArea, i))
                 continue;
@@ -1002,7 +1030,7 @@ void CAreaWorkPool::KameIconDisp(void)
                 {   44.0f,  16.0f,  },
             };
 
-            static_assert(COUNT_OF(s_aArrowOffsetTable) == DIRECTIONUM, "update me");
+            static_assert(COUNT_OF(s_aArrowOffsetTable) == DIRECTIONNUM, "update me");
             ASSERT(i >= 0 && i < COUNT_OF(s_aArrowOffsetTable));
 
             m_sprite.SetTexture(m_AreaSelTexture[5 + i]);
@@ -1072,49 +1100,39 @@ void CAreaWorkPool::ClearedAnimDisp(void)
 
 void CAreaWorkPool::AreaSelectGuide(void)
 {
-    CGameFont::m_pFont->SetRGBA(255, 170, 0, 255);
+    CGameFont::SetRGBA(255, 170, 0, 255);
 
     if (CAreaInfo::GetWorldNo(m_NowArea) == WORLDID::ID_FNY &&
         GetAreaState(AREAID::ID_AREA50) == CAreaRecord::STATE_CLEAR)
     {
         if (m_NowArea != AREAID::ID_FNY_STN)
         {
-            const wchar* pwszText = CGameText::GetText(GAMETEXT::VALUE(155));
-            CGameFont::m_pFont->Show(
-                pwszText,
-                CGameFont::GetScreenSize() / 179,
-                -269.0f,
-                -175.0f
-            );
+            const wchar* pwszText = CGameText::GetText(GAMETEXT(155));
+
+			CGameFont::SetHeight(CGameFont::GetScreenHeightEx(TYPEDEF::VSCR_H / 2.5f));
+            CGameFont::Show(pwszText, -269.0f, -175.0f);
         };
     }
     else
     {
         const wchar* pwszText = CAreaInfo::GetDispWorldName(m_NowArea);
-        CGameFont::m_pFont->Show(
-            pwszText,
-            CGameFont::GetScreenSize() * 0.0055803573f,
-            -269.0f,
-            -175.0f
-        );
+
+		CGameFont::SetHeight(CGameFont::GetScreenHeightEx(TYPEDEF::VSCR_H / 2.5f));
+		CGameFont::Show(pwszText, -269.0f, -175.0f);
     };
 
     if (m_bAreaDiskFlag)
     {
-        const wchar* pwszText = CSystemText::GetText(SYSTEXT::VALUE(107));
+        const wchar* pwszText = CSystemText::GetText(SYSTEXT(107));
 
         wchar wszBuffer[1024];
         wszBuffer[0] = UTEXT('\0');
         
         CTextData::Sprintf(wszBuffer, pwszText, CAreaInfo::GetDiscNo(m_NowArea));
         
-        CGameFont::m_pFont->SetRGBA(255, 0, 0, 255);
-        CGameFont::m_pFont->Show(
-            wszBuffer,
-            CGameFont::GetScreenSize() * 0.0044642859f,
-            -269.0f,
-            152.0f
-        );
+        CGameFont::SetRGBA(255, 0, 0, 255);
+		CGameFont::SetHeight(CGameFont::GetScreenHeightEx(TYPEDEF::VSCR_H / 2.0f));
+        CGameFont::Show(wszBuffer, -269.0f, 152.0f);
     };
 };
 
@@ -1209,7 +1227,7 @@ void CAreaWorkPool::AreaClearedAnimationInit(void)
     //  Animation sequence:
     //  Status -> Rank -> Kemuri -> Kame    
     // 
-    m_aClearAnim[1].m_nStep = CLEARANIM::STEP_FADEOUT;
+    m_aClearAnim[1].m_nStep = CLEARANIM::STEP_FADEIN;
 };
 
 
@@ -1257,7 +1275,7 @@ void CAreaWorkPool::AreaClearedAnimation(void)
         //
         switch (m_aClearAnim[0].m_nStep)
         {
-        case CLEARANIM::STEP_FADEOUT:
+        case CLEARANIM::STEP_FADEIN:
             {
                 uint32 uAnimKemuriFadeoutDur = uint32(CScreen::Framerate() * 0.25f);
                 CLEARANIM* pAnimKemuri = &m_aClearAnim[0];
@@ -1278,7 +1296,7 @@ void CAreaWorkPool::AreaClearedAnimation(void)
 
                 if (pAnimKemuri->m_uCounter >= uAnimKemuriFadeoutDur)
                 {
-                    pAnimKemuri->m_nStep = CLEARANIM::STEP_FADEIN;
+                    pAnimKemuri->m_nStep = CLEARANIM::STEP_FADEOUT;
                     pAnimKemuri->m_uCounter = 0;
                 }
                 else
@@ -1288,7 +1306,7 @@ void CAreaWorkPool::AreaClearedAnimation(void)
             }
             break;
 
-        case CLEARANIM::STEP_FADEIN:
+        case CLEARANIM::STEP_FADEOUT:
             {
                 uint32 uAnimKemuriFadeinDur = uint32(CScreen::Framerate() * 0.25f);
                 CLEARANIM* pAnimKemuri = &m_aClearAnim[0];
@@ -1330,7 +1348,7 @@ void CAreaWorkPool::AreaClearedAnimation(void)
         //
         switch (m_aClearAnim[1].m_nStep)
         {
-        case CLEARANIM::STEP_FADEOUT:
+        case CLEARANIM::STEP_FADEIN:
             {
                 uint32 uAnimStatusFadeoutDur = uint32(CScreen::Framerate() * 0.25f);
                 CLEARANIM* pAnimStatus = &m_aClearAnim[1];
@@ -1357,7 +1375,7 @@ void CAreaWorkPool::AreaClearedAnimation(void)
                     //
                     //  Start rank anim
                     //
-                    m_aClearAnim[2].m_nStep = CLEARANIM::STEP_FADEOUT;
+                    m_aClearAnim[2].m_nStep = CLEARANIM::STEP_FADEIN;
                 }
                 else
                 {
@@ -1396,7 +1414,7 @@ void CAreaWorkPool::AreaClearedAnimation(void)
         //
         switch (m_aClearAnim[2].m_nStep)
         {
-        case CLEARANIM::STEP_FADEOUT:
+        case CLEARANIM::STEP_FADEIN:
             {
                 uint32 uAnimRankFadeoutDur = uint32(CScreen::Framerate() * 0.25f);
                 CLEARANIM* pAnimRank = &m_aClearAnim[2];
@@ -1423,7 +1441,7 @@ void CAreaWorkPool::AreaClearedAnimation(void)
                     //
                     //  Start kemuri anim
                     //
-                    m_aClearAnim[0].m_nStep = CLEARANIM::STEP_FADEOUT;
+                    m_aClearAnim[0].m_nStep = CLEARANIM::STEP_FADEIN;
                 }
                 else
                 {
@@ -1623,12 +1641,12 @@ bool CAreaWorkPool::GetLineDrawEnable(int32 nIndex)
                 break;
 
             case 10:
-                if (IsAreaRootCleared(AREAID::ID_AREA14, CAreaRecord::CLEAR_ROOT_B))
-                    bResult = true;                
+				if (IsAreaRootCleared(AREAID::ID_AREA11, CAreaRecord::CLEAR_ROOT_B))
+					bResult = true;
                 break;
 
             case 11:
-                if (GetAreaState(AREAID::ID_AREA14) == CAreaRecord::STATE_CLEAR)
+                if (GetAreaState(AREAID::ID_AREA14))
                     bResult = true;
                 break;
 
@@ -2134,7 +2152,7 @@ void CAreaWorkPool::GetAreaPosition(RwV2d* pPosition, AREAID::VALUE idArea)
 
 AREAID::VALUE CAreaWorkPool::GetMoveToArea(AREAID::VALUE idArea, int32 nDirection)
 {
-    static const AREAID::VALUE s_aAreaMoveTable[][DIRECTIONUM] =
+    static const AREAID::VALUE s_aAreaMoveTable[][DIRECTIONNUM] =
     {
         { AREAID::ID_NONE,      AREAID::ID_NONE,    AREAID::ID_NONE,    AREAID::ID_NONE,        },
         { AREAID::ID_AREA02,    AREAID::ID_NONE,    AREAID::ID_NONE,    AREAID::ID_NONE,        },
@@ -2256,7 +2274,7 @@ AREAID::VALUE CAreaWorkPool::GetMoveToArea(AREAID::VALUE idArea, int32 nDirectio
         { AREAID::ID_KUR_STN,   AREAID::ID_AREA52,  AREAID::ID_NONE,    AREAID::ID_NONE,        },
         { AREAID::ID_NONE,      AREAID::ID_KUR_STN, AREAID::ID_NONE,    AREAID::ID_KUR_J01,     },
         { AREAID::ID_NONE,      AREAID::ID_AREA56,  AREAID::ID_AREA57,  AREAID::ID_NONE,        },
-        { AREAID::ID_AREA57,    AREAID::ID_NONE,    AREAID::ID_NONE,    AREAID::ID_AREA58, },
+        { AREAID::ID_AREA57,    AREAID::ID_NONE,    AREAID::ID_NONE,    AREAID::ID_AREA58,      },
     };
 
     ASSERT(idArea >= 0 && idArea < COUNT_OF(s_aAreaMoveTable));
@@ -2379,7 +2397,7 @@ bool CAreaWorkPool::CheckAreaMove(AREAID::VALUE idArea, int32 nDirection)
             
             if (idAreaToMove <= AREAID::ID_KUR_J01)
             {
-                for (int32 i = 0; i < DIRECTIONUM; i++)
+                for (int32 i = 0; i < DIRECTIONNUM; i++)
                 {
                     if (CheckAreaMove(idAreaToMove, i))
                         return true;
@@ -2427,6 +2445,7 @@ bool CAreaWorkPool::IsAreaRootCleared(AREAID::VALUE idArea, CAreaRecord::CLEAR_R
 
 void CAreaWorkPool::DebugStartPlayClearAnim(void)
 {
+#ifdef _DEBUG    
     //
     //  For debug only
     //  Start clear anim at station of the current world
@@ -2465,17 +2484,37 @@ void CAreaWorkPool::DebugStartPlayClearAnim(void)
         break;
     };
 
+    GetAreaPosition(&m_vKamePos, m_ClearedArea);
+
     AreaClearedAnimationInit();
+#endif    
 };
 
 
 void CAreaWorkPool::DebugAreaChanged(void)
 {
-    OUTPUT("Now area %d (name: %s)\n", m_NewArea, CMapInfo::GetName(CStageInfo::GetMapID(CAreaInfo::GetStageID(m_NowArea, 0))));
+#ifdef _DEBUG
+    char szBuff[256];
+    szBuff[0] = '\0';
+
+    const wchar* pwszDispName = CAreaInfo::GetDispName(m_NowArea);
+    
+    if (pwszDispName)
+        CTextData::ToMultibyte(szBuff, COUNT_OF(szBuff), pwszDispName);
+    
+    OUTPUT(
+        "Area changed! Id: %d, (%s - %s)\n",
+        m_NewArea,
+        szBuff,
+        CMapInfo::GetName(CStageInfo::GetMapID(CAreaInfo::GetStageID(m_NowArea, 0)))
+    );
+#endif    
 };
 
 
-/*static*/ bool CAreaSequence::m_bDebugClearAnim = false;
+#ifdef _DEBUG
+/*static*/ bool CAreaSequence::m_bDebugClearAnimRequest = false;
+#endif
 
 
 /*static*/ CProcess* CAreaSequence::Instance(void)
@@ -2488,6 +2527,9 @@ CAreaSequence::CAreaSequence(void)
 : m_pWorkPool(nullptr)
 , m_pDlgSure(nullptr)
 , m_bDlgRunning(false)
+#ifdef _DEBUG
+, m_bDebugCall(false)
+#endif    
 {
     ;
 };
@@ -2499,8 +2541,28 @@ CAreaSequence::~CAreaSequence(void)
 };
 
 
-bool CAreaSequence::OnAttach(const void* param)
+bool CAreaSequence::OnAttach(const void* pParam)
 {
+#ifdef _DEBUG
+    m_bDebugCall = bool(pParam != nullptr);
+    if (m_bDebugCall)
+    {
+        //
+        //  as area id viewer call, just open all area for moving
+        //
+        CGameData::PushRecord();
+        CGameData::Record().SetDefault();
+
+        for (int32 i = AREAID::SELECTABLESTART; i < AREAID::SELECTABLEMAX; ++i)
+        {
+            CGameData::Record().Area().SetAreaOpened(AREAID::VALUE(i));
+            CGameData::Record().Area().SetAreaCleared(AREAID::VALUE(i), CAreaRecord::CLEAR_ROOT_C);
+        };
+
+        CGameData::Record().Area().SetCurrentSelectedArea(AREAID::VALUE(int32(pParam)));
+    };
+#endif    
+
     m_pWorkPool = new CAreaWorkPool;
     ASSERT(m_pWorkPool);
     m_pWorkPool->Attach();
@@ -2511,8 +2573,8 @@ bool CAreaSequence::OnAttach(const void* param)
     m_pDlgSure->Set(0.0f, 0.0f, CSprite::m_fVirtualScreenW, 140.0f);
     m_pDlgSure->SetOpenAction(true);
     m_pDlgSure->SetText(
-        CGameText::GetText(GAMETEXT::VALUE(758)),
-        CGameFont::GetScreenSize() / 223,
+        CGameText::GetText(GAMETEXT(758)),
+		CGameFont::GetScreenHeightEx(TYPEDEF::VSCR_H / 2.0f),
         { 0xFF, 0xFF, 0xFF, 0xFF }
     );
 
@@ -2540,86 +2602,129 @@ void CAreaSequence::OnDetach(void)
         m_pDlgSure = nullptr;
     };
 
+#ifdef _DEBUG
+    if (m_bDebugCall)
+        CGameData::PopRecord();
+#endif 
+
     CAnim2DSequence::OnDetach();
 };
 
 
-void CAreaSequence::OnMove(bool bRet, const void* param)
+void CAreaSequence::OnMove(bool bRet, const void* pReturnValue)
 {
-    switch (m_step)
+    switch (m_animstep)
     {
-    case STEP_FADE_OUT:
-        m_pWorkPool->TextureSetting();
-        m_pWorkPool->AreaMenuSetting();
-
-        if (!CScreenFade::IsFading())
+    case ANIMSTEP_FADEIN:
         {
-            AREAID::VALUE idArea = CGameData::Record().Area().GetCurrentSelectedArea();
+            m_pWorkPool->TextureSetting();
+            m_pWorkPool->AreaMenuSetting();
 
-            switch (CAreaInfo::GetWorldNo(idArea))
+            if (!CScreenFade::IsFading())
             {
-            case WORLDID::ID_MNY:
-                CGameSound::PlayBGM(SDCODE_BGM(12327));
-                break;
+                AREAID::VALUE idArea = CGameData::Record().Area().GetCurrentSelectedArea();
 
-            case WORLDID::ID_DHO:
-            case WORLDID::ID_TRI:
-                CGameSound::PlayBGM(SDCODE_BGM(12328));
-                break;
-
-            case WORLDID::ID_JPN:
-                CGameSound::PlayBGM(SDCODE_BGM(12329));
-                break;
-
-            case WORLDID::ID_FNY:
-                CGameSound::PlayBGM(SDCODE_BGM(12330));
-                break;
-
-            case WORLDID::ID_KUR:
-                CGameSound::PlayBGM(SDCODE_BGM(12331));
-                break;
-
-            default:
-                ASSERT(false);
-                break;
-            };
-        };
-        break;
-
-    case STEP_DRAW:
-        m_pWorkPool->TextureSetting();
-        m_pWorkPool->AreaMenuSetting();
-
-        if (m_bDlgRunning)
-        {
-            if (!m_pDlgSure->IsOpen())
-            {
-                m_bDlgRunning = false;
-
-                switch (m_pDlgSure->GetStatus())
+                switch (CAreaInfo::GetWorldNo(idArea))
                 {
-                case CDialog::STATUS_YES:
-                    Ret();
+                case WORLDID::ID_MNY:
+                    CGameSound::PlayBGM(SDCODE_BGM(12327));
+                    break;
+
+                case WORLDID::ID_DHO:
+                case WORLDID::ID_TRI:
+                    CGameSound::PlayBGM(SDCODE_BGM(12328));
+                    break;
+
+                case WORLDID::ID_JPN:
+                    CGameSound::PlayBGM(SDCODE_BGM(12329));
+                    break;
+
+                case WORLDID::ID_FNY:
+                    CGameSound::PlayBGM(SDCODE_BGM(12330));
+                    break;
+
+                case WORLDID::ID_KUR:
+                    CGameSound::PlayBGM(SDCODE_BGM(12331));
+                    break;
+
+                default:
+                    ASSERT(false);
                     break;
                 };
             };
         }
-        else if (m_pWorkPool->Move())
+        break;
+
+    case ANIMSTEP_DRAW:
         {
-            if (m_pWorkPool->GetNextSequence() == AREATYPES::NEXTSEQUENCE_TITLE)
+            m_pWorkPool->TextureSetting();
+            m_pWorkPool->AreaMenuSetting();
+
+            if (m_bDlgRunning)
             {
-                m_bDlgRunning = true;
-                m_pDlgSure->Open();
+                if (!m_pDlgSure->IsOpen())
+                {
+                    m_bDlgRunning = false;
+
+                    switch (m_pDlgSure->GetStatus())
+                    {
+                    case CDialog::STATUS_YES:
+                        BeginFadeout();
+                        break;
+                    };
+                };
             }
-            else
+            else if (m_pWorkPool->Move())
             {
-                Ret();
+                if (m_pWorkPool->GetNextSequence() == AREATYPES::NEXTSEQUENCE_TITLE)
+                {
+                    m_bDlgRunning = true;
+                    m_pDlgSure->Open();
+                }
+                else
+                {
+                    BeginFadeout();
+                };
             };
-        };
+        }
+        break;
+
+    case ANIMSTEP_END:
+        {
+            m_pWorkPool->UpdateAreaWarp();
+
+            switch (m_pWorkPool->GetNextSequence())
+            {
+            case AREATYPES::NEXTSEQUENCE_AREA:
+            case AREATYPES::NEXTSEQUENCE_WARP:
+                Ret();
+                break;
+
+            case AREATYPES::NEXTSEQUENCE_CHARASEL:
+                Ret((const void*)PROCLABEL_SEQ_CHARASELECT);
+                break;
+
+            case AREATYPES::NEXTSEQUENCE_MENUSAVE:
+                Ret((const void*)PROCLABEL_SEQ_SAVELOADMENUSAVE);
+                break;
+
+            case AREATYPES::NEXTSEQUENCE_MENULOAD:
+                Ret((const void*)PROCLABEL_SEQ_SAVELOADMENULOAD);
+                break;
+
+            case AREATYPES::NEXTSEQUENCE_OPTIONS:
+                Ret((const void*)PROCLABEL_SEQ_OPTIONS);
+                break;
+
+            case AREATYPES::NEXTSEQUENCE_TITLE:
+                Ret((const void*)PROCLABEL_SEQ_TITLE);
+                break;
+            };
+        }
         break;
     };
 
-    CAnim2DSequence::OnMove(bRet, param);
+    CAnim2DSequence::OnMove(bRet, pReturnValue);
 };
 
 
@@ -2632,45 +2737,6 @@ void CAreaSequence::OnDraw(void) const
         m_pWorkPool->TextureDraw();
         m_pWorkPool->AreaMenuDraw();
     };
-};
-
-
-bool CAreaSequence::OnRet(void)
-{
-    m_pWorkPool->UpdateAreaWarp();
-
-    switch (m_pWorkPool->GetNextSequence())
-    {
-    case AREATYPES::NEXTSEQUENCE_AREA:
-    case AREATYPES::NEXTSEQUENCE_WARP:
-        Ret();
-        break;
-        
-    case AREATYPES::NEXTSEQUENCE_CHARASEL:
-        Ret((const void*)PROCESSTYPES::LABEL_SEQ_CHARSELECT);
-        break;
-        
-    case AREATYPES::NEXTSEQUENCE_MENUSAVE:
-        Ret((const void*)PROCESSTYPES::LABEL_SEQ_SAVELOADMENUSAVE);
-        break;
-        
-    case AREATYPES::NEXTSEQUENCE_MENULOAD:
-        Ret((const void*)PROCESSTYPES::LABEL_SEQ_SAVELOADMENULOAD);
-        break;
-        
-    case AREATYPES::NEXTSEQUENCE_OPTIONS:
-        Ret((const void*)PROCESSTYPES::LABEL_SEQ_OPTION);
-        break;
-        
-    case AREATYPES::NEXTSEQUENCE_TITLE:
-        Ret((const void*)PROCESSTYPES::LABEL_SEQ_TITLE);
-        break;
-
-    default:
-		return false;
-    };
-    
-	return true;
 };
 
 

@@ -1,9 +1,22 @@
 #pragma once
 
+#include "System/Common/Controller.hpp"
 
-class CGamepad
+
+#define IPadFunctionMask(Function) (1 << (16 + (Function)))
+
+
+class IGamepad : public CController
 {
 public:
+    enum
+    {
+        CONTROLLER_1 = 0,
+        CONTROLLER_2,
+        CONTROLLER_3,
+        CONTROLLER_4,
+    };
+
     enum FUNCTION
     {
         FUNCTION_ATTACK_A = 0,
@@ -21,7 +34,7 @@ public:
 
     enum VIBRATIONTYPE
     {
-        VIBRATIONTYPE_LOW,
+        VIBRATIONTYPE_LOW = 0,
         VIBRATIONTYPE_NORMAL,
         VIBRATIONTYPE_HARD,
         
@@ -29,15 +42,20 @@ public:
     };
 
 public:
-    static int32 Invalid(void);
-    static int32 Max(void);
-    static bool CheckFunction(uint32 uDigital, FUNCTION function);
-    static void AppendButtonFunction(int32 iController, FUNCTION function, uint32 uBasicButton);
+    static bool CheckFunction(uint32 uDigital, FUNCTION function);    
     static void ClearAllButtonFunction(int32 iController);    
-    static bool StartVibration(int32 iController, VIBRATIONTYPE type, float fTime);
-    static void EnableStickToDigitalMapping(bool bEnable);
+    static void AppendButtonFunction(int32 iController, uint32 uBasicButton, FUNCTION function);
     static uint32 ConvertToVirtualButton(uint32 uBasicButton);
-    static bool IsKeyboard(int32 iController);
-    static int32 GetKeyboardController(void);
-    static void DigitalCancelToFunction(bool bEnable);
+    static bool StartVibration(int32 iController, VIBRATIONTYPE type, float fTime);    
+    static void SaveLockedState(void);
+    static void RestoreLockedState(void);
+    
+private:
+    static bool isExist(int32 iController);
+
+private:
+    static int32 m_aLockedPhysicalPort[];
 };
+
+
+using IPad = IGamepad;

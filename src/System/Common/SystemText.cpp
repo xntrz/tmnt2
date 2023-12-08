@@ -23,19 +23,19 @@ static CTextData s_SystemText;
 };
 
 
-/*static*/ const wchar* CSystemText::GetText(SYSTEXT::VALUE id)
-{
-    return s_SystemText.GetText(id);
-};
-
-
 /*static*/ int32 CSystemText::GetTextNum(void)
 {
     return s_SystemText.GetTextNum();
 };
 
 
+/*static*/ const wchar* CSystemText::GetText(SYSTEXT id)
+{
+    return s_SystemText.GetText(id);
+};
+
+
 /*static*/ const wchar* CSystemText::EmptyText(void)
 {
-    return &CTextData::EMPTYTEXT;
+    return CTextData::EMPTYTEXT;
 };

@@ -1,548 +1,35 @@
 #include "PCPhysicalController.hpp"
-#include "PCTypedefs.hpp"
-
-#include "System/Common/PhysicalController.hpp"
+#include "PCSpecific.hpp"
 
 #define DIRECTINPUT_VERSION 0x0800
 #include <dinput.h>
 
 
+struct JOYSTICKSTATE
+{
+	GUID m_guid;
+#ifdef _DEBUG	
+	GUID m_guidprod;
+#endif	
+	IDirectInputDevice8* m_pDevice;
+	DIDEVCAPS m_deviceCaps;
+	bool m_bVibrationFeature;
+	int32 m_numAxes;
+	IDirectInputEffect* m_pVibrationEffect;
+	TCHAR m_tszName[MAX_PATH];
+};
+
+
 struct JOYSTICKINFO
 {
-	static const int32 STATE_MAX = 32;
-
-	struct STATE
-	{
-		GUID m_guid;
-		IDirectInputDevice8* m_pDevice;
-		DIDEVCAPS m_deviceCaps;
-		bool m_bVibrationFeature;
-		int32 m_numAxes;
-		IDirectInputEffect* m_pVibrationEffect;
-		TCHAR m_tszName[MAX_PATH];
-	};
-
-	STATE* m_apState[STATE_MAX];
-	int32 m_count;
+	JOYSTICKSTATE* m_apJoystickState[32];
+	int32 m_nJoystickCnt;
 };
 
 
-static JOYSTICKINFO s_aJoystickInfo;
+static JOYSTICKINFO s_JoystickInfo;
 static IDirectInput8* s_pDirectInput8 = nullptr;
-static void* s_hWnd = nullptr;
-
-
-namespace DI8Utils
-{
-	bool AcquireDevice(IDirectInputDevice8* pDevice)
-	{
-		HRESULT hResult = S_OK;
-		do
-		{
-			hResult = pDevice->Acquire();
-		} while (hResult == DIERR_INPUTLOST);
-
-		return SUCCEEDED(hResult);
-	};
-};
-
-
-class CPCKeyboardController : public IPhysicalController
-{
-private:
-	struct DIGITALINFO
-	{
-		uint32 m_digital;
-		int32 m_scancode;
-		bool m_bEnabled;
-	};
-
-
-	struct ANALOGINFO
-	{
-		int32 m_no;
-		bool m_bOneAxis;
-		int32 m_scancodeX;
-		int32 m_scancodeY;
-		bool m_bEnabled;
-	};
-
-
-	static const int32 KEYBUFFER_SIZE = 256;
-	static const int32 FIXED_DIGITAL_MAX = CController::DIGITAL_NUM;
-
-
-public:
-	CPCKeyboardController(int32 iController)
-	: m_numUsedFixedDigital(0)
-	, m_pDIDevice(nullptr)
-	{
-		m_info.m_iPhysicalPort = iController;
-	};
-
-
-	virtual ~CPCKeyboardController(void)
-	{
-		Close();
-	};
-
-
-	virtual void Close(void) override
-	{
-		if (m_pDIDevice)
-		{
-			m_pDIDevice->Unacquire();
-			m_pDIDevice->Release();
-			m_pDIDevice = nullptr;
-		};
-	};
-
-
-	virtual void Update(void) override
-	{
-		Clear();
-
-		if (!DI8Utils::AcquireDevice(m_pDIDevice))
-		{
-			m_info.m_state = CController::STATE_UNCONNECT;
-			IPhysicalController::Update();
-			return;
-		};
-
-		m_info.m_state = CController::STATE_CONNECT;
-
-		memset(m_keybuffer, 0x00, sizeof(m_keybuffer));
-		if (FAILED(m_pDIDevice->GetDeviceState(sizeof(m_keybuffer), m_keybuffer)))
-		{
-			IPhysicalController::Update();
-			return;
-		};
-
-		uint32 digital = 0;
-		for (int32 i = 0; i < m_numUsedFixedDigital; ++i)
-		{
-			if (m_aFixedDigitalInfo[i].m_bEnabled && IsKeyDown(m_aFixedDigitalInfo[i].m_scancode))
-				digital |= m_aFixedDigitalInfo[i].m_digital;
-		};
-
-		for (int32 i = 0; i < COUNT_OF(m_aDigitalInfo); ++i)
-		{
-			if (m_aDigitalInfo[i].m_bEnabled && IsKeyDown(m_aDigitalInfo[i].m_scancode))
-				digital |= m_aDigitalInfo[i].m_digital;
-		};
-
-		for (int32 i = 0; i < COUNT_OF(m_aAnalogInfo); ++i)
-		{
-			if (m_aAnalogInfo[i].m_bEnabled)
-			{
-				if(m_aAnalogInfo[i].m_bOneAxis)
-				{
-					if (IsKeyDown(m_aAnalogInfo[i].m_scancodeX))
-						m_info.m_aAnalog[i] = int16(0x7FFF);
-					else
-						m_info.m_aAnalog[i] = int16(0x0);
-				}
-				else
-				{
-					if (IsKeyDown(m_aAnalogInfo[i].m_scancodeY))
-						m_info.m_aAnalog[i] = int16(0x7FFF);
-					else if (IsKeyDown(m_aAnalogInfo[i].m_scancodeX))
-						m_info.m_aAnalog[i] = int16(0x8000);
-				};
-			};
-		};
-
-		m_info.m_digital = digital;
-
-		IPhysicalController::Update();
-	};
-
-
-	virtual bool Start(void)
-	{
-		ASSERT(s_pDirectInput8);
-
-		bool bResult = false;
-		try
-		{
-			if (FAILED(s_pDirectInput8->CreateDevice(GUID_SysKeyboard, &m_pDIDevice, NULL)))
-				throw std::exception();
-
-			if (FAILED(m_pDIDevice->SetDataFormat(&c_dfDIKeyboard)))
-				throw std::exception();
-
-			if (FAILED(m_pDIDevice->SetCooperativeLevel(HWND(s_hWnd), DISCL_NONEXCLUSIVE | DISCL_FOREGROUND)))
-				throw std::exception();
-			
-			HRESULT hResult = S_OK;
-			do
-			{
-				hResult = m_pDIDevice->Acquire();
-			} while (hResult == DIERR_INPUTLOST);
-
-			if (FAILED(hResult))
-				throw std::exception();
-
-			bResult = true;
-		}
-		catch (std::exception& e)
-		{
-			REF(e);
-		};
-
-		if (bResult)
-		{
-			uint32 aDigital[] =
-			{
-				CController::DIGITAL_UP,
-				CController::DIGITAL_DOWN,
-				CController::DIGITAL_LEFT,
-				CController::DIGITAL_RIGHT,
-				CController::DIGITAL_A,
-				CController::DIGITAL_B,
-				CController::DIGITAL_X,
-				CController::DIGITAL_Y,
-				CController::DIGITAL_LEFT_BUMPER,
-				CController::DIGITAL_RIGHT_BUMPER,
-				CController::DIGITAL_LEFT_TRIGGER,
-				CController::DIGITAL_RIGHT_TRIGGER,
-				CController::DIGITAL_SELECT,
-				CController::DIGITAL_START,
-				CController::DIGITAL_LEFT_THUMB,
-				CController::DIGITAL_RIGHT_THUMB,
-			};
-
-			for (int32 i = 0; i < COUNT_OF(m_aDigitalInfo); ++i)
-			{
-				m_aDigitalInfo[i].m_bEnabled = false;
-				m_aDigitalInfo[i].m_digital = aDigital[i];
-			};
-
-			for (int32 i = 0; i < COUNT_OF(m_aAnalogInfo); ++i)
-			{
-				m_aAnalogInfo[i].m_bEnabled = false;
-				m_aAnalogInfo[i].m_no = i;
-				if (i < 0 || i > 3)
-				{
-					m_aAnalogInfo[i].m_bOneAxis = true;
-					m_aAnalogInfo[i].m_scancodeX = -1;
-				}
-				else
-				{
-					m_aAnalogInfo[i].m_bOneAxis = false;
-					m_aAnalogInfo[i].m_scancodeX = -1;
-					m_aAnalogInfo[i].m_scancodeY = -1;
-				};
-			};
-		};
-
-		return bResult;
-	};
-
-
-	void MapDigital(uint32 btn, int32 iDIKey)
-	{
-		for (int32 i = 0; i < COUNT_OF(m_aDigitalInfo); ++i)
-		{
-			if (m_aDigitalInfo[i].m_digital == btn)
-			{
-				m_aDigitalInfo[i].m_bEnabled = (iDIKey >= 0);
-				m_aDigitalInfo[i].m_scancode = iDIKey;
-				return;
-			};
-		};
-	};
-
-
-	void MapDigitalFixed(uint32 btn, int32 iDIKey)
-	{
-		ASSERT(m_numUsedFixedDigital < FIXED_DIGITAL_MAX);
-		m_aFixedDigitalInfo[m_numUsedFixedDigital].m_bEnabled = true;
-		m_aFixedDigitalInfo[m_numUsedFixedDigital].m_digital = btn;
-		m_aFixedDigitalInfo[m_numUsedFixedDigital].m_scancode = iDIKey;
-		++m_numUsedFixedDigital;
-	};
-
-
-	void MapAnalog(int32 no, int32 iDIKeyX, int32 iDIKeyY)
-	{
-		ASSERT(iDIKeyX >= 0 && iDIKeyX < 256);
-		ASSERT(iDIKeyY >= 0 && iDIKeyY < 256);
-		ASSERT(no >= 0 && no < CController::ANALOG_NUM);
-
-		for (int32 i = 0; i < COUNT_OF(m_aAnalogInfo); ++i)
-		{
-			if (m_aAnalogInfo[i].m_no == no)
-			{
-				m_aAnalogInfo[i].m_bEnabled = (iDIKeyX >= 0 && iDIKeyY >= 0);
-				m_aAnalogInfo[i].m_scancodeX = iDIKeyX;
-				m_aAnalogInfo[i].m_scancodeY = iDIKeyY;
-			};
-		};
-	};
-
-
-	bool IsKeyDown(int32 iDIKey) const
-	{
-		ASSERT(iDIKey >= 0 && iDIKey < KEYBUFFER_SIZE);
-		return (m_keybuffer[iDIKey] & 0x80) != 0;
-	};
-
-
-	bool IsKeyNotFixed(int32 iDIKey) const
-	{
-		if (!m_numUsedFixedDigital)
-			return true;
-
-		for (int32 i = 0; i < m_numUsedFixedDigital; ++i)
-		{
-			if (m_aFixedDigitalInfo[i].m_scancode == iDIKey)
-				return false;
-		};
-
-		return true;
-	};
-
-
-	int32 GetDownKey(void) const
-	{
-		for (int32 i = 0; i < KEYBUFFER_SIZE; ++i)
-		{
-			if (CPCPhysicalController::IsKeyValid(i) && IsKeyDown(i))
-				return i;			
-		};
-
-		return -1;
-	};
-
-
-private:
-	DIGITALINFO m_aFixedDigitalInfo[FIXED_DIGITAL_MAX];
-	DIGITALINFO m_aDigitalInfo[CController::DIGITAL_NUM];
-	ANALOGINFO m_aAnalogInfo[CController::ANALOG_NUM];
-	int8 m_keybuffer[KEYBUFFER_SIZE];
-	int32 m_numUsedFixedDigital;
-	IDirectInputDevice8* m_pDIDevice;
-};
-
-
-class CPCGamepadController : public IPhysicalController
-{
-public:
-	CPCGamepadController(int32 iController)
-	: m_joystickNo(iController)
-	{
-		m_info.m_iPhysicalPort = iController;
-	};
-
-
-	virtual ~CPCGamepadController(void)
-	{
-		;
-	};
-
-
-	virtual void Close(void) override
-	{
-		delete this;
-	};
-
-
-	virtual void Update(void) override
-	{
-		Clear();
-
-		JOYSTICKINFO::STATE* pJoystickState = s_aJoystickInfo.m_apState[m_joystickNo];
-		IDirectInputDevice8* pDevice = pJoystickState->m_pDevice;
-		if (!pJoystickState || !pDevice)
-		{
-			m_info.m_state = CController::STATE_UNCONNECT;
-			IPhysicalController::Update();
-			return;
-		};
-
-		m_info.m_state = CController::STATE_CONNECT;
-		
-		if (FAILED(pDevice->Poll()))
-		{
-			if (!DI8Utils::AcquireDevice(pDevice))
-			{
-				IPhysicalController::Update();
-				return;
-			};
-		};
-
-		memset(&m_joystate, 0x00, sizeof(m_joystate));
-		if (FAILED(pDevice->GetDeviceState(sizeof(DIJOYSTATE2), &m_joystate)))
-		{
-			IPhysicalController::Update();
-			return;
-		};
-
-		uint32 digital = 0;
-
-		if (LOWORD(m_joystate.rgdwPOV[0]) != WORD(0xFFFF))
-		{
-			enum
-			{
-				DPAD_UP			= 0,
-				DPAD_UP_RIGHT	= 1,
-				DPAD_UP_LEFT	= 7,
-				DPAD_RIGHT		= 2,
-				DPAD_LEFT		= 6,
-				DPAD_DOWN		= 4,
-				DPAD_DOWN_RIGHT = 3,
-				DPAD_DOWN_LEFT	= 5,
-			};
-
-			switch (m_joystate.rgdwPOV[0] / 4500)
-			{
-			case DPAD_UP:
-				digital |= (CController::DIGITAL_UP);
-				break;
-			
-			case DPAD_UP_RIGHT:
-				digital |= (CController::DIGITAL_UP | CController::DIGITAL_RIGHT);
-				break;
-			
-			case DPAD_UP_LEFT:
-				digital |= (CController::DIGITAL_UP | CController::DIGITAL_LEFT);
-				break;
-
-			case DPAD_RIGHT:
-				digital |= (CController::DIGITAL_RIGHT);
-				break;
-
-			case DPAD_LEFT:
-				digital |= (CController::DIGITAL_LEFT);
-				break;
-
-			case DPAD_DOWN:
-				digital |= (CController::DIGITAL_DOWN);
-				break;
-
-			case DPAD_DOWN_RIGHT:
-				digital |= (CController::DIGITAL_DOWN | CController::DIGITAL_RIGHT);
-				break;
-
-			case DPAD_DOWN_LEFT:
-				digital |= (CController::DIGITAL_DOWN | CController::DIGITAL_LEFT);
-				break;
-
-			default:
-				ASSERT(false);
-				break;
-			};
-		};
-
-		if (IsButtonDown(0))
-			digital |= CController::DIGITAL_A;
-		if (IsButtonDown(1))
-			digital |= CController::DIGITAL_B;
-		if (IsButtonDown(2))
-			digital |= CController::DIGITAL_X;
-		if (IsButtonDown(3))
-			digital |= CController::DIGITAL_Y;
-		if (IsButtonDown(4))
-			digital |= CController::DIGITAL_LEFT_BUMPER;
-		if (IsButtonDown(5))
-			digital |= CController::DIGITAL_RIGHT_BUMPER;
-		if (IsButtonDown(6))
-			digital |= CController::DIGITAL_LEFT_TRIGGER;
-		if (IsButtonDown(7))
-			digital |= CController::DIGITAL_RIGHT_TRIGGER;
-		if (IsButtonDown(8))
-			digital |= CController::DIGITAL_SELECT;
-		if (IsButtonDown(9))
-			digital |= CController::DIGITAL_START;
-		if (IsButtonDown(10))
-			digital |= CController::DIGITAL_LEFT_THUMB;
-		if (IsButtonDown(11))
-			digital |= CController::DIGITAL_RIGHT_THUMB;
-
-		const int32 DEADZONE = int32(float(TYPEDEF::SINT16_MAX) * 0.25f);
-
-		m_info.m_aAnalog[CController::ANALOG_LSTICK_X]	= int16(Clamp(m_joystate.lX, DEADZONE));
-		m_info.m_aAnalog[CController::ANALOG_LSTICK_Y]	= int16(Clamp(-1 - m_joystate.lY, DEADZONE));
-		m_info.m_aAnalog[CController::ANALOG_RSTICK_X]	= int16(Clamp(m_joystate.lRz, DEADZONE));
-		m_info.m_aAnalog[CController::ANALOG_RSTICK_Y]	= int16(Clamp(-1 - m_joystate.rglSlider[0], DEADZONE));
-		m_info.m_aAnalog[CController::ANALOG_RUP]		= (digital & CController::DIGITAL_A ? TYPEDEF::SINT16_MAX : 0);
-		m_info.m_aAnalog[CController::ANALOG_RDOWN] 	= (digital & CController::DIGITAL_B ? TYPEDEF::SINT16_MAX : 0);
-		m_info.m_aAnalog[CController::ANALOG_RLEFT] 	= (digital & CController::DIGITAL_X ? TYPEDEF::SINT16_MAX : 0);
-		m_info.m_aAnalog[CController::ANALOG_RRIGHT] 	= (digital & CController::DIGITAL_Y ? TYPEDEF::SINT16_MAX : 0);
-		m_info.m_aAnalog[CController::ANALOG_L1]		= (digital & CController::DIGITAL_LEFT_BUMPER	? TYPEDEF::SINT16_MAX : 0);
-		m_info.m_aAnalog[CController::ANALOG_L2]		= (digital & CController::DIGITAL_LEFT_TRIGGER	? TYPEDEF::SINT16_MAX : 0);
-		m_info.m_aAnalog[CController::ANALOG_L3]		= (digital & CController::DIGITAL_LEFT_THUMB	? TYPEDEF::SINT16_MAX : 0);
-		m_info.m_aAnalog[CController::ANALOG_R1]		= (digital & CController::DIGITAL_RIGHT_BUMPER	? TYPEDEF::SINT16_MAX : 0);
-		m_info.m_aAnalog[CController::ANALOG_R2]		= (digital & CController::DIGITAL_RIGHT_TRIGGER ? TYPEDEF::SINT16_MAX : 0);
-		m_info.m_aAnalog[CController::ANALOG_R3]		= (digital & CController::DIGITAL_RIGHT_THUMB	? TYPEDEF::SINT16_MAX : 0);
-
-		if(m_bVibrateEnable)
-		{
-			if(!m_bVibrate && m_iVibFrame > 0)
-			{
-				if (pJoystickState->m_bVibrationFeature && 
-					pJoystickState->m_pVibrationEffect)
-				{
-					int32 type = int32(m_uVibType);
-					int32 direction[2] = { int32(m_uVibType), int32(m_uVibType) };
-
-					DIEFFECT effect;
-					memset(&effect, 0x00, sizeof(effect));
-					effect.dwSize = sizeof(effect);
-					effect.dwFlags = DIEFF_CARTESIAN | DIEFF_OBJECTOFFSETS;
-					effect.lpEnvelope = 0;
-					effect.dwStartDelay = 0;
-					effect.cbTypeSpecificParams = sizeof(type);
-					effect.lpvTypeSpecificParams = &type;
-					effect.rglDirection = LPLONG(direction);
-					pJoystickState->m_pVibrationEffect->SetParameters(&effect, DIEP_START | DIEP_DIRECTION | DIEP_TYPESPECIFICPARAMS);
-
-					m_bVibrate = true;
-				};
-			}
-			else
-			{
-				if (!--m_iVibFrame)
-				{
-					if (pJoystickState->m_bVibrationFeature &&
-						pJoystickState->m_pVibrationEffect)
-						pJoystickState->m_pVibrationEffect->Stop();
-
-					m_bVibrate = false;
-					m_iVibFrame = 0;
-					m_uVibType = 0;
-				};
-			};
-		};
-
-		m_info.m_digital = digital;
-
-		IPhysicalController::Update();
-	};
-
-
-	bool IsButtonDown(int32 idx) const
-	{
-		return (m_joystate.rgbButtons[idx] & 0x80) != 0;
-	};
-
-
-	int32 Clamp(int32 A, int32 B) const
-	{
-		if (A < B && -B < A)
-			A = 0;
-		return A;
-	};
-
-
-private:
-	int32 m_joystickNo;
-	DIJOYSTATE2 m_joystate;
-};
-
-
-static CPCKeyboardController* s_pPCKeyboardController = nullptr;
+static class CPCKeyboardController* s_pPCKeyboardController = nullptr;
 
 
 static inline CPCKeyboardController& KeyboardController(void)
@@ -552,15 +39,515 @@ static inline CPCKeyboardController& KeyboardController(void)
 };
 
 
+static inline bool AcquireDevice(IDirectInputDevice8* pDevice)
+{
+	HRESULT hResult = S_OK;
+	
+	do
+	{
+		hResult = pDevice->Acquire();
+	} while (hResult == DIERR_INPUTLOST);
+
+	return SUCCEEDED(hResult);
+};
+
+
+class CPCKeyboardController final : public IPhysicalController
+{
+private:
+	struct DIGITALINFO
+	{
+		uint32 m_digital;
+		int32 m_scancode;
+		bool m_bEnabled;
+	};
+
+	struct ANALOGINFO
+	{
+		CController::ANALOG m_analog;
+		bool m_bOneAxis;
+		int32 m_scancodeX;
+		int32 m_scancodeY;
+		bool m_bEnabled;
+	};
+
+	static const int32 KEYBUFFER_SIZE = 256;
+	static const int32 FIXED_DIGITAL_MAX = CController::DIGITAL_NUM;
+
+public:
+	CPCKeyboardController(int32 iController);
+	virtual ~CPCKeyboardController(void);
+	virtual void Close(void) override;
+	virtual void Update(void) override;
+	virtual bool Start(void);
+	void MapDigital(uint32 btn, int32 iDIKey);
+	void MapDigitalFixed(uint32 btn, int32 iDIKey);
+	void MapAnalog(CController::ANALOG analog, int32 iDIKeyX, int32 iDIKeyY);
+	bool IsKeyDown(int32 iDIKey) const;
+	bool IsKeyNotFixed(int32 iDIKey) const;
+	int32 GetDownKey(void) const;
+
+private:
+	DIGITALINFO m_aDigitalFixedInfo[FIXED_DIGITAL_MAX];
+	DIGITALINFO m_aDigitalInfo[CController::DIGITAL_NUM];
+	ANALOGINFO m_aAnalogInfo[CController::ANALOG_NUM];
+	uint8 m_keybuffer[KEYBUFFER_SIZE];
+	int32 m_numUsedFixedDigital;
+	IDirectInputDevice8* m_pDIDevice;
+};
+
+
+class CPCGamepadController final : public IPhysicalController
+{
+public:
+	CPCGamepadController(int32 iController);
+	virtual ~CPCGamepadController(void);
+	virtual void Close(void) override;
+	virtual void Update(void) override;
+	bool IsButtonDown(int32 idx) const;
+	int32 ClampValue(int32 value, int32 clamp) const;
+
+private:
+	int32 m_iPort;
+	DIJOYSTATE2 m_joystate;
+};
+
+
+CPCKeyboardController::CPCKeyboardController(int32 iController)
+: m_numUsedFixedDigital(0)
+, m_pDIDevice(nullptr)
+{
+	std::memset(m_aDigitalInfo, 0x00, sizeof(m_aDigitalInfo));
+	std::memset(m_aDigitalFixedInfo, 0x00, sizeof(m_aDigitalFixedInfo));
+	std::memset(m_aAnalogInfo, 0x00, sizeof(m_aAnalogInfo));
+
+	m_info.m_iPhysicalPort = iController;	
+};
+
+
+CPCKeyboardController::~CPCKeyboardController(void)
+{
+	if (m_pDIDevice)
+	{
+		m_pDIDevice->Unacquire();
+		m_pDIDevice->Release();
+		m_pDIDevice = nullptr;
+	};
+};
+
+
+void CPCKeyboardController::Close(void)
+{
+	if (m_pDIDevice)
+	{
+		m_pDIDevice->Unacquire();
+		m_pDIDevice->Release();
+		m_pDIDevice = nullptr;
+	};
+};
+
+
+void CPCKeyboardController::Update(void)
+{
+	Clear();
+
+	if (!AcquireDevice(m_pDIDevice))
+	{
+		m_info.m_eState = CController::STATE_UNCONNECT;
+		IPhysicalController::Update();
+		return;
+	};
+
+	m_info.m_eState = CController::STATE_CONNECT;
+
+	std::memset(m_keybuffer, 0x00, sizeof(m_keybuffer));
+	if (FAILED(m_pDIDevice->GetDeviceState(sizeof(m_keybuffer), m_keybuffer)))
+	{
+		IPhysicalController::Update();
+		return;
+	};
+
+	uint32 digital = 0;
+	
+	for (int32 i = 0; i < m_numUsedFixedDigital; ++i)
+	{
+		if (m_aDigitalFixedInfo[i].m_bEnabled && IsKeyDown(m_aDigitalFixedInfo[i].m_scancode))
+			digital |= m_aDigitalFixedInfo[i].m_digital;
+	};
+
+	for (int32 i = 0; i < COUNT_OF(m_aDigitalInfo); ++i)
+	{
+		if (m_aDigitalInfo[i].m_bEnabled && IsKeyDown(m_aDigitalInfo[i].m_scancode))
+			digital |= m_aDigitalInfo[i].m_digital;
+	};
+
+	for (int32 i = 0; i < COUNT_OF(m_aAnalogInfo); ++i)
+	{
+		if (m_aAnalogInfo[i].m_bEnabled)
+		{
+			if (m_aAnalogInfo[i].m_bOneAxis)
+			{
+				if (IsKeyDown(m_aAnalogInfo[i].m_scancodeX))
+					m_info.m_aAnalog[i] = TYPEDEF::SINT16_MAX;
+				else
+					m_info.m_aAnalog[i] = 0;
+			}
+			else
+			{
+				if (IsKeyDown(m_aAnalogInfo[i].m_scancodeY))
+					m_info.m_aAnalog[i] = TYPEDEF::SINT16_MAX;
+				else if (IsKeyDown(m_aAnalogInfo[i].m_scancodeX))
+					m_info.m_aAnalog[i] = TYPEDEF::SINT16_MIN;
+			};
+		};
+	};
+
+	m_info.m_digital = digital;
+
+	IPhysicalController::Update();
+};
+
+
+bool CPCKeyboardController::Start(void)
+{
+	ASSERT(s_pDirectInput8);
+
+	if (FAILED(s_pDirectInput8->CreateDevice(GUID_SysKeyboard, &m_pDIDevice, NULL)))
+		return false;
+
+	if (FAILED(m_pDIDevice->SetDataFormat(&c_dfDIKeyboard)))
+		return false;
+
+	if (FAILED(m_pDIDevice->SetCooperativeLevel(CPCSpecific::m_hWnd, DISCL_NONEXCLUSIVE | DISCL_FOREGROUND)))
+		return false;
+
+	//
+	// NOTE: Uncomment this to return initialization failure if keyboard focus is not on window
+	//
+	
+	/*
+	if (!AcquireDevice(m_pDIDevice))
+		return false;
+	*/
+	
+	for (int32 i = 0; i < COUNT_OF(m_aDigitalInfo); ++i)
+	{
+		m_aDigitalFixedInfo[i].m_bEnabled = false;
+		m_aDigitalFixedInfo[i].m_digital = 0;
+		m_aDigitalFixedInfo[i].m_scancode = -1;
+	};
+
+	uint32 aDigital[] =
+	{
+		CController::DIGITAL_LUP,
+		CController::DIGITAL_LDOWN,
+		CController::DIGITAL_LLEFT,
+		CController::DIGITAL_LRIGHT,
+		CController::DIGITAL_RUP,
+		CController::DIGITAL_RDOWN,
+		CController::DIGITAL_RLEFT,
+		CController::DIGITAL_RRIGHT,
+		CController::DIGITAL_SELECT,
+		CController::DIGITAL_START,
+		CController::DIGITAL_L1,
+		CController::DIGITAL_L2,
+		CController::DIGITAL_L3,
+		CController::DIGITAL_R1,
+		CController::DIGITAL_R2,
+		CController::DIGITAL_R3,
+	};
+
+	for (int32 i = 0; i < COUNT_OF(m_aDigitalInfo); ++i)
+	{
+		m_aDigitalInfo[i].m_bEnabled = false;
+		m_aDigitalInfo[i].m_digital = aDigital[i];
+		m_aDigitalInfo[i].m_scancode = -1;
+	};
+
+	for (int32 i = 0; i < COUNT_OF(m_aAnalogInfo); ++i)
+	{
+		m_aAnalogInfo[i].m_bEnabled = false;
+		m_aAnalogInfo[i].m_analog = CController::ANALOG(i);
+		m_aAnalogInfo[i].m_bOneAxis = (i >= 0 && i <= 3 ? false : true);
+		m_aAnalogInfo[i].m_scancodeX = -1;
+		m_aAnalogInfo[i].m_scancodeY = -1;
+	};
+	
+	return true;
+};
+
+
+void CPCKeyboardController::MapDigital(uint32 btn, int32 iDIKey)
+{
+	for (int32 i = 0; i < COUNT_OF(m_aDigitalInfo); ++i)
+	{
+		if (m_aDigitalInfo[i].m_digital == btn)
+		{
+			m_aDigitalInfo[i].m_bEnabled = (iDIKey >= 0);
+			m_aDigitalInfo[i].m_scancode = iDIKey;
+			return;
+		};
+	};
+};
+
+
+void CPCKeyboardController::MapDigitalFixed(uint32 btn, int32 iDIKey)
+{
+	ASSERT(m_numUsedFixedDigital < FIXED_DIGITAL_MAX);
+	
+	m_aDigitalFixedInfo[m_numUsedFixedDigital].m_bEnabled = true;
+	m_aDigitalFixedInfo[m_numUsedFixedDigital].m_digital = btn;
+	m_aDigitalFixedInfo[m_numUsedFixedDigital].m_scancode = iDIKey;
+	
+	++m_numUsedFixedDigital;
+};
+
+
+void CPCKeyboardController::MapAnalog(CController::ANALOG analog, int32 iDIKeyX, int32 iDIKeyY)
+{
+	ASSERT(iDIKeyX >= 0 && iDIKeyX < KEYBUFFER_SIZE);
+	ASSERT(iDIKeyY >= 0 && iDIKeyY < KEYBUFFER_SIZE);
+	ASSERT(analog >= 0 && analog < CController::ANALOG_NUM);
+
+	for (int32 i = 0; i < COUNT_OF(m_aAnalogInfo); ++i)
+	{
+		if (m_aAnalogInfo[i].m_analog == analog)
+		{
+			m_aAnalogInfo[i].m_bEnabled = (iDIKeyX >= 0 && iDIKeyY >= 0);
+			m_aAnalogInfo[i].m_scancodeX = iDIKeyX;
+			m_aAnalogInfo[i].m_scancodeY = iDIKeyY;
+		};
+	};
+};
+
+
+bool CPCKeyboardController::IsKeyDown(int32 iDIKey) const
+{
+	ASSERT(iDIKey >= 0 && iDIKey < KEYBUFFER_SIZE);
+	
+	return ((m_keybuffer[iDIKey] & uint8(0x80)) != 0);
+};
+
+
+bool CPCKeyboardController::IsKeyNotFixed(int32 iDIKey) const
+{
+	for (int32 i = 0; i < m_numUsedFixedDigital; ++i)
+	{
+		if (m_aDigitalFixedInfo[i].m_scancode == iDIKey)
+			return false;
+	};
+
+	return true;
+};
+
+
+int32 CPCKeyboardController::GetDownKey(void) const
+{
+	for (int32 i = 0; i < KEYBUFFER_SIZE; ++i)
+	{
+		if (IsKeyDown(i))
+			return i;
+	};
+
+	return -1;
+};
+
+
+CPCGamepadController::CPCGamepadController(int32 iController)
+: m_iPort(iController)
+, m_joystate({})
+{
+	m_info.m_iPhysicalPort = iController;
+};
+
+
+CPCGamepadController::~CPCGamepadController(void)
+{
+	;
+};
+
+
+void CPCGamepadController::Close(void)
+{
+	delete this;
+};
+
+
+void CPCGamepadController::Update(void)
+{
+	Clear();
+
+	JOYSTICKSTATE* pJoystickState = s_JoystickInfo.m_apJoystickState[m_iPort];
+	IDirectInputDevice8* pDevice = pJoystickState->m_pDevice;
+	if (!pJoystickState || !pDevice)
+	{
+		m_info.m_eState = CController::STATE_UNCONNECT;
+		IPhysicalController::Update();
+		return;
+	};
+
+	m_info.m_eState = CController::STATE_CONNECT;
+
+	if (FAILED(pDevice->Poll()))
+	{
+		if (!AcquireDevice(pDevice))
+		{
+			IPhysicalController::Update();
+			return;
+		};
+	};
+
+	std::memset(&m_joystate, 0x00, sizeof(m_joystate));
+	if (FAILED(pDevice->GetDeviceState(sizeof(DIJOYSTATE2), &m_joystate)))
+	{
+		IPhysicalController::Update();
+		return;
+	};
+
+	uint32 digital = 0;
+
+	if (LOWORD(m_joystate.rgdwPOV[0]) != WORD(0xFFFF))
+	{
+		uint32 PovDigital[] =
+		{
+			CController::DIGITAL_LUP,
+			CController::DIGITAL_LUP 	| CController::DIGITAL_LRIGHT,
+			CController::DIGITAL_LRIGHT,
+			CController::DIGITAL_LRIGHT | CController::DIGITAL_LDOWN,
+			CController::DIGITAL_LDOWN,
+			CController::DIGITAL_LDOWN 	| CController::DIGITAL_LLEFT,
+			CController::DIGITAL_LLEFT,
+			CController::DIGITAL_LLEFT 	| CController::DIGITAL_LUP,
+		};
+
+		int32 Index = int32(m_joystate.rgdwPOV[0] / 4500);
+		
+		if (Index >= 0 && Index < COUNT_OF(PovDigital))
+			digital |= PovDigital[Index];
+	};
+
+	uint32 BtnDigital[] =
+	{
+		CController::DIGITAL_RDOWN,
+		CController::DIGITAL_RLEFT,
+		CController::DIGITAL_RRIGHT,
+		CController::DIGITAL_RUP,
+		CController::DIGITAL_L1,
+		CController::DIGITAL_L2,
+		CController::DIGITAL_R1,
+		CController::DIGITAL_R2,
+		CController::DIGITAL_SELECT,
+		CController::DIGITAL_START,
+		CController::DIGITAL_L3,
+		CController::DIGITAL_R3,		
+	};
+
+	for (int32 i = 0; i < COUNT_OF(BtnDigital); ++i)
+	{
+		if (IsButtonDown(i))
+			digital |= BtnDigital[i];
+	};
+
+#ifdef _DEBUG
+	//switch (pJoystickState->m_guidprod.Data1)
+	//{
+	//case MAKELONG(0x0810, 0x0001):
+	//	{
+	//		//
+	//		//	VID_0810&PID_0001 gamepad case:
+	//		// 		- correcting right stick axis values
+	//		//
+	//		m_joystate.rglSlider[0] = m_joystate.lZ;
+	//	}
+	//	break;
+	//};		
+#endif	
+
+	const int32 DEADZONE = int32(float(TYPEDEF::SINT16_MAX) * 0.25f);
+
+	m_info.m_aAnalog[CController::ANALOG_LSTICK_X] 	= int16(ClampValue(m_joystate.lX, DEADZONE));
+	m_info.m_aAnalog[CController::ANALOG_LSTICK_Y] 	= int16(ClampValue(-1 - m_joystate.lY, DEADZONE));
+	m_info.m_aAnalog[CController::ANALOG_RSTICK_X] 	= int16(ClampValue(m_joystate.lRz, DEADZONE));
+	m_info.m_aAnalog[CController::ANALOG_RSTICK_Y] 	= int16(ClampValue(-1 - m_joystate.rglSlider[0], DEADZONE));
+	m_info.m_aAnalog[CController::ANALOG_RUP] 		= (digital & CController::DIGITAL_RUP 	? TYPEDEF::SINT16_MAX : 0);
+	m_info.m_aAnalog[CController::ANALOG_RDOWN] 	= (digital & CController::DIGITAL_RDOWN ? TYPEDEF::SINT16_MAX : 0);
+	m_info.m_aAnalog[CController::ANALOG_RLEFT] 	= (digital & CController::DIGITAL_RLEFT ? TYPEDEF::SINT16_MAX : 0);
+	m_info.m_aAnalog[CController::ANALOG_RRIGHT] 	= (digital & CController::DIGITAL_RRIGHT? TYPEDEF::SINT16_MAX : 0);
+	m_info.m_aAnalog[CController::ANALOG_L1] 		= (digital & CController::DIGITAL_L1 	? TYPEDEF::SINT16_MAX : 0);
+	m_info.m_aAnalog[CController::ANALOG_L2] 		= (digital & CController::DIGITAL_L2 	? TYPEDEF::SINT16_MAX : 0);
+	m_info.m_aAnalog[CController::ANALOG_L3] 		= (digital & CController::DIGITAL_L3 	? TYPEDEF::SINT16_MAX : 0);
+	m_info.m_aAnalog[CController::ANALOG_R1] 		= (digital & CController::DIGITAL_R1 	? TYPEDEF::SINT16_MAX : 0);
+	m_info.m_aAnalog[CController::ANALOG_R2] 		= (digital & CController::DIGITAL_R2 	? TYPEDEF::SINT16_MAX : 0);
+	m_info.m_aAnalog[CController::ANALOG_R3] 		= (digital & CController::DIGITAL_R3 	? TYPEDEF::SINT16_MAX : 0);
+
+	//
+	//	TESTME will test it someday
+	//
+	if (m_info.m_bVibEnable)
+	{
+		if (!m_info.m_bVibrate && (m_info.m_iVibFrame > 0))
+		{
+			if (pJoystickState->m_bVibrationFeature && pJoystickState->m_pVibrationEffect)
+			{
+				int32 type = int32(m_info.m_uVibMax);
+				int32 direction[2] = { int32(m_info.m_uVibMax), int32(m_info.m_uVibMax) };
+
+				DIEFFECT effect;
+				std::memset(&effect, 0x00, sizeof(effect));
+				effect.dwSize = sizeof(effect);
+				effect.dwFlags = DIEFF_CARTESIAN | DIEFF_OBJECTOFFSETS;
+				effect.lpEnvelope = 0;
+				effect.dwStartDelay = 0;
+				effect.cbTypeSpecificParams = sizeof(type);
+				effect.lpvTypeSpecificParams = &type;
+				effect.rglDirection = LPLONG(direction);
+
+				pJoystickState->m_pVibrationEffect->SetParameters(&effect, DIEP_START | DIEP_DIRECTION | DIEP_TYPESPECIFICPARAMS);
+
+				m_info.m_bVibrate = true;
+			};
+		}
+		else
+		{
+			if (!--m_info.m_iVibFrame)
+			{
+				if (pJoystickState->m_bVibrationFeature && pJoystickState->m_pVibrationEffect)
+					pJoystickState->m_pVibrationEffect->Stop();
+
+				m_info.m_bVibrate = false;
+				m_info.m_iVibFrame = 0;
+				m_info.m_uVibMax = 0;
+			};
+		};
+	};
+
+	m_info.m_digital = digital;
+
+	IPhysicalController::Update();
+};
+
+
+bool CPCGamepadController::IsButtonDown(int32 idx) const
+{
+	return ((m_joystate.rgbButtons[idx] & BYTE(0x80)) != 0);
+};
+
+
+int32 CPCGamepadController::ClampValue(int32 value, int32 clamp) const
+{
+	return ((value < clamp) && (value > -clamp)) ? 0 : value;
+};
+
+
 static BOOL FAR PASCAL EnumAxisCallback(LPCDIDEVICEOBJECTINSTANCE lpObject, LPVOID lpParameter)
 {
-	JOYSTICKINFO::STATE* pJoystickState = (JOYSTICKINFO::STATE*)lpParameter;
+	JOYSTICKSTATE* pJoystickState = (JOYSTICKSTATE*)lpParameter;
 	ASSERT(pJoystickState);
 
 	DIPROPRANGE range;
 	memset(&range, 0x00, sizeof(range));
-	range.lMin = int16(0x8000);
-	range.lMax = int16(0x7FFF);
+	range.lMin = TYPEDEF::SINT16_MIN;
+	range.lMax = TYPEDEF::SINT16_MAX;
 	range.diph.dwObj = lpObject->dwType;
 	range.diph.dwHow = DIPH_BYID;
 	range.diph.dwSize = sizeof(range);
@@ -572,7 +559,7 @@ static BOOL FAR PASCAL EnumAxisCallback(LPCDIDEVICEOBJECTINSTANCE lpObject, LPVO
 
 static BOOL FAR PASCAL EnumFeedbackCallback(LPCDIDEVICEOBJECTINSTANCE lpObject, LPVOID lpParameter)
 {
-	JOYSTICKINFO::STATE* pJoystickState = (JOYSTICKINFO::STATE*)lpParameter;
+	JOYSTICKSTATE* pJoystickState = (JOYSTICKSTATE*)lpParameter;
 	ASSERT(pJoystickState);
 
 	pJoystickState->m_bVibrationFeature = true;
@@ -585,131 +572,123 @@ static BOOL FAR PASCAL EnumFeedbackCallback(LPCDIDEVICEOBJECTINSTANCE lpObject, 
 
 static BOOL FAR PASCAL EnumDeviceCallback(LPCDIDEVICEINSTANCE lpDevice, LPVOID lpParameter)
 {
-	BOOL bResult = TRUE;
-	int32 deviceType = lpDevice->dwDevType & 0xFF;
+	DWORD dwDevType = DIDFT_GETTYPE(lpDevice->dwDevType);
 
-	if (deviceType == DI8DEVTYPE_GAMEPAD ||
-		deviceType == DI8DEVTYPE_JOYSTICK)
+	if ((dwDevType != DI8DEVTYPE_GAMEPAD) &&
+		(dwDevType != DI8DEVTYPE_JOYSTICK))
+		return TRUE;
+
+	JOYSTICKSTATE* pJoystickState = new JOYSTICKSTATE;
+
+	std::memset(pJoystickState, 0x00, sizeof(*pJoystickState));
+	_tcscpy(pJoystickState->m_tszName, lpDevice->tszProductName);
+	pJoystickState->m_guid = lpDevice->guidInstance;	
+#ifdef _DEBUG
+	pJoystickState->m_guidprod = lpDevice->guidProduct;
+#endif	
+
+	if (FAILED(s_pDirectInput8->CreateDevice(pJoystickState->m_guid, &pJoystickState->m_pDevice, NULL)))
+		goto label_failure;
+
+	if (FAILED(pJoystickState->m_pDevice->SetDataFormat(&c_dfDIJoystick2)))
+		goto label_failure;
+
+	if (FAILED(pJoystickState->m_pDevice->SetCooperativeLevel(CPCSpecific::m_hWnd, DISCL_EXCLUSIVE | DISCL_FOREGROUND)))
+		goto label_failure;
+
+	pJoystickState->m_deviceCaps.dwSize = sizeof(pJoystickState->m_deviceCaps);
+	if (FAILED(pJoystickState->m_pDevice->GetCapabilities(&pJoystickState->m_deviceCaps)))
+		goto label_failure;
+
+	if (FAILED(pJoystickState->m_pDevice->EnumObjects(EnumAxisCallback, pJoystickState, DIDFT_AXIS)))
+		goto label_failure;
+
+	if (FAILED(pJoystickState->m_pDevice->EnumObjects(EnumFeedbackCallback, pJoystickState, DIDFT_FFACTUATOR | DIDFT_AXIS)))
+		goto label_failure;
+
+	if (pJoystickState->m_bVibrationFeature)
 	{
-		JOYSTICKINFO::STATE* pJoystickState = nullptr;
-		try
-		{
-			pJoystickState = new JOYSTICKINFO::STATE;
-			if (!pJoystickState)
-				throw std::exception();
+		DIPROPDWORD prop;
+		std::memset(&prop, 0x00, sizeof(prop));		
+		prop.diph.dwHow 		= DIPH_DEVICE;
+		prop.diph.dwObj 		= 0;
+		prop.diph.dwSize 		= sizeof(prop);
+		prop.diph.dwHeaderSize 	= sizeof(prop.diph);
+		prop.dwData 			= 0;
 
-			memset(pJoystickState, 0x00, sizeof(*pJoystickState));
-			_tcscpy(pJoystickState->m_tszName, lpDevice->tszProductName);
-			pJoystickState->m_guid = lpDevice->guidInstance;
+		if (FAILED(pJoystickState->m_pDevice->SetProperty(DIPROP_AUTOCENTER, &prop.diph)))
+			goto label_failure;
 
-			if (FAILED(s_pDirectInput8->CreateDevice(pJoystickState->m_guid, &pJoystickState->m_pDevice, NULL)))
-				throw std::exception();
+		if (pJoystickState->m_numAxes > 2)
+			pJoystickState->m_numAxes = 2;
 
-			if (FAILED(pJoystickState->m_pDevice->SetDataFormat(&c_dfDIJoystick2)))
-				throw std::exception();
+		int32 aAxes[4] = { 0, 4, 0, 0 };
 
-			if (FAILED(pJoystickState->m_pDevice->SetCooperativeLevel(HWND(s_hWnd), DISCL_EXCLUSIVE | DISCL_FOREGROUND)))
-				throw std::exception();
+		DIEFFECT effect;
+		std::memset(&effect, 0x00, sizeof(effect));		
+		effect.dwGain 					= 10000;
+		effect.rglDirection 			= LPLONG(&aAxes[2]);
+		effect.dwDuration 				= INFINITE;
+		effect.dwTriggerButton 			= DIEB_NOTRIGGER;
+		effect.cAxes 					= pJoystickState->m_numAxes;
+		effect.dwSize 					= sizeof(effect);
+		effect.dwFlags 					= DIEFF_CARTESIAN | DIEFF_OBJECTOFFSETS;
+		effect.dwSamplePeriod 			= 0;
+		effect.dwTriggerRepeatInterval 	= 0;
+		effect.rgdwAxes 				= LPDWORD(aAxes);
+		effect.lpEnvelope 				= 0;
+		effect.dwStartDelay 			= 0;
 
-			pJoystickState->m_deviceCaps.dwSize = sizeof(pJoystickState->m_deviceCaps);
-			if (FAILED(pJoystickState->m_pDevice->GetCapabilities(&pJoystickState->m_deviceCaps)))
-				throw std::exception();
+		int32 param = 10000;
+		effect.cbTypeSpecificParams = sizeof(param);
+		effect.lpvTypeSpecificParams = &param;
 
-			if (FAILED(pJoystickState->m_pDevice->EnumObjects(EnumAxisCallback, pJoystickState, DIDFT_AXIS)))
-				throw std::exception();
-
-			if (FAILED(pJoystickState->m_pDevice->EnumObjects(EnumFeedbackCallback, pJoystickState, DIDFT_FFACTUATOR | DIDFT_AXIS)))
-				throw std::exception();
-
-			if (pJoystickState->m_bVibrationFeature)
-			{
-				DIPROPDWORD prop;
-				memset(&prop, 0x00, sizeof(prop));
-				prop.diph.dwHow = DIPH_DEVICE;
-				prop.diph.dwObj = 0;
-				prop.diph.dwSize = sizeof(prop);
-				prop.diph.dwHeaderSize = sizeof(prop.diph);
-				prop.dwData = 0;
-
-				if (FAILED(pJoystickState->m_pDevice->SetProperty(DIPROP_AUTOCENTER, &prop.diph)))
-					throw std::exception();
-
-				if (pJoystickState->m_numAxes > 2)
-					pJoystickState->m_numAxes = 2;
-
-				int32 aAxes[4] = { 0, 4, 0, 0 };
-
-				DIEFFECT effect;
-				memset(&effect, 0x00, sizeof(effect));
-				effect.dwGain = 10000;
-				effect.rglDirection = LPLONG(&aAxes[2]);
-				effect.dwDuration = -1;
-				effect.dwTriggerButton = -1;
-				effect.cAxes = pJoystickState->m_numAxes;
-				effect.dwSize = sizeof(effect);
-				effect.dwFlags = DIEFF_CARTESIAN | DIEFF_OBJECTOFFSETS;
-				effect.dwSamplePeriod = 0;
-				effect.dwTriggerRepeatInterval = 0;
-				effect.rgdwAxes = LPDWORD(aAxes);
-				effect.lpEnvelope = 0;
-				effect.dwStartDelay = 0;
-
-				int32 param = 10000;
-				effect.cbTypeSpecificParams = sizeof(param);
-				effect.lpvTypeSpecificParams = &param;
-
-				if (FAILED(pJoystickState->m_pDevice->CreateEffect(GUID_ConstantForce, &effect, &pJoystickState->m_pVibrationEffect, NULL)))
-					throw std::exception();
-			};
-
-			s_aJoystickInfo.m_apState[s_aJoystickInfo.m_count++] = pJoystickState;
-			bResult = (s_aJoystickInfo.m_count < JOYSTICKINFO::STATE_MAX);
-		}
-		catch (std::exception& e)
-		{
-			REF(e);
-
-			if (pJoystickState->m_pVibrationEffect)
-			{
-				pJoystickState->m_pVibrationEffect->Release();
-				pJoystickState->m_pVibrationEffect = nullptr;
-			};
-
-			if (pJoystickState->m_pDevice)
-			{
-				pJoystickState->m_pDevice->Release();
-				pJoystickState->m_pDevice = nullptr;
-			};
-
-			if (pJoystickState)
-			{
-				delete pJoystickState;
-				pJoystickState = nullptr;
-			};
-		};
+		if (FAILED(pJoystickState->m_pDevice->CreateEffect(GUID_ConstantForce, &effect, &pJoystickState->m_pVibrationEffect, NULL)))
+			goto label_failure;
 	};
 
-	return bResult;
+	s_JoystickInfo.m_apJoystickState[s_JoystickInfo.m_nJoystickCnt++] = pJoystickState;
+
+	return (s_JoystickInfo.m_nJoystickCnt < COUNT_OF(s_JoystickInfo.m_apJoystickState));
+
+label_failure:
+	if (pJoystickState->m_pVibrationEffect)
+	{
+		pJoystickState->m_pVibrationEffect->Release();
+		pJoystickState->m_pVibrationEffect = nullptr;
+	};
+
+	if (pJoystickState->m_pDevice)
+	{
+		pJoystickState->m_pDevice->Release();
+		pJoystickState->m_pDevice = nullptr;
+	};
+
+	if (pJoystickState)
+	{
+		delete pJoystickState;
+		pJoystickState = nullptr;
+	};
+	
+	return TRUE;
 };
 
 
 /*static*/ int32 CPCPhysicalController::PHYSICALCONTROLLER_MAX = 3;
 
 
-/*static*/ bool CPCPhysicalController::Initialize(void* hWnd)
+/*static*/ bool CPCPhysicalController::Initialize(void)
 {
-	s_hWnd = hWnd;
-
 	if (DirectInput8Create(GetModuleHandle(NULL), DIRECTINPUT_VERSION, IID_IDirectInput8, (LPVOID*)&s_pDirectInput8, NULL) == DI_OK)
 	{
  		if (s_pDirectInput8->EnumDevices(DI8DEVCLASS_ALL, EnumDeviceCallback, NULL, 0) == DI_OK)
 		{
-			s_pPCKeyboardController = new CPCKeyboardController(s_aJoystickInfo.m_count);
+			s_pPCKeyboardController = new CPCKeyboardController(s_JoystickInfo.m_nJoystickCnt);
 			if (s_pPCKeyboardController)
 			{
 				if (s_pPCKeyboardController->Start())
 				{
-					PHYSICALCONTROLLER_MAX = ++s_aJoystickInfo.m_count;
+					PHYSICALCONTROLLER_MAX = ++s_JoystickInfo.m_nJoystickCnt;
 					return true;
 				};
 			};
@@ -731,9 +710,9 @@ static BOOL FAR PASCAL EnumDeviceCallback(LPCDIDEVICEINSTANCE lpDevice, LPVOID l
 
 /*static*/ void CPCPhysicalController::Terminate(void)
 {
-	for (int32 i = 0; i < s_aJoystickInfo.m_count; ++i)
+	for (int32 i = 0; i < s_JoystickInfo.m_nJoystickCnt; ++i)
 	{
-		JOYSTICKINFO::STATE* pJoystickState = s_aJoystickInfo.m_apState[i];
+		JOYSTICKSTATE* pJoystickState = s_JoystickInfo.m_apJoystickState[i];
 		if (!pJoystickState)
 			continue;
 
@@ -752,10 +731,10 @@ static BOOL FAR PASCAL EnumDeviceCallback(LPCDIDEVICEINSTANCE lpDevice, LPVOID l
 		pJoystickState->m_pDevice = nullptr;
 
 		delete pJoystickState;
-		s_aJoystickInfo.m_apState[i] = nullptr;
+		s_JoystickInfo.m_apJoystickState[i] = nullptr;
 	};
 
-	s_aJoystickInfo.m_count = 0;
+	s_JoystickInfo.m_nJoystickCnt = 0;
 
 	if (s_pPCKeyboardController)
 	{
@@ -771,349 +750,72 @@ static BOOL FAR PASCAL EnumDeviceCallback(LPCDIDEVICEINSTANCE lpDevice, LPVOID l
 };
 
 
-/*static*/ IPhysicalController* CPCPhysicalController::New(int32 iController)
+/*static*/ IPhysicalController* CPCPhysicalController::Open(int32 iController)
 {
-	if (!s_pPCKeyboardController || KeyboardController().Info().m_iPhysicalPort != iController)
+	IPhysicalController* pPhysicalController = s_pPCKeyboardController;
+
+	if(KeyboardController().Info().m_iPhysicalPort != iController)
 	{
 		ASSERT(iController < PHYSICALCONTROLLER_MAX);
-		return new CPCGamepadController(iController);
+		pPhysicalController = new CPCGamepadController(iController);
 	};
 
-	return s_pPCKeyboardController;
+	return pPhysicalController;
 };
 
 
 /*static*/ void CPCPhysicalController::MapDigital(uint32 btn, int32 iDIKey)
 {
-	KeyboardController().MapDigital(btn, iDIKey);
+	if (s_pPCKeyboardController)
+		KeyboardController().MapDigital(btn, iDIKey);
 };
 
 
 /*static*/ void CPCPhysicalController::MapDigitalFixed(uint32 btn, int32 iDIKey)
 {
-	KeyboardController().MapDigitalFixed(btn, iDIKey);
+	if (s_pPCKeyboardController)
+		KeyboardController().MapDigitalFixed(btn, iDIKey);
 };
 
 
-/*static*/ void CPCPhysicalController::MapAnalog(int32 no, int32 iDIKeyX, int32 iDIKeyY)
+/*static*/ void CPCPhysicalController::MapAnalog(CController::ANALOG analog, int32 iDIKeyX, int32 iDIKeyY)
 {
-	KeyboardController().MapAnalog(no, iDIKeyX, iDIKeyY);
+	if (s_pPCKeyboardController)
+		KeyboardController().MapAnalog(analog, iDIKeyX, iDIKeyY);
 };
 
 
 /*static*/ bool CPCPhysicalController::IsKeyDown(int32 iDIKey)
 {
-	return KeyboardController().IsKeyDown(iDIKey);
-};
-
-
-/*static*/ bool CPCPhysicalController::IsKeyValid(int32 iDIKey)
-{
-	static int8 s_aValidKeyTable[] =
-	{
-		0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 1, 1, 1, 1,
-		1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 1, 1, 1, 1, 1, 1, 1,
-		1, 1, 1, 1, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
-		1, 1, 1, 1, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
-		1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 1, 1, 0,
-		0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-		0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-		0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-		0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0,
-		0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-		0, 1, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-		0, 1, 1, 1, 0, 1, 0, 1, 0, 1, 1, 1, 1, 1, 0, 0, 0, 0,
-		0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-		0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-		0, 0, 0, 0,
-	};
-
-	return KeyboardController().IsKeyNotFixed(iDIKey) && s_aValidKeyTable[iDIKey];
+	if (s_pPCKeyboardController)
+		return KeyboardController().IsKeyDown(iDIKey);
+	else
+		return false;
 };
 
 
 /*static*/ bool CPCPhysicalController::IsKeyNotFixed(int32 iDIKey)
 {
-	return KeyboardController().IsKeyNotFixed(iDIKey);
+	if (s_pPCKeyboardController)
+		return KeyboardController().IsKeyNotFixed(iDIKey);
+	else
+		return false;
 };
 
 
 /*static*/ int32 CPCPhysicalController::GetDownKey(void)
 {
-	return KeyboardController().GetDownKey();
+	if (s_pPCKeyboardController)
+		return KeyboardController().GetDownKey();
+	else
+		return -1;
 };
 
 
 /*static*/ int32 CPCPhysicalController::GetPort(void)
 {
-	return KeyboardController().Info().m_iPhysicalPort;
-};
-
-
-/*static*/ const char* CPCPhysicalController::GetKeyName(int32 iDIKey)
-{
-	static const char* s_apszKeyNameTable[]=
-	{
-		"NULL",
-		"NULL",
-		"1",
-		"2",
-		"3",
-		"4",
-		"5",
-		"6",
-		"7",
-		"8",
-		"9",
-		"0",
-		"dash",
-		"NULL",
-		"back",
-		"tab",
-		"q",
-		"w",
-		"e",
-		"r",
-		"t",
-		"y",
-		"u",
-		"i",
-		"o",
-		"p",
-		"lbrace",
-		"rbrace",
-		"NULL",
-		"lctrl",
-		"a",
-		"s",
-		"d",
-		"f",
-		"g",
-		"h",
-		"j",
-		"k",
-		"l",
-		"colon",
-		"NULL",
-		"NULL",
-		"lshift",
-		"bkslash",
-		"z",
-		"x",
-		"c",
-		"v",
-		"b",
-		"n",
-		"m",
-		"comma",
-		"period",
-		"slash",
-		"rshift",
-		"numpad star",
-		"lalt",
-		"space",
-		"capslock",
-		"f1",
-		"f2",
-		"f3",
-		"f4",
-		"f5",
-		"f6",
-		"f7",
-		"f8",
-		"f9",
-		"f10",
-		"numlock",
-		"scroll",
-		"numpad 7",
-		"numpad 8",
-		"numpad 9",
-		"numpad minus",
-		"numpad 4",
-		"numpad 5",
-		"numpad 6",
-		"numpad plus",
-		"numpad 1",
-		"numpad 2",
-		"numpad 3",
-		"numpad 0",
-		"numpad del",
-		"NULL",
-		"NULL",
-		"NULL",
-		"f11",
-		"f12",
-		"NULL",
-		"NULL",
-		"NULL",
-		"NULL",
-		"NULL",
-		"NULL",
-		"NULL",
-		"NULL",
-		"NULL",
-		"NULL",
-		"NULL",
-		"NULL",
-		"NULL",
-		"NULL",
-		"NULL",
-		"NULL",
-		"NULL",
-		"NULL",
-		"NULL",
-		"NULL",
-		"NULL",
-		"NULL",
-		"NULL",
-		"NULL",
-		"NULL",
-		"NULL",
-		"NULL",
-		"NULL",
-		"NULL",
-		"NULL",
-		"NULL",
-		"NULL",
-		"NULL",
-		"NULL",
-		"NULL",
-		"NULL",
-		"NULL",
-		"NULL",
-		"NULL",
-		"NULL",
-		"NULL",
-		"NULL",
-		"NULL",
-		"NULL",
-		"NULL",
-		"NULL",
-		"NULL",
-		"NULL",
-		"NULL",
-		"NULL",
-		"NULL",
-		"NULL",
-		"NULL",
-		"NULL",
-		"NULL",
-		"NULL",
-		"NULL",
-		"NULL",
-		"NULL",
-		"NULL",
-		"NULL",
-		"NULL",
-		"NULL",
-		"NULL",
-		"NULL",
-		"NULL",
-		"NULL",
-		"NULL",
-		"rctrl",
-		"NULL",
-		"NULL",
-		"NULL",
-		"NULL",
-		"NULL",
-		"NULL",
-		"NULL",
-		"NULL",
-		"NULL",
-		"NULL",
-		"NULL",
-		"NULL",
-		"NULL",
-		"NULL",
-		"NULL",
-		"NULL",
-		"NULL",
-		"NULL",
-		"NULL",
-		"NULL",
-		"NULL",
-		"NULL",
-		"NULL",
-		"numpad slash",
-		"NULL",
-		"NULL",
-		"ralt",
-		"NULL",
-		"NULL",
-		"NULL",
-		"NULL",
-		"NULL",
-		"NULL",
-		"NULL",
-		"NULL",
-		"NULL",
-		"NULL",
-		"NULL",
-		"NULL",
-		"NULL",
-		"NULL",
-		"home",
-		"up",
-		"pgup",
-		"NULL",
-		"left",
-		"NULL",
-		"right",
-		"NULL",
-		"end",
-		"down",
-		"pgdown",
-		"ins",
-		"del",
-		"NULL",
-		"NULL",
-		"NULL",
-		"NULL",
-		"NULL",
-		"NULL",
-		"NULL",
-		"lwin",
-		"rwin",
-		"NULL",
-		"NULL",
-		"NULL",
-		"NULL",
-		"NULL",
-		"NULL",
-		"NULL",
-		"NULL",
-		"NULL",
-		"NULL",
-		"NULL",
-		"NULL",
-		"NULL",
-		"NULL",
-		"NULL",
-		"NULL",
-		"NULL",
-		"NULL",
-		"NULL",
-		"NULL",
-		"NULL",
-		"NULL",
-		"NULL",
-		"NULL",
-		"NULL",
-		"NULL",
-		"NULL",
-		"NULL",
-		"NULL",
-		"NULL",
-		"NULL",
-		"NULL",
-		"NULL",
-		"NULL",
-		"NULL",
-	};
-
-	if (iDIKey >= 0 && iDIKey < 256)
-		return s_apszKeyNameTable[iDIKey];
+	if (s_pPCKeyboardController)
+		return KeyboardController().Info().m_iPhysicalPort;
 	else
-		return nullptr;
+		return CController::Max();
 };

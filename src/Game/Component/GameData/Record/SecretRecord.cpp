@@ -9,7 +9,7 @@ static inline int32 calcCrystalLevel(GAMETYPES::CRYSTALTYPE crytype)
 {
 	int32 iCryNum = CGameData::Record().Item().GetCrystalNum(crytype);
 	int32 iLevel = iCryNum / 10;
-	return Math::Clamp(iLevel, 0, 3);
+	return Clamp(iLevel, 0, 3);
 };
 
 
@@ -301,7 +301,10 @@ void CSecretRecord::setFlag(FLAGTYPE flagtype, SECRETID::VALUE idSecret, bool bS
 
 	uint32* puFlag = (flagtype == FLAGTYPE_UNLOCKED ? m_auUnlockedFlag : m_auUnnotifiedFlag);
 
-	FLAG_CHANGE(puFlag[FlagNo], BIT(SecretNo), bSet);
+	if (bSet)
+		FLAG_SET(puFlag[FlagNo], BIT(SecretNo));
+	else
+		FLAG_CLEAR(puFlag[FlagNo], BIT(SecretNo));
 };
 
 

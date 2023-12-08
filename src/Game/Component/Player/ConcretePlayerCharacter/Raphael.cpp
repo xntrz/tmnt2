@@ -12,9 +12,6 @@
 
 namespace Raphael
 {
-    static const RwV3d BANDANA_OFFSET = { 0.0f, 0.15f, 0.05f };
-    
-
     bool CAttackJump::IsEnableChangeStatus(PLAYERTYPES::STATUS status)
     {
         PLAYERTYPES::STATUS aStatusArray[] =
@@ -32,7 +29,7 @@ namespace Raphael
 
     void CAttackJump::OnAttach(void)
     {
-        Character().ChangeMotion("JAttack1");
+        Character().ChangeMotion(Raphael::MOTIONNAMES::ATTACK_JUMP1);
         
         RwV3d vVelocity = Math::VECTOR3_ZERO;
         Character().GetVelocity(&vVelocity);
@@ -47,7 +44,7 @@ namespace Raphael
 
     void CAttackJump::OnDetach(void)
     {
-        Character().ChangeMotion("JAttack3");
+        Character().ChangeMotion(Raphael::MOTIONNAMES::ATTACK_JUMP3);
     };
 
 
@@ -57,11 +54,16 @@ namespace Raphael
         {
             if (Character().IsMotionEnd())
             {
-                Character().ChangeMotion("JAttack2");
+                Character().ChangeMotion(Raphael::MOTIONNAMES::ATTACK_JUMP2);
                 m_phase = PHASE_REPEAT;
             };
         };
     };
+    
+
+    //
+    // *********************************************************************************
+    //
 
 
     void CTouchdown::OnAttach(void)
@@ -69,8 +71,13 @@ namespace Raphael
         PlayerStatus::CTouchdown::OnAttach();
 
         if (Character().GetStatusPrev() == PLAYERTYPES::STATUS_ATTACK_JUMP)
-            Character().ChangeMotion("JAttack3");
+            Character().ChangeMotion(Raphael::MOTIONNAMES::ATTACK_JUMP3);
     };
+
+    
+    //
+    // *********************************************************************************
+    //
 
 
     bool CAttackAAC::IsEnableChangeStatus(PLAYERTYPES::STATUS status)
@@ -81,8 +88,13 @@ namespace Raphael
 
     void CAttackAAC::OnAttach(void)
     {
-        Character().ChangeMotion("AAC");
+        Character().ChangeMotion(PLAYERTYPES::MOTIONNAMES::ATTACK_AAC);
     };
+
+
+    //
+    // *********************************************************************************
+    //
 
 
     void CAttackAABBC::OnDischargeWave(void)
@@ -94,6 +106,11 @@ namespace Raphael
     };
 
 
+    //
+    // *********************************************************************************
+    //
+
+
     void CAttackB::OnDischargeWave(MAGIC_GENERIC::STEP step)
     {
         RwV3d vPosition = Math::VECTOR3_ZERO;
@@ -101,6 +118,11 @@ namespace Raphael
         
         MAGIC_GENERIC::ChargeAttackRaphael(&vPosition, Character().GetDirection(), m_pPlayerChr, step);
     };
+
+
+    //
+    // *********************************************************************************
+    //
 
 
     bool CPush::IsEnableChangeStatus(PLAYERTYPES::STATUS status)
@@ -118,7 +140,7 @@ namespace Raphael
 
     void CPush::OnAttach(void)
     {
-        Character().ChangeMotion("Push");
+        Character().ChangeMotion(Raphael::MOTIONNAMES::PUSH);
     };
 
 
@@ -169,6 +191,7 @@ CRaphael::CRaphael(GAMETYPES::COSTUME costume)
     parameter.m_feature.m_fAerialMoveSpeed      = 5.2f;
     parameter.m_feature.m_fAerialAcceleration   = 12.0f;
     parameter.m_feature.m_nKnifeAttachBoneID    = CHARACTERTYPES::BONEID_RIGHT_WRIST;
+
     parameter.m_pStateMachine = new CPlayerStateMachine(this, PLAYERTYPES::NORMALMAX);
     ASSERT(parameter.m_pStateMachine);
 
@@ -183,9 +206,7 @@ CRaphael::CRaphael(GAMETYPES::COSTUME costume)
 
     Initialize(&parameter);
 
-    m_pModuleMan->Include(
-        CCircleShadowModule::New(this, 1.5f, 1.5f, true)
-    );
+    m_pModuleMan->Include(CCircleShadowModule::New(this, 1.5f, 1.5f, true));
 
     if (costume != GAMETYPES::COSTUME_SAMURAI)
     {
@@ -203,10 +224,4 @@ CRaphael::CRaphael(GAMETYPES::COSTUME costume)
 CRaphael::~CRaphael(void)
 {
     ;
-};
-
-
-void CRaphael::Run(void)
-{
-    CPlayerCharacter::Run();
 };

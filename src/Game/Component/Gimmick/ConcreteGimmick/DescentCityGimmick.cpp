@@ -141,7 +141,7 @@ void CDescentCityGimmick::initModel(void)
         CModel* pModel = CModelManager::CreateModel(apszModel[i]);
         ASSERT(pModel);
 
-        pGimmickModel->SetModel(CNormalGimmickModel::MODELKIND_VISUAL_NORMAL, pModel);
+        pGimmickModel->SetModel(CNormalGimmickModel::MODELTYPE_DRAW_NORMAL, pModel);
         pGimmickModel->SetVisualNormal();
         pGimmickModel->SetPosition(&m_vPosition);
         pGimmickModel->SetRotation(&m_vRotation);

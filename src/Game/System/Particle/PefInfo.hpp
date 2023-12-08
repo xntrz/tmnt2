@@ -3,7 +3,7 @@
 
 namespace PEFINFO
 {
-    typedef enum tag_PATTERNFLAG
+    typedef enum tag_PATTERNFLAG : uint32
     {
         PATTERNFLAG_NONE            = 0x0,
         PATTERNFLAG_FALL            = 0x1,
@@ -28,7 +28,7 @@ namespace PEFINFO
         MOVEFLAG_CIRCLE         = 0x1,        
     } MOVEFLAG;
 
-    typedef enum tag_RANDFLAG
+    typedef enum tag_RANDFLAG : uint32
     {
         RANDFLAG_NONE           = 0x0,
         RANDFLAG_STARTPOS_X     = 0x1,

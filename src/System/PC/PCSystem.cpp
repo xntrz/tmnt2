@@ -1,71 +1,130 @@
 #include "PCSystem.hpp"
 #include "PCFramework.hpp"
 #include "PCSpecific.hpp"
-#include "PCResources.hpp"
+#include "resources.hpp"
+
+#ifdef _DEBUG
+#include "Sound/SdDrv.hpp"
+#include "Sound/SdDrvCtrl.hpp"
+#endif
 
 
-static const TCHAR* APP_WNDNAME = TEXT("TMNT2");
-static const TCHAR* APP_CLASSNAME = TEXT("TMNT2APP");
-
-
-/*static*/ LRESULT CALLBACK CPCSystem::WndProcRouter(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
+static LRESULT CALLBACK WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
-    CPCSystem* pSystem = nullptr;
-    
-    if (uMsg == WM_NCCREATE)
+    switch (uMsg)
     {
-        pSystem = (CPCSystem*)LPCREATESTRUCT(lParam)->lpCreateParams;
-        SetWindowLong(hWnd, GWL_USERDATA, LONG(pSystem));
-    }
-    else
-    {
-        pSystem = (CPCSystem*)GetWindowLong(hWnd, GWL_USERDATA);
+    case WM_ACTIVATE:
+        {
+            CPCSystem::Instance().SetFocused(wParam != WA_INACTIVE);
+            
+            if (!CPCSystem::Instance().IsFocused())
+                break;
+
+            UpdateWindow(hWnd);
+        }
+        break;
+   
+    case WM_PAINT:
+        {
+            PAINTSTRUCT Ps;
+
+			BeginPaint(hWnd, &Ps);
+			CPCSystem::Instance().Framework().Render();
+			CPCSystem::Instance().Framework().FlipNoSync();
+			EndPaint(hWnd, &Ps);
+        }
+        break;
+
+    case WM_CLOSE:
+        {
+            DestroyWindow(hWnd);
+        }        
+        break;
+        
+    case WM_DESTROY:
+        {
+            PostQuitMessage(0);
+        }        
+        break;
+
+    case WM_SETCURSOR:
+        {
+            CPCSpecific::DisplayCursor(false);
+        }
+        break;
+        
+    default:
+        return DefWindowProc(hWnd, uMsg, wParam, lParam);
     };
 
-    if (pSystem)
-        return pSystem->WndProc(hWnd, uMsg, wParam, lParam);
-    else
-        return DefWindowProc(hWnd, uMsg, wParam, lParam);
+    return 0;
+};
+
+
+/*static*/ const char* CPCSystem::WNDNAME = "TMNT2";
+/*static*/ CPCSystem* CPCSystem::m_pInstance = nullptr;
+
+
+/*static*/ CPCSystem& CPCSystem::Instance(void)
+{
+    return *m_pInstance;
 };
 
 
 CPCSystem::CPCSystem(CPCFramework* pFramework)
 : m_pFramework(pFramework)
 , m_bScreenSavingEnabled(false)
-, m_bIsForeground(false)
+, m_bFocused(true)
 {
-    ;
+    ASSERT(!m_pInstance);
+    m_pInstance = this;
 };
 
 
 CPCSystem::~CPCSystem(void)
 {
-    ;
+    ASSERT(m_pInstance == this);
+    m_pInstance = nullptr;
 };
 
 
 bool CPCSystem::Initialize(void)
 {
+    //
+    //  Set sticky keys
+    //
     m_StickyKeys = { 0 };
-    m_ToggleKeys = { 0 };
-    m_FilterKeys = { 0 };
-    
     m_StickyKeys.cbSize = sizeof(m_StickyKeys);
-    m_ToggleKeys.cbSize = sizeof(m_ToggleKeys);
-    m_FilterKeys.cbSize = sizeof(m_FilterKeys);
 
-    SystemParametersInfo(SPI_GETSCREENSAVEACTIVE, 0, &m_bScreenSavingEnabled, 0);
     SystemParametersInfo(SPI_GETSTICKYKEYS, sizeof(m_StickyKeys), &m_StickyKeys, 0);
-    SystemParametersInfo(SPI_GETTOGGLEKEYS, sizeof(m_ToggleKeys), &m_ToggleKeys, 0);
-    SystemParametersInfo(SPI_GETFILTERKEYS, sizeof(m_FilterKeys), &m_FilterKeys, 0);
 
     STICKYKEYS StickyKeys = { 0 };
     StickyKeys.cbSize = sizeof(StickyKeys);
     StickyKeys.dwFlags = FLAG_CLEAR(m_StickyKeys.dwFlags, SKF_HOTKEYACTIVE);
 
+    SystemParametersInfo(SPI_SETSTICKYKEYS, sizeof(StickyKeys), &StickyKeys, 0);
+
+    //
+    //  Set toggle keys
+    //
+    m_ToggleKeys = { 0 };
+    m_ToggleKeys.cbSize = sizeof(m_ToggleKeys);
+
+    SystemParametersInfo(SPI_GETTOGGLEKEYS, sizeof(m_ToggleKeys), &m_ToggleKeys, 0);
+
     TOGGLEKEYS ToggleKeys = { 0 };
     ToggleKeys.cbSize = sizeof(ToggleKeys);
     ToggleKeys.dwFlags = FLAG_CLEAR(m_ToggleKeys.dwFlags, TKF_HOTKEYACTIVE | TKF_TOGGLEKEYSON);
+
+    SystemParametersInfo(SPI_SETTOGGLEKEYS, sizeof(ToggleKeys), &ToggleKeys, 0);
+
+    //
+    //  Set filter keys
+    //
+    m_FilterKeys = { 0 };
+    m_FilterKeys.cbSize = sizeof(m_FilterKeys);
+
+    SystemParametersInfo(SPI_GETFILTERKEYS, sizeof(m_FilterKeys), &m_FilterKeys, 0);
 
     FILTERKEYS FilterKeys = { 0 };
     FilterKeys.cbSize = sizeof(FilterKeys);
@@ -75,22 +134,26 @@ bool CPCSystem::Initialize(void)
     FilterKeys.iBounceMSec = m_FilterKeys.iBounceMSec;
     FilterKeys.dwFlags = FLAG_CLEAR(m_FilterKeys.dwFlags, FKF_HOTKEYACTIVE);
 
+    SystemParametersInfo(SPI_SETFILTERKEYS, sizeof(FilterKeys), &FilterKeys, 0);
+
+    //
+    //  Set screensave
+    //
+    m_bScreenSavingEnabled = 0;
+    SystemParametersInfo(SPI_GETSCREENSAVEACTIVE, 0, &m_bScreenSavingEnabled, 0);    
     SystemParametersInfo(SPI_SETSCREENSAVEACTIVE, 0, 0, 0);
-    SystemParametersInfo(SPI_SETSTICKYKEYS, sizeof(StickyKeys), &StickyKeys, 0);
-    SystemParametersInfo(SPI_SETTOGGLEKEYS, sizeof(ToggleKeys), &ToggleKeys, 0);
-    SystemParametersInfo(SPI_SETFILTERKEYS, sizeof(FILTERKEYS), &FilterKeys, 0);
 
     if (!CheckOS())
     {
-        OUTPUT(" Operating system check failed\n");
+        OUTPUT("Operating system check failed\n");
         return false;
     };
 
     if (!WindowCreate())
     {
-        OUTPUT(" Create window failed\n");
+        OUTPUT("Create window failed\n");
         return false;
-    };    
+    };
 
     return true;
 };
@@ -107,71 +170,31 @@ void CPCSystem::Terminate(void)
 };
 
 
-void CPCSystem::Run(void)
+bool CPCSystem::Run(void)
 {
-    MSG Msg = { 0 };
-    
-    while (!m_pFramework->IsEnded())
+    bool bResult = true;
+    MSG Msg;
+
+    if (PeekMessageA(&Msg, 0, 0, 0, PM_REMOVE))
     {
-        if (PeekMessage(&Msg, NULL, 0, 0, PM_REMOVE | PM_NOYIELD))
+        if (Msg.message == WM_QUIT)
         {
-            if (Msg.message == WM_QUIT)
-            {
-                break;
-            }
-            else
-            {
-                TranslateMessage(&Msg);
-                DispatchMessage(&Msg);
-            };
-        }
-        else if (m_bIsForeground)
-        {
-            m_pFramework->Move();
-            m_pFramework->Render();
-            m_pFramework->Flip();
+            bResult = false;
         }
         else
         {
-            WaitMessage();
+            TranslateMessage(&Msg);
+            DispatchMessageA(&Msg);
         };
-    };
-};
-
-
-void CPCSystem::WindowShow(bool bFullscreen)
-{
-    HWND hWnd = HWND(CPCSpecific::m_hWnd);    
-    if (bFullscreen)
-    {
-        ShowCursor(FALSE);
     }
-    else
+    else if (m_bFocused)
     {
-        ShowWindow(hWnd, SW_SHOW);
-        SetForegroundWindow(hWnd);
-        SetFocus(hWnd);
+        Framework().Move();
+        Framework().Render();
+        Framework().Flip();
     };
-};
 
-
-void CPCSystem::WindowHide(bool bFullscreen)
-{
-    HWND hWnd = HWND(CPCSpecific::m_hWnd);
-    if (!bFullscreen)
-        ShowWindow(hWnd, SW_HIDE);
-};
-
-
-void CPCSystem::CursorShow(bool bState)
-{
-    ;
-};
-
-
-bool CPCSystem::IsCursorHidden(void) const
-{
-    return false;
+	return bResult;
 };
 
 
@@ -230,7 +253,7 @@ bool CPCSystem::CheckOS(void)
     else
         WinVersion = WINVERSION_UNKNOWN;
 
-    strcpy(m_szOsName, s_aWinVersionInfo[WinVersion].m_pszLabel);
+    std::strcpy(m_szOsName, s_aWinVersionInfo[WinVersion].m_pszLabel);
     
     return s_aWinVersionInfo[WinVersion].m_bCompatibility;
 };
@@ -238,27 +261,31 @@ bool CPCSystem::CheckOS(void)
 
 bool CPCSystem::WindowCreate(void)
 {
-    WNDCLASSEX WndClass = { 0 };
+    WNDCLASSEXA WndClass = { 0 };
     WndClass.cbSize         = sizeof(WndClass);
     WndClass.style          = 0;
-    WndClass.lpfnWndProc    = &CPCSystem::WndProcRouter;
+    WndClass.lpfnWndProc    = WndProc;
     WndClass.cbClsExtra     = 0;
     WndClass.cbWndExtra     = 0;
     WndClass.hInstance      = CPCSpecific::m_hInstance;
     WndClass.hIcon          = LoadIcon(GetModuleHandle(NULL), MAKEINTRESOURCE(IDI_APP));
     WndClass.hCursor        = LoadCursor(NULL, IDC_ARROW);
-    WndClass.hbrBackground  = HBRUSH(COLOR_WINDOW + 1);
+    WndClass.hbrBackground  = HBRUSH(GetStockObject(BLACK_BRUSH));
     WndClass.lpszMenuName   = NULL;
-	WndClass.lpszClassName  = APP_CLASSNAME;
+	WndClass.lpszClassName  = WNDNAME;
 
-    if (!RegisterClassEx(&WndClass))
+    if (!RegisterClassExA(&WndClass))
         return false;
+
+    const DWORD Styles = (WS_OVERLAPPEDWINDOW);
     
-    HWND hWndResult = CreateWindowEx(
+    static_assert(Styles == 0xCF0000, "checkout");
+
+    HWND hWndResult = CreateWindowExA(
         NULL,
-        APP_CLASSNAME,
-        APP_WNDNAME,
-        WS_OVERLAPPEDWINDOW,
+        WNDNAME,
+        WNDNAME,
+        Styles,
         CW_USEDEFAULT,
         0,
         CW_USEDEFAULT,
@@ -266,16 +293,14 @@ bool CPCSystem::WindowCreate(void)
         NULL,
         NULL,
         CPCSpecific::m_hInstance,
-        this
+        NULL
     );
 
 	if (!hWndResult)
-	{
-		DWORD dwError = GetLastError();
         return false;
-	};
 
     SetForegroundWindow(hWndResult);
+    
     CPCSpecific::m_hWnd = hWndResult;
 
     return true;
@@ -284,109 +309,15 @@ bool CPCSystem::WindowCreate(void)
 
 void CPCSystem::WindowDestroy(void)
 {
-    HWND hWnd = HWND(CPCSpecific::m_hWnd);
-    if (hWnd)
+    if (CPCSpecific::m_hWnd)
     {
-        DestroyWindow(hWnd);
-        CPCSpecific::m_hWnd = nullptr;
+        DestroyWindow(CPCSpecific::m_hWnd);
+        CPCSpecific::m_hWnd = NULL;
     };
 
-	UnregisterClass(APP_CLASSNAME, NULL);
+	MSG msg;
+	while (PeekMessageA(&msg, 0, 0, 0, PM_REMOVE))
+		;
 
-	MSG Msg = { 0 };
-	while (PeekMessage(&Msg, NULL, 0, 0, PM_REMOVE | PM_NOYIELD))
-		;	
-};
-
-
-LRESULT CALLBACK CPCSystem::WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
-{
-    switch (uMsg)
-    {
-    case WM_ACTIVATE:
-        HANDLE_WM_ACTIVATE(hWnd, wParam, lParam, OnActivate);
-        break;
-
-    case WM_SIZE:
-        HANDLE_WM_SIZE(hWnd, wParam, lParam, OnSize);
-        break;
-
-    case WM_SIZING:
-        OnSizing(hWnd, LPRECT(lParam));
-        break;
-
-    case WM_CLOSE:
-        HANDLE_WM_CLOSE(hWnd, wParam, lParam, OnClose);        
-        break;
-
-    case WM_DESTROY:
-        HANDLE_WM_DESTROY(hWnd, wParam, lParam, OnDestroy);
-        break;
-
-    case WM_SETCURSOR:
-        if (!HANDLE_WM_SETCURSOR(hWnd, wParam, lParam, OnSetCursor))
-            return DefWindowProc(hWnd, uMsg, wParam, lParam);
-        break;
-
-    default:
-        return DefWindowProc(hWnd, uMsg, wParam, lParam);
-    };
-
-    return 0;
-};
-
-
-void CPCSystem::OnActivate(HWND hWnd, uint32 state, HWND hwndActDeact, BOOL fMinimized)
-{
-    if (state == WA_INACTIVE)
-    {
-        m_bIsForeground = false;
-    }
-    else
-    {
-        m_bIsForeground = true;
-        UpdateWindow(hWnd);
-    };
-};
-
-
-void CPCSystem::OnSize(HWND hWnd, uint32 state, int32 w, int32 h)
-{
-    if ((w > 0) && (h > 0))
-        m_pFramework->UpdateSize(w, h);
-};
-
-
-void CPCSystem::OnSizing(HWND hWnd, RECT* pRect)
-{
-    m_pFramework->Render();
-    m_pFramework->Flip();
-    
-    SetWindowPos(
-        hWnd,
-        HWND_TOP,
-        pRect->left,
-        pRect->top,
-        pRect->right - pRect->left,
-        pRect->bottom - pRect->top,
-        SWP_NOMOVE
-    );
-};
-
-
-void CPCSystem::OnClose(HWND hWnd)
-{
-    DestroyWindow(hWnd);
-};
-
-
-void CPCSystem::OnDestroy(HWND hWnd)
-{
-    PostQuitMessage(0x0);
-};
-
-
-bool CPCSystem::OnSetCursor(HWND hWnd, HWND hWndCursor, uint32 codeHitTest, uint32 ms)
-{
-    return false;
+	UnregisterClassA(WNDNAME, NULL);
 };

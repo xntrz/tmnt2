@@ -13,12 +13,20 @@ class CGameObject;
 class CEffect;
 
 
+typedef enum tagSEMOVETYPE
+{
+    SEMOVETYPE_WALK = 0,
+    SEMOVETYPE_RUN,
+    SEMOVETYPE_LIFTWALK,
+} SEMOVETYPE;
+
+
 typedef struct tagSE_WALK_PARAM
 {
     int32 Type;
     int32 Id;
     RwV3d Pos;
-    int32 MoveType;
+    SEMOVETYPE MoveType;
     int32 GroundType;
     int32 GroundParam;    
 } SE_WALK_PARAM;
@@ -54,9 +62,10 @@ public:
     
     enum FADESPEED
     {
-        FADESPEED_SLOW = 0,
+        FADESPEED_FAST = 0,
         FADESPEED_NORMAL,
-        FADESPEED_FAST,
+        FADESPEED_SLOW,
+        
         FADESPEEDNUM,
     };
 
@@ -90,7 +99,7 @@ public:
     static void StopSE(int32 nSE);
     static void FadeOutSE(int32 nSE, FADESPEED speed);
     static void PlayBGM(int32 nBGM);
-    static void PlayVoice(int32 nVoice, PLAYERID::VALUE idPlayer);
+    static void PlayVoice(int32 nVoice, PLAYERID::VALUE idPlayer = PLAYERID::ID_INVALID);
     static bool IsVoicePlaying(void);
     static bool IsIDPlaying(PLAYERID::VALUE idPlayer);
     static void FadeOut(FADESPEED speed);
@@ -99,7 +108,7 @@ public:
     static void Resume(void);
     static void AttachCamera(RwCamera* pCamera);
     static void DetachCamera(void);
-    static void PlayPositionSE(const RwV3d* pPos, int32 nSE, int32 param);
+    static void PlayPositionSE(const RwV3d* pPos, int32 nSE, int32 param = 0);
     static void PlayObjectSE(const CCharacter* pCharacter, int32 nSE, int32 param = 0);
     static void PlayObjectSE(const CGimmick* pGimmick, int32 nSE, int32 param = 0);
     static void PlayObjectSE(const CEffect* pEffect, int32 nSE, int32 param = 0);
@@ -121,6 +130,10 @@ public:
     static int32 GetVoiceConfig(void);
     static void StageAfter(STAGEID::VALUE idStage);
     static void StageBefore(STAGEID::VALUE idStage);
+
+    static inline int32 GetSeRaw(void) { return m_nSeConfig; };
+    static inline int32 GetBgmRaw(void) { return m_nBgmConfig; };
+    static inline int32 GetVoiceRaw(void) { return m_nVoiceConfig; };
 
 private:
     static bool calcSEPositionInfo(const RwV3d* pvPos, int32& dist, int32& rot);

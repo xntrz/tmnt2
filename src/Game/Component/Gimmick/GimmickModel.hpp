@@ -24,37 +24,45 @@ protected:
 class CNormalGimmickModel : public CGimmickModel
 {
 public:
-    static const int32 MODELNUM = 4;
-
-    enum MODELKIND
+    enum
     {
-        MODELKIND_VISUAL_NORMAL = 0,
-        MODELKIND_VISUAL_BREAK,
-        MODELKIND_ATARI_NORMAL,
-        MODELKIND_ATARI_BREAK,
-        MODELKINDNUM,
+        MODELTYPE_DRAW_NORMAL = 0,
+        MODELTYPE_ATARI_NORMAL,
+        MODELTYPE_DRAW_BREAK,
+        MODELTYPE_ATARI_BREAK,
     };
-
+    
 public:
     CNormalGimmickModel(void);
     virtual ~CNormalGimmickModel(void);
     virtual void Draw(void) const override;
     virtual void UpdateFrame(void) override;
-    void SetModel(int32 modelkind, CModel* pModel);
-    CModel* GetModel(int32 modelkind) const;
-    CModel* GetVisualModel(void) const;
-    CModel* GetCollisionModel(void) const;
+    void SetModel(int32 idx, CModel* pModel);
+    void SetColor(int32 idx, const RwRGBA& rColor);
     RpClump* GetCollisionModelClump(void) const;
-    void SetVisualNormal(void);
-    void SetVisualBreak(void);
-    void SetCollisionNormal(void);
-    void SetCollisionBreak(void);
-    void SetDrawEnable(bool bEnable);
-    bool IsDrawEnable(void) const;
-    void SetColor(int32 modelkind, const RwRGBA& rColor);
+
+    // returns pointer to an modeling matrix
+    RwMatrix* GetMatrix(int32 idx) const;
+
+    inline CModel* GetModel(int32 idx) const        { return m_apModel[idx]; };
+    inline CModel* GetVisualModel(void) const       { return GetModel(m_idxModelDraw); };
+    inline CModel* GetCollisionModel(void) const    { return (GetModel(m_idxModelAtari) ? GetModel(m_idxModelAtari) : GetModel(m_idxModelDraw)); };
+    
+    inline bool IsDrawEnable(void) const            { return m_bDrawEnable; };
+    inline void SetDrawEnable(bool bEnable)         { m_bDrawEnable = bEnable; };
+    
+    inline int32 GetDrawType(void) const            { return m_idxModelDraw; };
+    inline int32 GetAtariType(void) const           { return m_idxModelAtari; };
+    inline void SetDrawType(int32 idx)              { m_idxModelDraw = idx; };
+    inline void SetAtariType(int32 idx)             { m_idxModelAtari = idx; };
+    
+    inline void SetVisualNormal(void)               { SetDrawType(MODELTYPE_DRAW_NORMAL); };
+    inline void SetCollisionNormal(void)            { SetAtariType(MODELTYPE_ATARI_NORMAL); };
+    inline void SetVisualBreak(void)                { SetDrawType(MODELTYPE_DRAW_BREAK); };
+    inline void SetCollisionBreak(void)             { SetAtariType(MODELTYPE_ATARI_BREAK); };
 
 protected:
-    MODELKIND m_CollisionModelKind;
-    MODELKIND m_ViewModelKind;
+    int32 m_idxModelDraw;
+    int32 m_idxModelAtari;
     bool m_bDrawEnable;
 };

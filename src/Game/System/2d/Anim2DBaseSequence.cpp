@@ -35,23 +35,6 @@ CAnim2DSequence::~CAnim2DSequence(void)
 };
 
 
-bool CAnim2DSequence::Ret(const void* param)
-{
-    switch (m_step)
-    {
-    case STEP_DRAW:
-        BeginFadeIn();
-        return true;
-
-    case STEP_END:
-        CSequence::Ret(param);
-        return true;
-    };
-
-    return false;
-};
-
-
 void CAnim2DSequence::OnDetach(void)
 {
     CLoadingDisplay::Stop(this);
@@ -63,58 +46,57 @@ void CAnim2DSequence::OnDetach(void)
 };
 
 
-void CAnim2DSequence::OnMove(bool bRet, const void* param)
+void CAnim2DSequence::OnMove(bool bRet, const void* pReturnValue)
 {
-    switch (m_step)
+    switch (m_animstep)
     {
-    case STEP_READFILE:
-        if (CDataLoader::IsLoadEnd())
+    case ANIMSTEP_READFILE:
         {
+            CDataLoader::Period();
+            
+            if (!CDataLoader::IsLoadEnd())
+                break;
+
             CLoadingDisplay::Stop(this);
 
             ASSERT(std::strlen(m_szAnimName) > 0);
-            
+
             m_bResumed = bRet;
             m_pAnimation2D = CAnimation2DLoader::Get(m_szAnimName);
             ASSERT(m_pAnimation2D);
-           
-			if (m_pAnimation2D)
-			{
-                BeginFadeOut();
-			}
-			else
-			{
-                CSequence::Ret();
-			};
+
+            (m_pAnimation2D ? BeginFadein() : CSequence::Ret());
         }
-        else
-        {
-            CDataLoader::Period();
-        };        
         break;
         
-    case STEP_FADE_OUT:
-        if (!CScreenFade::IsFading())
+    case ANIMSTEP_FADEIN:
         {
-            m_step = STEP_DRAW;
+            if (CScreenFade::IsFading())
+                break;
+            
+            m_animstep = ANIMSTEP_DRAW;
             CGameData::Attribute().SetInteractive(true);
-        };
+        }
         break;
         
-    case STEP_DRAW:
-        m_pAnimation2D->Update();
-        m_pAnimation2D->Input();
+    case ANIMSTEP_DRAW:
+        {
+            m_pAnimation2D->Update();
+            m_pAnimation2D->Input();
+        }
         break;
         
-    case STEP_FADE_IN:
-        if (!CScreenFade::IsFading())
-            m_step = STEP_END;
+    case ANIMSTEP_FADEOUT:
+        {
+            if (!CScreenFade::IsFading())
+                m_animstep = ANIMSTEP_END;
+        }
         break;
         
-    case STEP_END:
-        m_bResumed = false;
-		if (!OnRet())
-            CSequence::Ret();
+    case ANIMSTEP_END:
+        {
+            m_bResumed = false;
+        }
         break;
         
     default:
@@ -148,7 +130,7 @@ bool CAnim2DSequence::OnAttach(int32 iFileID)
     if (m_bDisplayLoading)
         CLoadingDisplay::Start(this);
 
-	m_step = STEP_READFILE;
+	m_animstep = ANIMSTEP_READFILE;
 
     return true;
 };
@@ -163,13 +145,13 @@ bool CAnim2DSequence::OnAttach(const char* pszFilename)
     if (m_bDisplayLoading)
         CLoadingDisplay::Start(this);
     
-	m_step = STEP_READFILE;
+	m_animstep = ANIMSTEP_READFILE;
 
     return true;
 };
 
 
-void CAnim2DSequence::BeginFadeOut(void)
+void CAnim2DSequence::BeginFadein(void)
 {
     if (!m_bResumed)
     {
@@ -177,22 +159,16 @@ void CAnim2DSequence::BeginFadeOut(void)
         m_pAnimation2D->Start();
     };
     
-    CScreenFade::StartOut();
-    m_step = STEP_FADE_OUT;
+    CScreenFade::BlackIn();
+    m_animstep = ANIMSTEP_FADEIN;
 };
 
 
-void CAnim2DSequence::BeginFadeIn(void)
+void CAnim2DSequence::BeginFadeout(void)
 {
     CGameData::Attribute().SetInteractive(false);
-    CScreenFade::StartIn();
-    m_step = STEP_FADE_IN;
-};
-
-
-bool CAnim2DSequence::OnRet(void)
-{
-    return false;
+    CScreenFade::BlackOut();
+    m_animstep = ANIMSTEP_FADEOUT;
 };
 
 
@@ -216,8 +192,8 @@ bool CAnim2DSequence::IsAnim2DMessageList(const char** pTable, int32 max, int32*
 
 bool CAnim2DSequence::IsDrawing(void) const
 {
-    return (m_step >= STEP_FADE_OUT &&
-            m_step <= STEP_FADE_IN);
+    return ((m_animstep >= ANIMSTEP_FADEIN) &&
+            (m_animstep <= ANIMSTEP_FADEOUT));
 };
 
 

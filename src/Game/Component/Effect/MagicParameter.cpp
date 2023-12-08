@@ -45,7 +45,7 @@ void CMagicParameter::SetFeature(MAGICTYPES::FEATURE feature)
 void CMagicParameter::AddFeature(MAGICTYPES::FEATURE feature)
 {
     uint32 uFlagField = m_feature;
-    FLAG_CHANGE(uFlagField, feature, true);
+    FLAG_SET(uFlagField, feature);
     m_feature = MAGICTYPES::FEATURE(uFlagField);
 };
 

@@ -7,26 +7,24 @@ class CFileAccess;
 class CFile
 {
 public:
-    enum STATUS
+    enum STAT
     {
-        STATUS_NOREAD = 0,
-        STATUS_READING,
-        STATUS_READEND,
-        STATUS_ERROR,
+        STAT_NOREAD = 0,
+        STAT_READING,
+        STAT_READEND,
+        STAT_ERROR,
     };
 
 public:
-    CFile(int32 nLabel);
+    CFile(void);
     virtual ~CFile(void);
-    virtual bool Open(int32 id);
-    virtual bool Open(const char* pszName);
+    virtual bool Open(int32 nType, const void* pTypeData);
     virtual void Close(void);
     virtual void* Data(void) const;
     virtual uint32 Size(void) const;
-    virtual STATUS Status(void);
+    virtual STAT Stat(void);
 
 protected:
-    int32 m_nLabel;
-    STATUS m_status;
+    STAT m_stat;
     CFileAccess* m_pAccessData;
 };

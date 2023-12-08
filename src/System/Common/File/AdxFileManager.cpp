@@ -1,22 +1,15 @@
 #include "AdxFileManager.hpp"
-#include "AdxFileAccess.hpp"
-#include "AdxRwFileSystem.hpp"
-#include "FileID.hpp"
-#include "Filename.hpp"
-#include "RwFileManager.hpp"
 
 #include "cri_adxt.h"
 
 
-/*static*/ CAdxFileManager& CAdxFileManager::Instance(void)
+/*static*/ bool CAdxFileManager::LoadPartition(int32 ptid, const char* fname, void* dir, void* ptinfo)
 {
-    return (CAdxFileManager&)CFileManager::Instance();
+    return ((CAdxFileManager&)Instance()).LoadPartition(ptid, fname, ptinfo);
 };
 
 
 CAdxFileManager::CAdxFileManager(void)
-: m_pAdxRwFileSystem(nullptr)
-, m_paAdxFileAccess(nullptr)
 {
     std::memset(&m_ptinfoCommon[0], 0x00, sizeof(m_ptinfoCommon));
     std::memset(&m_ptinfoLang[0], 0x00, sizeof(m_ptinfoLang));      
@@ -33,18 +26,6 @@ bool CAdxFileManager::Start(void)
 {
     if (!CFileManager::Start())
         return false;
-
-    m_pAdxRwFileSystem = (CAdxRwFileSystem*)RwMalloc(sizeof(CAdxRwFileSystem), rwMEMHINTDUR_GLOBAL);
-    if (!m_pAdxRwFileSystem->Initialize())
-        return false;
-    CRwFileManager::Regist(m_pAdxRwFileSystem, true);
-
-    m_paAdxFileAccess = new CAdxFileAccess[32];
-    if (!m_paAdxFileAccess)
-        return false;
-
-    for (int32 i = 0; i < 32; ++i)
-        m_listAdxFileAccessPool.push_back(&m_paAdxFileAccess[i]);
 
     if (!SetupFileSystem())
         return false;
@@ -66,28 +47,11 @@ bool CAdxFileManager::Start(void)
 
 void CAdxFileManager::Stop(void)
 {
-    for (CAdxFileAccess& it : m_listAdxFileAccessAlloc)
-        it.Clear();
-    
-    GarbageCollection();
-
     ADXT_Finish();
 
     ShutdownThreadSystem();
+    
     ShutdownFileSystem();
-
-    if (m_paAdxFileAccess)
-    {
-        delete[] m_paAdxFileAccess;
-        m_paAdxFileAccess = nullptr;
-    };
-
-    if (m_pAdxRwFileSystem)
-    {
-        m_pAdxRwFileSystem->Terminate();
-        CRwFileManager::Remove(m_pAdxRwFileSystem);
-        m_pAdxRwFileSystem = nullptr;
-    };
 
     CFileManager::Stop();
 };
@@ -95,8 +59,7 @@ void CAdxFileManager::Stop(void)
 
 void CAdxFileManager::Sync(void)
 {
-    CFileManager::Sync();    
-    GarbageCollection();
+    CFileManager::Sync();
     ADXM_ExecMain();
 };
 
@@ -105,62 +68,24 @@ void CAdxFileManager::Reset(void)
 {
     bool bResult = LoadPartitionCommon();
     ASSERT(bResult != false);
+    
     bResult = LoadPartitionLang();
     ASSERT(bResult != false);
 };
 
 
-CFileAccess* CAdxFileManager::AllocRequest(int32 nID, int32 nLabel)
+CFileAccess* CAdxFileManager::AllocRequest(int32 nType, const void* pTypeData)
 {
-    if (nLabel != LABELADX_ID)
-        return CFileManager::AllocRequest(nID, nLabel);
-
-    if (m_listAdxFileAccessPool.empty())
+    if (nType != FILETYPE_ID)
         return nullptr;
 
-    CAdxFileAccess* pAccess = m_listAdxFileAccessPool.front();
-    ASSERT(pAccess);
-    if (!pAccess)
-        return nullptr;
+    int32 FileID = int32(pTypeData);
+    ASSERT( (FileID >= 0) && (FileID < FILEID::ID_MAX) );
+
+	CRequest req(FileID, &m_aAdxFileAccess[FileID]);
+	RegistRequest(req);
     
-    m_listAdxFileAccessPool.erase(pAccess);
-    m_listAdxFileAccessAlloc.push_back(pAccess);
-
-    REQUEST request;
-    request.m_pAccessData = pAccess;
-    request.m_nLabel = nLabel;    
-    request.m_type = REQUEST::TYPE_ID;
-    request.m_data.id = nID;
-    RegistRequest(request);
-    
-    return pAccess;
-};
-
-
-CFileAccess* CAdxFileManager::AllocRequest(const char* pszName, int32 nLabel)
-{
-    if (nLabel != LABELADX_NAME)
-        return CFileManager::AllocRequest(pszName, nLabel);
-
-    if (m_listAdxFileAccessPool.empty())
-        return nullptr;
-
-    CAdxFileAccess* pAccess = m_listAdxFileAccessPool.front();
-    ASSERT(pAccess);
-    if (!pAccess)
-        return nullptr;
-    
-    m_listAdxFileAccessPool.erase(pAccess);
-    m_listAdxFileAccessAlloc.push_back(pAccess);
-
-    REQUEST request;
-    request.m_pAccessData = pAccess;
-    request.m_nLabel = nLabel;
-    request.m_type = REQUEST::TYPE_ID;
-    request.SetName(pszName);
-    RegistRequest(request);
-
-    return pAccess;
+    return &m_aAdxFileAccess[FileID];
 };
 
 
@@ -191,47 +116,35 @@ bool CAdxFileManager::LoadPartitionLang(void)
 
 bool CAdxFileManager::LoadPartition(int32 PtId, const char* FName, void* PtInfo)
 {
-    while (ADXF_LoadPartitionNw(PtId, FName, NULL, PtInfo))
-        Error("Loading partition no wait error");
+	if (!ADXF_LoadPartitionNw(PtId, FName, NULL, PtInfo))
+	{
+		bool bLoopFlag = true;
 
-    while (true)
-    {        
-        int32 PtStat = ADXF_GetPtStat(PtId);
-        if (PtStat == ADXF_STAT_READEND)
-        {
-			break;
-        }
-        else if (PtStat == ADXF_STAT_READING)
-        {
-			Sync();
-        }
-        else
-        {
-			Error("Reading partition error");
-        };        
-    };
+		do
+		{
+			int32 stat = ADXF_GetPtStat(PtId);
+			switch (stat)
+			{
+			case ADXF_STAT_READEND:
+				return true;
 
-    return true;
-};
+			case ADXF_STAT_READING:
+				Sync();
+				break;
 
+			default:
+				bLoopFlag = false;
+				break;
+			};
+		} while (bLoopFlag);
+	};
 
-void CAdxFileManager::GarbageCollection(void)
-{
-    if (m_listAdxFileAccessAlloc.empty())
-        return;
+    char buff[1024];
+    buff[0] = '\0';
 
-    auto it = m_listAdxFileAccessAlloc.begin();
-    while (it)
-    {
-        CAdxFileAccess* pAccess = &(*it);
-        if (pAccess->Status() == CAdxFileAccess::STATUS_NOREAD)
-        {
-            it = m_listAdxFileAccessAlloc.erase(it);
-            m_listAdxFileAccessPool.push_back(pAccess);
-        }
-        else
-        {
-            ++it;
-        };
-    };
+    std::sprintf(buff, "Load partition \"%s\" failed.", FName);
+
+    Error(buff);
+
+    return false;
 };

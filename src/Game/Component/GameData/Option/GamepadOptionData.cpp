@@ -2,8 +2,11 @@
 
 #include "Game/Component/GameData/GameData.hpp"
 #include "Game/System/Misc/Gamepad.hpp"
-#include "Game/System/Misc/Keyboard.hpp"
 #include "System/Common/Controller.hpp"
+
+#ifdef TARGET_PC
+#include "System/PC/PCSpecific.hpp"
+#endif
 
 
 CGamepadOptionData::CGamepadOptionData(void)
@@ -21,6 +24,14 @@ CGamepadOptionData::~CGamepadOptionData(void)
 void CGamepadOptionData::Initialize(int32 port)
 {
     m_port = port;
+
+#ifdef TARGET_PC    
+    //
+    //  "WEAK ATTACK->OK  JUMP->CANCEL"
+    //
+    IGamepad::DIGITAL_OK = IPadFunctionMask(IGamepad::FUNCTION_ATTACK_A) | IGamepad::DIGITAL_START;
+    IGamepad::DIGITAL_CANCEL = IPadFunctionMask(IGamepad::FUNCTION_JUMP) | IGamepad::DIGITAL_SELECT;
+#endif
     
     SetDefault();
 };
@@ -36,13 +47,13 @@ void CGamepadOptionData::SetDefault(void)
 {
     m_bVibration = true;
     
-    m_auButtonAssign[OPTIONTYPES::BTNFUNC_ATTACK_A] = CController::DIGITAL_A;
-    m_auButtonAssign[OPTIONTYPES::BTNFUNC_ATTACK_B] = CController::DIGITAL_B;    
-    m_auButtonAssign[OPTIONTYPES::BTNFUNC_SHURIKEN] = CController::DIGITAL_Y;
-    m_auButtonAssign[OPTIONTYPES::BTNFUNC_JUMP] = CController::DIGITAL_X;
-    m_auButtonAssign[OPTIONTYPES::BTNFUNC_DASH] = CController::DIGITAL_LEFT_BUMPER;
-    m_auButtonAssign[OPTIONTYPES::BTNFUNC_GUARD] = CController::DIGITAL_RIGHT_BUMPER;
-    m_auButtonAssign[OPTIONTYPES::BTNFUNC_CHANGE_CHARA] = CController::DIGITAL_RIGHT_TRIGGER;
+    m_auButtonAssign[OPTIONTYPES::BTNFUNC_ATTACK_A]     = IGamepad::DIGITAL_RDOWN;
+    m_auButtonAssign[OPTIONTYPES::BTNFUNC_ATTACK_B]     = IGamepad::DIGITAL_RLEFT;
+    m_auButtonAssign[OPTIONTYPES::BTNFUNC_SHURIKEN]     = IGamepad::DIGITAL_RUP;
+    m_auButtonAssign[OPTIONTYPES::BTNFUNC_JUMP]         = IGamepad::DIGITAL_RRIGHT;
+    m_auButtonAssign[OPTIONTYPES::BTNFUNC_DASH]         = IGamepad::DIGITAL_L1;
+    m_auButtonAssign[OPTIONTYPES::BTNFUNC_GUARD]        = IGamepad::DIGITAL_R1;
+    m_auButtonAssign[OPTIONTYPES::BTNFUNC_CHANGE_CHARA] = IGamepad::DIGITAL_L2;
 };
 
 
@@ -51,25 +62,33 @@ void CGamepadOptionData::Apply(void)
     if (!IsValid())
         SetDefault();
 
-    int32 iController = CController::GetPhysicalPort(m_port);
+    int32 iController = IGamepad::GetController(m_port);
     
-    CGamepad::ClearAllButtonFunction(iController);
-    CGamepad::AppendButtonFunction(iController, CGamepad::FUNCTION_ATTACK_A, m_auButtonAssign[OPTIONTYPES::BTNFUNC_ATTACK_A]);
-    CGamepad::AppendButtonFunction(iController, CGamepad::FUNCTION_ATTACK_B, m_auButtonAssign[OPTIONTYPES::BTNFUNC_ATTACK_B]);
-    CGamepad::AppendButtonFunction(iController, CGamepad::FUNCTION_SHOT, m_auButtonAssign[OPTIONTYPES::BTNFUNC_SHURIKEN]);
-    CGamepad::AppendButtonFunction(iController, CGamepad::FUNCTION_JUMP, m_auButtonAssign[OPTIONTYPES::BTNFUNC_JUMP]);
-    CGamepad::AppendButtonFunction(iController, CGamepad::FUNCTION_DASH, m_auButtonAssign[OPTIONTYPES::BTNFUNC_DASH]);
-    CGamepad::AppendButtonFunction(iController, CGamepad::FUNCTION_GUARD, m_auButtonAssign[OPTIONTYPES::BTNFUNC_GUARD]);
-    CGamepad::AppendButtonFunction(iController, CGamepad::FUNCTION_SWITCH_CHR, m_auButtonAssign[OPTIONTYPES::BTNFUNC_CHANGE_CHARA]);
-    CGamepad::AppendButtonFunction(iController, CGamepad::FUNCTION_SWITCH_CAM, CController::DIGITAL_LEFT_THUMB);
-    CGamepad::AppendButtonFunction(iController, CGamepad::FUNCTION_SWITCH_GAUGE, CController::DIGITAL_RIGHT_THUMB);
+    IGamepad::ClearAllButtonFunction(iController);
+    
+    IGamepad::AppendButtonFunction(iController, m_auButtonAssign[OPTIONTYPES::BTNFUNC_ATTACK_A],        IGamepad::FUNCTION_ATTACK_A);
+    IGamepad::AppendButtonFunction(iController, m_auButtonAssign[OPTIONTYPES::BTNFUNC_ATTACK_B],        IGamepad::FUNCTION_ATTACK_B);
+    IGamepad::AppendButtonFunction(iController, m_auButtonAssign[OPTIONTYPES::BTNFUNC_SHURIKEN],        IGamepad::FUNCTION_SHOT);
+    IGamepad::AppendButtonFunction(iController, m_auButtonAssign[OPTIONTYPES::BTNFUNC_JUMP],            IGamepad::FUNCTION_JUMP);
+    IGamepad::AppendButtonFunction(iController, m_auButtonAssign[OPTIONTYPES::BTNFUNC_DASH],            IGamepad::FUNCTION_DASH);
+    IGamepad::AppendButtonFunction(iController, m_auButtonAssign[OPTIONTYPES::BTNFUNC_GUARD],           IGamepad::FUNCTION_GUARD);
+    IGamepad::AppendButtonFunction(iController, m_auButtonAssign[OPTIONTYPES::BTNFUNC_CHANGE_CHARA],    IGamepad::FUNCTION_SWITCH_CHR);
+#ifdef TARGET_PS2
+    IGamepad::AppendButtonFunction(iController, IGamepad::DIGITAL_LUP,      IGamepad::FUNCTION_SWITCH_CAM);
+    IGamepad::AppendButtonFunction(iController, IGamepad::DIGITAL_LDOWN,    IGamepad::FUNCTION_SWITCH_GAUGE);
+#elif TARGET_PC    
+    IGamepad::AppendButtonFunction(iController, IGamepad::DIGITAL_R3,       IGamepad::FUNCTION_SWITCH_CAM);
+    IGamepad::AppendButtonFunction(iController, IGamepad::DIGITAL_L3,       IGamepad::FUNCTION_SWITCH_GAUGE);
+#else
+#error Not implemented for current target
+#endif    
 
-#ifdef _TARGET_PC
-    if (CKeyboard::GetPort() == m_port)
-        CGameData::Option().Keyboard().InitializeGamepadMapping();
+#ifdef TARGET_PC
+    if (m_port == CPCSpecific::GetKeyboradPort())
+        CGameData::Option().Keyboard().AssignButton();
 #endif
     
-    CController::EnableVibration(iController, m_bVibration);
+    IGamepad::EnableVibration(iController, m_bVibration);
 };
 
 
@@ -77,7 +96,7 @@ bool CGamepadOptionData::IsValid(void) const
 {
     for (int32 i = 0; i < COUNT_OF(m_auButtonAssign); ++i)
     {
-        if (FLAG_TEST_ANY(m_auButtonAssign[i], ~CController::DIGITAL_MASK))
+        if (FLAG_TEST_ANY(m_auButtonAssign[i], ~IGamepad::DIGITAL_MASK))
             return false;
     };
 
@@ -135,7 +154,7 @@ uint32 CGamepadOptionData::GetAssignedButton(OPTIONTYPES::BTNFUNC func) const
 
 uint32 CGamepadOptionData::extractSingleButton(uint32 button) const
 {
-    for (int32 i = 0; i < CController::DIGITAL_NUM / 2; ++i)
+    for (int32 i = 0; i < IGamepad::DIGITAL_NUM / 2; ++i)
     {
 		uint32 uButton = (1 << i);
         if (FLAG_TEST_ANY(uButton, button))

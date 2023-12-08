@@ -35,7 +35,7 @@ public:
     {
         if (m_paNode)
         {
-            delete [] m_paNode;
+            delete[] m_paNode;
             m_paNode = nullptr;
         };
     };
@@ -160,7 +160,7 @@ void CDataLoaderContainer::Period(void)
 {
     if (m_pCurrentFile)
     {
-        if (m_pCurrentFile->Status() == CFile::STATUS_READEND)
+        if (m_pCurrentFile->Stat() == CFile::STAT_READEND)
         {
             const void* pFileData = m_pCurrentFile->Data();
             uint32 uFileSize = m_pCurrentFile->Size();

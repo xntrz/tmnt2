@@ -28,7 +28,6 @@ private:
         char m_szName[32];
         int32 m_nType;
         int32 m_nNumKey;
-        //PATHKEY m_aKey[];
     };
 
     struct SETCAMDATA
@@ -159,7 +158,7 @@ bool CCameraData::GetSpline(RwV3d* pPos, const PATHDATA* pPathData, float fTime)
     ASSERT(pPos);
     ASSERT(pPathData);
 
-    fTime = Math::Clamp(fTime, 0.0f, 1.0f);
+    fTime = Clamp(fTime, 0.0f, 1.0f);
 
     int32 nKeyIndex = 0;
     int32 nNumKey = pPathData->m_nNumKey - 1;
@@ -227,24 +226,26 @@ float CCameraData::FindNearestPosValue(RwV3d* pPos, int32 nPathID, int32 nNumDiv
 {
     const PATHDATALIST* pPathDataList = GetPathDataList();
     const PATHDATA* pPathData = GetPathData(pPathDataList, nPathID);
+
     float fMinDist = 1000.0f;
     float fNearestTime = 0.0f;
 
     for (int32 i = 0; i < nNumDivPath; ++i)
     {
         float fDeltaDivPath = 1.0f / nNumDivPath;
-        float fValue = float(i) * fDeltaDivPath;
+        float fPathT = float(i) * fDeltaDivPath;
+        
         RwV3d vPathPos = Math::VECTOR3_ZERO;
-        RwV3d vTemp = Math::VECTOR3_ZERO;
+        GetSpline(&vPathPos, pPathData, fPathT);
+
+        RwV3d vDltPos = Math::VECTOR3_ZERO;
+        Math::Vec3_Sub(&vDltPos, &vPathPos, pPos);
         
-        GetSpline(&vPathPos, pPathData, fValue);
-        Math::Vec3_Sub(&vTemp, &vPathPos, pPos);
-        
-        float fDist = Math::Vec3_Length(&vTemp);
+        float fDist = Math::Vec3_Length(&vDltPos);
         if (fDist < fMinDist)
         {
             fMinDist = fDist;
-            fNearestTime = fValue;
+			fNearestTime = fPathT;
         };
     };
 

@@ -1,5 +1,6 @@
 #include "EffectManager.hpp"
 #include "MagicManager.hpp"
+#include "MagicParameter.hpp"
 #include "Tracer.hpp"
 #include "Effect.hpp"
 #include "MagicSetup.hpp"
@@ -18,6 +19,13 @@
 #include "Game/Component/Module/CircleShadowModule.hpp"
 #include "Game/Component/Module/BarrierModule.hpp"
 #include "Game/System/GameObject/GameObjectManager.hpp"
+
+
+#ifdef _DEBUG
+#define EFFECT_MAX_NUM (256)
+#else
+#define EFFECT_MAX_NUM (100)
+#endif
 
 
 class CEffectList
@@ -269,15 +277,12 @@ CEffectContainer::CEffectContainer(void)
 , m_pListEffectDisplay(nullptr)
 , m_pooltype(POOLTYPE_COMMON)
 {
-    m_pListCommonEffectPool = new CEffectList(100);
-    m_pListAttachedEffectPool = new CEffectList(100);
-    m_pListEffectDisplay = new CEffectList(100);
-
-    ASSERT(m_pListAttachedEffectPool);
-    ASSERT(m_pListCommonEffectPool);
-    ASSERT(m_pListEffectDisplay);
+    const int32 EffectNum = EFFECT_MAX_NUM;
     
-    m_pCurrentEffectPool = m_pListCommonEffectPool;
+    m_pListCommonEffectPool     = new CEffectList(EffectNum);
+    m_pListAttachedEffectPool   = new CEffectList(EffectNum);
+    m_pListEffectDisplay        = new CEffectList(EffectNum);
+    m_pCurrentEffectPool        = m_pListCommonEffectPool;
 };
 
 
@@ -661,7 +666,7 @@ static CEffect* EffectFromHandle(uint32 hEffect)
 
     pEffectPlay->SetDirection(fDirection);
     pEffectPlay->SetTracer(pTracer, pvOffset, fDirection);
-    pEffectPlay->SetDirectionTraceFlag(true);
+    pEffectPlay->SetDirectionTraceFlag(false);
     pEffectPlay->SetSoundPlay(bPlaySound);
     EffectContainer().Play(pEffectPlay);
 
@@ -691,13 +696,13 @@ static CEffect* EffectFromHandle(uint32 hEffect)
 
 /*static*/ void CEffectManager::Convert(const char* pszName, CMagicParameter* pMagicParameter)
 {
-    CEffect* pEffect = EffectContainer().Search(pszName);
+    CEffect* pEffect = EffectContainer().Search(pMagicParameter->GetBaseEffectName());
     if (pEffect)
     {
         CMagic* pMagic = new CMagic(pszName);
         ASSERT(pMagic);
 
-        pMagic->CreateSubstance(pszName);
+        pMagic->CreateSubstance(pMagicParameter->GetBaseEffectName());
         pMagic->SetParameter(pMagicParameter);
         pMagic->SetStringEffectOn(CGameData::Option().Display().IsEnabledFontEffect());
 

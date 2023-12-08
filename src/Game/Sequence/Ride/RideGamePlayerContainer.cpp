@@ -23,6 +23,21 @@ CRideGamePlayerContainer::~CRideGamePlayerContainer(void)
 };
 
 
+CGamePlayer* CRideGamePlayerContainer::GamePlayer(int32 no) const
+{
+    if (no >= 0 && no < m_nNumPlayer)
+        return reinterpret_cast<CGamePlayer*>(getRideGamePlayer(no));
+    else
+        return CGamePlayer::Dummy();
+};
+
+
+int32 CRideGamePlayerContainer::GetPlayerNum(void) const
+{
+    return m_nNumPlayer;
+};
+
+
 void CRideGamePlayerContainer::AddPlayer(int32 nPlayerNo, PLAYERID::VALUE idPlayer, GAMETYPES::COSTUME costume)
 {
     ASSERT(nPlayerNo >= 0 && nPlayerNo < GAMETYPES::PLAYERS_MAX);
@@ -34,21 +49,6 @@ void CRideGamePlayerContainer::AddPlayer(int32 nPlayerNo, PLAYERID::VALUE idPlay
     };
 
     getRideGamePlayer(nPlayerNo)->AddPlayerCharacter(idPlayer, costume);
-};
-
-
-IGamePlayer& CRideGamePlayerContainer::GamePlayer(int32 no) const
-{
-    if (no >= 0 && no < m_nNumPlayer)
-        return *getRideGamePlayer(no);
-    else
-        return CRideGamePlayer::Dummy();
-};
-
-
-int32 CRideGamePlayerContainer::GetPlayerNum(void) const
-{
-    return m_nNumPlayer;
 };
 
 

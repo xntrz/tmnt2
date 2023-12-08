@@ -365,11 +365,6 @@ void CGameObjectContainer::PeriodForList(CList<GAMEOBJECTWORK>& rList, CGameObje
     {
         m_pCurrentParent = pParent;
 
-		//RwV3d* p = (RwV3d*)0x1138CC0C;
-		//OUTPUT("%s -> %f %f %f\n", it.m_pObject->GetName(), p->x, p->y, p->z);
-		//if (it.m_pObject->GetType() == GAMEOBJECTTYPE::CHARACTER)
-			//OUTPUT("WTF\n");
-
         if (!FLAG_TEST(it.m_flag, GAMEOBJECTWORK::FLAG_DELETE_REQUEST))
             it.m_pObject->Period();
 
@@ -406,14 +401,14 @@ CGameObjectContainer::GAMEOBJECTWORK* CGameObjectContainer::FindObjectWork(uint3
     OBJECTHANDLE ObjectHandle = { hObject };
 
     GAMEOBJECTWORK* pWork = &m_aWorkPool[ObjectHandle.m_parts.m_index];
-    if (pWork->m_iUseCounter != ObjectHandle.m_parts.m_counter)
+    if (pWork->m_iUseCounter != int32(ObjectHandle.m_parts.m_counter))
         return nullptr;
     
 	if (!pWork->m_pObject)
 		return nullptr;
 
     ASSERT(pWork->m_pObject->GetHandle() == hObject);
-    ASSERT(pWork->m_pObject->GetType() == ObjectHandle.m_parts.m_type);
+	ASSERT(pWork->m_pObject->GetType() == GAMEOBJECTTYPE::VALUE(ObjectHandle.m_parts.m_type));
 
     return pWork;
 };

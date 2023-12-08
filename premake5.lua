@@ -1,19 +1,22 @@
-dir_bin = "%{wks.location}/../../bin/%{prj.name}/%{cfg.buildcfg}"
-dir_obj = "%{wks.location}/../../obj/%{prj.name}/%{cfg.buildcfg}"
+dir_bin = "%{wks.location}/../../bin/%{cfg.buildcfg}"
+dir_obj = "%{wks.location}/../../obj/%{cfg.buildcfg}/%{prj.name}"
 dir_src = "%{wks.location}/../../src"
 dir_lib = "%{wks.location}/../../vendor"
 dir_pch = "src"
 
-workspace "tmnt2"
+
+workspace "TMNT2"      
    location "build/%{_ACTION}"
-   filename "tmnt2"
+   filename "TMNT2"
    configurations { "Debug", "Release" }
    system "Windows"
-   startproject "Base"
+   startproject "Game"
    targetdir "%{dir_bin}"
    objdir "%{dir_obj}"
    language "C++"
    rtti "Off"
+   characterset "MBCS"
+   defines { "WIN32", "_WINDOWS", "TARGET_PC" }
    includedirs 
    { 
       "%{dir_src}",
@@ -24,13 +27,15 @@ workspace "tmnt2"
       "%{dir_src}/**.c",
       "%{dir_src}/**.hpp",
       "%{dir_src}/**.cpp",
-      "%{dir_src}/**.rc",
+      "%{dir_src}/**.inl",
       "%{dir_src}/**.manifest",
    }
-   filter { "kind:WindowedApp or SharedLib" }
-      linkoptions { "/DYNAMICBASE:NO" }   
+   filter { "kind:WindowedApp" }
+      linkoptions { "/SAFESEH:NO", "/DYNAMICBASE:NO" }
+   filter { "kind:WindowedApp or StaticLib" }
+      linkoptions { "/MACHINE:X86" }   
    filter "configurations:Debug"
-      defines { "WIN32", "_DEBUG", "_WINDOWS" }
+      defines { "_DEBUG", "RWDEBUG" }
       symbols "On"
       optimize "Off"
       intrinsics "Off"
@@ -39,7 +44,7 @@ workspace "tmnt2"
       runtime "Debug"
       editandcontinue "On"
    filter "configurations:Release"
-      defines { "WIN32", "NDEBUG", "_WINDOWS" }
+      defines { "NDEBUG" }
       symbols "Off"
       optimize "Full"
       intrinsics "On"
@@ -49,28 +54,36 @@ workspace "tmnt2"
       editandcontinue "Off"
       flags { "NoIncrementalLink", "NoBufferSecurityCheck", "NoRuntimeChecks", "MultiProcessorCompile" }
 
-project "game"
+
+project "Game"
+   dependson { "System" }
    targetname "%{wks.name}"
-   characterset "MBCS"
-   defines { "_TARGET_PC" }
    kind "WindowedApp"
    includedirs  {  "%{dir_lib}/rwsdk37/include/d3d9", "%{dir_lib}/cri/include", }
    libdirs  { "%{dir_lib}/cri/lib/x86" }
    resincludedirs { "%{dir_src}/System/PC" }
-   forceincludes "System\\Common\\pch.hpp"
-   pchheader "System/Common/pch.hpp"
-	pchsource "%{dir_pch}/System/Common/pch.cpp"
-   linkoptions { "/SAFESEH:NO", "/DYNAMICBASE:NO" }
+   forceincludes "Game\\pch.hpp"
+   pchheader "Game/pch.hpp"
+	pchsource "%{dir_pch}/Game/pch.cpp"
+   files 
+   {    
+      "%{dir_src}/System/**.rc",
+   }
    links 
    { 
+      -- win32
       "dinput8.lib",
       "dxguid.lib",
       "winmm.lib",
       "ksuser.lib",
       "dsound.lib",
+
+      -- cri
       "cri_adxpcx86_dsound8.lib",
       "cri_mwsfdpcx86.lib",
       --"cri_adxpcx86_xaudio2.lib",
+
+      -- rw
       "rtbmp.lib",
       "rtpng.lib",
       "rpworld.lib",
@@ -92,10 +105,9 @@ project "game"
       "rtquat.lib",
       "rtintsec.lib",
       "rtcharse.lib",
-      "legacy_stdio_definitions.lib",
+      "legacy_stdio_definitions.lib"
    } 
    filter { "configurations:Debug" }
-      defines { "RWDEBUG" }
-      libdirs  { "%{dir_lib}/rwsdk37/lib/d3d9/debug" }
+      libdirs  { "%{dir_lib}/rwsdk37/lib/d3d9/debug", "%{dir_bin}" }
    filter { "configurations:Release" }
-      libdirs  { "%{dir_lib}/rwsdk37/lib/d3d9/release" }
+      libdirs  { "%{dir_lib}/rwsdk37/lib/d3d9/release", "%{dir_bin}" }

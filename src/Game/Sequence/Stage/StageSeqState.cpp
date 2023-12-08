@@ -22,28 +22,9 @@
 };
 
 
-void CDummyStageState::OnAttach(CStageBaseSequence* pSeq, const void* pParam)
-{
-    ;
-};
-
-
-void CDummyStageState::OnDetach(CStageBaseSequence* pSeq)
-{
-    ;
-};
-
-
-bool CDummyStageState::OnMove(CStageBaseSequence* pSeq)
-{
-    return true;
-};
-
-
-/*static*/ CLoadStageSeqState* CLoadStageSeqState::Create(STAGEID::VALUE idStage)
-{
-	return new CLoadStageSeqState(idStage);
-};
+//
+// *********************************************************************************
+//
 
 
 CLoadStageSeqState::CLoadStageSeqState(STAGEID::VALUE idStage)
@@ -64,7 +45,6 @@ void CLoadStageSeqState::OnAttach(CStageBaseSequence* pSeq, const void* pParam)
 void CLoadStageSeqState::OnDetach(CStageBaseSequence* pSeq)
 {
     pSeq->Stage().Start();
-    pSeq->Stage().AddStageObjects();
 };
 
 
@@ -73,24 +53,21 @@ bool CLoadStageSeqState::OnMove(CStageBaseSequence* pSeq)
     switch (m_step)
     {
     case STEP_LOAD_SOUND:
-        if (CGameSound::IsLoadEnd())
         {
-            LoadStageCommon();
-            LoadPlayers();
-            LoadStage();
+            if (!CGameSound::IsLoadEnd())
+                break;
+
+            LoadData();
             m_step = STEP_LOAD_DATA;
-        };
+        }
         break;
         
     case STEP_LOAD_DATA:
-        if (CDataLoader::IsLoadEnd())
-        {
-            m_step = STEP_END;
-        }
-        else
         {
             CDataLoader::Period();
-        };
+            if (CDataLoader::IsLoadEnd())
+                m_step = STEP_END;
+        }
         break;
     };
     
@@ -104,20 +81,22 @@ void CLoadStageSeqState::LoadPlayers(void)
     for (int32 i = 0; i < nPlayerInfoNum; ++i)
     {
         const CGamePlayParam::CHARAINFO& CharaInfo = CGameData::PlayParam().CharaInfo(i);
-
-        CGameLoader::LoadPlayer(
-            CharaInfo.m_CharacterID,
-            CharaInfo.m_Costume
-        );
+        CGameLoader::LoadPlayer(CharaInfo.m_CharacterID, CharaInfo.m_Costume);
     };
+};
+
+
+void CLoadStageSeqState::LoadData(void)
+{
+    LoadStageCommon();
+    LoadPlayers();
+    LoadStage();
 };
 
 
 void CLoadStageSeqState::LoadStageCommon(void)
 {
-    CGameLoader::LoadStageCommonData(
-        CStageInfo::GetMode(m_idStage)
-    );
+    CGameLoader::LoadStageCommonData(CStageInfo::GetMode(m_idStage));
 };
 
 
@@ -127,10 +106,15 @@ void CLoadStageSeqState::LoadStage(void)
 };
 
 
+//
+// *********************************************************************************
+//
+
+
 void CIntroStageSeqState::OnAttach(CStageBaseSequence* pSeq, const void* pParam)
 {
     pSeq->Stage().GetMapCamera()->SetCameraMode(CMapCamera::MODE_INTRODUCTION);
-    CScreenFade::StartOut();
+    CScreenFade::BlackIn();
     m_step = STEP_INTRO;
     m_fTime = 0.0f;
 };
@@ -138,7 +122,7 @@ void CIntroStageSeqState::OnAttach(CStageBaseSequence* pSeq, const void* pParam)
 
 void CIntroStageSeqState::OnDetach(CStageBaseSequence* pSeq)
 {
-    pSeq->Stage().GetMapCamera()->SetCameraMode(CMapCamera::MODE_MANUAL);
+    pSeq->Stage().GetMapCamera()->SetCameraMode(CMapCamera::MODE_AUTOCHANGE);
 };
 
 
@@ -162,9 +146,7 @@ bool CIntroStageSeqState::OnMove(CStageBaseSequence* pSeq)
         
     case STEP_DISPINFO:
         {
-            CGaugeInformation::MissionInfoSet(
-                CGameData::PlayParam().GetStage()
-            );
+            CGaugeInformation::MissionInfoSet(CGameData::PlayParam().GetStage());
             
             m_fTime += CGameProperty::GetElapsedTime();
 
@@ -174,17 +156,15 @@ bool CIntroStageSeqState::OnMove(CStageBaseSequence* pSeq)
 
             if (m_fTime >= 30.0f)
             {
-                CScreenFade::StartIn();
-                m_step = STEP_FADEIN;
+                CScreenFade::BlackOut();
+                m_step = STEP_FADEOUT;
             };
         }
         break;
         
-    case STEP_FADEIN:
+    case STEP_FADEOUT:
         {
-            CGaugeInformation::MissionInfoSet(
-                CGameData::PlayParam().GetStage()
-            );
+            CGaugeInformation::MissionInfoSet(CGameData::PlayParam().GetStage());
             
             if (!CScreenFade::IsFading())
                 m_step = STEP_END;
@@ -194,6 +174,11 @@ bool CIntroStageSeqState::OnMove(CStageBaseSequence* pSeq)
     
     return (m_step >= STEP_END);
 };
+
+
+//
+// *********************************************************************************
+//
 
 
 void CPlayStageSeqState::OnAttach(CStageBaseSequence* pSeq, const void* pParam)
@@ -210,7 +195,7 @@ void CPlayStageSeqState::OnAttach(CStageBaseSequence* pSeq, const void* pParam)
     else
         pMapCamera->SetPathMode(CMapCamera::PATHMODE_SINGLEPLAYER);
 
-    CScreenFade::StartOut();
+    CScreenFade::BlackIn();
     m_fTime = 0.0f;
     m_step = STEP_PLAYING;
 };
@@ -247,7 +232,7 @@ bool CPlayStageSeqState::OnMove(CStageBaseSequence* pSeq)
                 case CGameStage::RESULT_GAMECLEAR:
                     {
                         if (!CGameData::PlayParam().IsLastStage())
-                            m_step = STEP_FADEIN;
+                            m_step = STEP_FADEOUT;
                         else
                             CGaugeResult::SetMissionResult(CGaugeResult::RESULTREQ_SUCCESS);
                     }
@@ -267,13 +252,13 @@ bool CPlayStageSeqState::OnMove(CStageBaseSequence* pSeq)
                     
                 case CGameStage::RESULT_RET_TITLE:
                     {
-                        m_step = STEP_FADEIN;
+                        m_step = STEP_FADEOUT;
                     }
                     break;
                     
                 case CGameStage::RESULT_RET_STAGESEL:
                     {
-                        m_step = STEP_FADEIN;
+                        m_step = STEP_FADEOUT;
                     }
                     break;
 
@@ -296,19 +281,19 @@ bool CPlayStageSeqState::OnMove(CStageBaseSequence* pSeq)
         {
             m_fTime -= CGameProperty::GetElapsedTime();
             if (!CGameSound::IsVoicePlaying() || m_fTime <= 0.0f)
-                m_step = STEP_FADEIN;
+                m_step = STEP_FADEOUT;
         }
         break;
         
-    case STEP_FADEIN:
+    case STEP_FADEOUT:
         {
-            CGameSound::FadeOut(CGameSound::FADESPEED_FAST);
-            CScreenFade::StartIn(0.5f);
-            m_step = STEP_FADEWAIT;
+            CGameSound::FadeOut(CGameSound::FADESPEED_SLOW);
+            CScreenFade::BlackOut(0.5f);
+            m_step = STEP_FADEOUT_WAIT;
         }
         break;
 
-    case STEP_FADEWAIT:
+    case STEP_FADEOUT_WAIT:
         {
             if (!CScreenFade::IsFading())
                 m_step = STEP_END;

@@ -83,7 +83,7 @@ namespace PlayerStatus
         );
 		Character().SetAcceleration(&vAccleration);
 
-        CGamepad::StartVibration(Character().GetPadID(), CGamepad::VIBRATIONTYPE_LOW, 0.2f);        
+        IGamepad::StartVibration(Character().GetPadID(), IGamepad::VIBRATIONTYPE_LOW, 0.2f);        
     };
 
 
@@ -110,7 +110,7 @@ namespace PlayerStatus
         if (Character().GetStatusPrev() == PLAYERTYPES::STATUS_KNOCK_FRONT)
             Character().ReplayMotion();
         else
-            Character().ChangeMotion("YFront");
+            Character().ChangeMotion(PLAYERTYPES::MOTIONNAMES::KNOCK_FRONT);
         
         CKnockCommon::OnAttach();
     };
@@ -126,7 +126,7 @@ namespace PlayerStatus
         if (Character().GetStatusPrev() == PLAYERTYPES::STATUS_KNOCK_BACK)
             Character().ReplayMotion();
         else
-            Character().ChangeMotion("YBack");
+            Character().ChangeMotion(PLAYERTYPES::MOTIONNAMES::KNOCK_BACK);
 
         CKnockCommon::OnAttach();
     };
@@ -217,7 +217,7 @@ namespace PlayerStatus
             
             Character().SetPlayerFlag(PLAYERTYPES::FLAG_AERIAL_STATUS, true);
 
-            CGamepad::StartVibration(Character().GetPadID(), CGamepad::VIBRATIONTYPE_HARD, 0.2f);
+            IGamepad::StartVibration(Character().GetPadID(), IGamepad::VIBRATIONTYPE_HARD, 0.2f);
         };
     };
 
@@ -243,7 +243,7 @@ namespace PlayerStatus
 
     void CFlyawayFront::OnAttach(void)
     {
-        Character().ChangeMotion("YFrontFuttobi1");
+        Character().ChangeMotion(PLAYERTYPES::MOTIONNAMES::FLYAWAY_FRONT);
         CFlyawayCommon::OnAttach();
     };
 
@@ -261,7 +261,7 @@ namespace PlayerStatus
 
     void CFlyawayBack::OnAttach(void)
     {
-        Character().ChangeMotion("YBackFuttobi1");
+        Character().ChangeMotion(PLAYERTYPES::MOTIONNAMES::FLYAWAY_BACK);
         CFlyawayCommon::OnAttach();
     };
 
@@ -302,7 +302,7 @@ namespace PlayerStatus
         if (!FLAG_TEST(pGroundInfo->m_attribute, MAPTYPES::ATTRIBUTE_DEATH))
             CGameSound::PlayObjectSE(m_pPlayerChr, SDCODE_SE(4121));
 
-        CGamepad::StartVibration(Character().GetPadID(), CGamepad::VIBRATIONTYPE_HARD, 0.2f);
+        IGamepad::StartVibration(Character().GetPadID(), IGamepad::VIBRATIONTYPE_HARD, 0.2f);
     };
 
 
@@ -318,11 +318,8 @@ namespace PlayerStatus
             Character().IsPlayerFlagSet(PLAYERTYPES::FLAG_REQUEST_PASSIVE))
         {
             RwV3d vOffset = Math::VECTOR3_ZERO;
-            CEffectManager::PlayTrace(
-                "all_dash2",
-                new CPlayerTracer(m_pPlayerChr),
-                &vOffset
-            );
+            
+            CEffectManager::PlayTrace(PLAYERTYPES::EFFECTNAMES::PASSIVE, new CPlayerTracer(m_pPlayerChr), &vOffset);
 
             PlayerUtil::CallVoiceOfPassive(m_pPlayerChr);
             
@@ -350,7 +347,7 @@ namespace PlayerStatus
 
     const char* CFlyawayBoundFront::GetMotionName(void) const
     {
-        return "YFrontFuttobi2";
+        return PLAYERTYPES::MOTIONNAMES::FLYAWAY_BOUND_FRONT;
     };
 
 
@@ -387,7 +384,7 @@ namespace PlayerStatus
 
     const char* CFlyawayBoundBack::GetMotionName(void) const
     {
-        return "YBackFuttobi2";
+        return PLAYERTYPES::MOTIONNAMES::FLYAWAY_BOUND_BACK;
     };
 
 
@@ -419,36 +416,24 @@ namespace PlayerStatus
 
         const CPlayerCharacter::COLLISIONWALLINFO* pWallInfo = Character().GetCollisionWall();
         ASSERT(pWallInfo);
-        
-		RwV3d vPosition = pWallInfo->m_vPosition;
+
+        float fDirection = Character().GetDirection();
+        RwV3d vPosition = pWallInfo->m_vPosition;
 		vPosition.y -= 0.5f;
 
-        CEffectManager::Play(
-            "all_pitan",
-            &vPosition,
-            Character().GetDirection()
-        );
+        CEffectManager::Play(PLAYERTYPES::EFFECTNAMES::CRASH_WALL, &vPosition, fDirection);
 
-        CGameObjectManager::SendMessage(
-            m_pPlayerChr,
-            CHARACTERTYPES::MESSAGEID_RECVDMG,
-            (void*)10
-        );
+        CGameObjectManager::SendMessage(m_pPlayerChr, CHARACTERTYPES::MESSAGEID_RECVDMG, (void*)10);
 
         if (Character().IsDamageRequested())
         {
-            CGameObjectManager::SendMessage(
-                m_pPlayerChr,
-                CHARACTERTYPES::MESSAGEID_RECVDMG,
-                (void*)20
-            );
-            
+            CGameObjectManager::SendMessage(m_pPlayerChr, CHARACTERTYPES::MESSAGEID_RECVDMG, (void*)20);            
             Character().RequestDamage(0);
         };
 
         CGameSound::PlayObjectSE(m_pPlayerChr, SDCODE_SE(4121));
 
-        CGamepad::StartVibration(Character().GetPadID(), CGamepad::VIBRATIONTYPE_HARD, 0.2f);
+        IGamepad::StartVibration(Character().GetPadID(), IGamepad::VIBRATIONTYPE_HARD, 0.2f);
     };
 
 
@@ -478,7 +463,7 @@ namespace PlayerStatus
 
     const char* CCrashWallFront::GetMotionName(void) const
     {
-        return "YWall1";
+        return PLAYERTYPES::MOTIONNAMES::CRASHWALL_FRONT;
     };
 
 
@@ -501,7 +486,7 @@ namespace PlayerStatus
 
     const char* CCrashWallBack::GetMotionName(void) const
     {
-        return "YWall1";
+        return PLAYERTYPES::MOTIONNAMES::CRASHWALL_BACK;
     };
 
 
@@ -571,7 +556,7 @@ namespace PlayerStatus
         Character().SetPlayerFlag(PLAYERTYPES::FLAG_AERIAL_STATUS, false);
         Character().SetEnableCatchHit(false);
 
-        CGamepad::StartVibration(Character().GetPadID(), CGamepad::VIBRATIONTYPE_LOW, 0.2f);
+        IGamepad::StartVibration(Character().GetPadID(), IGamepad::VIBRATIONTYPE_LOW, 0.2f);
     };
 
 
@@ -601,7 +586,7 @@ namespace PlayerStatus
 
     const char* CCrashWallTouchdownFront::GetMotionName(void) const
     {
-        return "YWall2";
+        return PLAYERTYPES::MOTIONNAMES::CRASHWALL_TOUCHDOWN_FRONT;
     };
 
 
@@ -624,7 +609,7 @@ namespace PlayerStatus
 
     const char* CCrashWallTouchdownBack::GetMotionName(void) const
     {
-        return "YWall2";
+        return PLAYERTYPES::MOTIONNAMES::CRASHWALL_TOUCHDOWN_BACK;
     };
 
 
@@ -696,7 +681,7 @@ namespace PlayerStatus
         m_fTime = 0.1f;
         m_fEndTime = Character().AttackParameter().m_fTroubleTime;
 
-        CGamepad::StartVibration(Character().GetPadID(), CGamepad::VIBRATIONTYPE_NORMAL, 0.2f);
+        IGamepad::StartVibration(Character().GetPadID(), IGamepad::VIBRATIONTYPE_NORMAL, 0.2f);
     };
 
 
@@ -739,7 +724,7 @@ namespace PlayerStatus
     void CDindle::OnAttach(void)
     {
         CStatusDamage::OnAttach();
-        Character().ChangeMotion("BiriBiri");
+        Character().ChangeMotion(PLAYERTYPES::MOTIONNAMES::DINDLE);
         Character().ApplyStatusEffect();
     };
 
@@ -752,7 +737,7 @@ namespace PlayerStatus
     void CStun::OnAttach(void)
     {
         CStatusDamage::OnAttach();
-        Character().ChangeMotion("Piyori");
+        Character().ChangeMotion(PLAYERTYPES::MOTIONNAMES::STUN);
         Character().ApplyStatusEffect();
     };    
 
@@ -765,7 +750,7 @@ namespace PlayerStatus
     void CSleep::OnAttach(void)
     {
         CStatusDamage::OnAttach();
-        Character().ChangeMotion("Piyori");
+        Character().ChangeMotion(PLAYERTYPES::MOTIONNAMES::SLEEP);
         Character().ApplyStatusEffect();
     };
 
@@ -793,7 +778,7 @@ namespace PlayerStatus
     void CBind::OnAttach(void)
     {
         CStatusDamage::OnAttach();
-        Character().ChangeMotion("BiriBiri");
+        Character().ChangeMotion(PLAYERTYPES::MOTIONNAMES::BIND);
         Character().ApplyStatusEffect();
     };
 

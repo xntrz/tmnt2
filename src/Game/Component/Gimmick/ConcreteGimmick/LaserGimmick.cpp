@@ -1,7 +1,7 @@
 #include "LaserGimmick.hpp"
 
 #include "Game/Component/GameMain/GameProperty.hpp"
-#include "Game/Component/Gimmick/GimmickUtils.hpp"
+#include "Game/Component/Gimmick/Utils/GimmickUtils.hpp"
 #include "Game/Component/Gimmick/GimmickParam.hpp"
 #include "Game/System/Hit/HitAttackData.hpp"
 #include "Game/System/Hit/HitCatchData.hpp"
@@ -227,7 +227,6 @@ CLaserGimmick::~CLaserGimmick(void)
 
 void CLaserGimmick::GetPosition(RwV3d* pvPosition) const
 {
-    ASSERT(pvPosition);
     *pvPosition = m_vPosition;
 };
 

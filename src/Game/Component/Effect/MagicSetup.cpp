@@ -583,7 +583,28 @@ static void SetPipeFreezegas(void)
 
 static void SetFireHydrantWater(void)
 {
-    ;
+    MAGICTYPES::FEATURE feature = MAGICTYPES::FEATURE(
+        MAGICTYPES::FEATURE_ATTACK_TO_ENEMY     |
+        MAGICTYPES::FEATURE_ATTACK_TO_PLAYER    |
+        MAGICTYPES::FEATURE_GRAVITY             |
+        MAGICTYPES::FEATURE_STRAIGHT            |
+        MAGICTYPES::FEATURE_LIVETIME            |
+        MAGICTYPES::FEATURE_ATTACK
+    );
+
+    const RwV3d vOffset = { 0.0f, -0.3f, 1.8f };
+    const RwV3d vMovement = { 19.0f, 0.0f, 0.0f };
+    
+    CMagicParameter param;
+    param.SetBaseEffectName(EFFECTID::GetNameFromID(EFFECTID::ID_SPRAYWTER));
+    param.SetFeature(feature);
+    param.SetCollisionBody(&vOffset, 0.5f);
+    param.SetCollisionAttack(&vOffset, 0.5f, 10, CHitAttackData::ANTIGUARD_INVALID, CHitAttackData::STATUS_FLYAWAY);
+    param.SetMovement(&vMovement, nullptr);
+    param.SetLive(0.5f);
+
+    CMagicManager::ChangeToAttached();
+    CEffectManager::Convert(EFFECTID::GetNameFromID(EFFECTID::ID_SPRAYWTER), &param);
 };
 
 
@@ -667,7 +688,34 @@ static void SetLaserRed(void)
 
 static void SetEnergyBallGun(void)
 {
-    ;
+    MAGICTYPES::FEATURE feature = MAGICTYPES::FEATURE(
+        MAGICTYPES::FEATURE_ATTACK_TO_PLAYER        |
+        MAGICTYPES::FEATURE_ATTACK_HIT              |
+        MAGICTYPES::FEATURE_COLLISION_MAPOBJECT_HIT |
+        MAGICTYPES::FEATURE_COLLISION_MAP_HIT       |
+        MAGICTYPES::FEATURE_COLLISION_MAPOBJECT     |
+        MAGICTYPES::FEATURE_COLLISION_MAP           |
+        MAGICTYPES::FEATURE_STRAIGHT                |
+        MAGICTYPES::FEATURE_LIVETIME                |
+        MAGICTYPES::FEATURE_ATTACK                  |
+        MAGICTYPES::FEATURE_BODY
+    );
+
+    const RwV3d vMovement = { 15.0f, 0.0f, 0.0f };
+
+    CMagicParameter param;
+    param.SetBaseEffectName(EFFECTID::GetNameFromID(EFFECTID::ID_GUNBALL));
+    param.SetFeature(feature);
+    param.SetCollisionBody(nullptr, 0.2f);
+    param.SetCollisionAttack(nullptr, 0.2f, 15, CHitAttackData::ANTIGUARD_INVALID, CHitAttackData::STATUS_KNOCK);
+    param.SetMovement(&vMovement, nullptr);
+    param.SetLive(3.0f);
+    param.SetReflectNum(1);
+    param.SetAppearEffectName(EFFECTID::GetNameFromID(EFFECTID::ID_GUNBALL_FIRE));
+    param.SetVanishMagicName(MAGICID::GetNameFromID(MAGICID::ID_EXPL_B1_PLAYER));
+
+    CMagicManager::ChangeToAttached();
+    CEffectManager::ConvertWithDestroy(EFFECTID::GetNameFromID(EFFECTID::ID_GUNBALL), &param);
 };
 
 

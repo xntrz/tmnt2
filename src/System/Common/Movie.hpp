@@ -1,7 +1,9 @@
 #pragma once
 
 #include "Sprite.hpp"
-#include "cri_mw.h"
+
+#include "crimwsfd.h"
+
 
 class CMovie
 {

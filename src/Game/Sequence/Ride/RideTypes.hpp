@@ -15,6 +15,6 @@ namespace RIDETYPES
     {
         MESSAGEID_SCORE_INC = 301,
         MESSAGEID_SHOT_EOL,
-        MESSAGEID_SHOT_DESTROY,
+        MESSAGEID_SHOT_HIT,
     };
 };

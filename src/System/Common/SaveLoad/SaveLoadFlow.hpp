@@ -10,7 +10,7 @@ class CSaveLoadFlow
 public:
     enum MODE
     {
-        MODE_CHECK,
+        MODE_CHECK = 0,
         MODE_SAVE,
         MODE_LOAD,
         MODE_AUTOSAVE,

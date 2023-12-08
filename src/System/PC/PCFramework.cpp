@@ -1,18 +1,95 @@
 #include "PCFramework.hpp"
-#include "PCSystem.hpp"
-#include "PCTimer.hpp"
+#include "PCTypedefs.hpp"
 #include "PCSpecific.hpp"
+#include "PCSystem.hpp"
+#include "PCSetting.hpp"
+#include "PCTimer.hpp"
 #include "PCMemory.hpp"
 #include "PCGraphicsDevice.hpp"
 #include "PCInputsDevice.hpp"
 #include "PCClockDevice.hpp"
-#include "PCTypedefs.hpp"
-#include "PCSetting.hpp"
-#include "PCDebug.hpp"
 #include "PCSoundDevice.hpp"
+#include "PCError.hpp"
 
 #include "File/PCFileManager.hpp"
+
+#include "System/Common/Screen.hpp"
 #include "System/Common/Process/ProcessDispatcher.hpp"
+
+
+class CPCFramework::CFrameSkipController final
+{
+public:
+    CFrameSkipController(void);
+    void Sync(void);
+    void SetEnable(bool bState);
+
+    inline bool IsEnabled(void) const { return m_bEnable; };
+    inline bool IsSkip(void) const { return m_bSkip; };
+
+private:
+    uint32 m_uTime;
+    uint32 m_uFrametime;
+    uint32 m_uFrametimeTimeout;
+    int32 m_nNumSkip;
+    bool m_bSkip;
+    bool m_bEnable;
+};
+
+
+CPCFramework::CFrameSkipController::CFrameSkipController(void)
+: m_uTime(0)
+, m_uFrametime(0)
+, m_uFrametimeTimeout(0)
+, m_nNumSkip(0)
+, m_bSkip(false)
+, m_bEnable(false)
+{
+    m_uFrametime = (CPCTimer::Instance().GranularityMillisecond() / uint32(CScreen::Framerate()));
+    m_uFrametimeTimeout = (CPCTimer::Instance().GranularityMillisecond() / uint32(CScreen::Framerate() * 0.5f));
+
+    SetEnable(true);
+};
+
+
+void CPCFramework::CFrameSkipController::Sync(void)
+{    
+    uint32 uTimeNow     = CPCTimer::Instance().ElapsedTime();
+    uint32 uTimeSkipped = (m_uTime + (m_nNumSkip * m_uFrametime));    
+    uint32 uTimeElapsed = (uTimeSkipped >= uTimeNow) ? (uTimeNow + TYPEDEF::UINT32_MAX - uTimeSkipped) : (uTimeNow - uTimeSkipped);
+
+	bool bEnable        = (m_bEnable);
+	bool bMaySkip       = (m_nNumSkip < 5);
+	bool bFrameTimeout  = (uTimeElapsed > m_uFrametimeTimeout);
+
+    if (bEnable && bMaySkip && bFrameTimeout)
+    {
+        m_bSkip = true;
+        ++m_nNumSkip;
+    }
+    else
+    {
+        m_bSkip     = false;
+        m_nNumSkip  = 0;
+        m_uTime     = uTimeNow;
+
+        if (uTimeElapsed > m_uFrametime)
+            m_uTime -= (((uTimeElapsed - m_uFrametime) / 2) % uTimeElapsed);
+    };
+};
+
+
+void CPCFramework::CFrameSkipController::SetEnable(bool bState)
+{
+    if (m_bEnable != bState)
+    {
+        m_uTime     = CPCTimer::Instance().ElapsedTime();
+        m_nNumSkip  = 0;
+        m_bSkip     = false;
+    };
+
+    m_bEnable = bState;
+};
 
 
 /*static*/ CPCFramework* CPCFramework::m_pInstance = nullptr;
@@ -30,7 +107,7 @@ CPCFramework::CPCFramework(void)
 , m_pTimer(nullptr)
 , m_pPCGraphicsDevice(nullptr)
 , m_pPCSoundDevice(nullptr)
-, m_bStarted(false)
+, m_bFrameworkInitStatus(false)
 {
 	m_pInstance = this;
 };
@@ -44,10 +121,12 @@ CPCFramework::~CPCFramework(void)
 
 bool CPCFramework::Initialize(void)
 {
+    m_pMemory = new CPCMemory;
+    
     m_pSystem = new CPCSystem(this);
     if (!m_pSystem->Initialize())
     {
-        OUTPUT("pcsystem init failed");
+        OUTPUT("pcsystem init failed\n");
         return false;
     };
 
@@ -56,42 +135,60 @@ bool CPCFramework::Initialize(void)
     m_pPCGraphicsDevice = new CPCGraphicsDevice;
     m_pGraphicsDevice = m_pPCGraphicsDevice;
     m_pFileManager = new CPCFileManager;
-    m_pInputsDevice = new CPCInputsDevice(CPCSpecific::m_hWnd);
+    m_pInputsDevice = new CPCInputsDevice;
+    m_pPCSoundDevice = new CPCSoundDevice;
+    m_pFrameSkipController = new CFrameSkipController;
 
-    if (!PCSddInitializeADX(CPCSpecific::m_hWnd))
+    if (!m_pPCSoundDevice->Initialize())
     {
-        OUTPUT("adx sd init failed");
+        OUTPUT("adx sound init failed\n");
+        CPCError::ShowNoRet("Sound initialize failed");
         return false;
     };
 
-    if (!PCSddInitializeFramework())
+    if (!m_pPCSoundDevice->InitializeLib())
     {
-        OUTPUT("framework sd init failed");
+        OUTPUT("lib sound init failed\n");
+        CPCError::ShowNoRet("Sound framework initialize failed");
         return false;
     };
 
     if (!CFramework::Initialize())
     {
-        OUTPUT("framework initialize failed");
+        OUTPUT("framework initialize failed\n");
         return false;
     };
+
+    m_bFrameworkInitStatus = true;
     
-#ifdef _DEBUG
-    CPCDebug::ReplaceConsole();
-    CPCDebug::MaximizeConsole(true);
-#endif
-    m_pSystem->WindowShow(false);
-    
+    ShowWindow(CPCSpecific::m_hWnd, SW_SHOW);
+    SetForegroundWindow(CPCSpecific::m_hWnd);
+
     return true;
 };
 
 
 void CPCFramework::Terminate(void)
 {
-    CFramework::Terminate();
+    if (m_bFrameworkInitStatus)
+    {
+        CFramework::Terminate();
+        m_bFrameworkInitStatus = false;
+    };
 
-    PCSddTerminateFramework();
-    PCSddTerminateADX();
+    if (m_pFrameSkipController)
+    {
+        delete m_pFrameSkipController;
+        m_pFrameSkipController = nullptr;
+    };
+
+    if (m_pPCSoundDevice)
+    {
+        m_pPCSoundDevice->TerminateLib();
+        m_pPCSoundDevice->Terminate();
+        delete m_pPCSoundDevice;
+        m_pPCSoundDevice = nullptr;
+    };
 
     if (m_pInputsDevice)
     {
@@ -129,13 +226,22 @@ void CPCFramework::Terminate(void)
         delete m_pSystem;
         m_pSystem = nullptr;
     };
+
+    if (m_pMemory)
+    {
+        delete m_pMemory;
+        m_pMemory = nullptr;
+    };
 };
 
 
 void CPCFramework::Run(void)
 {
-    ASSERT(m_pSystem);
-    m_pSystem->Run();
+    while (!IsEnded())
+    {
+        if (!m_pSystem->Run())
+            break;
+    };
 };
 
 
@@ -147,24 +253,25 @@ void CPCFramework::Move(void)
 
 void CPCFramework::Render(void)
 {
+    ASSERT(m_pFrameSkipController);
     ASSERT(m_pGraphicsDevice);
-    ASSERT(m_pProcessDispatcher);
+
+    m_pFrameSkipController->Sync();
+    m_pGraphicsDevice->SetFlipEnable(!m_pFrameSkipController->IsSkip());
 
     if (m_pGraphicsDevice->RenderBegin())
     {
-        m_pProcessDispatcher->Draw();
+        if (!m_pFrameSkipController->IsSkip())
+            m_pProcessDispatcher->Draw();
+
         m_pGraphicsDevice->RenderEnd();
     };
 };
 
 
-void CPCFramework::UpdateSize(int32 iWidth, int32 iHeight)
+void CPCFramework::FlipNoSync(void)
 {
-    if (m_bStarted && !m_pGraphicsDevice->IsExclusive())
-    {        
-        m_pGraphicsDevice->DestroyFrameBuffer();
-        m_pGraphicsDevice->CreateFrameBuffer(iWidth, iHeight);		
-    };
+    m_pGraphicsDevice->Flip();
 };
 
 
@@ -172,4 +279,47 @@ CPCGraphicsDevice& CPCFramework::GraphicsDevice(void)
 {
     ASSERT(m_pGraphicsDevice);
     return *m_pPCGraphicsDevice;
+};
+
+
+bool CPCFramework::SetVideomode(int32 No)
+{
+    if (!GraphicsDevice().IsFullscreen())
+        ShowWindow(CPCSpecific::m_hWnd, SW_HIDE);
+
+    bool bResult = GraphicsDevice().SetVideomode(No);
+
+    if (!GraphicsDevice().IsFullscreen())
+    {
+        ShowWindow(CPCSpecific::m_hWnd, SW_SHOW);
+        SetForegroundWindow(CPCSpecific::m_hWnd);
+    };
+
+    GraphicsDevice().GetVideomode(No, CPCSetting::m_videomode);
+
+    return bResult;
+};
+
+
+bool CPCFramework::GetVideomode(int32 No, PC::VIDEOMODE& vm)
+{
+    return GraphicsDevice().GetVideomode(No, vm);
+};
+
+
+int32 CPCFramework::GetVideomodeCur(void)
+{
+    return GraphicsDevice().GetVideomodeCur();
+};
+
+
+int32 CPCFramework::GetVideomodeNum(void)
+{
+    return GraphicsDevice().GetVideomodeNum();
+};
+
+
+void CPCFramework::SetSkipEnable(bool bState)
+{
+    m_pFrameSkipController->SetEnable(bState);
 };

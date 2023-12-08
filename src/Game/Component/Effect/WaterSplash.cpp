@@ -315,7 +315,7 @@ static inline CWaterSplash& WaterSplash(void)
     if (!pTexture)
     {
         CTextureManager::SetCurrentTextureSet("rain_ef");
-        RwTexture* pTexture = CTextureManager::GetRwTexture("raindrop");
+        pTexture = CTextureManager::GetRwTexture("raindrop");
     };
     
     ASSERT(pTexture);

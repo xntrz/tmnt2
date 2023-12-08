@@ -21,7 +21,7 @@ protected:
 
     enum MODELTYPE
     {
-        MODELTYPE_DISP,
+        MODELTYPE_DISP = 0,
         MODELTYPE_COLL,
         
         MODELTYPENUM,
@@ -29,7 +29,7 @@ protected:
 
     enum SUBID
     {
-        SUBID_ELEVATOR,
+        SUBID_ELEVATOR = 0,
         SUBID_REFRECTION_DOOR,
         SUBID_TRICERATOR_DOOR,
         SUBID_TRICERATOR_SHUTTER,

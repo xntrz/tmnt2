@@ -32,7 +32,7 @@ CUnlockSequence::~CUnlockSequence(void)
 };
 
 
-bool CUnlockSequence::OnAttach(const void* param)
+bool CUnlockSequence::OnAttach(const void* pParam)
 {
     m_pUnlockMessage = new CUnlockMessage;
     ASSERT(m_pUnlockMessage);
@@ -71,45 +71,53 @@ void CUnlockSequence::OnDetach(void)
 };
 
 
-void CUnlockSequence::OnMove(bool bRet, const void* param)
+void CUnlockSequence::OnMove(bool bRet, const void* pReturnValue)
 {
     switch (m_phase)
     {
     case PHASE_LOAD:
-        if (CDataLoader::IsLoadEnd())
-        {
-            CUnlockMessage::SetTexture();
-            CLoadingDisplay::Stop(this);
-            m_phase = PHASE_FADEOUT;
-        }
-        else
         {
             CDataLoader::Period();
-        };        
-        break;
+            
+            if (!CDataLoader::IsLoadEnd())
+                break;
 
-    case PHASE_FADEOUT:
-        CGameData::Attribute().SetInteractive(true);
-        CScreenFade::StartOut(1.0f);
-        m_phase = PHASE_FADEOUT_WAIT;
-        break;
-
-    case PHASE_FADEOUT_WAIT:
-        if (!CScreenFade::IsFading())
-            m_phase = PHASE_NOTIFY;        
-        break;
-
-    case PHASE_NOTIFY:
-        if (Notify())
-            m_phase = PHASE_FADEIN;        
+            CUnlockMessage::SetTexture();
+            CLoadingDisplay::Stop(this);
+            m_phase = PHASE_FADEIN;
+        }
         break;
 
     case PHASE_FADEIN:
-        CScreenFade::StartIn(1.0f);
-        m_phase = PHASE_FADEIN_WAIT;
+        {
+            CGameData::Attribute().SetInteractive(true);
+            CScreenFade::BlackIn(1.0f);
+            m_phase = PHASE_FADEIN_WAIT;
+        }
         break;
 
     case PHASE_FADEIN_WAIT:
+        {
+            if (!CScreenFade::IsFading())
+                m_phase = PHASE_NOTIFY;
+        }
+        break;
+
+    case PHASE_NOTIFY:
+        {
+            if (Notify())
+                m_phase = PHASE_FADEOUT;
+        }
+        break;
+
+    case PHASE_FADEOUT:
+        {
+            CScreenFade::BlackOut(1.0f);
+            m_phase = PHASE_FADEOUT_WAIT;
+        }
+        break;
+
+    case PHASE_FADEOUT_WAIT:
         if (!CScreenFade::IsFading())
         {
             m_phase = PHASE_EOL;
@@ -136,40 +144,48 @@ void CUnlockSequence::OnDraw(void) const
 
 bool CUnlockSequence::Notify(void)
 {
-    bool bResult = false;
-
     switch (m_notifyphase)
     {
     case NOTIFYPHASE_PEEK:
-        m_UnnnotifiedSecretID = CGameData::Record().Secret().GetUnnotifiedSecret();
-        m_notifyphase = NOTIFYPHASE_OPEN;
+        {
+            m_UnnnotifiedSecretID = CGameData::Record().Secret().GetUnnotifiedSecret();
+            m_notifyphase = NOTIFYPHASE_OPEN;
+        }
         break;
 
     case NOTIFYPHASE_OPEN:
-        if (m_UnnnotifiedSecretID != SECRETID::ID_NONE)
         {
-            m_pUnlockMessage->SetMessage(m_UnnnotifiedSecretID);
-            m_pUnlockMessage->Open();
-            m_notifyphase = NOTIFYPHASE_SHOW;
+            if (m_UnnnotifiedSecretID != SECRETID::ID_NONE)
+            {
+                m_pUnlockMessage->SetMessage(m_UnnnotifiedSecretID);
+                m_pUnlockMessage->Open();
+                m_notifyphase = NOTIFYPHASE_SHOW;
+            }
+            else
+            {
+                m_notifyphase = NOTIFYPHASE_EOL;
+            };
         }
-        else
-        {
-            m_notifyphase = NOTIFYPHASE_EOL;
-        };        
         break;
 
     case NOTIFYPHASE_SHOW:
-        if (!m_pUnlockMessage->IsActive())
-            m_notifyphase = NOTIFYPHASE_CLOSE;        
+        {
+            if (!m_pUnlockMessage->IsActive())
+                m_notifyphase = NOTIFYPHASE_CLOSE;
+        }
         break;
 
     case NOTIFYPHASE_CLOSE:
-        if (!m_pUnlockMessage->IsOpen())
-            m_notifyphase = NOTIFYPHASE_PEEK;        
+        {
+            if (!m_pUnlockMessage->IsOpen())
+                m_notifyphase = NOTIFYPHASE_PEEK;
+        }
         break;
 
     case NOTIFYPHASE_EOL:
-        bResult = true;
+        {
+            ;
+        }        
         break;
 
     default:
@@ -177,5 +193,5 @@ bool CUnlockSequence::Notify(void)
         break;
     };
 
-    return bResult;
+    return (m_notifyphase == NOTIFYPHASE_EOL);
 };

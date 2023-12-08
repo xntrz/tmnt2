@@ -1,80 +1,145 @@
 #include "PCSoundDevice.hpp"
+#include "PCSpecific.hpp"
 
-#include <dsound.h>
+#include "Sound/SdDrv.hpp"
+
+#include "System/Common/File/Filename.hpp"
+#include "System/Common/Configure.hpp"
+
 #include "cri_adxcs.h"
 #include "adx_dsound8.h"
 
 #include <ks.h>
 #include <ksmedia.h>
-
-static IDirectSound8* s_pDirectSound;
-static IDirectSoundBuffer* s_pSoundBuffer;
+#include <adx_pc.h>
 
 
-bool PCSddInitializeADX(void* hWnd)
+CPCSoundDevice::CPCSoundDevice(void)
+: m_pDs(nullptr)
+, m_pDsBuffer(nullptr)
+, m_pSoundHeap(nullptr)
 {
-    if (SUCCEEDED(DirectSoundCreate8(0, &s_pDirectSound, 0)))
-    {
-        if (SUCCEEDED(s_pDirectSound->SetCooperativeLevel(HWND(hWnd), DSSCL_PRIORITY)))
-        {
-            DSBUFFERDESC DsBufferDesc;
-            std::memset(&DsBufferDesc, 0x00, sizeof(DsBufferDesc));
-
-            DsBufferDesc.dwSize = sizeof(DsBufferDesc);
-            DsBufferDesc.dwFlags = DSBCAPS_PRIMARYBUFFER;
-            if (SUCCEEDED(s_pDirectSound->CreateSoundBuffer(&DsBufferDesc, &s_pSoundBuffer, 0)))
-            {
-                WAVEFORMATEX WaveFormatEx;
-                std::memset(&WaveFormatEx, 0x00, sizeof(WaveFormatEx));
-                WaveFormatEx.wFormatTag = WAVE_FORMAT_PCM;
-                WaveFormatEx.nChannels = 2;
-                WaveFormatEx.nSamplesPerSec = 48000;
-                WaveFormatEx.wBitsPerSample = 16;
-                WaveFormatEx.nBlockAlign = 4;
-                WaveFormatEx.nAvgBytesPerSec = 192000;
-                if (FAILED(s_pSoundBuffer->SetFormat(&WaveFormatEx)) || (WaveFormatEx.nSamplesPerSec != 48000))
-                {
-                    WaveFormatEx.nSamplesPerSec = 44100;
-                    WaveFormatEx.nAvgBytesPerSec = 44100 * WaveFormatEx.nBlockAlign;
-                    s_pSoundBuffer->SetFormat(&WaveFormatEx);
-                };
-                
-                ADXPC_SetupSoundDirectSound8(s_pDirectSound);
-                
-                return true;
-            };
-        };
-    };
-
-    return false;
+    ;
 };
 
 
-void PCSddTerminateADX(void)
+bool CPCSoundDevice::Initialize(void)
+{
+	if (FAILED(DirectSoundCreate8(0, &m_pDs, 0)))
+		return false;
+
+	if (FAILED(m_pDs->SetCooperativeLevel(CPCSpecific::m_hWnd, DSSCL_PRIORITY)))
+		return false;
+	
+	DSBUFFERDESC DsBufferDesc;
+	std::memset(&DsBufferDesc, 0x00, sizeof(DsBufferDesc));
+	DsBufferDesc.dwSize = sizeof(DsBufferDesc);
+	DsBufferDesc.dwFlags = DSBCAPS_PRIMARYBUFFER;
+
+	if (FAILED(m_pDs->CreateSoundBuffer(&DsBufferDesc, &m_pDsBuffer, 0)))
+		return false;
+
+	WAVEFORMATEX WaveFormatEx;
+	std::memset(&WaveFormatEx, 0x00, sizeof(WaveFormatEx));
+	WaveFormatEx.wFormatTag = WAVE_FORMAT_PCM;
+	WaveFormatEx.nChannels = 2;
+	WaveFormatEx.nSamplesPerSec = 48000;
+	WaveFormatEx.wBitsPerSample = 16;
+	WaveFormatEx.nBlockAlign = 4;
+	WaveFormatEx.nAvgBytesPerSec = (WaveFormatEx.nSamplesPerSec * WaveFormatEx.nBlockAlign);
+
+	if (FAILED(m_pDsBuffer->SetFormat(&WaveFormatEx)))
+	{
+		if ((WaveFormatEx.nSamplesPerSec != 48000))
+		{
+			WaveFormatEx.nSamplesPerSec = 44100;
+			WaveFormatEx.nAvgBytesPerSec = (WaveFormatEx.nSamplesPerSec * WaveFormatEx.nBlockAlign);
+
+			if (FAILED(m_pDsBuffer->SetFormat(&WaveFormatEx)))
+				return false;
+		};
+
+		return false;
+	};
+
+	ADXPC_SetupSoundDirectSound8(m_pDs);
+	ADXPC_SetDsbCapsGlobalFocus(0);
+	ADXPC_SetOutputStereo(1);
+
+	return true;
+};
+
+
+void CPCSoundDevice::Terminate(void)
 {
     ADXPC_ShutdownSound();
 
-    if (s_pSoundBuffer)
+    if (m_pDsBuffer)
     {
-        s_pSoundBuffer->Release();
-        s_pSoundBuffer = nullptr;
+        m_pDsBuffer->Release();
+        m_pDsBuffer = nullptr;
     };
 
-    if (s_pDirectSound)
+    if (m_pDs)
     {
-        s_pDirectSound->Release();
-        s_pDirectSound = nullptr;
+        m_pDs->Release();
+        m_pDs = nullptr;
     };
 };
 
 
-bool PCSddInitializeFramework(void)
+bool CPCSoundDevice::InitializeLib(void)
 {
-    return true;
+	//
+	//	Init path
+	//
+	char szPath[MAX_PATH];
+	szPath[0] = '\0';
+	
+	const char* pszSdPath = nullptr;	
+	if (CConfigure::CheckArgValue("afspath", &pszSdPath))
+	{
+		std::strcpy(szPath, pszSdPath);
+		CFilename::ConvPathPlatform(szPath);		
+	};
+
+	if (szPath[0] == '\0')
+		GetModulePath(szPath);
+
+	//
+	//	Init options
+	//
+	uint32 OptFlag = 0;
+
+	if (CConfigure::CheckArg("novag"))
+		OptFlag |= 0x1;
+	
+	if (CConfigure::CheckArg("novox"))
+		OptFlag |= 0x2;
+
+	if (CConfigure::CheckArg("noseq"))
+		OptFlag |= 0x4;
+
+	//
+	//	Init heap
+	//
+	void* HeapPtr = nullptr;
+	uint32 HeapSize = 0;
+
+	//
+	//	Init drv
+	//
+	return SdDrvInitialize(CPCSpecific::m_hWnd, szPath, HeapPtr, HeapSize, OptFlag);
 };
 
 
-void PCSddTerminateFramework(void)
+void CPCSoundDevice::TerminateLib(void)
 {
-    ;
+	SdDrvTerminate();
+
+	if (m_pSoundHeap)
+	{
+		delete[] m_pSoundHeap;
+		m_pSoundHeap = nullptr;
+	};
 };

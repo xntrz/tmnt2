@@ -10,20 +10,25 @@ class CAreaWorkPool;
 class CAreaSequence final : public CAnim2DSequence
 {
 public:
-    static bool m_bDebugClearAnim;
+#ifdef _DEBUG    
+    static bool m_bDebugClearAnimRequest;
+#endif
+    
     static CProcess* Instance(void);
 
     CAreaSequence(void);
     virtual ~CAreaSequence(void);
-    virtual bool OnAttach(const void* param) override;
+    virtual bool OnAttach(const void* pParam) override;
     virtual void OnDetach(void) override;
-    virtual void OnMove(bool bRet, const void* param) override;
+    virtual void OnMove(bool bRet, const void* pReturnValue) override;
     virtual void OnDraw(void) const override;
-    virtual bool OnRet(void) override;
     bool AreaSelectLoad(void);
     
 private:
     CAreaWorkPool* m_pWorkPool;
     CDialog* m_pDlgSure;
     bool m_bDlgRunning;
+#ifdef _DEBUG
+    bool m_bDebugCall;
+#endif    
 };

@@ -2,7 +2,7 @@
 
 #include "Game/Component/GameMain/GameProperty.hpp"
 #include "Game/Component/Gimmick/GimmickQuery.hpp"
-#include "Game/Component/Gimmick/GimmickUtils.hpp"
+#include "Game/Component/Gimmick/Utils/GimmickUtils.hpp"
 #include "Game/Component/Gimmick/GimmickParam.hpp"
 #include "Game/Component/Gimmick/MoveStrategy/CuttingGimmickMove.hpp"
 #include "Game/System/Hit/HitAttackData.hpp"
@@ -244,7 +244,6 @@ void CCuttingGimmick::init(void* pParam)
     m_pCuttingMove->SetRotation(&vRotation);
     SetMoveStrategy(m_pCuttingMove);
     m_pCuttingMove->Start();
-    //SetModelStrategy(&m_model);
 
     RpClump* pAtariClump = pAtari->GetClump();
     if (pAtariClump)

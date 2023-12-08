@@ -6,9 +6,6 @@
 class CPlayerCharacter;
 
 
-//
-//  TODO player change voice module
-//
 class CPlayerChangeVoiceModule : public IModule
 {
 public:
@@ -16,13 +13,17 @@ public:
     virtual ~CPlayerChangeVoiceModule(void);
     virtual void Run(void) override;
     virtual void Draw(void) override;
-    void SetComboWall(void);
     void PlayChangeVoice(void);
-    void PlayRandomVoice(void);
     void Start(void);
-
+    void SetComboWall(void);
+    float GetTime(void) const;
+    
 private:
     CPlayerCharacter* m_pPlayerChr;
-    float m_fTimerProcComboWall;
-    bool m_bComboWallRequest;
+    float m_fInitTStamp;
+    float m_fChangeVoxRqTime;
+    float m_fComboVoxRqTime;
+    float m_fRandVoxRqTime;
+    bool m_bChangeVoxRq;
+    bool m_bComboVoxRq;
 };

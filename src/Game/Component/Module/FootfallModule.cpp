@@ -1,5 +1,6 @@
 #include "FootfallModule.hpp"
 
+#include "Game/Component/Enemy/CharacterCompositor.hpp"
 #include "Game/Component/Player/PlayerCharacter.hpp"
 #include "Game/System/Character/Character.hpp"
 #include "Game/System/Sound/GameSound.hpp"
@@ -23,9 +24,20 @@ void CFootfallModule::Run(void)
 {
     if (TimingCheck())
     {
-        //
-        //  TODO CGameSound::PlayWalkSE
-        //
+        SE_WALK_PARAM param;
+        param.Type = m_pCharacter->GetCharacterType();
+        
+        if (m_pCharacter->GetCharacterType() == CCharacter::TYPE_ENEMY)
+            param.Id = static_cast<CCharacterCompositor*>(m_pCharacter)->GetID();
+        else            
+            param.Id = static_cast<CPlayerCharacter*>(m_pCharacter)->GetID();
+        
+        param.MoveType = SEMOVETYPE_RUN;
+        param.GroundType = m_pCharacter->GetCollisionGround()->m_attribute;
+
+        m_pCharacter->GetPosition(&param.Pos);
+
+        CGameSound::PlayWalkSE(&param);    
     };
 };
 

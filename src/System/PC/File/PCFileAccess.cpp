@@ -1,18 +1,12 @@
 #include "PCFileAccess.hpp"
-#include "PCFileManager.hpp"
-#include "PCFileStd.hpp"
-
-#include "System/PC/PCTypedefs.hpp"
 
 
-/*static*/ bool CPCPhyFileAccess::IsExists(const char* path)
+/*static*/ bool CPCPhyFileAccess::IsExists(const char* pszFilename)
 {
-    void* hFile = stdf_open(path, "rb");
+    void* hFile = RwFopen(pszFilename, "rb");
     if (hFile)
     {
-        stdf_close(hFile);
-        hFile = nullptr;
-
+        RwFclose(hFile);
         return true;
     };
 
@@ -20,65 +14,40 @@
 };
 
 
-CPCPhyFileAccess::CPCPhyFileAccess(void)
-: m_hFile(nullptr)
-{
-    ;
-};
-
-
-CPCPhyFileAccess::~CPCPhyFileAccess(void)
-{
-    ;
-};
-
-
-bool CPCPhyFileAccess::Read(const char* pszName)
+bool CPCPhyFileAccess::Open(const char* pszFilename)
 {
     bool bResult = false;
-
-    void* hFile = stdf_open(pszName, "rb");
+    
+    void* hFile = RwFopen(pszFilename, "rb");
     if (hFile)
     {
-        m_status = STATUS_READING;
+        m_stat = STAT_READING;
 
-        stdf_seek(hFile, 0, stdf_seek_end);
-        m_uBufferSize = stdf_tell(hFile);
-        stdf_seek(hFile, 0, stdf_seek_begin);        
+        RwFseek(hFile, 0, SEEK_END);
+        m_uBufferSize = uint32(RwFtell(hFile));
+        RwFseek(hFile, 0, SEEK_SET);
 
         if (m_uBufferSize)
         {
             m_pBuffer = new char[m_uBufferSize];
             ASSERT(m_pBuffer);
+
             if (m_pBuffer)
             {
-                stdf_read(hFile, m_pBuffer, m_uBufferSize);
-                
-                m_status = STATUS_READEND;
-                bResult = true;
+                uint32 readed = RwFread(m_pBuffer, sizeof(uint8), m_uBufferSize, hFile);
+                bResult = (readed == m_uBufferSize);
+                m_stat = STAT_READEND;
             };
-        }
-        else
-        {
-            m_status = STATUS_ERROR;
         };
 
-        stdf_close(hFile);
+        RwFclose(hFile);
         hFile = nullptr;
-    }
-    else
-    {
-        m_status = STATUS_ERROR;
     };
 
+    if (!bResult)
+        m_stat = STAT_ERROR;
+
     return bResult;
-};
-
-
-bool CPCPhyFileAccess::Read(int32 nID)
-{
-    ASSERT(false);
-    return false;
 };
 
 
@@ -90,110 +59,6 @@ void CPCPhyFileAccess::Clear(void)
         m_pBuffer = nullptr;        
         m_uBufferSize = 0;
         
-        m_status = STATUS_NOREAD;
-    };
-};
-
-
-bool CPCPhyFileAccess::Write(const char* pszName, const char* data, int32 datalen)
-{
-    bool bResult = false;
-
-    void* hFile = stdf_open(pszName, "wb");
-    if (hFile)
-    {
-        m_status = STATUS_READING;
-
-        stdf_write(hFile, data, datalen);
-        m_status = STATUS_READEND;
-        
-        bResult = true;
-
-        stdf_close(hFile);
-        hFile = nullptr;
-    }
-    else
-    {
-        m_status = STATUS_ERROR;
-    };
-
-    return bResult;
-};
-
-
-CPCRcFileAccess::CPCRcFileAccess(void)
-: m_hData(nullptr)
-{
-    ;
-};
-
-
-CPCRcFileAccess::~CPCRcFileAccess(void)
-{
-    ASSERT(!m_hData);
-};
-
-
-bool CPCRcFileAccess::Read(const char* pszName)
-{
-    ASSERT(false);
-    return false;
-};
-
-
-bool CPCRcFileAccess::Read(int32 nID)
-{
-    bool bResult = false;
-
-    try
-    {
-        m_status = STATUS_READING;
-        HMODULE hModule = GetModuleHandle(NULL);
-        ASSERT(hModule != NULL);
-
-        HRSRC hResource = FindResource(hModule, MAKEINTRESOURCE(nID), TEXT("RAWFILE"));
-        if (hResource == NULL)
-            throw std::exception("FindResourceA");
-
-        m_hData = LoadResource(hModule, hResource);
-        if (m_hData == NULL)
-            throw std::exception("LoadResource");
-
-        m_uBufferSize = SizeofResource(hModule, hResource);
-        m_pBuffer = LockResource(m_hData);
-        ASSERT(m_pBuffer);
-
-        m_status = STATUS_READEND;
-        bResult = true;
-    }
-    catch (std::exception& e)
-    {
-		REF(e);
-
-        DWORD dwError = GetLastError();
-        OUTPUT("Resource loading error: %s %u\n", e.what(), dwError);
-
-        Clear();
-
-        m_status = STATUS_ERROR;
-    };
-
-    return bResult;
-};
-
-
-void CPCRcFileAccess::Clear(void)
-{
-    if (m_hData)
-    {
-        ASSERT(m_pBuffer);
-
-        FreeResource(m_hData);
-        m_hData = NULL;
-        
-        m_pBuffer = nullptr;
-        m_uBufferSize = 0;
-        
-        m_status = STATUS_NOREAD;
+        m_stat = STAT_NOREAD;
     };
 };

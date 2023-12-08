@@ -187,7 +187,7 @@ void CGimmickEventDispatcher::send(EVENT_PARAM* pEventParam)
         if (pGimmick)
         {
             OUTPUT(
-                " Sending event: %s to %s (param: %d depth %d)\n",
+                "Sending event: %s to %s (param: %d depth %d)\n",
                 pEventParam->m_args.m_szSender,
                 pEventParam->m_szTargetName,
                 pEventParam->m_args.m_type,

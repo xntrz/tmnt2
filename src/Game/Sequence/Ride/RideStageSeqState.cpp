@@ -17,12 +17,6 @@ CLoadRideStageSeqState::CLoadRideStageSeqState(STAGEID::VALUE idStage)
 };
 
 
-CLoadRideStageSeqState::~CLoadRideStageSeqState(void)
-{
-    ;
-};
-
-
 void CLoadRideStageSeqState::LoadPlayers(void)
 {
     int32 nPlayerInfoNum = CGameData::PlayParam().GetCharaInfoNum();
@@ -32,6 +26,11 @@ void CLoadRideStageSeqState::LoadPlayers(void)
         CGameLoader::LoadRidePlayer(CharaInfo.m_CharacterID, CharaInfo.m_Costume);
     };
 };
+
+
+//
+// *********************************************************************************
+//
 
 
 void CPlayRideStageSeqState::OnAttach(CStageBaseSequence* pSeq, const void* pParam)
@@ -45,7 +44,7 @@ void CPlayRideStageSeqState::OnAttach(CStageBaseSequence* pSeq, const void* pPar
     pSeq->Stage().AddStageObjects();
     pSeq->Stage().AddPlayers();
 
-    CScreenFade::StartOut();
+    CScreenFade::BlackIn();
     
     m_step = STEP_PLAY;
 
@@ -88,8 +87,8 @@ bool CPlayRideStageSeqState::OnMove(CStageBaseSequence* pSeq)
 
     case STEP_PLAYEND:
         {
-            CGameSound::FadeOut(CGameSound::FADESPEED_FAST);
-            CScreenFade::StartIn();
+            CGameSound::FadeOut(CGameSound::FADESPEED_SLOW);
+            CScreenFade::BlackOut();
             m_step = STEP_FADEIN;
         }
         break;

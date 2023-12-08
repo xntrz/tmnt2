@@ -45,8 +45,8 @@ public:
     static void Terminate(CProcess* pSender);
     static void Start(CProcess* pSender);
     static void Reset(CProcess* pSender);
+    static void Enable(CProcess* pSender, bool bEnable);
     static void SetInteractive(CProcess* pSender, bool bInteractive);
-    static void SetEnable(CProcess* pSender, bool bEnable);
     
     CTimeoutProcess(void);
     virtual ~CTimeoutProcess(void);
@@ -56,13 +56,13 @@ public:
     virtual void Draw(void) const override;
 
 private:
+    static bool postPrivateMessage(CProcess* pSender, MESSAGE* pMessage);
     void execTimeout(void);
     void messageProc(void);
     void resetObject(void);
     void changeState(STATE eState);
 
 private:
-    static MESSAGE m_message;
     STATE m_eState;
     int32 m_iRootSeqLabel;
     CTimerObj* m_apTimer[2];

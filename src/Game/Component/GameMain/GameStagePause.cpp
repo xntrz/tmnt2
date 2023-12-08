@@ -4,13 +4,13 @@
 #include "Game/Component/GameMain/GameProperty.hpp"
 #include "Game/Component/GameData/GameData.hpp"
 #include "Game/Component/Gauge/GaugeInformation.hpp"
-#include "Game/System/Sound/GameSound.hpp"
-#include "Game/System/Misc/Gamepad.hpp"
-#include "Game/System/Misc/ScreenFade.hpp"
 #include "Game/Component/Menu/MessageWindow.hpp"
-#include "System/Common/Controller.hpp"
-#include "Game/System/2d/GameText.hpp"
+#include "Game/System/Misc/ScreenFade.hpp"
+#include "Game/System/Misc/ControllerMisc.hpp"
 #include "Game/System/Sound/VoiceManager.hpp"
+#include "Game/System/Sound/GameSound.hpp"
+#include "Game/System/Text/GameText.hpp"
+#include "System/Common/Controller.hpp"
 
 
 /*static*/ CDummyStagePause* CDummyStagePause::Instance(void)
@@ -56,13 +56,13 @@ void CMenuStagePause::Start(void* param)
     CGaugeInformation::DispInit();
     CGameSound::PlaySE(SDCODE_SE(4099));
     CGameSound::Pause();
-    CGamepad::EnableStickToDigitalMapping(true);
+    EnableStickToDirButton(true);
 };
 
 
 void CMenuStagePause::Stop(void)
 {
-    CGamepad::EnableStickToDigitalMapping(false);
+    EnableStickToDirButton(false);
 };
 
 
@@ -70,7 +70,7 @@ bool CMenuStagePause::Update(void)
 {
     bool bResult = true;
     
-    if (CScreenFade::IsFading())
+    if (CScreenFade::IsDrawing())
         return bResult;
 
     CGaugeInformation::PausePeriod();
@@ -98,7 +98,7 @@ bool CMenuStagePause::Update(void)
             if (pStage->SetResult(CGameStage::RESULT_RET_STAGESEL))
             {                
                 CGameData::PlayResult().SetAreaResult(CGamePlayResult::AREARESULT_EXIT);
-                CGameData::PlayResult().SetExitSub(CGamePlayResult::EXITSUB_AREASEL);
+                CGameData::PlayResult().SetExitSub(CGamePlayResult::EXITSUB_TO_AREASEL);
             };
         }
         break;
@@ -108,7 +108,7 @@ bool CMenuStagePause::Update(void)
             if (pStage->SetResult(CGameStage::RESULT_RET_TITLE))
             {
                 CGameData::PlayResult().SetAreaResult(CGamePlayResult::AREARESULT_EXIT);
-                CGameData::PlayResult().SetExitSub(CGamePlayResult::EXITSUB_TITLE);
+                CGameData::PlayResult().SetExitSub(CGamePlayResult::EXITSUB_TO_TITLE);
             };
         }
         break;
@@ -136,17 +136,17 @@ void CMenuStagePause::Draw(void)
 
 /*static*/ const CTutorialStagePause::TUTORIALINFO CTutorialStagePause::m_aTutorialMessageInfo[] =
 {
-    { GAMETEXT::VALUE(0x0),     SEGROUPID::VALUE(-1)    },
-    { GAMETEXT::VALUE(0x47B),   SEGROUPID::VALUE(0xA8)  },
-    { GAMETEXT::VALUE(0x47C),   SEGROUPID::VALUE(0xA9)  },
-    { GAMETEXT::VALUE(0x47D),   SEGROUPID::VALUE(0xAA)  },
-    { GAMETEXT::VALUE(0x47E),   SEGROUPID::VALUE(0xAC)  },
-    { GAMETEXT::VALUE(0x47F),   SEGROUPID::VALUE(0xAD)  },
-    { GAMETEXT::VALUE(0x480),   SEGROUPID::VALUE(0xAE)  },
-    { GAMETEXT::VALUE(0x481),   SEGROUPID::VALUE(0xB2)  },
-    { GAMETEXT::VALUE(0x482),   SEGROUPID::VALUE(0xB4)  },
-    { GAMETEXT::VALUE(0x483),   SEGROUPID::VALUE(0xB6)  },
-    { GAMETEXT::VALUE(0x484),   SEGROUPID::VALUE(0xB8)  },
+    { GAMETEXT(0x0),     SEGROUPID::VALUE(-1)    },
+    { GAMETEXT(0x47B),   SEGROUPID::VALUE(0xA8)  },
+    { GAMETEXT(0x47C),   SEGROUPID::VALUE(0xA9)  },
+    { GAMETEXT(0x47D),   SEGROUPID::VALUE(0xAA)  },
+    { GAMETEXT(0x47E),   SEGROUPID::VALUE(0xAC)  },
+    { GAMETEXT(0x47F),   SEGROUPID::VALUE(0xAD)  },
+    { GAMETEXT(0x480),   SEGROUPID::VALUE(0xAE)  },
+    { GAMETEXT(0x481),   SEGROUPID::VALUE(0xB2)  },
+    { GAMETEXT(0x482),   SEGROUPID::VALUE(0xB4)  },
+    { GAMETEXT(0x483),   SEGROUPID::VALUE(0xB6)  },
+    { GAMETEXT(0x484),   SEGROUPID::VALUE(0xB8)  },
 };
 
 
@@ -163,7 +163,7 @@ void CTutorialStagePause::Start(void* param)
     ASSERT(nTutoNo >= 0 && nTutoNo < COUNT_OF(m_aTutorialMessageInfo));
     
     CVoiceManager::SetVoice(SEGROUPID::VALUE(m_aTutorialMessageInfo[nTutoNo].m_nSeGroup), true);
-    const wchar* pwszText = CGameText::GetText(GAMETEXT::VALUE(m_aTutorialMessageInfo[nTutoNo].m_nTextID));
+    const wchar* pwszText = CGameText::GetText(GAMETEXT(m_aTutorialMessageInfo[nTutoNo].m_nTextID));
 
     m_fTimer = 1.0f;
 	m_bComplete = false;
@@ -192,8 +192,8 @@ void CTutorialStagePause::Stop(void)
 
 bool CTutorialStagePause::Update(void)
 {    
-	if (CScreenFade::IsFading())
-		return true;
+    if (CScreenFade::IsDrawing())
+        return true;
 
     if (m_fTimer > 0.0f)
     {

@@ -56,11 +56,11 @@ void CRideGimmick::PostMove(void)
     ASSERT(m_pRideMove);
 
     RwV3d vRotation = Math::VECTOR3_ZERO;
-    RwV3d vPosition = Math::VECTOR3_ZERO;
-
-    m_pRideMove->GetPosition(&vPosition);
     m_pRideMove->GetRotation(&vRotation);
 
+    RwV3d vPosition = Math::VECTOR3_ZERO;
+    m_pRideMove->GetPosition(&vPosition);
+    
     m_model.SetPosition(&vPosition);
     m_model.SetRotation(&vRotation);
 
@@ -84,8 +84,8 @@ void CRideGimmick::PostMove(void)
 
     if (m_bCatchHit && IsProcess(PROCESSTYPE_DAMAGE))
     {
-        RwSphere sphere = { 0 };
-        sphere.center = vPosition;
+        RwSphere sphere = { vPosition, m_fRadius };
+        sphere.center = { vPosition.x, vPosition.y + m_fOffset, vPosition.z };
         sphere.radius = m_fRadius;
 
         CHitCatchData Catch;
@@ -128,7 +128,7 @@ bool CRideGimmick::IsProcess(PROCESSTYPE processtype) const
 		m_model.GetPosition(&vPosition);
 
     float fDist = vPosition.z - vBasisPoint.z;
-    if (fDist < s_afCheckDistance[processtype] && fDist > -15.0f)
+    if ((fDist < s_afCheckDistance[processtype]) && (fDist > -15.0f))
         return true;
     
     return false;

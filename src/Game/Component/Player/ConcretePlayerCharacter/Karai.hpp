@@ -8,6 +8,13 @@
 
 namespace Karai
 {
+    const RwV3d CHARGE_ATTACK_LOCAL_POSITION = { 0.0f, 0.025f, 1.0f };
+
+    namespace MOTIONNAMES
+    {
+        static const char* ATTACK_JUMP = "JAttack";
+    };
+
     class CAttackJump : public CStatus
     {
     public:
@@ -17,13 +24,11 @@ namespace Karai
         virtual void OnRun(void) override;
     };
 
-
     class CAttackAABBC : public PlayerStatus::CAttackAABBC
     {
     public:
         virtual void OnDischargeWave(void) override;
     };
-
 
     class CAttackB : public PlayerStatus::CAttackB
     {
@@ -38,6 +43,5 @@ class CKarai : public CPlayerCharacter
 public:
     CKarai(GAMETYPES::COSTUME costume);
     virtual ~CKarai(void);
-    virtual void Run(void) override;
     virtual void ShootingKnife(void) override;
 };

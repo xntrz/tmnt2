@@ -21,9 +21,9 @@ class CDummyStageState final : public IStageSeqState
 public:
     static CDummyStageState* Instance(void);
     
-    virtual void OnAttach(CStageBaseSequence* pSeq, const void* pParam) override;
-    virtual void OnDetach(CStageBaseSequence* pSeq) override;
-    virtual bool OnMove(CStageBaseSequence* pSeq) override;
+    virtual void OnAttach(CStageBaseSequence* pSeq, const void* pParam) override {};
+    virtual void OnDetach(CStageBaseSequence* pSeq) override {};
+    virtual bool OnMove(CStageBaseSequence* pSeq) override { return true; };
 };
 
 
@@ -38,19 +38,14 @@ public:
     };
     
 public:
-    static CLoadStageSeqState* Create(STAGEID::VALUE idStage);
-    
     CLoadStageSeqState(STAGEID::VALUE idStage);
     virtual void OnAttach(CStageBaseSequence* pSeq, const void* pParam) override;
     virtual void OnDetach(CStageBaseSequence* pSeq) override;
     virtual bool OnMove(CStageBaseSequence* pSeq) override;
     virtual void LoadPlayers(void);
+    void LoadData(void);
     void LoadStageCommon(void);
     void LoadStage(void);
-
-private:    
-    void loadData(void);
-    void loadSound(void);
 
 private:
     STAGEID::VALUE m_idStage;
@@ -65,7 +60,7 @@ public:
     {
         STEP_INTRO = 0,
         STEP_DISPINFO,
-        STEP_FADEIN,
+        STEP_FADEOUT,
         STEP_END,
     };
     
@@ -88,8 +83,8 @@ public:
         STEP_PLAYING = 0,
         STEP_RESULT,
         STEP_PLAYEND,
-        STEP_FADEIN,
-        STEP_FADEWAIT,
+        STEP_FADEOUT,
+        STEP_FADEOUT_WAIT,
         STEP_END,
     };
     

@@ -6,7 +6,7 @@
 
 class CTitleSequence final : public CAnim2DSequence
 {
-public:
+private:
     enum NEXT_SEQUENCE
     {
         NEXT_SEQUENCE_NONE = 0,
@@ -17,14 +17,22 @@ public:
         NEXT_SEQUENCE_ARCADE,        
         NEXT_SEQUENCE_QUIT,
     };
-
-private:    
+  
     enum PHASE
     {
         PHASE_NONE = 0,
         PHASE_START,
         PHASE_CHOICE,
         PHASE_CHOICE_WARNING,
+    };
+
+    enum MENUITEMID
+    {
+        MENUITEMID_GAME_NEW = 0,
+        MENUITEMID_GAME_CONTINUE,
+        MENUITEMID_OPTIONS,
+        MENUITEMID_QUIT,
+        MENUITEMID_ARCADE,
     };
 
     struct MENUITEMINFO
@@ -41,11 +49,10 @@ public:
 
     CTitleSequence(void);
     virtual ~CTitleSequence(void);
-    virtual bool OnAttach(const void* param) override;
+    virtual bool OnAttach(const void* pParam) override;
     virtual void OnDetach(void) override;
-    virtual void OnMove(bool bRet, const void* param) override;
+    virtual void OnMove(bool bRet, const void* pReturnValue) override;
     virtual void OnDraw(void) const override;
-    virtual bool OnRet(void) override;
     void CheckPressStart(void);
     void UpdateTimers(void);
     void OpenNewGameWarning(void);
@@ -53,6 +60,8 @@ public:
     void UpdateMenu(void);
     void UpdateDemo(void);
     int32 GetSelectByItemIndex(int32 iItemIndex) const;
+    void SetMenuItem(void);
+    void Branch(void);
 
 private:
     static MENUITEMINFO m_aMenuItemInfoTable[];

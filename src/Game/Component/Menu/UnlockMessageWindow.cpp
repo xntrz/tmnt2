@@ -2,7 +2,7 @@
 
 #include "Game/Component/GameMain/SecretInfo.hpp"
 #include "Game/Component/GameData/GameData.hpp"
-#include "Game/System/2d/GameText.hpp"
+#include "Game/System/Text/GameText.hpp"
 #include "Game/System/Texture/TextureManager.hpp"
 #include "System/Common/Controller.hpp"
 #include "System/Common/Screen.hpp"
@@ -49,7 +49,7 @@ CUnlockMessage::CUnlockMessage(void)
     CTextureManager::SetCurrentTextureSet("MessageWindow");
     m_CursorSprite.SetTexture(CTextureManager::GetRwTexture("win_icon"));
 
-    const wchar* pwszText = CGameText::GetText(GAMETEXT::VALUE(4));
+    const wchar* pwszText = CGameText::GetText(GAMETEXT(4));
     m_CursorText.SetText(pwszText, s_fWindowFontSize, s_WindowFontColor);
 };
 
@@ -140,7 +140,7 @@ void CUnlockMessage::Input(void)
 
 void CUnlockMessage::SetMessage(SECRETID::VALUE idSecret)
 {
-    const wchar* pwszText = CGameText::GetText(GAMETEXT::VALUE(CSecretInfo::GetGameText(idSecret)));
+    const wchar* pwszText = CGameText::GetText(GAMETEXT(CSecretInfo::GetGameText(idSecret)));
     
     SetText(pwszText, s_fWindowFontSize, s_WindowFontColor);
     

@@ -3,7 +3,7 @@
 #include "Game/Component/GameData/GameData.hpp"
 #include "Game/Component/GameMain/AreaInfo.hpp"
 #include "Game/Component/GameMain/NexusInfo.hpp"
-#include "Game/System/2d/GameText.hpp"
+#include "Game/System/Text/GameText.hpp"
 #include "Game/System/2d/GameFont.hpp"
 #include "Game/System/2d/Animation2D.hpp"
 #include "Game/System/2d/MenuController.hpp"
@@ -279,15 +279,15 @@ void CResultWorkPool::CrystalLvlUpDraw(void)
 
                 uAlphaBasis = uint8(Math::LinearTween(0.0f, 255.0f, float(m_auAnimCnt[3]), fDurationSub2));
 
-                const wchar* pwszText = CGameText::GetText(GAMETEXT::VALUE(790));
+                const wchar* pwszText = CGameText::GetText(GAMETEXT(790));
                 float x = -(CGameFont::GetStringWidth(pwszText) * 0.5f);
                 float y = Math::LinearTween(-100.0f, 10.0f, float(m_auAnimCnt[3]), fDurationSub2);
                 
-                CGameFont::m_fHeight = CGameFont::GetScreenSize() / 180.0f;                
+				CGameFont::SetHeight(CGameFont::GetScreenHeightEx(TYPEDEF::VSCR_H / 2.5f));
                 CGameFont::SetRGBA(255, 255, 255, uAlphaBasis);
                 CGameFont::Show(pwszText, x, y);
                 
-                pwszText = CGameText::GetText(GAMETEXT::VALUE(m_nLvlupCryIndex + 791));
+                pwszText = CGameText::GetText(GAMETEXT(m_nLvlupCryIndex + 791));
                 x = -(CGameFont::GetStringWidth(pwszText) * 0.5f);
                 y = Math::LinearTween(-70.0f, 10.0f, float(m_auAnimCnt[3]), fDurationSub2);
 
@@ -392,8 +392,8 @@ void CResultWorkPool::PersonalResultDraw(void)
             RENDERSTATE_PUSH(rwRENDERSTATEDESTBLEND, rwBLENDONE);
 
             float fRotSpeed = 0.05f;
-            m_afRotate[0] = Math::InvClamp(m_afRotate[0] + fRotSpeed, 0.0f, 360.0f);
-            m_afRotate[1] = Math::InvClamp(m_afRotate[1] - fRotSpeed, 0.0f, 360.0f);
+            m_afRotate[0] = InvClamp(m_afRotate[0] + fRotSpeed, 0.0f, 360.0f);
+            m_afRotate[1] = InvClamp(m_afRotate[1] - fRotSpeed, 0.0f, 360.0f);
 
 			uint8 uAlphaBasis = uint8(Math::LinearTween(0.0f, 255.0f, float(m_auAnimCnt[1]), fDurationSub));
 
@@ -422,11 +422,11 @@ void CResultWorkPool::PersonalResultDraw(void)
             ++m_auAnimCnt[1];
         };
 
-        float w = Math::LinearTween(320.0f, -192.0f, float(m_auAnimCnt[1]), fDurationSub);
-        float h = Math::LinearTween(160.0f, -96.0f, float(m_auAnimCnt[1]), fDurationSub);
+        float spr_w = Math::LinearTween(320.0f, -192.0f, float(m_auAnimCnt[1]), fDurationSub);
+        float spr_h = Math::LinearTween(160.0f, -96.0f, float(m_auAnimCnt[1]), fDurationSub);
 
         m_sprite.SetOffset(0.5f, 0.5f);
-        m_sprite.Resize(w, h);
+        m_sprite.Resize(spr_w, spr_h);
         m_sprite.SetRGBA(255, 255, 255, 255);
 
         for (int32 i = 0; i < COLUMNS; ++i)
@@ -434,7 +434,7 @@ void CResultWorkPool::PersonalResultDraw(void)
             GAMETYPES::CLEARRANK personalrank = CGameData::PlayResult().GetPersonalRank(i);
             ASSERT(personalrank >= GAMETYPES::CLEARRANK_E && personalrank < GAMETYPES::CLEARRANK_NUM);
             
-            m_sprite.SetTexture(m_apTexture[personalrank]);
+            m_sprite.SetTexture(m_apTexture[personalrank - 1]);
             m_sprite.Move(float(i) * 106.0f - 92.0f, 141.0f);
             m_sprite.Draw();
         };
@@ -493,10 +493,10 @@ void CResultWorkPool::CrystalGrowingDraw(void)
 	uint8 uAlphaBasis = uint8(Math::LinearTween(0.0f, 255.0f, float(m_auAnimCnt[0]), fDuration));
     float fOfsY = Math::LinearTween(0.0f, 10.0f, float(m_auAnimCnt[0]), fDuration);
 
-    CGameFont::m_fHeight = CGameFont::GetScreenSize() / 223.0f;
+	CGameFont::SetHeight(CGameFont::GetScreenHeightEx(TYPEDEF::VSCR_H / 2.0f));
     CGameFont::SetRGBA(255, 255, 255, uAlphaBasis);
 
-    const wchar* pwszText = CGameText::GetText(GAMETEXT::VALUE(m_nLvlupCryIndex + 786));
+    const wchar* pwszText = CGameText::GetText(GAMETEXT(m_nLvlupCryIndex + 786));
     float x = -(CGameFont::GetStringWidth(pwszText) * 0.5f);
     float y = fOfsY - 120.0f;
     CGameFont::Show(pwszText, x, y);
@@ -518,8 +518,8 @@ void CResultWorkPool::CrystalGrowingDraw(void)
     int32 nCryData = GetCrystalData(m_nLvlupCryIndex);
     int32 nCryLevel = (nCryData / 10) - 1;
 
-    pwszText = CGameText::GetText(GAMETEXT::VALUE( nCryLevel + aCryText[m_nLvlupCryIndex] ));
-    CGameFont::m_pFont->Flow(pwszText, CGameFont::m_fHeight, &bbox);
+	pwszText = CGameText::GetText(GAMETEXT(nCryLevel + aCryText[m_nLvlupCryIndex]));
+    CGameFont::Flow(pwszText, &bbox);
 
     CSystem2D::PopRenderState();
 
@@ -599,10 +599,10 @@ void CResultWorkPool::BattleNexusWinnerDraw(void)
 
 	uint8 uAlphaBasis = uint8(Math::LinearTween(0.0f, 255.0f, float(m_auAnimCnt[0]), fDuration));
 
-    CGameFont::m_fHeight = CGameFont::GetScreenSize() * 180.0f;
+	CGameFont::SetHeight(CGameFont::GetScreenHeightEx(TYPEDEF::VSCR_H / 2.5f));
     CGameFont::SetRGBA(255, 255, 255, uAlphaBasis);
 
-    const wchar* pwszText = CGameText::GetText(GAMETEXT::VALUE(812));
+    const wchar* pwszText = CGameText::GetText(GAMETEXT(812));
     float fOfsX = -(CGameFont::GetStringWidth(pwszText) * 0.5f);
     CGameFont::Show(pwszText, fOfsX, 70.0f);
 
@@ -610,19 +610,19 @@ void CResultWorkPool::BattleNexusWinnerDraw(void)
     switch (idArea)
     {
     case AREAID::ID_AREA60_A:
-        pwszText = CGameText::GetText(GAMETEXT::VALUE(85));
+        pwszText = CGameText::GetText(GAMETEXT(85));
         break;
 
     case AREAID::ID_AREA60_B:
-        pwszText = CGameText::GetText(GAMETEXT::VALUE(86));
+        pwszText = CGameText::GetText(GAMETEXT(86));
         break;
 
     case AREAID::ID_AREA60_C:
-        pwszText = CGameText::GetText(GAMETEXT::VALUE(87));
+        pwszText = CGameText::GetText(GAMETEXT(87));
         break;
 
     case AREAID::ID_AREA60_D:
-        pwszText = CGameText::GetText(GAMETEXT::VALUE(88));
+        pwszText = CGameText::GetText(GAMETEXT(88));
         break;
 
     default:
@@ -732,7 +732,7 @@ int32 CResultWorkPool::GetBattleNexusBattleNo(void) const
 
 bool CResultWorkPool::IsBattleNexusCleared(void) const
 {
-    return (CGameData::PlayResult().GetAreaResult() == CGamePlayResult::AREARESULT_CLEAR);
+    return (CGameData::PlayResult().GetAreaResult() == CGamePlayResult::AREARESULT_GAMECLEAR);
 };
 
 
@@ -763,7 +763,7 @@ CResultSequence::~CResultSequence(void)
 };
 
 
-bool CResultSequence::OnAttach(const void* param)
+bool CResultSequence::OnAttach(const void* pParam)
 {    
     m_resulttype = CGameData::PlayResult().GetResultType();
     m_pResultWorkPool = new CResultWorkPool;
@@ -785,7 +785,7 @@ bool CResultSequence::OnAttach(const void* param)
         break;
 
     case GAMETYPES::RESULTTYPE_NEXUS:        
-        if (CGameData::PlayResult().GetAreaResult() == CGamePlayResult::AREARESULT_CLEAR)
+        if (CGameData::PlayResult().GetAreaResult() == CGamePlayResult::AREARESULT_GAMECLEAR)
         {
             bResult = CAnim2DSequence::OnAttach(FILEID::ID_RESULT_N);
             SetAnimationName("result_n");
@@ -826,23 +826,32 @@ void CResultSequence::OnDetach(void)
 };
 
 
-void CResultSequence::OnMove(bool bRet, const void* param)
+void CResultSequence::OnMove(bool bRet, const void* pReturnValue)
 {
-    CAnim2DSequence::OnMove(bRet, param);
-    switch (m_step)
+    CAnim2DSequence::OnMove(bRet, pReturnValue);
+
+    switch (m_animstep)
     {
-    case STEP_FADE_OUT:
-        CMenuController::KeyLock(CController::DIGITAL_UP);
-        CMenuController::KeyLock(CController::DIGITAL_DOWN);
+    case ANIMSTEP_FADEIN:
+        {
+            CMenuController::KeyLock(CController::DIGITAL_LUP);
+            CMenuController::KeyLock(CController::DIGITAL_LDOWN);
+        }
         break;
         
-    case STEP_DRAW:
-        ResultItemProc();
+    case ANIMSTEP_DRAW:
+        {
+            ResultItemProc();
+        }        
         break;
 
-    case STEP_END:
-        CMenuController::KeyUnlock(CController::DIGITAL_UP);
-        CMenuController::KeyUnlock(CController::DIGITAL_DOWN);        
+    case ANIMSTEP_END:
+        {
+            CMenuController::KeyUnlock(CController::DIGITAL_LUP);
+            CMenuController::KeyUnlock(CController::DIGITAL_LDOWN);
+
+            Ret();
+        }
         break;
     };
 };
@@ -862,7 +871,7 @@ void CResultSequence::OnDraw(void) const
 };
 
 
-void CResultSequence::BeginFadeOut(void)
+void CResultSequence::BeginFadein(void)
 {
     const char* pszBgTexName = nullptr;
     char szOrg[32];
@@ -1404,8 +1413,9 @@ void CResultSequence::BeginFadeOut(void)
         m_pAnimation2D->SetText(szOrg, szNew);
     };
 
-    CAnim2DSequence::BeginFadeOut();
     CGameSound::PlayBGM(SDCODE_BGM(12322));
+    
+    CAnim2DSequence::BeginFadein();
 };
 
 
@@ -1415,24 +1425,24 @@ void CResultSequence::ResultItemProc(void)
     {
         if (CGameData::PlayResult().IsAntiqueTaken())
         {
-            m_pAnimation2D->FlashKeyPress(CController::DIGITAL_UP);
+            m_pAnimation2D->FlashKeyPress(CController::DIGITAL_LUP);
             m_pResultWorkPool->ResultAnimAnit(CResultWorkPool::ANIMTYPE_NONE);
         }
         else
         {
-            m_pAnimation2D->FlashKeyPress(CController::DIGITAL_DOWN);
+            m_pAnimation2D->FlashKeyPress(CController::DIGITAL_LDOWN);
         };
     }
     else if (m_pAnimation2D->CheckMessageGetURL("CheckCrystal"))
     {
         if (m_pResultWorkPool->CheckGetCrystal())
         {
-            m_pAnimation2D->FlashKeyPress(CController::DIGITAL_UP);
+            m_pAnimation2D->FlashKeyPress(CController::DIGITAL_LUP);
             m_pResultWorkPool->ResultAnimAnit(CResultWorkPool::ANIMTYPE_NONE);
         }
         else
         {
-            m_pAnimation2D->FlashKeyPress(CController::DIGITAL_DOWN);
+            m_pAnimation2D->FlashKeyPress(CController::DIGITAL_LDOWN);
         };
     }
     else if (m_pAnimation2D->CheckMessageGetURL("CheckCrystal10") ||
@@ -1441,11 +1451,11 @@ void CResultSequence::ResultItemProc(void)
         m_pResultWorkPool->ResultAnimAnit(CResultWorkPool::ANIMTYPE_NONE);
         if (m_pResultWorkPool->CheckLvlUpCrystal())
         {
-            m_pAnimation2D->FlashKeyPress(CController::DIGITAL_UP);
+            m_pAnimation2D->FlashKeyPress(CController::DIGITAL_LUP);
         }
         else
         {
-            m_pAnimation2D->FlashKeyPress(CController::DIGITAL_DOWN);
+            m_pAnimation2D->FlashKeyPress(CController::DIGITAL_LDOWN);
         };
     }
     else if (m_pAnimation2D->CheckMessageGetURL("CrystalPiece"))
@@ -1535,6 +1545,6 @@ void CResultSequence::ResultItemProc(void)
     }
     else if (m_pAnimation2D->CheckMessageGetURL("ResultEnd"))
     {
-        Ret();
+        BeginFadeout();
     };
 };

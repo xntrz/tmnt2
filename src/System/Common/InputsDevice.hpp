@@ -1,6 +1,6 @@
 #pragma once
 
-#include "PhysicalController.hpp"
+#include "Controller.hpp"
 
 
 class CInputsDevice
@@ -15,8 +15,8 @@ public:
 	virtual bool Unlock(int32 iController);
 	virtual bool IsLocked(int32 iController);
 	virtual void SetMaximumLocked(int32 num);
-	virtual const IPhysicalController::INFO& GetLockedVirtualController(void) const;
-	virtual const IPhysicalController::INFO& GetUnlockedVirtualController(void) const;
+	virtual IPhysicalController::INFO& GetLockedVirtualController(void);
+	virtual IPhysicalController::INFO& GetUnlockedVirtualController(void);
 	virtual void Compaction(void);
 	virtual void ExchangePhysicalController(int32 iController1, int32 iController2);
 	virtual void SyncVirtualController(void);

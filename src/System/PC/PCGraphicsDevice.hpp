@@ -1,5 +1,7 @@
 #pragma once
 
+#include "PCTypedefs.hpp"
+
 #include "System/Common/GraphicsDevice.hpp"
 
 
@@ -8,17 +10,9 @@ class CPCFrameTimer;
 
 class CPCGraphicsDevice final : public CGraphicsDevice
 {
-public:
-    enum DISPLAYMODE
-    {
-        DISPLAYMODE_FULLSCREEN,
-        DISPLAYMODE_FULLWINDOW,
-        DISPLAYMODE_WINDOW,
-    };
-    
 private:
     struct VIDEOMODE;
-    struct DEVICE;
+    struct DEVICEINFO;
     
 public:
     CPCGraphicsDevice(void);
@@ -33,34 +27,26 @@ public:
     virtual void* Configure(void) override;
     virtual int32 Subsystem(void) override;
     virtual int32 Videomode(void) override;
-    virtual bool IsExclusive(void) const override;    
-    const char* GetDeviceName(void) const;
-    void SetDisplaymode(DISPLAYMODE mode);
-    bool SetVideomode(int32 iVideomodeIndex);
-    bool SetVideomode(int32 iWidth, int32 iHeight, int32 iDepth);
-    DISPLAYMODE GetDisplaymode(void) const;
-    void GetVideomode(int32 iVideomodeIndex, int32& riWidth, int32& riHeight, int32& riDepth);
-    int32 GetVideomodeNum(void) const;
+    virtual bool EnumerateVideomodes(void);
+    virtual void Cleanup(void);
+    virtual int32 SearchAndSetVideomode(const PC::VIDEOMODE& vm, bool bSearchInProgress);
+    virtual void SetWindowRect(int32 iWidth, int32 iHeight);
+    bool SetVideomode(int32 No);
+    bool SetVideomode(const PC::VIDEOMODE& vm);
+    bool GetVideomode(int32 No, PC::VIDEOMODE& vm) const;
     int32 GetVideomodeCur(void) const;
-    bool IsVideomodeWindow(int32 iVideomodeNo) const;
+    int32 GetVideomodeNum(void) const;
+    bool IsFullscreen(void) const;
 
 private:
-    int32 GetDeviceNoByMonitorNo(int32 iMonitorNo);
-    DEVICE& Device(void);
-    const DEVICE& Device(void) const;
-    void ConfigureUpdate(int32 iWidth, int32 iHeight);
-    void DeviceChanged(void);
-    bool DeviceStartup(void);
-    void DeviceCleanup(void);
-    int32 DeviceSyncPrimary(void);
-    bool DeviceInitMonitor(int32 iDevice);
-    bool EvalVideomode(const VIDEOMODE* pVideomode) const;
-    static int32 VideomodeSortCallback(const void* a, const void* b);
+    void OutputInfo(void);
 
 private:
     CPCFrameTimer* m_pFrameTimer;
-    DEVICE* m_paDevice;
-    int32 m_numDevice;
+    DEVICEINFO* m_pDeviceInfo;
+    int32 m_numDevices;
     int32 m_curDevice;
-    DISPLAYMODE m_displaymode;
+    int32 m_multisamplingLvl;
+    bool m_bFullscreen;
+    bool m_bHighReso;
 };

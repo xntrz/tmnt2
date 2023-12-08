@@ -32,7 +32,7 @@ namespace PlayerStatus
 
     void CLiftChallenge::OnAttach(void)
     {
-        Character().ChangeMotion("Nage1");
+        Character().ChangeMotion(PLAYERTYPES::MOTIONNAMES::LIFT_CHALLENGE);
     };
 
 
@@ -146,7 +146,7 @@ namespace PlayerStatus
 
     void CLiftSuccess::OnAttach(void)
     {
-        Character().ChangeMotion("Nage2");
+        Character().ChangeMotion(PLAYERTYPES::MOTIONNAMES::LIFT_SUCCESS);
         Character().LiftInfo().m_bMissThrow = true;
         Character().SetEnableBodyHit(false);
         PlayerUtil::CallVoiceOfLiftUp(m_pPlayerChr);
@@ -197,7 +197,7 @@ namespace PlayerStatus
     {
         Character().ResetVelocity();
         Character().ResetAcceleration();
-        Character().ChangeMotion("NageIdle");
+        Character().ChangeMotion(PLAYERTYPES::MOTIONNAMES::LIFT);
         Character().LiftInfo().m_bMissThrow = true;
     };
 
@@ -234,7 +234,7 @@ namespace PlayerStatus
     void CLiftWalk::OnAttach(void)
     {
         Character().SetCharacterFlag(CHARACTERTYPES::FLAG_FIXED_DIRECTION, false);
-        Character().ChangeMotion("NageWalk");
+        Character().ChangeMotion(PLAYERTYPES::MOTIONNAMES::LIFT_WALK);
         Character().LiftInfo().m_bMissThrow = true;
     };
 
@@ -276,7 +276,7 @@ namespace PlayerStatus
     void CThrow::OnAttach(void)
     {
         Character().ResetVelocity();
-        Character().ChangeMotion("Nage3");
+        Character().ChangeMotion(PLAYERTYPES::MOTIONNAMES::THROW);
 
         CGameObject* pLiftObj = CGameObjectManager::GetObject(Character().LiftInfo().m_szLiftObjectName);
         ASSERT(pLiftObj);
@@ -324,7 +324,7 @@ namespace PlayerStatus
     void CThrowBack::OnAttach(void)
     {
         Character().ResetVelocity();
-        Character().ChangeMotion("NageBack");
+        Character().ChangeMotion(PLAYERTYPES::MOTIONNAMES::THROW_BACK);
         Character().SetEnableBodyHit(false);
 
         PlayerUtil::CallVoiceOfBackThrow(m_pPlayerChr);
@@ -358,7 +358,7 @@ namespace PlayerStatus
     void CThrowCombination::OnAttach(void)
     {
         Character().ResetVelocity();
-        Character().ChangeMotion("Nage2");
+        Character().ChangeMotion(PLAYERTYPES::MOTIONNAMES::THROW_COMBINATION);
         Character().SetEnableCatchHit(false);
         Character().SetEnableBodyHit(false);
         
@@ -381,7 +381,7 @@ namespace PlayerStatus
             {
                 if (Character().IsMotionEnd())
                 {
-                    Character().ChangeMotion("Nage3");
+                    Character().ChangeMotion(PLAYERTYPES::MOTIONNAMES::THROW_COMBINATION);
                     m_iMotionStep = 1;
                 };
             }
@@ -410,14 +410,14 @@ namespace PlayerStatus
 
     void CCaught::OnAttach(void)
     {
-        Character().ChangeMotion("NagerarePose");
+        Character().ChangeMotion(PLAYERTYPES::MOTIONNAMES::CAUGHT);
         Character().SetEnableCatchHit(false);
         Character().SetEnableBodyHit(false);
         Character().SetPlayerFlag(PLAYERTYPES::FLAG_AERIAL_STATUS, false);
         Character().ResetVelocity();
         Character().ResetAcceleration();
 
-        CGamepad::StartVibration(Character().GetPadID(), CGamepad::VIBRATIONTYPE_NORMAL, 0.2f);
+        IGamepad::StartVibration(Character().GetPadID(), IGamepad::VIBRATIONTYPE_NORMAL, 0.2f);
     };
 
 
@@ -453,7 +453,7 @@ namespace PlayerStatus
 
     void CLifted::OnAttach(void)
     {
-        Character().ChangeMotion("Nage3");
+        Character().ChangeMotion(PLAYERTYPES::MOTIONNAMES::LIFTED);
     };
 
 
@@ -487,7 +487,7 @@ namespace PlayerStatus
 
     void CLiftedWalk::OnAttach(void)
     {
-        Character().ChangeMotion("Nage3");
+        Character().ChangeMotion(PLAYERTYPES::MOTIONNAMES::LIFTED_WALK);
     };
     
 
@@ -574,7 +574,7 @@ namespace PlayerStatus
 
     void CThrownBack::OnAttach(void)
     {
-        Character().ChangeMotion("Nage3");
+        Character().ChangeMotion(PLAYERTYPES::MOTIONNAMES::THROWN_BACK);
     };
 
 
@@ -604,14 +604,14 @@ namespace PlayerStatus
 
     void CThrownCombination::OnAttach(void)
     {
-        Character().ChangeMotion("NagerareTag1");
+        Character().ChangeMotion(PLAYERTYPES::MOTIONNAMES::THROWN_COMBINATION1);
         Character().SetCharacterFlag(CHARACTERTYPES::FLAG_CANCEL_GRAVITY, true);
         Character().SetPlayerFlag(PLAYERTYPES::FLAG_AERIAL_STATUS, false);
         Character().SetEnableCatchHit(false);
 
         CGameEvent::SetPlayerTechnicalAction(Character().GetPlayerNo(), GAMETYPES::TECACT_COMBINATION);
 
-        CGamepad::StartVibration(Character().GetPadID(), CGamepad::VIBRATIONTYPE_NORMAL, 0.2f);
+        IGamepad::StartVibration(Character().GetPadID(), IGamepad::VIBRATIONTYPE_NORMAL, 0.2f);
 
         m_fStartTimer = 0.0f;
         m_hEffect = 0;
@@ -643,12 +643,12 @@ namespace PlayerStatus
                 {
                     Character().ResetVelocity();
                     Character().SetCharacterFlag(CHARACTERTYPES::FLAG_FIXED_DIRECTION, false);
-                    Character().ChangeMotion("NagerareTag2");
+                    Character().ChangeMotion(PLAYERTYPES::MOTIONNAMES::THROWN_COMBINATION2);
 
                     RwV3d vPosition = Math::VECTOR3_ZERO;
                     Character().GetPosition(&vPosition);
 
-                    m_hEffect = CEffectManager::Play("all_tag", &vPosition);
+                    m_hEffect = CEffectManager::Play(PLAYERTYPES::EFFECTNAMES::THROW_COMBINATION, &vPosition);
                     m_iMotionStep = 1;
                     m_fStartTimer = CGameProperty::GetTotalElapsedTime();
                 }
@@ -820,8 +820,11 @@ namespace PlayerStatus
         bool SendPositionCommon(CPlayerCharacter& rPlayerChr)
         {
             CGameObject* pLiftObj = CGameObjectManager::GetObject(rPlayerChr.LiftInfo().m_szLiftObjectName);
-            if (!pLiftObj)
+			if (!pLiftObj)
+			{
+				rPlayerChr.ChangeStatus(PLAYERTYPES::STATUS_IDLE);
                 return false;
+			};
 
             CModel* pModel = rPlayerChr.GetModel();
             ASSERT(pModel);
@@ -843,16 +846,18 @@ namespace PlayerStatus
                 return true;
             };
             
-            CCharacter* pCharacter = (CCharacter*)pLiftObj;
-            
-            RwV3d vPosition;
-            RwV3d vLiftPosition = Math::VECTOR3_ZERO;
+			RwV3d vTarPos = Math::VECTOR3_ZERO;
+			static_cast<CCharacter*>(pLiftObj)->GetPosition(&vTarPos);
 
-            pCharacter->GetPosition(&vLiftPosition);
-            rPlayerChr.GetPosition(&vPosition);
-            
-            Math::Vec3_Sub(&vPosition, &vLiftPosition, &vPosition);
-            if (Math::Vec3_Length(&vPosition) <= 0.8f)
+			RwV3d vMePos = Math::VECTOR3_ZERO;
+			rPlayerChr.GetPosition(&vMePos);
+
+			RwV3d vDltPos = Math::VECTOR3_ZERO;
+			Math::Vec3_Sub(&vDltPos, &vTarPos, &vMePos);
+			vDltPos.y = 0.0f;
+
+			float fDist = Math::Vec3_Length(&vDltPos);
+            if (fDist <= 0.8f)
             {
                 CGameObjectManager::SendMessage(pLiftObj, CHARACTERTYPES::MESSAGEID_LIFT, &liftinfo);                
                 return true;

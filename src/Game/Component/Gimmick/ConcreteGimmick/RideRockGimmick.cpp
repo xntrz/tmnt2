@@ -34,7 +34,7 @@ CRideRockGimmick::CRideRockGimmick(const char* pszName, void* pParam)
 
     m_DefaultColor = pModel->GetColor();
 
-    m_model.SetModel(CNormalGimmickModel::MODELKIND_VISUAL_NORMAL, pModel);
+    m_model.SetModel(CNormalGimmickModel::MODELTYPE_DRAW_NORMAL, pModel);
     m_model.SetPosition(&pInitParam->m_vPosition);
     m_model.UpdateFrame();
 
@@ -80,7 +80,7 @@ void CRideRockGimmick::PostMove(void)
     Color.blue  = uint8(m_DefaultColor.blue  * (1.0f - m_fBlendRate) + m_DamageColor.blue    * m_fBlendRate);
     Color.alpha = uint8(m_DefaultColor.alpha * (1.0f - m_fBlendRate) + m_DamageColor.alpha   * m_fBlendRate);
 
-    m_model.SetColor(CNormalGimmickModel::MODELKIND_VISUAL_NORMAL, Color);
+    m_model.SetColor(CNormalGimmickModel::MODELTYPE_DRAW_NORMAL, Color);
 };
 
 

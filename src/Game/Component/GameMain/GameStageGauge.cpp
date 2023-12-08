@@ -117,11 +117,9 @@ uint32 CBossExGauge::findBoss(int32 No) const
         int32 EnemyCnt = CGameProperty::GetEnemyMax();
         for (int32 i = 0; i < EnemyCnt; ++i)
         {
-			if (CGameProperty::Enemy(i).IsAlive())
-			{
-				if (CGameProperty::Enemy(i).Enemy().EnemyCharacter().GetID() == IdEnemy)
-					return CGameProperty::Enemy(i).Enemy().GetHandle();
-			};
+            CEnemy* pEnemy = CGameProperty::GetEnemy(i);
+            if (pEnemy && (pEnemy->EnemyCharacter().GetID() == IdEnemy))
+                return pEnemy->GetHandle();
         };
     };
 
@@ -204,11 +202,9 @@ void CCounterExGauge::Update(void)
     int32 GimmickCnt = CGameProperty::GetGimmickMax();
     for (int32 i = 0; i < GimmickCnt; ++i)
     {
-		if (CGameProperty::Gimmick(i).IsAlive())
-		{
-			if (CGameProperty::Gimmick(i).GetGimmick()->GetID() == GIMMICKID::ID_N_UTROM)
-				++UtromCnt;
-		};
+        CGimmick* pGimmick = CGameProperty::GetGimmick(i);
+        if (pGimmick && (pGimmick->GetID() == GIMMICKID::ID_N_UTROM))
+            ++UtromCnt;
     };
 
     CGaugeStatus::CounterDispSet(1, UtromCnt);
@@ -265,11 +261,9 @@ uint32 CLifeExGauge::findFugitoid(void)
     int32 EnemyCnt = CGameProperty::GetEnemyMax();
     for (int32 i = 0; i < EnemyCnt; ++i)
     {
-		if (CGameProperty::Enemy(i).IsAlive())
-		{
-			if (CGameProperty::Enemy(i).Enemy().EnemyCharacter().GetID() == ENEMYID::ID_FUGITOID)
-				return CGameProperty::Enemy(i).Enemy().GetHandle();
-		};
+        CEnemy* pEnemy = CGameProperty::GetEnemy(i);
+        if (pEnemy && (pEnemy->EnemyCharacter().GetID() == ENEMYID::ID_FUGITOID))
+            return pEnemy->GetHandle();
     };
 
     return 0;

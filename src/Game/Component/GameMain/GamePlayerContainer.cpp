@@ -6,10 +6,11 @@ CGamePlayerContainer::CGamePlayerContainer(void)
 : m_pGamePlayerTable(nullptr)
 , m_nNumPlayer(0)
 {
+    CGamePlayer::AttachContainer(this);
+    CGamePlayer::ClearDamageNegation();
+    
     m_pGamePlayerTable = new CGamePlayer[GAMETYPES::PLAYERS_MAX];
     ASSERT(m_pGamePlayerTable);
-
-    CGamePlayer::ClearDamageNegation();
 };
 
 
@@ -22,6 +23,20 @@ CGamePlayerContainer::~CGamePlayerContainer(void)
     };
 
     m_nNumPlayer = 0;
+
+    CGamePlayer::DetachContainer();
+};
+
+
+CGamePlayer* CGamePlayerContainer::GamePlayer(int32 no) const
+{
+    return ((no >= 0 && no < m_nNumPlayer) ? getGamePlayer(no) : CGamePlayer::Dummy());
+};
+
+
+int32 CGamePlayerContainer::GetPlayerNum(void) const
+{
+    return m_nNumPlayer;
 };
 
 
@@ -29,28 +44,20 @@ void CGamePlayerContainer::AddPlayer(int32 nPlayerNo, PLAYERID::VALUE idPlayer, 
 {
     ASSERT(nPlayerNo >= 0 && nPlayerNo < GAMETYPES::PLAYERS_MAX);
 
-    if (!getGamePlayer(nPlayerNo)->IsAlive())
+    CGamePlayer* pGamePlayer = getGamePlayer(nPlayerNo);
+    if(!pGamePlayer->IsAlive())
     {
-        getGamePlayer(nPlayerNo)->CreatePlayer(nPlayerNo);
+        pGamePlayer->CreatePlayer(nPlayerNo);
         ++m_nNumPlayer;
     };
 
-    getGamePlayer(nPlayerNo)->AddPlayerCharacter(idPlayer, costume);
+    pGamePlayer->AddCharacter(idPlayer, costume);
 };
 
 
-IGamePlayer& CGamePlayerContainer::GamePlayer(int32 no) const
+void CGamePlayerContainer::Remove(CGamePlayer* pGamePlayer)
 {
-	if (no >= 0 && no < m_nNumPlayer)
-		return *getGamePlayer(no);
-    else
-        return CGamePlayer::Dummy();
-};
-
-
-int32 CGamePlayerContainer::GetPlayerNum(void) const
-{
-    return m_nNumPlayer;
+    (void)pGamePlayer;    
 };
 
 

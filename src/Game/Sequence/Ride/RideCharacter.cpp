@@ -12,10 +12,12 @@
 #include "Game/Component/Module/CircleShadowModule.hpp"
 #include "Game/Component/Module/BandanaModule.hpp"
 #include "Game/Component/Module/ModuleManager.hpp"
+#include "Game/System/Misc/Gamepad.hpp"
 #include "Game/System/Map/WorldMap.hpp"
 #include "Game/System/Hit/HitAttackData.hpp"
 #include "Game/System/Sound/GameSound.hpp"
 #include "Game/System/Sound/MessageManager.hpp"
+#include "System/Common/Screen.hpp"
 
 
 /*static*/ CRideCharacter* CRideCharacter::New(PLAYERID::VALUE idChr, CRidePlayer* pRidePlayer, GAMETYPES::COSTUME costume)
@@ -26,10 +28,7 @@
     std::strcpy(szPlayerName, PLAYERID::GetName(idChr));
     std::strcat(szPlayerName, "_r");
 
-    CRideCharacter* pRideCharacter = new CRideCharacter(szPlayerName, idChr, pRidePlayer, costume);
-    ASSERT(pRideCharacter);
-
-    return pRideCharacter;
+    return new CRideCharacter(szPlayerName, idChr, pRidePlayer, costume);
 };
 
 
@@ -77,26 +76,13 @@ CRideCharacter::CRideCharacter(const char* pszName, PLAYERID::VALUE idPlayer, CR
     Initialize(&parameter);
 
     if (CRideStage::GetShadowFlag())
-        m_pModuleMan->Include(CCircleShadowModule::New(this, 1.5f, 1.5f, false));
+        m_pModuleMan->Include(CCircleShadowModule::New(this, 1.5f, 1.5f, true));
 
-    CRideCharacterEffectModule* pRideEffetMod = nullptr;
-    if (CRideStage::m_bSpace)
-    {
-        pRideEffetMod = CRideCharacterEffectModule::New(this, CRideCharacterEffectModule::RIDERTYPE_SHIP);
-    }
-    else
-    {
-        pRideEffetMod = CRideCharacterEffectModule::New(this, CRideCharacterEffectModule::RIDERTYPE_BOARD);
-    };
+    m_pModuleMan->Include(
+        CRideCharacterEffectModule::New(this, IsShip() ? CRideCharacterEffectModule::RIDERTYPE_SHIP : CRideCharacterEffectModule::RIDERTYPE_BOARD)
+    );
 
-    if (pRideEffetMod)
-    {
-        pRideEffetMod->SetDrawEnable(false);
-        m_pModuleMan->Include(pRideEffetMod);
-    };
-
-    InitBandana();
-
+    SetEffectDrawEnable(false);
     SetGravityEnable(true);
 	SetStartPosition(pRidePlayer->GetNo(), false);
 };
@@ -110,45 +96,51 @@ CRideCharacter::~CRideCharacter(void)
 
 void CRideCharacter::Run(void)
 {
-    UpdateBandana();
-    
-    RwV3d vPosition = Math::VECTOR3_ZERO;
-    GetPosition(&vPosition);
-    
+    MakePadInfo();
+
     if (IsEnableMove())
     {
         CalcControlRate();
+        if (IsShip())
+        {
+            Roll();
+            MoveForShip();
+        }
+        else
+        {
+            Turn();
+            Jump();
+            Move();
+        }
     }
     else
     {
-        RwV3d vBasisVector = Math::VECTOR3_ZERO;
-        CRideStage::GetBasisVector(&vBasisVector);
-
-        RwV3d vVelocity = Math::VECTOR3_ZERO;
-        vVelocity.z = vBasisVector.z;
-        SetVelocity(&vVelocity);
+        MoveByScroll();
     };
-
+    
     CPlayerCharacter::Run();
-
+    
     if (!IsEnableMove())
     {
-        CBandanaModule* pBandanaMod = (CBandanaModule*)GetModule(MODULETYPE::BANDANA);
-        if (pBandanaMod)
-            pBandanaMod->Reset(&m_vRevivePos);
-        
-        RwV3d vPosition = Math::VECTOR3_ZERO;
-        GetPosition(&vPosition);;
+        RwV3d vPos = Math::VECTOR3_ZERO;
+        GetPosition(&vPos);
 
-		SetPosition(&m_vRevivePos);
-		UpdateModel();
-		SetPosition(&vPosition);
+        SetPosition(&m_vRevivePos);
+        UpdateModel();
+        SetPosition(&vPos);
+
+        if (IsShip())
+            m_vRevivePos.z += (CGameProperty::GetElapsedTime() * -8.0f);
     };
-
+    
     MoveLimit();
 
+    RwV3d vPosition = Math::VECTOR3_ZERO;
+    GetPosition(&vPosition);
     if ((vPosition.y > -6.0f) && (vPosition.y < -6.0f))
         CMessageManager::Request(SEGROUPID::VALUE(162), GetID());
+    
+    Shot();
 
     m_fPlaytime += CGameProperty::GetElapsedTime();
 };
@@ -166,8 +158,8 @@ void CRideCharacter::MessageProc(int32 nMessageID, void* pParam)
         OnMessageShotEol();
         break;
 
-    case RIDETYPES::MESSAGEID_SHOT_DESTROY:
-        OnMessageShotDestroy();
+    case RIDETYPES::MESSAGEID_SHOT_HIT:
+        OnMessageShotHit();
         break;
 
     default:
@@ -198,7 +190,7 @@ void CRideCharacter::CheckCollisionForBody(RwV3d& rvVelocityPerFrame)
 
     if (!Math::Vec3_IsEqual(&vVelocityPerFrameSave, &rvVelocityPerFrame))
     {
-        if (CGameProperty::GetElapsedTime() * 0.1f > Math::RandFloat())
+        if ((CGameProperty::GetElapsedTime() * 0.1f) > Math::RandFloat())
             CMessageManager::Request(SEGROUPID::VALUE(165), GetID());
     };
 };
@@ -211,7 +203,9 @@ void CRideCharacter::CheckCollisionForWall(RwV3d& rvVelocityPerFrame)
 
     RwV3d vPosition = Math::VECTOR3_ZERO;
     GetPosition(&vPosition);
+    
     Math::Vec3_Add(&vPosition, &vPosition, &rvVelocityPerFrame);
+    
     SetPosition(&vPosition);
 };
 
@@ -252,9 +246,9 @@ void CRideCharacter::OnMessageDoChangingAerial(void)
 
 void CRideCharacter::OnMessageTouchdown(float fFieldHeight)
 {
-    if (GetStatus() == PLAYERTYPES::RIDESTATUS_JUMP ||
-        GetStatus() == PLAYERTYPES::RIDESTATUS_AERIAL ||
-        GetStatus() == PLAYERTYPES::RIDESTATUS_AERIAL_STAGGER)
+    if ((GetStatus() == PLAYERTYPES::RIDESTATUS_JUMP) ||
+        (GetStatus() == PLAYERTYPES::RIDESTATUS_AERIAL) ||
+        (GetStatus() == PLAYERTYPES::RIDESTATUS_AERIAL_STAGGER))
     {
         ChangeStatus(PLAYERTYPES::RIDESTATUS_TOUCHDOWN);
     };
@@ -263,70 +257,21 @@ void CRideCharacter::OnMessageTouchdown(float fFieldHeight)
 
 void CRideCharacter::OnMessageCatchAttack(CHitAttackData* pAttack)
 {
-    ASSERT(pAttack);
-    
     if (pAttack->GetPower())
-    {
-        if (IsEnableMove())
-        {
-            RwV3d vPosition = Math::VECTOR3_ZERO;
-            GetPosition(&vPosition);
-
-            if (GetStatus() != PLAYERTYPES::RIDESTATUS_REVIVE)
-                CEffectManager::Play(EFFECTID::ID_ALL_PITAN, &vPosition);
-
-            ChangeStatus(PLAYERTYPES::RIDESTATUS_CRASH_WALL);
-        };
-    };
+        HitWall(HIT_SPHERE_KIND_CENTER);
 };
 
 
 void CRideCharacter::OnMessageReceivedDamage(int32 nDamage)
 {
     if (nDamage)
-    {
-        if (IsEnableMove())
-        {
-            RwV3d vPosition = Math::VECTOR3_ZERO;
-            GetPosition(&vPosition);
-
-            if (GetStatus() != PLAYERTYPES::RIDESTATUS_REVIVE)
-                CEffectManager::Play(EFFECTID::ID_ALL_PITAN, &vPosition);
-
-            ChangeStatus(PLAYERTYPES::RIDESTATUS_CRASH_WALL);
-        };
-    };
+        HitWall(HIT_SPHERE_KIND_CENTER);
 };
 
 
 void CRideCharacter::OnSteppedDeathFloor(void)
 {
-    if (IsEnableMove())
-    {
-        RwV3d vPosition = Math::VECTOR3_ZERO;
-        GetPosition(&vPosition);
-
-        if (GetStatus() != PLAYERTYPES::RIDESTATUS_REVIVE)
-            CEffectManager::Play(EFFECTID::ID_ALL_PITAN, &vPosition);
-
-        ChangeStatus(PLAYERTYPES::RIDESTATUS_CRASH_WALL);
-    };
-};
-
-
-void CRideCharacter::ShootingKnife(void)
-{
-    if (IsEnableShot() && CheckDispShot())
-    {
-        RwV3d vPosition = Math::VECTOR3_ZERO;
-        GetBodyPosition(&vPosition);
-        
-        CShotManager::Shot(SHOTID::ID_RIDE, &vPosition, 0.0f, this, 0.0f, 3.0f);
-        
-        CGameSound::PlayObjectSE(this, SDCODE_SE(4145));
-
-        ++m_nNumDispShot;
-    };
+    HitWall(HIT_SPHERE_KIND_CENTER);
 };
 
 
@@ -358,9 +303,9 @@ void CRideCharacter::OnMessageShotEol(void)
 };
 
 
-void CRideCharacter::OnMessageShotDestroy(void)
+void CRideCharacter::OnMessageShotHit(void)
 {
-    CMessageManager::Request(SEGROUPID::VALUE(161), GetID());
+    CMessageManager::Request(SEGROUPID::VALUE(164), GetID());
     CGameEvent::SetPlayerRideAction(GetPlayerNo(), GAMETYPES::RIDEACT_KILL);
 };
 
@@ -369,14 +314,12 @@ void CRideCharacter::OnMessageScoreAdd(void* param)
 {
     RIDETYPES::SCOREKIND scorekind = RIDETYPES::SCOREKIND(int32(param));
 
-    ASSERT(scorekind >= 0 && scorekind < RIDETYPES::SCOREKINDNUM);
-    ASSERT(scorekind >= 0 && scorekind < COUNT_OF(m_aScore));
+    ASSERT(scorekind >= 0);
+    ASSERT(scorekind < COUNT_OF(m_aScore));
 
     ++m_aScore[scorekind];
 
-    RwV3d vOffset = { 0.0f, 2.0f, 0.0f };
-    if (!IsShip())
-        vOffset.y = 3.0f;
+    RwV3d vOffset = { 0.0f, (IsShip() ? 1.0f : 2.0f), 0.0f };
     CEffectManager::PlayTrace(EFFECTID::ID_I_GET, new CRideCharacterTracer(this), &vOffset);
 
     switch (scorekind)
@@ -394,7 +337,7 @@ void CRideCharacter::OnMessageScoreAdd(void* param)
         break;
     };
 
-    int32 nScoreTotal = GetScore(RIDETYPES::SCOREKIND_GOLD) + GetScore(RIDETYPES::SCOREKIND_SILVER);
+    int32 nScoreTotal = CRideStage::GetScore(RIDETYPES::SCOREKIND_GOLD) + CRideStage::GetScore(RIDETYPES::SCOREKIND_SILVER);
 
     if(nScoreTotal == 1)
     {
@@ -485,23 +428,23 @@ void CRideCharacter::OnMessageScoreAdd(void* param)
 
 void CRideCharacter::OnAttach(CRideCharacter* pBeforeCharacter, bool bChangeEffectEnable)
 {
-    CPlayerCharacter::OnAttach(pBeforeCharacter, bChangeEffectEnable);
+    CPlayerCharacter::OnAttach(pBeforeCharacter, false);
 
     RwV3d vVelocity = Math::VECTOR3_ZERO;
     pBeforeCharacter->GetVelocity(&vVelocity);
+
     SetVelocity(&vVelocity);
 
     m_fControlRate = 1.0f;
     m_fTurnDirection = 0.0f;
     SetDirection(0.0f);
+    SetEffectDrawEnable(true);
 
-    CRideCharacterEffectModule* pRideEffectMod = (CRideCharacterEffectModule*)GetModule(MODULETYPE::RIDE_EFFECT);
-    if (pRideEffectMod)
-        pRideEffectMod->SetDrawEnable(true);
-
-    CCircleShadowModule* pCircleShadowMod = (CCircleShadowModule*)GetModule(MODULETYPE::CIRCLE_SHADOW);
-    if (pCircleShadowMod)
-        pCircleShadowMod->SetEnable(true);
+    if (bChangeEffectEnable)        
+    {
+        RwV3d vOffset = { 0.0f, 0.7f, 0.0f };
+        CEffectManager::PlayTrace(EFFECTID::ID_BARRIER_START, new CRideCharacterTracer(this), &vOffset, true);
+    };
 };
 
 
@@ -511,177 +454,282 @@ void CRideCharacter::OnDetach(CRideCharacter* pAfterCharacter)
 
     RwV3d vVelocity = Math::VECTOR3_ZERO;
     GetVelocity(&vVelocity);
+
     pAfterCharacter->SetVelocity(&vVelocity);
 
-    CRideCharacterEffectModule* pRideEffectMod = (CRideCharacterEffectModule*)GetModule(MODULETYPE::RIDE_EFFECT);
-    if (pRideEffectMod)
-        pRideEffectMod->SetDrawEnable(false);
-
-    CCircleShadowModule* pCircleShadowMod = (CCircleShadowModule*)GetModule(MODULETYPE::CIRCLE_SHADOW);
-    if (pCircleShadowMod)
-        pCircleShadowMod->SetEnable(false);
+    SetEffectDrawEnable(false);
 };
 
 
-bool CRideCharacter::IsEnableMove(void) const
+void CRideCharacter::OnCrashWall(void)
 {
-    bool bResult = false;
-    
-    switch (GetStatus())
+    GetPosition(&m_vRevivePos);
+};
+
+
+void CRideCharacter::OnRevive(void)
+{
+    m_fControlRate = 1.0f;
+    SetStartPosition(GetPlayerNo(), true);
+};
+
+
+void CRideCharacter::MakePadInfo(void)
+{
+    std::memset(&m_padinfo, 0x00, sizeof(m_padinfo));
+
+    float x = IPad::GetAnalog(m_padinfo.m_nPadNo, IPad::ANALOG_LSTICK_X);
+    float y = IPad::GetAnalog(m_padinfo.m_nPadNo, IPad::ANALOG_LSTICK_Y);
+
+    x = float(x > 0 ? (x / TYPEDEF::SINT16_MAX) : -(x / TYPEDEF::SINT16_MIN));
+    y = float(y > 0 ? (y / TYPEDEF::SINT16_MAX) : -(y / TYPEDEF::SINT16_MIN));
+
+    const float deadzone = 0.4f;
+
+    m_padinfo.m_fStickX = (Math::FAbs(x) >= deadzone ? x : 0.0f);
+    m_padinfo.m_fStickY = (Math::FAbs(y) >= deadzone ? y : 0.0f);
+
+#ifdef TARGET_PC
+    uint32 uDigitalMovementMask = (
+        CController::DIGITAL_LUP    |
+        CController::DIGITAL_LDOWN  |
+        CController::DIGITAL_LLEFT  |
+        CController::DIGITAL_LRIGHT
+    );
+
+    uint32 uDigital = IPad::GetDigital(m_padinfo.m_nPadNo);
+    if (FLAG_TEST_ANY(uDigital, uDigitalMovementMask))
     {
-    case PLAYERTYPES::RIDESTATUS_RUN:
-    case PLAYERTYPES::RIDESTATUS_JUMP:
-    case PLAYERTYPES::RIDESTATUS_AERIAL:
-    case PLAYERTYPES::RIDESTATUS_AERIAL_STAGGER:
-    case PLAYERTYPES::RIDESTATUS_TOUCHDOWN:
-    case PLAYERTYPES::RIDESTATUS_LEFT:
-    case PLAYERTYPES::RIDESTATUS_RIGHT:
-    case PLAYERTYPES::RIDESTATUS_SPEED_UP:
-    case PLAYERTYPES::RIDESTATUS_SPEED_DOWN:
-    case PLAYERTYPES::RIDESTATUS_SHIP_ROLL_LEFT:
-    case PLAYERTYPES::RIDESTATUS_SHIP_ROLL_RIGHT:
-    case PLAYERTYPES::RIDESTATUS_REVIVE:
-    case PLAYERTYPES::RIDESTATUS_STAGGER:
-        bResult = true;
-        break;
+        float xDigital = 0.0f;
+        float yDigital = 0.0f;
+
+        if (FLAG_TEST(uDigital, CController::DIGITAL_LLEFT))
+            xDigital = -1.0f;
+        else if (FLAG_TEST(uDigital, CController::DIGITAL_LRIGHT))
+            xDigital = 1.0f;
+
+        if (FLAG_TEST(uDigital, CController::DIGITAL_LUP))
+            yDigital = 1.0f;
+        else if (FLAG_TEST(uDigital, CController::DIGITAL_LDOWN))
+            yDigital = -1.0f;
+
+        m_padinfo.m_fStickX = xDigital;
+        m_padinfo.m_fStickY = yDigital;
     };
+#endif    
 
-    return bResult;
+    uint32 uDigitalTrigger = IPad::GetDigitalTrigger(m_padinfo.m_nPadNo);
+
+    m_padinfo.m_bShot       = IPad::CheckFunction(uDigitalTrigger, IPad::FUNCTION_SHOT);
+    m_padinfo.m_bJump       = IPad::CheckFunction(uDigitalTrigger, IPad::FUNCTION_JUMP);
+    m_padinfo.m_bLeftTurn   = IPad::CheckFunction(uDigitalTrigger, IPad::FUNCTION_DASH);
+    m_padinfo.m_bRightTurn  = IPad::CheckFunction(uDigitalTrigger, IPad::FUNCTION_GUARD);
 };
 
 
-bool CRideCharacter::IsEnableStagger(void) const
+void CRideCharacter::CalcControlRate(void)
 {
-    bool bResult = false;
-
-    switch (GetStatus())
+    if (m_fControlRate < 1.0f)
     {
-    case PLAYERTYPES::RIDESTATUS_RUN:
-    case PLAYERTYPES::RIDESTATUS_JUMP:
-    case PLAYERTYPES::RIDESTATUS_AERIAL:
-    case PLAYERTYPES::RIDESTATUS_AERIAL_STAGGER:
-    case PLAYERTYPES::RIDESTATUS_TOUCHDOWN:
-    case PLAYERTYPES::RIDESTATUS_LEFT:
-    case PLAYERTYPES::RIDESTATUS_RIGHT:
-    case PLAYERTYPES::RIDESTATUS_SPEED_UP:
-    case PLAYERTYPES::RIDESTATUS_SPEED_DOWN:
-    case PLAYERTYPES::RIDESTATUS_SHIP_ROLL_LEFT:
-    case PLAYERTYPES::RIDESTATUS_SHIP_ROLL_RIGHT:
-    case PLAYERTYPES::RIDESTATUS_STAGGER:
-        bResult = true;
-        break;
+        m_fControlRate += (CGameProperty::GetElapsedTime() / 3.0f);
+        if (m_fControlRate > 1.0f)
+            m_fControlRate = 1.0f;
     };
-
-    return bResult;
 };
 
 
-bool CRideCharacter::IsEnableShot(void) const
+void CRideCharacter::Roll(void)
 {
-    bool bResult = false;
-
-    if (!IsShip())
-        return bResult;
-
-    switch (GetStatus())
-    {
-    case PLAYERTYPES::RIDESTATUS_RUN:
-    case PLAYERTYPES::RIDESTATUS_JUMP:
-    case PLAYERTYPES::RIDESTATUS_AERIAL:
-    case PLAYERTYPES::RIDESTATUS_AERIAL_STAGGER:
-    case PLAYERTYPES::RIDESTATUS_TOUCHDOWN:
-    case PLAYERTYPES::RIDESTATUS_LEFT:
-    case PLAYERTYPES::RIDESTATUS_RIGHT:
-    case PLAYERTYPES::RIDESTATUS_SPEED_UP:
-    case PLAYERTYPES::RIDESTATUS_SPEED_DOWN:
-    case PLAYERTYPES::RIDESTATUS_SHIP_ROLL_LEFT:
-    case PLAYERTYPES::RIDESTATUS_SHIP_ROLL_RIGHT:
-    case PLAYERTYPES::RIDESTATUS_STAGGER:
-        bResult = true;
-        break;
-    };
-
-    return bResult;
+    if (m_padinfo.m_bLeftTurn)
+        ChangeStatus(PLAYERTYPES::RIDESTATUS_SHIP_ROLL_LEFT);
+    else if (m_padinfo.m_bRightTurn)
+        ChangeStatus(PLAYERTYPES::RIDESTATUS_SHIP_ROLL_RIGHT);
 };
 
 
-bool CRideCharacter::IsEnableRoll(void) const
+void CRideCharacter::MoveForShip(void)
 {
-    bool bResult = false;
+    float dt = CGameProperty::GetElapsedTime();
+    float x_max = CRideStage::GetMoveLimitXMax();
+    float x_min = CRideStage::GetMoveLimitXMin();
+    float y_max = CRideStage::GetMoveLimitYMax();
+    float y_min = CRideStage::GetMoveLimitYMin();
 
-    if (!IsShip())
-        return bResult;
+    //
+    //	x vel
+    //
+    float damping_x = m_vVelocity.x * 0.97f;
+    float dx = damping_x - (dt * (m_padinfo.m_fStickX * m_fControlRate) * 18.0f);
+    float px = m_vPosition.x + dx * dt;
 
-    switch (GetStatus())
-    {
-    case PLAYERTYPES::RIDESTATUS_RUN:  
-    case PLAYERTYPES::RIDESTATUS_LEFT:
-    case PLAYERTYPES::RIDESTATUS_RIGHT:
-    case PLAYERTYPES::RIDESTATUS_SPEED_UP:
-    case PLAYERTYPES::RIDESTATUS_SPEED_DOWN:    
-        bResult = true;
-        break;
-    };
+    dx = (px >= x_max ? 0.0f : dx);
+    dx = (px <= x_min ? 0.0f : dx);
 
-    return bResult;
+    //
+    //	y vel
+    //
+    float damping_y = m_vVelocity.y * 0.97f;
+    float dy = damping_y - (dt * (m_padinfo.m_fStickY * m_fControlRate) * 18.0f);
+    float py = m_vPosition.y + dy * dt;
+
+    dy = (py >= y_max ? 0.0f : dy);
+    dy = (py <= y_min ? 0.0f : dy);
+
+    //
+    //	apply vel
+    //
+    RwV3d vBasisVec = Math::VECTOR3_ZERO;
+    CRideStage::GetBasisVector(&vBasisVec);
+
+    m_vVelocity.x = dx;
+    m_vVelocity.y = dy;
+    m_vVelocity.z = vBasisVec.z;
 };
 
 
-void CRideCharacter::SetStartPosition(int32 nPlayerNo, bool bRevive)
+void CRideCharacter::Turn(void)
 {
-    RwV3d vPosition = Math::VECTOR3_ZERO;
+    float fTurnDirection = GetTurnDirection();
 
-    if (nPlayerNo % 2)
+    if (fTurnDirection > 0.0f)
     {
-        if (nPlayerNo % 2 == 1)
-            vPosition.x = -1.0f;
+        fTurnDirection += CGameProperty::GetElapsedTime() * (Math::PI * 3.0f);
+        if (fTurnDirection > Math::PI2)
+            fTurnDirection = 0.0f;
+
+        SetTurnDirection(fTurnDirection);
+        SetDirection(fTurnDirection);
+        return;
     }
-    else
+    else if (fTurnDirection < 0.0f)
     {
-        vPosition.x = 1.0f;
+        fTurnDirection -= CGameProperty::GetElapsedTime() * (Math::PI * 3.0f);
+        if (fTurnDirection < -Math::PI2)
+            fTurnDirection = 0.0f;
+
+        SetTurnDirection(fTurnDirection);
+        SetDirection(fTurnDirection);
+        return;
     };
+
+    if (GetStatus() == PLAYERTYPES::RIDESTATUS_JUMP)
+    {
+        if (m_padinfo.m_bLeftTurn)
+        {
+            fTurnDirection += CGameProperty::GetElapsedTime() * (Math::PI * 3.0f);
+            CGameEvent::SetPlayerRideAction(GetPlayerNo(), GAMETYPES::RIDEACT_TRICK);
+        }
+        else if (m_padinfo.m_bRightTurn)
+        {
+            fTurnDirection -= CGameProperty::GetElapsedTime() * (Math::PI * 3.0f);
+            CGameEvent::SetPlayerRideAction(GetPlayerNo(), GAMETYPES::RIDEACT_TRICK);
+        };
+
+        SetTurnDirection(fTurnDirection);
+        SetDirection(fTurnDirection);
+    };
+};
+
+
+void CRideCharacter::Jump(void)
+{
+    if (m_padinfo.m_bJump && !IsPlayerFlagSet(PLAYERTYPES::FLAG_AERIAL_STATUS))
+        ChangeStatus(PLAYERTYPES::RIDESTATUS_JUMP);
+};
+
+
+void CRideCharacter::Move(void)
+{
+    float dt = CGameProperty::GetElapsedTime();
+    float x_max = CRideStage::GetMoveLimitXMax();
+    float x_min = CRideStage::GetMoveLimitXMin();
+	float z_max = CRideStage::GetMoveLimitZMax();
+	float z_min = CRideStage::GetMoveLimitZMin();
+
+	//
+	//	x vel
+	//
+    float damping = m_vVelocity.x * 0.97f;
+    float dx = damping - (dt * (m_padinfo.m_fStickX * m_fControlRate) * 18.0f);
+    float px = m_vPosition.x + dx * dt;
+
+    dx = (px >= x_max ? 0.0f : dx);
+    dx = (px <= x_min ? 0.0f : dx);
+
+	//
+	//	y vel
+	//
+    float dy = (m_padinfo.m_fStickY * m_fControlRate) * 1.9444444f;
+
+	float py = m_vPosition.z + dy * dt;
+
+	dy = (py >= z_max ? 0.0f : dy);
+	dy = (py <= z_min ? 0.0f : dy);
+
+	//
+	//	apply vel
+	//
+	RwV3d vBasisVec = Math::VECTOR3_ZERO;
+	CRideStage::GetBasisVector(&vBasisVec);
+
+    m_vVelocity.x = dx;
+    m_vVelocity.z = (vBasisVec.z + dy);
+};
+
+
+void CRideCharacter::MoveByScroll(void)
+{
+    RwV3d vBasisVec = Math::VECTOR3_ZERO;
+    CRideStage::GetBasisVector(&vBasisVec);
+
+    RwV3d vVelocity = Math::VECTOR3_ZERO;
+    vVelocity.z = vBasisVec.z;
+    SetVelocity(&vVelocity);
+};
+
+
+void CRideCharacter::MoveLimit(void)
+{
+    if (!IsEnableMove())
+        return;
+
+    float fMaxZ = CRideStage::GetMoveLimitZMax();
+    float fMinZ = CRideStage::GetMoveLimitZMin();
+
+    RwV3d vPosition = Math::VECTOR3_ZERO;
+    GetPosition(&vPosition);
 
     if (IsShip())
-        vPosition.y += float(nPlayerNo / 2);
-    else
-        vPosition.z += float((nPlayerNo / 2) * 4);
-
-    vPosition.z += CRideStage::GetMoveLimitZMin();
-
-    if (bRevive)
     {
-        if (IsShip())
-            vPosition.y += 3.5f;
-        else
-            vPosition.y += 4.0f;
+        vPosition.z = fMinZ;
+        SetPosition(&vPosition);
     }
     else
     {
-        vPosition.y += 1.0f;
+        if (vPosition.z < fMinZ)
+            vPosition.z = fMinZ;
+
+        if (vPosition.z > fMaxZ)
+            vPosition.z = fMaxZ;
+
+        SetPosition(&vPosition);
     };
-
-    SetPosition(&vPosition);
 };
 
 
-void CRideCharacter::SetEffectDrawEnable(bool bEnable)
+void CRideCharacter::Shot(void)
 {
-    CRideCharacterEffectModule* pRideEffectMod = (CRideCharacterEffectModule*)GetModule(MODULETYPE::RIDE_EFFECT);
-    if (pRideEffectMod)
-        pRideEffectMod->SetDrawEnable(bEnable);
+    if (m_padinfo.m_bShot && IsEnableShot() && CheckDispShot())
+    {
+        RwV3d vPosition = Math::VECTOR3_ZERO;
+        GetBodyPosition(&vPosition);
 
-    CCircleShadowModule* pCircleShadowMod = (CCircleShadowModule*)GetModule(MODULETYPE::CIRCLE_SHADOW);
-    if (pCircleShadowMod)
-        pCircleShadowMod->SetEnable(bEnable);
-};
+        CShotManager::Shot(SHOTID::ID_RIDE, &vPosition, 0.0f, this, 0.0f, 3.0f);
 
+        CGameSound::PlayObjectSE(this, SDCODE_SE(4145));
 
-void CRideCharacter::SetGravityEnable(bool bEnable)
-{
-    if (!IsShip())
-        SetCharacterFlag(CHARACTERTYPES::FLAG_CANCEL_GRAVITY, !bEnable);
-    else
-        SetCharacterFlag(CHARACTERTYPES::FLAG_CANCEL_GRAVITY, true);
+        ++m_nNumDispShot;
+    };
 };
 
 
@@ -695,7 +743,7 @@ void CRideCharacter::HitWall(HIT_SPHERE_KIND hitspherekind)
             {
                 RwV3d vPosition = Math::VECTOR3_ZERO;
                 GetPosition(&vPosition);
-                
+
                 if (GetStatus() != PLAYERTYPES::RIDESTATUS_REVIVE)
                     CEffectManager::Play(EFFECTID::ID_ALL_PITAN, &vPosition);
 
@@ -712,7 +760,7 @@ void CRideCharacter::HitWall(HIT_SPHERE_KIND hitspherekind)
                 m_fControlRate = 0.0f;
             };
 
-            ReplaceVelocityX(-8.33f);
+            ReplaceVelocityX(-8.333333f);
         }
         break;
 
@@ -724,7 +772,7 @@ void CRideCharacter::HitWall(HIT_SPHERE_KIND hitspherekind)
                 m_fControlRate = 0.0f;
             };
 
-            ReplaceVelocityX(8.33f);
+            ReplaceVelocityX(8.3333333f);
         }
         break;
 
@@ -737,8 +785,9 @@ void CRideCharacter::HitWall(HIT_SPHERE_KIND hitspherekind)
 
 void CRideCharacter::GetHitSphere(RwSphere* pSphere, HIT_SPHERE_KIND hitspherekind)
 {
-    ASSERT(hitspherekind >= 0 && hitspherekind < HIT_SPHERE_KIND_NUM);
     ASSERT(pSphere);
+    ASSERT(hitspherekind >= 0);
+    ASSERT(hitspherekind < HIT_SPHERE_KIND_NUM);
 
     static const RwSphere s_aHitSphere[HIT_SPHERE_KIND_NUM] =
     {
@@ -757,7 +806,7 @@ void CRideCharacter::GetHitSphere(RwSphere* pSphere, HIT_SPHERE_KIND hitsphereki
 CRideCharacter::HIT_SPHERE_KIND CRideCharacter::CheckHit(RwV3d& rvVelocityPerFrame)
 {
     HIT_SPHERE_KIND Result = HIT_SPHERE_KIND_NONE;
-    
+
     if (!IsEnableMove())
         return Result;
 
@@ -791,209 +840,146 @@ CRideCharacter::HIT_SPHERE_KIND CRideCharacter::CheckHit(RwV3d& rvVelocityPerFra
 void CRideCharacter::ReplaceVelocityX(float fVelocityX)
 {
     RwV3d vVelocity = Math::VECTOR3_ZERO;
-    GetVelocity(&vVelocity);
+    GetVelocity(&vVelocity);    
     vVelocity.x = fVelocityX;
     SetVelocity(&vVelocity);
 };
 
 
-void CRideCharacter::CalcControlRate(void)
+void CRideCharacter::SetStartPosition(int32 nPlayerNo, bool bRevive)
 {
-    if (m_fControlRate < 1.0f)
-    {
-        m_fControlRate += (CGameProperty::GetElapsedTime() * 0.33f);
-        if (m_fControlRate > 1.0f)
-            m_fControlRate = 1.0f;
-    };
-};
-
-
-void CRideCharacter::MoveLimit(void)
-{
-    if (!IsEnableMove())
-        return;
-
-    float fZMax = CRideStage::GetMoveLimitZMax();
-    float fZMin = CRideStage::GetMoveLimitZMin();
-    float fXMax = CRideStage::GetMoveLimitXMax();
-    float fXMin = CRideStage::GetMoveLimitXMin();
-    float fYMax = CRideStage::GetMoveLimitYMax();
-    float fYMin = CRideStage::GetMoveLimitYMin();
-
     RwV3d vPosition = Math::VECTOR3_ZERO;
-    GetPosition(&vPosition);
 
-    RwV3d vVelocity = Math::VECTOR3_ZERO;
-    GetVelocity(&vVelocity);
-
-    if (vPosition.x < fXMin || vPosition.x > fXMax)
-        vVelocity.x = 0.0f;
-    
-    vPosition.x = Math::Clamp(vPosition.x, fXMin, fXMax);
+    vPosition.x = ((nPlayerNo % 2) == 1) ? -1.0f : 1.0f;
 
     if (IsShip())
-    {
-        if (vPosition.y < fYMin || vPosition.y > fYMax)
-            vVelocity.y = 0.0f;
-
-        vPosition.y = Math::Clamp(vPosition.y, fYMin, fYMax);
-
-        vPosition.z = fZMin;
-        SetPosition(&vPosition);
-    }
+        vPosition.y += float(nPlayerNo / 2);
     else
+        vPosition.z += float((nPlayerNo / 2) * 4);
+
+    vPosition.z += CRideStage::GetMoveLimitZMin();
+
+    if (bRevive)
+        vPosition.y += (IsShip() ? 3.5f : 4.0f);
+    else
+        vPosition.y += 1.0f;
+
+    SetPosition(&vPosition);
+};
+
+
+void CRideCharacter::SetEffectDrawEnable(bool bEnable)
+{
+    CRideCharacterEffectModule* pRideEffectMod = static_cast<CRideCharacterEffectModule*>(GetModule(MODULETYPE::RIDE_EFFECT));
+    if (pRideEffectMod)
+        pRideEffectMod->SetDrawEnable(bEnable);
+
+    CCircleShadowModule* pCircleShadowMod = static_cast<CCircleShadowModule*>(GetModule(MODULETYPE::CIRCLE_SHADOW));
+    if (pCircleShadowMod)
+        pCircleShadowMod->SetEnable(bEnable);
+};
+
+
+void CRideCharacter::SetGravityEnable(bool bEnable)
+{
+    if (IsShip())
+        bEnable = false;
+
+    SetCharacterFlag(CHARACTERTYPES::FLAG_CANCEL_GRAVITY, !bEnable);
+};
+
+
+bool CRideCharacter::IsEnableMove(void) const
+{
+    switch (GetStatus())
     {
-        if (vPosition.z < fZMin || vPosition.z > fZMax)
-            vVelocity.z = 0.0f;
+    case PLAYERTYPES::RIDESTATUS_RUN:
+    case PLAYERTYPES::RIDESTATUS_JUMP:
+    case PLAYERTYPES::RIDESTATUS_AERIAL:
+    case PLAYERTYPES::RIDESTATUS_AERIAL_STAGGER:
+    case PLAYERTYPES::RIDESTATUS_TOUCHDOWN:
+    case PLAYERTYPES::RIDESTATUS_LEFT:
+    case PLAYERTYPES::RIDESTATUS_RIGHT:
+    case PLAYERTYPES::RIDESTATUS_SPEED_UP:
+    case PLAYERTYPES::RIDESTATUS_SPEED_DOWN:
+    case PLAYERTYPES::RIDESTATUS_SHIP_ROLL_LEFT:
+    case PLAYERTYPES::RIDESTATUS_SHIP_ROLL_RIGHT:
+    case PLAYERTYPES::RIDESTATUS_REVIVE:
+    case PLAYERTYPES::RIDESTATUS_STAGGER:
+        return true;
 
-        vPosition.z = Math::Clamp(vPosition.z, fZMin, fZMax);
-        SetPosition(&vPosition);
-    };
-
-    SetVelocity(&vVelocity);
-};
-
-
-void CRideCharacter::SetTurnDirection(float fDir)
-{
-    m_fTurnDirection = fDir;
-};
-
-
-float CRideCharacter::GetTurnDirection(void) const
-{
-    return m_fTurnDirection;
-};
-
-
-float CRideCharacter::GetPlaytime(void) const
-{
-    return m_fPlaytime;
-};
-
-
-float CRideCharacter::GetControlRate(void) const
-{
-    return m_fControlRate;
-};
-
-
-bool CRideCharacter::IsShip(void) const
-{
-    return CRideStage::m_bSpace;
-};
-
-
-void CRideCharacter::ResetTurnDirection(void)
-{
-    SetTurnDirection(0.0f);
-};
-
-
-void CRideCharacter::OnCrashWall(void)
-{
-    GetPosition(&m_vRevivePos);
-};
-
-
-void CRideCharacter::OnRevive(void)
-{
-    m_fControlRate = 1.0f;
-    SetStartPosition(GetPlayerNo(), true);
-};
-
-
-void CRideCharacter::InitBandana(void)
-{
-	if (IsShip())
-		return;
-
-    RwV3d vBandanaOffset = Math::VECTOR3_ZERO;
-    CBandanaModule::BANDANACOLOR BandanaColor = CBandanaModule::BANDANACOLOR_RED;
-    bool bBandanaFlag = false;
-
-    switch (GetID())
-    {
-    case PLAYERID::ID_LEO:
-        {
-            bBandanaFlag = true;
-            vBandanaOffset = { 0.0f, 0.15f, 0.05f };
-            BandanaColor = CBandanaModule::BANDANACOLOR_BLUE;
-        }
-        break;
-
-    case PLAYERID::ID_RAP:
-        {
-            bBandanaFlag = true;
-            vBandanaOffset = { 0.0f, 0.15f, 0.05f };
-            BandanaColor = CBandanaModule::BANDANACOLOR_RED;
-        }
-        break;
-
-    case PLAYERID::ID_MIC:
-        {
-            bBandanaFlag = true;
-            vBandanaOffset = { 0.0f, 0.15f, 0.05f };
-            BandanaColor = CBandanaModule::BANDANACOLOR_ORANGE;
-        }
-        break;
-
-    case PLAYERID::ID_DON:
-        {
-            bBandanaFlag = true;
-            vBandanaOffset = { 0.0f, 0.15f, 0.05f };
-            BandanaColor = CBandanaModule::BANDANACOLOR_PURPLE;
-        }
-        break;
-
-    case PLAYERID::ID_SLA:
-        {
-            bBandanaFlag = true;
-            vBandanaOffset = { 0.0f, 0.15f, 0.05f };
-            BandanaColor = CBandanaModule::BANDANACOLOR_SLASHUURGREY;
-        }
-        break;
-    };
-
-    if (bBandanaFlag)
-    {
-        m_pModuleMan->Include(new CBandanaModule(
-            this,
-            m_pModel,
-            CHARACTERTYPES::BONEID_HEAD,
-            &vBandanaOffset,
-            BandanaColor
-        ));
+    default:
+        return false;
     };
 };
 
 
-void CRideCharacter::UpdateBandana(void)
+bool CRideCharacter::IsEnableStagger(void) const
 {
-    CBandanaModule* pBandanaMod = (CBandanaModule*)GetModule(MODULETYPE::BANDANA);
-    if (pBandanaMod)
+    switch (GetStatus())
     {
-        float fDir = GetDirection();
-        RwV3d vWind = Math::VECTOR3_ZERO;
-
-        vWind.x = Math::Sin(m_fPlaytime * Math::PI2) * 12.0f;
-        vWind.y = 1.5f + (Math::Sin(m_fPlaytime * 30.0f * Math::PI) * 30.0f);
-        vWind.z = Math::Cos(fDir) * -1.0f * 3.0f;
-
-        pBandanaMod->SetWind(&vWind);
+    case PLAYERTYPES::RIDESTATUS_RUN:
+    case PLAYERTYPES::RIDESTATUS_JUMP:
+    case PLAYERTYPES::RIDESTATUS_AERIAL:
+    case PLAYERTYPES::RIDESTATUS_AERIAL_STAGGER:
+    case PLAYERTYPES::RIDESTATUS_TOUCHDOWN:
+    case PLAYERTYPES::RIDESTATUS_LEFT:
+    case PLAYERTYPES::RIDESTATUS_RIGHT:
+    case PLAYERTYPES::RIDESTATUS_SPEED_UP:
+    case PLAYERTYPES::RIDESTATUS_SPEED_DOWN:
+    case PLAYERTYPES::RIDESTATUS_SHIP_ROLL_LEFT:
+    case PLAYERTYPES::RIDESTATUS_SHIP_ROLL_RIGHT:
+    case PLAYERTYPES::RIDESTATUS_STAGGER:
+        return true;
+        
+    default:
+        return false;
     };
 };
 
 
-bool CRideCharacter::CheckDispShot(void) const
+bool CRideCharacter::IsEnableShot(void) const
 {
-    return (m_nNumDispShot < 4);
+    if (!IsShip())
+        return false;
+
+    switch (GetStatus())
+    {
+    case PLAYERTYPES::RIDESTATUS_RUN:
+    case PLAYERTYPES::RIDESTATUS_JUMP:
+    case PLAYERTYPES::RIDESTATUS_AERIAL:
+    case PLAYERTYPES::RIDESTATUS_AERIAL_STAGGER:
+    case PLAYERTYPES::RIDESTATUS_TOUCHDOWN:
+    case PLAYERTYPES::RIDESTATUS_LEFT:
+    case PLAYERTYPES::RIDESTATUS_RIGHT:
+    case PLAYERTYPES::RIDESTATUS_SPEED_UP:
+    case PLAYERTYPES::RIDESTATUS_SPEED_DOWN:
+    case PLAYERTYPES::RIDESTATUS_SHIP_ROLL_LEFT:
+    case PLAYERTYPES::RIDESTATUS_SHIP_ROLL_RIGHT:
+    case PLAYERTYPES::RIDESTATUS_STAGGER:
+        return true;
+
+    default:
+        return false;
+    };
 };
 
 
-int32 CRideCharacter::GetScore(RIDETYPES::SCOREKIND scorekind) const
+bool CRideCharacter::IsEnableRoll(void) const
 {
-    ASSERT(scorekind >= 0 && scorekind < RIDETYPES::SCOREKINDNUM);
-    ASSERT(scorekind >= 0 && scorekind < COUNT_OF(m_aScore));
-    return m_aScore[scorekind];
+    if (!IsShip())
+        return false;
+
+    switch (GetStatus())
+    {
+    case PLAYERTYPES::RIDESTATUS_RUN:
+    case PLAYERTYPES::RIDESTATUS_LEFT:
+    case PLAYERTYPES::RIDESTATUS_RIGHT:
+    case PLAYERTYPES::RIDESTATUS_SPEED_UP:
+    case PLAYERTYPES::RIDESTATUS_SPEED_DOWN:
+        return true;
+
+    default:
+        return false;
+    };
 };

@@ -14,28 +14,28 @@ CGimmickModel::CGimmickModel(int32 nNumGimmickModel)
     ASSERT(m_apModel);
 
     for (int32 i = 0; i < m_nNumGimmickModel; ++i)
-    {
         m_apModel[i] = nullptr;
-    };
 };
 
 
 CGimmickModel::~CGimmickModel(void)
 {
-    for (int32 i = 0; i < m_nNumGimmickModel; ++i)
+    if (m_apModel)
     {
-        if (m_apModel[i])
+        for (int32 i = 0; i < m_nNumGimmickModel; ++i)
         {
-            CModelManager::DestroyModel(m_apModel[i]);
-            m_apModel[i] = nullptr;
+            if (m_apModel[i])
+            {
+                CModelManager::DestroyModel(m_apModel[i]);
+                m_apModel[i] = nullptr;
+            };
         };
-    };
-    
-    m_nNumGimmickModel = 0;
 
-    ASSERT(m_apModel);
-    delete[] m_apModel;
-    m_apModel = nullptr;
+        m_nNumGimmickModel = 0;
+
+        delete[] m_apModel;
+        m_apModel = nullptr;
+    };
 };
 
 
@@ -47,13 +47,9 @@ void CGimmickModel::Draw(void) const
         if(pModel)
         {
             if (i)
-            {
                 pModel->UpdateFrame();
-            }
             else
-            {
                 pModel->Draw();
-            };
         };
     };
 };
@@ -65,9 +61,7 @@ void CGimmickModel::UpdateFrame(void)
     {
         CModel* pModel = m_apModel[i];
         if (pModel)
-        {
             pModel->UpdateFrame();
-        };
     };    
 };
 
@@ -104,14 +98,15 @@ void CGimmickModel::GetPosition(RwV3d* pPos) const
 {
     ASSERT(pPos);
     ASSERT(m_apModel[0]);
+    
     m_apModel[0]->GetPosition(pPos);
 };
 
 
 CNormalGimmickModel::CNormalGimmickModel(void)
-: CGimmickModel(MODELNUM)
-, m_CollisionModelKind(MODELKIND_ATARI_NORMAL)
-, m_ViewModelKind(MODELKIND_VISUAL_NORMAL)
+: CGimmickModel(4)
+, m_idxModelDraw(0)
+, m_idxModelAtari(1)
 , m_bDrawEnable(true)
 {
     ;
@@ -134,14 +129,10 @@ void CNormalGimmickModel::Draw(void) const
         CModel* pModel = m_apModel[i];
         if (pModel)
         {
-            if (i == m_ViewModelKind)
-            {
+            if (i == m_idxModelDraw)
                 pModel->Draw();
-            }
             else
-            {
-                pModel->UpdateFrame();
-            };
+                pModel->UpdateFrame();            
         };
     };
 };
@@ -153,94 +144,37 @@ void CNormalGimmickModel::UpdateFrame(void)
 };
 
 
-void CNormalGimmickModel::SetModel(int32 modelkind, CModel* pModel)
+void CNormalGimmickModel::SetModel(int32 idx, CModel* pModel)
 {
-    ASSERT(modelkind >= 0 && modelkind < m_nNumGimmickModel);
-    ASSERT(modelkind >= 0 && modelkind < MODELKINDNUM);
-    ASSERT(!m_apModel[modelkind]);
+    ASSERT(idx >= 0 && idx < m_nNumGimmickModel);
+    ASSERT(!m_apModel[idx]);
     ASSERT(pModel);
     
-    m_apModel[modelkind] = pModel;
+    m_apModel[idx] = pModel;
 };
 
 
-CModel* CNormalGimmickModel::GetModel(int32 modelkind) const
+void CNormalGimmickModel::SetColor(int32 idx, const RwRGBA& rColor)
 {
-    return m_apModel[modelkind];
-};
+    ASSERT(idx >= 0 && idx < m_nNumGimmickModel);
+    ASSERT(m_apModel[idx]);
 
-
-CModel* CNormalGimmickModel::GetVisualModel(void) const
-{
-    return m_apModel[m_ViewModelKind];
-};
-
-
-CModel* CNormalGimmickModel::GetCollisionModel(void) const
-{
-    if (m_apModel[m_CollisionModelKind])
-    {
-        return m_apModel[m_CollisionModelKind];
-    }
-    else
-    {
-        return m_apModel[m_ViewModelKind];
-    };
+    m_apModel[idx]->SetColor(rColor);
 };
 
 
 RpClump* CNormalGimmickModel::GetCollisionModelClump(void) const
 {
-    CModel* pModel = GetCollisionModel();
-    if (pModel)
-    {
-        return pModel->GetClump();
-    }
-    else
-    {
-        return nullptr;
-    };
+    return (GetCollisionModel() ? GetCollisionModel()->GetClump() : nullptr);
 };
 
 
-void CNormalGimmickModel::SetVisualNormal(void)
+RwMatrix* CNormalGimmickModel::GetMatrix(int32 idx) const
 {
-    m_ViewModelKind = MODELKIND_VISUAL_NORMAL;
-};
-
-
-void CNormalGimmickModel::SetVisualBreak(void)
-{
-    m_ViewModelKind = MODELKIND_VISUAL_BREAK;
-};
-
-
-void CNormalGimmickModel::SetCollisionNormal(void)
-{
-	m_CollisionModelKind = MODELKIND_ATARI_NORMAL;
-};
-
-
-void CNormalGimmickModel::SetCollisionBreak(void)
-{
-	m_CollisionModelKind = MODELKIND_ATARI_BREAK;
-};
-
-
-void CNormalGimmickModel::SetDrawEnable(bool bEnable)
-{
-    m_bDrawEnable = bEnable;
-};
-
-
-bool CNormalGimmickModel::IsDrawEnable(void) const
-{
-    return m_bDrawEnable;
-};
-
-
-void CNormalGimmickModel::SetColor(int32 modelkind, const RwRGBA& rColor)
-{
-    ASSERT(m_apModel[modelkind]);
-    m_apModel[modelkind]->SetColor(rColor);
+    CModel* pModel = GetModel(idx);
+    RpClump* pClump = pModel->GetClump();
+    RwFrame* pFrame = RpClumpGetFrameMacro(pClump);
+    RwMatrix* pMatrix = RwFrameGetMatrixMacro(pFrame);
+    
+    return pMatrix;
 };

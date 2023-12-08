@@ -11,6 +11,7 @@ public:
         MODE_NORMAL = 0,        
     };
 
+private:    
     enum STATE
     {
         STATE_NONE = 0,
@@ -48,7 +49,6 @@ private:
     void messageProc(void);
 
 private:
-    static MESSAGE m_message;
     MODE m_mode;
     STATE m_state;
     float m_fPhase;

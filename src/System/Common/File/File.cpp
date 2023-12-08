@@ -3,9 +3,8 @@
 #include "FileManager.hpp"
 
 
-CFile::CFile(int32 nLabel)
-: m_nLabel(nLabel)
-, m_status(STATUS_NOREAD)
+CFile::CFile(void)
+: m_stat(STAT_NOREAD)
 , m_pAccessData(nullptr)
 {
     ;
@@ -18,18 +17,11 @@ CFile::~CFile(void)
 };
 
 
-bool CFile::Open(int32 id)
+bool CFile::Open(int32 nType, const void* pTypeData)
 {
-    m_pAccessData = CFileManager::Instance().AllocRequest(id, m_nLabel);
+    m_pAccessData = CFileManager::Instance().AllocRequest(nType, pTypeData);
     ASSERT(m_pAccessData);
-    return (m_pAccessData != nullptr);
-};
-
-
-bool CFile::Open(const char* pszName)
-{
-    m_pAccessData = CFileManager::Instance().AllocRequest(pszName, m_nLabel);
-    ASSERT(m_pAccessData);
+    
     return (m_pAccessData != nullptr);
 };
 
@@ -41,7 +33,7 @@ void CFile::Close(void)
         m_pAccessData->Clear();
         m_pAccessData = nullptr;
 
-        m_status = STATUS_NOREAD;
+        m_stat = STAT_NOREAD;
     };
 };
 
@@ -64,30 +56,30 @@ uint32 CFile::Size(void) const
 };
 
 
-CFile::STATUS CFile::Status(void)
+CFile::STAT CFile::Stat(void)
 {
     ASSERT(m_pAccessData);
     
-    switch (m_pAccessData->Status())
+    switch (m_pAccessData->Stat())
     {
-    case CFileAccess::STATUS_READING:
-    case CFileAccess::STATUS_PENDING:
-        m_status = STATUS_READING;
+    case CFileAccess::STAT_READING:
+    case CFileAccess::STAT_PENDING:
+        m_stat = STAT_READING;
         break;
         
-    case CFileAccess::STATUS_READEND:
-        m_status = STATUS_READEND;
+    case CFileAccess::STAT_READEND:
+        m_stat = STAT_READEND;
         break;
         
-    case CFileAccess::STATUS_ERROR:
-        m_status = STATUS_ERROR;
+    case CFileAccess::STAT_ERROR:
+        m_stat = STAT_ERROR;
         break;
 
     default:
         ASSERT(false);
-        m_status = STATUS_ERROR;
+        m_stat = STAT_ERROR;
         break;
     };
 
-    return m_status;
+    return m_stat;
 };

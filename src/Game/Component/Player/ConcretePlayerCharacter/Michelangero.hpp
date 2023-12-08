@@ -8,6 +8,13 @@
 
 namespace Michelangero
 {
+    const RwV3d BANDANA_OFFSET = { 0.0f, 0.15f, 0.05f };
+
+    namespace MOTIONNAMES
+    {
+        static const char* ATTACK_JUMP = "JAttack";
+    };
+
     class CAttackJump : public CStatus
     {
     public:
@@ -28,7 +35,6 @@ namespace Michelangero
         virtual void OnDischargeWave(void) override;
     };
 
-
     class CAttackB : public PlayerStatus::CAttackB
     {
     public:
@@ -42,5 +48,4 @@ class CMichelangero : public CPlayerCharacter
 public:
     CMichelangero(GAMETYPES::COSTUME costume);
     virtual ~CMichelangero(void);
-    virtual void Run(void) override;
 };

@@ -3,26 +3,19 @@
 #include "File.hpp"
 
 
-class CAdxFile : public CFile
+class CAdxFileID : public CFile
 {
 public:
-    CAdxFile(int32 nLabel);
-    virtual ~CAdxFile(void);
+    inline CAdxFileID(void) {};
+    virtual ~CAdxFileID(void) {};
+    virtual bool Open(int32 fid);
 };
 
 
-class CAdxFileID : public CAdxFile
+class CAdxFileISO : public CFile
 {
 public:
-    CAdxFileID(void);
-    virtual ~CAdxFileID(void);
-};
-
-
-class CAdxFileISO : public CAdxFile
-{
-public:
-    CAdxFileISO(void);
-    virtual ~CAdxFileISO(void);
-    virtual bool Open(const char* pszName) override;
+    inline CAdxFileISO(void) {};
+    virtual ~CAdxFileISO(void) {};
+    virtual bool Open(const char* fname);
 };

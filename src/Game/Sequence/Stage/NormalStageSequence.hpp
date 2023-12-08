@@ -10,6 +10,6 @@ public:
 
     CNormalStageSequence(void);
     virtual ~CNormalStageSequence(void);
-    virtual bool OnAttach(const void* param) override;
+    virtual bool OnAttach(const void* pParam) override;
     virtual void OnStateDetached(STATE state) override;
 };

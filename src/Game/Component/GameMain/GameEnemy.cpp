@@ -6,11 +6,12 @@
 #include "Game/System/GameObject/GameObjectManager.hpp"
 
 
-/*static*/ CGameEnemy& CGameEnemy::Dummy(void)
+/*static*/ CGameEnemy CGameEnemy::m_dummy;
+
+
+/*static*/ CGameEnemy* CGameEnemy::Dummy(void)
 {
-    static CGameEnemy s_DummyGameEnemy;
-    
-    return s_DummyGameEnemy;
+    return &m_dummy;
 };
 
 

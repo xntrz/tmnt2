@@ -1,8 +1,10 @@
 #pragma once
 
+#include "System/Common/Screen.hpp"
+
 
 class CMapCamera;
-class IGamePlayerContainer;
+class CGamePlayerContainer;
 class CGameEnemyContainer;
 class CGameGimmickContainer;
 
@@ -16,12 +18,8 @@ public:
     CGamePropertyObject(void);
     virtual ~CGamePropertyObject(void);
     void Period(void);
-    void UpdateTime(void);
-    void UpdateActiveObject(void);
-    void WatchPlayerFallen(void);
-    IGamePlayerContainer& PlayerContainer(void) const;
-    CGameEnemyContainer& EnemyContainer(void) const;
-    CGameGimmickContainer& GimmickContainer(void) const;
+    void SetRwCamera(RwCamera* pRwCamera);
+    void SetMapCamera(CMapCamera* pMapCamera);
     float GetTotalElapsedTime(void) const;
     float GetElapsedTime(void) const;
     float GetCleartime(void) const;
@@ -30,10 +28,16 @@ public:
     float GetGravity(void) const;
     RwCamera* GetRwCamera(void) const;
     CMapCamera* GetMapCamera(void) const;
-    void SetRwCamera(RwCamera* pRwCamera);
-    void SetMapCamera(CMapCamera* pMapCamera);
-    void GetCameraViewMatrix(RwMatrix* pMatrix);
-    void GetCameraFrameMatrix(RwMatrix* pMatrix);
+    void GetCameraViewMatrix(RwMatrix* pMatrix) const;
+    void GetCameraFrameMatrix(RwMatrix* pMatrix) const;
+    CGamePlayerContainer& PlayerContainer(void) const;
+    CGameEnemyContainer& EnemyContainer(void) const;
+    CGameGimmickContainer& GimmickContainer(void) const;
+
+protected:
+    void updateTime(void);
+    void updateActiveObject(void);
+    void watchPlayerFallen(void);
     
 protected:
     float m_fTotalElapsedTime;
@@ -43,7 +47,10 @@ protected:
     float m_fGravity;
     RwCamera* m_pRwCamera;
     CMapCamera* m_pMapCamera;
-    IGamePlayerContainer* m_pPlayerContainer;
+    CGamePlayerContainer* m_pPlayerContainer;
     CGameEnemyContainer* m_pEnemyContainer;
     CGameGimmickContainer* m_pGimmickContainer;
 };
+
+
+#include "GamePropertyObj.inl"

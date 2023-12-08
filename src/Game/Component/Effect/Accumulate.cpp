@@ -141,8 +141,7 @@ void CAccumulate::SetVertexAll(void)
     Math::Matrix_Invert(&matBillboard, RwCameraGetViewMatrixMacro(pCamera));
 
     RwV3d vMoveFront = Math::VECTOR3_ZERO;    
-    RwV3d vCameraPosition = Math::VECTOR3_ZERO;
-    vCameraPosition = RwFrameGetMatrixMacro(RwCameraGetFrameMacro(pCamera))->pos;
+    RwV3d vCameraPosition = RwFrameGetMatrixMacro(RwCameraGetFrameMacro(pCamera))->pos;
     Math::Vec3_Sub(&vMoveFront, &aPosition[1], &vCameraPosition);
     Math::Vec3_Normalize(&vMoveFront, &vMoveFront);
     Math::Vec3_Scale(&vMoveFront, &vMoveFront, -0.05f);

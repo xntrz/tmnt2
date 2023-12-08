@@ -22,7 +22,7 @@ namespace MAPTYPES
         GIMMICKTYPE_BELTCONVEYOR,
     };
 
-    enum ATTRIBUTE
+    enum ATTRIBUTE : uint32
     {
         ATTRIBUTE_UNKNOWN   = 0x0,
         ATTRIBUTE_WATER     = 0x1,

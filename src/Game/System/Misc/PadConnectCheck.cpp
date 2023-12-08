@@ -3,34 +3,22 @@
 #include "Game/Component/GameData/GameData.hpp"
 #include "Game/Component/Menu/MessageWindow.hpp"
 #include "Game/System/Sound/GameSound.hpp"
+#include "Game/ProcessList.hpp"
 #include "System/Common/RenderState.hpp"
 #include "System/Common/Controller.hpp"
 #include "System/Common/Process/Sequence.hpp"
-#include "System/Common/Process/ProcessList.hpp"
 #include "System/Common/Process/ProcessMail.hpp"
 #include "System/Common/Screen.hpp"
+#include "System/Common/Sprite.hpp"
 #include "System/Common/Camera.hpp"
 
 
 class CPadConnectCheckMsgWindow : public CMessageWindow
 {
 public:
-    CPadConnectCheckMsgWindow(void);
-    virtual ~CPadConnectCheckMsgWindow(void);
+    inline CPadConnectCheckMsgWindow(void) : CMessageWindow(CMessageWindow::COLOR_ERROR) {};
+    virtual ~CPadConnectCheckMsgWindow(void) {};
     virtual void DrawInWindow(const Rt2dBBox& bbox) const override;
-};
-
-
-CPadConnectCheckMsgWindow::CPadConnectCheckMsgWindow(void)
-: CMessageWindow(CMessageWindow::COLOR_ERROR)
-{
-    ;
-};
-
-
-CPadConnectCheckMsgWindow::~CPadConnectCheckMsgWindow(void)
-{
-    ;
 };
 
 
@@ -68,9 +56,6 @@ void CPadConnectCheckMsgWindow::DrawInWindow(const Rt2dBBox& bbox) const
 };
 
 
-/*static*/ CPadConnectCheckProcess::MESSAGE CPadConnectCheckProcess::m_message;
-
-
 /*static*/ CProcess* CPadConnectCheckProcess::Instance(void)
 {
     return new CPadConnectCheckProcess;
@@ -81,7 +66,7 @@ void CPadConnectCheckMsgWindow::DrawInWindow(const Rt2dBBox& bbox) const
 {
     ASSERT(pSender);
     
-    pSender->Mail().Send(PROCESSTYPES::LABEL_PADCONNECTCHECK, PROCESSTYPES::MAIL::TYPE_ATTACH);
+    pSender->Mail().Send(PROCLABEL_PADCONNECTCHECK, PROCESSTYPES::MAIL::TYPE_ATTACH);
 };
 
 
@@ -89,17 +74,17 @@ void CPadConnectCheckMsgWindow::DrawInWindow(const Rt2dBBox& bbox) const
 {
     ASSERT(pSender);
     
-    pSender->Mail().Send(PROCESSTYPES::LABEL_PADCONNECTCHECK, PROCESSTYPES::MAIL::TYPE_DETACH);
+    pSender->Mail().Send(PROCLABEL_PADCONNECTCHECK, PROCESSTYPES::MAIL::TYPE_DETACH);
 };
 
 
 /*static*/ void CPadConnectCheckProcess::Reset(CProcess* pSender)
 {
-    ASSERT(pSender);
+    static MESSAGE s_message;
+    
+    s_message.m_type = MESSAGE::TYPE_RESET;
 
-    m_message.m_type = MESSAGE::TYPE_RESET;
-
-    pSender->Mail().Send(PROCESSTYPES::LABEL_PADCONNECTCHECK, PROCESSTYPES::MAIL::TYPE_MSG, &m_message);
+    pSender->Mail().Send(PROCLABEL_PADCONNECTCHECK, PROCESSTYPES::MAIL::TYPE_MSG, &s_message);
 };
 
 
@@ -126,7 +111,7 @@ bool CPadConnectCheckProcess::Attach(void)
 
     m_pWindow = new CPadConnectCheckMsgWindow;
     ASSERT(m_pWindow);
-    m_pWindow->Set(0.0f, 0.0f, CScreen::VirtualWidth(), 160.0f);
+    m_pWindow->Set(0.0f, 0.0f, CSprite::m_fVirtualScreenW, 160.0f);
     m_pWindow->SetOpenAction(false);
     m_pWindow->SetPriority(CMessageWindow::PRIORITY_TOP);
 
@@ -160,7 +145,7 @@ void CPadConnectCheckProcess::Move(void)
         if (CGameData::Attribute().IsInteractive())
         {
             bool PadOkFlag = true;
-            int32 LostPort = (CController::PORT_MAX - 1);
+            int32 LostPort = 7;
 
             int32 PadCnt = CController::Max();
             for (int32 i = 0; i < PadCnt; ++i)
@@ -219,7 +204,7 @@ void CPadConnectCheckProcess::Draw(void) const
 
 void CPadConnectCheckProcess::MessageProc(void)
 {
-    PROCESSTYPES::MAIL mail = PROCESSTYPES::MAIL::EMPTY;
+    PROCESSTYPES::MAIL mail;
 
     while (Mail().Recv(mail))
     {
@@ -322,10 +307,10 @@ bool CPadConnectCheckProcess::SeqSleep(int32 iLabel)
     if (Info().Process(iLabel).Info().State() != PROCESSTYPES::STATE_RUN)
         return false;
 
-    if (!Mail().Send(iLabel, PROCESSTYPES::MAIL::TYPE_RUN_DISABLE))
+    if (!Mail().Send(iLabel, PROCESSTYPES::MAIL::TYPE_MOVE_DISABLE))
         return false;
 
-    Mail().Send(PROCESSTYPES::LABEL_SCREENFADE, PROCESSTYPES::MAIL::TYPE_RUN_DISABLE);
+    Mail().Send(PROCLABEL_SCREENFADE, PROCESSTYPES::MAIL::TYPE_MOVE_DISABLE);
     
     return true;
 };
@@ -339,10 +324,10 @@ bool CPadConnectCheckProcess::SeqWakeup(int32 iLabel)
     if (Info().Process(iLabel).Info().State() != PROCESSTYPES::STATE_RUN)
         return false;
 
-    if (!Mail().Send(iLabel, PROCESSTYPES::MAIL::TYPE_RUN_ENABLE))
+    if (!Mail().Send(iLabel, PROCESSTYPES::MAIL::TYPE_MOVE_ENABLE))
         return false;
 
-    Mail().Send(PROCESSTYPES::LABEL_SCREENFADE, PROCESSTYPES::MAIL::TYPE_RUN_ENABLE);
+    Mail().Send(PROCLABEL_SCREENFADE, PROCESSTYPES::MAIL::TYPE_MOVE_ENABLE);
 
     return true;
 };
@@ -350,7 +335,7 @@ bool CPadConnectCheckProcess::SeqWakeup(int32 iLabel)
 
 void CPadConnectCheckProcess::WarningMsgSet(int32 iControllerPort)
 {
-#ifdef _TARGET_PS2
+#ifdef TARGET_PS2
     ;
 #endif    
 };

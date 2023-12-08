@@ -1,7 +1,7 @@
 #include "TransferFloorGimmick.hpp"
 
 #include "Game/Component/GameMain/GameProperty.hpp"
-#include "Game/Component/Gimmick/GimmickUtils.hpp"
+#include "Game/Component/Gimmick/Utils/GimmickUtils.hpp"
 #include "Game/Component/Gimmick/GimmickParam.hpp"
 #include "Game/Component/Gimmick/MoveStrategy/TransferFloorGimmickMove.hpp"
 #include "Game/System/Map/MapCollisionModel.hpp"
@@ -72,26 +72,41 @@ CLinearTransferFloorGimmick::CLinearTransferFloorGimmick(const char* pszName, vo
     GIMMICKPARAM::GIMMICK_MOVEFLOOR_LINEAR* pInitParam = (GIMMICKPARAM::GIMMICK_MOVEFLOOR_LINEAR*)pParam;
     ASSERT(pInitParam);
 
-    const char* apszMdlName[] = { "mvf_s", "mvf_l", };
-    ASSERT( (pInitParam->m_subid) >= 0 && (pInitParam->m_subid < COUNT_OF(apszMdlName)) );
-    
-    CModel* pModel = CModelManager::CreateModel(apszMdlName[pInitParam->m_subid]);
+    static const char* s_apszMdlName[] =
+    {
+        "mvf_s",
+        "mvf_l",
+    };
+
+    ASSERT(pInitParam->m_subid >= 0);
+    ASSERT(pInitParam->m_subid < COUNT_OF(s_apszMdlName));
+
+    //
+    //  init model
+    //
+    CModel* pModel = CModelManager::CreateModel(s_apszMdlName[pInitParam->m_subid]);
     ASSERT(pModel);
 
-    RwV3d vRotation = Math::VECTOR3_ZERO;
+    m_model.SetModel(CNormalGimmickModel::MODELTYPE_DRAW_NORMAL, pModel);
+    
+    //
+    //  init pos & rot
+    //
     RwMatrix matrix;
-    RwMatrixSetIdentityMacro(&matrix);
+    RwMatrixSetIdentityMacro(&matrix);    
     CGimmickUtils::QuaternionToRotationMatrix(&matrix, &pInitParam->m_quat);
+    
+    RwV3d vRotation = Math::VECTOR3_ZERO;
     CGimmickUtils::MatrixToRotation(&matrix, &vRotation);
     
-    m_model.SetModel(CNormalGimmickModel::MODELKIND_VISUAL_NORMAL, pModel);
     m_model.SetRotation(&vRotation);
     m_model.SetPosition(&pInitParam->m_vPosition);
     m_model.UpdateFrame();
-    SetModelStrategy(&m_model);
 
+    //
+    //  init movement
+    //
     CLinearTransferFloorGimmickMove* pLinearMove = new CLinearTransferFloorGimmickMove;
-    ASSERT(pLinearMove);
     pLinearMove->SetPosition(&pInitParam->m_vPosition);
     pLinearMove->SetMoveTime(pInitParam->m_fMoveTime);
     pLinearMove->SetStopTime(pInitParam->m_fStopTime);
@@ -99,26 +114,27 @@ CLinearTransferFloorGimmick::CLinearTransferFloorGimmick(const char* pszName, vo
     pLinearMove->SetStartPosition(&pInitParam->m_vPosStart);
     pLinearMove->SetGoalPosition(&pInitParam->m_vPosGoal);
     pLinearMove->Start();
-    m_pTransferMove = pLinearMove;
-    SetMoveStrategy(m_pTransferMove);
 
+    //
+    //  init map collision
+    //
     if (m_model.GetCollisionModelClump())
     {
-        m_hAtari = CMapCollisionModel::RegistCollisionModel(
-            m_model.GetCollisionModelClump(),
-            GetName(),
-            MAPTYPES::GIMMICKTYPE_NORMAL
-        );
+        RpClump* pClump = m_model.GetCollisionModelClump();
         
+        m_hAtari = CMapCollisionModel::RegistCollisionModel(pClump, GetName(), MAPTYPES::GIMMICKTYPE_NORMAL);
+        ASSERT(m_hAtari);
+
         if (m_hAtari)
             CMapCollisionModel::SetBoundingSphereRadius(m_hAtari, (pInitParam->m_subid ? 3.0f : 2.0f));
     };
-};
 
-
-CLinearTransferFloorGimmick::~CLinearTransferFloorGimmick(void)
-{
-    ;
+    //
+    //  setup model & move strategy
+    //
+    SetModelStrategy(&m_model);
+    SetMoveStrategy(pLinearMove);
+    m_pTransferMove = pLinearMove;
 };
 
 
@@ -128,52 +144,68 @@ CPathTransferFloorGimmick::CPathTransferFloorGimmick(const char* pszName, void* 
     GIMMICKPARAM::GIMMICK_MOVEFLOOR_PATH* pInitParam = (GIMMICKPARAM::GIMMICK_MOVEFLOOR_PATH*)pParam;
     ASSERT(pInitParam);
 
-    const char* apszMdlName[] = { "mvf_s", "mvf_l", };
-    ASSERT((pInitParam->m_subid) >= 0 && (pInitParam->m_subid < COUNT_OF(apszMdlName)));
+    static const char* s_apszMdlName[] =
+    {
+        "mvf_s",
+        "mvf_l",
+    };
+    
+    ASSERT(pInitParam->m_subid >= 0);
+    ASSERT(pInitParam->m_subid < COUNT_OF(s_apszMdlName));
 
-    CModel* pModel = CModelManager::CreateModel(apszMdlName[pInitParam->m_subid]);
+    //
+    //  init model
+    //
+    CModel* pModel = CModelManager::CreateModel(s_apszMdlName[pInitParam->m_subid]);
     ASSERT(pModel);
 
-    RwV3d vRotation = Math::VECTOR3_ZERO;
+    m_model.SetModel(CNormalGimmickModel::MODELTYPE_DRAW_NORMAL, pModel);
+    
+    //
+    //  init pos & rot
+    //
     RwMatrix matrix;
     RwMatrixSetIdentityMacro(&matrix);
     CGimmickUtils::QuaternionToRotationMatrix(&matrix, &pInitParam->m_quat);
+    
+    RwV3d vRotation = Math::VECTOR3_ZERO;
     CGimmickUtils::MatrixToRotation(&matrix, &vRotation);
 
-    m_model.SetModel(CNormalGimmickModel::MODELKIND_VISUAL_NORMAL, pModel);
     m_model.SetRotation(&vRotation);
     m_model.SetPosition(&pInitParam->m_vPosition);
     m_model.UpdateFrame();
-    SetModelStrategy(&m_model);
 
+    //
+    //  init movement
+    //
     CPathTransferFloorGimmickMove* pPathMove = new CPathTransferFloorGimmickMove;
-    ASSERT(pPathMove);
     pPathMove->SetPosition(&pInitParam->m_vPosition);
     pPathMove->SetMoveTime(pInitParam->m_fMoveTime);
     pPathMove->SetStopTime(pInitParam->m_fStopTime);
     pPathMove->SetKind(pInitParam->m_kind);
     pPathMove->SetPathName(pInitParam->m_szPathName);
     pPathMove->Start();
-    m_pTransferMove = pPathMove;
-    SetMoveStrategy(m_pTransferMove);
 
+    //
+    //  init map collision
+    //
     if (m_model.GetCollisionModelClump())
     {
-        m_hAtari = CMapCollisionModel::RegistCollisionModel(
-            m_model.GetCollisionModelClump(),
-            GetName(),
-            MAPTYPES::GIMMICKTYPE_NORMAL
-        );
+        RpClump* pClump = m_model.GetCollisionModelClump();
+        
+        m_hAtari = CMapCollisionModel::RegistCollisionModel(pClump, GetName(), MAPTYPES::GIMMICKTYPE_NORMAL);
+        ASSERT(m_hAtari);
 
         if (m_hAtari)
             CMapCollisionModel::SetBoundingSphereRadius(m_hAtari, 5.0f);
     };
-};
 
-
-CPathTransferFloorGimmick::~CPathTransferFloorGimmick(void)
-{
-    ;
+    //
+    //  setup model & move strategy
+    //
+    SetModelStrategy(&m_model);
+    SetMoveStrategy(pPathMove);
+    m_pTransferMove = pPathMove;
 };
 
 
@@ -186,7 +218,7 @@ CRotateTransferFloorGimmick::CRotateTransferFloorGimmick(const char* pszName, vo
     GIMMICKPARAM::GIMMICK_MOVEFLOOR_ROUND* pInitParam = (GIMMICKPARAM::GIMMICK_MOVEFLOOR_ROUND*)pParam;
     ASSERT(pInitParam);
 
-    const char* apszMdlName[] =
+    static const char* s_apszMdlName[] =
     {
         "mvf_bar_l",
         "mvf_bar_s",
@@ -194,49 +226,62 @@ CRotateTransferFloorGimmick::CRotateTransferFloorGimmick(const char* pszName, vo
         "mvf_disk_s",
         "mvf_disk_s",
     };
-    ASSERT((pInitParam->m_subid) >= 0 && (pInitParam->m_subid < COUNT_OF(apszMdlName)));
 
-    CModel* pModel = CModelManager::CreateModel(apszMdlName[pInitParam->m_subid]);
+    ASSERT(pInitParam->m_subid >= 0);
+    ASSERT(pInitParam->m_subid < COUNT_OF(s_apszMdlName));
+
+    //
+    //  init model
+    //
+    CModel* pModel = CModelManager::CreateModel(s_apszMdlName[pInitParam->m_subid]);
     ASSERT(pModel);
-    RwV3d vRotation = { 0.0f, CGimmickUtils::QuaternionToRotationY(&pInitParam->m_quat), 0.0f };    
-    m_model.SetModel(CNormalGimmickModel::MODELKIND_VISUAL_NORMAL, pModel);
+    
+    m_model.SetModel(CNormalGimmickModel::MODELTYPE_DRAW_NORMAL, pModel);
+
+    //
+    //  init pos & rot
+    //
+    RwV3d vRotation = Math::VECTOR3_ZERO;
+    vRotation.y = CGimmickUtils::QuaternionToRotationY(&pInitParam->m_quat);
+    
     m_model.SetRotation(&vRotation);
     m_model.SetPosition(&pInitParam->m_vPosition);
     m_model.UpdateFrame();
-    SetModelStrategy(&m_model);
 
+    //
+    //  init movement
+    //
     RwMatrix matRot;
     RwMatrixSetIdentityMacro(&matRot);
     CGimmickUtils::QuaternionToRotationMatrix(&matRot, &pInitParam->m_quat);
 
-    CRotateTransferFloorGimmickMove* pRotateMove = new CRotateTransferFloorGimmickMove;
-    ASSERT(pRotateMove);
-    pRotateMove->SetPosition(&pInitParam->m_vPosition);
-    pRotateMove->SetKind(3);
-    pRotateMove->SetRotAxis(&matRot);
-    pRotateMove->SetRoundTime(pInitParam->m_fRoundTime);
-    pRotateMove->Start();
-    m_pTransferMove = pRotateMove;
-    SetMoveStrategy(m_pTransferMove);
-    m_pRotateMove = pRotateMove;
+    m_pRotateMove = new CRotateTransferFloorGimmickMove;
+    m_pRotateMove->SetPosition(&pInitParam->m_vPosition);
+    m_pRotateMove->SetKind(3);
+    m_pRotateMove->SetRotAxis(&matRot);
+    m_pRotateMove->SetRoundTime(pInitParam->m_fRoundTime);
+    m_pRotateMove->Start();
 
+    //
+    //  init map collision
+    //
     if (m_model.GetCollisionModelClump())
     {
-        m_hAtari = CMapCollisionModel::RegistCollisionModel(
-            m_model.GetCollisionModelClump(),
-            GetName(),
-            MAPTYPES::GIMMICKTYPE_NORMAL
-        );
+        RpClump* pClump = m_model.GetCollisionModelClump();
+
+        m_hAtari = CMapCollisionModel::RegistCollisionModel(pClump, GetName(), MAPTYPES::GIMMICKTYPE_NORMAL);
+        ASSERT(m_hAtari);
 
         if (m_hAtari)
             CMapCollisionModel::SetBoundingSphereRadius(m_hAtari, 10.0f);
     };
-};
 
-
-CRotateTransferFloorGimmick::~CRotateTransferFloorGimmick(void)
-{
-    ;
+    //
+    //  setup model & move strategy
+    //
+    SetModelStrategy(&m_model);
+	SetMoveStrategy(m_pRotateMove);
+    m_pTransferMove = m_pRotateMove;
 };
 
 

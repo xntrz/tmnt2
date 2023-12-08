@@ -58,7 +58,7 @@ CRideFlagGimmick::CRideFlagGimmick(const char* pszName, void* pParam)
     ASSERT(pModel);
     pModel->SetClippingEnable(false);
 
-    m_model.SetModel(CNormalGimmickModel::MODELKIND_VISUAL_NORMAL, pModel);
+    m_model.SetModel(CNormalGimmickModel::MODELTYPE_DRAW_NORMAL, pModel);
     m_model.SetPosition(&vPosition);
     m_model.UpdateFrame();
 

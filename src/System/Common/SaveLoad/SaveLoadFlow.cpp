@@ -10,7 +10,7 @@
 {
     CSaveLoadFlow* pFlow = nullptr;
     
-#ifdef _TARGET_PC
+#ifdef TARGET_PC
     pFlow = new CPCSaveLoadFlow(mode, pFrame, pData);
 #else
 #error Not implemented for current target

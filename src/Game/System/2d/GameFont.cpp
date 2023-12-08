@@ -1,6 +1,7 @@
 #include "GameFont.hpp"
 
 #include "Game/System/Texture/TextureManager.hpp"
+#include "System/Common/Font.hpp"
 #include "System/Common/System2D.hpp"
 #include "System/Common/Screen.hpp"
 #include "System/Common/Sprite.hpp"
@@ -23,11 +24,14 @@
 };
 
 
-/*static*/ void CGameFont::Open(const char* pszName, const char* pszFilePath, const char* pszTextureDict)
+/*static*/ bool CGameFont::Open(const char* pszName, const char* pszFilePath, const char* pszTextureDict)
 {
     ASSERT(pszFilePath);
+    ASSERT(pszTextureDict);
+    
+    bool bResult = false;    
 
-    if (CGameFont::SetTxDictionary(pszTextureDict))
+    if (CGameFont::SetTexDictionary(pszTextureDict))
     {
         Rt2dFontSetPath("");
         Rt2dFont* pRt2dFont = Rt2dFontRead("Common/Fonts/MainFont");
@@ -35,11 +39,14 @@
 		
         m_pFont = new CUnicodeFont(pRt2dFont);
         ASSERT(m_pFont);
-		m_fHeight = GetScreenSize();
-		return;
+        
+        m_fHeight = GetScreenHeight();        
+        ChangeCharacterRect();
+        
+        bResult = true;
     };
-
-    ASSERT(false);
+    
+    return bResult;
 };
 
 
@@ -53,15 +60,13 @@
 };
 
 
-/*static*/ bool CGameFont::SetTxDictionary(const char* pszName)
+/*static*/ bool CGameFont::SetTexDictionary(const char* pszName)
 {
-    ASSERT(pszName);
-    
     RwTexDictionary* pRwTexDictionary = CTextureManager::GetRwTextureDictionary(pszName);    
-    ASSERT(pRwTexDictionary);
+    if (!pRwTexDictionary)
+        return false;
     
-    Rt2dFontTexDictionarySet(pRwTexDictionary);
-    
+    Rt2dFontTexDictionarySet(pRwTexDictionary);        
     return true;
 };
 
@@ -72,9 +77,93 @@
 };
 
 
-/*static*/ float CGameFont::GetScreenSize(void)
+/*static*/ int32 CGameFont::GetDisplayLineString(wchar* dst, const wchar* src, float fWidth, int32 count)
 {
-    return ( Rt2dFontGetHeight(m_pFont->GetFontObj()) * float(CSprite::m_fVirtualScreenW) );
+    return m_pFont->GetDisplayLineString(dst, src, m_fHeight, fWidth, count);
+};
+
+
+/*static*/ int32 CGameFont::CountFlowLine(const wchar* pwszString, float fWidth)
+{
+    return m_pFont->CountFlowLine(pwszString, m_fHeight, fWidth);
+};
+
+
+/*static*/ void CGameFont::ConvertToUnicode(wchar* dst, const char* src)
+{
+    CUnicodeFont::ConvertToUnicode(dst, src);
+};
+
+
+/*static*/ void CGameFont::Show(const wchar* pwszString, float x, float y)
+{
+    m_pFont->Show(pwszString, m_fHeight, x, y);
+};
+
+
+/*static*/ void CGameFont::Show(const wchar* pwszString, RwV2d* pvPos)
+{
+    m_pFont->Show(pwszString, m_fHeight, pvPos);
+};
+
+
+/*static*/ void CGameFont::Flow(const wchar* pwszString, Rt2dBBox* pBBox, Rt2dJustificationType format)
+{
+    m_pFont->Flow(pwszString, m_fHeight, pBBox, format);
+};
+
+
+/*static*/ void CGameFont::FlowEx(const wchar* pwszString, int32 numLinePad, const Rt2dBBox* pBBox, Rt2dJustificationType format)
+{
+    m_pFont->FlowEx(pwszString, m_fHeight, numLinePad, pBBox, format);
+};
+
+
+/*static*/ void CGameFont::Show(const char* pszString, float x, float y)
+{
+    m_pFont->Show(pszString, m_fHeight, x, y);
+};
+
+
+/*static*/ void CGameFont::Show(const char* pszString, const RwV2d* pvPos)
+{
+    m_pFont->Show(pszString, m_fHeight, pvPos);
+};
+
+
+/*static*/ void CGameFont::SetRGBA(const RwRGBA& rColor)
+{
+    m_pFont->SetRGBA(rColor);
+};
+
+
+/*static*/ void CGameFont::SetRGBA(uint8 r, uint8 g, uint8 b, uint8 a)
+{
+    SetRGBA({ r, g, b, a });
+};
+
+
+/*static*/ void CGameFont::SetHeight(float h)
+{
+    m_fHeight = h;
+};
+
+
+/*static*/ float CGameFont::GetHeight(void)
+{
+    return m_fHeight;
+};
+
+
+/*static*/ float CGameFont::GetScreenHeight(void)
+{
+    return (Rt2dFontGetHeight(m_pFont->GetFontObj()) * float(CScreen::Height())) / TYPEDEF::VSCR_H;
+};
+
+
+/*static*/ float CGameFont::GetScreenHeightEx(float fScreenH)
+{
+    return (Rt2dFontGetHeight(m_pFont->GetFontObj()) * float(CScreen::Height())) / fScreenH;
 };
 
 
@@ -90,49 +179,7 @@
 };
 
 
-/*static*/ void CGameFont::Show(const wchar* pwszString, float x, float y)
+/*static*/ Rt2dFont* CGameFont::GetFontObj(void)
 {
-    m_pFont->Show(pwszString, m_fHeight, x, y);
-};
-
-
-/*static*/ void CGameFont::Show(const wchar* pwszString, const RwV2d* pvPos)
-{
-    m_pFont->Show(pwszString, m_fHeight, pvPos->x, pvPos->y);
-};
-
-
-/*static*/ void CGameFont::Show(const wchar* pwszString, const RwV2d& rvPos)
-{
-    m_pFont->Show(pwszString, m_fHeight, rvPos.x, rvPos.y);
-};
-
-
-/*static*/ void CGameFont::Show(const char* pszString, float x, float y)
-{
-    m_pFont->Show(pszString, m_fHeight, x, y);
-};
-
-
-/*static*/ void CGameFont::Show(const char* pszString, const RwV2d* pvPos)
-{
-    m_pFont->Show(pszString, m_fHeight, pvPos->x, pvPos->y);
-};
-
-
-/*static*/ void CGameFont::Show(const char* pszString, const RwV2d& rvPos)
-{
-    m_pFont->Show(pszString, m_fHeight, rvPos.x, rvPos.y);
-};
-
-
-/*static*/ void CGameFont::SetRGBA(const RwRGBA& rColor)
-{
-    m_pFont->SetRGBA(rColor);
-};
-
-
-/*static*/ void CGameFont::SetRGBA(uint8 r, uint8 g, uint8 b, uint8 a)
-{
-    m_pFont->SetRGBA(r, g, b, a);
+    return m_pFont->GetFontObj();
 };

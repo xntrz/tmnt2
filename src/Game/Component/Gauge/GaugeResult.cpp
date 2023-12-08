@@ -512,7 +512,7 @@ void CGaugeResult_Container::DrawNexus(void)
 
 void CGaugeResult_Container::CallFailMessage(void) const
 {
-    switch (CGameProperty::Player(m_nReqFailedPlayer).GetCurrentCharacterID())
+    switch (CGameProperty::Player(m_nReqFailedPlayer)->GetCurrentCharacterID())
     {
     case PLAYERID::ID_LEO:
         CMessageManager::Request(SEGROUPID::VALUE(47), PLAYERID::VALUE(-1));
@@ -555,7 +555,7 @@ void CGaugeResult_Container::CallFailMessage(void) const
 
 RwTexture* CGaugeResult_Container::GetFailTexture(void) const
 {
-    int32 nIndex = CGameProperty::Player(m_nReqFailedPlayer).GetCurrentCharacterID() + 2;
+    int32 nIndex = CGameProperty::Player(m_nReqFailedPlayer)->GetCurrentCharacterID() + 2;
     ASSERT(nIndex >= 0 && nIndex < COUNT_OF(m_apTexture));
     
     return m_apTexture[nIndex];

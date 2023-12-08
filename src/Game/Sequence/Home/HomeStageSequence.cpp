@@ -30,10 +30,10 @@ CHomeStageSequence::~CHomeStageSequence(void)
 };
 
 
-bool CHomeStageSequence::OnAttach(const void* param)
+bool CHomeStageSequence::OnAttach(const void* pParam)
 {
     CGameData::PlayParam().SetStage(STAGEID::ID_ST03S);
-    CStageBaseSequence::OnAttach(param);
+    CStageBaseSequence::OnAttach(pParam);
 
     m_pHomeCamera = new CHomeCamera;
     ASSERT(m_pHomeCamera);
@@ -66,9 +66,9 @@ void CHomeStageSequence::OnDetach(void)
 };
 
 
-void CHomeStageSequence::OnMove(bool bRet, const void* param)
+void CHomeStageSequence::OnMove(bool bRet, const void* pReturnValue)
 {
-    CStageBaseSequence::OnMove(bRet, param);
+    CStageBaseSequence::OnMove(bRet, pReturnValue);
 };
 
 

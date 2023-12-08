@@ -1,12 +1,5 @@
 #include "GimmickData.hpp"
 #include "GimmickManager.hpp"
-#include "GimmickParam.hpp"
-
-
-struct CGimmickData::GIMMICKDATA : public GIMMICKPARAM::GIMMICK_BASIC
-{
-    ;
-};
 
 
 CGimmickData::CGimmickData(void)

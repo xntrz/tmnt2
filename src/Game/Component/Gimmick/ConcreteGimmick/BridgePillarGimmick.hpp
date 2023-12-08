@@ -7,6 +7,7 @@
 class CGimmickMotion;
 class CCuttingGimmickMove;
 
+
 class CBridgePillarGimmick final : public CGimmick
 {
 private:
@@ -20,7 +21,7 @@ private:
     };
     
 public:
-    CBridgePillarGimmick(const char* pszName, void* pParram);
+    CBridgePillarGimmick(const char* pszName, void* pParam);
     virtual ~CBridgePillarGimmick(void);    
     virtual bool Query(CGimmickQuery* pQuery) const;
     virtual void PostMove(void);
@@ -47,5 +48,5 @@ private:
     int32 m_step;
     int32 m_iLife;
     uint32 m_hAtari;
-    CGimmickMotion* m_pMotionController;
+    CGimmickMotion* m_pGimmickMotion;
 };

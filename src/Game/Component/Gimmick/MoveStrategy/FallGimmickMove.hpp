@@ -9,15 +9,18 @@ public:
     CFallGimmickMove(int32 movetype, float fReflection, float fCollisionRadius);
     virtual ~CFallGimmickMove(void);
     virtual RESULT OnMove(float dt) override;
-    void SetRotation(const RwV3d* pvRotation);
-    void SetVelocity(const RwV3d* pvVelocity);
-    void SetRotationVelocity(const RwV3d* pvRotationVelocity);
-    void GetRotation(RwV3d* pvRotation);
-    void GetVelocity(RwV3d* pvVelocity);
-    void SetCollisionRadiusAutoChangeEnable(bool bEnable);
+
+    inline void SetRotation(const RwV3d* pvRotation) { m_vRotation = *pvRotation; };
+    inline void GetRotation(RwV3d* pvRotation) { *pvRotation = m_vRotation; };
+
+    inline void SetVelocity(const RwV3d* pvVelocity) { m_vVelocity = *pvVelocity; };
+    inline void GetVelocity(RwV3d* pvVelocity) { *pvVelocity = m_vVelocity; };
+    
+    inline void SetRotationVelocity(const RwV3d* pvRotationVelocity) { m_vRotationVelocity = *pvRotationVelocity; };
+
+    inline void SetCollisionRadiusAutoChangeEnable(bool bEnable) { m_bColRadiusAutoChangeEnable = bEnable; };
 
 private:
-    void clear(void);
     void collisionRadiusAutoChange(void);
 
 private:

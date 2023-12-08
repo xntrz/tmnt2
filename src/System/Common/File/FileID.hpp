@@ -6,6 +6,7 @@ namespace FILEID
     enum VALUE
     {
         ID_INVALID = -1,
+        
         ID_FONT_METRICS = 0,
         ID_FONT,
         ID_LOGO,
@@ -243,7 +244,9 @@ namespace FILEID
         ID_ENBU_RAPEXB,
         ID_ENBU_MICEXB,
         ID_ENBU_DONEXB,
+        
         ID_STRINGS,
+        
         ID_MAX,
     };
 };

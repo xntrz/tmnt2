@@ -3,7 +3,7 @@
 
 #include "Game/Component/GameData/GameData.hpp"
 #include "Game/System/2d/GameFont.hpp"
-#include "Game/System/2d/GameText.hpp"
+#include "Game/System/Text/GameText.hpp"
 #include "Game/System/2d/Animation2D.hpp"
 #include "Game/System/2d/MenuController.hpp"
 #include "Game/System/Sound/GameSound.hpp"
@@ -11,10 +11,10 @@
 #include "Game/System/Misc/ScreenFade.hpp"
 #include "Game/System/Texture/TextureManager.hpp"
 #include "Game/System/DataLoader/DataLoader.hpp"
+#include "Game/ProcessList.hpp"
 #include "System/Common/Controller.hpp"
 #include "System/Common/Sprite.hpp"
 #include "System/Common/System2D.hpp"
-#include "System/Common/Process/ProcessList.hpp"
 #include "System/Common/File/FileID.hpp"
 #include "System/Common/RenderState.hpp"
 #include "System/Common/Screen.hpp"
@@ -317,12 +317,12 @@ bool CDatabaseViewer_Container::Run(void)
             CGameSound::PlaySE(SDCODE_SE(0x1001));
             return true;
         }
-        else if (CController::GetDigitalTrigger(iPad, CController::DIGITAL_LEFT))
+        else if (CController::GetDigitalTrigger(iPad, CController::DIGITAL_LLEFT))
         {
             CGameSound::PlaySE(SDCODE_SE(0x1004));
             m_eMovedir = MOVEDIR_LEFT;
         }
-        else if (CController::GetDigitalTrigger(iPad, CController::DIGITAL_RIGHT))
+        else if (CController::GetDigitalTrigger(iPad, CController::DIGITAL_LRIGHT))
         {
             CGameSound::PlaySE(SDCODE_SE(0x1004));
             m_eMovedir = MOVEDIR_RIGHT;
@@ -336,23 +336,23 @@ bool CDatabaseViewer_Container::Run(void)
             float EndY = 178.0f;
             float EndX = 320.0f;
 
-            if (CController::GetDigital(iPad, CController::DIGITAL_UP))
+            if (CController::GetDigital(iPad, CController::DIGITAL_LUP))
             {
                 if (m_vImgPos.y < (EndY * (m_fImageZoom - 1.0f)))
                     m_vImgPos.y += ScrollStep;
             }
-            else if (CController::GetDigital(iPad, CController::DIGITAL_DOWN))
+            else if (CController::GetDigital(iPad, CController::DIGITAL_LDOWN))
             {
                 if (m_vImgPos.y > (-EndY * (m_fImageZoom - 1.0f)))
                     m_vImgPos.y -= ScrollStep;
             };
 
-            if (CController::GetDigital(iPad, CController::DIGITAL_LEFT))
+            if (CController::GetDigital(iPad, CController::DIGITAL_LLEFT))
             {
                 if (m_vImgPos.x < (EndX * (m_fImageZoom - 1.0f)))
                     m_vImgPos.x += ScrollStep;
             }
-            else if (CController::GetDigital(iPad, CController::DIGITAL_RIGHT))
+            else if (CController::GetDigital(iPad, CController::DIGITAL_LRIGHT))
             {
                 if (m_vImgPos.x > (-EndX * (m_fImageZoom - 1.0f)))
                     m_vImgPos.x -= ScrollStep;
@@ -361,12 +361,12 @@ bool CDatabaseViewer_Container::Run(void)
     }
     else if (!m_bFlagImgChange)
     {
-        if (CController::GetDigital(iPad, CController::DIGITAL_UP))
+        if (CController::GetDigital(iPad, CController::DIGITAL_LUP))
         {
             if (m_fImageZoom < ZoomMax)
                 m_fImageZoom += ZoomStep;
         }
-        else if (CController::GetDigital(iPad, CController::DIGITAL_DOWN))
+        else if (CController::GetDigital(iPad, CController::DIGITAL_LDOWN))
         {
             if (m_fImageZoom > ZoomMin)
                 m_fImageZoom -= ZoomStep;
@@ -486,9 +486,11 @@ void CDatabaseViewer_Container::Draw(void)
             std::sprintf(Buff, "%d/%d", m_iImgCursor + 1, m_iTexNum);
             
             CSystem2D::PushRenderState();
-            CGameFont::m_fHeight = CGameFont::GetScreenSize() / 447.0f * 3.0f;
+
+			CGameFont::SetHeight(CGameFont::GetScreenHeight() * 3.0f);
             CGameFont::SetRGBA(255, 180, 0, 255);
             CGameFont::Show(Buff, -260.0f, -152.0f);
+
             CSystem2D::PopRenderState();
         };
     };
@@ -604,7 +606,7 @@ CDatabaseViewer::~CDatabaseViewer(void)
 };
 
 
-bool CDatabaseViewer::OnAttach(const void* param)
+bool CDatabaseViewer::OnAttach(const void* pParam)
 {
     if (!s_pDatabaseViewer_Container)
         s_pDatabaseViewer_Container = new CDatabaseViewer_Container;
@@ -629,7 +631,7 @@ void CDatabaseViewer::OnDetach(void)
 };
 
 
-void CDatabaseViewer::OnMove(bool bRet, const void* param)
+void CDatabaseViewer::OnMove(bool bRet, const void* pReturnValue)
 {
     switch (m_ePhase)
     {
@@ -640,7 +642,7 @@ void CDatabaseViewer::OnMove(bool bRet, const void* param)
             if (CDataLoader::IsLoadEnd())
             {
                 CGameSound::PlayBGM(SDCODE_BGM(0x3024));
-                CScreenFade::StartOut(1.0f);
+                CScreenFade::BlackIn(1.0f);
                 m_ePhase = PHASE_RUN;
             };
         }
@@ -653,8 +655,8 @@ void CDatabaseViewer::OnMove(bool bRet, const void* param)
 
             if (s_pDatabaseViewer_Container->Run())
             {
-                CGameSound::FadeOut(CGameSound::FADESPEED_FAST);
-                CScreenFade::StartIn(1.0f);
+                CGameSound::FadeOut(CGameSound::FADESPEED_SLOW);
+                CScreenFade::BlackOut(1.0f);
                 m_ePhase = PHASE_END;
             };
         }

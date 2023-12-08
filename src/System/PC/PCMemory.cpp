@@ -2,6 +2,63 @@
 #include "PCTypedefs.hpp"
 
 
+/*static*/ CPCMemoryDefault CPCMemoryDefault::m_instance;
+
+
+CPCMemoryDefault::CPCMemoryDefault(void)
+{
+    m_pThis = this;
+};
+
+
+CPCMemoryDefault::~CPCMemoryDefault(void)
+{
+    m_pThis = nullptr;
+};
+
+
+void* CPCMemoryDefault::RepAlloc(uint32 size, const char* fname, int32 fline)
+{
+    return std::malloc(size);
+};
+
+
+void CPCMemoryDefault::RepFree(void* mem)
+{
+    std::free(mem);
+};
+
+
+void* CPCMemoryDefault::RepRwAlloc(uint32 size, uint32 hint)
+{
+    return std::malloc(size);
+};
+
+
+void CPCMemoryDefault::RepRwFree(void* mem)
+{
+    std::free(mem);
+};
+
+
+void* CPCMemoryDefault::RepRwRealloc(void* mem, uint32 size, uint32 hint)
+{
+    return std::realloc(mem, size);
+};
+
+
+void* CPCMemoryDefault::RepRwCalloc(uint32 objSize, uint32 size, uint32 hint)
+{
+    return std::calloc(objSize, size);
+};
+
+
+uint32 CPCMemoryDefault::AllocatedSize(void)
+{
+    return 0;
+};
+
+
 CPCMemory::CPCMemory(void)
 : m_iMemBlock(0)
 , m_iRwMemBlock(0)

@@ -2,6 +2,8 @@
 
 #include "Game/Component/Gimmick/Gimmick.hpp"
 #include "Game/Component/Gimmick/GimmickModel.hpp"
+
+#include "Game/System/Hit/HitCatchData.hpp"
 #include "Game/System/Character/Character.hpp"
 
 
@@ -88,7 +90,7 @@ public:
     virtual void OnReceiveEvent(const char* pszSender, GIMMICKTYPES::EVENTTYPE eventtype) override;
     virtual void OnTouchedDown(void) override;
     virtual void OnCatchAttack(CHitAttackData* pAttack) override;
-    virtual void OnCatch(int32* piStatus);
+    virtual void OnCatch(CHitCatchData::RESULT* pResult);
     virtual void OnLift(CCharacter::MSG_LIFT_INFO* pMsgLiftInfo);
     virtual void OnMissThrow(RwV3d* pvVelocity);
     virtual void OnThrow(RwV3d* pvVelocity);

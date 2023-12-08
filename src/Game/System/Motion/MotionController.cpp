@@ -29,19 +29,10 @@ CMotionController::CMotionController(CModel* pModel)
 
     FLAG_CLEAR(uInFlags, rpHANIMHIERARCHYUPDATELTMS | rpHANIMHIERARCHYUPDATEMODELLINGMATRICES);
 
-    m_pInHierarchy = RpHAnimHierarchyCreateFromHierarchy(
-        pHierarchy,
-        RpHAnimHierarchyFlag(uInFlags),
-        36
-    );
-
-    m_pOutHierarchy = RpHAnimHierarchyCreateFromHierarchy(
-        pHierarchy,
-        RpHAnimHierarchyFlag(uOutFlags),
-        36
-    );
-
+    m_pInHierarchy = RpHAnimHierarchyCreateFromHierarchy(pHierarchy, RpHAnimHierarchyFlag(uInFlags), 36);
     ASSERT(m_pInHierarchy);
+    
+    m_pOutHierarchy = RpHAnimHierarchyCreateFromHierarchy(pHierarchy, RpHAnimHierarchyFlag(uOutFlags), 36);
     ASSERT(m_pOutHierarchy);
     
     RpHAnimHierarchySetKeyFrameCallBacksMacro(m_pOutHierarchy, 1);
@@ -264,7 +255,7 @@ void CMotionController::SetTimeMotion(float fTime)
 {
     ASSERT(fTime >= m_fStartTime && fTime <= m_fEndTime);
 
-    fTime = Math::Clamp(fTime, m_fStartTime, m_fEndTime);
+    fTime = Clamp(fTime, m_fStartTime, m_fEndTime);
 
     if (!Math::FEqual(m_fTime, fTime))
     {

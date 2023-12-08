@@ -27,7 +27,7 @@ void CDefaultCameraUpdater::Update(CMapCamera* pMapCamera)
     for (int32 i = 0; i < nNumPlayer; ++i)
     {
         RwV3d vTmp = Math::VECTOR3_ZERO;
-        CGameProperty::Player(i).GetPosition(&vTmp);
+        CGameProperty::Player(i)->GetPosition(&vTmp);
 
         avPosition[i] = vTmp;
         
@@ -66,7 +66,7 @@ void CBossBattleCameraUpdater::Update(CMapCamera* pMapCamera)
     for (int32 i = 0; i < nNumPlayer; ++i)
     {
         RwV3d vTmp = Math::VECTOR3_ZERO;
-        CGameProperty::Player(i).GetPosition(&vTmp);
+        CGameProperty::Player(i)->GetPosition(&vTmp);
         
         vLookat.x += vTmp.x;
         vLookat.y += vTmp.y;

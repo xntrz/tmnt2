@@ -17,7 +17,7 @@ protected:
 
     enum COLLTYPE
     {
-        COLLTYPE_ON,
+        COLLTYPE_ON = 0,
         COLLTYPE_OFF,
     };
 

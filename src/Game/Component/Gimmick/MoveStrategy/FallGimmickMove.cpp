@@ -15,8 +15,6 @@ CFallGimmickMove::CFallGimmickMove(int32 movetype, float fReflection, float fCol
 , m_bColRadiusAutoChangeEnable(false)
 {
     ASSERT((movetype >= CFallGimmick::MOVETYPE_START) && (movetype < CFallGimmick::MOVETYPE_NUM));
-    
-    clear();
 };
 
 
@@ -79,69 +77,8 @@ CFallGimmickMove::RESULT CFallGimmickMove::OnMove(float dt)
 };
 
 
-void CFallGimmickMove::SetRotation(const RwV3d* pvRotation)
-{
-    ASSERT(pvRotation);
-
-    m_vRotation = *pvRotation;
-};
-
-
-void CFallGimmickMove::SetVelocity(const RwV3d* pvVelocity)
-{
-    ASSERT(pvVelocity);
-
-    m_vVelocity = *pvVelocity;
-};
-
-
-void CFallGimmickMove::SetRotationVelocity(const RwV3d* pvRotationVelocity)
-{
-    ASSERT(pvRotationVelocity);
-    
-    m_vRotationVelocity = *pvRotationVelocity;
-};
-
-
-void CFallGimmickMove::GetRotation(RwV3d* pvRotation)
-{
-    *pvRotation = m_vRotation;
-};
-
-
-void CFallGimmickMove::GetVelocity(RwV3d* pvVelocity)
-{
-    *pvVelocity = m_vVelocity;
-};
-
-
-void CFallGimmickMove::SetCollisionRadiusAutoChangeEnable(bool bEnable)
-{
-    m_bColRadiusAutoChangeEnable = bEnable;
-};
-
-
-void CFallGimmickMove::clear(void)
-{
-    m_vRotation = Math::VECTOR3_ZERO;
-    m_vVelocity = Math::VECTOR3_ZERO;
-    m_vRotationVelocity = Math::VECTOR3_ZERO;
-    m_movetype = CFallGimmick::MOVETYPE_STOP;
-    m_fReflection = 0.0f;
-    m_fCollisionRadius = 0.0f;
-    m_bColRadiusAutoChangeEnable = false;
-};
-
-
 void CFallGimmickMove::collisionRadiusAutoChange(void)
 {
     if (m_bColRadiusAutoChangeEnable)
-    {
-        float VelY = m_vVelocity.y;
-        if (VelY < 0.0f)
-            VelY = -VelY;
-
-        m_fCollisionRadius = VelY * 0.010204081f * 1.7f;
-        m_fCollisionRadius = Math::Clamp(m_fCollisionRadius, 0.35f, 1.7f);
-    };
+		m_fCollisionRadius = Clamp(Math::FAbs(m_vVelocity.y) / 98.0f * 1.7f, 0.35f, 1.7f);
 };

@@ -96,6 +96,7 @@ void CParticleSet::Read(const void* pBuffer, uint32 uBufferSize)
 
     std::memcpy(m_szTexDictName, effectinfo.m_szTexDictName, sizeof(m_szTexDictName));
     std::memcpy(m_szEffectName, effectinfo.m_szEffectName, sizeof(m_szEffectName));
+
     m_fEffectPlayTime = effectinfo.m_fEffectPlayTime;
 	m_bLoop = bool(effectinfo.m_bLoop > 0);
 	m_bTrace = bool(effectinfo.m_bTrace > 0);
@@ -177,46 +178,30 @@ void CParticleSet::Draw(RwCamera* pCamera)
         CParticle* pParticle = m_apParticle[i - 1];
         ASSERT(pParticle);
 
-        pParticle->Draw(pCamera);
+        if(m_bStringOn || !pParticle->IsStringParticle())
+            pParticle->Draw(pCamera);        
     };
-
-    //for (int32 i = 0; i < m_nParticleNum; ++i)
-    //{
-    //    CParticle* pParticle = m_apParticle[i];
-    //    ASSERT(pParticle);
-    //    
-    //    if (pParticle->IsStringParticle())
-    //    {
-    //        //if (m_bStringOn)
-    //            pParticle->Draw(pCamera);
-    //    }
-    //    else
-    //    {
-    //        pParticle->Draw(pCamera);
-    //    };
-    //    
-    //};
 };
 
 
 void CParticleSet::SetGravity(float fGravity)
 {
-    for (int32 i = 0; i < m_nParticleNum; ++i)
-        m_apParticle[i]->SetGravity(fGravity);
+    for (int32 i = m_nParticleNum; i > 0; --i)
+        m_apParticle[i - 1]->SetGravity(fGravity);
 };
 
 
 void CParticleSet::SetBasisPositionForAll(const RwV3d* pvPosition)
 {
-    for (int32 i = 0; i < m_nParticleNum; ++i)
-        m_apParticle[i]->SetBasisPositionForAll(pvPosition);
+    for (int32 i = m_nParticleNum; i > 0; --i)
+        m_apParticle[i - 1]->SetBasisPositionForAll(pvPosition);
 };
 
 
 void CParticleSet::SetBasisPosition(const RwV3d* pvPosition)
 {
-    for (int32 i = 0; i < m_nParticleNum; ++i)
-        m_apParticle[i]->SetBasisPosition(pvPosition);
+    for (int32 i = m_nParticleNum; i > 0; --i)
+        m_apParticle[i - 1]->SetBasisPosition(pvPosition);
 };
 
 

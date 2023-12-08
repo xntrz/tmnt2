@@ -90,14 +90,10 @@ namespace Intersection
         else
         {
             if (pOutAwayVelocityP)
-            {
-                *pOutAwayVelocityP = { 0.0f, 0.0f, fRadiusQ * 0.5f };
-            };
+                *pOutAwayVelocityP = { 0.0f, 0.0f, (fRadiusQ * 0.5f) };
 
             if (pOutAwayVelocityQ)
-            {
-                *pOutAwayVelocityQ = { 0.0f, 0.0f, fRadiusP * 0.5f };
-            };
+                *pOutAwayVelocityQ = { 0.0f, 0.0f, (fRadiusP * 0.5f) };
         };
 
         return true;
@@ -122,7 +118,32 @@ namespace Intersection
         ASSERT(pVelocityQ);
         ASSERT(fRadiusQ >= 0.0f);
 
-		return false;
+        RwV3d vRV = Math::VECTOR3_ZERO;
+        Math::Vec3_Sub(&vRV, pVelocityP, pVelocityQ);
+
+        float fD = Math::Vec3_Dot(&vRV, &vRV);
+        
+        if (Math::FEqual(fD, 0.0f))
+            return false;
+
+        RwV3d vD = Math::VECTOR3_ZERO;
+        Math::Vec3_Sub(&vD, pStartPosP, pStartPosQ);
+        
+        float fRoot = (Math::Vec3_Dot(&vRV, &vD) * 2.0f) - (Math::Vec3_Dot(&vD, &vD) - ((fRadiusP + fRadiusQ) * (fRadiusQ + fRadiusP))) * fD;
+        if (fRoot < 0.0f)
+            return false;
+
+        float fT = (-Math::Vec3_Dot(&vRV, &vD) - Math::Sqrt(fRoot)) / fD;
+        if ((fT < 0.0f) || (fT  > 1.0f))
+            return false;
+
+        if (pOutIntersectVelocityP)
+            Math::Vec3_Scale(pOutIntersectVelocityP, pVelocityP, fT);
+        
+        if (pOutIntersectVelocityQ)
+            Math::Vec3_Scale(pOutIntersectVelocityQ, pVelocityQ, fT);
+        
+        return true;
     };
 
 

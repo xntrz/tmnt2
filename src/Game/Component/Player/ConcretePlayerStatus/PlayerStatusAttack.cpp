@@ -30,7 +30,7 @@ namespace PlayerStatus
     {
         Character().ResetVelocity();
         Character().ResetAcceleration();
-        Character().ChangeMotion("A");
+        Character().ChangeMotion(PLAYERTYPES::MOTIONNAMES::ATTACK_A);
         
         Character().SetPlayerFlag(PLAYERTYPES::FLAG_REQUEST_ATTACK_A, false);
         Character().SetPlayerFlag(PLAYERTYPES::FLAG_REQUEST_ATTACK_B, false);
@@ -72,7 +72,7 @@ namespace PlayerStatus
     
     void CAttackAA::OnAttach(void)
     {
-        Character().ChangeMotion("AA");
+        Character().ChangeMotion(PLAYERTYPES::MOTIONNAMES::ATTACK_AA);
 
         Character().SetPlayerFlag(PLAYERTYPES::FLAG_REQUEST_ATTACK_A, false);
         Character().SetPlayerFlag(PLAYERTYPES::FLAG_REQUEST_ATTACK_B, false);
@@ -119,7 +119,7 @@ namespace PlayerStatus
     
     void CAttackAAB::OnAttach(void)
     {
-        Character().ChangeMotion("AAB");
+        Character().ChangeMotion(PLAYERTYPES::MOTIONNAMES::ATTACK_AAB);
 
         Character().SetPlayerFlag(PLAYERTYPES::FLAG_REQUEST_ATTACK_A, false);
         Character().SetPlayerFlag(PLAYERTYPES::FLAG_REQUEST_ATTACK_B, false);
@@ -167,7 +167,7 @@ namespace PlayerStatus
     
     void CAttackAAC::OnAttach(void)
     {
-        Character().ChangeMotion("AAC");
+        Character().ChangeMotion(PLAYERTYPES::MOTIONNAMES::ATTACK_AAC);
 
         Character().SetPlayerFlag(PLAYERTYPES::FLAG_REQUEST_ATTACK_A, false);
         Character().SetPlayerFlag(PLAYERTYPES::FLAG_REQUEST_ATTACK_B, false);
@@ -203,7 +203,7 @@ namespace PlayerStatus
     
     void CAttackAABB::OnAttach(void)
     {
-        Character().ChangeMotion("AABB");
+        Character().ChangeMotion(PLAYERTYPES::MOTIONNAMES::ATTACK_AABB);
 
         Character().SetPlayerFlag(PLAYERTYPES::FLAG_REQUEST_ATTACK_A, false);
         Character().SetPlayerFlag(PLAYERTYPES::FLAG_REQUEST_ATTACK_B, false);
@@ -251,7 +251,7 @@ namespace PlayerStatus
     
     void CAttackAABC::OnAttach(void)
     {
-        Character().ChangeMotion("AABC");
+        Character().ChangeMotion(PLAYERTYPES::MOTIONNAMES::ATTACK_AABC);
 
         Character().SetPlayerFlag(PLAYERTYPES::FLAG_REQUEST_ATTACK_A, false);
         Character().SetPlayerFlag(PLAYERTYPES::FLAG_REQUEST_ATTACK_B, false);
@@ -287,7 +287,7 @@ namespace PlayerStatus
     
     void CAttackAABBB::OnAttach(void)
     {
-        Character().ChangeMotion("AABBB");
+        Character().ChangeMotion(PLAYERTYPES::MOTIONNAMES::ATTACK_AABBB);
 
         Character().SetPlayerFlag(PLAYERTYPES::FLAG_REQUEST_ATTACK_A, false);
         Character().SetPlayerFlag(PLAYERTYPES::FLAG_REQUEST_ATTACK_B, false);
@@ -304,11 +304,7 @@ namespace PlayerStatus
         RwV3d vOffset = Math::VECTOR3_ZERO;
         Math::Vec3_Sub(&vOffset, &vPosBody, &vPosChr);
         
-        CEffectManager::PlayTrace(
-            EFFECTID::ID_ALL_TAME_FLASH,
-            new CPlayerTracer(m_pPlayerChr),
-            &vOffset
-        );
+        CEffectManager::PlayTrace(EFFECTID::ID_ALL_TAME_FLASH, new CPlayerTracer(m_pPlayerChr), &vOffset);
 
         PlayerUtil::CallVoiceOfAABBB(m_pPlayerChr);
     };
@@ -340,7 +336,7 @@ namespace PlayerStatus
     
     void CAttackAABBC::OnAttach(void)
     {
-        Character().ChangeMotion("AABBC");
+        Character().ChangeMotion(PLAYERTYPES::MOTIONNAMES::ATTACK_AABBC);
 
         Character().SetPlayerFlag(PLAYERTYPES::FLAG_REQUEST_ATTACK_A, false);
         Character().SetPlayerFlag(PLAYERTYPES::FLAG_REQUEST_ATTACK_B, false);
@@ -468,7 +464,7 @@ namespace PlayerStatus
     
     void CAttackBCharge::OnAttach(void)
     {
-        Character().ChangeMotion("B");
+        Character().ChangeMotion(PLAYERTYPES::MOTIONNAMES::ATTACK_B);
         Character().SetCharacterFlag(CHARACTERTYPES::FLAG_MOTION_SPEED_CTRL, true);
         Character().SetMotionSpeed(0.05f);
         Character().ResetVelocity();
@@ -578,7 +574,7 @@ namespace PlayerStatus
         if (Character().GetStatusPrev() == m_status)
             Character().ReplayMotion();
         else
-            Character().ChangeMotion("Shuriken");
+            Character().ChangeMotion(PLAYERTYPES::MOTIONNAMES::ATTACK_KNIFE);
 
         Character().ResetAcceleration();
         Character().ResetVelocity();
@@ -598,10 +594,7 @@ namespace PlayerStatus
         {
             CGameSound::PlayObjectSE(m_pPlayerChr, SDCODE_SE(4120));
             Character().ShootingKnife();
-            CGameEvent::SetPlayerTechnicalAction(
-                Character().GetPlayerNo(),
-                GAMETYPES::TECACT_KNIFE
-            );
+            CGameEvent::SetPlayerTechnicalAction(Character().GetPlayerNo(), GAMETYPES::TECACT_KNIFE);
 
             Character().SetPlayerFlag(PLAYERTYPES::FLAG_DISABLE_THROW_KNIFE, false);
         };
@@ -636,7 +629,7 @@ namespace PlayerStatus
         if (Character().GetStatusPrev() == m_status)
             Character().ReplayMotion();
         else
-            Character().ChangeMotion("JShuriken");
+            Character().ChangeMotion(PLAYERTYPES::MOTIONNAMES::ATTACK_KNIFE_JUMP);
 
         Character().SetPlayerFlag(PLAYERTYPES::FLAG_AERIAL_STATUS, true);
         Character().SetPlayerFlag(PLAYERTYPES::FLAG_DISABLE_THROW_KNIFE, true);
@@ -658,10 +651,7 @@ namespace PlayerStatus
         {
             CGameSound::PlayObjectSE(m_pPlayerChr, SDCODE_SE(4128));
             Character().ShootingKnife();
-            CGameEvent::SetPlayerTechnicalAction(
-                Character().GetPlayerNo(),
-                GAMETYPES::TECACT_KNIFE_JUMP
-            );
+            CGameEvent::SetPlayerTechnicalAction(Character().GetPlayerNo(), GAMETYPES::TECACT_KNIFE_JUMP);
 
             Character().SetPlayerFlag(PLAYERTYPES::FLAG_DISABLE_THROW_KNIFE, false);
         };
@@ -681,7 +671,7 @@ namespace PlayerStatus
     
     void CAttackRun::OnAttach(void)
     {
-        Character().ChangeMotion("RunAttack");
+        Character().ChangeMotion(PLAYERTYPES::MOTIONNAMES::ATTACK_RUN);
         Character().ResetVelocity();
         Character().ResetAcceleration();
     };

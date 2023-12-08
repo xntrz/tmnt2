@@ -32,9 +32,13 @@
 #include "Game/System/Misc/ScreenFade.hpp"
 #include "Game/System/Misc/RenderStateManager.hpp"
 #include "Game/System/Misc/DebugShape.hpp"
-#include "Game/System/Misc/Keyboard.hpp"
 #include "System/Common/Camera.hpp"
 #include "System/Common/Controller.hpp"
+
+#ifdef TARGET_PC
+#include "System/PC/PCSpecific.hpp"
+#include "System/PC/PCPhysicalControllerKey.hpp"
+#endif
 
 
 /*static*/ CGameStage* CGameStage::m_pCurrent = nullptr;
@@ -151,8 +155,6 @@ void CGameStage::Terminate(void)
 
 void CGameStage::Start(void)
 {
-	FLAG_CLEAR(CController::DIGITAL_CANCEL, CController::DIGITAL_B);
-
     CWorldMap::OnLoaded();
     RpWorld* pWorld = CWorldMap::GetWorld();
     createCamera(pWorld);
@@ -166,8 +168,6 @@ void CGameStage::Start(void)
 
 void CGameStage::Stop(void)
 {
-    FLAG_SET(CController::DIGITAL_CANCEL, CController::DIGITAL_B);
-    
     changeSystemState(SYSTEMSTATE_NONE);
     m_bPlayStarted = false;
     stopExGauge();
@@ -191,7 +191,9 @@ void CGameStage::Period(void)
     if (m_systemstate == SYSTEMSTATE_NONE)
         return;
 
-	if (IsPaused())
+    float dt = CGameProperty::GetElapsedTime();
+    
+    if (IsPaused())
 	{
 		ASSERT(m_pPauseHandler);
 		if (m_pPauseHandler->Update())
@@ -206,7 +208,7 @@ void CGameStage::Period(void)
 		m_pCameraUpdater->Update(m_pMapCamera);
 
 		if (m_bPlayStarted && m_systemstate == SYSTEMSTATE_NORMAL)
-			m_fTimer += CGameProperty::GetElapsedTime();
+            m_fTimer += dt;
 
         CGameProperty::Period();
         if (m_bCreatedRadar)
@@ -217,14 +219,7 @@ void CGameStage::Period(void)
 		CShotManager::Period();
 		CGimmickManager::DispatchEvent();
 #ifdef _DEBUG
-        CDebugShape::Period();
-
-        if (CController::GetDigitalTrigger(0, CController::DIGITAL_OK) &&
-            CController::GetDigitalTrigger(0, CController::DIGITAL_A))
-        {
-            CGameStage::GetCurrent()->NotifyGameClear(CGamePlayResult::CLEARSUB_A);
-            //CMessageManager::OnlyTextRequest(SEGROUPID::ID_ONLYTEXT_START);
-        };        
+        CDebugShape::Period(dt);  
 #endif
 		CEffectManager::Period();
 		CGaugeInformation::MissionInfoPeriod();
@@ -261,9 +256,9 @@ void CGameStage::Draw(void) const
         CWorldMap::Draw(CWorldMap::DRAWTYPE_AFTER);
         CShotManager::Draw();
         CGimmickManager::Draw(CGimmickInfo::DRAWPRI_POSTALPHAMAP);
-        
+
 #ifdef _DEBUG
-        //CDebugShape::Draw3D();
+        CDebugShape::Draw3D();
 #endif
         
         CEffectManager::Draw(CCamera::CameraCurrent());        
@@ -278,7 +273,7 @@ void CGameStage::Draw(void) const
     };
 
 #ifdef _DEBUG
-	//CDebugShape::Draw2D();
+	CDebugShape::Draw2D();
     CDebugShape::FrameEnd();
 #endif
 
@@ -286,7 +281,7 @@ void CGameStage::Draw(void) const
     if (m_bMultipleBoss)
         CGaugeInformation::BossGaugeDraw(1);
 
-    //CMessageManager::Draw();
+    CMessageManager::Draw();
 
     if(IsPaused())
     {
@@ -295,7 +290,7 @@ void CGameStage::Draw(void) const
     };
 
     CGaugeInformation::MissionInfoDraw();
-    //CGaugeInformation::DispBattleNexusInfo();
+    CGaugeInformation::DispBattleNexusInfo();
 };
 
 
@@ -341,22 +336,15 @@ void CGameStage::AddPlayers(bool bProtect)
     };
 
     for (int32 i = 0; i < CGameData::PlayParam().GetPlayerNum(); ++i)
-    {
-        CGameProperty::Player(i).LoadContext(
-            CGameData::PlayParam().PlayerContext(i)
-        );
-    };
+        CGameProperty::Player(i)->LoadContext(CGameData::PlayParam().PlayerContext(i));
 
-    if (CGameData::PlayParam().GetStageMode() == GAMETYPES::STAGEMODE_RIDE)
+    if (CGameData::Record().Secret().IsUnlockedSecret(SECRETID::ID_CHEATCODE_SELFRECOVERY))
     {
-        if (CGameData::Record().Secret().IsUnlockedSecret(SECRETID::ID_CHEATCODE_SELFRECOVERY))
-        {
-            m_pRecoveryObj = new CAutoHpCtrlObj(CAutoHpCtrlObj::MODE_RECOVER);
-        }
-        else if (CGameData::Record().Secret().IsUnlockedSecret(SECRETID::ID_CHALLENGE_POISON))
-        {
-            m_pRecoveryObj = new CAutoHpCtrlObj(CAutoHpCtrlObj::MODE_DAMAGE);
-        };
+        m_pRecoveryObj = new CAutoHpCtrlObj(CAutoHpCtrlObj::MODE_RECOVER);
+    }
+    else if (CGameData::Record().Secret().IsUnlockedSecret(SECRETID::ID_CHALLENGE_POISON))
+    {
+        m_pRecoveryObj = new CAutoHpCtrlObj(CAutoHpCtrlObj::MODE_DAMAGE);
     };
 };
 
@@ -370,17 +358,17 @@ void CGameStage::StartPlay(void)
 
 bool CGameStage::CheckPauseMenu(void) const
 {
-#ifdef _TARGET_PC    
-    return CController::GetDigitalTrigger(CGameData::Attribute().GetVirtualPad(), CController::DIGITAL_CANCEL);
+#ifdef TARGET_PC    
+    return CPCSpecific::IsKeyDown(DIK_ESCAPE);
 #else
-#error Not implemented for current target
+    return CController::GetDigitalTrigger(CController::CONTROLLER_UNLOCKED_ON_VIRTUAL, CController::DIGITAL_START);
 #endif
 };
 
 
 void CGameStage::StartPause(PAUSETYPE pausetype, void* param)
 {
-    if (CScreenFade::IsFading())
+    if (CScreenFade::IsDrawing())
         return;
     
     IGameStagePause* pPauseHandler = nullptr;
@@ -541,10 +529,7 @@ void CGameStage::SetCameraUpdater(CStageInfo::CAMERAUPDATE cameraupdtype)
 
 void CGameStage::SetCameraUpdater(IGameStageCameraUpdater* pCameraUpdater)
 {
-    if (pCameraUpdater)
-        m_pCameraUpdater = pCameraUpdater;
-    else
-        m_pCameraUpdater = CDefaultCameraUpdater::Instance();
+	m_pCameraUpdater = (pCameraUpdater ? pCameraUpdater : CDefaultCameraUpdater::Instance());
 };
 
 
@@ -565,12 +550,9 @@ void CGameStage::resume(void)
 
 void CGameStage::updatePlayData(void)
 {
-    for (int32 i = 0;i < CGameProperty::GetPlayerNum(); ++i)
-    {
-        CGameProperty::Player(i).SaveContext(
-            CGameData::PlayParam().PlayerContext(i)
-        );
-    };
+	int32 nPlayerNum = CGameProperty::GetPlayerNum();
+    for (int32 i = 0; i < nPlayerNum; ++i)
+        CGameProperty::Player(i)->SaveContext(CGameData::PlayParam().PlayerContext(i));
 };
 
 
@@ -581,8 +563,8 @@ void CGameStage::updateResultData(void)
 
 	if (CGameProperty::GetPlayerNum() > 0)
 	{
-		CGameData::PlayResult().SetStageclearSecond(m_fTimer);
-		CGameData::PlayResult().SetRemainedHP(CGameProperty::Player(0).GetHP());
+		CGameData::PlayResult().SetStageClearSecond(m_fTimer);
+		CGameData::PlayResult().SetRemainedHP(CGameProperty::Player(0)->GetHP());
 	};
 };
 

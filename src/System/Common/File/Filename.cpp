@@ -9,6 +9,10 @@ static const char* s_pszCommonDataPath = "common/";
 static const char* s_apszLanguageDataPath[] =
 {
     "language/english/",
+    //"language/german/",
+    //"language/french/",
+    //"language/spanish/",
+    //"language/italian/",
 };
 
 
@@ -144,6 +148,8 @@ static const char* s_apszFilename[] =
     "stage/st60x_d08.lpac",
     "stage/st60x_d09.lpac",
     "stage/st60x_d10.lpac",
+    // "stage/ste3demo1.lpac",
+    // "stage/ste3demo2.lpac",
     "player/donatello/donatello.lpac",
     "player/donatello/donatello_exa.lpac",
     "player/donatello/donatello_exb.lpac",
@@ -316,7 +322,7 @@ static_assert(COUNT_OF(s_apszFilename) == FILEID::ID_MAX, "update me");
 {
     while (*Path)
     {
-#ifdef _TARGET_PC
+#ifdef TARGET_PC
         if (*Path == '/')
             *Path = '\\';
 #else

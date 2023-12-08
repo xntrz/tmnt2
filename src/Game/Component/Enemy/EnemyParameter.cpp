@@ -4,7 +4,7 @@
 #include "Game/Component/GameMain/GameTypes.hpp"
 
 
-static const char* ENEMYPARAM_FILEHEADER = "EPB_Ver1.0";
+static const char* ENEMYPARAM_FILEHEADER = "EPB_Ver1.0     ";
 static const int32 ENEMYPARAM_MAX = 594;
 static const int32 FREQUENCY_MAX = 27;
 
@@ -138,6 +138,8 @@ static void CompensationParameter(ENEMYPARAMCONTAINER* pEnemyParam)
             s_aEnemyParam[ParamNo].m_bExist = true;
             std::memcpy(&s_aEnemyParam[ParamNo], &TmpContainer, sizeof(TmpContainer));
 
+			CompensationParameter(&s_aEnemyParam[ParamNo].m_container);
+
             ++ParamNo;
         };
 
@@ -192,4 +194,21 @@ static void CompensationParameter(ENEMYPARAMCONTAINER* pEnemyParam)
     ASSERT((index >= 0) && (index < COUNT_OF(s_aEnemyParam)));
     ASSERT(s_aEnemyParam[index].m_bExist);
     return s_aEnemyParam[index].m_container.m_AICharacteristic;
+};
+
+
+/*static*/ bool CEnemyParameter::Exist(ENEMYID::VALUE id)
+{
+    for (int32 i = 0; i < COUNT_OF(s_aEnemyParam); ++i)
+    {
+        if (!s_aEnemyParam[i].m_bExist)
+            continue;
+
+        if (s_aEnemyParam[i].m_container.m_eID != id)
+            continue;
+
+        return true;
+    };
+
+    return false;
 };

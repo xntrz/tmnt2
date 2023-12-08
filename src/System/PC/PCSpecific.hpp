@@ -2,22 +2,29 @@
 
 #include "PCTypedefs.hpp"
 
+#include "System/Common/Controller.hpp"
+
 
 class CPCSpecific
 {
 public:
     static HINSTANCE m_hInstance;
     static HWND m_hWnd;
-    
-    static void Initialize(void);
-    static void Terminate(void);
-    static void SetFlipEnable(bool bEnable);
-    static bool SetVideomode(int32 iWidth, int32 iHeight, int32 iDepth);
-    static bool SetVideomode(int32 iVideomodeNo);
+
+public:    
+    static int32 GetKeyboradPort(void);
+    static void MapDigital(uint32 btn, int32 iDIKey);
+    static void MapDigitalFixed(uint32 btn, int32 iDIKey);
+    static void MapAnalog(CController::ANALOG analog, int32 iDIKeyX, int32 iDIKeyY);
+    static int32 GetDownKey(void);
+    static bool IsKeyDown(int32 iDIKey);
+    static bool IsKeyValid(int32 iDIKey);
+    static const char* GetKeyName(int32 iDIKey);
+    static bool SetVideomode(int32 No);
+    static bool GetVideomode(int32 No, PC::VIDEOMODE& vm);
     static int32 GetVideomodeNum(void);
     static int32 GetVideomodeCur(void);
-    static void GetVideomode(int32 iVideomodeNo, int32& w, int32& h, int32& d);
-    static bool IsVideomodeWindow(int32 iVideomodeNo);
-    static void GetModulePath(char* pszModulePathBuff, int32 buffsize);
+    static void FrameSkipEnable(bool bEnable);
     static void DisplayCursor(bool bDispFlag);
+    static void PathCorrection(std::string& str);
 };

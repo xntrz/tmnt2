@@ -3,65 +3,77 @@
 #include "Game/System/Misc/ScreenFade.hpp"
 
 
-CSaveLoadSequenceBase::CSaveLoadSequenceBase(CSaveLoad::TYPE type)
-: m_phase(PHASE_FADEOUT)
+CSaveLoadSequence::CSaveLoadSequence(CSaveLoad::TYPE type)
+: m_phase(PHASE_FADEIN)
 , m_type(type)
 {
     ;
 };
 
 
-CSaveLoadSequenceBase::~CSaveLoadSequenceBase(void)
+CSaveLoadSequence::~CSaveLoadSequence(void)
 {
     ;
 };
 
 
-bool CSaveLoadSequenceBase::OnAttach(const void* param)
+bool CSaveLoadSequence::OnAttach(const void* pParam)
 {
-    m_phase = PHASE_FADEOUT;
+    m_phase = PHASE_FADEIN;
     CSaveLoad::Initialize(m_type);
     return true;
 };
 
 
-void CSaveLoadSequenceBase::OnDetach(void)
+void CSaveLoadSequence::OnDetach(void)
 {
     CSaveLoad::Terminate();
 };
 
 
-void CSaveLoadSequenceBase::OnMove(bool bRet, const void* param)
+void CSaveLoadSequence::OnMove(bool bRet, const void* pReturnValue)
 {
     switch (m_phase)
     {
-    case PHASE_FADEOUT:
-        CScreenFade::StartOut(1.0f);
-        m_phase = PHASE_FADEOUT_WAIT;
-        break;
-
-    case PHASE_FADEOUT_WAIT:
-        if (!CScreenFade::IsFading())
-            m_phase = PHASE_RUN;
-        break;
-
-    case PHASE_RUN:
-        if (CSaveLoad::Run())
-            m_phase = PHASE_FADEIN;        
-        break;
-
     case PHASE_FADEIN:
-        CScreenFade::StartIn(1.0f);
-        m_phase = PHASE_FADEIN_WAIT;
+        {
+            CScreenFade::BlackIn(1.0f);
+            m_phase = PHASE_FADEIN_WAIT;
+        }
         break;
 
     case PHASE_FADEIN_WAIT:
-        if (!CScreenFade::IsFading())
-            m_phase = PHASE_EOL;        
+        {
+            if (!CScreenFade::IsFading())
+                m_phase = PHASE_RUN;
+        }
+        break;
+
+    case PHASE_RUN:
+        {
+            if (CSaveLoad::Run())
+                m_phase = PHASE_FADEOUT;
+        }
+        break;
+
+    case PHASE_FADEOUT:
+        {
+            CScreenFade::BlackOut(1.0f);
+            m_phase = PHASE_FADEOUT_WAIT;
+        }
+        break;
+
+    case PHASE_FADEOUT_WAIT:
+        {
+            if (!CScreenFade::IsFading())
+                m_phase = PHASE_EOL;
+        }
         break;
 
     case PHASE_EOL:
-        Ret();
+        {
+            Ret();
+        }        
         break;
 
     default:
@@ -71,7 +83,7 @@ void CSaveLoadSequenceBase::OnMove(bool bRet, const void* param)
 };
 
 
-void CSaveLoadSequenceBase::OnDraw(void) const
+void CSaveLoadSequence::OnDraw(void) const
 {
     ;
 };

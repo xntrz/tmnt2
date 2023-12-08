@@ -1,18 +1,18 @@
 #pragma once
 
+#include "GimmickParam.hpp"
+
 
 class CGimmickData
 {
 public:
     static const int32 ENEMY_PATTERN_NUM = 8;
 
-    struct GIMMICKDATA;
-
-    struct ENEMY_KIND
+    struct GIMMICKDATA : public GIMMICKPARAM::GIMMICK_BASIC
     {
-        int16 m_id;
-        int16 m_pattern;
+        ;
     };
+
 
     struct MGD_HEADER
     {
@@ -22,6 +22,11 @@ public:
         int32 m_nOffsetEnemySetDataPos;
     };
 
+    CHECK_SIZE(MGD_HEADER, 0x1C);
+
+    //
+    //  map
+    //
     struct MAPGIMMICK_DATA
     {
         int32 m_nSize;
@@ -32,6 +37,15 @@ public:
     {
         int32 m_nGimmickDataNum;
         MAPGIMMICK_DATA m_aGimmickData[];
+    };
+
+    //
+    //  enemy
+    //
+    struct ENEMY_KIND
+    {
+        int16 m_id;
+        int16 m_pattern;
     };
 
     struct ENEMYSET_DATA
@@ -46,7 +60,7 @@ public:
         ENEMYSET_DATA m_aEnemySadData[];
     };
 
-    CHECK_SIZE(MGD_HEADER, 0x1C);
+    CHECK_SIZE(ENEMY_KIND, 0x4);
     CHECK_SIZE(ENEMYSET_DATA, 0x24);
 
 public:

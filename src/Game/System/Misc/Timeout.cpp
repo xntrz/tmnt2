@@ -1,9 +1,9 @@
 #include "Timeout.hpp"
 
 #include "Game/Component/GameData/GameData.hpp"
+#include "Game/ProcessList.hpp"
 #include "System/Common/Controller.hpp"
 #include "System/Common/Process/Sequence.hpp"
-#include "System/Common/Process/ProcessList.hpp"
 #include "System/Common/Process/ProcessMail.hpp"
 #include "System/Common/Screen.hpp"
 
@@ -26,6 +26,7 @@ protected:
     float m_fElapsedTime;
     int32 m_nSuspendCount;
 };
+
 
 class CTimeoutProcess::CNonInputTimer : public CTimerObj
 {
@@ -146,7 +147,6 @@ bool CTimeoutProcess::CNonInputTimer::isInputOccured(void)
 
 /*static*/ const float CTimeoutProcess::TIMEOUT_SEC_NONINPUT = 45.0f;
 /*static*/ const float CTimeoutProcess::TIMEOUT_SEC_TOTAL = 300.0f;
-/*static*/ CTimeoutProcess::MESSAGE CTimeoutProcess::m_message;
 
 
 /*static*/ CProcess* CTimeoutProcess::Instance(void)
@@ -157,65 +157,74 @@ bool CTimeoutProcess::CNonInputTimer::isInputOccured(void)
 
 /*static*/ void CTimeoutProcess::Initialize(CProcess* pSender)
 {
-    ASSERT(pSender);
-    
-    pSender->Mail().Send(PROCESSTYPES::LABEL_TIMEOUT, PROCESSTYPES::MAIL::TYPE_ATTACH);
+    pSender->Mail().Send(PROCLABEL_TIMEOUT, PROCESSTYPES::MAIL::TYPE_ATTACH);
 };
 
 
 /*static*/ void CTimeoutProcess::Terminate(CProcess* pSender)
 {
-    ASSERT(pSender);
-    
-    pSender->Mail().Send(PROCESSTYPES::LABEL_TIMEOUT, PROCESSTYPES::MAIL::TYPE_DETACH);
+    pSender->Mail().Send(PROCLABEL_TIMEOUT, PROCESSTYPES::MAIL::TYPE_DETACH);
 };
 
 
 /*static*/ void CTimeoutProcess::Start(CProcess* pSender)
 {
-    ASSERT(pSender);
+    static MESSAGE s_message = {};
     
-    m_message.m_type = MESSAGE::TYPE_START;
+    s_message.m_type = MESSAGE::TYPE_START;
     
-    pSender->Mail().Send(PROCESSTYPES::LABEL_TIMEOUT, PROCESSTYPES::MAIL::TYPE_MSG, &m_message);
+    postPrivateMessage(pSender, &s_message);
 };
 
 
 /*static*/ void CTimeoutProcess::Reset(CProcess* pSender)
 {
-    ASSERT(pSender);
+    static MESSAGE s_message = {};
+
+    s_message.m_type = MESSAGE::TYPE_RESET;
     
-    m_message.m_type = MESSAGE::TYPE_RESET;
-    
-    pSender->Mail().Send(PROCESSTYPES::LABEL_TIMEOUT, PROCESSTYPES::MAIL::TYPE_MSG, &m_message);
+    postPrivateMessage(pSender, &s_message);
+};
+
+
+/*static*/ void CTimeoutProcess::Enable(CProcess* pSender, bool bEnable)
+{
+    static MESSAGE s_message = {};
+
+    s_message.m_type = MESSAGE::TYPE_ENABLE;
+    s_message.m_param.m_bEnable = bEnable;
+
+    postPrivateMessage(pSender, &s_message);
 };
 
 
 /*static*/ void CTimeoutProcess::SetInteractive(CProcess* pSender, bool bInteractive)
 {
-    ASSERT(pSender);
+    static MESSAGE s_message = {};
     
-    m_message.m_type = MESSAGE::TYPE_INTERACTIVE;
-    m_message.m_param.m_bInteractive = bInteractive;
+    s_message.m_type = MESSAGE::TYPE_INTERACTIVE;
+    s_message.m_param.m_bInteractive = bInteractive;
     
-    pSender->Mail().Send(PROCESSTYPES::LABEL_TIMEOUT, PROCESSTYPES::MAIL::TYPE_MSG, &m_message);
+    postPrivateMessage(pSender, &s_message);
+
+    Enable(pSender, bInteractive);
 };
 
 
-/*static*/ void CTimeoutProcess::SetEnable(CProcess* pSender, bool bEnable)
+/*static*/ bool CTimeoutProcess::postPrivateMessage(CProcess* pSender, MESSAGE* pMessage)
 {
-    ASSERT(pSender);
-    
-    m_message.m_type = MESSAGE::TYPE_ENABLE;
-    m_message.m_param.m_bEnable = bEnable;
-    
-    pSender->Mail().Send(PROCESSTYPES::LABEL_TIMEOUT, PROCESSTYPES::MAIL::TYPE_MSG, &m_message);
+    bool bResult = false;
+
+    if (pSender->Info().IsProcessExist(PROCLABEL_TIMEOUT))
+        bResult = pSender->Mail().Send(PROCLABEL_TIMEOUT, PROCESSTYPES::MAIL::TYPE_MSG, pMessage);
+
+    return bResult;
 };
 
 
 CTimeoutProcess::CTimeoutProcess(void)
 : m_eState(STATE_IDLE)
-, m_iRootSeqLabel(PROCESSTYPES::LABEL_SEQ_GAMEMAIN)
+, m_iRootSeqLabel(PROCLABEL_SEQ_GAMEMAIN)
 , m_apTimer()
 , m_nTimeoutTimerNo(-1)
 , m_bEnable(false)
@@ -233,7 +242,7 @@ CTimeoutProcess::~CTimeoutProcess(void)
 
 bool CTimeoutProcess::Attach(void)
 {
-    m_iRootSeqLabel = PROCESSTYPES::LABEL_SEQ_GAMEMAIN;
+    m_iRootSeqLabel = PROCLABEL_SEQ_GAMEMAIN;
 
     m_apTimer[0] = new CTimerObj;
     ASSERT(m_apTimer[0]);
@@ -318,7 +327,7 @@ void CTimeoutProcess::execTimeout(void)
 
 void CTimeoutProcess::messageProc(void)
 {
-    PROCESSTYPES::MAIL mail = PROCESSTYPES::MAIL::EMPTY;
+	PROCESSTYPES::MAIL mail;
 
     while (Mail().Recv(mail))
     {

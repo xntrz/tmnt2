@@ -31,7 +31,7 @@ namespace Casey
 
     void CAttackJump::OnAttach(void)
     {
-        Character().ChangeMotion("JAttack");
+        Character().ChangeMotion(Casey::MOTIONNAMES::ATTACK_JUMP);
         CGameSound::PlayAttackSE(m_pPlayerChr);
     };
 
@@ -47,6 +47,11 @@ namespace Casey
         ;
     };
 
+    
+    //
+    // *********************************************************************************
+    //
+
 
     void CAttackAABBC::OnDischargeWave(void)
     {
@@ -56,6 +61,11 @@ namespace Casey
         MAGIC_GENERIC::ChargeAttackCasey(&vPosition, Character().GetDirection(), m_pPlayerChr, MAGIC_GENERIC::STEP_THREE);
     };
 
+    
+    //
+    // *********************************************************************************
+    //
+
 
     void CAttackB::OnDischargeWave(MAGIC_GENERIC::STEP step)
     {
@@ -64,6 +74,11 @@ namespace Casey
 
         MAGIC_GENERIC::ChargeAttackCasey(&vPosition, Character().GetDirection(), m_pPlayerChr, step);
     };
+
+
+    //
+    // *********************************************************************************
+    //
 
 
     bool CPush::IsEnableChangeStatus(PLAYERTYPES::STATUS status)
@@ -81,7 +96,7 @@ namespace Casey
 
     void CPush::OnAttach(void)
     {
-        Character().ChangeMotion("Push");
+        Character().ChangeMotion(Casey::MOTIONNAMES::PUSH);
 
         RwV3d vVelocity = Math::VECTOR3_ZERO;
         Character().GetVelocity(&vVelocity);
@@ -126,33 +141,32 @@ CCasey::CCasey(GAMETYPES::COSTUME costume)
     //
     
     CPlayerCharacter::PARAMETER parameter = { 0 };
-    parameter.m_chrparameter.m_bToon = true;
-    parameter.m_chrparameter.m_pszModelName = "casey";
+    parameter.m_chrparameter.m_bToon            = true;
+    parameter.m_chrparameter.m_pszModelName     = "casey";
     parameter.m_chrparameter.m_pszMotionSetName = "casey";
-    parameter.m_feature.m_fWalkMoveSpeed = 2.0f;
-    parameter.m_feature.m_fLiftWalkMoveSpeed = 3.6f;
-    parameter.m_feature.m_fRunMoveSpeed = 5.2f;
-    parameter.m_feature.m_fDashMoveSpeed = 16.0f;
-    parameter.m_feature.m_fDashTime = 0.2f;
-    parameter.m_feature.m_fJumpInitializeSpeed = 7.5f;
-    parameter.m_feature.m_fAerialMoveSpeed = 5.2f;
-    parameter.m_feature.m_fAerialAcceleration = 12.0f;
-    parameter.m_feature.m_nKnifeAttachBoneID = CHARACTERTYPES::BONEID_RIGHT_WRIST;
-    parameter.m_pStateMachine = new CPlayerStateMachine(this, PLAYERTYPES::NORMALMAX);
+    parameter.m_feature.m_fWalkMoveSpeed        = 2.0f;
+    parameter.m_feature.m_fLiftWalkMoveSpeed    = 3.6f;
+    parameter.m_feature.m_fRunMoveSpeed         = 5.2f;
+    parameter.m_feature.m_fDashMoveSpeed        = 16.0f;
+    parameter.m_feature.m_fDashTime             = 0.2f;
+    parameter.m_feature.m_fJumpInitializeSpeed  = 7.5f;
+    parameter.m_feature.m_fAerialMoveSpeed      = 5.2f;
+    parameter.m_feature.m_fAerialAcceleration   = 12.0f;
+    parameter.m_feature.m_nKnifeAttachBoneID    = CHARACTERTYPES::BONEID_RIGHT_WRIST;
+
+    parameter.m_pStateMachine = new CPlayerStateMachine(this, PLAYERTYPES::STATUS::NORMALMAX);
     ASSERT(parameter.m_pStateMachine);
 
     CStatus::RegistDefaultForStateMachine(*parameter.m_pStateMachine);
 
-    parameter.m_pStateMachine->RegistStatus(PLAYERTYPES::STATUS_PUSH, new Casey::CPush);    
-    parameter.m_pStateMachine->RegistStatus(PLAYERTYPES::STATUS_ATTACK_JUMP, new Casey::CAttackJump);
-    parameter.m_pStateMachine->RegistStatus(PLAYERTYPES::STATUS_ATTACK_AABBC, new Casey::CAttackAABBC);
-    parameter.m_pStateMachine->RegistStatus(PLAYERTYPES::STATUS_ATTACK_B, new Casey::CAttackB);
+    parameter.m_pStateMachine->RegistStatus(PLAYERTYPES::STATUS_PUSH,           new Casey::CPush);    
+    parameter.m_pStateMachine->RegistStatus(PLAYERTYPES::STATUS_ATTACK_JUMP,    new Casey::CAttackJump);
+    parameter.m_pStateMachine->RegistStatus(PLAYERTYPES::STATUS_ATTACK_AABBC,   new Casey::CAttackAABBC);
+    parameter.m_pStateMachine->RegistStatus(PLAYERTYPES::STATUS_ATTACK_B,       new Casey::CAttackB);
 
     Initialize(&parameter);
 
-    m_pModuleMan->Include(
-        CCircleShadowModule::New(this, 1.5f, 1.5f, true)
-    );
+    m_pModuleMan->Include(CCircleShadowModule::New(this, 1.5f, 1.5f, true));
 };
 
 
@@ -162,10 +176,11 @@ CCasey::~CCasey(void)
 };
 
 
-void CCasey::Run(void)
+void CCasey::OnChangeMotion(void)
 {
-    CPlayerCharacter::Run();
-	m_pModel->SetPartsDrawEnable(3, true);
+    CPlayerCharacter::OnChangeMotion();
+    
+    //m_pModel->SetPartsDrawEnable(3, true);
 };
 
 
@@ -191,5 +206,5 @@ void CCasey::ShootingKnife(void)
     CShotManager::Shot(SHOTID::ID_PACK, &vPosition, m_fDirection, this, 0.26f, 5.0f);
 
     if (!IsAttributeFlagSet(PLAYERTYPES::ATTRIBUTE_INNUMERABLE_KNIFE))
-        CGameProperty::Player(GetPlayerNo()).AddShurikenNum(-1);
+        CGameProperty::Player(GetPlayerNo())->AddShurikenNum(-1);
 };

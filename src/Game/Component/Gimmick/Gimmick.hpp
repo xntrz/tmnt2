@@ -33,14 +33,16 @@ public:
     virtual void OnDie(void);
     virtual void OnCatchAttack(CHitAttackData* pAttack);
     virtual void OnAttackResult(CHitCatchData* pCatch);
-    bool IsSleep(void) const;
-    void Init(GIMMICKID::VALUE idGimmick);
-    GIMMICKID::VALUE GetID(void) const;
     void Release(void);
-    void SetModelStrategy(CGimmickModel* pModel);
-    void SetMoveStrategy(CGimmickMove* pMove);
+    bool IsSleep(void) const;
 
-private:
+    inline void Init(GIMMICKID::VALUE idGimmick)        { m_id = idGimmick; };
+    inline GIMMICKID::VALUE GetID(void) const           { return m_id; };
+    inline void SetModelStrategy(CGimmickModel* pModel) { m_pModelStrategy = pModel; };
+    inline void SetMoveStrategy(CGimmickMove* pMove)    { m_pMoveStrategy = pMove; };
+    inline CGimmickMove* GetMoveStrategy(void) const    { return m_pMoveStrategy; };
+    
+protected:
     GIMMICKID::VALUE m_id;
     CGimmickModel* m_pModelStrategy;
     CGimmickMove* m_pMoveStrategy;

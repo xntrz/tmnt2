@@ -1,7 +1,7 @@
 #include "InputsDevice.hpp"
 
 
-CInputsDevice* CInputsDevice::m_pInstance = nullptr;
+/*static*/ CInputsDevice* CInputsDevice::m_pInstance = nullptr;
 
 
 /*static*/ CInputsDevice& CInputsDevice::Instance(void)
@@ -100,13 +100,13 @@ void CInputsDevice::SetMaximumLocked(int32 num)
 };
 
 
-const IPhysicalController::INFO& CInputsDevice::GetLockedVirtualController(void) const
+IPhysicalController::INFO& CInputsDevice::GetLockedVirtualController(void)
 {
 	return m_aInfoVController[0];
 };
 
 
-const IPhysicalController::INFO& CInputsDevice::GetUnlockedVirtualController(void) const
+IPhysicalController::INFO& CInputsDevice::GetUnlockedVirtualController(void)
 {
 	return m_aInfoVController[1];
 };
@@ -122,23 +122,23 @@ void CInputsDevice::Compaction(void)
 		if (m_pbLockList[i])
 			continue;
 
-		if(ControllerResource(i).Info().m_state == CController::STATE_UNCONNECT)
+		if(ControllerResource(i).Info().m_eState == CController::STATE_UNCONNECT)
 		{
 			for (int32 j = i + 1; j < m_iControllerMax; ++j)
 			{
-				if (ControllerResource(j).Info().m_state == CController::STATE_CONNECT)
+				if (ControllerResource(j).Info().m_eState == CController::STATE_CONNECT)
 				{
 					ExchangePhysicalController(i, j);
 					break;
 				};
 			};
 		}
-		else if(ControllerResource(i).Info().m_state == CController::STATE_CONNECT)
+		else if (ControllerResource(i).Info().m_eState == CController::STATE_CONNECT)
 		{
 			for (int32 j = i + 1; j < m_iControllerMax; ++j)
 			{
 				if (!m_pbLockList[j] &&
-					ControllerResource(j).Info().m_state == CController::STATE_CONNECT &&
+					ControllerResource(j).Info().m_eState == CController::STATE_CONNECT &&
 					ControllerResource(i).Info().m_iPhysicalPort > ControllerResource(j).Info().m_iPhysicalPort)
 				{
 					ExchangePhysicalController(i, j);
@@ -168,11 +168,11 @@ void CInputsDevice::SyncVirtualController(void)
 {
 	m_aInfoVController[0] = { 0 };
 	m_aInfoVController[0].m_iPhysicalPort	= CController::CONTROLLER_LOCKED_ON_VIRTUAL;
-	m_aInfoVController[0].m_state			= CController::STATE_CONNECT;
+	m_aInfoVController[0].m_eState			= CController::STATE_CONNECT;
 	
 	m_aInfoVController[1] = { 0 };
 	m_aInfoVController[1].m_iPhysicalPort	= CController::CONTROLLER_UNLOCKED_ON_VIRTUAL;
-	m_aInfoVController[1].m_state			= CController::STATE_CONNECT;
+	m_aInfoVController[1].m_eState			= CController::STATE_CONNECT;
 
 	for (int32 i = 0; i < m_iControllerMax; ++i)
 	{
@@ -180,6 +180,7 @@ void CInputsDevice::SyncVirtualController(void)
 		ASSERT(m_pbLockList);
 
 		IPhysicalController* pPhysicalController = m_ppPhysicalController[i];
+		
 		IPhysicalController::INFO* info = &m_aInfoVController[0];
 		if (!m_pbLockList[i])
 			info = &m_aInfoVController[1];
@@ -190,21 +191,21 @@ void CInputsDevice::SyncVirtualController(void)
 		info->m_digitalRelease	|= pPhysicalController->Info().m_digitalRelease;
 		info->m_digitalRepeat	|= pPhysicalController->Info().m_digitalRepeat;
 
-		for (int32 i = 0; i < CController::ANALOG_NUM; ++i)
+		for (int32 j = 0; j < CController::ANALOG_NUM; ++j)
 		{
-			if (info->m_aAnalog[i] < 0)
+			if (info->m_aAnalog[j] < 0)
 			{
-				if (pPhysicalController->Info().m_aAnalog[i] >= 0)
-					info->m_aAnalog[i] += pPhysicalController->Info().m_aAnalog[i];
-				else if (pPhysicalController->Info().m_aAnalog[i] < info->m_aAnalog[i])
-					info->m_aAnalog[i] = pPhysicalController->Info().m_aAnalog[i];
+				if (pPhysicalController->Info().m_aAnalog[j] >= 0)
+					info->m_aAnalog[j] += pPhysicalController->Info().m_aAnalog[j];
+				else if (pPhysicalController->Info().m_aAnalog[j] < info->m_aAnalog[j])
+					info->m_aAnalog[j] = pPhysicalController->Info().m_aAnalog[j];
 			}
 			else
 			{
-				if (pPhysicalController->Info().m_aAnalog[i] < 0)
-					info->m_aAnalog[i] += pPhysicalController->Info().m_aAnalog[i];
-				else if (info->m_aAnalog[i] < pPhysicalController->Info().m_aAnalog[i])
-					info->m_aAnalog[i] = pPhysicalController->Info().m_aAnalog[i];
+				if (pPhysicalController->Info().m_aAnalog[j] < 0)
+					info->m_aAnalog[j] += pPhysicalController->Info().m_aAnalog[j];
+				else if (info->m_aAnalog[j] < pPhysicalController->Info().m_aAnalog[j])
+					info->m_aAnalog[j] = pPhysicalController->Info().m_aAnalog[j];
 			};
 		};
 	};

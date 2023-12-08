@@ -163,7 +163,7 @@ void CCharacterCompositor::RotateDirection(float fDirection, float fRotateRate)
     
     ASSERT(Math::FAbs(fDirectionDiff) <= Math::PI);
     
-    fDirectionDiff = Math::Clamp(fDirectionDiff, -fRotateDirectionMax, fRotateDirectionMax);
+    fDirectionDiff = Clamp(fDirectionDiff, -fRotateDirectionMax, fRotateDirectionMax);
 
     SetDirection(m_fDirection + fDirectionDiff);
 };

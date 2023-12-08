@@ -160,9 +160,9 @@ void CTimeObj::Init(uint32 timevalue)
     m_nYear     = m_nBaseYear;
     m_nMonth    = 1;
     m_bDay      = 1;
-    m_bHour     = span.GetHours();
-    m_bMinutes  = span.GetMinutes();
-    m_bSeconds  = span.GetSeconds();
+	m_bHour		= int8(span.GetHours());
+	m_bMinutes	= int8(span.GetMinutes());
+	m_bSeconds	= int8(span.GetSeconds());
 
     int32 nTotalDays = m_nTotalDays;
     ASSERT(nTotalDays);
@@ -173,7 +173,7 @@ void CTimeObj::Init(uint32 timevalue)
     while (getDaysAtMonth(m_nYear, m_nMonth) <= nTotalDays)
         nTotalDays -= getDaysAtMonth(m_nYear, m_nMonth++);
 
-    m_bDay = nTotalDays + 1;
+	m_bDay = int8(nTotalDays + 1);
 };
 
 
@@ -181,13 +181,13 @@ void CTimeObj::Init(int32 year, int32 month, int32 day, int32 hour, int32 minute
 {
     ASSERT(year >= m_nBaseYear);
     
-    m_nYear     = year;
-    m_nMonth    = month;
-    m_bDay      = day;
-    m_bHour     = hour;
-    m_bMinutes  = minute;
-    m_bSeconds  = seconds;
-    m_nTotalDays= m_bDay - 1;
+	m_nYear			= int16(year);
+	m_nMonth		= int16(month);
+	m_bDay			= int8(day);
+	m_bHour			= int8(hour);
+	m_bMinutes		= int8(minute);
+	m_bSeconds		= int8(seconds);
+	m_nTotalDays	= int32(m_bDay - 1);
 
     for (int32 nMonth = 1; nMonth < m_nMonth; ++nMonth)
         m_nTotalDays += getDaysAtMonth(m_nYear, nMonth);
@@ -288,22 +288,18 @@ int32 CTimeObj::getDaysAtYear(int32 year) const
 };
 
 
-CSystemTime::CSystemTime(void)
-{
-    ;
-};
-
-
-CSystemTime::~CSystemTime(void)
-{
-    ;
-};
-
-
 /*static*/ CSystemTime& CSystemTime::Instance(void)
 {
     static CSystemTime s_theSystemTime;
     return s_theSystemTime;
+};
+
+
+CSystemTime::CSystemTime(void)
+: m_pIClockDevice(nullptr)
+, m_time()
+{
+    ;
 };
 
 

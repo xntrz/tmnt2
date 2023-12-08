@@ -7,7 +7,7 @@ class CProcessMemory;
 class CProcessMail;
 
 
-class CProcessDispatcher
+class CProcessDispatcher final
 {
 private:
 	class CAccesser;
@@ -15,7 +15,7 @@ private:
 
 public:
 	CProcessDispatcher(const PROCESSTYPES::PROCESS* pProcessList);
-	virtual ~CProcessDispatcher(void);
+	~CProcessDispatcher(void);
 	bool Start(void);
 	void Stop(void);
 	bool Add(int32 iLabel);

@@ -5,7 +5,7 @@ namespace GAMEOBJECTTYPES
 {
     const int32 NAME_MAX = 16;
 
-    enum FLAG
+    enum FLAG : uint32
     {
         FLAG_NONE = 0x0,
         FLAG_PAUSE = 0x1,

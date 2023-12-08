@@ -11,6 +11,16 @@
 #include "Game/System/Hit/HitCatchData.hpp"
 
 
+namespace EFFECTNAMES
+{
+    static const char* GUARD        = "all_guard1";
+    static const char* GUARD_IMPACT = "all_guard2";
+    static const char* GUARD_BREAK  = "all_guardbreak";
+    static const char* COUNTER      = "all_count";
+    static const char* STUN_HIT     = "all_piyohit";
+};
+
+
 CCharacterAttackCalculator::CCharacterAttackCalculator(CCharacter& rCharacter, CHitAttackData& rAttack)
 : m_rCharacter(rCharacter)
 , m_rAttack(rAttack)
@@ -188,7 +198,7 @@ void CCharacterAttackCalculator::PlayEffect(CHARACTERTYPES::ATTACKRESULTTYPE att
         case CHARACTERTYPES::ATTACKRESULTTYPE_SLEEP:
         case CHARACTERTYPES::ATTACKRESULTTYPE_FREEZE:
             {
-                CEffectManager::Play("all_count", &vPosition);
+                CEffectManager::Play(EFFECTNAMES::COUNTER, &vPosition);
             }
             break;
         };
@@ -208,25 +218,25 @@ void CCharacterAttackCalculator::PlayEffect(CHARACTERTYPES::ATTACKRESULTTYPE att
 
         case CHARACTERTYPES::ATTACKRESULTTYPE_STUN:
             {
-                CEffectManager::Play("all_piyohit", &vPosition);
+                CEffectManager::Play(EFFECTNAMES::STUN_HIT, &vPosition);
             }
             break;
             
         case CHARACTERTYPES::ATTACKRESULTTYPE_GUARD:
             {
-                CEffectManager::Play("all_guard1", &vPosition);
+                CEffectManager::Play(EFFECTNAMES::GUARD, &vPosition);
             }
             break;
             
         case CHARACTERTYPES::ATTACKRESULTTYPE_GUARD_IMPACT:
             {
-                CEffectManager::Play("all_guard2", &vPosition);
+                CEffectManager::Play(EFFECTNAMES::GUARD_IMPACT, &vPosition);
             }
             break;
 
         case CHARACTERTYPES::ATTACKRESULTTYPE_GUARD_BREAK:
             {
-                CEffectManager::Play("all_guardbreak;", &vPosition);
+                CEffectManager::Play(EFFECTNAMES::GUARD_BREAK, &vPosition);
             }
             break;
         };
@@ -525,7 +535,7 @@ float CCharacterAttackCalculator::CalcAttackPowerRatio(int32 iMinPower, int32 iM
 {
     ASSERT(iMinPower < iMaxPower);
 
-    return Math::Clamp(
+    return Clamp(
         float((m_rAttack.GetPower() - iMinPower) / (iMaxPower - iMinPower)),
         0.0f,
         1.0f

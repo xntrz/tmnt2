@@ -53,7 +53,8 @@ public:
     void LookAt(const RwV3d* pvEye, const RwV3d* pvAt, const RwV3d* pvUp);
     void Skip(void);
     void SetLookat(const RwV3d* pvEye, const RwV3d* pvAt);
-    void SetCameraVibration(float fPower, float fTime, uint32 uFreq);
+    void SetCameraVibration(float fPower, float fTime, int32 nFreq);
+    void StopCameraVibration(void);
     void SetFarClipPlane(float fFarClipPlane);
     void SetNearClipPlane(float fNearClipPlane);
     void SetFogDistance(float fFogDist);
@@ -75,7 +76,7 @@ private:
     void IntroductionCreate(void);
     void IntroductionDestroy(void);
     void IntroductionUpdate(void);
-    void VibrationCreate(float fPower, float fTime, uint32 uFreq);
+    void VibrationCreate(float fPower, float fTime, int32 nFreq);
     void VibrationDestroy(void);
     void VibrationUpdate(void);
 

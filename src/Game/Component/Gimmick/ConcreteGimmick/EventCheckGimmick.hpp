@@ -174,18 +174,6 @@ private:
 };
 
 
-class CUtromAreaCheckGimmick : public CGimmick
-{
-public:
-    CUtromAreaCheckGimmick(const char* pszName, void* pParam);
-    virtual ~CUtromAreaCheckGimmick(void);
-    virtual void PostMove(void) override;
-    virtual void OnReceiveEvent(const char* pszSender, GIMMICKTYPES::EVENTTYPE eventtype) override;
-    void AreaCheckInit(void);
-    void AreaCheckOn(void);
-};
-
-
 class CDonLaserGetCheckGimmick : public CSimpleEventCheckGimmick
 {
 public:

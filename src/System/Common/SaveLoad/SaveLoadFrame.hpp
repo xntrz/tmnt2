@@ -23,7 +23,7 @@ public:
 
     enum SELECTITEM
     {
-        SELECTITEM_YES,
+        SELECTITEM_YES = 0,
         SELECTITEM_NO,
         SELECTITEM_ERROR,
         

@@ -6,7 +6,7 @@
 #include "Game/Component/GameMain/AreaInfo.hpp"
 #include "Game/Component/Menu/Dialog.hpp"
 #include "Game/System/2d/GameFont.hpp"
-#include "Game/System/2d/GameText.hpp"
+#include "Game/System/Text/GameText.hpp"
 #include "Game/System/Texture/TextureManager.hpp"
 #include "System/Common/Sprite.hpp"
 #include "System/Common/System2D.hpp"
@@ -135,7 +135,11 @@ CGaugeInformation_Container::CGaugeInformation_Container(void)
     m_pConfirmDlg->Set(0.0f, 105.0f, 640.0f, 140.0f);
     m_pConfirmDlg->SetOpenAction(true);
     m_pConfirmDlg->SetStatus(CDialog::STATUS_NO);
-    m_pConfirmDlg->SetText(CGameText::GetText(GAMETEXT::VALUE(758)), CGameFont::GetScreenSize() / 223.0f, { 0xFF, 0xFF, 0xFF, 0xFF });
+    m_pConfirmDlg->SetText(
+		CGameText::GetText(GAMETEXT(758)), 
+		CGameFont::GetScreenHeightEx(TYPEDEF::VSCR_H / 2.0f),
+		{ 0xFF, 0xFF, 0xFF, 0xFF }
+	);
     
     m_bDlgRunFlag = false;
 };
@@ -218,13 +222,13 @@ void CGaugeInformation_Container::PausePeriodSub(void)
                         else
                             m_pausestatus = CGaugeInformation::PAUSESTATUS_BACK;
                     }
-                    else if (CController::GetDigitalTrigger(iController, CController::DIGITAL_UP))
+                    else if (CController::GetDigitalTrigger(iController, CController::DIGITAL_LUP))
                     {
-                        m_nCursor = Math::InvClamp(--m_nCursor, 0, PAUSERESULTNUM - 1);
+                        m_nCursor = InvClamp(--m_nCursor, 0, PAUSERESULTNUM - 1);
                     }
-                    else if (CController::GetDigitalTrigger(iController, CController::DIGITAL_DOWN))
+                    else if (CController::GetDigitalTrigger(iController, CController::DIGITAL_LDOWN))
                     {
-                        m_nCursor = Math::InvClamp(++m_nCursor, 0, PAUSERESULTNUM - 1);
+                        m_nCursor = InvClamp(++m_nCursor, 0, PAUSERESULTNUM - 1);
                     };
                 };
             }
@@ -272,9 +276,9 @@ void CGaugeInformation_Container::PauseDrawSub(void)
 
     CSystem2D::PushRenderState();
 
-    CGameFont::m_fHeight = CGameFont::GetScreenSize() / 120.0f;
+	CGameFont::SetHeight(CGameFont::GetScreenHeightEx(TYPEDEF::VSCR_H / 3.75f));
     CGameFont::SetRGBA(255, 170, 0, 255);
-    CGameFont::Show(CGameText::GetText(GAMETEXT::VALUE(908)), -220.0f, -100.0f);
+    CGameFont::Show(CGameText::GetText(GAMETEXT(908)), -220.0f, -100.0f);
 
     float fDuration = CScreen::Framerate() * 0.5f;
     float fStartValue = (m_bCursorAnimFlag ? 255.0f : 0.0f);
@@ -296,16 +300,15 @@ void CGaugeInformation_Container::PauseDrawSub(void)
     RENDERSTATE_PUSH(rwRENDERSTATEDESTBLEND, rwBLENDONE);
 
     CGameFont::SetRGBA(255, 170, 0, uAlphaBasis);
-    CGameFont::Show(CGameText::GetText(GAMETEXT::VALUE(908)), -220.0f, -100.0f);
+    CGameFont::Show(CGameText::GetText(GAMETEXT(908)), -220.0f, -100.0f);
     
     RENDERSTATE_PUSH(rwRENDERSTATEZWRITEENABLE, true);
     RENDERSTATE_PUSH(rwRENDERSTATESRCBLEND, rwBLENDSRCALPHA);
     RENDERSTATE_PUSH(rwRENDERSTATEDESTBLEND, rwBLENDINVSRCALPHA);
 
-    CGameFont::m_fHeight = CGameFont::GetScreenSize() / 223.0f;
+	CGameFont::SetHeight(CGameFont::GetScreenHeightEx(TYPEDEF::VSCR_H / 2.0f));
     CGameFont::SetRGBA(255, 255, 255, 255);    
-    int32 nTextID = (m_bShowInformationFlag ? 8 : 9);
-    CGameFont::Show(CGameText::GetText(GAMETEXT::VALUE(nTextID)), 50.0f, -85.0f);
+    CGameFont::Show(CGameText::GetText(GAMETEXT(m_bShowInformationFlag ? 8 : 9)), 50.0f, -85.0f);
 
     m_sprite.Resize(float(CScreen::Width()), 16.0f);
     m_sprite.SetOffset(0.5f, 0.5f);
@@ -318,57 +321,57 @@ void CGaugeInformation_Container::PauseDrawSub(void)
     {
         if (CGameData::PlayParam().GetStageMode() == GAMETYPES::STAGEMODE_RIDE)
         {
-            CGameFont::m_fHeight = CGameFont::GetScreenSize() * 2.0f;
+			CGameFont::SetHeight(CGameFont::GetScreenHeight() * 2.0f);
             CGameFont::SetRGBA(255, 170, 0, 255);
-            CGameFont::Show(CGameText::GetText(GAMETEXT::VALUE(933)), -220.0f, -50.0f);
+            CGameFont::Show(CGameText::GetText(GAMETEXT(933)), -220.0f, -50.0f);
 
             float fOfsY = -30.0f;
-            CGameFont::m_fHeight = CGameFont::GetScreenSize() * 1.85f;
+			CGameFont::SetHeight(CGameFont::GetScreenHeight() * 1.85f);
             CGameFont::SetRGBA(255, 255, 255, 255);
             
             if (CGameData::PlayParam().GetArea() == AREAID::ID_AREA22 ||
                 CGameData::PlayParam().GetArea() == AREAID::ID_AREA32)
             {
-                CGameFont::Show(CGameText::GetText(GAMETEXT::VALUE(935)), -200.0f, -30.0f);
-                CGameFont::Show(CGameText::GetText(GAMETEXT::VALUE(936)), -200.0f, -10.0f);
+                CGameFont::Show(CGameText::GetText(GAMETEXT(935)), -200.0f, -30.0f);
+                CGameFont::Show(CGameText::GetText(GAMETEXT(936)), -200.0f, -10.0f);
                 fOfsY = 10.0f;
             };
 
-            CGameFont::Show(CGameText::GetText(GAMETEXT::VALUE(937)), -200.0f, fOfsY);
+            CGameFont::Show(CGameText::GetText(GAMETEXT(937)), -200.0f, fOfsY);
             fOfsY += 20.0f;
             
-            CGameFont::Show(CGameText::GetText(GAMETEXT::VALUE(938)), -200.0f, fOfsY);
+            CGameFont::Show(CGameText::GetText(GAMETEXT(938)), -200.0f, fOfsY);
             fOfsY += 20.0f;
             
             if (CGameData::PlayParam().GetArea() == AREAID::ID_AREA22 ||
                 CGameData::PlayParam().GetArea() == AREAID::ID_AREA32)
             {
-                CGameFont::Show(CGameText::GetText(GAMETEXT::VALUE(939)), -200.0f, fOfsY);
+                CGameFont::Show(CGameText::GetText(GAMETEXT(939)), -200.0f, fOfsY);
                 fOfsY += 20.0f;
             };
 
-            CGameFont::Show(CGameText::GetText(GAMETEXT::VALUE(940)), -200.0f, fOfsY);
+            CGameFont::Show(CGameText::GetText(GAMETEXT(940)), -200.0f, fOfsY);
             fOfsY += 20.0f;
             
-            CGameFont::Show(CGameText::GetText(GAMETEXT::VALUE(941)), -200.0f, fOfsY);
+            CGameFont::Show(CGameText::GetText(GAMETEXT(941)), -200.0f, fOfsY);
             fOfsY += 20.0f;
             
-            CGameFont::Show(CGameText::GetText(GAMETEXT::VALUE(942)), -200.0f, fOfsY);
+            CGameFont::Show(CGameText::GetText(GAMETEXT(942)), -200.0f, fOfsY);
             fOfsY += 20.0f;
             
-            CGameFont::Show(CGameText::GetText(GAMETEXT::VALUE(943)), -200.0f, fOfsY);
+            CGameFont::Show(CGameText::GetText(GAMETEXT(943)), -200.0f, fOfsY);
         }
         else
         {
-            CGameFont::m_fHeight = (CGameFont::GetScreenSize() / 447.0f) * 2.0f;
+			CGameFont::SetHeight(CGameFont::GetScreenHeight() * 2.0f);
             CGameFont::SetRGBA(255, 170, 0, 255);
-            CGameFont::Show(CGameText::GetText(GAMETEXT::VALUE(911)), -220.0f, -50.0f);
+            CGameFont::Show(CGameText::GetText(GAMETEXT(911)), -220.0f, -50.0f);
 
             CGameFont::SetRGBA(255, 255, 255, 255);
-            CGameFont::Show(CGameText::GetText(GAMETEXT::VALUE(786)), -200.0f, -25.0f);
-            CGameFont::Show(CGameText::GetText(GAMETEXT::VALUE(787)), -200.0f, 35.0f);
-            CGameFont::Show(CGameText::GetText(GAMETEXT::VALUE(788)), 50.0f, -25.0f);
-            CGameFont::Show(CGameText::GetText(GAMETEXT::VALUE(789)), 50.0f, 35.0f);
+            CGameFont::Show(CGameText::GetText(GAMETEXT(786)), -200.0f, -25.0f);
+            CGameFont::Show(CGameText::GetText(GAMETEXT(787)), -200.0f, 35.0f);
+            CGameFont::Show(CGameText::GetText(GAMETEXT(788)), 50.0f, -25.0f);
+            CGameFont::Show(CGameText::GetText(GAMETEXT(789)), 50.0f, 35.0f);
 
             m_sprite.SetOffset(0.0f, 0.0f);
             m_sprite.Resize(64.0f, 64.0f);
@@ -449,22 +452,22 @@ void CGaugeInformation_Container::PauseDrawSub(void)
             switch (i)
             {
             case PAUSERESULT_BACK:
-                pwszText = CGameText::GetText(GAMETEXT::VALUE(749));
+                pwszText = CGameText::GetText(GAMETEXT(749));
                 break;
 
             case PAUSERESULT_INFO:
-                pwszText = CGameText::GetText(GAMETEXT::VALUE(912));
+                pwszText = CGameText::GetText(GAMETEXT(912));
                 break;
 
             case PAUSERESULT_RET_WORLD:
                 if (CGameData::PlayParam().GetStageMode() == GAMETYPES::STAGEMODE_NEXUS)
-                    pwszText = CGameText::GetText(GAMETEXT::VALUE(923));
+                    pwszText = CGameText::GetText(GAMETEXT(923));
                 else
-                    pwszText = CGameText::GetText(GAMETEXT::VALUE(913));
+                    pwszText = CGameText::GetText(GAMETEXT(913));
                 break;
                 
             case PAUSERESULT_RET_TITLE:
-                pwszText = CGameText::GetText(GAMETEXT::VALUE(914));
+                pwszText = CGameText::GetText(GAMETEXT(914));
                 break;
             };
 
@@ -473,11 +476,11 @@ void CGaugeInformation_Container::PauseDrawSub(void)
             else
                 CGameFont::SetRGBA(255, 170, 0, 255);
 
-            CGameFont::m_fHeight = CGameFont::GetScreenSize() / 223.0f;
+			CGameFont::SetHeight(CGameFont::GetScreenHeightEx(TYPEDEF::VSCR_H / 2.0f));
             CGameFont::Show(pwszText, -200.0f, i * 25.0f - 50.0f);
         };
 
-        CGameFont::m_fHeight = CGameFont::GetScreenSize() / 271.0f;
+		CGameFont::SetHeight(CGameFont::GetScreenHeightEx(TYPEDEF::VSCR_H / 1.65f));
         CGameFont::SetRGBA(0, 128, 200, 255);
 
         Rt2dBBox bbox = { -220.0f, -350.0f, 440.0f, 300.0f };
@@ -489,19 +492,19 @@ void CGaugeInformation_Container::PauseDrawSub(void)
             switch (idArea)
             {
             case AREAID::ID_AREA60_A:
-                pwszText = CGameText::GetText(GAMETEXT::VALUE(878));
+                pwszText = CGameText::GetText(GAMETEXT(878));
                 break;
 
             case AREAID::ID_AREA60_B:
-                pwszText = CGameText::GetText(GAMETEXT::VALUE(879));
+                pwszText = CGameText::GetText(GAMETEXT(879));
                 break;
 
             case AREAID::ID_AREA60_C:
-                pwszText = CGameText::GetText(GAMETEXT::VALUE(880));
+                pwszText = CGameText::GetText(GAMETEXT(880));
                 break;
                 
             case AREAID::ID_AREA60_D:
-                pwszText = CGameText::GetText(GAMETEXT::VALUE(881));
+                pwszText = CGameText::GetText(GAMETEXT(881));
                 break;
 
             default:
@@ -509,12 +512,12 @@ void CGaugeInformation_Container::PauseDrawSub(void)
                 break;
             };
 
-            CGameFont::m_pFont->Flow(pwszText, CGameFont::m_fHeight, &bbox);
+            CGameFont::Flow(pwszText, &bbox);
         }
         else
         {
             AREAID::VALUE idArea = CGameData::PlayParam().GetArea();
-            CGameFont::m_pFont->Flow(CGameText::GetText(GAMETEXT::VALUE(idArea + 823)), CGameFont::m_fHeight, &bbox);
+            CGameFont::Flow(CGameText::GetText(GAMETEXT(idArea + 823)), &bbox);
         };
     };
 
@@ -553,31 +556,31 @@ void CGaugeInformation_Container::MissionInfoDrawSub(void)
 
     CSystem2D::PushRenderState();
 
+	CGameFont::SetHeight(CGameFont::GetScreenHeightEx(TYPEDEF::VSCR_H / 2.0f));
     CGameFont::SetRGBA(255, 170, 0, 255);
-    CGameFont::m_fHeight = CGameFont::GetScreenSize() / 223.0f;
 
     if (CGameData::PlayParam().GetStageMode() == GAMETYPES::STAGEMODE_NEXUS)
     {
-        CGameFont::Show(CGameText::GetText(GAMETEXT::VALUE(929)), -240.0f, -140.0f);
+        CGameFont::Show(CGameText::GetText(GAMETEXT(929)), -240.0f, -140.0f);
     }
     else
     {
-        CGameFont::Show(CGameText::GetText(GAMETEXT::VALUE(931)), -240.0f, -140.0f);
+        CGameFont::Show(CGameText::GetText(GAMETEXT(931)), -240.0f, -140.0f);
         
-        float fStrW = CGameFont::GetStringWidth(CGameText::GetText(GAMETEXT::VALUE(931)));
+        float fStrW = CGameFont::GetStringWidth(CGameText::GetText(GAMETEXT(931)));
         CGameFont::Show(CAreaInfo::GetEpisode(CGameData::PlayParam().GetArea()), fStrW - 240.0f, -140.0f);
     };
 
+	CGameFont::SetHeight(CGameFont::GetScreenHeightEx(TYPEDEF::VSCR_H / 2.5f));
     CGameFont::SetRGBA(255, 170, 0, 255);
-    CGameFont::m_fHeight = CGameFont::GetScreenSize() / 179.0f;    
     CGameFont::Show(CAreaInfo::GetDispName(CGameData::PlayParam().GetArea()), -230.0f, -110.0f);
 
+	CGameFont::SetHeight(CGameFont::GetScreenHeightEx(TYPEDEF::VSCR_H / 2.0f));
     CGameFont::SetRGBA(202, 0, 103, 255);
-    CGameFont::m_fHeight = CGameFont::GetScreenSize() / 223.0f;
-    CGameFont::Show(CGameText::GetText(GAMETEXT::VALUE(932)), -230.0f, -80.0f);
+    CGameFont::Show(CGameText::GetText(GAMETEXT(932)), -230.0f, -80.0f);
 
+	CGameFont::SetHeight(CGameFont::GetScreenHeightEx(TYPEDEF::VSCR_H / 2.0f));
     CGameFont::SetRGBA(202, 0, 103, 255);
-    CGameFont::m_fHeight = CGameFont::GetScreenSize() / 223.0f;
     
     Rt2dBBox bbox = { -220.0f, -230.0f, 440.0f, 300.0f };
     const wchar* pwszText = nullptr;
@@ -587,19 +590,19 @@ void CGaugeInformation_Container::MissionInfoDrawSub(void)
         switch (CGameData::PlayParam().GetArea())
         {
         case AREAID::ID_AREA60_A:
-            pwszText = CGameText::GetText(GAMETEXT::VALUE(878));
+            pwszText = CGameText::GetText(GAMETEXT(878));
             break;
             
         case AREAID::ID_AREA60_B:
-            pwszText = CGameText::GetText(GAMETEXT::VALUE(879));
+            pwszText = CGameText::GetText(GAMETEXT(879));
             break;
             
         case AREAID::ID_AREA60_C:
-            pwszText = CGameText::GetText(GAMETEXT::VALUE(880));
+            pwszText = CGameText::GetText(GAMETEXT(880));
             break;
             
         case AREAID::ID_AREA60_D:
-            pwszText = CGameText::GetText(GAMETEXT::VALUE(881));
+            pwszText = CGameText::GetText(GAMETEXT(881));
             break;
             
         default:
@@ -609,15 +612,15 @@ void CGaugeInformation_Container::MissionInfoDrawSub(void)
     }
     else
     {
-        pwszText = CGameText::GetText(GAMETEXT::VALUE(823 + CGameData::PlayParam().GetArea()));        
+        pwszText = CGameText::GetText(GAMETEXT(823 + CGameData::PlayParam().GetArea()));        
     };
 
     ASSERT(pwszText);
-    CGameFont::m_pFont->Flow(pwszText, CGameFont::m_fHeight, &bbox);
+    CGameFont::Flow(pwszText, &bbox);
 
+	CGameFont::SetHeight(CGameFont::GetScreenHeightEx(TYPEDEF::VSCR_H / 2.0f));
     CGameFont::SetRGBA(255, 255, 255, 255);
-    CGameFont::m_fHeight = CGameFont::GetScreenSize() / 223.0f;
-    CGameFont::Show(CGameText::GetText(GAMETEXT::VALUE(1226)), -230.0f, 135.0f);
+    CGameFont::Show(CGameText::GetText(GAMETEXT(1226)), -230.0f, 135.0f);
 
     CSystem2D::PopRenderState();
 };
@@ -766,11 +769,10 @@ void CGaugeInformation_Container::DispBattleNexusInfoSub(void)
         CSystem2D::PushRenderState();
         
         wchar wszBuff[128];
-        const wchar* pwszFormat = CGameText::GetText(GAMETEXT::VALUE(0x39E));
+        const wchar* pwszFormat = CGameText::GetText(GAMETEXT(0x39E));
         CTextData::Sprintf(wszBuff, pwszFormat, StageIndex + 1);
 
-        CGameFont::m_fHeight = (CGameFont::GetScreenSize() / 156.0f);
-        
+		CGameFont::SetHeight(CGameFont::GetScreenHeightEx(TYPEDEF::VSCR_H / 2.87f));
         CGameFont::SetRGBA(255, 170, 0, Alpha);
         CGameFont::Show(
             wszBuff,
@@ -778,7 +780,7 @@ void CGaugeInformation_Container::DispBattleNexusInfoSub(void)
             -20.0f
         );
 
-        const wchar* pwszText = CGameText::GetText(GAMETEXT::VALUE(StringOffset + StageIndex));
+        const wchar* pwszText = CGameText::GetText(GAMETEXT(StringOffset + StageIndex));
         CGameFont::SetRGBA(255, 170, 0, Alpha);
         CGameFont::Show(
             pwszText,
@@ -928,8 +930,8 @@ void CGaugeInformation_Container::BossGaugeDrawSub(int32 no)
     const wchar* pwszEnemyName = ENEMYID::GetDispName(IdEnemy);
 
     CSystem2D::PushRenderState();
+	CGameFont::SetHeight(CGameFont::GetScreenHeightEx(TYPEDEF::VSCR_H / 2.0f));
     CGameFont::SetRGBA(255, 255, 255, 255);
-    CGameFont::m_fHeight = CGameFont::GetScreenSize() / 223.0f;
     CGameFont::Show(
         pwszEnemyName,
         268.0f - CGameFont::GetStringWidth(pwszEnemyName),
@@ -976,7 +978,7 @@ void CGaugeInformation_Container::InfoDispBase(bool bFullScreen)
 {
     if (bFullScreen)
     {
-        m_sprite.Resize(CSystem2D::VirtualScreenWidth(), CSystem2D::VirtualScreenHeight());
+		m_sprite.Resize(CSprite::m_fVirtualScreenW, CSprite::m_fVirtualScreenH);
     }
     else
     {

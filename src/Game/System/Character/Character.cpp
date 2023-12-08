@@ -45,6 +45,7 @@ CCharacter::CCharacter(const char* pszName, TYPE type)
 , m_nNumBodyHitData(0)
 , m_pMotionParameterController(nullptr)
 , m_liftinfo({ 0 })
+, m_iDamageRequest(0)
 {
     CCharacterManager::Regist(this);
 };
@@ -1058,9 +1059,8 @@ void CCharacter::ChangeMotion(const char* pszMotionName, bool bForce)
     m_vPosition = vPos;
 
     RwV3d vFrameVelocity = Math::VECTOR3_ZERO;
-    CheckCollisionForBody(vFrameVelocity);
-    //CheckCollisionForWall(vFrameVelocity);
-    
+    //CheckCollisionForBody(vFrameVelocity); TODO
+    //CheckCollisionForWall(vFrameVelocity); TODO
     UpdateTransformForModel();
     UpdateMatrices();
     OnChangeMotion();
@@ -1254,7 +1254,10 @@ float CCharacter::GetDirection(void) const
 
 void CCharacter::SetCharacterFlag(CHARACTERTYPES::FLAG flag, bool bSet)
 {
-    FLAG_CHANGE(m_characterflag, flag, bSet);
+    if (bSet)
+        FLAG_SET(m_characterflag, flag);
+    else
+        FLAG_CLEAR(m_characterflag, flag);
 };
 
 

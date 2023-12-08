@@ -41,7 +41,6 @@ public:
     bool WarningIsShowing(void) const;
     
 private:
-    static MESSAGE m_message;
     bool m_bSleepFlag;
     int32 m_iSeqLabel;
     CMessageWindow* m_pWindow;

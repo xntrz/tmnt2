@@ -2,7 +2,7 @@
 
 #include "Game/Component/GameMain/GameProperty.hpp"
 #include "Game/Component/Player/PlayerCharacter.hpp"
-#include "Game/Component/Gimmick/GimmickUtils.hpp"
+#include "Game/Component/Gimmick/Utils/GimmickUtils.hpp"
 #include "Game/System/Map/WorldMap.hpp"
 
 
@@ -175,10 +175,10 @@ CPushingGimmickMove::RESULT CPushingGimmickMove::OnMove(float dt)
             m_vPosition.y += (m_vVelocity.y * dt);
             m_vPosition.z += (m_vVelocity.z * dt);
 
-            if ((m_fallaxis == FALL_ROT_AXIS_X_P && m_vRotVelocity.x > 1.0471976f)  ||
-                (m_fallaxis == FALL_ROT_AXIS_X_N && m_vRotVelocity.x < -1.0471976f) ||
-                (m_fallaxis == FALL_ROT_AXIS_Z_P && m_vRotVelocity.z < 1.0471976f)  ||
-                (m_fallaxis == FALL_ROT_AXIS_Z_N && m_vRotVelocity.z < -1.0471976f))
+            if (( (m_fallaxis == FALL_ROT_AXIS_X_P) && (m_vVelocity.x >  Math::ToRadian(60.0f)) ) ||
+                ( (m_fallaxis == FALL_ROT_AXIS_X_N) && (m_vVelocity.x < -Math::ToRadian(60.0f)) ) ||
+                ( (m_fallaxis == FALL_ROT_AXIS_Z_P) && (m_vVelocity.z <  Math::ToRadian(60.0f)) ) ||
+                ( (m_fallaxis == FALL_ROT_AXIS_Z_N) && (m_vVelocity.z < -Math::ToRadian(60.0f)) ))
             {
                 m_vVelocity.x = 0.0f;
                 m_vVelocity.z = 0.0f;
@@ -250,18 +250,18 @@ bool CPushingGimmickMove::RequestPlayerPushGimmick(CPlayerCharacter* pPlayerChar
         
         RwV3d vWallNormal = pWallInfo->m_vNormal;
 
-        if (isSameDirectionVectors(&vGimmickFrontDir, &vPlayerDir, Math::Cos(0.2617994f)) &&
+        if (isSameDirectionVectors(&vGimmickFrontDir, &vPlayerDir, Math::Cos(MATH_DEG2RAD(15.0f))) &&
             isSameDirectionVectors(&vGimmickBackDir, &vWallNormal, 0.99f))
         {
             RwV3d vVelocity = Math::VECTOR3_ZERO;
             
             Math::Vec3_Scale(&vVelocity, &vGimmickFrontDir, m_fSpeed);
             SetVelocity(&vVelocity);
-            
-            m_bRequestPush = true;            
+
+            m_bRequestPush = true;
             bResult = true;
         }
-        else if (isSameDirectionVectors(&vGimmickBackDir, &vPlayerDir, Math::Cos(0.2617994f)) &&
+        else if (isSameDirectionVectors(&vGimmickBackDir, &vPlayerDir, Math::Cos(MATH_DEG2RAD(15.0f))) &&
                  isSameDirectionVectors(&vGimmickFrontDir, &vWallNormal, 0.99f))
         {
             RwV3d vVelocity = Math::VECTOR3_ZERO;
@@ -357,7 +357,7 @@ bool CPushingGimmickMove::isFall(const RwV3d* pvAt, const RwV3d* pvRight)
     RwV3d vGimmickAt = Math::VECTOR3_ZERO;
     RwV3dTransformPoint(&vGimmickAt, &Math::VECTOR3_AXIS_Z, &matrix);
 
-    if (isSameDirectionVectors(&vGimmickAt, &m_vVelocity, Math::Cos(0.78539819f)))
+    if (isSameDirectionVectors(&vGimmickAt, &m_vVelocity, Math::Cos(MATH_DEG2RAD(45.0f))))
         m_fallaxis = FALL_ROT_AXIS_X_P;
     else
         m_fallaxis = FALL_ROT_AXIS_X_N;

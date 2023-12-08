@@ -4,7 +4,7 @@
 
 #include "Game/Component/GameMain/GameTypes.hpp"
 #include "Game/Component/GameData/GameData.hpp"
-#include "System/Common/Process/ProcessList.hpp"
+#include "Game/ProcessList.hpp"
 
 
 /*static*/ CProcess* CHomeSequence::Instance(void)
@@ -14,7 +14,7 @@
 
 
 CHomeSequence::CHomeSequence(void)
-: m_iCallLabel(-1)
+: m_iCallLabel(PROCESSTYPES::LABEL_EOL)
 {
     ;
 };
@@ -26,7 +26,7 @@ CHomeSequence::~CHomeSequence(void)
 };
 
 
-bool CHomeSequence::OnAttach(const void* param)
+bool CHomeSequence::OnAttach(const void* pParam)
 {
     return true;
 };
@@ -38,20 +38,20 @@ void CHomeSequence::OnDetach(void)
 };
 
 
-void CHomeSequence::OnMove(bool bRet, const void* param)
+void CHomeSequence::OnMove(bool bRet, const void* pReturnValue)
 {
     int32 iCallParam = 0;
     
     if (bRet)
     {
-        int32 iNextSequenceLabel = Branch(m_iCallLabel, param);
-        if (iNextSequenceLabel == PROCESSTYPES::LABEL_SEQ_ENDING)
+        int32 iNextSequenceLabel = Branch(m_iCallLabel, pReturnValue);
+        if (iNextSequenceLabel == PROCLABEL_SEQ_ENDING)
         {
-            if (m_iCallLabel == PROCESSTYPES::LABEL_SEQ_ANTIQUESHOP)
+            if (m_iCallLabel == PROCLABEL_SEQ_ANTIQUESHOP)
             {
                 iCallParam = GAMETYPES::ENDINGTYPE_SHOP;
             }
-            else if (m_iCallLabel == PROCESSTYPES::LABEL_SEQ_AREAPLAY)
+            else if (m_iCallLabel == PROCLABEL_SEQ_AREAPLAY)
             {
                 iCallParam = GAMETYPES::ENDINGTYPE_NEXUS;
             };
@@ -61,16 +61,16 @@ void CHomeSequence::OnMove(bool bRet, const void* param)
             //
             //  Returning to GameMainSequence
             //
-            if (m_iCallLabel == PROCESSTYPES::LABEL_SEQ_AREAPLAY ||
-                m_iCallLabel == PROCESSTYPES::LABEL_SEQ_ENDING)
-                iCallParam = PROCESSTYPES::LABEL_SEQ_TITLE;
+            if (m_iCallLabel == PROCLABEL_SEQ_AREAPLAY ||
+                m_iCallLabel == PROCLABEL_SEQ_ENDING)
+                iCallParam = PROCLABEL_SEQ_TITLE;
         };
 
 		m_iCallLabel = iNextSequenceLabel;
     }
     else
     {
-        m_iCallLabel = PROCESSTYPES::LABEL_SEQ_HOMESTAGE;
+        m_iCallLabel = PROCLABEL_SEQ_HOMESTAGE;
     };
 
     bool bResult = false;    
@@ -84,7 +84,7 @@ void CHomeSequence::OnMove(bool bRet, const void* param)
     else
     {
         if (iCallParam)
-            bResult = Call(m_iCallLabel, false, (const void*)iCallParam);
+            bResult = Call(m_iCallLabel, (const void*)iCallParam);
         else
             bResult = Call(m_iCallLabel);
     };
@@ -105,7 +105,7 @@ int32 CHomeSequence::Branch(int32 iLabel, const void* param)
     
     switch (iLabel)
     {
-    case PROCESSTYPES::LABEL_SEQ_HOMESTAGE:
+    case PROCLABEL_SEQ_HOMESTAGE:
         {
             switch (CHomeStageSequence::m_eDoorKind)
             {
@@ -118,14 +118,14 @@ int32 CHomeSequence::Branch(int32 iLabel, const void* param)
             case HOMETYPES::DOORKIND_APRIL:
                 {
                     CGameData::Record().Antique().SetShopState(CAntiqueRecord::SHOPSTATE_NORMAL);
-                    iNextSequenceLabel = PROCESSTYPES::LABEL_SEQ_ANTIQUESHOP;
+                    iNextSequenceLabel = PROCLABEL_SEQ_ANTIQUESHOP;
                 }
                 break;
 
             case HOMETYPES::DOORKIND_COMPUTER:
                 {
                     CGameData::Record().Database().SetDatabaseState(CDatabaseRecord::DBSTATE_NORMAL);
-                    iNextSequenceLabel = PROCESSTYPES::LABEL_SEQ_DATABASEMAIN;
+                    iNextSequenceLabel = PROCLABEL_SEQ_DATABASESEQ;
                 }
                 break;
 
@@ -133,7 +133,7 @@ int32 CHomeSequence::Branch(int32 iLabel, const void* param)
                 {
                     CGameData::Record().Nexus().SetNexusState(CNexusRecord::NEXUSSTATE_NORMAL);
                     CGameData::PlayParam().ClearArea();
-                    iNextSequenceLabel = PROCESSTYPES::LABEL_SEQ_NEXUSMENU;
+                    iNextSequenceLabel = PROCLABEL_SEQ_NEXUSMENU;
                 }
                 break;
 
@@ -144,48 +144,48 @@ int32 CHomeSequence::Branch(int32 iLabel, const void* param)
         }
         break;
 
-    case PROCESSTYPES::LABEL_SEQ_DATABASEMAIN:
+    case PROCLABEL_SEQ_DATABASESEQ:
         {
             if (CGameData::Option().Play().IsAutosaveEnabled())
-                iNextSequenceLabel = PROCESSTYPES::LABEL_SEQ_SAVELOADAUTO;
+                iNextSequenceLabel = PROCLABEL_SEQ_SAVELOADAUTO;
             else
-                iNextSequenceLabel = PROCESSTYPES::LABEL_SEQ_HOMESTAGE;
+                iNextSequenceLabel = PROCLABEL_SEQ_HOMESTAGE;
         }
         break;
 
-    case PROCESSTYPES::LABEL_SEQ_ANTIQUESHOP:
+    case PROCLABEL_SEQ_ANTIQUESHOP:
         {
             if (CGameData::Record().Antique().CheckJustCompleted())
             {
-                iNextSequenceLabel = PROCESSTYPES::LABEL_SEQ_ENDING;
+                iNextSequenceLabel = PROCLABEL_SEQ_ENDING;
             }
             else
             {
                 if (CGameData::Option().Play().IsAutosaveEnabled())
-                    iNextSequenceLabel = PROCESSTYPES::LABEL_SEQ_SAVELOADAUTO;
+                    iNextSequenceLabel = PROCLABEL_SEQ_SAVELOADAUTO;
                 else
-                    iNextSequenceLabel = PROCESSTYPES::LABEL_SEQ_HOMESTAGE;
+                    iNextSequenceLabel = PROCLABEL_SEQ_HOMESTAGE;
             };
         }
         break;
 
-    case PROCESSTYPES::LABEL_SEQ_NEXUSMENU:
+    case PROCLABEL_SEQ_NEXUSMENU:
         {
             if (CGameData::PlayParam().GetArea() != AREAID::ID_NONE)
             {
-                iNextSequenceLabel = PROCESSTYPES::LABEL_SEQ_AREAPLAY;
+                iNextSequenceLabel = PROCLABEL_SEQ_AREAPLAY;
             }
             else
             {
                 if (CGameData::Option().Play().IsAutosaveEnabled())
-                    iNextSequenceLabel = PROCESSTYPES::LABEL_SEQ_SAVELOADAUTO;
+                    iNextSequenceLabel = PROCLABEL_SEQ_SAVELOADAUTO;
                 else
-                    iNextSequenceLabel = PROCESSTYPES::LABEL_SEQ_HOMESTAGE;
+                    iNextSequenceLabel = PROCLABEL_SEQ_HOMESTAGE;
             };
         }
         break;
 
-    case PROCESSTYPES::LABEL_SEQ_NEXUSRETRY:
+    case PROCLABEL_SEQ_NEXUSRETRY:
         {
             bool bRetryFlag = bool(param != nullptr);
             
@@ -193,39 +193,39 @@ int32 CHomeSequence::Branch(int32 iLabel, const void* param)
             {
                 CGameData::PlayParam().ClearArea();
                 CGameData::PlayParam().SetStartArea(CGameData::PlayParam().GetArea(), 0);
-                iNextSequenceLabel = PROCESSTYPES::LABEL_SEQ_AREAPLAY;
+                iNextSequenceLabel = PROCLABEL_SEQ_AREAPLAY;
             }
             else
             {
-                iNextSequenceLabel = PROCESSTYPES::LABEL_SEQ_HOMESTAGE;
+                iNextSequenceLabel = PROCLABEL_SEQ_HOMESTAGE;
             };
         }
         break;
 
-    case PROCESSTYPES::LABEL_SEQ_SAVELOADAUTO:
+    case PROCLABEL_SEQ_SAVELOADAUTO:
         {
-            iNextSequenceLabel = PROCESSTYPES::LABEL_SEQ_HOMESTAGE;
+            iNextSequenceLabel = PROCLABEL_SEQ_HOMESTAGE;
         }
         break;
 
-    case PROCESSTYPES::LABEL_SEQ_AREAPLAY:
+    case PROCLABEL_SEQ_AREAPLAY:
         {
             CGamePlayResult::AREARESULT result = CGameData::PlayResult().GetAreaResult();
 
             switch (result)
             {
-            case CGamePlayResult::AREARESULT_CLEAR:
+            case CGamePlayResult::AREARESULT_GAMECLEAR:
                 {
                     if (CGameData::PlayParam().GetArea() != AREAID::ID_AREA60_D)
-                        iNextSequenceLabel = PROCESSTYPES::LABEL_SEQ_HOMESTAGE;
+                        iNextSequenceLabel = PROCLABEL_SEQ_HOMESTAGE;
                     else
-                        iNextSequenceLabel = PROCESSTYPES::LABEL_SEQ_ENDING;
+                        iNextSequenceLabel = PROCLABEL_SEQ_ENDING;
                 }
                 break;
 
             case CGamePlayResult::AREARESULT_GAMEOVER:
                 {
-                    iNextSequenceLabel = PROCESSTYPES::LABEL_SEQ_NEXUSRETRY;
+                    iNextSequenceLabel = PROCLABEL_SEQ_NEXUSRETRY;
                 }
                 break;
 
@@ -234,14 +234,14 @@ int32 CHomeSequence::Branch(int32 iLabel, const void* param)
                     CGamePlayResult::EXITSUB exitsub = CGameData::PlayResult().GetExitSub();
                     switch (exitsub)
                     {
-                    case CGamePlayResult::EXITSUB_AREASEL:
+					case CGamePlayResult::EXITSUB_TO_AREASEL:
                         {
                             CGameData::PlayParam().ClearArea();
-                            iNextSequenceLabel = PROCESSTYPES::LABEL_SEQ_NEXUSMENU;
+                            iNextSequenceLabel = PROCLABEL_SEQ_NEXUSMENU;
                         }
                         break;
 
-                    case CGamePlayResult::EXITSUB_TITLE:
+                    case CGamePlayResult::EXITSUB_TO_TITLE:
                         {
                             iNextSequenceLabel = PROCESSTYPES::LABEL_EOL;
                         }
@@ -263,7 +263,7 @@ int32 CHomeSequence::Branch(int32 iLabel, const void* param)
         }
         break;
 
-    case PROCESSTYPES::LABEL_SEQ_ENDING:
+    case PROCLABEL_SEQ_ENDING:
         {
             iNextSequenceLabel = PROCESSTYPES::LABEL_EOL;
         }

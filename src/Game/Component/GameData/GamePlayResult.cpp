@@ -6,7 +6,7 @@
 #include "Game/Component/GameMain/AreaInfo.hpp"
 
 
-/*static*/ const float CGamePlayResult::m_afLifeEvalTable [] =
+/*static*/ const float CGamePlayResult::m_afLifeEvalTable[] =
 {
     20.0f,
     50.0f,
@@ -120,40 +120,40 @@ void CGamePlayResult::Clear(void)
     m_result            = AREARESULT_NONE;
     m_clearsub          = CLEARSUB_A;
     m_exitsub           = EXITSUB_NONE;
-    m_baserankNormal    = GAMETYPES::CLEARRANK_NONE;
-    m_baserankRide      = GAMETYPES::CLEARRANK_NONE;
+    m_baserank          = GAMETYPES::CLEARRANK_NONE;
     m_bTakenRedCry      = false;
     m_bTakenGreenCry    = false;
     m_bTakenOrangeCry   = false;
     m_bTakenWhiteCry    = false;
     m_bTakenAntique     = false;
     m_bTakenComeback    = false;
-    m_cleartimeTotal.Clear();
+    m_cleartime.Clear();
     m_nRemainingHP      = 0;
     m_nMaxHP            = 0;
     m_nTakenItemCount   = 0;
     m_nTotalItemCount   = 0;
-    m_totalrank         = GAMETYPES::CLEARRANK_NONE;
+    m_arearank          = GAMETYPES::CLEARRANK_NONE;
     m_nRidePrizeNo      = -1;
 
-    for (int32 i = 0; i < COUNT_OF(m_aNodeStage); ++i)
+    for (int32 i = 0; i < COUNT_OF(m_aStageNode); ++i)
     {
-        m_aNodeStage[i].m_nMVP = 0;
-        m_aNodeStage[i].m_cleartime.Clear();
+        m_aStageNode[i].m_mvp = 0;
+        m_aStageNode[i].m_cleartime.Clear();
     };
 
-    m_aPlayerID[0] = PLAYERID::ID_INVALID;
-    m_aPlayerID[1] = PLAYERID::ID_INVALID;
-    m_aPlayerID[2] = PLAYERID::ID_INVALID;
-    m_aPlayerID[3] = PLAYERID::ID_INVALID;
+    m_aPlayerID[0] = PLAYERID::ID_MAX;
+    m_aPlayerID[1] = PLAYERID::ID_MAX;
+    m_aPlayerID[2] = PLAYERID::ID_MAX;
+    m_aPlayerID[3] = PLAYERID::ID_MAX;
 
-    m_CharaResultNormal.Clear();
-    m_CharaResultRide.Clear();
-    
-    m_auCleartimeEvalTable[0] = 0;
-    m_auCleartimeEvalTable[1] = 0;
-    m_auCleartimeEvalTable[2] = 0;
-    m_auCleartimeEvalTable[3] = 0;
+    m_CharaResult.Clear();
+    m_StageResult.Clear();
+    m_RideResult.Clear();
+
+    m_aClearEvalTable[0] = 0;
+    m_aClearEvalTable[1] = 0;
+    m_aClearEvalTable[2] = 0;
+    m_aClearEvalTable[3] = 0;
 };
 
 
@@ -201,7 +201,7 @@ GAMETYPES::RESULTTYPE CGamePlayResult::GetResultType(void) const
 
 bool CGamePlayResult::IsScenarioEnding(void) const
 {
-    if (m_result == AREARESULT_CLEAR)
+    if (m_result == AREARESULT_GAMECLEAR)
         return CGameData::PlayParam().GetArea() == AREAID::ID_AREA58;
     else
         return false;
@@ -210,7 +210,7 @@ bool CGamePlayResult::IsScenarioEnding(void) const
 
 bool CGamePlayResult::IsNexusEnding(void) const
 {
-    if (m_result == AREARESULT_CLEAR)
+    if (m_result == AREARESULT_GAMECLEAR)
         return CGameData::PlayParam().GetArea() == AREAID::ID_AREA60_D;
     else
         return false;
@@ -230,18 +230,15 @@ void CGamePlayResult::InitForArea(void)
     switch (CGameData::Option().Play().GetDifficulty())
     {
     case GAMETYPES::DIFFICULTY_EASY:
-        m_baserankNormal = GAMETYPES::CLEARRANK_E;
-        m_baserankRide = GAMETYPES::CLEARRANK_E;
+        m_baserank = GAMETYPES::CLEARRANK_E;
         break;
 
     case GAMETYPES::DIFFICULTY_NORMAL:
-        m_baserankNormal = GAMETYPES::CLEARRANK_D;
-        m_baserankRide = GAMETYPES::CLEARRANK_E;
+        m_baserank = GAMETYPES::CLEARRANK_D;
         break;
 
     case GAMETYPES::DIFFICULTY_HARD:
-        m_baserankNormal = GAMETYPES::CLEARRANK_C;
-        m_baserankRide = GAMETYPES::CLEARRANK_E;
+        m_baserank = GAMETYPES::CLEARRANK_C;
         break;
 
     default:
@@ -258,34 +255,46 @@ void CGamePlayResult::InitForArea(void)
 
 void CGamePlayResult::InitForStage(void)
 {
-    ;
+    m_StageResult.Clear();
 };
 
 
 void CGamePlayResult::TermForStage(void)
 {
-    getCurrentStage()->m_nMVP = GetMVP();
+    m_StageResult.Evaluate();
+
+    STAGENODE* pStageNode = getCurrentStage();
+    ASSERT(pStageNode);
+    if (pStageNode)
+        pStageNode->m_mvp = m_StageResult.GetMVP();
 };
 
 
 void CGamePlayResult::Evaluate(void)
 {
-    m_CharaResultNormal.Evaluate();
+    m_CharaResult.Evaluate();
 
     if (CGameData::PlayParam().GetStageMode() == GAMETYPES::STAGEMODE_RIDE)
     {
-        m_CharaResultRide.Evaluate();
-        m_totalrank = calcRideClearRank(m_CharaResultRide.GetTotalCoinPoint());
+        m_RideResult.Evaluate();
+        
+        int32 nPoint = m_RideResult.GetTotalCoinPoint();
+        int32 nEval = EvaluateInt(nPoint, m_anRideAreaEvalTable, COUNT_OF(m_anRideAreaEvalTable));
+        m_arearank = calcRideClearRank(nEval);
     }
     else
     {
-        initClearTimeEvalTable(CGameData::PlayParam().GetArea());
+        initClearTimeEvalTable(CGameData::PlayParam().GetArea());        
+
         int32 nEvalTime = evaluateClearTime();
-        int32 nEvalHP = evaluateRemainingHP();
+        int32 nEvalHP   = evaluateRemainingHP();
         int32 nEvalItem = evaluateItem();
-        int32 nEvalMVP = m_CharaResultNormal.Chara(m_CharaResultNormal.GetMVP()).m_nPersonalPoint;
-        int32 nEvalTotal = (nEvalTime + nEvalHP + nEvalItem + nEvalMVP);
-        m_totalrank = calcClearRank(nEvalTotal);
+        int32 nEvalMVP  = m_CharaResult.Chara(m_CharaResult.GetMVP()).m_nPersonalPoint;
+        int32 nEvalTotal= (nEvalTime + nEvalHP + nEvalItem + nEvalMVP);
+
+        int32 nEval = EvaluateInt(nEvalTotal, m_anNormalAreaEvalTable, COUNT_OF(m_anNormalAreaEvalTable));
+
+        m_arearank = calcClearRank(nEval);
     };
 };
 
@@ -299,8 +308,7 @@ void CGamePlayResult::TakePrize(AREAID::VALUE idArea)
         {
             const CGamePlayParam::PRIZEINFO& prizeinfo = CGameData::PlayParam().PrizeInfo(i);
             
-            if (prizeinfo.m_iPointsNum <= m_CharaResultRide.GetTotalCoinPoint() &&
-                !prizeinfo.m_bTaken)
+            if (prizeinfo.m_iPointsNum <= m_RideResult.GetTotalCoinPoint() && !prizeinfo.m_bTaken)
             {
                 m_nRidePrizeNo = i;
                 takeOnePrize(idArea, prizeinfo.m_PrizeType);
@@ -363,8 +371,6 @@ void CGamePlayResult::ApplyToRecord(void)
     case GAMETYPES::RESULTTYPE_NORMAL:
     case GAMETYPES::RESULTTYPE_RIDE:
         {
-            AREAID::VALUE idArea = CGameData::PlayParam().GetArea();
-            
             switch (m_clearsub)
             {
             case CLEARSUB_A:
@@ -386,28 +392,35 @@ void CGamePlayResult::ApplyToRecord(void)
                 CGameData::Record().Area().SetNowClearArea();
             };
 
-            CGameData::Record().Area().UpdateAreaClearTime(idArea, m_cleartimeTotal);
+            CGameData::Record().Area().UpdateAreaClearTime(idArea, m_cleartime);
         }
         break;
 
     case GAMETYPES::RESULTTYPE_NEXUS:
-        if (m_result == AREARESULT_CLEAR)
+        if (m_result == AREARESULT_GAMECLEAR)
         {
             GAMETYPES::NEXUSID idNexus = CAreaInfo::GetNexusID(CGameData::PlayParam().GetArea());
             ASSERT(idNexus != GAMETYPES::NEXUSID_NUM);
 
             CGameData::Record().Nexus().SetTournamentState(idNexus, CNexusRecord::STATE_CLEAR);
-            CGameData::Record().Nexus().UpdateTournamentClearTime(idNexus, m_cleartimeTotal);
+            CGameData::Record().Nexus().UpdateTournamentClearTime(idNexus, m_cleartime);
         };
         break;
     };
 };
 
 
-void CGamePlayResult::SetStageclearSecond(float fSeconds)
+void CGamePlayResult::SetStageClearSecond(float fSeconds)
 {
-    getCurrentStage()->m_cleartime = CGameTime(uint32(fSeconds));
-    m_cleartimeTotal.Add(CGameTime(uint32(fSeconds)));
+    CGameTime cleartime;
+    cleartime.Init(uint32(fSeconds));
+
+    STAGENODE* pStageNode = getCurrentStage();
+    ASSERT(pStageNode);
+    if (pStageNode)
+        pStageNode->m_cleartime = cleartime;
+    
+    m_cleartime.Add(cleartime);
 };
 
 
@@ -420,13 +433,7 @@ void CGamePlayResult::SetRemainedHP(int32 iRemainHP)
 void CGamePlayResult::SetRideCharaPlaySecond(PLAYERID::VALUE idPlayer, float fSeconds)
 {
     int32 nIndex = IndexOfChara(idPlayer);
-
-    ASSERT(nIndex >= 0 && nIndex < GAMETYPES::CHARACTER_MAX);
-
-    if (nIndex < -1)
-        return;
-
-    m_CharaResultRide.SetCharaPlaytime(nIndex, fSeconds);
+    m_RideResult.SetCharaPlaytime(nIndex, fSeconds);
 };
 
 
@@ -485,14 +492,12 @@ void CGamePlayResult::AddTechnicalAction(PLAYERID::VALUE idPlayer, GAMETYPES::TE
 {
     ASSERT(tecact >= 0 && tecact < GAMETYPES::TECACT_MAX);
 
-    int32 nIndex = IndexOfChara(idPlayer);
-
-    ASSERT(nIndex >= 0 && nIndex < GAMETYPES::CHARACTER_MAX);
-
-    if (nIndex < -1)
-        return;
-
-    m_CharaResultNormal.AddTechnicalAction(nIndex, idPlayer, tecact);
+    if (tecact >= 0 && tecact < GAMETYPES::TECACT_MAX)
+    {
+        int32 nIndex = IndexOfChara(idPlayer);
+        m_CharaResult.AddTechnicalAction(nIndex, idPlayer, tecact);
+        m_StageResult.AddTechnicalAction(nIndex, idPlayer, tecact);
+    };    
 };
 
 
@@ -501,13 +506,7 @@ void CGamePlayResult::AddRideAction(PLAYERID::VALUE idPlayer, GAMETYPES::RIDEACT
     ASSERT(rideact >= 0 && rideact < GAMETYPES::RIDEACT_MAX);
     
     int32 nIndex = IndexOfChara(idPlayer);
-
-    ASSERT(nIndex >= 0 && nIndex < GAMETYPES::CHARACTER_MAX);
-    
-    if (nIndex < -1)
-        return;
-
-    m_CharaResultRide.AddRideAction(nIndex, rideact);
+    m_RideResult.AddRideAction(nIndex, rideact);
 };
 
 
@@ -526,6 +525,8 @@ int32 CGamePlayResult::IndexOfChara(PLAYERID::VALUE idPlayer) const
         if (m_aPlayerID[i] == idPlayer)
             return i;
     };
+
+    ASSERT(false);
 
     return -1;
 };
@@ -570,49 +571,49 @@ bool CGamePlayResult::IsAntiqueTaken(void) const
 
 GAMETYPES::CLEARRANK CGamePlayResult::GetOffenseTechRank(int32 nIndex) const
 {
-    return GAMETYPES::CLEARRANK(m_baserankNormal + m_CharaResultNormal.Chara(nIndex).m_nOffenseEval);
+    return calcClearRank(m_CharaResult.Chara(nIndex).m_nOffenseEval);
 };
 
 
 GAMETYPES::CLEARRANK CGamePlayResult::GetDefenceTechRank(int32 nIndex) const
 {
-    return GAMETYPES::CLEARRANK(m_baserankNormal + m_CharaResultNormal.Chara(nIndex).m_nDefenseEval);
+    return calcClearRank(m_CharaResult.Chara(nIndex).m_nDefenseEval);
 };
 
 
 GAMETYPES::CLEARRANK CGamePlayResult::GetAerialTechRank(int32 nIndex) const
 {
-    return GAMETYPES::CLEARRANK(m_baserankNormal + m_CharaResultNormal.Chara(nIndex).m_nAerialEval);
+    return calcClearRank(m_CharaResult.Chara(nIndex).m_nAerialEval);
 };
 
 
 GAMETYPES::CLEARRANK CGamePlayResult::GetPersonalRank(int32 nIndex) const
 {
     if (m_type == GAMETYPES::RESULTTYPE_RIDE)
-        return GAMETYPES::CLEARRANK(m_baserankRide + m_CharaResultRide.Chara(nIndex).m_nPersonalEval);
+        return calcRideClearRank(m_RideResult.Chara(nIndex).m_nPersonalEval);
     else
-        return GAMETYPES::CLEARRANK(m_baserankNormal + m_CharaResultNormal.Chara(nIndex).m_nPersonalEval);
+        return calcClearRank(m_CharaResult.Chara(nIndex).m_nPersonalEval);
 };
 
 
 int32 CGamePlayResult::GetMVP(void) const
 {
     if (m_type == GAMETYPES::RESULTTYPE_RIDE)
-        return m_CharaResultRide.GetMVP();
+        return m_RideResult.GetMVP();
     else
-        return m_CharaResultNormal.GetMVP();
+        return m_CharaResult.GetMVP();
 };
 
 
 GAMETYPES::CLEARRANK CGamePlayResult::GetTotalRank(void) const
 {
-    return m_totalrank;
+    return m_arearank;
 };
 
 
 const CGameTime& CGamePlayResult::GetCleartimeTotal(void) const
 {
-    return m_cleartimeTotal;
+    return m_cleartime;
 };
 
 
@@ -621,7 +622,7 @@ float CGamePlayResult::GetRemainedHPRatio(void) const
     ASSERT(m_nMaxHP > 0);
 
     if (m_nMaxHP)
-        return float((100 * m_nRemainingHP) / m_nMaxHP);
+        return (100.0f * float(m_nRemainingHP)) / float(m_nMaxHP);
     else
         return 100.0f;
 };
@@ -630,7 +631,7 @@ float CGamePlayResult::GetRemainedHPRatio(void) const
 float CGamePlayResult::GetItemTakeRatio(void) const
 {
     if (m_nTotalItemCount)
-        return float((100 * m_nTakenItemCount) / m_nTotalItemCount);
+        return (100.0f * float(m_nTakenItemCount)) / float(m_nTotalItemCount);
     else
         return 100.0f;
 };
@@ -638,19 +639,19 @@ float CGamePlayResult::GetItemTakeRatio(void) const
 
 int32 CGamePlayResult::GetRideGoldCoin(void) const
 {
-    return m_CharaResultRide.GetTotalGoldCoin();
+    return m_RideResult.GetTotalGoldCoin();
 };
 
 
 int32 CGamePlayResult::GetRideSilverCoin(void) const
 {
-    return m_CharaResultRide.GetTotalSilverCoin();
+    return m_RideResult.GetTotalSilverCoin();
 };
 
 
 int32 CGamePlayResult::GetRideCoinPoint(void) const
 {
-    return m_CharaResultRide.GetTotalCoinPoint();
+    return m_RideResult.GetTotalCoinPoint();
 };
 
 
@@ -662,41 +663,41 @@ int32 CGamePlayResult::GetRideTakenPrizeNo(void) const
 
 GAMETYPES::CLEARRANK CGamePlayResult::GetCoinRank(int32 nIndex) const
 {
-    return GAMETYPES::CLEARRANK(m_baserankRide + m_CharaResultRide.Chara(nIndex).m_nCoinEval);
+    return calcRideClearRank(m_RideResult.Chara(nIndex).m_nCoinEval);
 };
 
 
 GAMETYPES::CLEARRANK CGamePlayResult::GetControlRank(int32 nIndex) const
 {
-    return GAMETYPES::CLEARRANK(m_baserankRide + m_CharaResultRide.Chara(nIndex).m_nControlEval);
+    return calcRideClearRank(m_RideResult.Chara(nIndex).m_nControlEval);
 };
 
 
 GAMETYPES::CLEARRANK CGamePlayResult::GetTrickRank(int32 nIndex) const
 {
-    return GAMETYPES::CLEARRANK(m_baserankRide + m_CharaResultRide.Chara(nIndex).m_nTrickEval);
+    return calcRideClearRank(m_RideResult.Chara(nIndex).m_nTrickEval);
 };
 
 
 GAMETYPES::CLEARRANK CGamePlayResult::GetShotRank(int32 nIndex) const
 {
-    return GAMETYPES::CLEARRANK(m_baserankRide + m_CharaResultRide.Chara(nIndex).m_nKillEval);
+    return calcRideClearRank(m_RideResult.Chara(nIndex).m_nShotEval);
 };
 
 
-int32 CGamePlayResult::GetStageMVP(int32 nStage) const
+int32 CGamePlayResult::GetStageMVP(int32 nIndex) const
 {
-    ASSERT(nStage >= 0 && nStage < COUNT_OF(m_aNodeStage));
+    ASSERT(nIndex >= 0 && nIndex < COUNT_OF(m_aStageNode));
 
-    return m_aNodeStage[nStage].m_nMVP;
+    return m_aStageNode[nIndex].m_mvp;
 };
 
 
-const CGameTime& CGamePlayResult::GetStageCleartime(int32 nStage) const
+const CGameTime& CGamePlayResult::GetStageCleartime(int32 nIndex) const
 {
-    ASSERT(nStage >= 0 && nStage < COUNT_OF(m_aNodeStage));
+    ASSERT(nIndex >= 0 && nIndex < COUNT_OF(m_aStageNode));
 
-    return m_aNodeStage[nStage].m_cleartime;
+    return m_aStageNode[nIndex].m_cleartime;
 };
 
 
@@ -705,28 +706,28 @@ void CGamePlayResult::initClearTimeEvalTable(AREAID::VALUE idArea)
     uint32 uCleartimeBest = CAreaInfo::GetBestRankClearTime(idArea);
     uint32 uCleartimeWorst = CAreaInfo::GetWorstRankClearTime(idArea);
 
-    m_auCleartimeEvalTable[0] = uCleartimeWorst;
-    m_auCleartimeEvalTable[1] = (uCleartimeBest + 2 * uCleartimeWorst) / 3;
-    m_auCleartimeEvalTable[2] = (uCleartimeWorst + 2 * uCleartimeBest) / 3;
-    m_auCleartimeEvalTable[3] = uCleartimeBest;
+    m_aClearEvalTable[0] = uCleartimeWorst;
+    m_aClearEvalTable[1] = (uCleartimeBest + 2 * uCleartimeWorst) / 3;
+    m_aClearEvalTable[2] = (uCleartimeWorst + 2 * uCleartimeBest) / 3;
+    m_aClearEvalTable[3] = uCleartimeBest;
 };
 
 
 GAMETYPES::CLEARRANK CGamePlayResult::calcClearRank(int32 nEval) const
 {
-    return GAMETYPES::CLEARRANK(m_baserankNormal + EvaluateInt(nEval, m_anNormalAreaEvalTable, COUNT_OF(m_anNormalAreaEvalTable)));
+    return GAMETYPES::CLEARRANK(nEval + m_baserank);
 };
 
 
 GAMETYPES::CLEARRANK CGamePlayResult::calcRideClearRank(int32 nEval) const
 {
-    return GAMETYPES::CLEARRANK(m_baserankRide + EvaluateInt(nEval, m_anRideAreaEvalTable, COUNT_OF(m_anRideAreaEvalTable)));
+    return GAMETYPES::CLEARRANK(nEval + 1);
 };
 
 
 int32 CGamePlayResult::evaluateClearTime(void) const
 {
-    return EvaluateInt(m_cleartimeTotal.GetTotalSecond(), (int32*)m_auCleartimeEvalTable, COUNT_OF(m_auCleartimeEvalTable));
+    return EvaluateInt(m_cleartime.GetTotalSecond(), (int32*)m_aClearEvalTable, COUNT_OF(m_aClearEvalTable));
 };
 
 
@@ -746,14 +747,14 @@ int32 CGamePlayResult::evaluateItem(void) const
 };
 
 
-CGamePlayResult::NODESTAGE* CGamePlayResult::getCurrentStage(void)
+CGamePlayResult::STAGENODE* CGamePlayResult::getCurrentStage(void)
 {
     int32 nStageIndex = CGameData::PlayParam().GetStageIndex();
     
-    ASSERT(nStageIndex >= 0 && nStageIndex < COUNT_OF(m_aNodeStage));
+    ASSERT(nStageIndex >= 0 && nStageIndex < COUNT_OF(m_aStageNode));
     
-    if (nStageIndex >= 0 && nStageIndex < COUNT_OF(m_aNodeStage))
-        return &m_aNodeStage[nStageIndex];
+    if (nStageIndex >= 0 && nStageIndex < COUNT_OF(m_aStageNode))
+        return &m_aStageNode[nStageIndex];
     else
         return nullptr;
 };

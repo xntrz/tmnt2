@@ -543,7 +543,7 @@ void CManipulator::RunStatusDamage(void)
 
 void CManipulator::RunPush(void)
 {
-
+    ;
 };
 
 
@@ -585,25 +585,25 @@ void CManipulator::AnalyzeInputDevice(void)
         target.y = 0.0f;
         Math::Vec3_Normalize(&target, &target);
 
-        m_input.m_fDirection = atan2(-target.x, -target.z);
+        m_input.m_fDirection = Math::ATan2(-target.x, -target.z);
     };
 
     uint32 uDigital = m_padstream.GetDigital(m_nControllerNo);
     uint32 uDigitalTrigger = m_padstream.GetDigitalTrigger(m_nControllerNo);
 
-    m_input.m_uDash = CGamepad::CheckFunction(uDigitalTrigger, CGamepad::FUNCTION_DASH);
-    m_input.m_uJump = CGamepad::CheckFunction(uDigitalTrigger, CGamepad::FUNCTION_JUMP);
+    m_input.m_uDash = IGamepad::CheckFunction(uDigitalTrigger, IGamepad::FUNCTION_DASH);
+    m_input.m_uJump = IGamepad::CheckFunction(uDigitalTrigger, IGamepad::FUNCTION_JUMP);
 
-    if (CGamepad::CheckFunction(uDigitalTrigger, CGamepad::FUNCTION_ATTACK_A) &&
-        CGamepad::CheckFunction(uDigitalTrigger, CGamepad::FUNCTION_ATTACK_B))
+    if (IGamepad::CheckFunction(uDigitalTrigger, IGamepad::FUNCTION_ATTACK_A) &&
+        IGamepad::CheckFunction(uDigitalTrigger, IGamepad::FUNCTION_ATTACK_B))
     {
         m_input.m_uAttack = 3;
     }
-    else if (CGamepad::CheckFunction(uDigitalTrigger, CGamepad::FUNCTION_ATTACK_B))
+    else if (IGamepad::CheckFunction(uDigitalTrigger, IGamepad::FUNCTION_ATTACK_B))
     {
         m_input.m_uAttack = 2;
     }
-    else if (CGamepad::CheckFunction(uDigitalTrigger, CGamepad::FUNCTION_ATTACK_A))
+    else if (IGamepad::CheckFunction(uDigitalTrigger, IGamepad::FUNCTION_ATTACK_A))
     {
         m_input.m_uAttack = 1;
     }
@@ -612,26 +612,26 @@ void CManipulator::AnalyzeInputDevice(void)
 		m_input.m_uAttack = 0;
 	};
 
-    m_input.m_uAttackCharge = CGamepad::CheckFunction(uDigital, CGamepad::FUNCTION_ATTACK_B);
-    m_input.m_uKnife = CGamepad::CheckFunction(uDigitalTrigger, CGamepad::FUNCTION_SHOT);
-    m_input.m_uGuard = CGamepad::CheckFunction(uDigital, CGamepad::FUNCTION_GUARD);
+    m_input.m_uAttackCharge = IGamepad::CheckFunction(uDigital, IGamepad::FUNCTION_ATTACK_B);
+    m_input.m_uKnife = IGamepad::CheckFunction(uDigitalTrigger, IGamepad::FUNCTION_SHOT);
+    m_input.m_uGuard = IGamepad::CheckFunction(uDigital, IGamepad::FUNCTION_GUARD);
     
 	m_input.m_uLift =
-		CGamepad::CheckFunction(uDigitalTrigger, CGamepad::FUNCTION_ATTACK_B) &&
-		CGamepad::CheckFunction(uDigital, CGamepad::FUNCTION_GUARD);
+		IGamepad::CheckFunction(uDigitalTrigger, IGamepad::FUNCTION_ATTACK_B) &&
+		IGamepad::CheckFunction(uDigital, IGamepad::FUNCTION_GUARD);
 
     m_input.m_uRecover = FLAG_TEST_ANY(
         uDigitalTrigger,
-        CController::DIGITAL_A |
-        CController::DIGITAL_B |
-        CController::DIGITAL_X |
-        CController::DIGITAL_Y
+        CController::DIGITAL_RUP    |
+        CController::DIGITAL_RDOWN  |
+        CController::DIGITAL_RLEFT  |
+        CController::DIGITAL_RRIGHT
     );
 
     m_input.m_uPassive =
-        (CGamepad::CheckFunction(uDigitalTrigger, CGamepad::FUNCTION_ATTACK_A) ||
-        CGamepad::CheckFunction(uDigitalTrigger, CGamepad::FUNCTION_ATTACK_B) ||
-        CGamepad::CheckFunction(uDigitalTrigger, CGamepad::FUNCTION_JUMP));
+        IGamepad::CheckFunction(uDigitalTrigger, IGamepad::FUNCTION_ATTACK_A) ||
+        IGamepad::CheckFunction(uDigitalTrigger, IGamepad::FUNCTION_ATTACK_B) ||
+        IGamepad::CheckFunction(uDigitalTrigger, IGamepad::FUNCTION_JUMP);
 
 	m_padstream.GetInput(&m_input, sizeof(m_input));
 };
@@ -639,32 +639,22 @@ void CManipulator::AnalyzeInputDevice(void)
 
 void CManipulator::AnalyzeInputVector(RwV3d& rvInputVector, float& rfInputVectorLength)
 {
-    int16 nAnalogRX = m_padstream.GetAnalogX(m_nControllerNo);
-    int16 nAnalogRY = m_padstream.GetAnalogY(m_nControllerNo);
+    float x = float(m_padstream.GetAnalogX(m_nControllerNo));
+    float y = float(m_padstream.GetAnalogY(m_nControllerNo));
 
-    float rx = 0.0f;
-    float ry = 0.0f;
+    x = (x >= 0.0f ? (x / float(TYPEDEF::SINT16_MAX)) : -(x / float(TYPEDEF::SINT16_MIN)));
+    y = (y >= 0.0f ? -(y / float(TYPEDEF::SINT16_MAX)) : (y / float(TYPEDEF::SINT16_MIN)));
 
-    if (nAnalogRX >= 0)
-        rx = float(nAnalogRX / TYPEDEF::SINT16_MAX);
-    else
-        rx = -float(nAnalogRX / TYPEDEF::SINT16_MIN);
-
-    if (nAnalogRY >= 0)
-        ry = -float(nAnalogRY / TYPEDEF::SINT16_MAX);
-    else
-        ry = float(nAnalogRY / TYPEDEF::SINT16_MIN);
-
-    rvInputVector.x = rx;
+    rvInputVector.x = x;
     rvInputVector.y = 0.0f;
-    rvInputVector.z = ry;
+    rvInputVector.z = y;
     rfInputVectorLength = Math::Vec3_Length(&rvInputVector);
 
-#ifdef _TARGET_PC
-    uint32 uDigitalMovementMask =   (CController::DIGITAL_UP |
-                                    CController::DIGITAL_DOWN |
-                                    CController::DIGITAL_LEFT |
-                                    CController::DIGITAL_RIGHT);
+#ifdef TARGET_PC
+    uint32 uDigitalMovementMask =   (CController::DIGITAL_LUP |
+                                    CController::DIGITAL_LDOWN |
+                                    CController::DIGITAL_LLEFT |
+                                    CController::DIGITAL_LRIGHT);
 
     uint32 uDigital = m_padstream.GetDigital(m_nControllerNo);
     if (!FLAG_TEST_ANY(uDigital, uDigitalMovementMask))
@@ -675,11 +665,11 @@ void CManipulator::AnalyzeInputVector(RwV3d& rvInputVector, float& rfInputVector
     //
     //  Check X axis
     //
-    if (FLAG_TEST(uDigital, CController::DIGITAL_LEFT))
+    if (FLAG_TEST(uDigital, CController::DIGITAL_LLEFT))
     {
         xDigital = -1.0f;
     }
-    else if (FLAG_TEST(uDigital, CController::DIGITAL_RIGHT))
+    else if (FLAG_TEST(uDigital, CController::DIGITAL_LRIGHT))
     {
         xDigital = 1.0f;
     }
@@ -691,11 +681,11 @@ void CManipulator::AnalyzeInputVector(RwV3d& rvInputVector, float& rfInputVector
     //
     //  Check Y axis
     //
-    if (FLAG_TEST(uDigital, CController::DIGITAL_UP))
+    if (FLAG_TEST(uDigital, CController::DIGITAL_LUP))
     {
         yDigital = -1.0f;
     }
-    else if (FLAG_TEST(uDigital, CController::DIGITAL_DOWN))
+    else if (FLAG_TEST(uDigital, CController::DIGITAL_LDOWN))
     {
         yDigital = 1.0f;
     }
@@ -714,25 +704,14 @@ void CManipulator::AnalyzeInputVector(RwV3d& rvInputVector, float& rfInputVector
 
 void CManipulator::SetSpecificAbilityFlag(void)
 {
-    m_pPlayerChr->SetPlayerFlag(
-        PLAYERTYPES::FLAG_PUSH,
-        bool(m_input.m_uMove != 0 )
-    );
-
-    m_pPlayerChr->SetPlayerFlag(
-        PLAYERTYPES::FLAG_CONSOLE,
-        bool(m_input.m_uAttack != 0)
-    );
+    m_pPlayerChr->SetPlayerFlag(PLAYERTYPES::FLAG_PUSH,     bool(m_input.m_uMove != 0));
+    m_pPlayerChr->SetPlayerFlag(PLAYERTYPES::FLAG_CONSOLE,  bool(m_input.m_uAttack != 0));
 };
 
 
 void CManipulator::SetConfusionInput(void)
 {
     if (m_pPlayerChr->IsAttributeFlagSet(PLAYERTYPES::ATTRIBUTE_CONFUSION))
-    {
-        m_pPlayerChr->SetDirection(
-            m_pPlayerChr->GetDirection() + Math::PI
-        );
-    };
+        m_pPlayerChr->SetDirection(m_pPlayerChr->GetDirection() + Math::PI);
 };
 

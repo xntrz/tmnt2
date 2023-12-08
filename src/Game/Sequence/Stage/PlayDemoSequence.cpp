@@ -1,13 +1,15 @@
 #include "PlayDemoSequence.hpp"
 #include "PlayDemoSeqState.hpp"
 
-#include "Game/Component/GameMain/GameProperty.hpp"
 #include "Game/Component/GameData/GameData.hpp"
+#include "Game/Component/GameMain/GameProperty.hpp"
 #include "Game/System/2d/GameFont.hpp"
-#include "Game/System/2d/GameText.hpp"
-#include "Game/System/Texture/TextureManager.hpp"
-#include "Game/System/Sound/GameSound.hpp"
 #include "Game/System/Misc/PadStream.hpp"
+#include "Game/System/Misc/ControllerMisc.hpp"
+#include "Game/System/Misc/Timeout.hpp"
+#include "Game/System/Sound/GameSound.hpp"
+#include "Game/System/Text/GameText.hpp"
+#include "Game/System/Texture/TextureManager.hpp"
 #include "System/Common/Controller.hpp"
 #include "System/Common/System2D.hpp"
 
@@ -54,7 +56,7 @@ CPlayDemoSequence::~CPlayDemoSequence(void)
 };
 
 
-bool CPlayDemoSequence::OnAttach(const void* param)
+bool CPlayDemoSequence::OnAttach(const void* pParam)
 {
     CGameData::Attribute().SetGamemode(GAMETYPES::GAMEMODE_DEMO);
     
@@ -88,7 +90,7 @@ bool CPlayDemoSequence::OnAttach(const void* param)
     CGameData::PlayParam().SetStage(m_idStage);
     CGameData::OnBeginArea();
 
-    CStageBaseSequence::OnAttach(param);
+    CStageBaseSequence::OnAttach(pParam);
 
     RegisterStateObject(STATE_LOAD, new CLoadStageSeqState(CGameData::PlayParam().GetStage()), true);
     RegisterStateObject(STATE_PLAY, new CPlayDemoStageSeqState, true);
@@ -96,6 +98,12 @@ bool CPlayDemoSequence::OnAttach(const void* param)
     ChangeState(STATE_LOAD);
     
     Math::SRand(123456);
+
+#ifdef BUILD_TRIAL
+    CTimeoutProcess::Enable(this, true);
+    CTimeoutProcess::Start(this);
+#endif    
+    
     return true;
 };
 
@@ -105,7 +113,7 @@ void CPlayDemoSequence::OnDetach(void)
     CStageBaseSequence::OnDetach();
 
     CGameData::Attribute().SetVirtualPad(CController::CONTROLLER_LOCKED_ON_VIRTUAL);
-    CController::UnlockAllControllers();
+    UnlockAllControllers();
 
     if (++m_iStageIndex >= COUNT_OF(m_aStageTable))
         m_iStageIndex = 0;
@@ -121,9 +129,9 @@ void CPlayDemoSequence::OnDetach(void)
 };
 
 
-void CPlayDemoSequence::OnMove(bool bRet, const void* param)
+void CPlayDemoSequence::OnMove(bool bRet, const void* pReturnValue)
 {
-    CStageBaseSequence::OnMove(bRet, param);
+    CStageBaseSequence::OnMove(bRet, pReturnValue);
 
     if (GetState() == STATE_PLAY)
     {
@@ -156,10 +164,10 @@ void CPlayDemoSequence::OnDraw(void) const
         {
             CSystem2D::PushRenderState();
             
-            CGameFont::m_fHeight = CGameFont::GetScreenSize() / 150.0f;
+			CGameFont::SetHeight(CGameFont::GetScreenHeightEx(TYPEDEF::VSCR_H / 3.0f));
             CGameFont::SetRGBA(255, 124, 0, uAlphaBasis);
             
-            const wchar* pwszText = CGameText::GetText(GAMETEXT::VALUE(11));
+            const wchar* pwszText = CGameText::GetText(GAMETEXT(11));
             CGameFont::Show(
                 pwszText,
                 272.0f - CGameFont::GetStringWidth(pwszText),

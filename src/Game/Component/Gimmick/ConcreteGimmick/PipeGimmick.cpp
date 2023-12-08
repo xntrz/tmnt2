@@ -1,7 +1,7 @@
 #include "PipeGimmick.hpp"
 
 #include "Game/Component/GameMain/GameProperty.hpp"
-#include "Game/Component/Gimmick/GimmickUtils.hpp"
+#include "Game/Component/Gimmick/Utils/GimmickUtils.hpp"
 #include "Game/Component/Gimmick/GimmickParam.hpp"
 #include "Game/Component/Gimmick/GimmickDebug.hpp"
 #include "Game/System/Hit/HitAttackData.hpp"
@@ -39,7 +39,6 @@ CPipeGimmick::~CPipeGimmick(void)
 
 void CPipeGimmick::GetPosition(RwV3d* pvPosition) const
 {
-    ASSERT(pvPosition);
     *pvPosition = m_vPosition;
 };
 
@@ -85,7 +84,7 @@ void CPipeGimmick::OnCatchAttack(CHitAttackData* pAttack)
 {
     ASSERT(pAttack);
     
-    if (m_state = STATE_WAIT)
+    if (m_state == STATE_WAIT)
     {
         if (pAttack->IsFlagSlice())
         {
@@ -196,11 +195,6 @@ void CPipeGimmick::waiting(void)
         Catch.SetCatchNo(i);
 
         CHitAttackManager::RegistCatch(&Catch);
-
-#ifdef _DEBUG
-        if (CGimmickDebug::SHOW_CATCH)
-            CDebugShape::ShowSphere(&sphere);
-#endif
     };
 };
 

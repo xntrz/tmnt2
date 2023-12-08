@@ -1,6 +1,7 @@
 #include "Ride2D.hpp"
 #include "RideTypes.hpp"
 #include "RideStage.hpp"
+#include "RidePlayer.hpp"
 
 #include "Game/Component/GameMain/GameProperty.hpp"
 #include "Game/Component/GameMain/GamePlayer.hpp"
@@ -218,37 +219,42 @@ static CRide2DMedalAnimation* s_pMedalAnimation = nullptr;
     
     for (int32 i = 0; i < nGamePlayerNum; ++i)
     {
-        IGamePlayer& GamePlayer = CGameProperty::Player(i);
-
+        IGamePlayer* pGamePlayer = CGameProperty::Player(i);
+        CRidePlayer* pRidePlayer = static_cast<CRidePlayer*>(pGamePlayer->GetPlayer());
+        
         float fOfsX = (nGamePlayerNum - i - 1) * -69.0f;
         
         DrawPersonalWindow(fOfsX, i);
         DrawPersonalPlayer(fOfsX, i);
         DrawPersonalMedal(fOfsX);
-        DrawPersonalScore(fOfsX + 224.0f, 179.0f, GamePlayer.GetScore(RIDETYPES::SCOREKIND_GOLD));
-        DrawPersonalScore(fOfsX + 224.0f, 194.0f, GamePlayer.GetScore(RIDETYPES::SCOREKIND_SILVER));
+        DrawPersonalScore(fOfsX + 224.0f, 179.0f, pRidePlayer->GetScore(RIDETYPES::SCOREKIND_GOLD));
+        DrawPersonalScore(fOfsX + 224.0f, 194.0f, pRidePlayer->GetScore(RIDETYPES::SCOREKIND_SILVER));
     };
 };
 
 
 /*static*/ void CRide2D::DrawPersonalWindow(float fOfsX, int32 nPlayerNo)
 {
+    IGamePlayer* pGamePlayer = CGameProperty::Player(nPlayerNo);
+    CRidePlayer* pRidePlayer = static_cast<CRidePlayer*>(pGamePlayer->GetPlayer());
+
     CSprite sprite;
-    
     sprite.SetTextureAndResize(CTextureManager::GetRwTexture("ride_info_window"));
     sprite.SetPositionAndSize(fOfsX + 232.0f, 185.0f, 128.0f, 64.0f);
-    sprite.SetRGBA(PLAYERID::GetColor(CGameProperty::Player(nPlayerNo).GetCurrentCharacterID()));
+    sprite.SetRGBA(PLAYERID::GetColor(pRidePlayer->GetCurrentCharacterID()));
     sprite.Draw();
 };
 
 
 /*static*/ void CRide2D::DrawPersonalPlayer(float fOfsX, int32 nPlayerNo)
 {
-    CSprite sprite;
+    IGamePlayer* pGamePlayer = CGameProperty::Player(nPlayerNo);
+    CRidePlayer* pRidePlayer = static_cast<CRidePlayer*>(pGamePlayer->GetPlayer());
 
+    CSprite sprite;
     sprite.SetTextureAndResize(CTextureManager::GetRwTexture("ride_chara_p"));
     sprite.SetPositionAndSize(fOfsX + 256.0f, 168.0f, 64.0f, 32.0f);
-    sprite.SetRGBA(PLAYERID::GetColor(CGameProperty::Player(nPlayerNo).GetCurrentCharacterID()));
+    sprite.SetRGBA(PLAYERID::GetColor(pRidePlayer->GetCurrentCharacterID()));
     sprite.SetUV(
         0.0f,
         float(nPlayerNo) * 0.25f,

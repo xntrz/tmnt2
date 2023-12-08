@@ -1,16 +1,18 @@
 #include "GamePlayer.hpp"
 #include "GameProperty.hpp"
 #include "GameEvent.hpp"
+#include "GamePlayerContainer.hpp"
 
 #include "Game/Component/Player/PlayerCharacter.hpp"
 #include "Game/Component/Player/Player.hpp"
 #include "Game/Component/GameData/GameData.hpp"
 #include "Game/System/GameObject/GameObjectManager.hpp"
-#include "Game/System/Misc/Gamepad.hpp"
 
 
 CGamePlayerSharedProperty::CGamePlayerSharedProperty(void)
-: m_nHP(0)
+: m_bDynamicCreation(false)
+, m_nRefCnt(0)
+, m_nHP(0)
 , m_nHPMax(0)
 {
     ;
@@ -23,6 +25,22 @@ CGamePlayerSharedProperty::~CGamePlayerSharedProperty(void)
 };
 
 
+void CGamePlayerSharedProperty::AddRef(void)
+{
+    ++m_nRefCnt;
+};
+
+
+void CGamePlayerSharedProperty::Release(void)
+{
+    if (!--m_nRefCnt)
+    {
+        if (m_bDynamicCreation)
+            delete this;
+    };
+};
+
+
 void CGamePlayerSharedProperty::Reset(void)
 {
     m_nHP = 0;
@@ -32,7 +50,7 @@ void CGamePlayerSharedProperty::Reset(void)
 
 int32 CGamePlayerSharedProperty::AddHP(int32 nHP)
 {
-    m_nHP = Math::Clamp(m_nHP + nHP, 0, m_nHPMax);
+    m_nHP = Clamp(m_nHP + nHP, 0, m_nHPMax);
     return m_nHP;
 };
 
@@ -81,6 +99,8 @@ CGamePlayerProperty::~CGamePlayerProperty(void)
 
 void CGamePlayerProperty::Setup(bool bResetShared)
 {
+    SharedProperty().AddRef();
+    
     if (bResetShared)
         SharedProperty().Reset();
 
@@ -92,7 +112,7 @@ void CGamePlayerProperty::Setup(bool bResetShared)
 
 void CGamePlayerProperty::Cleanup(void)
 {
-    ;
+    SharedProperty().Release();
 };
 
 
@@ -131,7 +151,7 @@ void CGamePlayerProperty::SetDamage(int32 nDmg)
 
 void CGamePlayerProperty::AddShurikenNum(int32 nShurikenNum)
 {
-    m_nShuriken = Math::Clamp(m_nShuriken + nShurikenNum, 0, m_nShurikenMax);
+    m_nShuriken = Clamp(m_nShuriken + nShurikenNum, 0, m_nShurikenMax);
 };
 
 
@@ -177,11 +197,14 @@ int32 CGamePlayerProperty::GetShurikenMax(void) const
 };
 
 
-/*static*/ CGamePlayer& CGamePlayer::Dummy(void)
+/*static*/ CGamePlayer CGamePlayer::m_dummy;
+/*static*/ int32 CGamePlayer::m_nDamageNegationCount = 0;
+/*static*/ CGamePlayerContainer* CGamePlayer::m_pContainer = nullptr;
+
+
+/*static*/ CGamePlayer* CGamePlayer::Dummy(void)
 {
-    static CGamePlayer s_DummyGameplayer;
-    
-    return s_DummyGameplayer;
+    return &m_dummy;
 };
 
 
@@ -205,7 +228,16 @@ int32 CGamePlayerProperty::GetShurikenMax(void) const
 };
 
 
-/*static*/ int32 CGamePlayer::m_nDamageNegationCount = 0;
+/*static*/ void CGamePlayer::AttachContainer(CGamePlayerContainer* pContainer)
+{
+    m_pContainer = pContainer;
+};
+
+
+/*static*/ void CGamePlayer::DetachContainer(void)
+{
+    m_pContainer = nullptr;
+};
 
 
 CGamePlayer::CGamePlayer(void)
@@ -213,6 +245,7 @@ CGamePlayer::CGamePlayer(void)
 , m_nNo(-1)
 , m_hObj(0)
 , m_pPlayer(nullptr)
+, m_property()
 , m_vPosition(Math::VECTOR3_ZERO)
 , m_vLastPosition(Math::VECTOR3_ZERO)
 {
@@ -226,90 +259,34 @@ CGamePlayer::~CGamePlayer(void)
 };
 
 
-void CGamePlayer::GenerateItemEffect(ITEMID::VALUE idItem)
+void CGamePlayer::AddRef(void)
 {
-    if (IsAlive())
-        Player().GenerateItemEffect(idItem);
+    ++m_nRefCount;
 };
 
 
-void CGamePlayer::Awake(void)
+void CGamePlayer::Release(void)
 {
-    if (IsAlive())
-        Player().Awake();    
-};
-
-
-void CGamePlayer::Sleep(void)
-{
-    if (IsAlive())
-        Player().Sleep();
-};
-
-
-bool CGamePlayer::IsIncludedCharacter(PLAYERID::VALUE idCharacter) const
-{
-    if (IsAlive())
-        return Player().IsIncludedCharacter(idCharacter);
-    else
-        return false;
+    if (!--m_nRefCount)
+    {
+        if (m_pContainer)
+            m_pContainer->Remove(this);
+        else
+            delete this;
+    };
 };
 
 
 bool CGamePlayer::IsAlive(void) const
 {
-    CGameObject* pObject = CGameObjectManager::GetObject(m_hObj);
-    if (!pObject)
-        return false;
-
-    ASSERT(pObject == m_pPlayer);
-
-    return true;
+    return (CGameObjectManager::GetObject(m_hObj) != nullptr);
 };
 
 
-int32 CGamePlayer::GetPlayerNo(void) const
-{
-    return m_nNo;
-};
-
-
-CPlayerCharacter* CGamePlayer::GetCharacter(int32 nIndex) const
-{
-    return Player().GetCharacter(nIndex);
-};
-
-
-CPlayerCharacter* CGamePlayer::GetCurrentCharacter(void) const
-{
-    return Player().GetCurrentCharacter();
-};
-
-
-PLAYERID::VALUE CGamePlayer::GetCharacterID(int32 nIndex) const
+void CGamePlayer::GetPosition(RwV3d* pvPosition) const
 {
     if (IsAlive())
-        return Player().GetCharacter(nIndex)->GetID();
-    else
-        return PLAYERID::ID_INVALID;
-};
-
-
-PLAYERID::VALUE CGamePlayer::GetCurrentCharacterID(void) const
-{
-    if (IsAlive())
-        return Player().GetCurrentCharacterID();
-    else
-        return PLAYERID::ID_INVALID;
-};
-
-
-void CGamePlayer::GetPosition(RwV3d* pvPosition)
-{
-    ASSERT(pvPosition);
-    
-    if (IsAlive())
-    {        
+    {
         Player().GetPosition(&m_vPosition);
         *pvPosition = m_vPosition;
     }
@@ -320,16 +297,11 @@ void CGamePlayer::GetPosition(RwV3d* pvPosition)
 };
 
 
-void CGamePlayer::GetLastPosition(RwV3d* pvPosition)
+void CGamePlayer::GetLastPosition(RwV3d* pvPosition) const
 {
-    ASSERT(pvPosition);
-    
     if (IsAlive())
     {
-        CPlayerCharacter* pCurrentPlayerChr = m_pPlayer->GetCurrentCharacter();
-        ASSERT(pCurrentPlayerChr);
-
-        pCurrentPlayerChr->GetReplacePosition(&m_vLastPosition);
+        Player().GetCurrentCharacter()->GetReplacePosition(&m_vLastPosition);
         *pvPosition = m_vLastPosition;
     }
     else
@@ -341,73 +313,92 @@ void CGamePlayer::GetLastPosition(RwV3d* pvPosition)
 
 float CGamePlayer::GetRotY(void) const
 {
-    if (IsAlive())
-        return GetCurrentCharacter()->GetDirection();
-    else
-        return 0.0f;
+    return (IsAlive() ? Player().GetCurrentCharacter()->GetDirection() : 0.0f);
 };
 
 
-PLAYERTYPES::STATUS CGamePlayer::GetStatus(void) const
+int32 CGamePlayer::GetPlayerNo(void) const
 {
-    if (IsAlive())
-        return GetCurrentCharacter()->GetStatus();
-    else
-        return PLAYERTYPES::STATUS_INVALID;
+    return m_nNo;
+};
+
+
+CPlayer* CGamePlayer::GetPlayer(void) const
+{
+    return m_pPlayer;
+};
+
+
+CPlayerCharacter* CGamePlayer::GetCharacter(int32 nIndex) const
+{
+    return (IsAlive() ? Player().GetCharacter(nIndex) : nullptr);
+};
+
+
+CPlayerCharacter* CGamePlayer::GetCurrentCharacter(void) const
+{
+    return (IsAlive() ? Player().GetCurrentCharacter() : nullptr);
+};
+
+
+PLAYERID::VALUE CGamePlayer::GetCharacterID(int32 nIndex) const
+{
+    return (IsAlive() ? Player().GetCharacterID(nIndex) : PLAYERID::ID_MAX);
+};
+
+
+PLAYERID::VALUE CGamePlayer::GetCurrentCharacterID(void) const
+{
+    return (IsAlive() ? Player().GetCurrentCharacterID() : PLAYERID::ID_MAX);
 };
 
 
 int32 CGamePlayer::GetCharacterNum(void) const
 {
-    if (IsAlive())
-        return Player().GetCharacterNum();
-    else
-        return 0;
+    return (IsAlive() ? Player().GetCharacterNum() : 0);
+};
+
+
+PLAYERTYPES::STATUS CGamePlayer::GetStatus(void) const
+{
+    return (IsAlive() ? Player().GetCurrentCharacter()->GetStatus() : PLAYERTYPES::STATUS_INVALID);
 };
 
 
 int32 CGamePlayer::GetHPMax(void) const
 {
-    if (IsAlive())
-        return m_property.GetHPMax();
-    else
-        return 0;
+    return (IsAlive() ? m_property.GetHPMax() : 0);
 };
 
 
-int32 CGamePlayer::GetHP(void)
+int32 CGamePlayer::GetHP(void) const
 {
-    if (IsAlive())
-        return m_property.GetHP();
-    else
-        return 0;
+    return (IsAlive() ? m_property.GetHP() : 0);
 };
 
 
 int32 CGamePlayer::GetDamage(void) const
 {
-    if (IsAlive())
-        return m_property.GetDamage();
-    else
-        return 0;
+    return (IsAlive() ? m_property.GetDamage() : 0);
 };
 
 
 int32 CGamePlayer::GetShurikenMax(void) const
 {
-    if (IsAlive())
-        return m_property.GetShurikenMax();
-    else
-        return 0;
+    return (IsAlive() ? m_property.GetShurikenMax() : 0);
 };
 
 
 int32 CGamePlayer::GetShurikenNum(void) const
 {
+    return (IsAlive() ? m_property.GetShurikenNum() : 0);
+};
+
+
+void CGamePlayer::Relocation(const RwV3d* pvPosition, float fDirection, bool bProtect)
+{
     if (IsAlive())
-        return m_property.GetShurikenNum();
-    else
-        return 0;
+        Player().Relocation(pvPosition, fDirection, bProtect);
 };
 
 
@@ -416,7 +407,7 @@ int32 CGamePlayer::AddHP(int32 iHP)
     if (!IsAlive())
         return 0;
 
-    if (!IsInvincible() || iHP > 0)
+    if (!isInvincible() || iHP > 0)
     {
         if (m_property.AddHP(iHP) <= 0)
         {
@@ -431,33 +422,26 @@ int32 CGamePlayer::AddHP(int32 iHP)
             };
         };
 
-		return m_property.GetHP();
+        return m_property.GetHP();
     }
-	else
-	{
-		return 0;
-	};
+    else
+    {
+        return 0;
+    };
 };
 
 
 void CGamePlayer::AddShurikenNum(int32 iShuriken)
 {
     if (IsAlive())
-    {
         m_property.AddShurikenNum(iShuriken);
-    };
 };
 
 
 void CGamePlayer::InvokeDeathFloor(void)
 {
     if (IsAlive())
-    {
-        CGameObjectManager::SendMessage(
-            Player().GetCurrentCharacter(),
-            CHARACTERTYPES::MESSAGEID_DEATHFLOOR
-        );
-    };
+        CGameObjectManager::SendMessage(Player().GetCurrentCharacter(), CHARACTERTYPES::MESSAGEID_DEATHFLOOR);
 };
 
 
@@ -485,36 +469,6 @@ void CGamePlayer::LoadContext(const CGamePlayParam::PLAYERCONTEXT& rContext)
 };
 
 
-void CGamePlayer::Relocation(const RwV3d* pvPosition, float fDirection, bool bProtect)
-{
-    if (IsAlive())
-        Player().Relocation(pvPosition, fDirection, bProtect);
-};
-
-
-int32 CGamePlayer::GetPadID(void) const
-{
-    if (IsAlive())
-        return Player().GetPadID();
-    else
-        return CGamepad::Invalid();
-};
-
-
-int32 CGamePlayer::GetScore(int32 scorekind) const
-{
-    ASSERT(false);
-    return 0;
-};
-
-
-CPlayer& CGamePlayer::Player(void) const
-{
-    ASSERT(m_pPlayer);
-    return *m_pPlayer;
-};
-
-
 void CGamePlayer::CreatePlayer(int32 no)
 {
     CreatePlayerEx(no, no);
@@ -525,14 +479,17 @@ void CGamePlayer::CreatePlayerEx(int32 no, int32 gamepadNo)
 {
     ASSERT(!m_pPlayer);
     ASSERT(no >= 0 && no < GAMETYPES::PLAYERS_MAX);
-    
-    CPlayer* pPlayer = CPlayer::New(no, gamepadNo);
-    ASSERT(pPlayer);
 
-    m_pPlayer = pPlayer;
-    m_hObj = pPlayer->GetHandle();
-    m_nNo = no;
-    m_property.Setup(m_nNo == 0);
+    CPlayer* pPlayer = CPlayer::New(no, gamepadNo);
+    if (pPlayer)
+    {
+        m_pPlayer = pPlayer;
+        m_hObj = pPlayer->GetHandle();
+        m_nNo = no;
+        m_property.Setup(m_nNo == 0);
+        
+        AddRef();
+    };
 };
 
 
@@ -541,14 +498,14 @@ void CGamePlayer::DestroyPlayer(void)
     if (m_pPlayer)
     {
         m_property.Cleanup();
-        
+
         CPlayer::Delete(m_pPlayer);
         m_pPlayer = nullptr;
     };
 };
 
 
-void CGamePlayer::AddPlayerCharacter(PLAYERID::VALUE idPlayer, GAMETYPES::COSTUME costume)
+void CGamePlayer::AddCharacter(PLAYERID::VALUE idPlayer, GAMETYPES::COSTUME costume)
 {
     if (IsAlive())
     {
@@ -558,14 +515,13 @@ void CGamePlayer::AddPlayerCharacter(PLAYERID::VALUE idPlayer, GAMETYPES::COSTUM
 };
 
 
-bool CGamePlayer::IsInvincible(void) const
+CPlayer& CGamePlayer::Player(void) const
 {
-    if (CGameData::Record().Secret().IsUnlockedSecret(SECRETID::ID_CHEATCODE_MIGHTYTURTLE))
-    {
-        return true;
-    }
-    else
-    {
-        return (m_nDamageNegationCount > 0);
-    };
+    return *m_pPlayer;
+};
+
+
+bool CGamePlayer::isInvincible(void) const
+{
+    return (CGameData::Record().Secret().IsUnlockedSecret(SECRETID::ID_CHEATCODE_MIGHTYTURTLE) || (m_nDamageNegationCount > 0));
 };

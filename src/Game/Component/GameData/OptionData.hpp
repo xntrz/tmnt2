@@ -6,8 +6,6 @@
 #include "Option/PlayOptionData.hpp"
 #include "Option/SoundOptionData.hpp"
 
-#include "Game/Component/GameMain/GameTypes.hpp"
-
 
 class COptionData
 {
@@ -17,12 +15,14 @@ public:
         CPlayOptionData::RAWDATA m_play;
         CSoundOptionData::RAWDATA m_sound;
         CDisplayOptionData::RAWDATA m_display;
-        CGamepadOptionData::RAWDATA m_aGamepad[6];   // TODO см. IDB (asm код, декомпилятор не видит * 8)
-#ifdef _TARGET_PC
+        CGamepadOptionData::RAWDATA m_aGamepad[6];
+#ifdef TARGET_PC
         CKeyboardOptionData::RAWDATA m_keyboard;
 #endif
     };
-    
+
+    CHECK_SIZE(COptionData::RAWDATA, 276);
+
 public:
     COptionData(void);
     ~COptionData(void);

@@ -489,7 +489,7 @@ void CCloth::StepSimulation(void)
                 if (pClothPt1->m_bLock)
                     break;
 
-                Math::Vec3_Scale(&vDistanceVector, &vDistance, 0.3333333f);
+                Math::Vec3_Scale(&vDistanceVector, &vDistance, (1.0f / 3.0f));
                 Math::Vec3_Add(&pClothPt1->m_vPosition, &pClothPt1->m_vPosition, &vDistanceVector);
 
                 if (nIndex > nIndexMax)
