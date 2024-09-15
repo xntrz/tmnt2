@@ -2,6 +2,7 @@
 #include "PCTypedefs.hpp"
 
 #include <timeapi.h>
+#include <intrin.h>
 
 
 class CPCTimer::IGetTimeFunctor

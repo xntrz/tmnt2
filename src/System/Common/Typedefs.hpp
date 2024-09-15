@@ -27,9 +27,11 @@
 
 #include <cstdlib>
 #include <cstring>
+#include <string>
 #include <vector>
 #include <limits>
 #include <algorithm>
+#include <cmath>
 
 typedef char int8;
 typedef short int16;
