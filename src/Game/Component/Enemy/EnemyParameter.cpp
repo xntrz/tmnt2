@@ -90,7 +90,6 @@ static void CompensationParameter(ENEMYPARAMCONTAINER* pEnemyParam)
         break;
 
     default:
-        ASSERT(false);
         break;
     };
 };
