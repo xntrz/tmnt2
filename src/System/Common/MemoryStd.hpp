@@ -3,18 +3,13 @@
 
 void* operator new(std::size_t size);
 void* operator new[](std::size_t size);
-void* operator new(std::size_t size, const char* fname, int32 fline);
-void* operator new[](std::size_t size, const char* fname, int32 fline);
-
 void operator delete(void* ptr);
 void operator delete[](void* ptr);
-void operator delete(void* ptr, const char* fname, int32 fline);
-void operator delete[](void* ptr, const char* fname, int32 fline);
-
-void* operator new(std::size_t size, const std::nothrow_t& nth);
-void* operator new[](std::size_t size, const std::nothrow_t& nth);
+void* operator new(std::size_t size, const std::nothrow_t& nth) noexcept;
+void* operator new[](std::size_t size, const std::nothrow_t& nth) noexcept;
 
 
 #ifdef _DEBUG
-#define new new(__FILE__, __LINE__)
-#endif
+extern void memory_std_set_alloc_source(const char* fname, int fline);
+#define new (memory_std_set_alloc_source(__FILENAME__, __LINE__), 0) ? NULL : new
+#endif /* _DEBUG */

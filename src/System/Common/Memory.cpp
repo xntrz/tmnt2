@@ -10,7 +10,7 @@
 };
 
 
-/*static*/ void* CMemory::_new(uint32 size, const char* fname, int32 fline)
+/*static*/ void* CMemory::_new(size_t size, const char* fname, int fline)
 {
     return Instance().RepAlloc(size, fname, fline);
 };
@@ -22,9 +22,9 @@
 };
 
 
-/*static*/ void* CMemory::malloc(uint32 size)
+/*static*/ void* CMemory::malloc(size_t size, const char* fname, int fline)
 {
-    return Instance().RepAlloc(size);
+    return Instance().RepAlloc(size, fname, fline);
 };
 
 
@@ -34,7 +34,7 @@
 };
 
 
-/*static*/ void* CMemory::rwmalloc(uint32 size, uint32 hint)
+/*static*/ void* CMemory::rwmalloc(size_t size, uint32 hint)
 {
     return Instance().RepRwAlloc(size, hint);
 };
@@ -46,25 +46,13 @@
 };
 
 
-/*static*/ void* CMemory::rwrealloc(void* mem, uint32 size, uint32 hint)
+/*static*/ void* CMemory::rwrealloc(void* mem, size_t size, uint32 hint)
 {
     return Instance().RepRwRealloc(mem, size, hint);
 };
 
 
-/*static*/ void* CMemory::rwcalloc(uint32 objSize, uint32 size, uint32 hint)
+/*static*/ void* CMemory::rwcalloc(size_t objSize, size_t size, uint32 hint)
 {
     return Instance().RepRwCalloc(objSize, size, hint);
-};
-
-
-CMemory::CMemory(void)
-{
-    ;
-};
-
-
-CMemory::~CMemory(void)
-{
-    ;
 };

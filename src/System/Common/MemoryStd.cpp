@@ -8,28 +8,39 @@
 #undef new
 #endif
 
+#define ALLOC_FNAME_INIT (nullptr)
+#define ALLOC_FLINE_INIT (0)
+
+
+static const char* s_lastAllocFname = ALLOC_FNAME_INIT;
+static int s_lastAllocFline = ALLOC_FLINE_INIT;
+
+
+/*extern*/ void memory_std_set_alloc_source(const char* fname, int fline)
+{
+	s_lastAllocFname = fname;
+	s_lastAllocFline = fline;
+};
+
+
+struct LAST_ALLOC_CLEANUP
+{
+	inline LAST_ALLOC_CLEANUP() {};
+	inline ~LAST_ALLOC_CLEANUP() { s_lastAllocFname = ALLOC_FNAME_INIT; s_lastAllocFline = ALLOC_FLINE_INIT; };
+};
+
 
 void* operator new(std::size_t size)
 {
-    return CMemory::_new(size, "unknown source file", 0);
+	LAST_ALLOC_CLEANUP obj;
+	return CMemory::_new(size, s_lastAllocFname, s_lastAllocFline);
 };
 
 
 void* operator new[](std::size_t size)
 {
-    return CMemory::_new(size, "unknown source file", 0);
-};
-
-
-void* operator new(std::size_t size, const char* fname, int32 fline)
-{
-    return CMemory::_new(size, fname, fline);
-};
-
-
-void* operator new[](std::size_t size, const char* fname, int32 fline)
-{
-    return CMemory::_new(size, fname, fline);
+	LAST_ALLOC_CLEANUP obj;
+	return CMemory::_new(size, s_lastAllocFname, s_lastAllocFline);
 };
 
 
@@ -39,37 +50,21 @@ void operator delete(void* ptr)
 };
 
 
-void operator delete [](void* ptr)
+void operator delete[](void* ptr)
 {
     CMemory::_delete(ptr);
 };
 
 
-//
-//	warning C4291
-//
-void operator delete(void* ptr, const char* fname, int32 fline)
+void* operator new(std::size_t size, const std::nothrow_t& nth) noexcept
 {
-    CMemory::_delete(ptr);
+	LAST_ALLOC_CLEANUP obj;
+	return CMemory::_new(size, s_lastAllocFname, s_lastAllocFline);
 };
 
 
-//
-//	warning C4291
-//
-void operator delete[](void* ptr, const char* fname, int32 fline)
+void* operator new[](std::size_t size, const std::nothrow_t& nth) noexcept
 {
-    CMemory::_delete(ptr);
-};
-
-
-void* operator new(std::size_t size, const std::nothrow_t& nth)
-{
-    return CMemory::_new(size);
-};
-
-
-void* operator new [](std::size_t size, const std::nothrow_t& nth)
-{
-    return CMemory::_new(size);
+	LAST_ALLOC_CLEANUP obj;
+	return CMemory::_new(size, s_lastAllocFname, s_lastAllocFline);
 };

@@ -17,7 +17,7 @@ CPCMemoryDefault::~CPCMemoryDefault(void)
 };
 
 
-void* CPCMemoryDefault::RepAlloc(uint32 size, const char* fname, int32 fline)
+void* CPCMemoryDefault::RepAlloc(size_t size, const char* fname, int fline)
 {
     return std::malloc(size);
 };
@@ -29,7 +29,7 @@ void CPCMemoryDefault::RepFree(void* mem)
 };
 
 
-void* CPCMemoryDefault::RepRwAlloc(uint32 size, uint32 hint)
+void* CPCMemoryDefault::RepRwAlloc(size_t size, uint32 hint)
 {
     return std::malloc(size);
 };
@@ -41,19 +41,19 @@ void CPCMemoryDefault::RepRwFree(void* mem)
 };
 
 
-void* CPCMemoryDefault::RepRwRealloc(void* mem, uint32 size, uint32 hint)
+void* CPCMemoryDefault::RepRwRealloc(void* mem, size_t size, uint32 hint)
 {
     return std::realloc(mem, size);
 };
 
 
-void* CPCMemoryDefault::RepRwCalloc(uint32 objSize, uint32 size, uint32 hint)
+void* CPCMemoryDefault::RepRwCalloc(size_t objSize, size_t size, uint32 hint)
 {
     return std::calloc(objSize, size);
 };
 
 
-uint32 CPCMemoryDefault::AllocatedSize(void)
+size_t CPCMemoryDefault::AllocatedSize(void)
 {
     return 0;
 };
@@ -98,7 +98,7 @@ CPCMemory::~CPCMemory(void)
 };
 
 
-void* CPCMemory::RepAlloc(uint32 size, const char* fname, int32 fline)
+void* CPCMemory::RepAlloc(size_t size, const char* fname, int32 fline)
 {
     void* pResult = HeapAlloc(m_hHeap, 0, size);
     if(pResult)
@@ -117,7 +117,7 @@ void CPCMemory::RepFree(void* mem)
 };
 
 
-void* CPCMemory::RepRwAlloc(uint32 size, uint32 hint)
+void* CPCMemory::RepRwAlloc(size_t size, uint32 hint)
 {
     ASSERT(m_hRwHeap);
     
@@ -138,7 +138,7 @@ void CPCMemory::RepRwFree(void* mem)
 };
 
 
-void* CPCMemory::RepRwRealloc(void* mem, uint32 size, uint32 hint)
+void* CPCMemory::RepRwRealloc(void* mem, size_t size, uint32 hint)
 {
     ASSERT(m_hRwHeap);
     
@@ -167,13 +167,13 @@ void* CPCMemory::RepRwRealloc(void* mem, uint32 size, uint32 hint)
 };
 
 
-void* CPCMemory::RepRwCalloc(uint32 objSize, uint32 size, uint32 hint)
+void* CPCMemory::RepRwCalloc(size_t objSize, size_t size, uint32 hint)
 {
     return RepRwAlloc(objSize * size, hint);
 };
 
 
-uint32 CPCMemory::AllocatedSize(void)
+size_t CPCMemory::AllocatedSize(void)
 {
     return 0;
 };
