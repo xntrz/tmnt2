@@ -27,20 +27,23 @@
 
 #include <cstdlib>
 #include <cstring>
+#include <cinttypes>
 #include <string>
 #include <vector>
 #include <limits>
 #include <algorithm>
 #include <cmath>
 
-typedef char int8;
-typedef short int16;
-typedef int int32;
-typedef long long int64;
-typedef unsigned char uint8;
-typedef unsigned short uint16;
-typedef unsigned int uint32;
-typedef unsigned long long uint64;
+
+using int8 	= int8_t;
+using int16 = int16_t;
+using int32 = int32_t;
+using int64 = int64_t;
+using uint8	= uint8_t;
+using uint16= uint16_t;
+using uint32= uint32_t;
+using uint64= uint64_t;
+
 
 #ifdef TARGET_PC
 typedef wchar_t wchar;
@@ -52,8 +55,10 @@ typedef unsigned int wchar;
 #error Current target is not set
 #endif
 
+
 #include "MemoryStd.hpp"
 #include "Debug.hpp"
+
 
 #define UNUSED(var) 					(do { (void)(var); } while (0))
 #define CHECK_SIZE(type, targetSize)	static_assert(sizeof(type) == targetSize, "incorrect size")
@@ -79,23 +84,6 @@ typedef unsigned int wchar;
 #define FLAG_TEST(flagfield, flag)		(((flagfield) & (flag)) == (flag))
 #define FLAG_TEST_ANY(flagfield, flag)	(((flagfield) & (flag)) != 0)
 
-#define ENUM_TO_FLAG(T)																\
-	inline T operator~ (T a) { return (T)~(int32)a; }								\
-	inline T operator| (T a, T b) { return (T)((int32)a | (int32)b); }				\
-	inline T operator& (T a, T b) { return (T)((int32)a & (int32)b); }				\
-	inline T operator^ (T a, T b) { return (T)((int32)a ^ (int32)b); }				\
-	inline T& operator|= (T& a, T b) { return (T&)((int32&)a |= (int32)b); }		\
-	inline T& operator&= (T& a, T b) { return (T&)((int32&)a &= (int32)b); }		\
-	inline T& operator^= (T& a, T b) { return (T&)((int32&)a ^= (int32)b); }
-
-#define ENUM_TO_FLAG_CLASS(T)														\
-	inline friend T operator~ (T a) { return (T)~(int32)a; }						\
-	inline friend T operator| (T a, T b) { return (T)((int32)a | (int32)b); }		\
-	inline friend T operator& (T a, T b) { return (T)((int32)a & (int32)b); }		\
-	inline friend T operator^ (T a, T b) { return (T)((int32)a ^ (int32)b); }		\
-	inline friend T& operator|= (T& a, T b) { return (T&)((int32&)a |= (int32)b); }	\
-	inline friend T& operator&= (T& a, T b) { return (T&)((int32&)a &= (int32)b); }	\
-	inline friend T& operator^= (T& a, T b) { return (T&)((int32&)a ^= (int32)b); }
 
 #ifdef UINT8_MAX
 #undef UINT8_MAX
@@ -125,22 +113,14 @@ typedef unsigned int wchar;
 template<class T>
 inline T Clamp(T val, T min, T max)
 {
-	return (
-		val > max ?
-		max :
-		(val < min ? min : val)
-	);
+	return (val > max ? max : (val < min ? min : val));
 };
 
 
 template<class T>
 inline T InvClamp(T val, T min, T max)
 {
-	return (
-		val > max ?
-		min :
-		(val < min ? max : val)
-	);
+	return (val > max ? min : (val < min ? max : val));
 };
 
 
