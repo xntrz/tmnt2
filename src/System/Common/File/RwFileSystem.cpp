@@ -9,7 +9,8 @@
 
 /*static*/ RwChar* CRwFileSystem::rwFileSystemGetDeviceName(RtFileSystem* fs)
 {
-    return "";
+    static char s_deviceName[] = "";
+    return s_deviceName;
 };
 
 
@@ -130,7 +131,9 @@ bool CRwFileSystem::Initialize(void)
     if (!m_pFile)
         return false;
 
-    RtFileSystemError err = _rtFSInit(this, MAX_FILES, "afs", "afs:");
+    static char s_fsName[] = "afs";
+    static char s_deviceName[] = "afs:";
+    RtFileSystemError err = _rtFSInit(this, MAX_FILES, s_fsName, s_deviceName);
     if (err != RTFS_ERROR_NOERROR)
         return false;
 

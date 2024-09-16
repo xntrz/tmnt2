@@ -15,7 +15,8 @@ bool CPCRwFileSystem::Initialize(void)
 
     GetModulePathSplit(szDrive, szDirectory, nullptr, nullptr);
     
-    RtFileSystem* pWinFS = RtWinFSystemInit(4, szDrive, "PC");
+    char fsName[] = "PC";
+    RtFileSystem* pWinFS = RtWinFSystemInit(4, szDrive, fsName);
 	if (!pWinFS)
 		return false;
 

@@ -64,8 +64,10 @@ void CAnim2DSequence::OnMove(bool bRet, const void* pReturnValue)
             m_bResumed = bRet;
             m_pAnimation2D = CAnimation2DLoader::Get(m_szAnimName);
             ASSERT(m_pAnimation2D);
-
-            (m_pAnimation2D ? BeginFadein() : CSequence::Ret());
+            if (m_pAnimation2D)
+                BeginFadein();
+            else
+                CSequence::Ret();
         }
         break;
         

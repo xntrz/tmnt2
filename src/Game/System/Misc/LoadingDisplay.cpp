@@ -112,7 +112,7 @@ void CLoadingDisplay::Draw(void) const
     if (m_state != STATE_DISPLAY)
         return;
 
-    wchar* pwszPhase = nullptr;
+    const wchar* pwszPhase = nullptr;
     wchar wszBuffer[32];
     
     wszBuffer[0] = UTEXT('\0');

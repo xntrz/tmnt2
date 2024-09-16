@@ -205,23 +205,23 @@ public:
 
     inline const CList<T, tag>& operator=(const CList<T, tag>& other)
     {
-        next = other.next;
-        prev = other.prev;
-        data = other.data;
+        this->next = other.next;
+        this->prev = other.prev;
+        this->data = other.data;
         return *this;
     };
 
 
     inline void clear(void)
     {
-        data = nullptr;
-        next = prev = this;
+		this->data = nullptr;
+		this->next = this->prev = this;
     };
 
 
     inline bool empty(void) const
     {
-        return (prev == this);
+		return (this->prev == this);
     };
 
 
@@ -230,7 +230,7 @@ public:
 		if (empty())
 			return nullptr;
 		else
-			return static_cast<T*>(next);
+			return static_cast<T*>(this->next);
     };
 
 
@@ -239,7 +239,7 @@ public:
 		if (empty())
 			return nullptr;
 		else
-			return static_cast<T*>(next);
+			return static_cast<T*>(this->next);
     };
 
 
@@ -248,7 +248,7 @@ public:
 		if (empty())
 			return nullptr;
 		else
-			return static_cast<T*>(prev);
+			return static_cast<T*>(this->prev);
     };
 
 
@@ -257,13 +257,13 @@ public:
 		if (empty())
 			return nullptr;
 		else
-			return static_cast<T*>(prev);
+			return static_cast<T*>(this->prev);
     };
 
 
     inline iterator begin(void)
     {
-        return iterator(this, next);
+		return iterator(this, this->next);
     };
 
 
@@ -275,7 +275,7 @@ public:
 
     inline const_iterator begin(void) const
     {
-        return const_iterator(this, next);
+		return const_iterator(this, this->next);
     };
 
 
@@ -293,7 +293,7 @@ public:
 
     inline void push_front(CListNode<T, tag>* node)
     {
-        insert(iterator(this, next), node);
+		insert(iterator(this, this->next), node);
     };
 
 
@@ -305,7 +305,7 @@ public:
 
     inline void push_back(CListNode<T, tag>* node)
     {
-        insert(iterator(this, prev->next), node);
+		insert(iterator(this, this->prev->next), node);
     };
 
 
@@ -326,13 +326,13 @@ public:
 
     inline void pop_front(void)
     {
-        erase(next);
+		erase(this->next);
     };
 
 
     inline void pop_back(void)
     {
-        erase(prev);
+		erase(this->prev);
     };
 
 
@@ -364,11 +364,11 @@ public:
         if (list->empty())
             return;
 
-        prev->next = list->next;
-        list->next->prev = prev;
+		this->prev->next = list->next;
+		list->next->prev = this->prev;
 
         list->prev->next = this;
-        prev = list->prev;
+		this->prev = list->prev;
 
         list->clear();
     };
@@ -379,8 +379,8 @@ public:
         if (empty() || list->empty())
             return;
 
-        next->prev = list;
-        prev->next = list;
+		this->next->prev = list;
+		this->prev->next = list;
 
         list->next->prev = this;
         list->prev->next = this;
