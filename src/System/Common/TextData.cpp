@@ -56,14 +56,10 @@ struct CTextData::HEADER
 };
 
 
-/*static*/ void CTextData::ToMultibyte(char* dst, int32 dstlen, const wchar* src)
+/*static*/ void CTextData::ToMultibyte(char* dst, size_t dstlen, const wchar* src)
 {
 #ifdef TARGET_PC
-    std::wstring wbuffer(src);
-    std::string buffer(wbuffer.begin(), wbuffer.end());
-    ASSERT(dstlen >= int32(buffer.length() + 1), "src: %d, dst: %d", buffer.length() + 1, dstlen);
-    int32 nNumCopied = buffer.copy(dst, dstlen);
-    dst[nNumCopied] = '\0';
+	std::wcstombs(dst, src, dstlen);
 #else
 #error Not implemented for current target
 #endif

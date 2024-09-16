@@ -14,7 +14,7 @@ public:
     static void StrCpy(wchar* pDestString, const wchar* pSrcString);
     static void StrCat(wchar* pDestString, const wchar* pSrcString);
     static void Sprintf(wchar* pDest, const wchar* pFormat, ...);
-    static void ToMultibyte(char* dst, int32 dstlen, const wchar* src);
+    static void ToMultibyte(char* dst, size_t dstlen, const wchar* src);
     
     CTextData(void);
     ~CTextData(void);
