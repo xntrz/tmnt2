@@ -31,7 +31,7 @@ static void RwDebugMsgEndpoint(RwDebugType type, const RwChar* string)
 		break;
 	};
 };
-#endif
+#endif /* RWDEBUG */
 
 
 /*static*/ void(*CDebug::Output)(const char* fname, int32 fline, const char* format, ...) = nullptr;
@@ -58,7 +58,7 @@ static void RwDebugMsgEndpoint(RwDebugType type, const RwChar* string)
     RwDebugSetHandler(RwDebugMsgEndpoint);
     RwDebugSetTraceState(TRUE);
     s_bRwDebugAssertSupressFlag = false;
-#endif
+#endif /* RWDEBUG */
 };
 
 
@@ -67,7 +67,7 @@ static void RwDebugMsgEndpoint(RwDebugType type, const RwChar* string)
 #ifdef RWDEBUG
     RwDebugSetTraceState(FALSE);
     RwDebugSetHandler(NULL);
-#endif
+#endif /* RWDEBUG */
 };
 
 
@@ -75,7 +75,7 @@ static void RwDebugMsgEndpoint(RwDebugType type, const RwChar* string)
 {
 #ifdef RWDEBUG
     s_bRwDebugAssertSupressFlag = bSupress;
-#endif    
+#endif /* RWDEBUG */
 };
 
 
