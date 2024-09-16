@@ -1,11 +1,11 @@
 # TMNT2
 #### Reverse engineering PC version of TMNT2: Battle Nexus (2004) based on dwarf pdb from leaked PS2 prototype [image](https://archive.org/details/TeenageMutantNinjaTurtles2BattleNexusJun142004prototype). 
 
-<img src="scr1.png" width="320"/>
-<img src="scr2.png" width="320"/>
-<img src="scr3.png" width="320"/>
-
-&nbsp;
+<p float="left">
+<img src="scr1.png" width="240"/>
+<img src="scr2.png" width="240"/>
+<img src="scr3.png" width="240"/>
+</p>
 
 # Current project status:
 ✔️ Basic gameplay\
