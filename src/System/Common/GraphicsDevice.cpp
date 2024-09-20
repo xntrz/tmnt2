@@ -18,6 +18,7 @@
 #include "rtbmp.h"
 #include "rtpng.h"
 #include "rtcharse.h"
+#include "rptoon.h"
 
 
 /*static*/ const RwRGBA CGraphicsDevice::DEFAULT_CLEAR_COLOR = { 0 };
@@ -82,8 +83,8 @@ bool CGraphicsDevice::Initialize(void)
         OUTPUT("RwEngineSetVideoMode failed");
         return false;
     };
-    
-    return true;
+
+	return true;
 };
 
 
@@ -126,7 +127,7 @@ bool CGraphicsDevice::Start(void)
         OUTPUT("CreateFrameBuffer failed");
         return false;
     };
-
+	
     if (!CreateCamera())
     {
         OUTPUT("CreateCamera failed");
@@ -139,7 +140,7 @@ bool CGraphicsDevice::Start(void)
     CScreen::AttachDevice(this);
     SetFlipInterval(m_iFlipInterval);
 
-    return true;
+	return true;
 };
 
 
@@ -229,11 +230,8 @@ bool CGraphicsDevice::AttachPlugin(void)
     if (!RpSkinPluginAttach())
         return false;
 
-    //
-    // TODO Attach RpToon plugin
-    //
-    //if (!RpToonPluginAttach())
-    //    ASSERT(false);
+	if (!RpToonPluginAttach())
+		return false;
 
     if (!RpCollisionPluginAttach())
         return false;

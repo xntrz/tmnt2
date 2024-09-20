@@ -4,9 +4,6 @@
 #include "ToonManager.hpp"
 
 
-//
-//  TODO rp toon
-//
 struct RpToonInk;
 struct RpToonPaint;
 
@@ -18,8 +15,10 @@ public:
     virtual ~CModelToon(void);
     virtual void Draw(void) override;
     virtual CModelManager::MODELTYPE GetType(void) const override;
-    void SetToonObject(RpToonInk* pInk, RpToonPaint* pPaint);
-    CToonManager::PATTERN GetPattern(void) const;
+	void SetToonObject(RpToonInk* pInk, RpToonPaint* pPaint);
+	
+	inline CToonManager::PATTERN GetPattern(void) const { return m_pattern; };
+	inline void SetThickness(float f) { m_fSilhouetteThickness = f; };
 
 private:
     static float m_fDefaultThickness;

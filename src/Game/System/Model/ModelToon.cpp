@@ -1,6 +1,8 @@
 #include "ModelToon.hpp"
 #include "ToonManager.hpp"
 
+#include "rptoon.h"
+
 
 class CSetToonObjectFunctor final : public CModelToon::IAtomicCallbackFunctor
 {
@@ -14,28 +16,28 @@ public:
 
 RpAtomic* CSetToonObjectFunctor::operator()(RpAtomic* pAtomic)
 {
-    //RpGeometry* pGeometry = RpAtomicGetGeometryMacro(pAtomic);
-    //ASSERT(pGeometry);
-    //
-    //if (RpSkinGeometryGetSkin(pGeometry))
-	//	RpSkinAtomicSetType(pAtomic, rpSKINTYPETOON);
-	//else
-	//	RpToonAtomicEnable(pAtomic);
-    //
-    //RpToonGeo* pToonGeometry = RpToonGeometryGetToonGeo(pGeometry);
-    //ASSERT(pToonGeometry);
-    //
-    //if (m_pRpToonInk)
-    //{
-    //    if (!RpToonGeoGetCreaseInk(pToonGeometry))
-    //        RpToonGeoSetCreaseInk(pToonGeometry, m_pRpToonInk);
-    //    if (!RpToonGeoGetSilhouetteInk(pToonGeometry))
-    //        RpToonGeoSetSilhouetteInk(pToonGeometry, m_pRpToonInk);
-    //};
-    //
-    //if (m_pRpToonPaint)
-    //    RpToonGeoSetPaint(pToonGeometry, m_pRpToonPaint);
-    //
+	RpGeometry* pGeometry = RpAtomicGetGeometryMacro(pAtomic);
+    ASSERT(pGeometry);
+
+	if (RpSkinGeometryGetSkin(pGeometry))
+		RpToonSkinAtomicSetType(pAtomic, rpSKINTYPETOON);
+	else
+		RpToonAtomicEnable(pAtomic);
+    
+    RpToonGeo* pToonGeometry = RpToonGeometryGetToonGeo(pGeometry);
+    ASSERT(pToonGeometry);
+    
+    if (m_pRpToonInk)
+    {
+        if (!RpToonGeoGetCreaseInk(pToonGeometry))
+            RpToonGeoSetCreaseInk(pToonGeometry, m_pRpToonInk);
+        if (!RpToonGeoGetSilhouetteInk(pToonGeometry))
+            RpToonGeoSetSilhouetteInk(pToonGeometry, m_pRpToonInk);
+    };
+    
+    if (m_pRpToonPaint)
+        RpToonGeoSetPaint(pToonGeometry, m_pRpToonPaint);
+    
     return pAtomic;
 };
 
@@ -66,8 +68,8 @@ void CModelToon::Draw(void)
 {
     if (m_pRpToonInk)
     {
-		//RpToonInkSetOverallThickness(m_pRpToonInk, m_fSilhouetteThickness);
-        //RpToonInkSetColor(m_pRpToonInk, m_SilhouetteColor);
+		RpToonInkSetOverallThickness(m_pRpToonInk, m_fSilhouetteThickness);
+        RpToonInkSetColor(m_pRpToonInk, m_SilhouetteColor);
     };
 
     CModel::Draw();
@@ -102,10 +104,4 @@ void CModelToon::SetToonObject(RpToonInk* pInk, RpToonPaint* pPaint)
     functor.m_pRpToonPaint = paint;
     
     ForAllAtomicCallback(&functor);
-};
-
-
-CToonManager::PATTERN CModelToon::GetPattern(void) const
-{
-    return m_pattern;
 };

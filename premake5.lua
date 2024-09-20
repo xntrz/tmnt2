@@ -55,16 +55,20 @@ workspace "TMNT2"
       flags { "NoIncrementalLink", "NoBufferSecurityCheck", "NoRuntimeChecks", "MultiProcessorCompile" }
 
 
-project "Game"
+project "TMNT2"
    dependson { "System" }
    targetname "%{wks.name}"
    kind "WindowedApp"
-   includedirs  {  "%{dir_lib}/rwsdk37/include/d3d9", "%{dir_lib}/cri/include", }
+   includedirs  
+   {  
+		"%{dir_lib}/rwsdk37/include/d3d9", 
+		"%{dir_lib}/cri/include", 
+	}
    libdirs  { "%{dir_lib}/cri/lib/x86" }
    resincludedirs { "%{dir_src}/System/PC" }
    forceincludes "Game\\pch.hpp"
    pchheader "Game/pch.hpp"
-	pchsource "%{dir_pch}/Game/pch.cpp"
+   pchsource "%{dir_pch}/Game/pch.cpp"
    files 
    {    
       "%{dir_src}/System/**.rc",
@@ -105,9 +109,10 @@ project "Game"
       "rtquat.lib",
       "rtintsec.lib",
       "rtcharse.lib",
-      "legacy_stdio_definitions.lib"
+      "legacy_stdio_definitions.lib",
+	  "rptoon.lib"
    } 
    filter { "configurations:Debug" }
       libdirs  { "%{dir_lib}/rwsdk37/lib/d3d9/debug", "%{dir_bin}" }
    filter { "configurations:Release" }
-      libdirs  { "%{dir_lib}/rwsdk37/lib/d3d9/release", "%{dir_bin}" }
+      libdirs  {  "%{dir_lib}/rwsdk37/lib/d3d9/release", "%{dir_bin}" }

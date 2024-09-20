@@ -6,6 +6,7 @@
 #include "Game/Component/Module/AtomicDisplayControlModule.hpp"
 #include "Game/Component/Module/AmbientLightModule.hpp"
 #include "Game/Component/Module/LocusModule.hpp"
+#include "Game/Component/Module/InkThicknessCtrlModule.hpp"
 #include "Game/Component/GameMain/GameProperty.hpp"
 #include "Game/System/GameObject/GameObjectManager.hpp"
 #include "Game/System/Model/Model.hpp"
@@ -207,10 +208,8 @@ void CCharacter::IncludeBasicModule(void)
 	CLocusModuleForCharacter* pLocusModule = CLocusModuleForCharacter::New(this);
 	if (pLocusModule)
 		m_pModuleMan->Include(pLocusModule);
-    
-    //
-    //  TODO ink thickness ctrl module
-    //
+
+	m_pModuleMan->Include(new CInkThicknessCtrlModule(this));
 };
 
 
