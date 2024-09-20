@@ -17,22 +17,23 @@ protected:
 public:
     CGamePropertyObject(void);
     virtual ~CGamePropertyObject(void);
-    void Period(void);
-    void SetRwCamera(RwCamera* pRwCamera);
-    void SetMapCamera(CMapCamera* pMapCamera);
-    float GetTotalElapsedTime(void) const;
-    float GetElapsedTime(void) const;
-    float GetCleartime(void) const;
-    float GetSleepDistance(void) const;
-    float GetDeathHeight(void) const;
-    float GetGravity(void) const;
-    RwCamera* GetRwCamera(void) const;
-    CMapCamera* GetMapCamera(void) const;
-    void GetCameraViewMatrix(RwMatrix* pMatrix) const;
-    void GetCameraFrameMatrix(RwMatrix* pMatrix) const;
-    CGamePlayerContainer& PlayerContainer(void) const;
-    CGameEnemyContainer& EnemyContainer(void) const;
-    CGameGimmickContainer& GimmickContainer(void) const;
+	void Period(void);
+	
+	/*inline*/ void SetRwCamera(RwCamera* pRwCamera);
+    /*inline*/ void SetMapCamera(CMapCamera* pMapCamera);
+    /*inline*/ float GetTotalElapsedTime(void) const;
+    /*inline*/ float GetElapsedTime(void) const;
+    /*inline*/ float GetCleartime(void) const;
+    /*inline*/ float GetSleepDistance(void) const;
+    /*inline*/ float GetDeathHeight(void) const;
+    /*inline*/ float GetGravity(void) const;
+    /*inline*/ RwCamera* GetRwCamera(void) const;
+    /*inline*/ CMapCamera* GetMapCamera(void) const;
+    /*inline*/ void GetCameraViewMatrix(RwMatrix* pMatrix) const;
+    /*inline*/ void GetCameraFrameMatrix(RwMatrix* pMatrix) const;
+    /*inline*/ CGamePlayerContainer& PlayerContainer(void) const;
+    /*inline*/ CGameEnemyContainer& EnemyContainer(void) const;
+    /*inline*/ CGameGimmickContainer& GimmickContainer(void) const;
 
 protected:
     void updateTime(void);

@@ -55,7 +55,7 @@ CGameMainSequence::~CGameMainSequence(void)
 bool CGameMainSequence::OnAttach(const void* pParam)
 {
 #ifdef _DEBUG
-    CDebug::SupressRwDebugAssert(true);
+    //CDebug::SupressRwDebugAssert(true);
 #endif
     Math::SRand(123456);
     CScreen::SetFlipInterval(1);
@@ -116,7 +116,7 @@ void CGameMainSequence::OnDetach(void)
     CTextureManager::Terminate();
     CDataLoader::Terminate();
 #ifdef _DEBUG
-    CDebug::SupressRwDebugAssert(false);
+    //CDebug::SupressRwDebugAssert(false);
 #endif
 };
 

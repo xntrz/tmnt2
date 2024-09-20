@@ -41,3 +41,4 @@
 * RenderWare v3.7 - [rw37sdk](https://archive.org/details/RenderwareStudio3.7SDKForWindows)
 * Dwarf explorer - [dwex](https://github.com/sevaa/dwex)
 * CRIWARE SDK - [crisdk](https://archive.org/details/cri-sdk)
+* toon plugin - [rptoon](https://github.com/xntrz/rptoon)

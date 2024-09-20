@@ -52,11 +52,18 @@ bool CGraphicsDevice::Initialize(void)
         &CMemory::rwcalloc
     };
 
-    if (!RwEngineInit(&memfuncs, 0x0, 0x400000))
+	const RwUInt32 rwRESOURCESDEFAULTARENASIZE = (4 << 20);
+	static_assert(rwRESOURCESDEFAULTARENASIZE == 0x400000, "retail checkout");
+
+	if (!RwEngineInit(&memfuncs, 0x0, rwRESOURCESDEFAULTARENASIZE))
     {
         OUTPUT("RwEngineInit failed");
         return false;
-    };
+	};
+
+#ifdef RWDEBUG
+	CDebug::StartRwDebug();
+#endif /* RWDEBUG */
 
 	if (!AttachPlugin())
 	{
@@ -90,8 +97,11 @@ bool CGraphicsDevice::Initialize(void)
 
 void CGraphicsDevice::Terminate(void)
 {
-    RwEngineClose();
-    RwEngineTerm();
+	RwEngineClose();
+#ifdef RWDEBUG
+	CDebug::StopRwDebug();
+#endif /* RWDEBUG */
+	RwEngineTerm();
 };
 
 
@@ -104,9 +114,8 @@ bool CGraphicsDevice::Start(void)
     };
 
 #ifdef RWDEBUG
-    CDebug::StartRwDebug();
     RtCharsetOpen();
-#endif        
+#endif /* RWDEBUG */  
 
     if (!RwImageRegisterImageFormat("bmp", RtBMPImageRead, 0))
     {
@@ -156,10 +165,8 @@ void CGraphicsDevice::Stop(void)
     DestroyCamera();
 
 #ifdef RWDEBUG
-    CDebug::StopRwDebug();
     RtCharsetClose();
-#endif
-    
+#endif /* RWDEBUG */
     RwEngineStop();
 };
 
