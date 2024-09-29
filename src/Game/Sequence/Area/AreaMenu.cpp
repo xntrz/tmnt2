@@ -278,15 +278,16 @@ AREATYPES::NEXTSEQUENCE CAreaMenu_Container::AreaMenuSelect_Sub(void)
                 m_nCursor = InvClamp(++m_nCursor, 0, m_nMenuItemCount - 1);
                 CGameSound::PlaySE(SDCODE_SE(4100));
             }
-            else if (CController::GetDigitalTrigger(iController, CController::DIGITAL_CANCEL))
+			else if (CController::GetDigitalTrigger(iController, CController::DIGITAL_CANCEL | CController::DIGITAL_R1))
             {
                 m_bMenuDispFlag = false;
                 m_MenuAnimCount = 0;
                 CGameSound::PlaySE(SDCODE_SE(4097));
             }
             else if (CController::GetDigitalTrigger(iController, CController::DIGITAL_OK))
-            {                
-                switch (m_aMenuItemTable[m_nCursor])
+			{
+				CGameSound::PlaySE(SDCODE_SE(4098));
+				switch (m_aMenuItemTable[m_nCursor])
                 {
                 case MAIN_WARP:
                     m_SubmenuType = SUBMENUTYPE_WARP;
@@ -317,10 +318,16 @@ AREATYPES::NEXTSEQUENCE CAreaMenu_Container::AreaMenuSelect_Sub(void)
                 case MAIN_TITLE:
                     return AREATYPES::NEXTSEQUENCE_TITLE;
                     
-                case MAIN_BACK:
-                    m_bMenuDispFlag = false;
-                    m_MenuAnimCount = 0;
-                    CGameSound::PlaySE(SDCODE_SE(4097));
+				case MAIN_BACK:
+					/**
+					 *	NOTE:
+					 *	in retail game there is call for playing CANCEL SE when back is pressed
+					 *	that overlaps OK SE (see before switch case) and they are playing together
+					 */
+					CGameSound::PlaySE(SDCODE_SE(4097));
+
+					m_bMenuDispFlag = false;
+					m_MenuAnimCount = 0;
                     break;
                 };
             };

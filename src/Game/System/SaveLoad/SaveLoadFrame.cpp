@@ -3,6 +3,7 @@
 #include "Game/Component/GameData/GameData.hpp"
 #include "Game/Component/Menu/MessageWindow.hpp"
 #include "Game/Component/Menu/Dialog.hpp"
+#include "Game/System/2d/MenuSound.hpp"
 #include "System/Common/Screen.hpp"
 #include "System/Common/Controller.hpp"
 
@@ -101,16 +102,21 @@ bool CSaveLoadFrame::IsErrorConfirmed(void) const
     ASSERT(m_mode == MODE_ERROR);
     ASSERT(m_pWindow);
 
-    if (m_fConfirmtimeLimit <= 0.0f)
-        return false;
-
-    if (CScreen::TimeElapsed() - m_fConfirmtimeStart >= m_fConfirmtimeLimit)
-        return true;
-
     int32 iController = CGameData::Attribute().GetVirtualPad();
-    uint32 uDigital = (m_ConfirmPadbtn == PADBTN_OK ? CController::DIGITAL_OK : CController::DIGITAL_CANCEL);
-    
-    return CController::GetDigitalTrigger(iController, uDigital);    
+
+	if ((m_ConfirmPadbtn == PADBTN_OK) && CController::GetDigitalTrigger(iController, CController::DIGITAL_OK))
+	{
+		CMenuSound::PlaySE(CMenuSound::SOUND_ID_OK);
+		return true;
+	};
+
+	if ((m_ConfirmPadbtn == PADBTN_CANCEL) && CController::GetDigitalTrigger(iController, CController::DIGITAL_CANCEL))
+	{
+		CMenuSound::PlaySE(CMenuSound::SOUND_ID_CANCEL);
+		return true;
+	};
+
+	return  (m_fConfirmtimeLimit > 0.0f) && ((CScreen::TimeElapsed() - m_fConfirmtimeStart) >= m_fConfirmtimeLimit);
 };
 
 

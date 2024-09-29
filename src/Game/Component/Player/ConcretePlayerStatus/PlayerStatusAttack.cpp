@@ -592,7 +592,7 @@ namespace PlayerStatus
     {
         if (Character().IsCharacterFlagSet(CHARACTERTYPES::FLAG_OCCURED_TIMING))
         {
-            CGameSound::PlayObjectSE(m_pPlayerChr, SDCODE_SE(4120));
+			CGameSound::PlayObjectSE(m_pPlayerChr, SDCODE_SE(0x1020));
             Character().ShootingKnife();
             CGameEvent::SetPlayerTechnicalAction(Character().GetPlayerNo(), GAMETYPES::TECACT_KNIFE);
 

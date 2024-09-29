@@ -295,9 +295,10 @@ void CPlayerSelectWorkPool::Move(void)
             } while (!m_aCharacterInfo[ GetRealCursor(i) ].m_bEnable);
         }
         else if (CController::GetDigitalTrigger(iController, CController::DIGITAL_LUP) ||
-            CController::GetDigitalTrigger(iController, CController::DIGITAL_LDOWN))
-        {
-            if (m_aCharacterInfo[ pPlayerInfo->m_iCursor + 4 ].m_bEnable)
+                 CController::GetDigitalTrigger(iController, CController::DIGITAL_LDOWN))
+		{
+			CGameSound::PlaySE(SDCODE_SE(4100));
+			if (m_aCharacterInfo[pPlayerInfo->m_iCursor + 4].m_bEnable)
                 pPlayerInfo->m_bSecret = !pPlayerInfo->m_bSecret;
         }
         else if (CController::GetDigital(iController, CController::DIGITAL_L1))
@@ -1252,23 +1253,28 @@ void CCharacterSelectSequence::OnMove(bool bRet, const void* pReturnValue)
             if (m_pWorkPool->IsEnded())
             {
                 CGameSound::FadeOut(CGameSound::FADESPEED_SLOW);
-                BeginFadeout();
-            };
+				BeginFadeout();
+
+				if (m_pWorkPool->IsConfirmed())
+					CGameSound::PlaySE(SDCODE_SE(4101));
+				else if (m_pWorkPool->IsReturned())
+					CGameSound::PlaySE(SDCODE_SE(4097));
+			};
         }
         break;
 
     case ANIMSTEP_END:
         {
             if (m_pWorkPool->IsConfirmed())
-            {
-                m_pWorkPool->Confirm();
+			{
+				m_pWorkPool->Confirm();
                 CGameData::Attribute().SetVirtualPad(CController::CONTROLLER_LOCKED_ON_VIRTUAL);
                 Ret();
             }
             else if (m_pWorkPool->IsReturned())
             {
-                Ret((const void*)PROCLABEL_SEQ_TITLE);
-            }
+				Ret((const void*)PROCLABEL_SEQ_TITLE);
+			}
             else
             {
                 Ret();

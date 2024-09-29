@@ -89,19 +89,15 @@ void CPushingGimmick::PostMove(void)
     if (m_pBodyHitData)
         m_pBodyHitData->SetCurrentPos(&vPostPos);
 
-    switch (m_pPushingMove->GetPushState())
+	float fSpeed = Math::Vec3_Length(&vVelocity);
+
+	switch (m_pPushingMove->GetPushState())
     {
     case CPushingGimmickMove::PUSHSTATE_PUSH:
         {
-            float fSpeed = Math::Vec3_Length(&vVelocity);
-
             if (fSpeed > 0.0f)
             {
-                if (!m_bSE)
-                {
-                    CGameSound::PlaySE(kindinfo().m_nSE);
-                    m_bSE = true;
-                };
+				startSE();
 
                 if (m_fEffectTimer >= 0.7f)
                 {
@@ -130,35 +126,29 @@ void CPushingGimmick::PostMove(void)
                 m_fEffectTimer += CGameProperty::GetElapsedTime();
             }
             else
-            {
-                m_fEffectTimer = 0.0f;
+			{
+				stopSE();
+				m_fEffectTimer = 0.0f;
             };
         }
         break;
 
     case CPushingGimmickMove::PUSHSTATE_ROTATION:
-        {
-            stopSE();
-        }
-        break;
-
     case CPushingGimmickMove::PUSHSTATE_FALL:
-        {
-            stopSE();
-        }
-        break;
-
     case CPushingGimmickMove::PUSHSTATE_END:
-        {
-            stopSE();            
-            Release();
-        }
-        break;
+		{
+			if (fSpeed <= 0.0f)
+				stopSE();
+		}
+		break;	
 
     default:
         ASSERT(false);
         break;
-    };
+	};
+
+	if (m_pPushingMove->GetPushState() == CPushingGimmickMove::PUSHSTATE_END)
+		Release();
 };
 
 
@@ -239,6 +229,16 @@ void CPushingGimmick::init(void* pParam)
 
     m_pBodyHitData->InitData(&vPosition, kindinfo().m_fRadius);
     m_pBodyHitData->SetState(CBodyHitData::STATE_SELF_TO_OTHER, true);    
+};
+
+
+void CPushingGimmick::startSE(void)
+{
+	if (!m_bSE)
+	{
+		CGameSound::PlaySE(kindinfo().m_nSE);
+		m_bSE = true;
+	};
 };
 
 

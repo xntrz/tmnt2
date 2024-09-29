@@ -49,14 +49,14 @@ namespace PlayerUtil
     {
         int32 aiVoiceList[] =
         {
-            SDCODE_VOICE(8241),
-            SDCODE_VOICE(8266),
-            SDCODE_VOICE(8291),
-            SDCODE_VOICE(8316),
-            SDCODE_VOICE(8342),
-            SDCODE_VOICE(8368),
-            SDCODE_VOICE(8396),
-            SDCODE_VOICE(8424),
+			SDCODE_SE(0x2031), // leo
+			SDCODE_SE(0x204A), // rap
+			SDCODE_SE(0x2063), // mic
+			SDCODE_SE(0x207C), // don
+			SDCODE_SE(0x20E8), // sla
+			SDCODE_SE(0x20B0), // cas
+			SDCODE_SE(0x20CC), // kar
+			SDCODE_SE(0x2096), // spl
         };
 
         PlayCharaSE(pPlayerChr, aiVoiceList);
@@ -67,14 +67,14 @@ namespace PlayerUtil
     {
         int32 aiVoiceList[] =
         {
-            SDCODE_VOICE(8242),
-            SDCODE_VOICE(8267),
-            SDCODE_VOICE(8292),
-            SDCODE_VOICE(8317),
-            SDCODE_VOICE(8343),
-            SDCODE_VOICE(8369),
-            SDCODE_VOICE(8397),
-            SDCODE_VOICE(8425),
+			SDCODE_SE(0x2032), // leo
+			SDCODE_SE(0x204B), // rap
+			SDCODE_SE(0x2064), // mic
+			SDCODE_SE(0x207D), // don
+			SDCODE_SE(0x20E9), // sla
+			SDCODE_SE(0x20B1), // cas
+			SDCODE_SE(0x20CD), // kar
+			SDCODE_SE(0x2097), // spl
         };
 
         PlayCharaSE(pPlayerChr, aiVoiceList);
@@ -85,14 +85,14 @@ namespace PlayerUtil
     {
         int32 aiVoiceList[] =
         {
-            SDCODE_VOICE(8218),
-            SDCODE_VOICE(8243),
-            SDCODE_VOICE(8268),
-            SDCODE_VOICE(8293),
-            SDCODE_VOICE(8318),
-            SDCODE_VOICE(8344),
-            SDCODE_VOICE(8370),
-            SDCODE_VOICE(8398),
+			SDCODE_SE(0x201A), // leo
+			SDCODE_SE(0x2033), // rap
+			SDCODE_SE(0x204C), // mic
+			SDCODE_SE(0x2065), // don
+			SDCODE_SE(0x20CE), // sla
+			SDCODE_SE(0x2098), // cas
+			SDCODE_SE(0x20B2), // kar
+			SDCODE_SE(0x207E), // spl
         };
 
         PlayCharaSE(pPlayerChr, aiVoiceList);
@@ -102,15 +102,15 @@ namespace PlayerUtil
     void CallVoiceOfBackThrow(const CPlayerCharacter* pPlayerChr)
     {
         int32 aiVoiceList[] =
-        {
-            SDCODE_VOICE(-1),
-            SDCODE_VOICE(-1),
-            SDCODE_VOICE(-1),
-            SDCODE_VOICE(-1),
-            SDCODE_VOICE(8341),
-            SDCODE_VOICE(8367),
-            SDCODE_VOICE(8395),
-            SDCODE_VOICE(8423),
+		{
+			SDCODE_SE(-1), 		// leo
+			SDCODE_SE(-1), 		// rap
+			SDCODE_SE(-1), 		// mic
+			SDCODE_SE(-1), 		// don
+			SDCODE_SE(0x20E7), 	// sla
+			SDCODE_SE(0x20AF), 	// cas
+			SDCODE_SE(0x20CB), 	// kar
+			SDCODE_SE(0x2095), 	// spl
         };
         
         PlayCharaSE(pPlayerChr, aiVoiceList);
@@ -119,65 +119,63 @@ namespace PlayerUtil
 
     void CallVoiceOfJumpWall(const CPlayerCharacter* pPlayerChr)
     {
-        int32 aiVoiceList [] =
-        {
-            SDCODE_VOICE(8235),
-            SDCODE_VOICE(8260),
-            SDCODE_VOICE(8285),
-            SDCODE_VOICE(8310),
-            SDCODE_VOICE(8335),
-            SDCODE_VOICE(8361),
-            SDCODE_VOICE(8388),
-            SDCODE_VOICE(8417),
-            SDCODE_VOICE(8236),
-            SDCODE_VOICE(8261),
+        int32 aiVoiceList[] =
+		{
+			// jump №1
+			SDCODE_SE(0x202B), // leo
+  			SDCODE_SE(0x2044), // rap
+  			SDCODE_SE(0x205D), // mic
+  			SDCODE_SE(0x2076), // don
+			SDCODE_SE(0x20E1), // sla
+  			SDCODE_SE(0x20A9), // cas
+  			SDCODE_SE(0x20C4), // kar
+  			SDCODE_SE(0x208F), // spl
 
-            SDCODE_VOICE(8286),
-            SDCODE_VOICE(8311),
-            SDCODE_VOICE(8336),
-            SDCODE_VOICE(8362),
-            SDCODE_VOICE(8389),
-            SDCODE_VOICE(8416),
-            SDCODE_VOICE(8237),
-            SDCODE_VOICE(8262),
-            SDCODE_VOICE(8287),
-            SDCODE_VOICE(8312),
+			// jump №2
+			SDCODE_SE(0x202C), // leo
+  			SDCODE_SE(0x2045), // rap
+  			SDCODE_SE(0x205E), // mic
+  			SDCODE_SE(0x2077), // don
+			SDCODE_SE(0x20E0), // sla
+  			SDCODE_SE(0x20AA), // cas
+  			SDCODE_SE(0x20C5), // kar
+  			SDCODE_SE(0x2090), // spl
 
-            SDCODE_VOICE(8337),
-            SDCODE_VOICE(8363),
-            SDCODE_VOICE(8390),
-            SDCODE_VOICE(8418),
-            SDCODE_VOICE(8238),
-            SDCODE_VOICE(8263),
-            SDCODE_VOICE(8288),
-            SDCODE_VOICE(8313),
-            SDCODE_VOICE(8338),
-            SDCODE_VOICE(8364),
+			// jump №3
+			SDCODE_SE(0x202D), // leo
+  			SDCODE_SE(0x2046), // rap
+  			SDCODE_SE(0x205F), // mic
+  			SDCODE_SE(0x2078), // don
+			SDCODE_SE(0x20E2), // sla
+  			SDCODE_SE(0x20AB), // cas
+  			SDCODE_SE(0x20C6), // kar
+  			SDCODE_SE(0x2091), // spl
 
-            SDCODE_VOICE(8391),
-            SDCODE_VOICE(8419),
-            SDCODE_VOICE(8239),
-            SDCODE_VOICE(8264),
-            SDCODE_VOICE(8289),
-            SDCODE_VOICE(8314),
-            SDCODE_VOICE(8339),
-            SDCODE_VOICE(8365),
-            SDCODE_VOICE(8392),
-            SDCODE_VOICE(8420),
-        };
+			// jump №4
+			SDCODE_SE(0x202E), // leo
+  			SDCODE_SE(0x2047), // rap
+  			SDCODE_SE(0x2060), // mic
+  			SDCODE_SE(0x2079), // don
+			SDCODE_SE(0x20E3), // sla
+  			SDCODE_SE(0x20AC), // cas
+  			SDCODE_SE(0x20C7), // kar
+  			SDCODE_SE(0x2092), // spl
 
-        int32 nNumWallJump = pPlayerChr->GetNumWallJump();
-        if (nNumWallJump >= 1)
-        {
-            if (nNumWallJump < 5)
-                nNumWallJump = nNumWallJump - 1;
-            else
-                nNumWallJump = 4;
-        }
-        else
-        {
-            nNumWallJump = 0;
-        };
+			// jump №5
+			SDCODE_SE(0x202F), // leo
+  			SDCODE_SE(0x2048), // rap
+  			SDCODE_SE(0x2061), // mic
+  			SDCODE_SE(0x207A), // don
+  			SDCODE_SE(0x20E4), // sla
+  			SDCODE_SE(0x20AD), // cas
+  			SDCODE_SE(0x20C8), // kar
+  			SDCODE_SE(0x2093), // spl
+		};
+
+		const int32 nNumWallJumpMax = (COUNT_OF(aiVoiceList) / PLAYERID::ID_MAX) - 1;
+
+		int32 nNumWallJump = pPlayerChr->GetNumWallJump();
+		nNumWallJump = Clamp(nNumWallJump, 0, nNumWallJumpMax);
 
         PlayCharaSE(pPlayerChr, &aiVoiceList[nNumWallJump * PLAYERID::ID_MAX]);
     };
@@ -185,17 +183,17 @@ namespace PlayerUtil
 
     void CallVoiceOfAABBB(const CPlayerCharacter* pPlayerChr)
     {
-        int32 aiVoiceList[] =
-        {
-            SDCODE_VOICE(8222),
-            SDCODE_VOICE(8247),
-            SDCODE_VOICE(8272),
-            SDCODE_VOICE(8297),
-            SDCODE_VOICE(8322),
-            SDCODE_VOICE(8348),
-            SDCODE_VOICE(8374),
-            SDCODE_VOICE(8402),
-        };
+		int32 aiVoiceList[] =
+		{
+			SDCODE_SE(0x201E), // leo
+			SDCODE_SE(0x2037), // rap
+			SDCODE_SE(0x2050), // mic
+			SDCODE_SE(0x2069), // don
+			SDCODE_SE(0x20D2), // sla
+			SDCODE_SE(0x209C), // cas
+			SDCODE_SE(0x20B6), // kar
+			SDCODE_SE(0x2082), // spl
+		};
 
         PlayCharaSE(pPlayerChr, aiVoiceList);
     };
@@ -205,14 +203,14 @@ namespace PlayerUtil
     {
         int32 aiVoiceList[] =
         {
-            SDCODE_VOICE(8223),
-            SDCODE_VOICE(8248),
-            SDCODE_VOICE(8273),
-            SDCODE_VOICE(8298),
-            SDCODE_VOICE(8323),
-            SDCODE_VOICE(8349),
-            SDCODE_VOICE(8375),
-            SDCODE_VOICE(8403),
+			SDCODE_SE(0x201F), // leo
+			SDCODE_SE(0x2038), // rap
+			SDCODE_SE(0x2051), // mic
+			SDCODE_SE(0x206A), // don
+			SDCODE_SE(0x20D3), // sla
+			SDCODE_SE(0x209D), // cas
+			SDCODE_SE(0x20B7), // kar
+			SDCODE_SE(0x2083), // spl
         };
 
         PlayCharaSE(pPlayerChr, aiVoiceList);
@@ -223,14 +221,14 @@ namespace PlayerUtil
     {
         int32 aiVoiceList[] =
         {
-            SDCODE_VOICE(8230),
-            SDCODE_VOICE(8255),
-            SDCODE_VOICE(8280),
-            SDCODE_VOICE(8305),
-            SDCODE_VOICE(8330),
-            SDCODE_VOICE(8356),
-            SDCODE_VOICE(8382),
-            SDCODE_VOICE(8410),
+  			SDCODE_SE(0x2026), // leo
+  			SDCODE_SE(0x203F), // rap
+  			SDCODE_SE(0x2058), // mic
+  			SDCODE_SE(0x2071), // don
+  			SDCODE_SE(0x20DA), // sla
+  			SDCODE_SE(0x20A4), // cas
+  			SDCODE_SE(0x20BE), // kar
+  			SDCODE_SE(0x208A), // spl
         };
 
         PlayCharaSE(pPlayerChr, aiVoiceList);
@@ -241,14 +239,14 @@ namespace PlayerUtil
     {
         int32 aiVoiceList[] =
         {
-            SDCODE_VOICE(8234),
-            SDCODE_VOICE(8259),
-            SDCODE_VOICE(8284),
-            SDCODE_VOICE(8309),
-            SDCODE_VOICE(8334),
-            SDCODE_VOICE(8360),
-            SDCODE_VOICE(8386),
-            SDCODE_VOICE(8415),
+  			SDCODE_SE(0x202A), // leo
+  			SDCODE_SE(0x2043), // rap
+  			SDCODE_SE(0x205C), // mic
+  			SDCODE_SE(0x2075), // don
+  			SDCODE_SE(0x20DF), // sla
+  			SDCODE_SE(0x20A8), // cas
+  			SDCODE_SE(0x20C2), // kar
+  			SDCODE_SE(0x208E), // spl
         };
 
         PlayCharaSE(pPlayerChr, aiVoiceList);

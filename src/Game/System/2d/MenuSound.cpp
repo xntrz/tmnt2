@@ -5,11 +5,11 @@
 
 /*static*/ const char* CMenuSound::m_apszSoundLabel[] =
 {
-    "SoundStart",
-    "SoundBad",
-    "SoundCancel",
-    "SoundOk",
     "SoundCursor",
+	"SoundOk",
+    "SoundCancel",	
+    "SoundBad",
+	"SoundStart",
 };
 
 

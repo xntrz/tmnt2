@@ -18,6 +18,9 @@
 #include "System/Common/RenderState.hpp"
 
 
+static const int32 ELEVATOR_SE = SDCODE_SE(0x1074);
+
+
 CElevatorGimmick::CElevatorGimmick(const char* pszName, void* pParam)
 : CGimmick(pszName, pParam)
 , m_model()
@@ -128,7 +131,7 @@ CElevatorGimmick::CElevatorGimmick(const char* pszName, void* pParam)
 
 CElevatorGimmick::~CElevatorGimmick(void)
 {
-    CGameSound::FadeOutSE(SDCODE_SE(4212), CGameSound::FADESPEED_NORMAL);
+	CGameSound::FadeOutSE(ELEVATOR_SE, CGameSound::FADESPEED_NORMAL);
 
     for (int32 i = 0; i < COUNT_OF(m_apParts); ++i)
     {
@@ -231,7 +234,7 @@ void CElevatorGimmick::PostMove(void)
         {
             if (m_id == ID_M02N_ELEVATOR)
             {
-                CGameSound::FadeOutSE(SDCODE_SE(4212), CGameSound::FADESPEED_NORMAL);
+				CGameSound::FadeOutSE(ELEVATOR_SE, CGameSound::FADESPEED_NORMAL);
 
                 for (int32 i = 1; i < COUNT_OF(m_apParts); ++i) // skip first part - floor
                 {
@@ -246,8 +249,9 @@ void CElevatorGimmick::PostMove(void)
                 m_state = STATE_ENEMY_START;
             }
             else
-            {
-                m_state = STATE_END;
+			{
+				ASSERT(m_id == ID_M05N_ELEVATOR);
+				m_state = STATE_END;
             };
         }
         break;
@@ -256,11 +260,11 @@ void CElevatorGimmick::PostMove(void)
         {
             ASSERT(m_id == ID_M02N_ELEVATOR);
 
-            if (m_fTimer > 0.3)
-            {
-                m_generator.ActivateEnemy();
-                m_state = STATE_END;
-            }
+			if (m_fTimer > 0.3)
+			{
+				m_generator.ActivateEnemy();
+				m_state = STATE_END;
+			};
         }
         break;
     };
@@ -283,7 +287,7 @@ void CElevatorGimmick::OnReceiveEvent(const char* pszSender, GIMMICKTYPES::EVENT
                 return;
 
             m_state = STATE_MOVE_START;
-            CGameSound::PlayObjectSE(this, SDCODE_SE(4212));
+			CGameSound::PlayObjectSE(this, ELEVATOR_SE);
 
             if (m_id == ID_M05N_ELEVATOR)
             {
@@ -315,7 +319,7 @@ void CElevatorGimmick::OnReceiveEvent(const char* pszSender, GIMMICKTYPES::EVENT
                     m_hAtari = 0;
                 };
 
-                CGameSound::FadeOutSE(SDCODE_SE(4212), CGameSound::FADESPEED_NORMAL);
+                CGameSound::FadeOutSE(ELEVATOR_SE, CGameSound::FADESPEED_NORMAL);
                 m_state = STATE_END;
             };
         }

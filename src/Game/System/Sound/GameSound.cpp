@@ -285,7 +285,7 @@ static void SdSetDamage(const SE_DAMAGE_PARAM* pParam)
             if (!std::strcmp(pParam->Attacker->GetName(), "GMNFALOBJ_A008"))
                 Code = SDCODE_SE(0x10FA);
 
-            switch (pParam->DefenderId)
+            switch (pParam->AttackerSubType)
             {
             case GIMMICKID::ID_N_LASER:
                 Code = SDCODE_SE(0x1030);
@@ -733,16 +733,16 @@ static void SdSetAttackPlayer(const SE_ATTACK_PARAM* pParam)
     int32 Code = SD_NOCODE;
     int32 KoeCode = SD_NOCODE;
 
-#define INIT_CODE_AND_KOE_MACRO(DefaultCodeHigh, DefaultCodeLow)            \
-     if (!std::strcmp(Motion, "A"))                                         \
-     {                                                                      \
-         KoeCode = s_atKoeHigh[(pParam->Id * 3) + Rnd];                     \
-         Code = SDCODE_SE(DefaultCodeHigh);                                 \
-     }                                                                      \
-     else                                                                   \
-     {                                                                      \
-         KoeCode = s_atKoeLow[(pParam->Id * 3) + Rnd];                      \
-         Code = SDCODE_SE(DefaultCodeLow);                                  \
+#define INIT_CODE_AND_KOE_MACRO(DefaultCodeHigh, DefaultCodeLow)    	\
+     if (!std::strcmp(Motion, "A"))                                   	\
+     {                                                                	\
+         KoeCode = s_atKoeLow[(pParam->Id * 3) + Rnd];                 	\
+         Code = SDCODE_SE(DefaultCodeLow);                            	\
+     }                                                                 	\
+     else                                                              	\
+     {                                                                 	\
+         KoeCode = s_atKoeHigh[(pParam->Id * 3) + Rnd];                	\
+         Code = SDCODE_SE(DefaultCodeHigh);                            	\
      };
 
     if ((!std::strcmp(Motion, "Shuriken")) ||
@@ -750,8 +750,8 @@ static void SdSetAttackPlayer(const SE_ATTACK_PARAM* pParam)
     {
         SoundSet(SDCODE_SE(0x1020));
     }
-    else if ((!std::strcmp(Motion, "A")) ||
-            (!std::strcmp(Motion, "B")) ||
+    else if ((*Motion == 'A') ||
+            (*Motion == 'B') ||
             (!std::strcmp(Motion, "RunAttack")) ||
             (!std::strcmp(Motion, "JAttack")) ||
             (!std::strcmp(Motion, "JAttack1")))
@@ -1078,9 +1078,9 @@ static void SdSetAttackEnemy(const SE_ATTACK_PARAM* pParam)
         
         const uint32 DriverFadeParam[] =
         {
-            0x2000,
-            0x1000,
-            0x0000,
+            0,		// fast
+            1000,	// normal
+            2000,	// slow
         };
         
         static_assert(COUNT_OF(DriverFadeParam) == FADESPEEDNUM, "update me");
@@ -1108,265 +1108,276 @@ static void SdSetAttackEnemy(const SE_ATTACK_PARAM* pParam)
         SoundSetEx(nVoice, 0, 0, uint32(idPlayer));
     }
     else
-    {
-        switch (idPlayer)
-        {
-        case PLAYERID::ID_LEO:
-            {
-                SoundSet(0x80002000);
-                SoundSet(0x8000201A);
-                SoundSet(0x8000201B);
-                SoundSet(0x8000201C);
-                SoundSet(0x8000201D);
-                SoundSet(0x8000201E);
-                SoundSet(0x8000201F);
-                SoundSet(0x80002020);
-                SoundSet(0x80002021);
-                SoundSet(0x80002022);
-                SoundSet(0x80002023);
-                SoundSet(0x80002024);
-                SoundSet(0x80002025);
-                SoundSet(0x80002026);
-                SoundSet(0x80002027);
-                SoundSet(0x80002028);
-                SoundSet(0x80002029);
-                SoundSet(0x8000202A);
-                SoundSet(0x8000202B);
-                SoundSet(0x8000202C);
-                SoundSet(0x8000202D);
-                SoundSet(0x8000202E);
-                SoundSet(0x8000202F);
-                SoundSet(0x80002030);
-                SoundSet(0x80002031);
-                SoundSet(0x80002032);
-                SoundSetEx(nVoice, 0, 0, uint32(idPlayer));
-            }
-            break;
-            
-        case PLAYERID::ID_RAP:
-            {
-                SoundSet(0x80002001);
-                SoundSet(0x80002033);
-                SoundSet(0x80002034);
-                SoundSet(0x80002035);
-                SoundSet(0x80002036);
-                SoundSet(0x80002037);
-                SoundSet(0x80002038);
-                SoundSet(0x80002039);
-                SoundSet(0x8000203A);
-                SoundSet(0x8000203B);
-                SoundSet(0x8000203C);
-                SoundSet(0x8000203D);
-                SoundSet(0x8000203E);
-                SoundSet(0x8000203F);
-                SoundSet(0x80002040);
-                SoundSet(0x80002041);
-                SoundSet(0x80002042);
-                SoundSet(0x80002043);
-                SoundSet(0x80002044);
-                SoundSet(0x80002045);
-                SoundSet(0x80002046);
-                SoundSet(0x80002047);
-                SoundSet(0x80002048);
-                SoundSet(0x80002049);
-                SoundSet(0x8000204A);
-                SoundSet(0x8000204B);
-                SoundSetEx(nVoice, 0, 0, uint32(idPlayer));
-            }
-            break;
-            
-        case PLAYERID::ID_MIC:
-            {
-                SoundSet(0x80002002);
-                SoundSet(0x8000204C);
-                SoundSet(0x8000204D);
-                SoundSet(0x8000204E);
-                SoundSet(0x8000204F);
-                SoundSet(0x80002050);
-                SoundSet(0x80002051);
-                SoundSet(0x80002052);
-                SoundSet(0x80002053);
-                SoundSet(0x80002054);
-                SoundSet(0x80002055);
-                SoundSet(0x80002056);
-                SoundSet(0x80002057);
-                SoundSet(0x80002058);
-                SoundSet(0x80002059);
-                SoundSet(0x8000205A);
-                SoundSet(0x8000205B);
-                SoundSet(0x8000205C);
-                SoundSet(0x8000205D);
-                SoundSet(0x8000205E);
-                SoundSet(0x8000205F);
-                SoundSet(0x80002060);
-                SoundSet(0x80002061);
-                SoundSet(0x80002062);
-                SoundSet(0x80002063);
-                SoundSet(0x80002064);
-                SoundSetEx(nVoice, 0, 0, uint32(idPlayer));
-            }
-            break;
-            
-        case PLAYERID::ID_DON:
-            {
-                SoundSet(0x80002003);
-                SoundSet(0x80002065);
-                SoundSet(0x80002066);
-                SoundSet(0x80002067);
-                SoundSet(0x80002068);
-                SoundSet(0x80002069);
-                SoundSet(0x8000206A);
-                SoundSet(0x8000206B);
-                SoundSet(0x8000206C);
-                SoundSet(0x8000206D);
-                SoundSet(0x8000206E);
-                SoundSet(0x8000206F);
-                SoundSet(0x80002070);
-                SoundSet(0x80002071);
-                SoundSet(0x80002072);
-                SoundSet(0x80002073);
-                SoundSet(0x80002074);
-                SoundSet(0x80002075);
-                SoundSet(0x80002076);
-                SoundSet(0x80002077);
-                SoundSet(0x80002078);
-                SoundSet(0x80002079);
-                SoundSet(0x8000207A);
-                SoundSet(0x8000207B);
-                SoundSet(0x8000207C);
-                SoundSet(0x8000207D);
-                SoundSetEx(nVoice, 0, 0, uint32(idPlayer));
-            }
-            break;
-            
-        case PLAYERID::ID_SLA:
-            {
-                SoundSet(0x800020CE);
-                SoundSet(0x800020CF);
-                SoundSet(0x800020D0);
-                SoundSet(0x800020D1);
-                SoundSet(0x800020D2);
-                SoundSet(0x800020D3);
-                SoundSet(0x800020D4);
-                SoundSet(0x800020D5);
-                SoundSet(0x800020D6);
-                SoundSet(0x800020D7);
-                SoundSet(0x800020D8);
-                SoundSet(0x800020D9);
-                SoundSet(0x800020DA);
-                SoundSet(0x800020DB);
-                SoundSet(0x800020DC);
-                SoundSet(0x800020DD);
-                SoundSet(0x800020DF);
-                SoundSet(0x800020E1);
-                SoundSet(0x800020E0);
-                SoundSet(0x800020E2);
-                SoundSet(0x800020E3);
-                SoundSet(0x800020E4);
-                SoundSet(0x800020E6);
-                SoundSet(0x800020E8);
-                SoundSet(0x800020E9);
-                SoundSetEx(nVoice, 0, 0, uint32(idPlayer));
-            }
-            break;
-            
-        case PLAYERID::ID_CAS:
-            {
-                SoundSet(0x80002098);
-                SoundSet(0x80002099);
-                SoundSet(0x8000209A);
-                SoundSet(0x8000209B);
-                SoundSet(0x8000209C);
-                SoundSet(0x8000209D);
-                SoundSet(0x8000209E);
-                SoundSet(0x8000209F);
-                SoundSet(0x800020A0);
-                SoundSet(0x800020A1);
-                SoundSet(0x800020A2);
-                SoundSet(0x800020A3);
-                SoundSet(0x800020A4);
-                SoundSet(0x800020A5);
-                SoundSet(0x800020A6);
-                SoundSet(0x800020A7);
-                SoundSet(0x800020A8);
-                SoundSet(0x800020A9);
-                SoundSet(0x800020AA);
-                SoundSet(0x800020AB);
-                SoundSet(0x800020AC);
-                SoundSet(0x800020AD);
-                SoundSet(0x800020AE);
-                SoundSet(0x800020B0);
-                SoundSet(0x800020B1);
-                SoundSetEx(nVoice, 0, 0, uint32(idPlayer));
-            }
-            break;
-            
-        case PLAYERID::ID_KAR:
-            {
-                SoundSet(0x800020B2);
-                SoundSet(0x800020B3);
-                SoundSet(0x800020B4);
-                SoundSet(0x800020B5);
-                SoundSet(0x800020B6);
-                SoundSet(0x800020B7);
-                SoundSet(0x800020B8);
-                SoundSet(0x800020B9);
-                SoundSet(0x800020BA);
-                SoundSet(0x800020BB);
-                SoundSet(0x800020BC);
-                SoundSet(0x800020BD);
-                SoundSet(0x800020BE);
-                SoundSet(0x800020BF);
-                SoundSet(0x800020C0);
-                SoundSet(0x800020C1);
-                SoundSet(0x800020C2);
-                SoundSet(0x800020C4);
-                SoundSet(0x800020C5);
-                SoundSet(0x800020C6);
-                SoundSet(0x800020C7);
-                SoundSet(0x800020C8);
-                SoundSet(0x800020CA);
-                SoundSet(0x800020CC);
-                SoundSet(0x800020CD);
-                SoundSetEx(nVoice, 0, 0, uint32(idPlayer));
-            }
-            break;
-            
-        case PLAYERID::ID_SPL:
-            {
-                SoundSet(0x8000207E);
-                SoundSet(0x8000207F);
-                SoundSet(0x80002080);
-                SoundSet(0x80002081);
-                SoundSet(0x80002082);
-                SoundSet(0x80002083);
-                SoundSet(0x80002084);
-                SoundSet(0x80002085);
-                SoundSet(0x80002086);
-                SoundSet(0x80002087);
-                SoundSet(0x80002088);
-                SoundSet(0x80002089);
-                SoundSet(0x8000208A);
-                SoundSet(0x8000208B);
-                SoundSet(0x8000208C);
-                SoundSet(0x8000208D);
-                SoundSet(0x8000208E);
-                SoundSet(0x8000208F);
-                SoundSet(0x80002090);
-                SoundSet(0x80002091);
-                SoundSet(0x80002092);
-                SoundSet(0x80002093);
-                SoundSet(0x80002094);
-                SoundSet(0x80002096);
-                SoundSet(0x80002097);
-                SoundSetEx(nVoice, 0, 0, uint32(idPlayer));
-            }
-            break;
+	{
+		// leo
+		static uint32 SdSeFadeTblLeo[] =
+		{
+			SDCODE_SE(0x2000),
+			SDCODE_SE(0x201A),
+			SDCODE_SE(0x201B),
+			SDCODE_SE(0x201C),
+			SDCODE_SE(0x201D),
+			SDCODE_SE(0x201E),
+			SDCODE_SE(0x201F),
+			SDCODE_SE(0x2020),
+			SDCODE_SE(0x2021),
+			SDCODE_SE(0x2022),
+			SDCODE_SE(0x2023),
+			SDCODE_SE(0x2024),
+			SDCODE_SE(0x2025),
+			SDCODE_SE(0x2026),
+			SDCODE_SE(0x2027),
+			SDCODE_SE(0x2028),
+			SDCODE_SE(0x2029),
+			SDCODE_SE(0x202A),
+			SDCODE_SE(0x202B),
+			SDCODE_SE(0x202C),
+			SDCODE_SE(0x202D),
+			SDCODE_SE(0x202E),
+			SDCODE_SE(0x202F),
+			SDCODE_SE(0x2030),
+			SDCODE_SE(0x2031),
+			SDCODE_SE(0x2032),
+		};
 
-        default:
-            ASSERT(false);
-            break;
-        };
+		// rap
+		static uint32 SdSeFadeTblRap[] =
+		{
+			SDCODE_SE(0x2001),
+			SDCODE_SE(0x2033),
+			SDCODE_SE(0x2034),
+			SDCODE_SE(0x2035),
+			SDCODE_SE(0x2036),
+			SDCODE_SE(0x2037),
+			SDCODE_SE(0x2038),
+			SDCODE_SE(0x2039),
+			SDCODE_SE(0x203A),
+			SDCODE_SE(0x203B),
+			SDCODE_SE(0x203C),
+			SDCODE_SE(0x203D),
+			SDCODE_SE(0x203E),
+			SDCODE_SE(0x203F),
+			SDCODE_SE(0x2040),
+			SDCODE_SE(0x2041),
+			SDCODE_SE(0x2042),
+			SDCODE_SE(0x2043),
+			SDCODE_SE(0x2044),
+			SDCODE_SE(0x2045),
+			SDCODE_SE(0x2046),
+			SDCODE_SE(0x2047),
+			SDCODE_SE(0x2048),
+			SDCODE_SE(0x2049),
+			SDCODE_SE(0x204A),
+			SDCODE_SE(0x204B),
+		};
+
+		// mic
+		static uint32 SdSeFadeTblMic[] =
+		{
+			SDCODE_SE(0x2002),
+			SDCODE_SE(0x204C),
+			SDCODE_SE(0x204D),
+			SDCODE_SE(0x204E),
+			SDCODE_SE(0x204F),
+			SDCODE_SE(0x2050),
+			SDCODE_SE(0x2051),
+			SDCODE_SE(0x2052),
+			SDCODE_SE(0x2053),
+			SDCODE_SE(0x2054),
+			SDCODE_SE(0x2055),
+			SDCODE_SE(0x2056),
+			SDCODE_SE(0x2057),
+			SDCODE_SE(0x2058),
+			SDCODE_SE(0x2059),
+			SDCODE_SE(0x205A),
+			SDCODE_SE(0x205B),
+			SDCODE_SE(0x205C),
+			SDCODE_SE(0x205D),
+			SDCODE_SE(0x205E),
+			SDCODE_SE(0x205F),
+			SDCODE_SE(0x2060),
+			SDCODE_SE(0x2061),
+			SDCODE_SE(0x2062),
+			SDCODE_SE(0x2063),
+			SDCODE_SE(0x2064),
+		};
+
+		// don
+		static uint32 SdSeFadeTblDon[] =
+		{
+			SDCODE_SE(0x2003),
+			SDCODE_SE(0x2065),
+			SDCODE_SE(0x2066),
+			SDCODE_SE(0x2067),
+			SDCODE_SE(0x2068),
+			SDCODE_SE(0x2069),
+			SDCODE_SE(0x206A),
+			SDCODE_SE(0x206B),
+			SDCODE_SE(0x206C),
+			SDCODE_SE(0x206D),
+			SDCODE_SE(0x206E),
+			SDCODE_SE(0x206F),
+			SDCODE_SE(0x2070),
+			SDCODE_SE(0x2071),
+			SDCODE_SE(0x2072),
+			SDCODE_SE(0x2073),
+			SDCODE_SE(0x2074),
+			SDCODE_SE(0x2075),
+			SDCODE_SE(0x2076),
+			SDCODE_SE(0x2077),
+			SDCODE_SE(0x2078),
+			SDCODE_SE(0x2079),
+			SDCODE_SE(0x207A),
+			SDCODE_SE(0x207B),
+			SDCODE_SE(0x207C),
+			SDCODE_SE(0x207D),
+		};
+
+		// sla
+		static uint32 SdSeFadeTblSla[] =
+		{
+			SDCODE_SE(0x20CE),
+			SDCODE_SE(0x20CF),
+			SDCODE_SE(0x20D0),
+			SDCODE_SE(0x20D1),
+			SDCODE_SE(0x20D2),
+			SDCODE_SE(0x20D3),
+			SDCODE_SE(0x20D4),
+			SDCODE_SE(0x20D5),
+			SDCODE_SE(0x20D6),
+			SDCODE_SE(0x20D7),
+			SDCODE_SE(0x20D8),
+			SDCODE_SE(0x20D9),
+			SDCODE_SE(0x20DA),
+			SDCODE_SE(0x20DB),
+			SDCODE_SE(0x20DC),
+			SDCODE_SE(0x20DD),
+			SDCODE_SE(0x20DF),
+			SDCODE_SE(0x20E1),
+			SDCODE_SE(0x20E0),
+			SDCODE_SE(0x20E2),
+			SDCODE_SE(0x20E3),
+			SDCODE_SE(0x20E4),
+			SDCODE_SE(0x20E6),
+			SDCODE_SE(0x20E8),
+			SDCODE_SE(0x20E9),
+		};
+
+		//cas 
+		static uint32 SdSeFadeTblCas [] =
+		{
+			SDCODE_SE(0x2098),
+			SDCODE_SE(0x2099),
+			SDCODE_SE(0x209A),
+			SDCODE_SE(0x209B),
+			SDCODE_SE(0x209C),
+			SDCODE_SE(0x209D),
+			SDCODE_SE(0x209E),
+			SDCODE_SE(0x209F),
+			SDCODE_SE(0x20A0),
+			SDCODE_SE(0x20A1),
+			SDCODE_SE(0x20A2),
+			SDCODE_SE(0x20A3),
+			SDCODE_SE(0x20A4),
+			SDCODE_SE(0x20A5),
+			SDCODE_SE(0x20A6),
+			SDCODE_SE(0x20A7),
+			SDCODE_SE(0x20A8),
+			SDCODE_SE(0x20A9),
+			SDCODE_SE(0x20AA),
+			SDCODE_SE(0x20AB),
+			SDCODE_SE(0x20AC),
+			SDCODE_SE(0x20AD),
+			SDCODE_SE(0x20AE),
+			SDCODE_SE(0x20B0),
+			SDCODE_SE(0x20B1),
+		};
+
+		// kar
+		static uint32 SdSeFadeTblKar[] =
+		{
+			SDCODE_SE(0x20B2),
+			SDCODE_SE(0x20B3),
+			SDCODE_SE(0x20B4),
+			SDCODE_SE(0x20B5),
+			SDCODE_SE(0x20B6),
+			SDCODE_SE(0x20B7),
+			SDCODE_SE(0x20B8),
+			SDCODE_SE(0x20B9),
+			SDCODE_SE(0x20BA),
+			SDCODE_SE(0x20BB),
+			SDCODE_SE(0x20BC),
+			SDCODE_SE(0x20BD),
+			SDCODE_SE(0x20BE),
+			SDCODE_SE(0x20BF),
+			SDCODE_SE(0x20C0),
+			SDCODE_SE(0x20C1),
+			SDCODE_SE(0x20C2),
+			SDCODE_SE(0x20C4),
+			SDCODE_SE(0x20C5),
+			SDCODE_SE(0x20C6),
+			SDCODE_SE(0x20C7),
+			SDCODE_SE(0x20C8),
+			SDCODE_SE(0x20CA),
+			SDCODE_SE(0x20CC),
+			SDCODE_SE(0x20CD),
+		};
+
+		// spl
+		static uint32 SdSeFadeTblSpl[] =
+		{
+			SDCODE_SE(0x207E),
+			SDCODE_SE(0x207F),
+			SDCODE_SE(0x2080),
+			SDCODE_SE(0x2081),
+			SDCODE_SE(0x2082),
+			SDCODE_SE(0x2083),
+			SDCODE_SE(0x2084),
+			SDCODE_SE(0x2085),
+			SDCODE_SE(0x2086),
+			SDCODE_SE(0x2087),
+			SDCODE_SE(0x2088),
+			SDCODE_SE(0x2089),
+			SDCODE_SE(0x208A),
+			SDCODE_SE(0x208B),
+			SDCODE_SE(0x208C),
+			SDCODE_SE(0x208D),
+			SDCODE_SE(0x208E),
+			SDCODE_SE(0x208F),
+			SDCODE_SE(0x2090),
+			SDCODE_SE(0x2091),
+			SDCODE_SE(0x2092),
+			SDCODE_SE(0x2093),
+			SDCODE_SE(0x2094),
+			SDCODE_SE(0x2096),
+			SDCODE_SE(0x2097),
+		};
+
+		static struct FADETABLEDATA
+		{
+			uint32* Data;
+			int32 Count;
+		} FadeTableData [] =
+		{
+			{ SdSeFadeTblLeo, COUNT_OF(SdSeFadeTblLeo) },
+			{ SdSeFadeTblRap, COUNT_OF(SdSeFadeTblRap) },
+			{ SdSeFadeTblMic, COUNT_OF(SdSeFadeTblMic) },
+			{ SdSeFadeTblDon, COUNT_OF(SdSeFadeTblDon) },
+			{ SdSeFadeTblSla, COUNT_OF(SdSeFadeTblSla) },
+			{ SdSeFadeTblCas, COUNT_OF(SdSeFadeTblCas) },
+			{ SdSeFadeTblKar, COUNT_OF(SdSeFadeTblKar) },
+			{ SdSeFadeTblSpl, COUNT_OF(SdSeFadeTblSpl) },
+		};
+
+		static_assert(COUNT_OF(FadeTableData) == PLAYERID::ID_MAX, "update me");
+
+		ASSERT(idPlayer >= 0);
+		ASSERT(idPlayer < COUNT_OF(FadeTableData));
+
+		for (int32 i = 0; i < FadeTableData[idPlayer].Count; ++i)
+			SoundSet(FadeTableData[idPlayer].Data[i] | 0x80000000);
+		
+		SoundSetEx(nVoice, 0, 0, uint32(idPlayer));
     };
 };
 
@@ -1402,16 +1413,13 @@ static void SdSetAttackEnemy(const SE_ATTACK_PARAM* pParam)
 
 
 /*static*/ void CGameSound::FadeOut(FADESPEED speed)
-{    
-    uint32 DriverCode[] =
-    {
-        0x407,
-        0x408,
-        0x409
-    };
+{
+	uint32 DriverCode[] = { 0x407, 0x408, 0x409 }; // fast, normal, slow
 
-    ASSERT(speed >= 0 && speed < COUNT_OF(DriverCode));
-    static_assert(COUNT_OF(DriverCode) == FADESPEEDNUM, "update me");
+	ASSERT(speed >= 0);
+	ASSERT(speed < COUNT_OF(DriverCode));
+	
+	static_assert(COUNT_OF(DriverCode) == FADESPEEDNUM, "update me");
     
     SoundSet(DriverCode[speed]);
 };
@@ -1442,25 +1450,11 @@ static void SdSetAttackEnemy(const SE_ATTACK_PARAM* pParam)
 };
 
 
-/*static*/ void CGameSound::AttachCamera(RwCamera* pCamera)
-{
-    ASSERT(pCamera);
-    
-    m_pCamera = pCamera;
-};
-
-
-/*static*/ void CGameSound::DetachCamera(void)
-{
-    m_pCamera = nullptr;
-};
-
-
-/*static*/ void CGameSound::PlayPositionSE(const RwV3d* pPos, int32 nSE, int32 param)
+/*static*/ void CGameSound::PlayPositionSE(const RwV3d* pPos, int32 nSE, int32 id /*= 0*/)
 {
     ASSERT((nSE == SD_NOCODE) || ((nSE >= 0x1000) && (nSE <= 0x2FFF)));
-    
-    if (!pPos)
+
+	if (!pPos)
     {
         SoundSet(nSE);
     }
@@ -1482,41 +1476,41 @@ static void SdSetAttackEnemy(const SE_ATTACK_PARAM* pParam)
             if (dist < 0)
                 dist = 0;
 
-            SoundSetEx(nSE, uint32(rot), 1310u * uint32(dist), uint32(param));
+            SoundSetEx(nSE, uint32(rot), 1310u * uint32(dist), uint32(id));
         };
     };
 };
 
 
-/*static*/ void CGameSound::PlayObjectSE(const CCharacter* pCharacter, int32 nSE, int32 param)
+/*static*/ void CGameSound::PlayObjectSE(const CCharacter* pCharacter, int32 nSE, int32 id /*= 0*/)
 {
     RwV3d vPosition = Math::VECTOR3_ZERO;
     pCharacter->GetPosition(&vPosition);
-    PlayPositionSE(&vPosition, nSE, param);
+    PlayPositionSE(&vPosition, nSE, id);
 };
 
 
-/*static*/ void CGameSound::PlayObjectSE(const CGimmick* pGimmick, int32 nSE, int32 param)
+/*static*/ void CGameSound::PlayObjectSE(const CGimmick* pGimmick, int32 nSE, int32 id /*= 0*/)
 {
     RwV3d vPosition = Math::VECTOR3_ZERO;
     pGimmick->GetPosition(&vPosition);
-    PlayPositionSE(&vPosition, nSE, param);
+    PlayPositionSE(&vPosition, nSE, id);
 };
 
 
-/*static*/ void CGameSound::PlayObjectSE(const CEffect* pEffect, int32 nSE, int32 param)
+/*static*/ void CGameSound::PlayObjectSE(const CEffect* pEffect, int32 nSE, int32 id /*= 0*/)
 {
     RwV3d vPosition = Math::VECTOR3_ZERO;
     pEffect->GetPosition(&vPosition);
-    PlayPositionSE(&vPosition, nSE, param);
+    PlayPositionSE(&vPosition, nSE, id);
 };
 
 
-/*static*/ void CGameSound::PlayObjectSE(const CPlayer* pPlayer, int32 nSE, int32 param)
+/*static*/ void CGameSound::PlayObjectSE(const CPlayer* pPlayer, int32 nSE, int32 id /*= 0*/)
 {
     RwV3d vPosition = Math::VECTOR3_ZERO;
     pPlayer->GetPosition(&vPosition);
-    PlayPositionSE(&vPosition, nSE, param);
+    PlayPositionSE(&vPosition, nSE, id);
 };
 
 
@@ -1704,60 +1698,6 @@ static void SdSetAttackEnemy(const SE_ATTACK_PARAM* pParam)
 };
 
 
-/*static*/ void CGameSound::SetMode(MODE mode)
-{
-    m_mode = mode;
-};
-
-
-/*static*/ CGameSound::MODE CGameSound::GetMode(void)
-{
-    return m_mode;
-};
-
-
-/*static*/ void CGameSound::SetBgmConfig(int32 value)
-{
-    m_nBgmConfig = convertToRawConfig(value);
-};
-
-
-/*static*/ int32 CGameSound::GetBgmConfig(void)
-{
-    return convertToVolume(m_nBgmConfig);
-};
-
-
-/*static*/ void CGameSound::SetSeConfig(int32 value)
-{
-    m_nSeConfig = convertToRawConfig(value);
-};
-
-
-/*static*/ int32 CGameSound::GetSeConfig(void)
-{
-    return convertToVolume(m_nSeConfig);
-};
-
-
-/*static*/ void CGameSound::SetVoiceConfig(int32 value)
-{
-    m_nVoiceConfig = convertToRawConfig(value);
-};
-
-
-/*static*/ int32 CGameSound::GetVoiceConfig(void)
-{
-    return convertToVolume(m_nVoiceConfig);
-};
-
-
-/*static*/ void CGameSound::StageAfter(STAGEID::VALUE idStage)
-{
-    ;
-};
-
-
 /*static*/ void CGameSound::StageBefore(STAGEID::VALUE idStage)
 {
     int32 Param = 0;
@@ -1891,6 +1831,12 @@ static void SdSetAttackEnemy(const SE_ATTACK_PARAM* pParam)
         SoundLoad(Bank, Param);
         break;
     };
+};
+
+
+/*static*/ void CGameSound::StageAfter(STAGEID::VALUE idStage)
+{
+	;
 };
 
 
@@ -2207,21 +2153,22 @@ static void SdSetAttackEnemy(const SE_ATTACK_PARAM* pParam)
 
 /*static*/ bool CGameSound::subtractReferenceCounter(int32 nSE)
 {
-    bool bRefEnd = false;
-    
     for (int32 i = 0; i < COUNT_OF(m_aLoopSe); ++i)
     {
-        if (m_aLoopSe[i].m_nSeCode == nSE)
-            bRefEnd = (!--m_aLoopSe[i].m_nRefCount);
+		if (m_aLoopSe[i].m_nSeCode == nSE)
+		{
+			if (m_aLoopSe[i].m_nRefCount)
+				return (--m_aLoopSe[i].m_nRefCount == 0);
+		};
     };
 
-    return bRefEnd;
+	return false;
 };
 
 
 /*static*/ void CGameSound::clearReferenceCounter(int32 nSE)
 {
-    ;
+	;
 };
 
 

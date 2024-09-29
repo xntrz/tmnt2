@@ -86,8 +86,8 @@ public:
 
     struct LOOP_SE
     {
-        const int32 m_nSeCode;
         int32 m_nRefCount;
+        int32 m_nSeCode;
     };
 
 public:
@@ -106,13 +106,11 @@ public:
     static void Stop(void);
     static void Pause(void);
     static void Resume(void);
-    static void AttachCamera(RwCamera* pCamera);
-    static void DetachCamera(void);
-    static void PlayPositionSE(const RwV3d* pPos, int32 nSE, int32 param = 0);
-    static void PlayObjectSE(const CCharacter* pCharacter, int32 nSE, int32 param = 0);
-    static void PlayObjectSE(const CGimmick* pGimmick, int32 nSE, int32 param = 0);
-    static void PlayObjectSE(const CEffect* pEffect, int32 nSE, int32 param = 0);
-    static void PlayObjectSE(const CPlayer* pPlayer, int32 nSE, int32 param = 0);
+    static void PlayPositionSE(const RwV3d* pPos, int32 nSE, int32 id = 0);
+    static void PlayObjectSE(const CCharacter* pCharacter, int32 nSE, int32 id = 0);
+    static void PlayObjectSE(const CGimmick* pGimmick, int32 nSE, int32 id = 0);
+    static void PlayObjectSE(const CEffect* pEffect, int32 nSE, int32 id = 0);
+    static void PlayObjectSE(const CPlayer* pPlayer, int32 nSE, int32 id = 0);
     static void PlayAttackSE(const CCharacter* pCharacter);
     static void PlayDamageSE(SE_DAMAGE_PARAM* pParam);
     static void PlayDeathSE(const CCharacter* pCharacter);
@@ -120,20 +118,22 @@ public:
     static void PlayWalkSE(SE_WALK_PARAM* pParam);
     static void PlayEffectSE(CEffect* pEffect, EFFECTID::VALUE idEffect);
     static void StopEffectSE(CEffect* pEffect, EFFECTID::VALUE idEffect);
-    static void SetMode(MODE mode);
-    static MODE GetMode(void);
-    static void SetBgmConfig(int32 value);
-    static int32 GetBgmConfig(void);
-    static void SetSeConfig(int32 value);
-    static int32 GetSeConfig(void);
-    static void SetVoiceConfig(int32 value);
-    static int32 GetVoiceConfig(void);
+	static void StageBefore(STAGEID::VALUE idStage);
     static void StageAfter(STAGEID::VALUE idStage);
-    static void StageBefore(STAGEID::VALUE idStage);
-
-    static inline int32 GetSeRaw(void) { return m_nSeConfig; };
-    static inline int32 GetBgmRaw(void) { return m_nBgmConfig; };
-    static inline int32 GetVoiceRaw(void) { return m_nVoiceConfig; };
+	
+	static /*inline*/ void AttachCamera(RwCamera* pCamera);
+    static /*inline*/ void DetachCamera(void);
+    static /*inline*/ void SetMode(MODE mode);
+    static /*inline*/ MODE GetMode(void);
+    static /*inline*/ void SetBgmConfig(int32 value);
+    static /*inline*/ int32 GetBgmConfig(void);
+    static /*inline*/ void SetSeConfig(int32 value);
+    static /*inline*/ int32 GetSeConfig(void);
+    static /*inline*/ void SetVoiceConfig(int32 value);
+    static /*inline*/ int32 GetVoiceConfig(void);
+	static /*inline*/ int32 GetSeRaw(void);
+	static /*inline*/ int32 GetBgmRaw(void);
+	static /*inline*/ int32 GetVoiceRaw(void);
 
 private:
     static bool calcSEPositionInfo(const RwV3d* pvPos, int32& dist, int32& rot);
@@ -158,3 +158,6 @@ private:
     static int32 m_nVoiceHistSide;
     static LOOP_SE m_aLoopSe[];
 };
+
+
+#include "GameSound.inl"

@@ -40,7 +40,8 @@ public:
     CGameObject* GetDefender(void) const;
     CGameObject* GetAttacker(void) const;
     CHitAttackData& GetAttack(void) const;
-    CHARACTERTYPES::ATTACKDIRECTIONTYPE DirectionType(void) const;
+	CHARACTERTYPES::ATTACKDIRECTIONTYPE DirectionType(void) const;
+	int32 GetCharacterID(CCharacter* pCharacter) const;
 
 private:
     CCharacter& m_rCharacter;

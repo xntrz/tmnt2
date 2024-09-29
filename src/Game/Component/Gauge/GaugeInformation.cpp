@@ -216,19 +216,22 @@ void CGaugeInformation_Container::PausePeriodSub(void)
                         };
                     }
                     else if (CController::GetDigitalTrigger(iController, CController::DIGITAL_CANCEL))
-                    {
-                        if (m_nCursor != PAUSERESULT_BACK)
+					{
+						CGameSound::PlaySE(SDCODE_SE(4100));
+						if (m_nCursor != PAUSERESULT_BACK)
                             m_nCursor = PAUSERESULT_BACK;
                         else
                             m_pausestatus = CGaugeInformation::PAUSESTATUS_BACK;
                     }
                     else if (CController::GetDigitalTrigger(iController, CController::DIGITAL_LUP))
-                    {
-                        m_nCursor = InvClamp(--m_nCursor, 0, PAUSERESULTNUM - 1);
+					{
+						CGameSound::PlaySE(SDCODE_SE(4100));
+						m_nCursor = InvClamp(--m_nCursor, 0, PAUSERESULTNUM - 1);
                     }
                     else if (CController::GetDigitalTrigger(iController, CController::DIGITAL_LDOWN))
-                    {
-                        m_nCursor = InvClamp(++m_nCursor, 0, PAUSERESULTNUM - 1);
+					{
+						CGameSound::PlaySE(SDCODE_SE(4100));
+						m_nCursor = InvClamp(++m_nCursor, 0, PAUSERESULTNUM - 1);
                     };
                 };
             }

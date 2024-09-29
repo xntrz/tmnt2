@@ -32,8 +32,9 @@ public:
     bool IsBig(void) const;
 
 protected:
-    void init(void* pParam);
-    void stopSE(void);
+	void init(void* pParam);
+	void startSE(void);
+	void stopSE(void);
     const KINDINFO& kindinfo(void) const;
 
 protected:

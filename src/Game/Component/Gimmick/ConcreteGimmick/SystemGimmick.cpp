@@ -455,10 +455,6 @@ CSEGimmick::CSEGimmick(const char* pszName, void* pParam)
 
     if (pPlaySeParam->m_subid == 1)
         startSE();
-    {
-        m_bPlaying = true;
-        CGameSound::PlayObjectSE(this, m_pNowSEInfo->m_nSE);
-    };
 };
 
 

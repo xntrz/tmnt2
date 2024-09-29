@@ -5,6 +5,7 @@
 #include "Game/Component/GameMain/GameProperty.hpp"
 #include "Game/Component/Player/PlayerStateMachine.hpp"
 #include "Game/Component/Effect/EffectGeneric.hpp"
+#include "Game/System/Sound/GameSound.hpp"
 #include "Game/System/Sound/MessageManager.hpp"
 #include "Game/System/Misc/Gamepad.hpp"
 
@@ -116,14 +117,23 @@ namespace RidePlayerStatus
         {
         case PLAYERTYPES::RIDESTATUS_RUN:
             {
-                if (RideCharacter().PadInfo().m_fStickX > 0.4f)
-                    StateMachine().ChangeStatus(PLAYERTYPES::RIDESTATUS_RIGHT);
-                else if (RideCharacter().PadInfo().m_fStickX < -0.4f)
-                    StateMachine().ChangeStatus(PLAYERTYPES::RIDESTATUS_LEFT);
-                else if (RideCharacter().PadInfo().m_fStickY > 0.4f)
-                    StateMachine().ChangeStatus(PLAYERTYPES::RIDESTATUS_SPEED_UP);
-                else if (RideCharacter().PadInfo().m_fStickY < -0.4f)
-                    StateMachine().ChangeStatus(PLAYERTYPES::RIDESTATUS_SPEED_DOWN);
+				if (RideCharacter().PadInfo().m_fStickX > 0.4f)
+				{
+					StateMachine().ChangeStatus(PLAYERTYPES::RIDESTATUS_RIGHT);					
+				}
+				else if (RideCharacter().PadInfo().m_fStickX < -0.4f)
+				{
+					StateMachine().ChangeStatus(PLAYERTYPES::RIDESTATUS_LEFT);					
+				}
+				else if (RideCharacter().PadInfo().m_fStickY > 0.4f)
+				{
+					StateMachine().ChangeStatus(PLAYERTYPES::RIDESTATUS_SPEED_UP);
+					CGameSound::PlayObjectSE(&Character(), SDCODE_SE(0x1096));
+				}
+				else if (RideCharacter().PadInfo().m_fStickY < -0.4f)
+				{
+					StateMachine().ChangeStatus(PLAYERTYPES::RIDESTATUS_SPEED_DOWN);
+				};
             }
             break;
 
@@ -143,8 +153,8 @@ namespace RidePlayerStatus
 
         case PLAYERTYPES::RIDESTATUS_SPEED_UP:
             {
-                if (RideCharacter().PadInfo().m_fStickY < 0.4f)
-                    StateMachine().ChangeStatus(PLAYERTYPES::RIDESTATUS_RUN);
+				if (RideCharacter().PadInfo().m_fStickY < 0.4f)
+					StateMachine().ChangeStatus(PLAYERTYPES::RIDESTATUS_RUN);
             }
             break;
 

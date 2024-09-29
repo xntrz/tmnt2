@@ -5,7 +5,11 @@
 #include "Game/Component/GameMain/GameEvent.hpp"
 #include "Game/Component/Effect/EffectGeneric.hpp"
 #include "Game/Component/Effect/EffectManager.hpp"
+#include "Game/Component/Effect/Effect.hpp"
 #include "Game/Component/Player/PlayerCharacter.hpp"
+#include "Game/Component/Enemy/CharacterCompositor.hpp"
+#include "Game/Component/Gimmick/Gimmick.hpp"
+#include "Game/Component/Shot/Shot.hpp"
 #include "Game/System/GameObject/GameObjectManager.hpp"
 #include "Game/System/Hit/HitAttackData.hpp"
 #include "Game/System/Hit/HitCatchData.hpp"
@@ -246,9 +250,50 @@ void CCharacterAttackCalculator::PlayEffect(CHARACTERTYPES::ATTACKRESULTTYPE att
 
 void CCharacterAttackCalculator::PlaySE(CHARACTERTYPES::ATTACKRESULTTYPE attackresult)
 {
-    //
-    //  TODO character attack calculator play result SE
-    //
+	if (attackresult == CHARACTERTYPES::ATTACKRESULTTYPE_INEFFECTIVE ||
+		attackresult == CHARACTERTYPES::ATTACKRESULTTYPE_THROW ||
+		attackresult == CHARACTERTYPES::ATTACKRESULTTYPE_PARTY_ATTACK)
+		return;
+
+	CGameObject* pObjAttacker = GetAttacker();
+	ASSERT(pObjAttacker != nullptr);
+
+	SE_DAMAGE_PARAM param;
+	std::memset(&param, 0, sizeof(param));
+
+	param.Attacker = pObjAttacker;
+	param.AttackerType = pObjAttacker->GetType();
+
+	switch (pObjAttacker->GetType())
+	{
+	case GAMEOBJECTTYPE::GIMMICK:
+		param.AttackerSubType = static_cast<CGimmick*>(pObjAttacker)->GetID();
+		break;
+
+	case GAMEOBJECTTYPE::CHARACTER:
+		param.AttackerSubType = static_cast<CCharacter*>(pObjAttacker)->GetCharacterType();
+		param.AttackerMotion = static_cast<CCharacter*>(pObjAttacker)->GetMotionName();
+		param.AttackerId = GetCharacterID(static_cast<CCharacter*>(pObjAttacker));
+		break;
+
+	case GAMEOBJECTTYPE::EFFECT:
+		param.AttackerSubType = static_cast<CEffect*>(pObjAttacker)->GetID();
+		break;
+
+	case GAMEOBJECTTYPE::SHOT:
+		param.AttackerSubType = static_cast<CShot*>(pObjAttacker)->GetID();
+		break;
+
+	default:
+		break;
+	};
+
+	param.DefenderType = m_rCharacter.GetCharacterType();
+	param.DefenderId = GetCharacterID(&m_rCharacter);
+	m_rCharacter.GetBodyPosition(&param.Pos);
+	param.AttackResult = attackresult;
+
+	CGameSound::PlayDamageSE(&param);
 };
 
 
@@ -617,4 +662,15 @@ CHitAttackData& CCharacterAttackCalculator::GetAttack(void) const
 CHARACTERTYPES::ATTACKDIRECTIONTYPE CCharacterAttackCalculator::DirectionType(void) const
 {
     return m_directiontype;
+};
+
+
+int32 CCharacterAttackCalculator::GetCharacterID(CCharacter* pCharacter) const
+{
+	ASSERT(pCharacter);
+
+	if (pCharacter->GetCharacterType() == CCharacter::TYPE_PLAYER)
+		return static_cast<CPlayerCharacter*>(pCharacter)->GetID();
+	else
+		return static_cast<CCharacterCompositor*>(pCharacter)->GetID();
 };

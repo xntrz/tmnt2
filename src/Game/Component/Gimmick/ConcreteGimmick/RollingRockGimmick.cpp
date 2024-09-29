@@ -91,16 +91,12 @@ CRollingRockGimmick::CRollingRockGimmick(const char* pszName, void* pParam)
         (idStage == STAGEID::ID_ST13R) ||
         (idStage == STAGEID::ID_ST14N))
     {
-        m_nBoundSE = SDCODE_SE(4267);
+        m_nBoundSE = SDCODE_SE(4350);
     }
-    else if (pBasicParam->m_subid)
-    {
-        m_nBoundSE = SDCODE_SE(4176);
-    }
-    else
-    {
-        m_nBoundSE = SDCODE_SE(4177);
-    };
+	else
+	{
+		m_nBoundSE = (pBasicParam->m_subid != 0 ? SDCODE_SE(4183) : SDCODE_SE(4184));
+	};
 };
 
 
