@@ -18,7 +18,7 @@ public:
 public:
     CFile(void);
     virtual ~CFile(void);
-    virtual bool Open(int32 nType, const void* pTypeData);
+    virtual bool Open(int32 nType, void* pTypeData);
     virtual void Close(void);
     virtual void* Data(void) const;
     virtual uint32 Size(void) const;

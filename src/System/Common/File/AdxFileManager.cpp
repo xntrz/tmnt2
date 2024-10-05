@@ -74,12 +74,12 @@ void CAdxFileManager::Reset(void)
 };
 
 
-CFileAccess* CAdxFileManager::AllocRequest(int32 nType, const void* pTypeData)
+CFileAccess* CAdxFileManager::AllocRequest(int32 nType, void* pTypeData)
 {
     if (nType != FILETYPE_ID)
         return nullptr;
 
-    int32 FileID = int32(pTypeData);
+	int32 FileID = (int32)pTypeData;
     ASSERT( (FileID >= 0) && (FileID < FILEID::ID_MAX) );
 
 	CRequest req(FileID, &m_aAdxFileAccess[FileID]);

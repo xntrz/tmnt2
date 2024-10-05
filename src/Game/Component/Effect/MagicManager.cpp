@@ -425,10 +425,10 @@ static CMagic* MagicFromHandle(uint32 hMagic)
 
 CMagicManager::CParameter::CParameter(void)
 : m_vPosition(Math::VECTOR3_ZERO)
-, m_vDirection(Math::VECTOR3_ZERO)
+, m_vDirection(Math::VECTOR3_AXIS_Z)
 , m_pParent(nullptr)
 , m_pTarget(nullptr)
-, m_bPlaySound(false)
+, m_bPlaySound(true)
 {
     ;
 };

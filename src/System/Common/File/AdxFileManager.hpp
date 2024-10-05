@@ -27,7 +27,7 @@ public:
     virtual void Stop(void) override;
     virtual void Sync(void) override;
     virtual void Reset(void) override;
-    virtual CFileAccess* AllocRequest(int32 nType, const void* pTypeData) override;
+    virtual CFileAccess* AllocRequest(int32 nType, void* pTypeData) override;
     virtual bool SetupThreadSystem(void);
     virtual void ShutdownThreadSystem(void);
     virtual bool LoadPartitionCommon(void);

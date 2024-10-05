@@ -602,11 +602,11 @@ bool CCharacterAttackCalculator::IsGuardableAttack(CHARACTERTYPES::ATTACKTYPE at
 
 bool CCharacterAttackCalculator::IsTroubleAttack(CHARACTERTYPES::ATTACKTYPE attacktype) const
 {
-    return (attacktype == CHARACTERTYPES::ATTACKRESULTTYPE_DINDLE   ||
-            attacktype == CHARACTERTYPES::ATTACKRESULTTYPE_STUN     ||
-            attacktype == CHARACTERTYPES::ATTACKRESULTTYPE_SLEEP    ||
-            attacktype == CHARACTERTYPES::ATTACKRESULTTYPE_FREEZE   ||
-            attacktype == CHARACTERTYPES::ATTACKRESULTTYPE_BIND);
+    return (attacktype == CHARACTERTYPES::ATTACKTYPE_DINDLE   ||
+            attacktype == CHARACTERTYPES::ATTACKTYPE_STUN     ||
+            attacktype == CHARACTERTYPES::ATTACKTYPE_SLEEP    ||
+            attacktype == CHARACTERTYPES::ATTACKTYPE_FREEZE   ||
+            attacktype == CHARACTERTYPES::ATTACKTYPE_BIND);
 };
 
 

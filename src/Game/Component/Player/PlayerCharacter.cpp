@@ -252,7 +252,7 @@ bool CPlayerCharacter::OnMessageCanChangingAerial(float fFieldHeight)
 
 void CPlayerCharacter::OnMessageDoChangingAerial(void)
 {
-    ChangeStatus(PLAYERTYPES::STATUS_AERIAL);
+	ChangeStatus(PLAYERTYPES::STATUS_AERIAL);
 };
 
 
@@ -270,8 +270,9 @@ void CPlayerCharacter::OnMessageTouchdown(float fFieldHeight)
     case PLAYERTYPES::STATUS_AERIAL_MOVE:
     case PLAYERTYPES::STATUS_ATTACK_JUMP:
     case PLAYERTYPES::STATUS_ATTACK_KNIFE_JUMP:   
-        ChangeStatus(PLAYERTYPES::STATUS_TOUCHDOWN);
-        break;
+		m_nNumWallJump = 0;
+		ChangeStatus(PLAYERTYPES::STATUS_TOUCHDOWN);
+		break;
 
     case PLAYERTYPES::STATUS_THROWN:
     case PLAYERTYPES::STATUS_FLYAWAY_BACK:
@@ -640,10 +641,14 @@ void CPlayerCharacter::ShootingKnife(void)
 };
 
 
-PLAYERTYPES::STATUS CPlayerCharacter::RequesStatusMorphing(PLAYERTYPES::STATUS status)
+PLAYERTYPES::STATUS CPlayerCharacter::RequestStatusMorphing(PLAYERTYPES::STATUS status)
 {
     switch (status)
     {
+	case PLAYERTYPES::STATUS_JUMP_WALL:
+		++m_nNumWallJump;
+		break;
+
     case PLAYERTYPES::STATUS_JUMP:
         if (GetStatus() == PLAYERTYPES::STATUS_IDLE ||
             GetStatus() == PLAYERTYPES::STATUS_WALK ||
@@ -979,12 +984,6 @@ void CPlayerCharacter::SetPadID(int32 nPadID)
 };
 
 
-void CPlayerCharacter::NotifyWallJumpSuccess(void)
-{
-    ++m_nNumWallJump;
-};
-
-
 void CPlayerCharacter::SetBlinkEnable(bool bEnable, float fDuration)
 {
     CBlinkCharacterModule* pBlinkCtrlMod = (CBlinkCharacterModule*)GetModule(MODULETYPE::BLINK_CHARACTER);
@@ -1125,7 +1124,7 @@ PLAYERTYPES::STATUS CPlayerCharacter::ChangeStatus(PLAYERTYPES::STATUS status)
 {
     ASSERT(m_pStateMachine);
     
-    status = RequesStatusMorphing(status);
+    status = RequestStatusMorphing(status);
     m_pStateMachine->ChangeStatus(status);
     
     return m_pStateMachine->CurrentStatus();
@@ -1500,12 +1499,6 @@ PLAYERID::VALUE CPlayerCharacter::GetID(void) const
 };
 
 
-int32 CPlayerCharacter::GetNumWallJump(void) const
-{
-    return m_nNumWallJump;
-};
-
-
 int32 CPlayerCharacter::GetPadID(void) const
 {
     return m_nPadID;
@@ -1588,48 +1581,6 @@ bool CPlayerCharacter::IsEnableAttackKnifeJump(void) const
     bool bIsNotOnCooldown       = (m_pStateMachine->GetStatusDuration() > 0.15f);
 
     return (bIsTechLevelOK && bIsEnableAttackKnife && bIsInAerial && (bIsNotSameStatus || bIsNotOnCooldown));
-};
-
-
-void CPlayerCharacter::SetPlayerFlag(PLAYERTYPES::FLAG flag, bool bSet)
-{
-    if (bSet)
-        FLAG_SET(m_playerflag, flag);
-    else
-        FLAG_CLEAR(m_playerflag, flag);
-};
-
-
-void CPlayerCharacter::SetAttributeFlag(PLAYERTYPES::ATTRIBUTE flag, bool bSet)
-{
-    if (bSet)
-        FLAG_SET(m_attribute, flag);
-    else
-        FLAG_CLEAR(m_attribute, flag);
-};
-
-
-bool CPlayerCharacter::IsPlayerFlagSet(PLAYERTYPES::FLAG flag) const
-{
-    return FLAG_TEST(m_playerflag, flag);
-};
-
-
-bool CPlayerCharacter::IsAttributeFlagSet(PLAYERTYPES::ATTRIBUTE flag) const
-{
-    return FLAG_TEST(m_attribute, flag);
-};
-
-
-PLAYERTYPES::FLAG CPlayerCharacter::GetPlayerFlag(void) const
-{
-    return PLAYERTYPES::FLAG(m_playerflag);
-};
-
-
-PLAYERTYPES::ATTRIBUTE CPlayerCharacter::GetAttributeFlag(void) const
-{
-    return PLAYERTYPES::ATTRIBUTE(m_attribute);
 };
 
 

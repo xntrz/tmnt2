@@ -451,6 +451,7 @@ CSEGimmick::CSEGimmick(const char* pszName, void* pParam)
     ASSERT( pPlaySeParam->m_nSE >= 0 &&
             pPlaySeParam->m_nSE < COUNT_OF(m_aSeInfoList));
     
+	m_vPosition = pPlaySeParam->m_vPosition;
     m_pNowSEInfo = &m_aSeInfoList[pPlaySeParam->m_nSE];
 
     if (pPlaySeParam->m_subid == 1)
@@ -465,6 +466,12 @@ CSEGimmick::~CSEGimmick(void)
 };
 
 
+void CSEGimmick::GetPosition(RwV3d* pvPosition) const
+{
+	*pvPosition = m_vPosition;
+};
+
+
 void CSEGimmick::PostMove(void)
 {
     if (FLAG_TEST(m_pNowSEInfo->m_flag, SEINFO::FLAG_LOOP) && m_bPlaying)
@@ -476,7 +483,7 @@ void CSEGimmick::PostMove(void)
         };
 
         m_fTimer += CGameProperty::GetElapsedTime();
-    };
+	};
 };
 
 
@@ -499,7 +506,7 @@ void CSEGimmick::OnReceiveEvent(const char* pszSender, GIMMICKTYPES::EVENTTYPE e
 void CSEGimmick::startSE(void)
 {
     m_bPlaying = true;
-    CGameSound::PlayObjectSE(this, m_pNowSEInfo->m_nSE);
+	CGameSound::PlayObjectSE(this, m_pNowSEInfo->m_nSE);
 };
 
 

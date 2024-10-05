@@ -163,10 +163,10 @@ void CPCSystem::Terminate(void)
 {
     WindowDestroy();
 
-    SystemParametersInfo(SPI_SETSCREENSAVEACTIVE, m_bScreenSavingEnabled, NULL, NULL);
-    SystemParametersInfo(SPI_SETSTICKYKEYS, sizeof(m_StickyKeys), &m_StickyKeys, NULL);
-    SystemParametersInfo(SPI_SETTOGGLEKEYS, sizeof(m_ToggleKeys), &m_ToggleKeys, NULL);
-    SystemParametersInfo(SPI_SETFILTERKEYS, sizeof(m_FilterKeys), &m_FilterKeys, NULL);
+    SystemParametersInfo(SPI_SETSCREENSAVEACTIVE, m_bScreenSavingEnabled, NULL, 0);
+    SystemParametersInfo(SPI_SETSTICKYKEYS, sizeof(m_StickyKeys), &m_StickyKeys, 0);
+    SystemParametersInfo(SPI_SETTOGGLEKEYS, sizeof(m_ToggleKeys), &m_ToggleKeys, 0);
+    SystemParametersInfo(SPI_SETFILTERKEYS, sizeof(m_FilterKeys), &m_FilterKeys, 0);
 };
 
 

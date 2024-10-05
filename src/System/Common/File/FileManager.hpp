@@ -56,7 +56,7 @@ public:
     virtual void Sync(void);
     virtual void Error(const char* pszDescription) = 0;
     virtual void Reset(void) = 0;
-    virtual CFileAccess* AllocRequest(int32 nType, const void* pTypeData) = 0;
+    virtual CFileAccess* AllocRequest(int32 nType, void* pTypeData) = 0;
 
 protected:
     void RegistRequest(CRequest& Request);

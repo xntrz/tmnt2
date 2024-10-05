@@ -275,7 +275,7 @@ void CRideCharacter::OnSteppedDeathFloor(void)
 };
 
 
-PLAYERTYPES::STATUS CRideCharacter::RequesStatusMorphing(PLAYERTYPES::STATUS status)
+PLAYERTYPES::STATUS CRideCharacter::RequestStatusMorphing(PLAYERTYPES::STATUS status)
 {
     PLAYERTYPES::STATUS NowStatus = GetStatus();
 

@@ -47,7 +47,7 @@ public:
     virtual void OnSteppedDeathFloor(void) override;
     virtual int32 GetPlayerIndex(void) const;
     virtual void ShootingKnife(void);
-    virtual PLAYERTYPES::STATUS RequesStatusMorphing(PLAYERTYPES::STATUS status);
+    virtual PLAYERTYPES::STATUS RequestStatusMorphing(PLAYERTYPES::STATUS status);
     CHARACTERTYPES::DEFENCERSTATUSFLAG CheckDefenceStatusFlag(const CHitAttackData& rAttack);
     void Initialize(PARAMETER* pParameter);
     void OnAttach(CPlayerCharacter* pBeforeCharacter, bool bChangeEffectEnable);
@@ -57,7 +57,6 @@ public:
     void GenerateItemEffect(ITEMID::VALUE idItem);
     void SetPlayerNo(int32 nPlayerNo);
     void SetPadID(int32 nPadID);
-    void NotifyWallJumpSuccess(void);
     void SetBlinkEnable(bool bEnable, float fDuration);
     void SetInvincibilityEnable(bool bEnable, float fDuration);
     void SetAttackPowerupEnable(bool bEnable, float fDuration);
@@ -91,7 +90,6 @@ public:
     PLAYERTYPES::STATUS GetStatus(void) const;
     PLAYERTYPES::STATUS GetStatusPrev(void) const;
     PLAYERID::VALUE GetID(void) const;
-    int32 GetNumWallJump(void) const;
     int32 GetPadID(void) const;
     int32 GetPlayerNo(void) const;
     void GetReplacePosition(RwV3d* pvPosition) const;
@@ -102,17 +100,18 @@ public:
     bool IsEnableAttackJump(void) const;
     bool IsEnableAttackKnife(void) const;
     bool IsEnableAttackKnifeJump(void) const;
-    void SetPlayerFlag(PLAYERTYPES::FLAG flag, bool bSet);
-    void SetAttributeFlag(PLAYERTYPES::ATTRIBUTE flag, bool bSet);
-    bool IsPlayerFlagSet(PLAYERTYPES::FLAG flag) const;
-    bool IsAttributeFlagSet(PLAYERTYPES::ATTRIBUTE flag) const;
-    PLAYERTYPES::FLAG GetPlayerFlag(void) const;
-    PLAYERTYPES::ATTRIBUTE GetAttributeFlag(void) const;
     bool IsThrowable(void) const;
     const PLAYERTYPES::FEATURE& Feature(void) const;
     CHARACTERTYPES::ATTACKPARAMETER& AttackParameter(void);
     PLAYERTYPES::CHARGEPHASE GetChargePhase(void) const;
-    bool IsEnableChangeStatus(PLAYERTYPES::STATUS status) const;
+	bool IsEnableChangeStatus(PLAYERTYPES::STATUS status) const;
+	
+	/*inline*/ void SetPlayerFlag(PLAYERTYPES::FLAG flag, bool bSet);
+    /*inline*/ void SetAttributeFlag(PLAYERTYPES::ATTRIBUTE flag, bool bSet);
+    /*inline*/ bool IsPlayerFlagSet(PLAYERTYPES::FLAG flag) const;
+	/*inline*/ bool IsAttributeFlagSet(PLAYERTYPES::ATTRIBUTE flag) const;
+
+	/*inline*/ int32 GetNumWallJump() const;
 
 private:
     PLAYERID::VALUE m_idPlayer;
@@ -131,4 +130,40 @@ private:
     RwV3d m_vReplacepoint;
     bool m_bActive;
     bool m_bClassicInput;
+};
+
+
+inline void CPlayerCharacter::SetPlayerFlag(PLAYERTYPES::FLAG flag, bool bSet)
+{
+	if (bSet)
+		FLAG_SET(m_playerflag, flag);
+	else
+		FLAG_CLEAR(m_playerflag, flag);
+};
+
+
+inline void CPlayerCharacter::SetAttributeFlag(PLAYERTYPES::ATTRIBUTE flag, bool bSet)
+{
+	if (bSet)
+		FLAG_SET(m_attribute, flag);
+	else
+		FLAG_CLEAR(m_attribute, flag);
+};
+
+
+inline bool CPlayerCharacter::IsPlayerFlagSet(PLAYERTYPES::FLAG flag) const
+{
+	return FLAG_TEST(m_playerflag, flag);
+};
+
+
+inline bool CPlayerCharacter::IsAttributeFlagSet(PLAYERTYPES::ATTRIBUTE flag) const
+{
+	return FLAG_TEST(m_attribute, flag);
+};
+
+
+inline int32 CPlayerCharacter::GetNumWallJump() const
+{
+	return m_nNumWallJump;
 };

@@ -131,8 +131,9 @@ protected:
 
 public:
     CSEGimmick(const char* pszName, void* pParam);
-    virtual ~CSEGimmick(void);
-    virtual void PostMove(void) override;
+	virtual ~CSEGimmick(void);
+	virtual void GetPosition(RwV3d* pvPosition) const;
+	virtual void PostMove(void) override;
     virtual void OnReceiveEvent(const char* pszSender, GIMMICKTYPES::EVENTTYPE eventtype) override;
 
 protected:

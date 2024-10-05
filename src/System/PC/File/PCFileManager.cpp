@@ -70,7 +70,7 @@ void CPCFileManager::Error(const char* pszDescription)
 };
 
 
-CFileAccess* CPCFileManager::AllocRequest(int32 nType, const void* pTypeData)
+CFileAccess* CPCFileManager::AllocRequest(int32 nType, void* pTypeData)
 {
     if (nType != CAdxFileManager::FILETYPE_ID)
         return CAdxFileManager::AllocRequest(nType, pTypeData);

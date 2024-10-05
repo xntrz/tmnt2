@@ -480,7 +480,7 @@ CSlashuurAccumulateModule::CSlashuurAccumulateModule(CCharacter* pCharacter)
     static const RwV3d SLASHUUR_BEAK_TOP            = {  1.45f, -0.09f, 0.0f };
     static const RwV3d SLASHUUR_BEAK_BOTTOM         = {  1.38f,  0.47f, 0.0f };
     static const RwV3d SLASHUUR_BEAK2_TOP           = {  1.38f,  0.47f, 0.0f };
-    static const RwV3d SLASHUUR_BEAK2_BOTTOM        = {  1.2f,   0.47f, 0.0f };
+    static const RwV3d SLASHUUR_BEAK2_BOTTOM        = {  1.2f,   0.95f, 0.0f };
 
     CModel* pModel = m_pCharacter->GetModel();
     ASSERT(pModel);

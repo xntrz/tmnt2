@@ -130,22 +130,22 @@ void CGuillotineGimmickMove::reviceTheta(float dt)
 
         switch (m_ePendulumState)
         {
-        case 0:
-            m_ePendulumState = PENDULUMSTATE(1);
+        case PENDULUMSTATE_RIGHT:
+			m_ePendulumState = PENDULUMSTATE_CENTER_TO_LEFT;
             break;
 
-        case 1:
+        case PENDULUMSTATE_CENTER_TO_LEFT:
             windSE();
-            m_ePendulumState = PENDULUMSTATE(2);
+            m_ePendulumState = PENDULUMSTATE_LEFT;
             break;
 
-        case 2:
-            m_ePendulumState = PENDULUMSTATE(3);
+        case PENDULUMSTATE_LEFT:
+            m_ePendulumState = PENDULUMSTATE_CENTER_TO_RIGHT;
             break;
 
-        case 3:
+        case PENDULUMSTATE_CENTER_TO_RIGHT:
             windSE();
-            m_ePendulumState = PENDULUMSTATE(0);
+            m_ePendulumState = PENDULUMSTATE_RIGHT;
             break;
 
         default:

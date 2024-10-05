@@ -17,7 +17,7 @@ CFile::~CFile(void)
 };
 
 
-bool CFile::Open(int32 nType, const void* pTypeData)
+bool CFile::Open(int32 nType, void* pTypeData)
 {
     m_pAccessData = CFileManager::Instance().AllocRequest(nType, pTypeData);
     ASSERT(m_pAccessData);

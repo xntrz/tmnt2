@@ -17,7 +17,7 @@ public:
     virtual void Stop(void) override;
     virtual void Sync(void) override;
     virtual void Error(const char* pszDescription) override;
-    virtual CFileAccess* AllocRequest(int32 nType, const void* pTypeData) override;
+    virtual CFileAccess* AllocRequest(int32 nType, void* pTypeData) override;
     virtual bool SetupFileSystem(void) override;
     virtual void ShutdownFileSystem(void) override;
 

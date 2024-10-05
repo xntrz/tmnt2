@@ -673,8 +673,9 @@ namespace PlayerStatus
     {
         Character().ChangeMotion(PLAYERTYPES::MOTIONNAMES::ATTACK_RUN);
         Character().ResetVelocity();
-        Character().ResetAcceleration();
-    };
+		Character().ResetAcceleration();
+		CGameSound::PlayAttackSE(&Character());
+	};
 
     
     void CAttackRun::OnDetach(void)

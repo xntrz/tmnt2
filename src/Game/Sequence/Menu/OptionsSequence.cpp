@@ -1843,7 +1843,7 @@ bool COptions::MsgDecidePad(void)
         };
 
         if (m_ConfigPad == -1)
-            m_ConfigPad = CGameAttribute::CGameAttribute().GetVirtualPad();
+			m_ConfigPad = CGameData::Attribute().GetVirtualPad();
 
         return true;
     };

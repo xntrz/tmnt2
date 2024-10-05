@@ -252,8 +252,6 @@ namespace PlayerStatus
         CEffectManager::Play(PLAYERTYPES::EFFECTNAMES::JUMP_WALL, &vFootPos);
         
         CGameEvent::SetPlayerTechnicalAction(Character().GetPlayerNo(), GAMETYPES::TECACT_JUMP_WALL);
-
-        Character().NotifyWallJumpSuccess();
         
         PlayerUtil::CallVoiceOfJumpWall(m_pPlayerChr);
         CGameSound::PlayObjectSE(m_pPlayerChr, SDCODE_SE(4124));

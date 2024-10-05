@@ -550,7 +550,6 @@ void CCloth::CheckCollision(CLOTHPOINT* pClothPoint)
 {
     CBodyHitData BodyHitData;
     BodyHitData.InitData(&pClothPoint->m_vPosition, 0.01f);
-    BodyHitData.SetHitID(uint32(pClothPoint));
 
     RwV3d vResult = Math::VECTOR3_ZERO;
 	

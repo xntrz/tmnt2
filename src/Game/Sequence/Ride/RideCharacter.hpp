@@ -59,7 +59,7 @@ public:
     virtual void OnMessageCatchAttack(CHitAttackData* pAttack) override;
     virtual void OnMessageReceivedDamage(int32 nDamage) override;
     virtual void OnSteppedDeathFloor(void) override;
-    virtual PLAYERTYPES::STATUS RequesStatusMorphing(PLAYERTYPES::STATUS status) override;
+    virtual PLAYERTYPES::STATUS RequestStatusMorphing(PLAYERTYPES::STATUS status) override;
     virtual void OnMessageShotEol(void);
     virtual void OnMessageShotHit(void);
     virtual void OnMessageScoreAdd(void* param);

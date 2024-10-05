@@ -48,7 +48,7 @@ struct CTextData::HEADER
 #ifdef TARGET_PC
     va_list vl;
     va_start(vl, pFormat);
-    vswprintf(pDest, pFormat, vl);
+    std::vswprintf(pDest, pFormat, vl);
     va_end(vl);
 #else
 #error Not implemented for current target

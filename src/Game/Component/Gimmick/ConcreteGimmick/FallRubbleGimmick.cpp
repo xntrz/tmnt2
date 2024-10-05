@@ -140,13 +140,13 @@ void CFallRubbleGimmick::Run(void)
     
     if (m_pMoveStrategy)
     {
-        CGimmickMove::RESULT Result = m_pMoveStrategy->OnMove(CGameProperty::GetElapsedTime());
-        if ((Result == CGimmickMove::MOVESTATE_TOUCHDOWN) ||
-            (Result == CGimmickMove::MOVESTATE_ON_GROUND))
+        CGimmickMove::MOVESTATE state = m_pMoveStrategy->Move(CGameProperty::GetElapsedTime());
+        if ((state == CGimmickMove::MOVESTATE_TOUCHDOWN) ||
+            (state == CGimmickMove::MOVESTATE_ON_GROUND))
         {
             OnTouchedDown();
             
-            if (Result == CGimmickMove::MOVESTATE_ON_GROUND)
+            if (state == CGimmickMove::MOVESTATE_ON_GROUND)
                 onOnGround();
         };
 
