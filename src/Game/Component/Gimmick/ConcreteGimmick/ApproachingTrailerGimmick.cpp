@@ -31,6 +31,7 @@ class CAppTrailerAttackBase
 {
 public:
     CAppTrailerAttackBase(CApproachingTrailerGimmick* pTrailer);
+    virtual ~CAppTrailerAttackBase(void) {};
     virtual bool Attach(void) = 0;
     virtual bool Detach(void) = 0;
     virtual bool Move(void) = 0;

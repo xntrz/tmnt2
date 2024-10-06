@@ -498,7 +498,9 @@ bool CAreaRecord::IsAreaRootCleared(AREAID::VALUE idArea, CLEAR_ROOT clearroot) 
     if (m_aNodeArea[idArea].m_state != STATE_CLEAR)
         return false;
 
-    return FLAG_TEST(m_aNodeArea[idArea].m_rootflag, BIT(clearroot));
+    uint32 rootlfag = (1 << static_cast<uint32>(clearroot));
+
+    return FLAG_TEST(m_aNodeArea[idArea].m_rootflag, rootlfag);
 };
 
 

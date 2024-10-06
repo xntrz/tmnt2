@@ -169,7 +169,7 @@ void CCharacterCompositor::RotateDirection(float fDirection, float fRotateRate)
 };
 
 
-ENEMYID::VALUE CCharacterCompositor::GetID(void)
+ENEMYID::VALUE CCharacterCompositor::GetID(void) const
 {
     return m_rEnemyChr.GetID();
 };

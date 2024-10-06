@@ -7,6 +7,7 @@ class CEnemy;
 class IGameStageExGauge
 {
 public:
+    virtual ~IGameStageExGauge(void) {};
     virtual void Start(void) = 0;
     virtual void Stop(void) = 0;
     virtual void Update(void) = 0;

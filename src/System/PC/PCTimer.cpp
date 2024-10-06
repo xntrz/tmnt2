@@ -8,6 +8,7 @@
 class CPCTimer::IGetTimeFunctor
 {
 public:
+    virtual ~IGetTimeFunctor(void) {};
     virtual uint32 operator()(void) const = 0;
 };
 

@@ -34,7 +34,7 @@ public:
     void ModuleShadow(float fRadius);
     ENEMYTYPES::STATUS GetStatus(void) const;
     void RotateDirection(float fDirection, float fRotateRate);
-    ENEMYID::VALUE GetID(void);
+	ENEMYID::VALUE GetID(void) const;
     CHARACTERTYPES::ATTACKPARAMETER& AttackParameter(void);
 
 private:

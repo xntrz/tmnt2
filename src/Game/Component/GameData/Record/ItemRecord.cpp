@@ -7,18 +7,17 @@ static const uint32 ALL_CRY_TAKEN_MASK = 0x3FFFFFFF;
 static_assert(~ALL_CRY_TAKEN_MASK == 0xC0000000, "idb -> CItemRecord::IsValid_4858A0");
 
 
-static const uint32 ALL_ITEM_TAKEN_MASK =
-    BIT(ITEMID::ID_HEAL_SMALL)  |
-    BIT(ITEMID::ID_HEAL_FULL)   |
-    BIT(ITEMID::ID_MISSILE)     |
-    BIT(ITEMID::ID_CRY_RED)     |
-    BIT(ITEMID::ID_CRY_GREEN)   |
-    BIT(ITEMID::ID_CRY_WHITE)   |
-    BIT(ITEMID::ID_CRY_ORANGE)  |
-    BIT(ITEMID::ID_ANTIQUE)     |
-    BIT(ITEMID::ID_INVINCIBLE)  |
-    BIT(ITEMID::ID_COMEBACK)    |
-    BIT(ITEMID::ID_DON_LASER);
+static const uint32 ALL_ITEM_TAKEN_MASK = (1 << static_cast<uint32>(ITEMID::ID_HEAL_SMALL))
+                                        | (1 << static_cast<uint32>(ITEMID::ID_HEAL_FULL))
+                                        | (1 << static_cast<uint32>(ITEMID::ID_MISSILE))
+                                        | (1 << static_cast<uint32>(ITEMID::ID_CRY_RED))
+                                        | (1 << static_cast<uint32>(ITEMID::ID_CRY_GREEN))
+                                        | (1 << static_cast<uint32>(ITEMID::ID_CRY_WHITE))
+                                        | (1 << static_cast<uint32>(ITEMID::ID_CRY_ORANGE))
+                                        | (1 << static_cast<uint32>(ITEMID::ID_ANTIQUE))
+                                        | (1 << static_cast<uint32>(ITEMID::ID_INVINCIBLE))
+                                        | (1 << static_cast<uint32>(ITEMID::ID_COMEBACK))
+                                        | (1 << static_cast<uint32>(ITEMID::ID_DON_LASER));
 
 
 static_assert(~ALL_ITEM_TAKEN_MASK == 0xFFFC03F1, "idb -> CItemRecord::IsValid_4858A0");
@@ -202,7 +201,9 @@ bool CItemRecord::IsItemTakenYet(ITEMID::VALUE idItem) const
 {
     ASSERT(idItem > ITEMID::ID_NONE && idItem <= ITEMID::ID_MAX);
 
-    return FLAG_TEST(m_uItemTakenFlag, BIT(idItem));
+    uint32 flag = (1 << static_cast<uint32>(idItem));
+    
+    return FLAG_TEST(m_uItemTakenFlag, flag);
 };
 
 
@@ -238,7 +239,8 @@ int32 CItemRecord::GetCrystalNum(GAMETYPES::CRYSTALTYPE crytype) const
     
     for (int32 i = 0; i < getCrystalMax(crytype); i++)
     {
-        if (FLAG_TEST(uCryFlag, BIT(i)))
+        uint32 flag = (1 << static_cast<uint32>(i));
+        if (FLAG_TEST(uCryFlag, flag))
             ++iResult;
     };
 
@@ -369,22 +371,24 @@ bool CItemRecord::getCrystalFlag(GAMETYPES::CRYSTALTYPE crytype, int32 no) const
     
     if (no >= 0 && no < getCrystalMax(crytype))
     {
+        uint32 flag = (1 << static_cast<uint32>(no));
+
         switch (crytype)
         {
         case GAMETYPES::CRYSTALTYPE_RED:
-            bResult = FLAG_TEST(m_uCrystalRedFlag, BIT(no));
+            bResult = FLAG_TEST(m_uCrystalRedFlag, flag);
             break;
 
         case GAMETYPES::CRYSTALTYPE_GREEN:
-            bResult = FLAG_TEST(m_uCrystalGreenFlag, BIT(no));
+            bResult = FLAG_TEST(m_uCrystalGreenFlag, flag);
             break;
 
         case GAMETYPES::CRYSTALTYPE_ORANGE:
-            bResult = FLAG_TEST(m_uCrystalOrangeFlag, BIT(no));
+            bResult = FLAG_TEST(m_uCrystalOrangeFlag, flag);
             break;
 
         case GAMETYPES::CRYSTALTYPE_WHITE:
-            bResult = FLAG_TEST(m_uCrystalWhiteFlag, BIT(no));
+            bResult = FLAG_TEST(m_uCrystalWhiteFlag, flag);
             break;
 
         default:
@@ -428,10 +432,12 @@ void CItemRecord::setCrystalFlag(GAMETYPES::CRYSTALTYPE crytype, int32 no, bool 
 
         if (puFlag)
         {
+            uint32 flag = (1 << static_cast<uint32>(no));
+
             if (bProcessed)
-                FLAG_SET(*puFlag, BIT(no));
+                FLAG_SET(*puFlag, flag);
             else
-                FLAG_CLEAR(*puFlag, BIT(no));
+                FLAG_CLEAR(*puFlag, flag);
         };
     };
 };

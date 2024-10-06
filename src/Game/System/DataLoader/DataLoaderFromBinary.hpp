@@ -63,6 +63,7 @@ public:
     class IItemReader
     {
     public:
+        virtual ~IItemReader(void) {};
         virtual void Eval(CChunkHeader* pChunkHeader, void* pData) = 0;
         virtual const char* GetLabel(void) const = 0;
         virtual READERTYPE::VALUE GetType(void) const = 0;

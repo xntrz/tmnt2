@@ -680,6 +680,7 @@ void CGaugeMeter_Container::LifeRecover_Period(void)
     if (m_fRecoverRot >= 360.0f)
         m_fRecoverRot -= 360.0f;
 
+    /* TODO correcting warning C4244 brokes gauge animation */
     m_PlayerHpMove = m_PlayerHpOld + ((m_PlayerHp - m_PlayerHpOld) * (float(m_uLifeAnimCnt) / fAnimDur));
     m_aAlpha[0] = uAlpha0;
     m_aAlpha[1] = uAlpha1;

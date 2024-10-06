@@ -301,10 +301,12 @@ void CSecretRecord::setFlag(FLAGTYPE flagtype, SECRETID::VALUE idSecret, bool bS
 
 	uint32* puFlag = (flagtype == FLAGTYPE_UNLOCKED ? m_auUnlockedFlag : m_auUnnotifiedFlag);
 
+	uint32 flag = (1 << static_cast<uint32>(SecretNo));
+
 	if (bSet)
-		FLAG_SET(puFlag[FlagNo], BIT(SecretNo));
+		FLAG_SET(puFlag[FlagNo], flag);
 	else
-		FLAG_CLEAR(puFlag[FlagNo], BIT(SecretNo));
+		FLAG_CLEAR(puFlag[FlagNo], flag);
 };
 
 
@@ -320,5 +322,7 @@ bool CSecretRecord::getFlag(FLAGTYPE flagtype, SECRETID::VALUE idSecret) const
 
 	const uint32* puFlag = (flagtype == FLAGTYPE_UNLOCKED ? m_auUnlockedFlag : m_auUnnotifiedFlag);
 
-	return FLAG_TEST(puFlag[FlagNo], BIT(SecretNo));
+	uint32 flag = (1 << static_cast<uint32>(SecretNo));
+
+	return FLAG_TEST(puFlag[FlagNo], flag);
 };

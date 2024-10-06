@@ -9,6 +9,7 @@ class CStageBaseSequence;
 class IStageSeqState
 {
 public:
+    virtual ~IStageSeqState(void) {};
     virtual void OnAttach(CStageBaseSequence* pSeq, const void* pParam) = 0;
     virtual void OnDetach(CStageBaseSequence* pSeq) = 0;
     virtual bool OnMove(CStageBaseSequence* pSeq) = 0;

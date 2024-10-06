@@ -7,6 +7,7 @@ class CMapCamera;
 class IGameStageCameraUpdater
 {
 public:
+    virtual ~IGameStageCameraUpdater(void) {};
     virtual void Update(CMapCamera* pMapCamera) = 0;
 };
 

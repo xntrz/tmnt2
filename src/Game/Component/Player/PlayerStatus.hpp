@@ -16,6 +16,8 @@ public:
     static bool IsWithinStatusFromArray(PLAYERTYPES::STATUS status, const PLAYERTYPES::STATUS* pStatusArray, int32 nArraySize);
     static void RegistDefaultForStateMachine(CPlayerStateMachine& statemachine);
     
+    inline CStatus(void) {};
+    virtual ~CStatus(void) {};
     virtual bool IsEnableChangeStatus(PLAYERTYPES::STATUS status) = 0;
     virtual void OnAttach(void) = 0;
     virtual void OnDetach(void) = 0;
