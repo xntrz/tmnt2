@@ -414,12 +414,12 @@ void CDebugShapeContainer::DrawSphere(SHAPE_SPHERE* pShapeSphere)
     {
         for (int32 j = 0; j < SPHERE_DIV_X; ++j)
         {
-            aIndex[nIndexNum + 0] = i * (SPHERE_DIV_X + 1) + j;
-            aIndex[nIndexNum + 1] = (i + 1) * (SPHERE_DIV_X + 1) + j;
-            aIndex[nIndexNum + 2] = (i + 1) * (SPHERE_DIV_X + 1) + j + 1;
-            aIndex[nIndexNum + 3] = i * (SPHERE_DIV_X + 1) + j;
-            aIndex[nIndexNum + 4] = (i + 1) * (SPHERE_DIV_X + 1) + j + 1;
-            aIndex[nIndexNum + 5] = i * (SPHERE_DIV_X + 1) + j + 1;
+			aIndex[nIndexNum + 0] = (RwImVertexIndex)(i * (SPHERE_DIV_X + 1) + j);
+			aIndex[nIndexNum + 1] = (RwImVertexIndex)((i + 1) * (SPHERE_DIV_X + 1) + j);
+			aIndex[nIndexNum + 2] = (RwImVertexIndex)((i + 1) * (SPHERE_DIV_X + 1) + j + 1);
+			aIndex[nIndexNum + 3] = (RwImVertexIndex)(i * (SPHERE_DIV_X + 1) + j);
+			aIndex[nIndexNum + 4] = (RwImVertexIndex)((i + 1) * (SPHERE_DIV_X + 1) + j + 1);
+			aIndex[nIndexNum + 5] = (RwImVertexIndex)(i * (SPHERE_DIV_X + 1) + j + 1);
 
             nIndexNum += 6;
             ASSERT(nIndexNum <= COUNT_OF(aIndex));
@@ -562,8 +562,8 @@ void CDebugShapeContainer::Accumulate(RwIm3DVertex* pVertex, int32 nVertexNum, R
     std::memcpy(&m_pIndexBuffer[m_nIndexNum], pIndex, sizeof(*pIndex) * nIndexNum);
 
     int32 nIndexOffsetBuff = m_nIndexOffset;
-    for (int32 i = m_nIndexNum; i < (m_nIndexNum + nIndexNum); ++i)
-        m_pIndexBuffer[i] = m_pIndexBuffer[i] + nIndexOffsetBuff;
+	for (int32 i = m_nIndexNum; i < (m_nIndexNum + nIndexNum); ++i)
+		m_pIndexBuffer[i] = (m_pIndexBuffer[i] + (RwImVertexIndex)nIndexOffsetBuff);
 
     m_nIndexOffset += nVertexNum;
     m_nIndexNum += nIndexNum;

@@ -3,18 +3,19 @@
 #include "Game/Component/GameData/GameTime.hpp"
 
 
-static const uint32 ALL_CLEAR_ROOT_MASK =
-    BIT(CAreaRecord::CLEAR_ROOT_A) |
-    BIT(CAreaRecord::CLEAR_ROOT_B) |
-    BIT(CAreaRecord::CLEAR_ROOT_C);
+static const uint32 ALL_CLEAR_ROOT_MASK = (1 << static_cast<uint32>(CAreaRecord::CLEAR_ROOT_A))
+                                        | (1 << static_cast<uint32>(CAreaRecord::CLEAR_ROOT_B))
+                                        | (1 << static_cast<uint32>(CAreaRecord::CLEAR_ROOT_C));
 
-static const uint32 CLEARTIME_RANK_E = GAMETIME_HMS(6, 20, 00);
-static const uint32 CLEARTIME_RANK_D = GAMETIME_HMS(5, 01, 00);
-static const uint32 CLEARTIME_RANK_C = GAMETIME_HMS(4, 01, 00);
-static const uint32 CLEARTIME_RANK_B = GAMETIME_HMS(3, 01, 00);
-static const uint32 CLEARTIME_RANK_A = GAMETIME_HMS(2, 31, 00);
-static const uint32 CLEARTIME_RANK_S = GAMETIME_HMS(2, 11, 00);
-static const uint32 CLEARTIME_RANK_SS = 0;
+
+static const uint32 CLEARTIME_RANK_E  = GAMETIME_HMS(6, 20, 00);
+static const uint32 CLEARTIME_RANK_D  = GAMETIME_HMS(5, 01, 00);
+static const uint32 CLEARTIME_RANK_C  = GAMETIME_HMS(4, 01, 00);
+static const uint32 CLEARTIME_RANK_B  = GAMETIME_HMS(3, 01, 00);
+static const uint32 CLEARTIME_RANK_A  = GAMETIME_HMS(2, 31, 00);
+static const uint32 CLEARTIME_RANK_S  = GAMETIME_HMS(2, 11, 00);
+static const uint32 CLEARTIME_RANK_SS = GAMETIME_HMS(0, 00, 00);
+
 
 static const int32 POINT_BORDERLINE[] =
 {
