@@ -1560,7 +1560,10 @@ bool CPlayerCharacter::IsEnableAttackKnife(void) const
 {
     if (CGameData::Record().Secret().IsUnlockedSecret(SECRETID::ID_CHEATCODE_SHURIKEN))
         return true;
-    
+
+    if (IsAttributeFlagSet(PLAYERTYPES::ATTRIBUTE_INNUMERABLE_KNIFE))
+        return true;
+
     if (CGameProperty::Player(m_nPlayerNo)->GetShurikenNum() <= 0)
         return false;
 
