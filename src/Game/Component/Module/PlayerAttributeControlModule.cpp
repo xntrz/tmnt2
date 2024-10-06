@@ -16,12 +16,6 @@ CPlayerAttributeControlModule::CPlayerAttributeControlModule(MODULETYPE::VALUE t
 };
 
 
-CPlayerAttributeControlModule::~CPlayerAttributeControlModule(void)
-{
-    ;
-};
-
-
 void CPlayerAttributeControlModule::Run(void)
 {
     if (!m_bEnable)
@@ -30,12 +24,6 @@ void CPlayerAttributeControlModule::Run(void)
     m_fElapsedTime += CGameProperty::GetElapsedTime();
     if (m_fElapsedTime >= m_fEndTime)
         Disable();
-};
-
-
-void CPlayerAttributeControlModule::Draw(void)
-{
-    ;
 };
 
 
@@ -67,23 +55,14 @@ void CPlayerAttributeControlModule::Disable(void)
 
 void CPlayerAttributeControlModule::SetRemainTime(float fTime)
 {
-    if (fTime <= 0.0f)
-    {
-        Disable();
-    }
+    if (fTime > 0.0f)
+        Enable(fTime);
     else
-    {
-        m_bEnable = true;
-        m_fEndTime = fTime;
-        m_fElapsedTime = 0.0f;
-    };
+        Disable();
 };
 
 
 float CPlayerAttributeControlModule::GetRemainTime(void) const
 {
-    if (m_bEnable)
-        return m_fEndTime - m_fElapsedTime;
-    else
-        return 0.0f;
+    return (m_bEnable ? (m_fEndTime - m_fElapsedTime) : 0.0f);    
 };

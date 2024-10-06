@@ -789,41 +789,37 @@ void CPlayerCharacter::OnAttach(CPlayerCharacter* pBeforeCharacter, bool bChange
     pBeforeCharacter->GetPosition(&m_vPosition);
 	SetDirection(pBeforeCharacter->GetDirection());
 
-    CToGimmickMessageModule* pToGimmickMod = (CToGimmickMessageModule*)GetModule(MODULETYPE::TO_GIMMICK_MSG);
+    CToGimmickMessageModule* pToGimmickMod = static_cast<CToGimmickMessageModule*>(GetModule(MODULETYPE::TO_GIMMICK_MSG));
     if (pToGimmickMod)
     {
         const COLLISIONGROUNDINFO* pGroundInfo = pBeforeCharacter->GetCollisionGround();
         ASSERT(pGroundInfo);
 
-        if (pGroundInfo->m_bHit &&
-            pGroundInfo->m_hittype == MAPTYPES::HITTYPE_GIMMICK)
-        {
+        if (pGroundInfo->m_bHit && (pGroundInfo->m_hittype == MAPTYPES::HITTYPE_GIMMICK))
             pToGimmickMod->SetPrevGimmickObjName(pGroundInfo->m_gimmickinfo.m_szGimmickObjName);
-        }
         else
-        {
-            pToGimmickMod->SetPrevGimmickObjName();
-        };
+            pToGimmickMod->SetPrevGimmickObjName("");
     };
 
     PLAYERTYPES::ATTRIBUTETIME attributetime;
     pBeforeCharacter->GetAttributeTime(&attributetime);
     SetAttributeTime(&attributetime);
+
     SetEnableBodyHit(true);
 
-    CPlayerAttributeControlModule* pConfusionCtrlMod = (CPlayerAttributeControlModule*)GetModule(MODULETYPE::PLAYERATTRCTRL_CONFUSION);
+    CPlayerAttributeControlModule* pConfusionCtrlMod = static_cast<CPlayerAttributeControlModule*>(GetModule(MODULETYPE::PLAYERATTRCTRL_CONFUSION));
     if (pConfusionCtrlMod)
         pConfusionCtrlMod->Disable();
 
     SetEffectEnable(true);
-    
+
     if (bChangeEffectEnable)
     {
         RwV3d vOffset = Math::VECTOR3_ZERO;
         CEffectManager::PlayTrace(EFFECTID::ID_BARRIER_START, new CPlayerTracer(this), &vOffset);
     };
 
-    CBandanaModule* pBandanaMod = (CBandanaModule*)GetModule(MODULETYPE::BANDANA);
+    CBandanaModule* pBandanaMod = static_cast<CBandanaModule*>(GetModule(MODULETYPE::BANDANA));
     if (pBandanaMod)
     {
         UpdateModel();
@@ -831,11 +827,11 @@ void CPlayerCharacter::OnAttach(CPlayerCharacter* pBeforeCharacter, bool bChange
         pBandanaMod->Reset(&vPosition);
     };
 
-    CCircleShadowModule* pCircleShadowMod = (CCircleShadowModule*)GetModule(MODULETYPE::CIRCLE_SHADOW);
+    CCircleShadowModule* pCircleShadowMod = static_cast<CCircleShadowModule*>(GetModule(MODULETYPE::CIRCLE_SHADOW));
     if (pCircleShadowMod)
         pCircleShadowMod->SetEnable(true);
 
-    CPlayerChangeVoiceModule* pPlayerChngVoiceMod = (CPlayerChangeVoiceModule*)GetModule(MODULETYPE::PLAYER_CHNG_VOICE);
+    CPlayerChangeVoiceModule* pPlayerChngVoiceMod = static_cast<CPlayerChangeVoiceModule*>(GetModule(MODULETYPE::PLAYER_CHNG_VOICE));
     if (pPlayerChngVoiceMod)
         pPlayerChngVoiceMod->Start();
 
@@ -1373,30 +1369,29 @@ void CPlayerCharacter::SetAttributeTime(PLAYERTYPES::ATTRIBUTETIME* pAttributeTi
 {
     ASSERT(pAttributeTime);
 
-    CPlayerAttributeControlModule* pCtrlAttackMod = (CPlayerAttributeControlModule*)GetModule(MODULETYPE::PLAYERATTRCTRL_ATTACK_POWER_UP);
+    CPlayerAttributeControlModule* pCtrlAttackMod = static_cast<CPlayerAttributeControlModule*>(GetModule(MODULETYPE::PLAYERATTRCTRL_ATTACK_POWER_UP));
     if (pCtrlAttackMod)
         pCtrlAttackMod->SetRemainTime(pAttributeTime->m_fAttackPowerup);
 
-    CPlayerAttributeControlModule* pCtrlDefenceMod = (CPlayerAttributeControlModule*)GetModule(MODULETYPE::PLAYERATTRCTRL_DEFENCE_POWER_UP);
+    CPlayerAttributeControlModule* pCtrlDefenceMod = static_cast<CPlayerAttributeControlModule*>(GetModule(MODULETYPE::PLAYERATTRCTRL_DEFENCE_POWER_UP));
     if (pCtrlDefenceMod)
         pCtrlDefenceMod->SetRemainTime(pAttributeTime->m_fDefencePowerup);
 
-    CPlayerAttributeControlModule* pCtrlChargeMod = (CPlayerAttributeControlModule*)GetModule(MODULETYPE::PLAYERATTRCTRL_CHANGE_TIME_CUT);
+    CPlayerAttributeControlModule* pCtrlChargeMod = static_cast<CPlayerAttributeControlModule*>(GetModule(MODULETYPE::PLAYERATTRCTRL_CHANGE_TIME_CUT));
     if (pCtrlChargeMod)
         pCtrlChargeMod->SetRemainTime(pAttributeTime->m_fChargePowerup);
 
-    CPlayerAttributeControlModule* pCtrlKnifeMod = (CPlayerAttributeControlModule*)GetModule(MODULETYPE::PLAYERATTRCTRL_INNUMERABLE_KNIFE);
+    CPlayerAttributeControlModule* pCtrlKnifeMod = static_cast<CPlayerAttributeControlModule*>(GetModule(MODULETYPE::PLAYERATTRCTRL_INNUMERABLE_KNIFE));
     if (pCtrlKnifeMod)
         pCtrlKnifeMod->SetRemainTime(pAttributeTime->m_fKnifePowerup);
 
-    CPlayerAttributeControlModule* pCtrlInvinMod = (CPlayerAttributeControlModule*)GetModule(MODULETYPE::PLAYERATTRCTRL_INVINCIBILITY);
+    CPlayerAttributeControlModule* pCtrlInvinMod = static_cast<CPlayerAttributeControlModule*>(GetModule(MODULETYPE::PLAYERATTRCTRL_INVINCIBILITY));
     if (pCtrlInvinMod)
         pCtrlInvinMod->SetRemainTime(pAttributeTime->m_fInvincibility);
 
-    CBlinkCharacterModule* pCtrlBlinkMod = (CBlinkCharacterModule*)GetModule(MODULETYPE::BLINK_CHARACTER);
+    CBlinkCharacterModule* pCtrlBlinkMod = static_cast<CBlinkCharacterModule*>(GetModule(MODULETYPE::BLINK_CHARACTER));
     if (pCtrlAttackMod)
         pCtrlBlinkMod->SetRemainTime(pAttributeTime->m_fBlink);
-
 
     if (pAttributeTime->m_fAttackPowerup > 0.0f)
     {
@@ -1422,11 +1417,11 @@ void CPlayerCharacter::SetAttributeTime(PLAYERTYPES::ATTRIBUTETIME* pAttributeTi
     if (pAttributeTime->m_fKnifePowerup > 0.0f)
     {
         m_pModuleMan->Include(
-            CharacterItemEffectModule::CreateItemEffectModule(this, EFFECTID::ID_SETUP_DEFENCE, pAttributeTime->m_fKnifePowerup)
+            CharacterItemEffectModule::CreateItemEffectModule(this, EFFECTID::ID_SETUP_KNIFE, pAttributeTime->m_fKnifePowerup)
         );
     };
 
-    if (pAttributeTime->m_fInvincibility > 0.0f && pAttributeTime->m_bItemEffectExists)
+    if ((pAttributeTime->m_fInvincibility > 0.0f) && pAttributeTime->m_bItemEffectExists)
     {
         m_pModuleMan->Include(
             CharacterItemEffectModule::CreateItemEffectModule(this, EFFECTID::ID_SETUP_METUKEI, pAttributeTime->m_fInvincibility)
@@ -1439,38 +1434,41 @@ void CPlayerCharacter::GetAttributeTime(PLAYERTYPES::ATTRIBUTETIME* pAttributeTi
 {
     ASSERT(pAttributeTime);
 
-    CPlayerAttributeControlModule* pCtrlAttackMod = (CPlayerAttributeControlModule*)GetModule(MODULETYPE::PLAYERATTRCTRL_ATTACK_POWER_UP);
+    /* get attack power up remain time */
+    CPlayerAttributeControlModule* pCtrlAttackMod = static_cast<CPlayerAttributeControlModule*>(GetModule(MODULETYPE::PLAYERATTRCTRL_ATTACK_POWER_UP));
     if (pCtrlAttackMod)
         pAttributeTime->m_fAttackPowerup = pCtrlAttackMod->GetRemainTime();
 
-    CPlayerAttributeControlModule* pCtrlDefenceMod = (CPlayerAttributeControlModule*)GetModule(MODULETYPE::PLAYERATTRCTRL_DEFENCE_POWER_UP);
+    /* get defence power up remain time */
+    CPlayerAttributeControlModule* pCtrlDefenceMod = static_cast<CPlayerAttributeControlModule*>(GetModule(MODULETYPE::PLAYERATTRCTRL_DEFENCE_POWER_UP));
     if (pCtrlDefenceMod)
         pAttributeTime->m_fDefencePowerup = pCtrlDefenceMod->GetRemainTime();
 
-    CPlayerAttributeControlModule* pCtrlChargeMod = (CPlayerAttributeControlModule*)GetModule(MODULETYPE::PLAYERATTRCTRL_CHANGE_TIME_CUT);
+    /* get charge time cut power up remain time */
+    CPlayerAttributeControlModule* pCtrlChargeMod = static_cast<CPlayerAttributeControlModule*>(GetModule(MODULETYPE::PLAYERATTRCTRL_CHANGE_TIME_CUT));
     if (pCtrlChargeMod)
         pAttributeTime->m_fChargePowerup = pCtrlChargeMod->GetRemainTime();
 
-    CPlayerAttributeControlModule* pCtrlKnifeMod = (CPlayerAttributeControlModule*)GetModule(MODULETYPE::PLAYERATTRCTRL_INNUMERABLE_KNIFE);
+    /* get infinite knife power up remain time */
+    CPlayerAttributeControlModule* pCtrlKnifeMod = static_cast<CPlayerAttributeControlModule*>(GetModule(MODULETYPE::PLAYERATTRCTRL_INNUMERABLE_KNIFE));
     if (pCtrlKnifeMod)
         pAttributeTime->m_fKnifePowerup = pCtrlKnifeMod->GetRemainTime();
 
-    CPlayerAttributeControlModule* pCtrlInvinMod = (CPlayerAttributeControlModule*)GetModule(MODULETYPE::PLAYERATTRCTRL_INVINCIBILITY);
+    /* get invincibility remain time */
+    CPlayerAttributeControlModule* pCtrlInvinMod = static_cast<CPlayerAttributeControlModule*>(GetModule(MODULETYPE::PLAYERATTRCTRL_INVINCIBILITY));
     if (pCtrlInvinMod)
         pAttributeTime->m_fInvincibility = pCtrlInvinMod->GetRemainTime();
 
+    /* get blink remain time */
     CBlinkCharacterModule* pCtrlBlinkMod = (CBlinkCharacterModule*)GetModule(MODULETYPE::BLINK_CHARACTER);
     if (pCtrlAttackMod)
         pAttributeTime->m_fBlink = pCtrlAttackMod->GetRemainTime();
 
+    /* get invincibility effect status */
     if (IsModuleIncluded(MODULETYPE::ITEM_EFFECT_INVINCIBLE))
     {
         pAttributeTime->m_bItemEffectExists = true;
-        CharacterItemEffectModule::SetItemEffectModuleEnable(
-            this,
-            MODULETYPE::ITEM_EFFECT_INVINCIBLE,
-            false
-        );
+        CharacterItemEffectModule::SetItemEffectModuleEnable(this, MODULETYPE::ITEM_EFFECT_INVINCIBLE, false);
     }
     else
     {

@@ -12,9 +12,9 @@ class CPlayerAttributeControlModule : public IModule
 {
 public:
     CPlayerAttributeControlModule(MODULETYPE::VALUE type, PLAYERTYPES::ATTRIBUTE attribute, CPlayerCharacter* pPlayerChr);
-    virtual ~CPlayerAttributeControlModule(void);
+    virtual ~CPlayerAttributeControlModule(void) {};
     virtual void Run(void) override;
-    virtual void Draw(void) override;
+    virtual void Draw(void) override {};
     virtual void Enable(float fEndTime);
     virtual void Disable(void);
     virtual void SetRemainTime(float fTime);
