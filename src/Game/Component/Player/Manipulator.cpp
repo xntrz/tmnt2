@@ -328,29 +328,29 @@ void CManipulator::RunAerialMove(void)
 
 bool CManipulator::RunAerialCommon(void)
 {
-    bool bResult = false;
+    bool bResult = true;
 
     if (m_input.m_uAttack && m_pPlayerChr->IsEnableAttackJump())
     {
         m_pPlayerChr->ChangeStatus(PLAYERTYPES::STATUS_ATTACK_JUMP);
-        bResult = true;
     }
     else if ((m_input.m_uKnife == 1) && m_pPlayerChr->IsEnableAttackKnife())
     {
         m_pPlayerChr->ChangeStatus(PLAYERTYPES::STATUS_ATTACK_KNIFE_JUMP);
-        bResult = true;
     }
     else if ((m_input.m_uJump == 1) && m_pPlayerChr->IsEnableJumpWall())
     {
         m_pPlayerChr->ChangeStatus(PLAYERTYPES::STATUS_JUMP_WALL);
-        bResult = true;
     }
     else if ((m_input.m_uJump == 1) && m_pPlayerChr->IsEnableJump2nd())
     {
         m_pPlayerChr->ChangeStatus(PLAYERTYPES::STATUS_JUMP_2ND);
-        bResult = true;
+    }
+    else
+    {
+        bResult = false;
     };
-
+    
     return bResult;
 };
 
@@ -463,15 +463,15 @@ void CManipulator::RunAttackBCharge(void)
 
 void CManipulator::RunAttackKnife(void)
 {
-    if (m_input.m_uKnife == 1 && m_pPlayerChr->IsEnableAttackKnife())
+    if ((m_input.m_uKnife == 1) && m_pPlayerChr->IsEnableAttackKnife())
         m_pPlayerChr->ChangeStatus(PLAYERTYPES::STATUS_ATTACK_KNIFE);
 };
 
 
 void CManipulator::RunAttackKnifeJump(void)
 {
-    if (m_input.m_uKnife == 1 && m_pPlayerChr->IsEnableAttackKnifeJump())
-        m_pPlayerChr->ChangeStatus(PLAYERTYPES::STATUS_ATTACK_KNIFE);
+    if ((m_input.m_uKnife == 1) && m_pPlayerChr->IsEnableAttackKnifeJump())
+        m_pPlayerChr->ChangeStatus(PLAYERTYPES::STATUS_ATTACK_KNIFE_JUMP);
     else
         m_pPlayerChr->SetDirection(m_input.m_fDirection);
 };

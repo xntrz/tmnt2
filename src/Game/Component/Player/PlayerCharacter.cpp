@@ -1574,14 +1574,18 @@ bool CPlayerCharacter::IsEnableAttackKnife(void) const
 bool CPlayerCharacter::IsEnableAttackKnifeJump(void) const
 {
     ASSERT(m_pStateMachine);
+    
+    if (CGameData::Record().Secret().GetAerialLevel() < 1)
+        return false;
 
-    bool bIsTechLevelOK         = (CGameData::Record().Secret().GetAerialLevel() >= 1);
-    bool bIsEnableAttackKnife   = IsEnableAttackKnife();
-    bool bIsInAerial            = IsPlayerFlagSet(PLAYERTYPES::FLAG_AERIAL_STATUS);
-    bool bIsNotSameStatus       = (GetStatus() != PLAYERTYPES::STATUS_ATTACK_KNIFE_JUMP);
-    bool bIsNotOnCooldown       = (m_pStateMachine->GetStatusDuration() > 0.15f);
+    if (!IsEnableAttackKnife())
+        return false;
 
-    return (bIsTechLevelOK && bIsEnableAttackKnife && bIsInAerial && (bIsNotSameStatus || bIsNotOnCooldown));
+    if (!IsPlayerFlagSet(PLAYERTYPES::FLAG_AERIAL_STATUS))
+        return false;
+
+    return  (GetStatus() != PLAYERTYPES::STATUS_ATTACK_KNIFE_JUMP) ||
+            (m_pStateMachine->GetStatusDuration() > 0.15f);
 };
 
 
