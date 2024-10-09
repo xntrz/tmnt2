@@ -203,9 +203,11 @@ void CCharacterParameterContainer::CPackage::Initialize(const char* pszName, con
     //
     //  Read pos param
     //
-    id = br.read<uint8>();
+	id = br.peek<uint8>();
     if (id == ID_POSITION)
     {
+		br.read<uint8>();
+
         int32 nPosNum = br.read<uint8>();
         for (int32 i = 0; i < nPosNum; ++i)
         {
