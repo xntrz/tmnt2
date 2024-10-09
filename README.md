@@ -16,7 +16,8 @@
 # Building & Run
 **Requirements**
 - assets files from retail game
-- visual studio with fully support c++11 (vs2015 or higher)
+- MS Visual Studio with fully support c++11 (vs2015 or higher)
+- MS DirectX 9.0c SDK with `DXSDK_DIR` environment variable is set
 
 **Build**
 - generate `.sln` file by [premake5](https://premake.github.io/)

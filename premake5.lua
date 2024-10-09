@@ -65,10 +65,15 @@ project "TMNT2"
    }
    includedirs  
    {  
+      "$(DXSDK_DIR)Include",
 		"%{dir_lib}/rwsdk37/include/d3d9", 
 		"%{dir_lib}/cri/include", 
 	}
-   libdirs  { "%{dir_lib}/cri/lib/x86" }
+   libdirs  
+   { 
+      "$(DXSDK_DIR)Lib/x86",
+      "%{dir_lib}/cri/lib/x86",
+   }
    resincludedirs { "%{dir_src}/System/PC" }
    forceincludes "Game\\pch.hpp"
    pchheader "Game/pch.hpp"
@@ -79,12 +84,14 @@ project "TMNT2"
    }
    links 
    { 
-      -- win32
+      -- directx
       "dinput8.lib",
       "dxguid.lib",
+      "dsound.lib",
+
+      -- win32
       "winmm.lib",
       "ksuser.lib",
-      "dsound.lib",
 
       -- cri
       "cri_adxpcx86_dsound8.lib",
@@ -114,7 +121,7 @@ project "TMNT2"
       "rtintsec.lib",
       "rtcharse.lib",
       "legacy_stdio_definitions.lib",
-	  "rptoon.lib"
+	   "rptoon.lib"
    } 
    filter { "configurations:Debug" }
       libdirs  { "%{dir_lib}/rwsdk37/lib/d3d9/debug", "%{dir_bin}" }
