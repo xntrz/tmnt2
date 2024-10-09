@@ -4,6 +4,8 @@
 **/idb/*
 **/srv/*
 **/obj/*
+**/System/Common/Debug/*
+**/vendor/*
 *.csproj
 *.db
 *.user

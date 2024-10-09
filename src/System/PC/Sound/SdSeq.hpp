@@ -1,5 +1,18 @@
 #pragma once
 
+#include "SdTypes.hpp"
+
+
+// TODO opt
+#define SD_SEQ_OPT_0x4		(0x4) 	// bgm se
+#define SD_SEQ_OPT_0x8		(0x8)
+#define SD_SEQ_OPT_0x10		(0x10)
+#define SD_SEQ_OPT_0x20		(0x20)
+#define SD_SEQ_OPT_0x40		(0x40)
+#define SD_SEQ_OPT_0x80		(0x80)
+#define SD_SEQ_OPT_0x100	(0x100)	// find reverse
+#define SD_SEQ_OPT_0x200	(0x200)
+
 
 struct SdTempo_t
 {
@@ -134,21 +147,21 @@ struct SdPcParam_t
 
 struct SdRdcParent_t
 {
-    uint32 MasterCode;
-    uint32 Code[3];
+    int32 MasterCode;
+    int32 Code[3];
 };
 
 
-struct SdSeq_t
+struct SdSeqWork_t
 {
-    uint32          CheckKeyTop;
-    uint32          ChNo;
-    uint32          Code;
-    uint16          CtrlPan;
-    uint16          CtrlVol;
+    int32          	CheckKeyTop;
+    uint16          ChNo;
+    int32          	Code;
+    int16         	CtrlPan;
+    int16         	CtrlVol;
     uint16          Sno;
     uint16          Priority;
-    uint16          NoiseCnt;
+    uint16          NoiseCut;
     uint16          KeyOffWait;
     uint16          SdWait;
     uint16          Mode;
@@ -157,8 +170,8 @@ struct SdSeq_t
     uint16          TransWaveNo;
     uint16          shRdxCrxBank;
     uint32          Address;
-    uint32          SpuAddress;
-    uint32          Option;
+    int32         	SpuAddress;
+    int32         	Option;
     SdTempo_t       Tempo;
     SdStep_t        Step;
     SdVolume_t      Volume;
@@ -176,15 +189,26 @@ struct SdSeq_t
     SdPcParam_t     PcParam[4];
     SdRdcParent_t   RdcParent;
     SdPan_t         SPan;
+    SdSurCtrl_t		SurCtrl;
     uint32          RdcParam[4];
     int32           nCtrlSur;
     int32           nTableIndex;
-    uint32          ExtFlag;
-    uint32          Mask;
-    uint32          CheckKeyEnd;
+    int32          	ExtFlag;
+    int32          	Mask;
+    int32          	CheckKeyEnd;
 };
+
+
+extern SdSeqWork_t SdSeqWork[52];
 
 
 void SdSeqInit(void);
 void SdSeqTerm(void);
-void SdSeqTask(void);
+void SdSeqMain(void);
+int32 SdSeqMaskCheck(SdSeqWork_t* Work);
+void SdSeqMask(int32 _no, int32 _data);
+void SdSeqAllOff(int32 _option);
+void SdSeqOff(SdSeqWork_t* Work, uint16 _keyOffWait);
+void SdSeqToneSet(SdSeqWork_t* Work, int32 _toneNo, int32 _drumNo);
+void SdSeqPauseSet(int32 _option);
+void SdSeqPauseClr(int32 _option);

@@ -13,11 +13,6 @@
 };
 
 
-/*static*/ inline void CGameSound::SetMode(MODE mode)
-{
-	m_mode = mode;
-};
-
 /*static*/ inline CGameSound::MODE CGameSound::GetMode(void)
 {
 	return m_mode;

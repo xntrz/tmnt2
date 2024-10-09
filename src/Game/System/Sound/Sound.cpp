@@ -14,23 +14,23 @@ void SoundFirstLoad(void)
 };
 
 
-void SoundLoad(int32 Command, uint32 Param)
+void SoundLoad(int32 Command, int32 Param)
 {
 #ifdef TARGET_PC
-    SdDrvLoad(Command, Param);
+    SdDrvLoad(Command, 0, Param);
 #else
 #error Not implemented for current target
 #endif
 };
 
 
-void SoundSet(uint32 Code)
+void SoundSet(int32 Code)
 {
     SoundSetEx(Code, 0, 0, 0);
 };
 
 
-void SoundSetEx(uint32 Code, uint32 Param1, uint32 Param2, uint32 Param3)
+void SoundSetEx(int32 Code, uint32 Param1, uint32 Param2, uint32 Param3)
 {
 #ifdef TARGET_PC
     SdDrvCodeSet(Code, Param1, Param2, Param3);
@@ -40,7 +40,7 @@ void SoundSetEx(uint32 Code, uint32 Param1, uint32 Param2, uint32 Param3)
 };
 
 
-bool SoundPlaybackCheck(uint32 Code)
+bool SoundPlaybackCheck(int32 Code)
 {
 #ifdef TARGET_PC
     return SdDrvPlaybackCheck(Code);
@@ -70,7 +70,7 @@ bool SoundGetLoadInfo(void)
 };
 
 
-uint32 SoundVoxCodeCheck(int32 SrvNo)
+int32 SoundVoxCodeCheck(int32 SrvNo)
 {
 #ifdef TARGET_PC
     return SdDrvVoxCodeCheck(SrvNo);

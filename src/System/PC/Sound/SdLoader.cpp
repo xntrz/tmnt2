@@ -2,6 +2,7 @@
 #include "SdMem.hpp"
 #include "SdLoadTask.hpp"
 #include "SdStr.hpp"
+#include "SdLog.hpp"
 
 
 #define SD_LOADER_SYSTEM_WAVE   (0)
@@ -20,33 +21,33 @@ static_assert(COUNT_OF(SdWaveTopAddress) == COUNT_OF(SdEnvelopeTable), "should b
 
 struct SdBgmDataHeader_t
 {
-    uint32 Count;
-    uint32 Offset;
-    uint32 Size;
+    int32 Count;
+    int32 Offset;
+    int32 Size;
 };
 
 
 struct SdBgmHeader_t
 {
     char Title[32];
-    uint32 Version;
-    uint32 TotalSize;
+    int32 Version;
+    int32 TotalSize;
     SdBgmDataHeader_t Head[32];
 };
 
 
 struct SdSeDataHeader_t
 {
-    uint32 Count;
-    uint32 Offset;
+    int32 Count;
+    int32 Offset;
 };
 
 
 struct SdSeHeader_t
 {
     char Title[32];
-    uint32 Version;
-    uint32 TotalSize;
+    int32 Version;
+    int32 TotalSize;
     SdSeDataHeader_t Head[16];
 };
 
@@ -55,7 +56,7 @@ struct SdEnvelopeDrumHeader_t
 {
     uint16 Count;
     uint16 Pad;
-    uint32 Offset;
+    int32 Offset;
 };
 
 
@@ -63,19 +64,19 @@ struct SdEnvelopeWaveHeader_t
 {
     uint16 Count;
     uint16 Flag;
-    uint32 Offset;
-    uint32 WaveOffset;
-    uint32 WaveSize;
+    int32 Offset;
+    int32 WaveOffset;
+    int32 WaveSize;
 };
 
 
 struct SdEnvelopeHeader_t
 {
     char Title[32];
-    uint32 Version;
-    uint32 TotalSize;
-    uint32 EnvSize;
-    uint32 WaveSize;
+    int32 Version;
+    int32 TotalSize;
+    int32 EnvSize;
+    int32 WaveSize;
     SdEnvelopeDrumHeader_t Drum;
     SdEnvelopeWaveHeader_t Wave[256];
 };
@@ -83,8 +84,8 @@ struct SdEnvelopeHeader_t
 
 struct SdStrHeader_t
 {
-    uint32 Size;
-    uint32 Count;
+    int32 Size;
+    int32 Count;
 };
 
 
@@ -119,9 +120,9 @@ struct SdLoadPoint_t
 
 static SdLoadPoint_t SdLoadSystem[] =
 {
-	{ "WaveData.bin",   0,  0   },
-	{ "TrSeData.bin",   0,  0   },
-	{ "SeData.bin",     0,  0   },
+    { "WaveData.bin",   0,  0   },
+    { "TrSeData.bin",   0,  0   },
+    { "SeData.bin",     0,  0   },
 };
 
 
@@ -225,20 +226,20 @@ static uint32       SdVoxMemSize = SD_DMA_PAGE;
 //
 //  Sd resource mem map
 //
-static bool         SdHeapAllocFlag = false;
-static void*        SdHeapAddrBegin = nullptr;
-static void*        SdHeapAddrEnd = nullptr;
-static void*        SdStrWorkAddr = nullptr;
-static uint32       SdStrWorkSize = 0;
-static void*        SdVoxHdrAddr = nullptr;
-static uint32       SdVoxHdrSize = 0;
-static void*        SdVagHdrAddr = nullptr;
-static uint32       SdVagHdrSize = 0;
-static void*        SdStrMemAddr = nullptr;
-static uint32       SdStrMemSize = 0;
-static void*        SdWaveAddr = nullptr;
-static uint32       SdWavHdrMemSize = 0;
-static uint32       SdSeqHdrMemSize = 0;
+static bool 	SdHeapAllocFlag = false;
+static void*	SdHeapAddrBegin = nullptr;
+static void*	SdHeapAddrEnd = nullptr;
+static void*	SdStrWorkAddr = nullptr;
+static uint32	SdStrWorkSize = 0;
+static void*	SdVoxHdrAddr = nullptr;
+static uint32	SdVoxHdrSize = 0;
+static void*	SdVagHdrAddr = nullptr;
+static uint32	SdVagHdrSize = 0;
+static void*	SdStrMemAddr = nullptr;
+static uint32	SdStrMemSize = 0;
+static void*	SdWaveAddr = nullptr;
+static uint32	SdWavHdrMemSize = 0;
+static uint32	SdSeqHdrMemSize = 0;
 
 
 //
@@ -253,74 +254,77 @@ static bool         SdTransWavLoadTaskBusyFlag = false;
 static int32        SdTransWavLoadTaskCnt = 0;
 
 
-static inline const SdStrFile_t* SdGetVoxFileLSN(uint32 Code)
+static inline const SdStrFile_t* SdGetVoxFileLSN(int32 _code)
 {
-    int32 FileNo    = SdGetVoxFileNo(Code);
-    int32 LoaderNo  = SdGetVoxLoaderNo(Code);
+    int32 FileNo    = SD_VOX_FILE_NO(_code);
+    int32 BankNo  = SD_VOX_BANK_NO(_code);
 
-    ASSERT(LoaderNo >= 0);
-    ASSERT(LoaderNo < SdVoxLoadNum);
+    ASSERT(BankNo >= 0);
+    ASSERT(BankNo < SdVoxLoadNum);
 
-    return &((SdStrFile_t*)SdLoadVox[LoaderNo].LSN)[FileNo];
+    return &((SdStrFile_t*)SdLoadVox[BankNo].LSN)[FileNo];
 };
 
 
-static inline const SdStrFile_t* SdGetVagFileLSN(uint32 Code)
+static inline const SdStrFile_t* SdGetVagFileLSN(int32 _code)
 {
-    int32 FileNo    = SdGetVagFileNo(Code);
-    int32 LoaderNo  = SdGetVagLoaderNo(Code);
+    int32 FileNo = SD_VAG_FILE_NO(_code);
+    int32 BankNo = SD_VAG_BANK_NO(_code);
 
-    ASSERT(LoaderNo >= 0);
-    ASSERT(LoaderNo < SdVagLoadNum);
+    ASSERT(BankNo >= 0);
+    ASSERT(BankNo < SdVagLoadNum);
 
-    return &((SdStrFile_t*)SdLoadVag[LoaderNo].LSN)[FileNo];
+    return &((SdStrFile_t*)SdLoadVag[BankNo].LSN)[FileNo];
 };
 
 
-static inline const char* SdGetSystemName(int32 Type)
+static inline const char* SdGetSystemName(int32 _type)
 {
-    ASSERT(Type >= 0);
-    ASSERT(Type < COUNT_OF(SdLoadSystem));
+    ASSERT(_type >= 0);
+    ASSERT(_type < COUNT_OF(SdLoadSystem));
 
-    return (((Type >= 0) && (Type < COUNT_OF(SdLoadSystem))) ? SdLoadSystem[Type].Name : nullptr);
+    return (((_type >= 0) && (_type < COUNT_OF(SdLoadSystem))) ? SdLoadSystem[_type].Name : nullptr);
 };
 
 
-static void SdTaskTransWavOnLoad(void* hTask)
+static void SdTaskTransWavOnLoad(void* _task)
 {
-    int32 Bank = int32(SdLoadTaskGetUser(hTask));
+    int32 Bank = (int32)SdLoadTaskGetUser(_task);
     if (SdTransCodeTable[Bank].Count)
     {
-        // TODO
+        SdKdtTableData_t* TableData = (SdKdtTableData_t*)SdLoadTaskAddress(_task);
+
+        for (int32 i = 0; i < SdTransCodeTable[Bank].Count; ++i)
+            TableData[i].TableAddress = (uint8**)((uintptr_t)TableData[i].TableAddress + (uintptr_t)TableData);
     };
 };
 
 
-static void SdTaskWavOnLoad(void* hTask)
+static void SdTaskWavOnLoad(void* _task)
 {
     ;
 };
 
 
-static void SdSetTransInfo(SdBgmHeader_t* Hdr)
+static void SdSetTransInfo(SdBgmHeader_t* Header)
 {
     for (int32 i = 0; i < COUNT_OF(SdTransCodeTable); ++i)
     {
         SdTransCodeTable[i].Table   = nullptr;
-        SdTransCodeTable[i].Offset  = Hdr->Head[i].Offset;
-        SdTransCodeTable[i].Count   = Hdr->Head[i].Count;
-        SdTransCodeTable[i].Size    = Hdr->Head[i].Size;
+        SdTransCodeTable[i].Offset  = Header->Head[i].Offset;
+        SdTransCodeTable[i].Count   = Header->Head[i].Count;
+        SdTransCodeTable[i].Size    = Header->Head[i].Size;
     };
 
     if (SdTransCodeTable[0].Count)
     {
-        SdTransCodeTable[0].CodeStart   = 0x2000;
-        SdTransCodeTable[0].CodeEnd     = SdTransCodeTable[0].Count + 0x1FFF;
+        SdTransCodeTable[0].CodeStart   = (uint16)0x2000;
+        SdTransCodeTable[0].CodeEnd     = (uint16)SdTransCodeTable[0].Count + (uint16)0x1FFF;
     }
     else
     {
-        SdTransCodeTable[0].CodeStart   = 0;
-        SdTransCodeTable[0].CodeEnd     = 0x1FFF;
+        SdTransCodeTable[0].CodeStart   = (uint16)0;
+        SdTransCodeTable[0].CodeEnd     = (uint16)0x1FFF;
     };
 
     for (int32 i = 1; i < COUNT_OF(SdTransCodeTable); ++i)
@@ -328,7 +332,7 @@ static void SdSetTransInfo(SdBgmHeader_t* Hdr)
         if (SdTransCodeTable[i].Count)
         {
             SdTransCodeTable[i].CodeStart   = SdTransCodeTable[i - 1].CodeEnd + 1;
-            SdTransCodeTable[i].CodeEnd     = SdTransCodeTable[i].CodeStart + SdTransCodeTable[i].Count - 1;
+            SdTransCodeTable[i].CodeEnd     = SdTransCodeTable[i].CodeStart + (uint16)SdTransCodeTable[i].Count - 1;
         }
         else
         {
@@ -339,44 +343,42 @@ static void SdSetTransInfo(SdBgmHeader_t* Hdr)
 };
 
 
-static void SdSetSeInfo(SdSeHeader_t* Hdr, void* Data)
+static void SdSetSeInfo(SdSeHeader_t* Header, void* Data)
 {
-    uint32 Count = 0;
+    int32 Count = 0;
     
     for (int32 i = 0; i < COUNT_OF(SdSeCodeTable); ++i)
     {
-        SdSeCodeTable[i].Table = &((uint8*)Data)[Hdr->Head[i].Offset];
-        SdSeCodeTable[i].Count = Hdr->Head[i].Count;
+        SdSeCodeTable[i].Table = &((uint8*)Data)[Header->Head[i].Offset];
+        SdSeCodeTable[i].Count = Header->Head[i].Count;
 
-        Count += Hdr->Head[i].Count;
+        Count += Header->Head[i].Count;
     };
 
-    for (uint32 i = 0; i < Count; ++i)
-    {
-        //
-        //  TODO seq
-        //
-    };
+    SdKdtTableData_t* TableData = (SdKdtTableData_t*)Data;
+
+    for (int32 i = 0; i < Count; ++i)
+        TableData[i].TableAddress = (uint8**)((uintptr_t)TableData[i].TableAddress + (uintptr_t)Data);
 };
 
 
-static void SdSetWaveInfo(SdEnvelopeHeader_t* Hdr, void* Data)
+static void SdSetWaveInfo(SdEnvelopeHeader_t* Header, void* Data)
 {
     static_assert(COUNT_OF(SdEnvelopeTable) <= COUNT_OF(SdEnvelopeHeader_t::Wave), "checkout");
     
     SdDrumTable.Flag        = 0x3;
-    SdDrumTable.Count       = Hdr->Drum.Count;
-    SdDrumTable.Table       = (uint8*)Data + Hdr->Drum.Offset - (SD_SCT_SIZE * 3);
+    SdDrumTable.Count       = Header->Drum.Count;
+    SdDrumTable.Table       = (uint8*)Data + Header->Drum.Offset - (SD_SCT_SIZE * 3);
     SdDrumTable.WaveOffset  = 0;
     SdDrumTable.WaveSize    = 0;
 
     for (int32 i = 0; i < COUNT_OF(SdEnvelopeTable); ++i)
     {
-        SdEnvelopeTable[i].Flag         = Hdr->Wave[i].Flag;
-        SdEnvelopeTable[i].Count        = Hdr->Wave[i].Count;
-        SdEnvelopeTable[i].Table        = (uint8*)Data + Hdr->Wave[i].Offset - (SD_SCT_SIZE * 3);
-        SdEnvelopeTable[i].WaveOffset   = Hdr->Wave[i].Offset;
-        SdEnvelopeTable[i].WaveSize     = Hdr->Wave[i].WaveSize;
+        SdEnvelopeTable[i].Flag         = (int16)Header->Wave[i].Flag;
+        SdEnvelopeTable[i].Count        = (int16)Header->Wave[i].Count;
+        SdEnvelopeTable[i].Table        = (uint8*)Data + Header->Wave[i].Offset - (SD_SCT_SIZE * 3);
+        SdEnvelopeTable[i].WaveOffset   = Header->Wave[i].WaveOffset;
+        SdEnvelopeTable[i].WaveSize     = Header->Wave[i].WaveSize;
     };
 };
 
@@ -424,7 +426,7 @@ void SdLoaderTerm(void)
     if (SdHeapAddrBegin && SdHeapAllocFlag)
     {
         SdMemFree(SdHeapAddrBegin);
-		SdHeapAddrBegin = nullptr;
+        SdHeapAddrBegin = nullptr;
         SdHeapAddrEnd = nullptr;
         SdHeapAllocFlag = false;
     };
@@ -439,12 +441,12 @@ bool SdGetLoadInfo(void)
 };
 
 
-void SdSetHeap(void* Heap, uint32 Size)
+void SdSetHeap(void* _heap, size_t _size)
 {
     if (!SdHeapAddrBegin)
     {
-        SdHeapAddrBegin = Heap;
-        SdHeapAddrEnd   = (uint8*)SdHeapAddrBegin + Size;
+        SdHeapAddrBegin = _heap;
+        SdHeapAddrEnd   = (uint8*)SdHeapAddrBegin + _size;
         SdHeapAllocFlag = false;
     };
 };
@@ -454,7 +456,7 @@ void SdSetResources(void)
 {
     if (!SdHeapAddrBegin)
     {
-        const uint32 SdHeapSize = (1024 * 1024) * 8; // 8 MB
+        const size_t SdHeapSize = (1024 * 1024) * 8; // 8 MB
         
         SdHeapAddrBegin = SdMemAlloc(SdHeapSize);
         SdHeapAddrEnd   = (uint8*)SdHeapAddrBegin + SdHeapSize;
@@ -469,12 +471,12 @@ void SdSetResources(void)
 };
 
 
-void SdMakeFilename(char* Buff, const char* Filename)
+void SdMakeFilename(char* _buff, const char* _filename)
 {
-    Buff[0] = '\0';
+    _buff[0] = '\0';
     
-    std::strcpy(Buff, SdHost);
-    std::strcat(Buff, Filename);
+    std::strcpy(_buff, SdHost);
+    std::strcat(_buff, _filename);
 };
 
 
@@ -515,7 +517,7 @@ void SdStreamLoad(void)
 
             if (StrHdr->Count)
             {
-				SdStrFile_t* StrFile = (SdStrFile_t*)(StrHdr + 1);
+                SdStrFile_t* StrFile = (SdStrFile_t*)(StrHdr + 1);
                 SdDmaInfo_t* StrDmaInfo = (SdDmaInfo_t*)(((uint8*)(StrFile + StrHdr->Count)) + 4);
                 
                 StrDmaInfo->Page = SD_VOX_DMA_PAGE;
@@ -565,7 +567,7 @@ void SdStreamLoad(void)
 
             if (StrHdr->Count)
             {
-				SdStrFile_t* StrFile = (SdStrFile_t*)(StrHdr + 1);
+                SdStrFile_t* StrFile = (SdStrFile_t*)(StrHdr + 1);
                 SdDmaInfo_t* StrDmaInfo = (SdDmaInfo_t*)(((uint8*)(StrFile + StrHdr->Count)) + 4);
 
                 SdDmaInfoVag[i].Page = StrDmaInfo->Page;
@@ -640,7 +642,7 @@ void SdSystemDataLoadInfo(void)
         {
             uint32 SeDataSize = ((SdSeHeader_t*)Buff)->TotalSize - SD_SCT_SIZE;
             void* SeDataAddr = SdWaveAddr;            
-			uint32 SeDataOffset = SD_SCT_SIZE;
+            uint32 SeDataOffset = SD_SCT_SIZE;
 
             SdSeqHdrMemSize = SeDataSize;
             
@@ -667,7 +669,7 @@ void SdSystemDataLoadInfo(void)
 
         if (SdLoadTaskSync(Filename, Buff, SD_SCT_SIZE * 3, 0))
         {
-			uint32 WavDataSize = ((SdEnvelopeHeader_t*)Buff)->EnvSize;
+            uint32 WavDataSize = ((SdEnvelopeHeader_t*)Buff)->EnvSize;
             void* WavDataAddr = SdWaveAddr;
             uint32 WavDataOffset = SD_SCT_SIZE * 3;
             
@@ -688,21 +690,21 @@ void SdSystemDataLoadInfo(void)
 };
 
 
-void SdTransLoad(int32 Bank)
+void SdTransLoad(int32 _bank)
 {
-    SdTransRelease(Bank);
+    SdTransRelease(_bank);
 
-    uint32 Size = SdGetTransWaveSize(Bank);
+    uint32 Size = SdGetTransWaveSize(_bank);
     if (!Size)
     {
-        OUTPUT("TRANS WAVE LOAD FAILED: ZERO SIZE!!\n");
+        SDLOG("TRANS WAVE LOAD FAILED: ZERO SIZE!!\n");
         return;
     };
     
-    void* Address = SdMemAlloc(ALIGN_ROUND_UP(SdTransCodeTable[Bank].Size, SD_SCT_SIZE));
+    void* Address = SdMemAlloc(ALIGN_ROUND_UP(SdTransCodeTable[_bank].Size, SD_SCT_SIZE));
     if (!Address)
     {
-        OUTPUT("TRANS WAVE LOAD FAILED: ALLOC FAILED!!!\n");
+        SDLOG("TRANS WAVE LOAD FAILED: ALLOC FAILED!!!\n");
         return;
     };
 
@@ -720,11 +722,11 @@ void SdTransLoad(int32 Bank)
 
     while (SdTransWavLoadTask[TaskIndex])
     {
-		++TaskIndex;
+        ++TaskIndex;
 
         if (TaskIndex >= COUNT_OF(SdTransWavLoadTask))
         {
-            OUTPUT("TRANS WAVE LOAD FAILED: NO SPACE FOR LOAD TASK!!\n");            
+            SDLOG("TRANS WAVE LOAD FAILED: NO SPACE FOR LOAD TASK!!\n");            
             return;
         };
     };
@@ -732,37 +734,37 @@ void SdTransLoad(int32 Bank)
     //
     //  Regist async load task
     //
-    void* hTask = SdLoadTaskAsync(Filename, Address, Size, SdTransCodeTable[Bank].Offset);
+    void* hTask = SdLoadTaskAsync(Filename, Address, Size, SdTransCodeTable[_bank].Offset);
     if (hTask)
     {
-        SdLoadTaskSetUser(hTask, (void*)Bank);
+        SdLoadTaskSetUser(hTask, (void*)_bank);
 
         SdTransWavLoadTask[TaskIndex] = hTask;
-        SdTransCodeTable[Bank].Table = (SdKdtTableData_t*)Address;
+        SdTransCodeTable[_bank].Table = (SdKdtTableData_t*)Address;
 
         ++SdTransWavLoadTaskCnt;
     }
     else
     {
-        OUTPUT("TRANS WAVE LOAD FAILED: ASYNC TASK IS NULL!!\n");
+        SDLOG("TRANS WAVE LOAD FAILED: ASYNC TASK IS NULL!!\n");
     };
 
     SdTransWavLoadTaskBusyFlag = false;
 };
 
 
-void SdTransRelease(int32 Bank)
+void SdTransRelease(int32 _bank)
 {
-    if (Bank >= COUNT_OF(SdTransCodeTable))
+    if (_bank >= COUNT_OF(SdTransCodeTable))
         return;
 
-    if (!SdTransCodeTable[Bank].Count)
+    if (!SdTransCodeTable[_bank].Count)
         return;
 
-    if (SdTransCodeTable[Bank].Table)
+    if (SdTransCodeTable[_bank].Table)
     {
-        SdMemFree(SdTransCodeTable[Bank].Table);
-        SdTransCodeTable[Bank].Table = nullptr;
+        SdMemFree(SdTransCodeTable[_bank].Table);
+        SdTransCodeTable[_bank].Table = nullptr;
     };
 };
 
@@ -801,18 +803,18 @@ void SdTransLoadTask(void)
 };
 
 
-void SdWaveLoad(int32 Bank, uint32 Address)
+void SdWaveLoad(int32 _bank, uint32 _address)
 {
-    uint32 Size = SdGetWaveSize(Bank);
+    int32 Size = SdGetWaveSize(_bank);
     if (!Size)
     {
-        OUTPUT("WAVE LOAD FAILED: ZERO SIZE!!!\n");
+        SDLOG("WAVE LOAD FAILED: ZERO SIZE!!!\n");
         return;
     };
 
-    if ((Address + Size) > uint32(SdHeapAddrEnd))
+    if ((_address + Size) > (uint32)SdHeapAddrEnd)
     {
-        OUTPUT("WAVE LOAD FAILED: NO HEAP SPACE!!\n");
+        SDLOG("WAVE LOAD FAILED: NO HEAP SPACE!!\n");
         return;
     };
 
@@ -830,11 +832,11 @@ void SdWaveLoad(int32 Bank, uint32 Address)
 
     while (SdWavLoadTask[TaskIndex])
     {
-		++TaskIndex;
+        ++TaskIndex;
 
         if (TaskIndex >= COUNT_OF(SdWavLoadTask))
         {
-            OUTPUT("WAVE LOAD FAILED: NO SPACE FOR LOAD TASK!!\n");
+            SDLOG("WAVE LOAD FAILED: NO SPACE FOR LOAD TASK!!\n");
             return;
         };
     };
@@ -842,17 +844,17 @@ void SdWaveLoad(int32 Bank, uint32 Address)
     //
     //  Regist async load task
     //
-    void* hTask = SdLoadTaskAsync(Filename, (void*)Address, Size, SdEnvelopeTable[Bank].WaveOffset);
+    void* hTask = SdLoadTaskAsync(Filename, (void*)_address, Size, SdEnvelopeTable[_bank].WaveOffset);
     if (hTask)
     {
         SdWavLoadTask[TaskIndex] = hTask;
-        SdWaveTopAddress[Bank] = (void*)Address;
+        SdWaveTopAddress[_bank] = (void*)_address;
 
         ++SdWavLoadTaskCnt;
     }
     else
     {
-        OUTPUT("WAVE LOAD FAILED: ASYNC TASK IS NULL!!\n");
+        SDLOG("WAVE LOAD FAILED: ASYNC TASK IS NULL!!\n");
     };
 
     SdWavLoadTaskBusyFlag = false;
@@ -911,9 +913,9 @@ void* SdGetStrWorkAddr(void)
 };
 
 
-void SdStrWorkMemReserve(uint32 Size)
+void SdStrWorkMemReserve(uint32 _size)
 {
-    SdStrWorkSize += Size;
+    SdStrWorkSize += _size;
     SdSetResources();
 };
 
@@ -954,89 +956,91 @@ void* SdGetWaveAddr(void)
 };
 
 
-uint32 SdGetWaveSize(int32 Bank)
+uint32 SdGetWaveSize(int32 _bank)
 {
-    ASSERT(Bank >= 0);
-    ASSERT(Bank < COUNT_OF(SdEnvelopeTable));
+    ASSERT(_bank >= 0);
+    ASSERT(_bank < COUNT_OF(SdEnvelopeTable));
 
-    if (!(Bank >= 0) && (Bank < COUNT_OF(SdEnvelopeTable)))
+    if (!(_bank >= 0) && (_bank < COUNT_OF(SdEnvelopeTable)))
         return 0;
 
-    return (SdEnvelopeTable[Bank].Count ? ALIGN_ROUND_UP(SdEnvelopeTable[Bank].WaveSize, SD_SCT_SIZE) : 0);        
+    return (uint32)(SdEnvelopeTable[_bank].Count ? ALIGN_ROUND_UP(SdEnvelopeTable[_bank].WaveSize, SD_SCT_SIZE) : 0);        
 };
 
 
-uint32 SdGetTransWaveSize(int32 Bank)
+uint32 SdGetTransWaveSize(int32 _bank)
 {
-    ASSERT(Bank >= 0);
-    ASSERT(Bank < COUNT_OF(SdTransCodeTable));
+    ASSERT(_bank >= 0);
+    ASSERT(_bank < COUNT_OF(SdTransCodeTable));
 
-    if (!(Bank >= 0) && (Bank < COUNT_OF(SdTransCodeTable)))
+    if (!(_bank >= 0) && (_bank < COUNT_OF(SdTransCodeTable)))
         return 0;
 
-    return (SdTransCodeTable[Bank].Count ? ALIGN_ROUND_UP(SdTransCodeTable[Bank].Size, SD_SCT_SIZE) : 0);
+    return (uint32)(SdTransCodeTable[_bank].Count ? ALIGN_ROUND_UP(SdTransCodeTable[_bank].Size, SD_SCT_SIZE) : 0);
 };
 
 
-uint32 SdGetVoicePosition(uint32 Code)
+uint32 SdGetVoicePosition(int32 _code)
 {
-    return SdGetVoxFileLSN(Code)->Position;
+    return SdGetVoxFileLSN(_code)->Position;
 };
 
 
-uint32 SdGetVoiceSize(uint32 Code)
+uint32 SdGetVoiceSize(int32 _code)
 {
-    return SdGetVoxFileLSN(Code)->Size;
+    return SdGetVoxFileLSN(_code)->Size;
 };
 
 
-uint32 SdGetVoiceDmaPage(uint32 Code)
+uint32 SdGetVoiceDmaPage(int32 _code)
 {
-    return SdDmaInfoVox[SdGetVoxLoaderNo(Code)].Page;
+    return SdDmaInfoVox[SD_VOX_BANK_NO(_code)].Page;
 };
 
 
-uint32 SdGetVoiceDmaBlock(uint32 Code)
+uint32 SdGetVoiceDmaBlock(int32 _code)
 {
-    return SdDmaInfoVox[SdGetVoxLoaderNo(Code)].Block;
+    return SdDmaInfoVox[SD_VOX_BANK_NO(_code)].Block;
 };
 
 
-void SdGetVoiceFilename(char* FilenameBuff, int32 No)
+void SdGetVoiceFilename(char* _buff, int32 _no)
 {
-	ASSERT(No >= 0 && No <= SdVoxLoadNum);
+    ASSERT(_no >= 0);
+    ASSERT(_no < SdVoxLoadNum);
 
-	SdMakeFilename(FilenameBuff, SdLoadVox[No].Name);
+    SdMakeFilename(_buff, SdLoadVox[_no].Name);
 };
 
 
-uint32 SdGetBgmPosition(uint32 Code)
+uint32 SdGetBgmPosition(int32 _code)
 {
-    return SdGetVagFileLSN(Code)->Position;
+    return SdGetVagFileLSN(_code)->Position;
 };
 
 
-uint32 SdGetBgmSize(uint32 Code)
+uint32 SdGetBgmSize(int32 _code)
 {
-    return SdGetVagFileLSN(Code)->Size;
+    return SdGetVagFileLSN(_code)->Size;
 };
 
 
-uint32 SdGetBgmDmaPage(uint32 Code)
+uint32 SdGetBgmDmaPage(int32 _code)
 {
-    return SdDmaInfoVag[SdGetVagLoaderNo(Code)].Page;
+    return SdDmaInfoVag[SD_VAG_BANK_NO(_code)].Page;
 };
 
 
-uint32 SdGetBgmDmaBlock(uint32 Code)
+uint32 SdGetBgmDmaBlock(int32 _code)
 {
-    return SdDmaInfoVag[SdGetVagLoaderNo(Code)].Block;
+    return SdDmaInfoVag[SD_VAG_BANK_NO(_code)].Block;
 };
 
 
-void SdGetBgmFilename(char* FilenameBuff, int32 No)
+void SdGetBgmFilename(char* _buff, int32 _no)
 {
-    ASSERT(No >= 0 && No <= SdVagLoadNum);
+    ASSERT(_no >= 0);
+    ASSERT(_no < SdVagLoadNum);
 
-	SdMakeFilename(FilenameBuff, SdLoadVag[No].Name);
+    SdMakeFilename(_buff, SdLoadVag[_no].Name);
 };

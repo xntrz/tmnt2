@@ -140,11 +140,53 @@ CDebugMenuCtrl::~CDebugMenuCtrl(void)
 };
 
 
+void CDebugMenuCtrl::Reset(void)
+{
+	while (!m_listItemAlloc.empty())
+	{
+		ITEM* pItem = m_listItemAlloc.front();
+		itemFree(pItem);
+	};
+
+	m_iSelect = 0;
+	m_iSelectMax = 0;
+	m_iDispMin = 0;
+	m_iDispMax = 0;
+	m_iPosX = 0;
+	m_iPosY = 0;
+	m_iHeight = 0;
+	m_Result = RESULT_NONE;
+	m_uOptFlag = 0;
+	m_uDigitalOK = CController::DIGITAL_START | CController::DIGITAL_RDOWN;        // START or A
+	m_uDigitalCANCEL = CController::DIGITAL_SELECT | CController::DIGITAL_RRIGHT;   // SELECT or B
+
+	SetHeight(15);
+	SetDispMax(10);
+	SetPos(100, 100);
+	SetColorSelect({ 0xFF, 0x30, 0x00, 0xFF });
+	SetColorUnselect({ 0xFF, 0xFF, 0xFF, 0xFF });
+	SetColorBackground({ 0x00, 0x00, 0x00, 0xFF });
+};
+
+
 void CDebugMenuCtrl::Period(void)
 {
     m_Result = RESULT_NONE;
-    
-    if (m_listItemAlloc.empty())
+
+	/* check out for selectable item if its in first position */
+	int32 i = 0;
+	for (auto& it : m_listItemAlloc)
+	{
+		/* if item is NOT selectable and select cursor on it so move it to the next item if in range of max selectable */
+		if (!it.State && (m_iSelect == i))
+		{
+			if (m_iSelect < m_iSelectMax)
+				++m_iSelect;
+		};
+		++i;
+	};
+
+	if (m_listItemAlloc.empty())
         return;
 
     if (m_iDispMax > m_iSelectMax)
@@ -202,9 +244,9 @@ void CDebugMenuCtrl::Draw(void) const
                 else
                 {
                     if(pItem->Hex)
-                        m_font.Print("%-*s 0x%X", pad, pItem->Name, pItem->Int.Value);
+                        m_font.Print("%-*s 0x%" PRIx32, pad, pItem->Name, pItem->Int.Value);
                     else
-                        m_font.Print("%-*s %d", pad, pItem->Name, pItem->Int.Value);
+                        m_font.Print("%-*s %" PRIi32, pad, pItem->Name, pItem->Int.Value);
                 };
             }
             break;
@@ -213,7 +255,11 @@ void CDebugMenuCtrl::Draw(void) const
             {
                 m_font.Print("%-*s %.02f", pad, pItem->Name, pItem->Float.Value);
             }            
-            break;
+			break;
+
+		case ITEM::TYPE_FLOAT_DISP:
+			m_font.Print("%-*s %.02f", pad, pItem->Name, *pItem->FloatDisp.pfValue);
+			break;
 
         case ITEM::TYPE_BOOLEAN:
             {
@@ -244,6 +290,10 @@ void CDebugMenuCtrl::Draw(void) const
             }
             break;
 
+		case ITEM::TYPE_TEXT:
+			m_font.Print("%-*s", pad, pItem->Name);
+			break;
+
         default:
             ASSERT(false);
             break;
@@ -254,13 +304,28 @@ void CDebugMenuCtrl::Draw(void) const
 };
 
 
-void CDebugMenuCtrl::AddInt(const char* pszName, int32 nValueMin, int32 nValueMax, int32 nValueStep, int32 nValueInit, void(*pfnCallback)(int32, bool))
+void CDebugMenuCtrl::AddInt(
+	const char* pszName,
+	int32 nValueMin,
+	int32 nValueMax,
+	int32 nValueStep,
+	int32 nValueInit,
+	int_cb cb
+)
 {
-    AddInt(pszName, nValueMin, nValueMax, nValueStep, nValueInit, nullptr, pfnCallback);
+    AddInt(pszName, nValueMin, nValueMax, nValueStep, nValueInit, nullptr, cb);
 };
 
 
-void CDebugMenuCtrl::AddInt(const char* pszName, int32 nValueMin, int32 nValueMax, int32 nValueStep, int32 nValueInit, const char** apszValueList, void(*pfnCallback)(int32, bool))
+void CDebugMenuCtrl::AddInt(
+	const char* pszName,
+	int32 nValueMin,
+	int32 nValueMax,
+	int32 nValueStep,
+	int32 nValueInit,
+	const char** apszValueList,
+	int_cb cb
+)
 {
     ITEM* pItem = itemAlloc();
     ASSERT(pItem);
@@ -273,12 +338,20 @@ void CDebugMenuCtrl::AddInt(const char* pszName, int32 nValueMin, int32 nValueMa
     pItemInt->ValueMax = nValueMax;
     pItemInt->ValueMin = nValueMin;
     pItemInt->ValueStep = nValueStep;
-    pItemInt->Callback = pfnCallback;
+    pItemInt->Callback = cb;
     pItemInt->ValueStrList = itemCopyStringArray(apszValueList, nValueMax);
 };
 
 
-void CDebugMenuCtrl::AddInt(const char* pszName, int32 nValueMin, int32 nValueMax, int32 nValueStep, int32 nValueInit, std::initializer_list<const char*> InitList, void(*pfnCallback)(int32, bool))
+void CDebugMenuCtrl::AddInt(
+	const char* pszName,
+	int32 nValueMin,
+	int32 nValueMax,
+	int32 nValueStep,
+	int32 nValueInit,
+	std::initializer_list<const char*> InitList,
+	int_cb cb
+)
 {
 	ASSERT(nValueMax == int32(InitList.size()), "value max and enum list must match!!");
 
@@ -288,7 +361,7 @@ void CDebugMenuCtrl::AddInt(const char* pszName, int32 nValueMin, int32 nValueMa
         for (int32 i = 0; i < int32(InitList.size()); ++i)
             apszValueList[i] = *(InitList.begin() + i);
 
-        AddInt(pszName, nValueMin, nValueMax, nValueStep, nValueInit, apszValueList, pfnCallback);
+        AddInt(pszName, nValueMin, nValueMax, nValueStep, nValueInit, apszValueList, cb);
 
         delete[] apszValueList;
         apszValueList = nullptr;
@@ -296,7 +369,7 @@ void CDebugMenuCtrl::AddInt(const char* pszName, int32 nValueMin, int32 nValueMa
 };
 
 
-void CDebugMenuCtrl::AddBool(const char* pszName, void(*pfnCallback)(bool, bool))
+void CDebugMenuCtrl::AddBool(const char* pszName, bool_cb cb)
 {
     ITEM* pItem = itemAlloc();
     ASSERT(pItem);
@@ -306,11 +379,11 @@ void CDebugMenuCtrl::AddBool(const char* pszName, void(*pfnCallback)(bool, bool)
 
     ITEM::BOOLEAN* pItemBoolean = &pItem->Boolean;
     pItemBoolean->Value = false;
-    pItemBoolean->Callback = pfnCallback;
+    pItemBoolean->Callback = cb;
 };
 
 
-void CDebugMenuCtrl::AddFloat(const char* pszName, float fValueMin, float fValueMax, float fValueStep, float fValueInit, void(*pfnCallback)(float, bool))
+void CDebugMenuCtrl::AddFloat(const char* pszName, float fValueMin, float fValueMax, float fValueStep, float fValueInit, float_cb cb)
 {
     ITEM* pItem = itemAlloc();
     ASSERT(pItem);
@@ -323,17 +396,30 @@ void CDebugMenuCtrl::AddFloat(const char* pszName, float fValueMin, float fValue
     pItemFloat->ValueMax = fValueMax;
     pItemFloat->ValueMin = fValueMin;
     pItemFloat->ValueStep = fValueStep;
-    pItemFloat->Callback = pfnCallback;
+    pItemFloat->Callback = cb;
 };
 
 
-void CDebugMenuCtrl::AddTrigger(const char* pszName, void(*pfnCallback)(void*))
+void CDebugMenuCtrl::AddFloatDisp(const char* pszName, float* pfValue)
 {
-    AddTrigger(pszName, pfnCallback, nullptr);
+	ITEM* pItem = itemAlloc();
+	ASSERT(pItem);
+
+	pItem->Type = ITEM::TYPE_FLOAT_DISP;
+	pItem->Name = itemCopyString(pszName);
+
+	ITEM::FLOAT_DISP* pItemFloat = &pItem->FloatDisp;
+	pItemFloat->pfValue = pfValue;	
 };
 
 
-void CDebugMenuCtrl::AddTrigger(const char* pszName, void(*pfnCallback)(void*), void* param)
+void CDebugMenuCtrl::AddTrigger(const char* pszName, trig_cb cb)
+{
+    AddTrigger(pszName, cb, nullptr);
+};
+
+
+void CDebugMenuCtrl::AddTrigger(const char* pszName, trig_cb cb, void* param)
 {
     ITEM* pItem = itemAlloc();
     ASSERT(pItem);
@@ -343,13 +429,7 @@ void CDebugMenuCtrl::AddTrigger(const char* pszName, void(*pfnCallback)(void*), 
 
     ITEM::TRIGGER* pItemTrigger = &pItem->Trigger;
     pItemTrigger->Param = param;
-    pItemTrigger->Callback = pfnCallback;
-};
-
-
-void CDebugMenuCtrl::AddTrigger(const char* pszName, void(*pfnCallback)(void*), int32 param)
-{
-    AddTrigger(pszName, pfnCallback, reinterpret_cast<void*>(param));
+    pItemTrigger->Callback = cb;
 };
 
 
@@ -364,6 +444,17 @@ void CDebugMenuCtrl::AddSeparator(bool bEmpty)
 
     ITEM::SEPARATOR* pItemSeparator = &pItem->Separator;
     pItemSeparator->Empty = bEmpty;
+};
+
+
+void CDebugMenuCtrl::AddText(const char* pszText, bool bSelectable /*= false*/)
+{
+	ITEM* pItem = itemAlloc();
+	ASSERT(pItem);
+
+	pItem->Type = ITEM::TYPE_TEXT;
+	pItem->Name = itemCopyString(pszText);
+	pItem->State = bSelectable;
 };
 
 
@@ -468,7 +559,8 @@ void CDebugMenuCtrl::handleMove(MOVEDIR MoveDir)
             break;
 
         case ITEM::TYPE_TRIGGER:
-            break;
+		case ITEM::TYPE_FLOAT_DISP:            
+			break;
 
         case ITEM::TYPE_SEPARATOR:
             ASSERT(false);

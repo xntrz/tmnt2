@@ -6,6 +6,7 @@
 #include "SdDs.hpp"
 #include "SdTable.hpp"
 #include "SdCallback.hpp"
+#include "SdLog.hpp"
 
 
 static SdStr_t* SdStrSrv[SDSTR_SRV_MAX];
@@ -65,9 +66,9 @@ static inline void* SdStrGetMemAddress(SdStr_t* SdStr)
 };
 
 
-static bool SdStrSet(SdStr_t* SdStr, uint32 Code)
+static bool SdStrSet(SdStr_t* SdStr, int32 _code)
 {
-    int32 CodeKind = SdDrvGetCodeKind(Code);
+    int32 CodeKind = SdDrvGetCodeKind(_code);
 
     if (!(CodeKind == SD_CODEKIND_VAG || CodeKind == SD_CODEKIND_VOX))
         return false;
@@ -79,12 +80,12 @@ static bool SdStrSet(SdStr_t* SdStr, uint32 Code)
     {
     case SDSTR_TYPE_VAG:
         {
-            SdGetBgmFilename(Filename, SdGetVagLoaderNo(Code));
+            SdGetBgmFilename(Filename, SD_VAG_BANK_NO(_code));
             
-            SdStr->DataPosition = SdGetBgmPosition(Code);
-            SdStr->DataSize     = SdGetBgmSize(Code);
-            SdStr->DmaPageSize	= SdGetBgmDmaPage(Code);
-            SdStr->DmaPageBlock	= SdGetBgmDmaBlock(Code);
+            SdStr->DataPosition = SdGetBgmPosition(_code);
+            SdStr->DataSize     = SdGetBgmSize(_code);
+            SdStr->DmaPageSize	= SdGetBgmDmaPage(_code);
+            SdStr->DmaPageBlock	= SdGetBgmDmaBlock(_code);
 
             //SdStr->PanData      = SdStr->SetCode.Param1;
             SdStr->PlayVolume   = SdStr->SetCode.Param2;
@@ -97,12 +98,12 @@ static bool SdStrSet(SdStr_t* SdStr, uint32 Code)
 
     case SDSTR_TYPE_VOX:
         {
-            SdGetVoiceFilename(Filename, SdGetVoxLoaderNo(Code));
+            SdGetVoiceFilename(Filename, SD_VOX_BANK_NO(_code));
 
-            SdStr->DataPosition = SdGetVoicePosition(Code);
-            SdStr->DataSize     = SdGetVoiceSize(Code);
-            SdStr->DmaPageSize	= SdGetVoiceDmaPage(Code);
-			SdStr->DmaPageBlock	= SdGetVoiceDmaBlock(Code);
+            SdStr->DataPosition = SdGetVoicePosition(_code);
+            SdStr->DataSize     = SdGetVoiceSize(_code);
+            SdStr->DmaPageSize	= SdGetVoiceDmaPage(_code);
+            SdStr->DmaPageBlock	= SdGetVoiceDmaBlock(_code);
         }
         break;
 
@@ -115,9 +116,9 @@ static bool SdStrSet(SdStr_t* SdStr, uint32 Code)
     if (!SdStr->Filename)
         return false;
 
-	std::strcpy(SdStr->Filename, Filename);
+    std::strcpy(SdStr->Filename, Filename);
 
-    SdStr->PlayCode     = Code;
+    SdStr->PlayCode     = _code;
     SdStr->PlayState    = SDSTR_STATE_READ_HEAD;
     SdStr->PlayTime     = 0;
     SdStr->Offset       = 0;
@@ -133,7 +134,7 @@ static bool SdStrSet(SdStr_t* SdStr, uint32 Code)
 };
 
 
-static SdStr_t* SdStrSrvNew(int32 No, int32 Type)
+static SdStr_t* SdStrSrvNew(int32 _no, int32 _type)
 {
     SdStr_t* Srv = nullptr;
     int32 SrvIndex = 0;
@@ -155,8 +156,8 @@ static SdStr_t* SdStrSrvNew(int32 No, int32 Type)
 
     Srv->CheckKeyTop    = SD_CANARY_TOP;
     Srv->Index          = SrvIndex;
-    Srv->Type           = Type;
-    Srv->No             = No;
+    Srv->Type           = _type;
+    Srv->No             = _no;
     Srv->DmaPageSize    = 0;
     Srv->DmaPageBlock   = 0;
     Srv->CheckKeyEnd    = SD_CANARY_END;
@@ -220,7 +221,7 @@ static bool SdStrQueueSet2nd(SdStr_t* SdStr)
 };
 
 
-static bool SdStrQueuePush(SdStr_t* SdStr, SdSetDriverCode_t* SetDrvCode)
+static bool SdStrQueuePush(SdStr_t* SdStr, SdSetDriverCode_t* CodeBuff)
 {
     if (SdStr->Type != SDSTR_TYPE_VOX)
         return false;
@@ -233,10 +234,10 @@ static bool SdStrQueuePush(SdStr_t* SdStr, SdSetDriverCode_t* SetDrvCode)
 
     SdStrQueueData_t QueueData;
     std::memset(&QueueData, 0, sizeof(QueueData));
-    QueueData.Code = SetDrvCode->Code;
-    QueueData.Param1 = SetDrvCode->Param1;
-    QueueData.Param2 = SetDrvCode->Param2;
-    QueueData.Param3 = SetDrvCode->Param3;
+    QueueData.Code = CodeBuff->Code;
+    QueueData.Param1 = CodeBuff->Param1;
+    QueueData.Param2 = CodeBuff->Param2;
+    QueueData.Param3 = CodeBuff->Param3;
 
     SdQueuePush(SdStr->Queue, &QueueData);
 
@@ -268,9 +269,9 @@ static bool SdStrFadeOut(SdStr_t* SdStr)
 };
 
 
-static void SdStrSetFadeOut(SdStr_t* SdStr, int32 time, uint32 flag, int32 waittime)
+static void SdStrSetFadeOut(SdStr_t* SdStr, int32 _time, uint32 _flag, int32 _waittime)
 {
-    (void)waittime;
+    (void)_waittime;
 
     if (!SdStr->PlayCode)
         return;
@@ -281,15 +282,11 @@ static void SdStrSetFadeOut(SdStr_t* SdStr, int32 time, uint32 flag, int32 waitt
     if (SdStr->FadeData)
         return;
 
-    int32 t = time;
-    if (t < SD_PERIOD)
-        t = SD_PERIOD;
-
-    SdStr->FadeSpeed = (-SD_FADE_MAX) / (t / SD_PERIOD);
+    SdStr->FadeSpeed = SD_FADEOUT_SPEED(_time);
     SdStr->FadeData = SD_FADE_MAX;
     
     if (SdStr->Type == SDSTR_TYPE_VOX)
-        SdStr->FadeFlag = flag;
+        SdStr->FadeFlag = _flag;
 };
 
 
@@ -301,7 +298,7 @@ static void SdStrPanCtrl(SdStr_t* SdStr)
 
 static void SdStrPanSet(SdStr_t* SdStr)
 {
-    SdDsBuffSetPan(SdStrGetDMA(SdStr), SdStr->Vol_L, SdStr->Vol_R);
+    SdStr->HighVol = SdDsBuffSetPan(SdStrGetDMA(SdStr), SdStr->Vol_L, SdStr->Vol_R);
 };
 
 
@@ -311,7 +308,10 @@ static void SdStrVolCtrl(SdStr_t* SdStr)
     
     if (SdStr->PlayVolume)
         Vol = SdStr->PlayVolume;
-    
+
+    /* convert vol to framework vol */
+    Vol = Vol << 6;
+
     SdStr->Vol_L = Vol;
     SdStr->Vol_R = Vol;
 
@@ -343,8 +343,7 @@ static void SdStrVolCtrl(SdStr_t* SdStr)
 
 static void SdStrVolSet(SdStr_t* SdStr)
 {
-    int32 Vol = Max(SdStr->Vol_L, SdStr->Vol_R);
-    int32 DmaVol = -SdVolumeTable[Vol];
+    int32 DmaVol = SdDsConvVol(SdStr->HighVol);
 
     IDirectSoundBuffer8_SetVolume(SdStrGetDMA(SdStr), DmaVol);
 };
@@ -363,7 +362,7 @@ static bool SdStrReadHead(SdStr_t* SdStr)
     
     SdStr->Offset = SD_SCT_SIZE;
     SdStr->FileHandle = SdLoadTaskAsync(SdStr->Filename, SdStr->Head, SD_SCT_SIZE, SdStr->DataPosition);
-	ASSERT(SdStr->FileHandle);
+    ASSERT(SdStr->FileHandle);
 
     return (SdStr->FileHandle ? true : false);
 };
@@ -374,7 +373,7 @@ static bool SdStrReadHeadWait(SdStr_t* SdStr)
     if (!SdStrCheckLoadEnd(SdStr))
         return false;
 
-	SdStr->DmaPos = 0;
+    SdStr->DmaPos = 0;
 
     std::memcpy(&SdStr->WaveHeader, SdStr->Head, sizeof(SdStr->WaveHeader));
 
@@ -389,7 +388,7 @@ static bool SdStrReadHeadWait(SdStr_t* SdStr)
     }
     else
     {
-		;
+        ;
     };
 
     SdStr->WaveHeader.LoopPoint += SD_SCT_SIZE;
@@ -406,7 +405,7 @@ static bool SdStrReadHeadWait(SdStr_t* SdStr)
         std::memset(&SdBuffDesc, 0, sizeof(SdBuffDesc));
         SdBuffDesc.dwSize       = SdBuffSize;
         SdBuffDesc.dwBufferBytes= SdStr->DmaPageSize;
-        SdBuffDesc.dwFlags      = DSBCAPS_CTRLVOLUME;
+        SdBuffDesc.dwFlags      = DSBCAPS_CTRLVOLUME | DSBCAPS_CTRLPAN;
         SdBuffDesc.lpwfxFormat  = &SdWaveFmt;
         
         if (!SdDsBuffCreate(&Dma, &SdBuffDesc))
@@ -414,10 +413,10 @@ static bool SdStrReadHeadWait(SdStr_t* SdStr)
             SdStr->PlayState = SDSTR_STATE_IDLE;
             return false;
         }
-		else
-		{
-			SdStr->DmaHandle = Dma;
-		};
+        else
+        {
+            SdStr->DmaHandle = Dma;
+        };
     };
     
     IDirectSoundBuffer_SetVolume(Dma, DSBVOLUME_MIN);
@@ -505,7 +504,6 @@ static bool SdStrWaveTransfer(SdStr_t* SdStr)
     {
         SdStr->Timeout = 4000;
         SdStr->PlayState = SDSTR_STATE_DOWNLOAD_WAIT;
-        OUTPUT("DOWN WAIT!\n");
         return false;
     };
 
@@ -567,11 +565,11 @@ static void SdStrPause(SdStr_t* SdStr)
     IDirectSoundBuffer* Dma = SdStrGetDMA(SdStr);
     if (Dma && !SdStr->VolumeOnPause)
     {
-		IDirectSoundBuffer8_GetVolume(Dma, LPLONG(&SdStr->VolumeOnPause));
-		IDirectSoundBuffer8_SetVolume(Dma, DSBVOLUME_MIN);
-		IDirectSoundBuffer_GetCurrentPosition(Dma, LPDWORD(&SdStr->DmaPos), 0);
-		IDirectSoundBuffer_Play(Dma, 0, 0, 0);
-		IDirectSoundBuffer_Stop(Dma);
+        IDirectSoundBuffer8_GetVolume(Dma, LPLONG(&SdStr->VolumeOnPause));
+        IDirectSoundBuffer8_SetVolume(Dma, DSBVOLUME_MIN);
+        IDirectSoundBuffer_GetCurrentPosition(Dma, LPDWORD(&SdStr->DmaPos), 0);
+        IDirectSoundBuffer_Play(Dma, 0, 0, 0);
+        IDirectSoundBuffer_Stop(Dma);
     };
 
     SdStrVolCtrl(SdStr);
@@ -584,14 +582,14 @@ static void SdStrResume(SdStr_t* SdStr)
     SdStr->PlayState = SdStr->PlayStateResume;
 
     IDirectSoundBuffer* Dma = SdStrGetDMA(SdStr);
-	if (Dma && SdStr->VolumeOnPause)
-	{
-		SdStr->VolumeOnPause = 0;
+    if (Dma && SdStr->VolumeOnPause)
+    {
+        SdStr->VolumeOnPause = 0;
 
-		IDirectSoundBuffer_SetCurrentPosition(Dma, SdStr->DmaPos);
-		IDirectSoundBuffer_SetVolume(Dma, SdStr->VolumeOnPause);
-		IDirectSoundBuffer_Play(Dma, 0, 0, DSBPLAY_LOOPING);
-	};
+        IDirectSoundBuffer_SetCurrentPosition(Dma, SdStr->DmaPos);
+        IDirectSoundBuffer_SetVolume(Dma, SdStr->VolumeOnPause);
+        IDirectSoundBuffer_Play(Dma, 0, 0, DSBPLAY_LOOPING);
+    };
 
     SdStrVolCtrl(SdStr);
 };
@@ -760,8 +758,8 @@ static void SdStrPlay(SdStr_t* SdStr)
         {
             SdStrPlayRoot(SdStr);
             
-			bool IsTransfered = SdStrWaveTransfer(SdStr);
-			bool IsStateNotChanged = (SdStr->PlayState == SDSTR_STATE_PLAYING); // make sure that state was not changed by fade ctrl in playroot
+            bool IsTransfered = SdStrWaveTransfer(SdStr);
+            bool IsStateNotChanged = (SdStr->PlayState == SDSTR_STATE_PLAYING); // make sure that state was not changed by fade ctrl in playroot
 
             if (IsTransfered && IsStateNotChanged)
                 SdStr->PlayState = SDSTR_STATE_READ_NEXT;
@@ -772,8 +770,8 @@ static void SdStrPlay(SdStr_t* SdStr)
         {
             SdStrPlayRoot(SdStr);
 
-			bool IsDownloadRqOK = SdStrOffsetDownload(SdStr);
-			bool IsStateNotChanged = (SdStr->PlayState == SDSTR_STATE_READ_NEXT); // make sure that state was not changed by fade ctrl in playroot
+            bool IsDownloadRqOK = SdStrOffsetDownload(SdStr);
+            bool IsStateNotChanged = (SdStr->PlayState == SDSTR_STATE_READ_NEXT); // make sure that state was not changed by fade ctrl in playroot
 
             if (IsDownloadRqOK && IsStateNotChanged)
                 SdStr->PlayState = SDSTR_STATE_PLAYING;
@@ -794,6 +792,7 @@ static void SdStrPlay(SdStr_t* SdStr)
         
     case SDSTR_STATE_DOWNLOAD_WAIT:
         {
+            SDLOG("DOWNLOAD_WAIT\n");
             SdStrDownloadWait(SdStr);
         }
         break;
@@ -867,10 +866,10 @@ void SdStrTask(void)
 {
     for (int32 i = 0; i < COUNT_OF(SdStrSrv); ++i)
     {
-		if (!SdStrSrv[i])
-			continue;
+        if (!SdStrSrv[i])
+            continue;
 
-		ASSERT(SdStrCheckCondition(SdStrSrv[i]));
+        ASSERT(SdStrCheckCondition(SdStrSrv[i]));
 
         if (SdStrCheckCondition(SdStrSrv[i]))
             SdStrPlay(SdStrSrv[i]);
@@ -914,83 +913,99 @@ void SdStrPauseSet(void)
 };
 
 
-SdStr_t* SdStrGet(int32 Type, int32 No)
+SdStr_t* SdStrGet(int32 _type, int32 _no)
 {
-    SdStr_t* Result = nullptr;
+    for (int32 i = 0; i < COUNT_OF(SdStrSrv); ++i)
+    {
+        if (SdStrSrv[i] == nullptr)
+            continue;
 
-	for (int32 i = 0; (i < COUNT_OF(SdStrSrv)) && (!Result); ++i)
-	{
-		if (SdStrSrv[i])
-			Result = ((SdStrSrv[i]->Type == Type) && (SdStrSrv[i]->No == No) ? SdStrSrv[i] : nullptr);
-	};
+        if (SdStrSrv[i]->Type != _type)
+            continue;
 
-    return Result;
+        if (SdStrSrv[i]->No != _no)
+            continue;
+
+        return SdStrSrv[i];
+    };
+
+    SDLOG("an attempt to get invalid stream server type=%" PRIi32 " no=%" PRIi32 "\n", _type, _no);
+
+    return nullptr;
 };
 
 
-int32 SdStrGetServerNum(int32 Type)
+int32 SdStrGetServerNum(int32 _type)
 {
     int32 Result = 0;
 
-	for (int32 i = 0; i < COUNT_OF(SdStrSrv); ++i)
-	{
-		if (SdStrSrv[i])
-			Result += (SdStrSrv[i]->Type == Type ? 1 : 0);
-	};
+    for (int32 i = 0; i < COUNT_OF(SdStrSrv); ++i)
+    {
+        if (SdStrSrv[i])
+            Result += (SdStrSrv[i]->Type == _type ? 1 : 0);
+    };
 
     return Result;
 };
 
 
-int32 SdVoxInit(int32 No)
+void SdStrSetMonaural(void)
 {
-    SdStr_t* SdStr = SdStrSrvNew(No, SDSTR_TYPE_VOX);
+    /* not used at all */
+};
 
+
+void SdStrSetStereo(void)
+{
+    /* not used at all */
+};
+
+
+int32 SdVoxInit(int32 _no)
+{
+    SdStr_t* SdStr = SdStrSrvNew(_no, SDSTR_TYPE_VOX);
     if (SdStr)
-    {
         SdStr->Queue = SdQueueCreate(48, sizeof(SdStrQueueData_t));
-    };
 
     return (SdStr ? SdStr->Index : -1);
 };
 
 
-void SdVoxSet(int32 No, SdSetDriverCode_t* SetDrvCode)
+void SdVoxSet(int32 _no, SdSetDriverCode_t* CodeBuff)
 {
-    SdStr_t* SdStr = SdStrGet(SDSTR_TYPE_VOX, No);
-    ASSERT(SdStr);
-
-    SdStrQueuePush(SdStr, SetDrvCode);
+    SdStr_t* SdStr = SdStrGet(SDSTR_TYPE_VOX, _no);
+    if (SdStr)
+        SdStrQueuePush(SdStr, CodeBuff);
 };
 
 
-void SdVoxSetFadeOut(int32 No, int32 time, uint32 flag)
+void SdVoxSetFadeOut(int32 _no, int32 _time, int32 _flag)
 {
-    SdStr_t* SdStr = SdStrGet(SDSTR_TYPE_VOX, No);
-    ASSERT(SdStr);
-
-    SdStrSetFadeOut(SdStr, time, flag, 0);
+    SdStr_t* SdStr = SdStrGet(SDSTR_TYPE_VOX, _no);
+    if (SdStr)
+        SdStrSetFadeOut(SdStr, _time, _flag, 0);
 };
 
 
-void SdVoxQueueClear(int32 No)
+void SdVoxQueueClear(int32 _no)
 {
-
+    ;
 };
 
 
 void SdVoxQueueAllClear(void)
 {
-
+    ;
 };
 
 
-bool SdVoxGetPlayVoice(int32 No)
+bool SdVoxGetPlayVoice(int32 _no)
 {
-    SdStr_t* SdStr = SdStrGet(SDSTR_TYPE_VOX, No);
-    ASSERT(SdStr);
+    SdStr_t* SdStr = SdStrGet(SDSTR_TYPE_VOX, _no);
+    if(SdStr)
+        return (SdStr->PlayState != SDSTR_STATE_IDLE);
 
-    return (SdStr->PlayState != SDSTR_STATE_IDLE);
+    return false;
 };
 
 
@@ -1008,124 +1023,68 @@ bool SdVoxGetAllPlayVoice(void)
 };
 
 
-uint32 SdVoxGetPlayCode(int32 No)
+int32 SdVoxGetPlayCode(int32 _no)
 {
-    SdStr_t* SdStr = SdStrGet(SDSTR_TYPE_VOX, No);
-    ASSERT(SdStr);
+    SdStr_t* SdStr = SdStrGet(SDSTR_TYPE_VOX, _no);
+    if (SdStr)
+        return (SdStr->PlayState != SDSTR_STATE_IDLE ? SdStr->PlayCode : 0);
 
-    return (SdStr->PlayState != SDSTR_STATE_IDLE ? SdStr->PlayCode : 0);
-};
-
-
-int32 SdVoxGetTotalPlaytime(int32 No)
-{
-    SdStr_t* SdStr = SdStrGet(SDSTR_TYPE_VOX, No);
-    ASSERT(SdStr);
-
-
-    int32 QueueTotalTime = 0;
-
-
-    return (SdStr->PlayState != SDSTR_STATE_IDLE ? SdStr->PlayCode : 0);
-};
-
-
-int32 SdVoxGetPlayVoiceCount(int32 No)
-{
     return 0;
 };
 
 
-int32 SdVoxGetAllPlayVoiceCount(void)
-{
-    return 0;
-};
-
-
-void SdVoxReset(int32 time, uint32 flag)
+void SdVoxReset(int32 _time, int32 _flag)
 {
     int32 VoxSrvCnt = SdStrGetServerNum(SDSTR_TYPE_VOX);
 
     for (int32 i = 0; i < VoxSrvCnt; ++i)
-        SdVoxSetFadeOut(i, time, flag);
+        SdVoxSetFadeOut(i, _time, _flag);
 };
 
 
-int32 SdVagInit(int32 No)
+int32 SdVagInit(int32 _no)
 {
-    SdStr_t* SdStr = SdStrSrvNew(No, SDSTR_TYPE_VAG);
-    
+    SdStr_t* SdStr = SdStrSrvNew(_no, SDSTR_TYPE_VAG);    
     if (SdStr)
-    {
-        SdStr->DefaultFadeOut = SD_FADEOUT_NORMAL;
-    };
+        SdStr->DefaultFadeOut = SD_FADEOUT_MODE_NORMAL;
 
     return (SdStr ? SdStr->Index : -1);
 };
 
 
-void SdVagSet(int32 No, SdSetDriverCode_t* SetDrvCode)
+void SdVagSet(int32 _no, SdSetDriverCode_t* CodeBuff)
 {
-    SdStr_t* SdStr = SdStrGet(SDSTR_TYPE_VAG, No);
+    SdStr_t* SdStr = SdStrGet(SDSTR_TYPE_VAG, _no);
     
     if (!SdStr)
         return;
 
     if (SdStr->PlayState != SDSTR_STATE_IDLE)
     {
-        SdVagSetFadeOut(No, 100, SDSTR_FADEOUT_FLAG_RST_QUE);
-        std::memcpy(&SdStr->SetCode, SetDrvCode, sizeof(*SetDrvCode));
+        SdVagSetFadeOut(_no, 100, SDSTR_FADEOUT_FLAG_RST_QUE);
+        std::memcpy(&SdStr->SetCode, CodeBuff, sizeof(*CodeBuff));
     }
     else
     {
-        SdStr->SetCode.Param1 = SetDrvCode->Param1;
-        SdStr->SetCode.Param2 = SetDrvCode->Param2;
-        SdStr->SetCode.Param3 = SetDrvCode->Param3;
-        SdStr->SetCode.FadeData = SetDrvCode->FadeData;
-        SdStr->SetCode.FadeSpeed = SetDrvCode->FadeSpeed;
+        SdStr->SetCode.Param1 = CodeBuff->Param1;
+        SdStr->SetCode.Param2 = CodeBuff->Param2;
+        SdStr->SetCode.Param3 = CodeBuff->Param3;
+        SdStr->SetCode.FadeData = CodeBuff->FadeData;
+        SdStr->SetCode.FadeSpeed = CodeBuff->FadeSpeed;
         
-        SdStrSet(SdStr, SetDrvCode->Code);
+        SdStrSet(SdStr, CodeBuff->Code);
     };
 };
 
 
-void SdVagSetMono(void)
-{
-    int32 VagSrvCnt = SdStrGetServerNum(SDSTR_TYPE_VAG);
-    
-    for (int32 i = 0; i < VagSrvCnt; ++i)
-    {
-        SdStr_t* SdStr = SdStrGet(SDSTR_TYPE_VAG, i);
-        ASSERT(SdStr);
-
-        SdStr->Stereo = false;
-    };
-};
-
-
-void SdVagSetStereo(void)
+bool SdVagPlaybackCheck(int32 _code)
 {
     int32 VagSrvCnt = SdStrGetServerNum(SDSTR_TYPE_VAG);
 
     for (int32 i = 0; i < VagSrvCnt; ++i)
     {
-        SdStr_t* SdStr = SdStrGet(SDSTR_TYPE_VAG, i);
-        ASSERT(SdStr);
-
-        SdStr->Stereo = true;
-    };
-};
-
-
-bool SdVagPlaybackCheck(uint32 Code)
-{
-    int32 VagSrvCnt = SdStrGetServerNum(SDSTR_TYPE_VAG);
-
-    for (int32 i = 0; i < VagSrvCnt; ++i)
-    {
-        uint32 VagSrvPlyCode = SdVagGetPlayCode(i);
-        
-        if (VagSrvPlyCode == Code)
+        int32 VagSrvPlyCode = SdVagGetPlayCode(i);        
+        if (VagSrvPlyCode == _code)
             return true;
     };
 
@@ -1133,7 +1092,7 @@ bool SdVagPlaybackCheck(uint32 Code)
 };
 
 
-bool SdVagFadeCheck(uint32 Code)
+bool SdVagFadeCheck(int32 _code)
 {
     int32 VagSrvCnt = SdStrGetServerNum(SDSTR_TYPE_VAG);
 
@@ -1142,11 +1101,10 @@ bool SdVagFadeCheck(uint32 Code)
         SdStr_t* SdStr = SdStrGet(SDSTR_TYPE_VAG, i);
         ASSERT(SdStr);
 
-        bool IsCodeMatch    = (SdStr->PlayCode == Code);
-        bool IsFadeData     = (SdStr->FadeData > 0);
-        bool IsFadeSpeed    = (SdStr->FadeSpeed < 0);
+        bool IsCodeMatch= (SdStr->PlayCode == _code);
+        bool IsFading 	= (SdStr->FadeData > 0) && (SdStr->FadeSpeed < 0);
 
-        if (IsCodeMatch && IsFadeData && IsFadeSpeed)
+        if (IsCodeMatch && IsFading)
             return true;
     };
 
@@ -1154,14 +1112,13 @@ bool SdVagFadeCheck(uint32 Code)
 };
 
 
-uint32 SdVagFirstPlayCode(void)
+int32 SdVagFirstPlayCode(void)
 {
     int32 VagSrvCnt = SdStrGetServerNum(SDSTR_TYPE_VAG);
 
     for (int32 i = 0; i < VagSrvCnt; ++i)
     {
-        uint32 VagSrvPlyCode = SdVagGetPlayCode(i);
-
+        int32 VagSrvPlyCode = SdVagGetPlayCode(i);
         if (VagSrvPlyCode)
             return VagSrvPlyCode;
     };
@@ -1170,7 +1127,7 @@ uint32 SdVagFirstPlayCode(void)
 };
 
 
-bool SdVagAutoFadeOutChek(int32 No)
+bool SdVagAutoFadeOutChek(int32 _no)
 {
     return true;
 };
@@ -1182,49 +1139,50 @@ bool SdVagAllAutoFadeOutChek(void)
 };
 
 
-int32 SdVagGetDefaultFadeOut(int32 No)
+int32 SdVagGetDefaultFadeOut(int32 _no)
 {
-    SdStr_t* SdStr = SdStrGet(SDSTR_TYPE_VAG, No);
-    ASSERT(SdStr);
-
-    return (SdStr->DefaultFadeOut);
+    SdStr_t* SdStr = SdStrGet(SDSTR_TYPE_VAG, _no);
+    if (SdStr)
+        return (SdStr->DefaultFadeOut);
+    
+    return SD_FADEOUT_MODE_0x3;
 };
 
 
-uint32 SdVagGetPlayCode(int32 No)
+int32 SdVagGetPlayCode(int32 _no)
 {
-    SdStr_t* SdStr = SdStrGet(SDSTR_TYPE_VAG, No);
-    ASSERT(SdStr);
-
-    return (SdStr->PlayState != SDSTR_STATE_IDLE ? SdStr->PlayCode : 0);
+    SdStr_t* SdStr = SdStrGet(SDSTR_TYPE_VAG, _no);
+    if (SdStr)
+        return (SdStr->PlayState != SDSTR_STATE_IDLE ? SdStr->PlayCode : 0);
+    
+    return 0;
 };
 
 
-void SdVagSetFadeOut(int32 No, int32 time, uint32 flag)
+void SdVagSetFadeOut(int32 _no, int32 _time, int32 _flag)
 {
-    SdStr_t* SdStr = SdStrGet(SDSTR_TYPE_VAG, No);
-    ASSERT(SdStr);
-
-    SdStrSetFadeOut(SdStr, time, flag, 0);
+    SdStr_t* SdStr = SdStrGet(SDSTR_TYPE_VAG, _no);
+    if (SdStr)
+        SdStrSetFadeOut(SdStr, _time, _flag, 0);
 };
 
 
-void SdVagReset(int32 time, uint32 flag)
+void SdVagReset(int32 _time, int32 _flag)
 {
     int32 VagSrvCnt = SdStrGetServerNum(SDSTR_TYPE_VAG);
 
     for (int32 i = 0; i < VagSrvCnt; ++i)
-        SdVagSetFadeOut(i, time, flag);
+        SdVagSetFadeOut(i, _time, _flag);
 };
 
 
-void SdVagFadeOutX(uint32 Code, int32 time)
+void SdVagFadeOutX(int32 _code, int32 _time)
 {
     int32 VagSrvCnt = SdStrGetServerNum(SDSTR_TYPE_VAG);
 
     for (int32 i = 0; i < VagSrvCnt; ++i)
     {
-        if (SdVagGetPlayCode(i) == Code)
-            SdVagSetFadeOut(i, time, SDSTR_FADEOUT_FLAG_RST_QUE);
+        if (SdVagGetPlayCode(i) == _code)
+            SdVagSetFadeOut(i, _time, SDSTR_FADEOUT_FLAG_RST_QUE);
     };
 };

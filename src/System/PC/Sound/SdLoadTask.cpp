@@ -10,7 +10,7 @@ struct SdLoadTask_t
     HANDLE		Handle;
     void*		ReadAddr;
     uint32		ReadSize;
-    const char*	Filename;
+    char		Filepath[MAX_PATH];
     bool		State;
     uint32		cbReaded;
     void*       UserData;
@@ -19,10 +19,11 @@ struct SdLoadTask_t
 
 static bool             SdLoadThreadLoopFlag = false;
 static HANDLE           SdLoadThreadHandle = NULL;
-static uint32           SdLoadLastError = 0;
-static SdLoadTask_t     SdLoadTask[256];
-static int32            SdLoadTaskIn = 0;
-static int32            SdLoadTaskOut = 0;
+static SdQueue_t* 		SdLoadTaskQueueR = nullptr;
+static SdQueue_t* 		SdLoadTaskQueueW = nullptr;
+static CRITICAL_SECTION SdLoadTaskQueueCS;
+static SdLoadTask_t		SdLoadTask[64];
+static int32 			SdLoadTaskPos = 0;
 
 
 static DWORD WINAPI SdLoadThreadProc(void* pParam)
@@ -30,24 +31,26 @@ static DWORD WINAPI SdLoadThreadProc(void* pParam)
     (void)pParam;
 
 #ifdef _DEBUG    
-    SdDrvThreadSetName("SoundLoadThread");
+    SdDrvSetCurrentThreadName("SoundLoadThread");
 #endif
     
     SetThreadPriority(GetCurrentThread(), THREAD_PRIORITY_HIGHEST);
 
     SdLoadThreadLoopFlag = true;
-
+    
     while (SdLoadThreadLoopFlag)
     {
         Sleep(10);
 
-        while ((SdLoadTaskOut != SdLoadTaskIn) && SdLoadThreadLoopFlag)
+        EnterCriticalSection(&SdLoadTaskQueueCS);
+        SdQueueMove(SdLoadTaskQueueW, SdLoadTaskQueueR);
+        LeaveCriticalSection(&SdLoadTaskQueueCS);
+
+        while (!SdQueueIsEmpty(SdLoadTaskQueueR))
         {
-            SdLoadTask_t* Task = &SdLoadTask[SdLoadTaskOut++];
-            
-            if (SdLoadTaskOut >= COUNT_OF(SdLoadTask))
-                SdLoadTaskOut = 0;
-            
+            SdLoadTask_t* Task = *(SdLoadTask_t**)SdQueueFront(SdLoadTaskQueueR);
+            SdQueuePop(SdLoadTaskQueueR);
+
             if (Task->Handle)
             {
                 if (ReadFile(Task->Handle, Task->ReadAddr, Task->ReadSize, LPDWORD(Task->cbReaded), NULL))
@@ -66,6 +69,22 @@ static DWORD WINAPI SdLoadThreadProc(void* pParam)
 
 bool SdLoadTaskInit(void)
 {
+    /**
+     *	Init sd loader queues
+     */
+    SdLoadTaskQueueR = SdQueueCreate(COUNT_OF(SdLoadTask), sizeof(SdLoadTask_t*));
+    if (!SdLoadTaskQueueR)
+        return false;
+
+    SdLoadTaskQueueW = SdQueueCreate(COUNT_OF(SdLoadTask), sizeof(SdLoadTask_t*));
+    if (!SdLoadTaskQueueW)
+        return false;
+
+    InitializeCriticalSection(&SdLoadTaskQueueCS);
+
+    /**
+     *	Start sd loader thread
+     */
     SdLoadThreadHandle = CreateThread(NULL, 0, SdLoadThreadProc, NULL, NULL, NULL);
     if (SdLoadThreadHandle == NULL)
         return false;
@@ -76,6 +95,9 @@ bool SdLoadTaskInit(void)
 
 void SdLoadTaskTerm(void)
 {
+    /**
+     *	Stop sd loader thread & cleanup tasks
+     */
     if (SdLoadThreadHandle)
     {
         SdLoadThreadLoopFlag = false;
@@ -84,9 +106,13 @@ void SdLoadTaskTerm(void)
         SdLoadThreadHandle = NULL;
     };
 
-    for (int32 i = 0; i < COUNT_OF(SdLoadTask); ++i)
+    /* load thread will exit BEFORE moving W queue into R queue - so R queue should be empty */
+    ASSERT(SdQueueIsEmpty(SdLoadTaskQueueR) == true);
+
+    while (!SdQueueIsEmpty(SdLoadTaskQueueW))
     {
-        SdLoadTask_t* Task = &SdLoadTask[i];
+        SdLoadTask_t* Task = (SdLoadTask_t*)SdQueueFront(SdLoadTaskQueueR);
+        SdQueuePop(SdLoadTaskQueueR);
 
         if (Task->Handle)
         {
@@ -95,40 +121,59 @@ void SdLoadTaskTerm(void)
             Task->State = true;
         };
     };
+
+    /**
+     *	Terminate sd loader queues
+     */
+    DeleteCriticalSection(&SdLoadTaskQueueCS);
+
+    ASSERT(SdQueueIsEmpty(SdLoadTaskQueueW) == true);
+    ASSERT(SdQueueIsEmpty(SdLoadTaskQueueR) == true);
+
+    if (SdLoadTaskQueueW)
+    {
+        SdQueueDestroy(SdLoadTaskQueueW);
+        SdLoadTaskQueueW = nullptr;
+    };
+
+    if (SdLoadTaskQueueR)
+    {
+        SdQueueDestroy(SdLoadTaskQueueR);
+        SdLoadTaskQueueR = nullptr;
+    };
 };
 
 
-bool SdLoadTaskSync(const char* Path, void* Buffer, uint32 BufferSize, uint32 Offset)
+bool SdLoadTaskSync(const char* _path, void* _buffer, uint32 _size, uint32 _offset)
 {
     bool bResult = false;
 
-    if (!Path)
+    if (!_path)
         return bResult;
 
-    if (!Buffer)
+    if (!_buffer)
         return bResult;
 
-    HANDLE hFile = CreateFileA(Path, (GENERIC_READ | GENERIC_WRITE), FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
+    HANDLE hFile = CreateFileA(_path, (GENERIC_READ | GENERIC_WRITE), FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
     if (hFile != INVALID_HANDLE_VALUE)
     {
-        uint32 ReadSize = BufferSize;
-
+        uint32 ReadSize = _size;
         uint32 FSizeHigh = 0;
         uint32 FSize = GetFileSize(hFile, LPDWORD(&FSizeHigh));
 
-        if (!BufferSize)
+        if (!_size)
             ReadSize = FSize;
 
-        if (SetFilePointer(hFile, LONG(Offset), 0, FILE_BEGIN) == Offset)
+        if (SetFilePointer(hFile, LONG(_offset), 0, FILE_BEGIN) == _offset)
         {
             DWORD Readed = 0;
-            if (ReadFile(hFile, Buffer, ReadSize, &Readed, NULL))
+            if (ReadFile(hFile, _buffer, ReadSize, &Readed, NULL))
                 bResult = true;
         }
-		else
-		{
-			ASSERT(false);
-		};
+        else
+        {
+            ASSERT(false);
+        };
 
         CloseHandle(hFile);
     };
@@ -137,97 +182,95 @@ bool SdLoadTaskSync(const char* Path, void* Buffer, uint32 BufferSize, uint32 Of
 };
 
 
-void* SdLoadTaskAsync(const char* Path, void* Buffer, uint32 BufferSize, uint32 Offset)
+void* SdLoadTaskAsync(const char* _path, void* _buffer, uint32 _size, uint32 _offset)
 {
     SdLoadTask_t* Result = nullptr;
 
-    if (!Path)
+    if (!_path)
         return Result;
 
-    if (!Buffer)
+    if (!_buffer)
         return Result;
 
-    if ((SdLoadTaskIn + 1) == SdLoadTaskOut)
-        return Result;
-
-    HANDLE hFile = CreateFileA(Path, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
+    HANDLE hFile = CreateFileA(_path, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
     if (hFile != INVALID_HANDLE_VALUE)
     {
-        uint32 ReadSize = BufferSize;
+        uint32 ReadSize = _size;
         uint32 FSizeHigh= 0;
         uint32 FSize    = GetFileSize(hFile, LPDWORD(&FSizeHigh));
 
-        if (!BufferSize)
+        if (!_size)
             ReadSize = FSize;
 
         if (!FSizeHigh)
         {
-            if (ReadSize > (FSize - Offset))
-                ReadSize = (FSize - Offset);
+            if (ReadSize > (FSize - _offset))
+                ReadSize = (FSize - _offset);
         };
 
-        if (SetFilePointer(hFile, LONG(Offset), 0, FILE_BEGIN) == Offset)
+        if (SetFilePointer(hFile, LONG(_offset), 0, FILE_BEGIN) == _offset)
         {
-            SdLoadTask_t* Task = &SdLoadTask[SdLoadTaskIn];
-
-            std::memset(Task, 0x00, sizeof(*Task));
+            SdLoadTask_t* Task = &SdLoadTask[SdLoadTaskPos++ % COUNT_OF(SdLoadTask)];
+            std::memset(Task, 0, sizeof(*Task));
             Task->Handle = hFile;
-            Task->Filename = Path;
-            Task->ReadAddr = Buffer;
+            std::strcpy(Task->Filepath, _path);
+            Task->ReadAddr = _buffer;
             Task->ReadSize = ReadSize;
             Task->State = false;
             Task->cbReaded = 0;
 
-            SdLoadTaskIn = (SdLoadTaskIn + 1 >= COUNT_OF(SdLoadTask) ? 0 : SdLoadTaskIn + 1);
-
+            EnterCriticalSection(&SdLoadTaskQueueCS);
+            ASSERT(SdQueueIsFull(SdLoadTaskQueueW) == false);
+            SdQueuePush(SdLoadTaskQueueW, &Task);
             Result = Task;
+            LeaveCriticalSection(&SdLoadTaskQueueCS);
         };
     };
 
 #ifdef _DEBUG    
     if (!Result)
-		ASSERT(false, "%u", GetLastError());
+        ASSERT(false, "%u", GetLastError());
 #endif
     
     return Result;
 };
 
 
-bool SdLoadTaskIsEnd(void* hTask)
+bool SdLoadTaskIsEnd(void* _task)
 {
-    ASSERT(hTask);
+    ASSERT(_task);
     
-    return ((SdLoadTask_t*)hTask)->State;
+    return ((SdLoadTask_t*)_task)->State;
 };
 
 
-uint32 SdLoadTaskReaded(void* hTask)
+uint32 SdLoadTaskReaded(void* _task)
 {
-    ASSERT(hTask);
+    ASSERT(_task);
 
-    return ((SdLoadTask_t*)hTask)->cbReaded;
+    return ((SdLoadTask_t*)_task)->cbReaded;
 };
 
 
-void* SdLoadTaskAddress(void* hTask)
+void* SdLoadTaskAddress(void* _task)
 {
-    ASSERT(hTask);
+    ASSERT(_task);
 
-    return ((SdLoadTask_t*)hTask)->ReadAddr;
+    return ((SdLoadTask_t*)_task)->ReadAddr;
 };
 
 
-void* SdLoadTaskGetUser(void* hTask)
+void* SdLoadTaskGetUser(void* _task)
 {
-    ASSERT(hTask);
+    ASSERT(_task);
 
-    return ((SdLoadTask_t*)hTask)->UserData;
+    return ((SdLoadTask_t*)_task)->UserData;
 };
 
 
-void SdLoadTaskSetUser(void* hTask, void* UserData)
+void SdLoadTaskSetUser(void* _task, void* _user)
 {
-    ASSERT(hTask);
+    ASSERT(_task);
 
-    ((SdLoadTask_t*)hTask)->UserData = UserData;
+    ((SdLoadTask_t*)_task)->UserData = _user;
 };

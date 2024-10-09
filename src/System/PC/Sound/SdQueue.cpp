@@ -13,26 +13,26 @@ struct SdQueue_t
 };
 
 
-SdQueue_t* SdQueueCreate(int32 Capacity, int32 ObjectSize)
+SdQueue_t* SdQueueCreate(int32 _capacity, int32 _objectSize)
 {
-    ASSERT(Capacity > 0);
-    ASSERT(ObjectSize > 0);
+    ASSERT(_capacity > 0);
+    ASSERT(_objectSize > 0);
 
     SdQueue_t* Queue = (SdQueue_t*)SdMemAlloc(sizeof(SdQueue_t));
     if (!Queue)
         return 0;
     
-	std::memset(Queue, 0, sizeof(*Queue));
+    std::memset(Queue, 0, sizeof(*Queue));
 
-    Queue->ObjectArray = SdMemAlloc(ObjectSize * Capacity);
+    Queue->ObjectArray = SdMemAlloc(_objectSize * _capacity);
     if (Queue->ObjectArray)
     {
-        std::memset(Queue->ObjectArray, 0, Capacity * ObjectSize);
+        std::memset(Queue->ObjectArray, 0, _capacity * _objectSize);
         
         Queue->PosCur = 0;
         Queue->PosCap = 0;
-        Queue->Capacity = Capacity;
-        Queue->Stride = ObjectSize;
+        Queue->Capacity = _capacity;
+        Queue->Stride = _objectSize;
         Queue->Size;
     }
     else
@@ -45,101 +45,84 @@ SdQueue_t* SdQueueCreate(int32 Capacity, int32 ObjectSize)
 };
 
 
-void SdQueueDestroy(SdQueue_t* q)
+void SdQueueDestroy(SdQueue_t* _q)
 {
-    SdQueue_t* Queue = (SdQueue_t*)q;
-
-    if (Queue->ObjectArray)
+    if (_q->ObjectArray)
     {
-        SdMemFree(Queue->ObjectArray);
-        Queue->ObjectArray = nullptr;
+        SdMemFree(_q->ObjectArray);
+        _q->ObjectArray = nullptr;
     };
 
-    SdMemFree(Queue);
+    SdMemFree(_q);
 };
 
 
-bool SdQueueIsFull(SdQueue_t* q)
+bool SdQueueIsFull(SdQueue_t* _q)
 {
-    SdQueue_t* Queue = (SdQueue_t*)q;
-
-    return (Queue->Size == Queue->Capacity);
+    return (_q->Size == _q->Capacity);
 };
 
 
-bool SdQueueIsEmpty(SdQueue_t* q)
+bool SdQueueIsEmpty(SdQueue_t* _q)
 {
-    SdQueue_t* Queue = (SdQueue_t*)q;
-
-    return (Queue->Size == 0);
+    return (_q->Size == 0);
 };
 
 
-void SdQueuePush(SdQueue_t* q, void* Object)
+void SdQueuePush(SdQueue_t* _q, void* _object)
 {
-    SdQueue_t* Queue = (SdQueue_t*)q;
-
-    ASSERT(!SdQueueIsFull(Queue));
+    ASSERT(!SdQueueIsFull(_q));
 
     std::memcpy(
-        &((char*)Queue->ObjectArray)[Queue->PosCap * Queue->Stride],
-        Object,
-        Queue->Stride
+        &((char*)_q->ObjectArray)[_q->PosCap * _q->Stride],
+        _object,
+        _q->Stride
     );
 
-    Queue->PosCap = (++Queue->PosCap % Queue->Capacity);
-    ++Queue->Size;
+    _q->PosCap = (++_q->PosCap % _q->Capacity);
+    ++_q->Size;
 };
 
 
-void SdQueuePop(SdQueue_t* q)
+void SdQueuePop(SdQueue_t* _q)
 {
-    SdQueue_t* Queue = (SdQueue_t*)q;
+    ASSERT(!SdQueueIsEmpty(_q));
 
-    ASSERT(!SdQueueIsEmpty(Queue));
+    _q->PosCur = (++_q->PosCur % _q->Capacity);
 
-    Queue->PosCur = (++Queue->PosCur % Queue->Capacity);
-
-    ASSERT(Queue->Size > 0);
-    --Queue->Size;
+    ASSERT(_q->Size > 0);
+    --_q->Size;
 };
 
 
-void* SdQueueFront(SdQueue_t* q)
+void* SdQueueFront(SdQueue_t* _q)
 {
-    SdQueue_t* Queue = (SdQueue_t*)q;
-
-    return &((char*)Queue->ObjectArray)[Queue->PosCur * Queue->Stride];
+    return &((char*)_q->ObjectArray)[_q->PosCur * _q->Stride];
 };
 
 
-void SdQueueClear(SdQueue_t* q)
+void SdQueueClear(SdQueue_t* _q)
 {
-    SdQueue_t* Queue = (SdQueue_t*)q;
-
-    while (!SdQueueIsEmpty(Queue))
-        SdQueuePop(Queue);
+    while (!SdQueueIsEmpty(_q))
+        SdQueuePop(_q);
 };
 
 
-bool SdQueueMove(SdQueue_t* from, SdQueue_t* to)
+bool SdQueueMove(SdQueue_t* _from, SdQueue_t* _to)
 {
-    SdQueue_t* QueueSrc = (SdQueue_t*)from;
-    SdQueue_t* QueueDst = (SdQueue_t*)to;
+    ASSERT(_to->Stride == _from->Stride);
+    ASSERT(_to->Capacity == _from->Capacity);
 
-    ASSERT(QueueDst->Stride == QueueSrc->Stride);
-    ASSERT(QueueDst->Capacity == QueueSrc->Capacity);
-
-    if (QueueDst->Stride != QueueSrc->Stride)
+    if (_to->Stride != _from->Stride)
         return false;
 
-    if (QueueDst->Capacity != QueueSrc->Capacity)
+    if (_to->Capacity != _from->Capacity)
         return false;
 
-    while (!SdQueueIsEmpty(QueueSrc) && !SdQueueIsFull(QueueDst))
+    while (!SdQueueIsEmpty(_from) && !SdQueueIsFull(_to))
     {
-        SdQueuePush(QueueDst, SdQueueFront(QueueSrc));
-        SdQueuePop(QueueSrc);
+        SdQueuePush(_to, SdQueueFront(_from));
+        SdQueuePop(_from);
     };
 
     return true;

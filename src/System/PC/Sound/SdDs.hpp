@@ -7,11 +7,12 @@
 #include <dsound.h>
 
 
-bool SdDsInitialize(HWND hWnd);
+bool SdDsInitialize(HWND _hWnd);
 void SdDsTerminate(void);
-uint32 SdDsSetWaveFormat(WAVEFORMATEX* WaveFormat, SdWaveDataHdr_t* SdWaveDataHdr);
-bool SdDsBuffCreate(LPDIRECTSOUNDBUFFER* SdBuff, DSBUFFERDESC* SdBuffDesc);
-void SdDsBuffDestroy(LPDIRECTSOUNDBUFFER SdBuff);
-void SdDsBuffLoadData(LPDIRECTSOUNDBUFFER SdBuff, const void* Data, uint32 Size);
-void SdDsBuffLoadDataEx(LPDIRECTSOUNDBUFFER SdBuff, uint32 Offset, const void* Data, uint32 Size);
-int32 SdDsBuffSetPan(LPDIRECTSOUNDBUFFER SdBuff, int32 ch_l, int32 ch_r);
+int32 SdDsSetWaveFormat(WAVEFORMATEX* WaveFormat, SdWaveDataHdr_t* Header);
+bool SdDsBuffCreate(LPDIRECTSOUNDBUFFER* Buff, DSBUFFERDESC* BuffDesc);
+void SdDsBuffDestroy(LPDIRECTSOUNDBUFFER Buff);
+void SdDsBuffLoadData(LPDIRECTSOUNDBUFFER Buff, const void* Data, size_t _size);
+void SdDsBuffLoadDataEx(LPDIRECTSOUNDBUFFER Buff, int32 _offset, const void* Data, uint32 _size);
+int32 SdDsBuffSetPan(LPDIRECTSOUNDBUFFER Buff, int32 _chLeft, int32 _chRight);
+int32 SdDsConvVol(int32 _vol);

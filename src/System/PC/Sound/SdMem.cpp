@@ -16,9 +16,9 @@ void SdMemTerminate(void)
 };
 
 
-void* SdMemAlloc(uint32 Size)
+void* SdMemAlloc(size_t _size)
 {
-    void* ret = _aligned_malloc(Size, 4096);
+    void* ret = _aligned_malloc(_size, 4096);
     if (ret)
         ++SdMemAllocCnt;
 
@@ -26,10 +26,10 @@ void* SdMemAlloc(uint32 Size)
 };
 
 
-void SdMemFree(void* Ptr)
+void SdMemFree(void* _mem)
 {
     ASSERT(SdMemAllocCnt > 0);
     --SdMemAllocCnt;
     
-    _aligned_free(Ptr);
+    _aligned_free(_mem);
 };

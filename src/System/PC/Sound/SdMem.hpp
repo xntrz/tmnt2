@@ -3,5 +3,5 @@
 
 void SdMemInitialize(void);
 void SdMemTerminate(void);
-void* SdMemAlloc(uint32 Size);
-void SdMemFree(void* Ptr);
+void* SdMemAlloc(size_t _size);
+void SdMemFree(void* _mem);

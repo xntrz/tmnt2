@@ -49,4 +49,4 @@ extern bool SdDrvStereoFlag;
 extern int32 SdDrvTempoUpSpeed;
 extern int32 SdDrvTempoUpData;
 
-void SdDrvCtrlFunc(uint32 Code, uint32 Param1, uint32 Param2);
+void SdDrvCtrlFunc(int32 _code, uint32 _param1, uint32 _param2);

@@ -52,9 +52,9 @@ extern const PROCESSTYPES::PROCESS g_aProcessList[] =
 #ifdef _DEBUG
     { PROCLABEL_SEQ_DBGMENU,            PROCESSTYPES::PRIORITY_NORMAL,      CDebugMenuSequence::Instance        },
     { PROCLABEL_SEQ_TESTMV,             PROCESSTYPES::PRIORITY_NORMAL,      CTestMovieSequence::Instance        },
-    { PROCLABEL_SEQ_TESTSD,             PROCESSTYPES::PRIORITY_NORMAL,      CTestSoundSequence::Instance        },
+    { PROCLABEL_SEQ_TESTSD,             PROCESSTYPES::PRIORITY_NORMAL,      TestSoundSequenceInstance        	},
     { PROCLABEL_SEQ_TESTPAD,            PROCESSTYPES::PRIORITY_NORMAL,      CTestPadSequence::Instance          },
-    { PROCLABEL_SEQ_MAKETEXT,           PROCESSTYPES::PRIORITY_NORMAL,      CPrintTextSequence::Instance        },
+    { PROCLABEL_SEQ_MAKETEXT,           PROCESSTYPES::PRIORITY_NORMAL,      CPrintTextSequence::Instance      	},
     { PROCLABEL_DBGFRAMECTRL,           PROCESSTYPES::PRIORITY_LOW,         CDbgFrameCtrlProcess::Instance      },
     { PROCLABEL_DBGPARAMCTRL,           PROCESSTYPES::PRIORITY_LOW,         CDbgParamCtrlProcess::Instance      },
     { PROCLABEL_DBGUNLOCK,              PROCESSTYPES::PRIORITY_LOW,         CDbgUnlockProcess::Instance         },

@@ -7,7 +7,6 @@
 #include "Game/Component/Player/Player.hpp"
 #include "Game/Component/Player/PlayerCharacter.hpp"
 #include "Game/Component/Enemy/CharacterCompositor.hpp"
-#include "Game/System/Character/Character.hpp"
 
 
 static const int32 s_dmKoeHigh[] =
@@ -751,9 +750,9 @@ static void SdSetAttackPlayer(const SE_ATTACK_PARAM* pParam)
         SoundSet(SDCODE_SE(0x1020));
     }
     else if ((*Motion == 'A') ||
-            (*Motion == 'B') ||
+            (*Motion == 'B')  ||
             (!std::strcmp(Motion, "RunAttack")) ||
-            (!std::strcmp(Motion, "JAttack")) ||
+            (!std::strcmp(Motion, "JAttack"))   ||
             (!std::strcmp(Motion, "JAttack1")))
     {
         switch (pParam->Id)
@@ -1038,6 +1037,21 @@ static void SdSetAttackEnemy(const SE_ATTACK_PARAM* pParam)
 };
 
 
+/*static*/ void CGameSound::SetMode(MODE mode)
+{
+	m_mode = mode;
+
+	uint32 DriverCodes[] = { 0x405, 0x404, 0x406 }; // set mono, set stereo, set surround
+
+	ASSERT(m_mode >= 0);
+	ASSERT(m_mode < COUNT_OF(DriverCodes));
+
+	static_assert(COUNT_OF(DriverCodes) == MODE_NUM, "update me");
+
+	SoundSet(DriverCodes[m_mode]);
+};
+
+
 /*static*/ void CGameSound::LoadWave(int32 nWaveNo)
 {
     SoundLoad(nWaveNo, 0);
@@ -1062,7 +1076,7 @@ static void SdSetAttackEnemy(const SE_ATTACK_PARAM* pParam)
     if (nSE != SD_NOCODE)
     {
         ASSERT((nSE >= 0x1000) && (nSE <= 0x2FFF));
-        SoundSetEx(uint32(nSE) | 0x80000000, 0, 0, 0);
+        SoundSetEx(nSE | SD_MASTERCODE_FADE, 0, 0, 0);
     };
 
     clearReferenceCounter(nSE);
@@ -1071,22 +1085,20 @@ static void SdSetAttackEnemy(const SE_ATTACK_PARAM* pParam)
 
 /*static*/ void CGameSound::FadeOutSE(int32 nSE, FADESPEED speed)
 {
-    if (nSE != SD_NOCODE)
-    {
-        ASSERT((nSE >= 0x1000) && (nSE <= 0x2FFF));
-        ASSERT(speed >= 0 && speed < FADESPEEDNUM);
-        
-        const uint32 DriverFadeParam[] =
-        {
-            0,		// fast
-            1000,	// normal
-            2000,	// slow
-        };
-        
-        static_assert(COUNT_OF(DriverFadeParam) == FADESPEEDNUM, "update me");
+	if (nSE == SD_NOCODE)
+		return;
+	
+	ASSERT((nSE >= 0x1000) && (nSE <= 0x2FFF));
 
-        SoundSetEx(uint32(nSE) | 0x80000000, DriverFadeParam[speed], 0, 0);
-    };
+	// in milliseconds
+	const uint32 DriverParam[] = { 0, 1000, 2000 }; // fast, norma, slow
+
+	ASSERT(speed >= 0);
+	ASSERT(speed < COUNT_OF(DriverParam));
+
+	static_assert(COUNT_OF(DriverParam) == FADESPEEDNUM, "update me");
+
+	SoundSetEx(nSE | SD_MASTERCODE_FADE, DriverParam[speed], 0, 0);
 };
 
 
@@ -1097,7 +1109,7 @@ static void SdSetAttackEnemy(const SE_ATTACK_PARAM* pParam)
 };
 
 
-/*static*/ void CGameSound::PlayVoice(int32 nVoice, PLAYERID::VALUE idPlayer)
+/*static*/ void CGameSound::PlayVoice(int32 nVoice, PLAYERID::VALUE idPlayer /*= PLAYERID::ID_INVALID*/)
 {
     ASSERT((nVoice != SD_NOCODE) || (nVoice >= 0x4000));
 
@@ -1109,6 +1121,10 @@ static void SdSetAttackEnemy(const SE_ATTACK_PARAM* pParam)
     }
     else
 	{
+		/**
+		 *	Tables of character SE that should be supressed before voice play
+		 */
+
 		// leo
 		static uint32 SdSeFadeTblLeo[] =
 		{
@@ -1264,7 +1280,7 @@ static void SdSetAttackEnemy(const SE_ATTACK_PARAM* pParam)
 		};
 
 		//cas 
-		static uint32 SdSeFadeTblCas [] =
+		static uint32 SdSeFadeTblCas[] =
 		{
 			SDCODE_SE(0x2098),
 			SDCODE_SE(0x2099),
@@ -1357,7 +1373,7 @@ static void SdSetAttackEnemy(const SE_ATTACK_PARAM* pParam)
 		{
 			uint32* Data;
 			int32 Count;
-		} FadeTableData [] =
+		} FadeTableData[] =
 		{
 			{ SdSeFadeTblLeo, COUNT_OF(SdSeFadeTblLeo) },
 			{ SdSeFadeTblRap, COUNT_OF(SdSeFadeTblRap) },
@@ -1375,9 +1391,9 @@ static void SdSetAttackEnemy(const SE_ATTACK_PARAM* pParam)
 		ASSERT(idPlayer < COUNT_OF(FadeTableData));
 
 		for (int32 i = 0; i < FadeTableData[idPlayer].Count; ++i)
-			SoundSet(FadeTableData[idPlayer].Data[i] | 0x80000000);
+			SoundSet(FadeTableData[idPlayer].Data[i] | SD_MASTERCODE_FADE);
 		
-		SoundSetEx(nVoice, 0, 0, uint32(idPlayer));
+		SoundSetEx(nVoice, 0, 0, (uint32)idPlayer);
     };
 };
 
@@ -1404,7 +1420,10 @@ static void SdSetAttackEnemy(const SE_ATTACK_PARAM* pParam)
         if (m_aVoiceHist[i].m_nVoiceCode == SD_NOCODE)
             continue;
 
-        if (SoundVoxCodeCheck(int32(idPlayer) & 1) == m_aVoiceHist[i].m_nVoiceCode)
+		int32 voiceServerNo = int32(idPlayer) & 1;
+		int32 voiceCode = SoundVoxCodeCheck(voiceServerNo);
+
+		if (voiceCode == m_aVoiceHist[i].m_nVoiceCode)
             return true;
     };
 
@@ -1452,33 +1471,35 @@ static void SdSetAttackEnemy(const SE_ATTACK_PARAM* pParam)
 
 /*static*/ void CGameSound::PlayPositionSE(const RwV3d* pPos, int32 nSE, int32 id /*= 0*/)
 {
-    ASSERT((nSE == SD_NOCODE) || ((nSE >= 0x1000) && (nSE <= 0x2FFF)));
+	ASSERT((nSE == SD_NOCODE) || ((nSE >= 0x1000) && (nSE <= 0x2FFF)));
 
 	if (!pPos)
-    {
-        SoundSet(nSE);
-    }
-    else
-    {
-        if (Math::Vec3_IsEqual(pPos, &Math::VECTOR3_ZERO))
-        {
-            SoundSet(nSE);
-        }
-        else
-        {
-            int32 dist = 0;
-            int32 rot = 0;
-            
-            if (!calcSEPositionInfo(pPos, dist, rot))
-                PlaySE(nSE);
+	{
+		SoundSetEx(nSE | SD_MASTERCODE_SURCTRL, 0, 0, id);
+		return;
+	};
 
-            dist -= 10;
-            if (dist < 0)
-                dist = 0;
+	if (Math::Vec3_IsEqual(pPos, &Math::VECTOR3_ZERO))
+	{
+		SoundSetEx(nSE | SD_MASTERCODE_SURCTRL, 0, 0, id);
+		return;
+	};
 
-            SoundSetEx(nSE, uint32(rot), 1310u * uint32(dist), uint32(id));
-        };
-    };
+	int32 distance = 0;
+	int32 rotation = 0;
+
+	if (!calcSEPositionInfo(pPos, &distance, &rotation))
+		PlaySE(nSE);
+
+	distance -= 10;
+	distance = Clamp(distance, 0, distance); // clamp for min only
+
+	SoundSetEx(
+		nSE | SD_MASTERCODE_SURCTRL,
+		(uint32)rotation,
+		(uint32)((0x10000 / 50) * distance),
+		(uint32)id
+	);
 };
 
 
@@ -1516,23 +1537,26 @@ static void SdSetAttackEnemy(const SE_ATTACK_PARAM* pParam)
 
 /*static*/ void CGameSound::PlayAttackSE(const CCharacter* pCharacter)
 {
-    SE_ATTACK_PARAM Param = { 0 };
+	if (!pCharacter)
+		return;
 
-    if (pCharacter)
-    {
-        Param.Type = pCharacter->GetCharacterType();
-        if (pCharacter->GetCharacterType() == CCharacter::TYPE_PLAYER)
-            Param.Id = ((CPlayerCharacter*)pCharacter)->GetID();
-        else
-            Param.Id = ((CCharacterCompositor*)pCharacter)->GetID();
-        Param.Motion = pCharacter->GetMotionName();
-        pCharacter->GetBodyPosition(&Param.Pos);
+	SE_ATTACK_PARAM param;
+	std::memset(&param, 0, sizeof(param));
 
-        if (pCharacter->GetCharacterType() == CCharacter::TYPE_PLAYER)
-            SdSetAttackPlayer(&Param);
-        else
-            SdSetAttackEnemy(&Param);
-    };
+	param.Type = pCharacter->GetCharacterType();
+	param.Motion = pCharacter->GetMotionName();
+	pCharacter->GetBodyPosition(&param.Pos);
+
+	if (pCharacter->GetCharacterType() == CCharacter::TYPE_PLAYER)
+	{
+		param.Id = static_cast<const CPlayerCharacter*>(pCharacter)->GetID();
+		SdSetAttackPlayer(&param);
+	}
+	else
+	{
+		param.Id = static_cast<const CCharacterCompositor*>(pCharacter)->GetID();
+		SdSetAttackEnemy(&param);
+	};
 };
 
 
@@ -1544,41 +1568,46 @@ static void SdSetAttackEnemy(const SE_ATTACK_PARAM* pParam)
 
 /*static*/ void CGameSound::PlayDeathSE(const CCharacter* pCharacter)
 {
-    if (pCharacter && (pCharacter->GetCharacterType() == CCharacter::TYPE_ENEMY))
-    {
-        RwV3d vPos = Math::VECTOR3_ZERO;
-        pCharacter->GetBodyPosition(&vPos);
-        
-        switch (((CCharacterCompositor*)pCharacter)->GetID())
-        {
-        case ENEMYID::ID_PURPLE_DRAGON_GANG:
-        case ENEMYID::ID_FOOT_NINJA_SWORD:
-        case ENEMYID::ID_FOOT_NINJA_STAFF:
-        case ENEMYID::ID_FEUDAL_FOOT_NINJA_SWORD:
-        case ENEMYID::ID_FEUDAL_FOOT_NINJA_STAFF:
-        case ENEMYID::ID_UTROMS_SECURITY_PATROL:
-        case ENEMYID::ID_FEDERATION_SOLDIER:
-        case ENEMYID::ID_MOBSTER:
-        case ENEMYID::ID_FOOT_NINJA_ARCHER:
-        case ENEMYID::ID_FEUDAL_FOOT_NINJA_ARCHER:
-        case ENEMYID::ID_FEDERATION_SHOOTER:
-        case ENEMYID::ID_EXO_SUITED_UTROMS:
-        case ENEMYID::ID_CAPTAIN_OF_FEDERATION:
-        case ENEMYID::ID_LARGE_MOBSTER:
-        case ENEMYID::ID_LARGE_FOOT_NINJA:
-        case ENEMYID::ID_FEUDAL_LARGE_FOOT_NINJA:
-        case ENEMYID::ID_LARGE_FEDERATION_SOLDIET:
-        case ENEMYID::ID_LARGE_EXO_SUITED_UTROMS:
-        case ENEMYID::ID_FOOT_TECH_NINJA:
-        case ENEMYID::ID_CAPTAIN_OF_FEUDAL_FOOT_NINJA:
-            PlayPositionSE(&vPos, SDCODE_SE(0x10D5), 0);
-            break;
-            
-        case ENEMYID::ID_SPASMOSAUR:
-            PlayPositionSE(&vPos, SDCODE_SE(0x2006), 0);
-            break;
-        };
-    };
+	if (!pCharacter)
+		return;
+
+	if (pCharacter->GetCharacterType() != CCharacter::TYPE_ENEMY)
+		return;
+
+	RwV3d vPos = Math::VECTOR3_ZERO;
+	pCharacter->GetBodyPosition(&vPos);
+
+	const CCharacterCompositor* pCompositor = static_cast<const CCharacterCompositor*>(pCharacter);
+
+	switch (pCompositor->GetID())
+	{
+	case ENEMYID::ID_PURPLE_DRAGON_GANG:
+	case ENEMYID::ID_FOOT_NINJA_SWORD:
+	case ENEMYID::ID_FOOT_NINJA_STAFF:
+	case ENEMYID::ID_FEUDAL_FOOT_NINJA_SWORD:
+	case ENEMYID::ID_FEUDAL_FOOT_NINJA_STAFF:
+	case ENEMYID::ID_UTROMS_SECURITY_PATROL:
+	case ENEMYID::ID_FEDERATION_SOLDIER:
+	case ENEMYID::ID_MOBSTER:
+	case ENEMYID::ID_FOOT_NINJA_ARCHER:
+	case ENEMYID::ID_FEUDAL_FOOT_NINJA_ARCHER:
+	case ENEMYID::ID_FEDERATION_SHOOTER:
+	case ENEMYID::ID_EXO_SUITED_UTROMS:
+	case ENEMYID::ID_CAPTAIN_OF_FEDERATION:
+	case ENEMYID::ID_LARGE_MOBSTER:
+	case ENEMYID::ID_LARGE_FOOT_NINJA:
+	case ENEMYID::ID_FEUDAL_LARGE_FOOT_NINJA:
+	case ENEMYID::ID_LARGE_FEDERATION_SOLDIET:
+	case ENEMYID::ID_LARGE_EXO_SUITED_UTROMS:
+	case ENEMYID::ID_FOOT_TECH_NINJA:
+	case ENEMYID::ID_CAPTAIN_OF_FEUDAL_FOOT_NINJA:
+		PlayPositionSE(&vPos, SDCODE_SE(0x10D5));
+		break;
+
+	case ENEMYID::ID_SPASMOSAUR:
+		PlayPositionSE(&vPos, SDCODE_SE(0x2006));
+		break;
+	};
 };
 
 
@@ -1643,23 +1672,22 @@ static void SdSetAttackEnemy(const SE_ATTACK_PARAM* pParam)
     if (pObjAttacker->GetType() != GAMEOBJECTTYPE::CHARACTER)
         return;
     
-    const CGimmick* pDefender = reinterpret_cast<const CGimmick*>(pObjDefender);
-    const CCharacter* pAttacker = reinterpret_cast<const CCharacter*>(pObjAttacker);
-    
-    if (pAttacker->GetCharacterType() != CCharacter::TYPE_PLAYER)
-        return;
-
-    const CPlayerCharacter* pPlayer = reinterpret_cast<const CPlayerCharacter*>(pAttacker);
-
-    const int32* pSE = &aPlayerHitSE[pPlayer->GetID() * 4];
+	const CCharacter* pAttacker = reinterpret_cast<const CCharacter*>(pObjAttacker);
+	if ((pAttacker->GetCharacterType() != CCharacter::TYPE_PLAYER))
+		return;
+	
+	const CGimmick* pDefender = reinterpret_cast<const CGimmick*>(pObjDefender);
 
     if ((pDefender->GetID() == GIMMICKID::ID_G_SSHIPS) ||
-        (pDefender->GetID() == GIMMICKID::ID_N_BRKCAR))
-    {
+		(pDefender->GetID() == GIMMICKID::ID_N_BRKCAR))
+	{
         RwV3d vGimmickPos = Math::VECTOR3_ZERO;
-        pDefender->GetPosition(&vGimmickPos);
-        
-        PlayPositionSE(&vGimmickPos, pSE[2], 0);
+		pDefender->GetPosition(&vGimmickPos);
+
+		const CPlayerCharacter* pPlayer = reinterpret_cast<const CPlayerCharacter*>(pAttacker);
+		const int32* pSE = &aPlayerHitSE[pPlayer->GetID() * 4];
+		
+		PlayPositionSE(&vGimmickPos, pSE[2], 0);
     };
 };
 
@@ -1701,7 +1729,7 @@ static void SdSetAttackEnemy(const SE_ATTACK_PARAM* pParam)
 /*static*/ void CGameSound::StageBefore(STAGEID::VALUE idStage)
 {
     int32 Param = 0;
-    int32 Bank = 2;
+    int32 Command = 2;
     
     switch (idStage)
     {
@@ -1721,7 +1749,7 @@ static void SdSetAttackEnemy(const SE_ATTACK_PARAM* pParam)
     case STAGEID::ID_ST47OB:
     case STAGEID::ID_ST48N:
     case STAGEID::ID_ST49N:
-        Bank = 3;
+        Command = 3;
         break;
 
     case STAGEID::ID_ST02NB:
@@ -1731,38 +1759,38 @@ static void SdSetAttackEnemy(const SE_ATTACK_PARAM* pParam)
     case STAGEID::ID_ST45N:
     case STAGEID::ID_ST58OB1:
     case STAGEID::ID_ST58OB2:
-        Bank = 4;
+        Command = 4;
         break;
 
     case STAGEID::ID_ST13R:
     case STAGEID::ID_ST14N:
-        Bank = 5;
+        Command = 5;
         break;
 
     case STAGEID::ID_ST15N:
-        Bank = 12;
+        Command = 12;
         break;
 
     case STAGEID::ID_ST23N:
-        Bank = 7;
+        Command = 7;
         break;
 
     case STAGEID::ID_ST31NB:
-        Bank = 8;
+        Command = 8;
         break;
 
     case STAGEID::ID_ST37N:
     case STAGEID::ID_ST44NB:
-        Bank = 6;
+        Command = 6;
         break;
 
     case STAGEID::ID_ST50NB:
-        Bank = 9;
+        Command = 9;
         break;
 
     case STAGEID::ID_ST52F:
     case STAGEID::ID_ST52FB:
-        Bank = 10;
+        Command = 10;
         break;
 
     case STAGEID::ID_ST60X_A01:
@@ -1805,30 +1833,33 @@ static void SdSetAttackEnemy(const SE_ATTACK_PARAM* pParam)
     case STAGEID::ID_ST60X_D08:
     case STAGEID::ID_ST60X_D09:
     case STAGEID::ID_ST60X_D10:
-        Bank = 11;
+        Command = 11;
         break;
+
+	default:
+		break;
     };
     
     switch (idStage)
     {
     case STAGEID::ID_ST02N:
-        SoundLoad(Bank, 1);
+        SoundLoad(Command, 1);
         break;
 
     case STAGEID::ID_ST18FB:
-        SoundLoad(Bank, 2);
+        SoundLoad(Command, 2);
         break;
 
     case STAGEID::ID_ST42NB:
-        SoundLoad(Bank, 3);
+        SoundLoad(Command, 3);
         break;
 
     case STAGEID::ID_ST49N:
-        SoundLoad(Bank, 4);
+        SoundLoad(Command, 4);
         break;
 
     default:
-        SoundLoad(Bank, Param);
+        SoundLoad(Command, Param);
         break;
     };
 };
@@ -1840,37 +1871,50 @@ static void SdSetAttackEnemy(const SE_ATTACK_PARAM* pParam)
 };
 
 
-/*static*/ bool CGameSound::calcSEPositionInfo(const RwV3d* pvPos, int32& dist, int32& rot)
+/*static*/ bool CGameSound::calcSEPositionInfo(const RwV3d* pvPos, int32* pDist, int32* pRot)
 {
-    if (m_pCamera)
-    {
-        RwV3d CameraPos = Math::VECTOR3_ZERO;
-        RwV3d CameraAt = Math::VECTOR3_ZERO;
+	ASSERT(pvPos);
+	ASSERT(pDist);
+	ASSERT(pRot);
 
-        getCameraInfo(m_pCamera, CameraPos, CameraAt);
+	if (!m_pCamera)
+	{
+		*pDist = 0;
+		*pRot = 0;
+		return false;
+	};
 
-        RwV3d Direction = Math::VECTOR3_ZERO;
-        Math::Vec3_Sub(&Direction, pvPos, &CameraPos);
-        float Distance = Math::Vec3_Length(&Direction);
+	RwV3d vCameraPos = Math::VECTOR3_ZERO;
+	RwV3d vCameraAt = Math::VECTOR3_ZERO;
+	getCameraInfo(m_pCamera, &vCameraPos, &vCameraAt);
+	vCameraAt.y = 0.0f;
 
-        CameraAt.y = 0.0f;
+	RwV3d vDir = Math::VECTOR3_ZERO;
+	Math::Vec3_Sub(&vDir, pvPos, &vCameraPos);
+	vDir.y = 0.0f;
 
-        RwV3d Tmp = Math::VECTOR3_ZERO;
-        float d = Math::Vec3_Dot(&Direction, &CameraAt);
-        Math::Vec3_Cross(&Tmp, &CameraAt, &Direction);
+	float d = Math::Vec3_Length(&vDir);
 
-        return true;
-    }
-    else
-    {
-        dist = 0;
-        rot = 0;
-        return false;
-    };
+	RwV3d vUp = Math::VECTOR3_ZERO;
+	Math::Vec3_Cross(&vUp, &vCameraAt, &vDir);
+
+	float z = Math::Vec3_Dot(&vDir, &vCameraAt);
+	float x = Math::Vec3_Length(&vUp);
+	if (vUp.y < 0.0f)
+		x = -x;
+
+	float angle = Math::ATan2(x, z);
+	if (angle < 0.0f)
+		angle += Math::PI2;
+
+	*pDist = (int32)d;
+	*pRot = (int32)(((float)0x10000 / (MATH_PI * 2.0f)) * angle);
+
+	return true;
 };
 
 
-/*static*/ void CGameSound::getCameraInfo(const RwCamera* pCamera, RwV3d& pos, RwV3d& at)
+/*static*/ void CGameSound::getCameraInfo(const RwCamera* pCamera, RwV3d* pvPos, RwV3d* pvAt)
 {
     ASSERT(pCamera);
     
@@ -1880,8 +1924,8 @@ static void SdSetAttackEnemy(const SE_ATTACK_PARAM* pParam)
     RwMatrix* pMatrix = RwFrameGetMatrixMacro(pFrame);
     ASSERT(pMatrix);
 
-    pos = pMatrix->pos;
-    at = pMatrix->at;
+    *pvPos = pMatrix->pos;
+    *pvAt  = pMatrix->at;
 };
 
 

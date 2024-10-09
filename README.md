@@ -9,8 +9,7 @@
 
 # Current project status:
 ✔️ Basic gameplay\
-✔️ SOUND: Voice & BGM\
-🛠️ SOUND: SE \
+✔️ Sound\
 ❌ Enemies & Bosses
 &nbsp;
 

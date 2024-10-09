@@ -59,6 +59,10 @@ project "TMNT2"
    dependson { "System" }
    targetname "%{wks.name}"
    kind "WindowedApp"
+   removefiles { 
+      "src/System/Common/MemPool.*",
+      "src/System/Common/Debug/**.*"
+   }
    includedirs  
    {  
 		"%{dir_lib}/rwsdk37/include/d3d9", 

@@ -69,7 +69,7 @@ public:
         FADESPEEDNUM,
     };
 
-    enum MODE
+	enum MODE
     {
         MODE_MONO = 0,
         MODE_STEREO,
@@ -92,8 +92,9 @@ public:
 
 public:
     static void Initialize(void);
-    static void Terminate(void);
-    static void LoadWave(int32 nWaveNo);
+	static void Terminate(void);
+	static void SetMode(MODE mode);
+	static void LoadWave(int32 nWaveNo);
     static bool IsLoadEnd(void);
     static void PlaySE(int32 nSE);
     static void StopSE(int32 nSE);
@@ -123,7 +124,6 @@ public:
 	
 	static /*inline*/ void AttachCamera(RwCamera* pCamera);
     static /*inline*/ void DetachCamera(void);
-    static /*inline*/ void SetMode(MODE mode);
     static /*inline*/ MODE GetMode(void);
     static /*inline*/ void SetBgmConfig(int32 value);
     static /*inline*/ int32 GetBgmConfig(void);
@@ -136,8 +136,8 @@ public:
 	static /*inline*/ int32 GetVoiceRaw(void);
 
 private:
-    static bool calcSEPositionInfo(const RwV3d* pvPos, int32& dist, int32& rot);
-    static void getCameraInfo(const RwCamera* pRwCamera, RwV3d& pos, RwV3d& at);
+    static bool calcSEPositionInfo(const RwV3d* pvPos, int32* pDist, int32* pRot);
+    static void getCameraInfo(const RwCamera* pCamera, RwV3d* pvPos, RwV3d* pvAt);
     static int32 getEffectSE(EFFECTID::VALUE idEffect);
     static bool isLoopSE(int32 nSE);
     static void addReferenceCounter(int32 nSE);

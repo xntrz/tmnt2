@@ -120,6 +120,9 @@ bool CPCSoundDevice::InitializeLib(void)
 	if (CConfigure::CheckArg("noseq"))
 		OptFlag |= 0x4;
 
+	if (CConfigure::CheckArg("sdlog"))
+		OptFlag |= 0x8;
+
 	//
 	//	Init heap
 	//

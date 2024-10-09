@@ -1,7 +1,4 @@
 #pragma once
 
 
-struct SdSeq_t;
-
-
-bool SdSeqCtrlFunc(int32 code, SdSeq_t* SdSeq, const void** Data);
+bool SdSeqCtrlFunc(uint8 _code, struct SdSeqWork_t* Work, uint8** Data);
