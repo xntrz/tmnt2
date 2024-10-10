@@ -2028,7 +2028,7 @@ void COptions::SwitchVolume(int32 Line, OPTIONTYPES::VOLUMETYPE Volumetype)
     {
         m_Volume[Volumetype][i].Flag = true;
         m_Volume[Volumetype][i].Color = (m_bSwitchMode ? s_ColorGreen : s_ColorOrange);
-        m_Volume[Volumetype][i].Color.alpha = (Volume < i ? 0x7F : 0xFF);
+        m_Volume[Volumetype][i].Color.alpha = (Volume <= i ? 0x7F : 0xFF);
         m_Volume[Volumetype][i].ScreenPos = { (float(i) * 9.0f) + 105.0f, float(Line) * 29.0f - 126.0f };
 		m_Volume[Volumetype][i].Sprite.SetRGBA(m_Volume[Volumetype][i].Color);
         m_Volume[Volumetype][i].Sprite.Move(
@@ -2044,13 +2044,13 @@ void COptions::SwitchVolume(int32 Line, OPTIONTYPES::VOLUMETYPE Volumetype)
         {
             CGameSound::PlaySE(SDCODE_SE(0x1004));
             m_fSwitchMoveL = SWITCH_ANM;
-            Volume = Clamp(Volume - 1, 0, CGameSound::VOLUME_MAX - 1);
+            Volume = Clamp(Volume - 1, 0, Volume);
         }
         else if (CController::GetDigitalTrigger(iPad, CController::DIGITAL_LRIGHT))
         {
             CGameSound::PlaySE(SDCODE_SE(0x1004));
             m_fSwitchMoveR = SWITCH_ANM;
-            Volume = Clamp(Volume + 1, 0, CGameSound::VOLUME_MAX - 1);
+            Volume = Clamp(Volume + 1, 0, CGameSound::VOLUME_MAX);
         };
 
         CGameData::Option().Sound().SetVolume(Volumetype, Volume);
