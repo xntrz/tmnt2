@@ -15,8 +15,8 @@ public:
 
     struct RAWDATA
     {
-        bool m_bFontEffectFlag;
         bool m_bPlayerMarkerFlag;
+        bool m_bFontEffectFlag;
         bool m_bHelpFlag;
 #ifdef TARGET_PC
         int32 m_iVideomodeNo;

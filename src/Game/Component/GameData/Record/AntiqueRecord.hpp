@@ -18,7 +18,7 @@ public:
         SHOPSTATE_COMPLETED,
     };
 
-    enum STATE
+    enum STATE : uint8
     {
         STATE_NONE = 0,
         STATE_UNIDENTIFIED,
@@ -28,15 +28,16 @@ public:
     struct NODEANTIQUE
     {
         STATE m_state;
-        uint32 m_uTimestampTakenDate;
+        uint32 m_takenDate;
     };
 
     struct RAWDATA
     {
         SHOPSTATE m_shopstate;
-        NODEANTIQUE m_aNodeAntique[ANTIQUEID::ID_MAX];
+        STATE m_abAntiqueState[ANTIQUEID::ID_MAX];
+        uint32 m_auAntiqueTakenDate[ANTIQUEID::ID_MAX];
     };
-    
+
 public:
     CAntiqueRecord(void);
     ~CAntiqueRecord(void);

@@ -94,14 +94,8 @@ void CDbgUnlockProcess::Move(void)
     if (m_unlockFlag & UNLOCKFLAG_CRYSTAL)
     {
         OUTPUT("UNLOCKING CRYSTAL\n");
-        
-        for (int32 i = 0; i < GAMETYPES::CRY_MAX; ++i)
-        {
-            CGameData::Record().Item().DebugSetCryTaken(GAMETYPES::CRYSTALTYPE_RED, i, true);
-            CGameData::Record().Item().DebugSetCryTaken(GAMETYPES::CRYSTALTYPE_GREEN, i, true);
-            CGameData::Record().Item().DebugSetCryTaken(GAMETYPES::CRYSTALTYPE_WHITE, i, true);
-            CGameData::Record().Item().DebugSetCryTaken(GAMETYPES::CRYSTALTYPE_ORANGE, i, true);
-        };
+
+        CGameData::Record().Item().ForceSetCrystalNum(GAMETYPES::CRYSTAL_MAX);
     };
 
     //

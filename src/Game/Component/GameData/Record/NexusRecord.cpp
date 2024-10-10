@@ -27,8 +27,8 @@ void CNexusRecord::SetDefault(void)
 
     for (int32 i = 0; i < COUNT_OF(m_aNodeStage); ++i)
     {
-        m_aNodeStage[i].m_iNumPlayed = 0;
-        m_aNodeStage[i].m_iNumCleared = 0;
+        m_aNodeStage[i].m_numPlayed = 0;
+        m_aNodeStage[i].m_numCleared = 0;
         m_aNodeStage[i].m_cleartime = 0;
     };    
 };
@@ -61,20 +61,20 @@ bool CNexusRecord::IsValid(void) const
 
     for (int32 i = 0; i < COUNT_OF(m_aNodeStage); ++i)
     {
-        if (m_aNodeStage[i].m_iNumPlayed < 0)
+        if (m_aNodeStage[i].m_numPlayed < 0)
         {
             OUTPUT(" %s is failed: node stage num played\n", __FUNCTION__);
             return false;
         };
 
-        if (m_aNodeStage[i].m_iNumCleared < 0 ||
-            m_aNodeStage[i].m_iNumCleared > m_aNodeStage[i].m_iNumPlayed)
+        if (m_aNodeStage[i].m_numCleared < 0 ||
+            m_aNodeStage[i].m_numCleared > m_aNodeStage[i].m_numPlayed)
         {
             OUTPUT(" %s is failed: node stage num cleared\n", __FUNCTION__);
             return false;
         };
 
-        if (!m_aNodeStage[i].m_iNumCleared &&
+        if (!m_aNodeStage[i].m_numCleared &&
             (m_aNodeStage[i].m_cleartime.GetTotalSecond() > 0))
         {
             OUTPUT(" %s is failed: node stage clear time\n", __FUNCTION__);
@@ -99,8 +99,8 @@ void CNexusRecord::Snapshot(RAWDATA& rRawData) const
 
     for (int32 i = 0; i < COUNT_OF(m_aNodeStage); ++i)
     {
-        rRawData.m_aNodeStage[i].m_iNumPlayed = m_aNodeStage[i].m_iNumPlayed;
-        rRawData.m_aNodeStage[i].m_iNumCleared = m_aNodeStage[i].m_iNumCleared;
+        rRawData.m_aNodeStage[i].m_numPlayed = m_aNodeStage[i].m_numPlayed;
+        rRawData.m_aNodeStage[i].m_numCleared = m_aNodeStage[i].m_numCleared;
         rRawData.m_aNodeStage[i].m_cleartime = m_aNodeStage[i].m_cleartime;
     };
 };
@@ -118,8 +118,8 @@ void CNexusRecord::Restore(const RAWDATA& rRawData)
 
     for (int32 i = 0; i < COUNT_OF(m_aNodeStage); ++i)
     {
-        m_aNodeStage[i].m_iNumPlayed = rRawData.m_aNodeStage[i].m_iNumPlayed;
-        m_aNodeStage[i].m_iNumCleared = rRawData.m_aNodeStage[i].m_iNumCleared;
+        m_aNodeStage[i].m_numPlayed = rRawData.m_aNodeStage[i].m_numPlayed;
+        m_aNodeStage[i].m_numCleared = rRawData.m_aNodeStage[i].m_numCleared;
         m_aNodeStage[i].m_cleartime = rRawData.m_aNodeStage[i].m_cleartime;
     };
 };
@@ -187,7 +187,7 @@ int32 CNexusRecord::GetTournamentPlayedStage(GAMETYPES::NEXUSID idNexus) const
     
     for (int32 i = 0; i < GAMETYPES::STAGE_MAX; ++i)
     {
-        if (m_aNodeStage[getStageIndex(idNexus, i)].m_iNumPlayed <= 0)
+        if (m_aNodeStage[getStageIndex(idNexus, i)].m_numPlayed <= 0)
             break;
 
         ++iResult;
@@ -199,7 +199,7 @@ int32 CNexusRecord::GetTournamentPlayedStage(GAMETYPES::NEXUSID idNexus) const
 
 void CNexusRecord::SetStagePlayed(GAMETYPES::NEXUSID idNexus, int32 stageNo)
 {
-    ++m_aNodeStage[getStageIndex(idNexus, stageNo)].m_iNumPlayed;
+    ++m_aNodeStage[getStageIndex(idNexus, stageNo)].m_numPlayed;
 };
 
 
@@ -207,7 +207,7 @@ void CNexusRecord::UpdateStageClearTime(GAMETYPES::NEXUSID idNexus, int32 stageN
 {
     NODESTAGE& nodestage = m_aNodeStage[getStageIndex(idNexus, stageNo)];
 
-	++nodestage.m_iNumCleared;
+	++nodestage.m_numCleared;
 
     if (nodestage.m_cleartime < cleartime)
         nodestage.m_cleartime = cleartime;
@@ -216,13 +216,13 @@ void CNexusRecord::UpdateStageClearTime(GAMETYPES::NEXUSID idNexus, int32 stageN
 
 int32 CNexusRecord::GetStagePlayCount(GAMETYPES::NEXUSID idNexus, int32 stageNo) const
 {
-    return m_aNodeStage[getStageIndex(idNexus, stageNo)].m_iNumPlayed;
+    return static_cast<int32>(m_aNodeStage[getStageIndex(idNexus, stageNo)].m_numPlayed);
 };
 
 
 int32 CNexusRecord::GetStageClearCount(GAMETYPES::NEXUSID idNexus, int32 stageNo) const
 {
-    return m_aNodeStage[getStageIndex(idNexus, stageNo)].m_iNumCleared;
+    return static_cast<int32>(m_aNodeStage[getStageIndex(idNexus, stageNo)].m_numCleared);
 };
 
 
@@ -230,8 +230,8 @@ int32 CNexusRecord::GetStageClearPercent(GAMETYPES::NEXUSID idNexus, int32 stage
 {
     const NODESTAGE& nodestage = m_aNodeStage[getStageIndex(idNexus, stageNo)];
 
-    if (nodestage.m_iNumPlayed)
-        return int32(float(nodestage.m_iNumCleared) * 100.0f / float(nodestage.m_iNumPlayed));
+    if (nodestage.m_numPlayed)
+        return int32(float(nodestage.m_numCleared) * 100.0f / float(nodestage.m_numPlayed));
     else
         return 0;
 };

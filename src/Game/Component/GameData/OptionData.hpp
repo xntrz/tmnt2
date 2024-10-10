@@ -12,16 +12,14 @@ class COptionData
 public:
     struct RAWDATA
     {
-        CPlayOptionData::RAWDATA m_play;
-        CSoundOptionData::RAWDATA m_sound;
         CDisplayOptionData::RAWDATA m_display;
+        CSoundOptionData::RAWDATA m_sound;
+        CPlayOptionData::RAWDATA m_play;
         CGamepadOptionData::RAWDATA m_aGamepad[6];
 #ifdef TARGET_PC
         CKeyboardOptionData::RAWDATA m_keyboard;
 #endif
     };
-
-    CHECK_SIZE(COptionData::RAWDATA, 276);
 
 public:
     COptionData(void);
@@ -42,7 +40,7 @@ private:
     CPlayOptionData m_play;
     CSoundOptionData m_sound;
     CDisplayOptionData m_display;
-    CKeyboardOptionData m_keyboard;
     CGamepadOptionData* m_paGamepad;
-    int32 m_iGamepadNum;    
+    int32 m_iGamepadNum;
+    CKeyboardOptionData m_keyboard;
 };

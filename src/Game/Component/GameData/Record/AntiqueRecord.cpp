@@ -19,14 +19,19 @@ CAntiqueRecord::~CAntiqueRecord(void)
 void CAntiqueRecord::SetDefault(void)
 {
     m_shopstate = SHOPSTATE_NONE;
-    std::memset(m_aNodeAntique, 0x00, sizeof(m_aNodeAntique));
+
+    for (int32 i = 0; i < COUNT_OF(m_aNodeAntique); ++i)
+    {
+        m_aNodeAntique[i].m_state = STATE_NONE;
+        m_aNodeAntique[i].m_takenDate = 0;
+    };
 };
 
 
 bool CAntiqueRecord::IsValid(void) const
 {
-    if (m_shopstate < SHOPSTATE_NONE ||
-        m_shopstate > SHOPSTATE_COMPLETED)
+    if ((m_shopstate < SHOPSTATE_NONE) ||
+        (m_shopstate > SHOPSTATE_COMPLETED))
     {
         OUTPUT(" %s is failed: shopstate\n", __FUNCTION__);
         return false;
@@ -34,8 +39,8 @@ bool CAntiqueRecord::IsValid(void) const
 
     for (int32 i = 0; i < COUNT_OF(m_aNodeAntique); ++i)
     {
-        if (m_aNodeAntique[i].m_state < STATE_NONE ||
-            m_aNodeAntique[i].m_state > STATE_IDENTIFIED)
+        if ((m_aNodeAntique[i].m_state < STATE_NONE) ||
+            (m_aNodeAntique[i].m_state > STATE_IDENTIFIED))
         {
             OUTPUT(" %s is failed: antique node state\n", __FUNCTION__);
             return false;
@@ -51,8 +56,11 @@ void CAntiqueRecord::Snapshot(RAWDATA& rRawData) const
 {
     rRawData.m_shopstate = m_shopstate;
 
-    std::memset(rRawData.m_aNodeAntique, 0x00, sizeof(rRawData.m_aNodeAntique));
-    std::memcpy(rRawData.m_aNodeAntique, m_aNodeAntique, sizeof(rRawData.m_aNodeAntique));
+    for (int32 i = 0; i < COUNT_OF(m_aNodeAntique); ++i)
+    {
+        rRawData.m_abAntiqueState[i]     = m_aNodeAntique[i].m_state;
+        rRawData.m_auAntiqueTakenDate[i] = m_aNodeAntique[i].m_takenDate;
+    };
 };
 
 
@@ -60,8 +68,11 @@ void CAntiqueRecord::Restore(const RAWDATA& rRawData)
 {
     m_shopstate = rRawData.m_shopstate;
 
-    std::memset(m_aNodeAntique, 0x00, sizeof(m_aNodeAntique));
-    std::memcpy(m_aNodeAntique, rRawData.m_aNodeAntique, sizeof(m_aNodeAntique));
+    for (int32 i = 0; i < COUNT_OF(m_aNodeAntique); ++i)
+    {
+        m_aNodeAntique[i].m_state       = rRawData.m_abAntiqueState[i];
+        m_aNodeAntique[i].m_takenDate   = rRawData.m_auAntiqueTakenDate[i];
+    };
 };
 
 
@@ -119,7 +130,7 @@ void CAntiqueRecord::SetAntiqueTaken(ANTIQUEID::VALUE idAntique)
     ASSERT(getAntiqueNode(idAntique).m_state == STATE_NONE);
 
     getAntiqueNode(idAntique).m_state = STATE_UNIDENTIFIED;
-    getAntiqueNode(idAntique).m_uTimestampTakenDate = CSystemTime::Instance().GetLocalTime().GetTimevalue();
+    getAntiqueNode(idAntique).m_takenDate = CSystemTime::Instance().GetLocalTime().GetTimevalue();
 };
 
 
@@ -145,7 +156,7 @@ bool CAntiqueRecord::IsAntiqueIdentified(ANTIQUEID::VALUE idAntique) const
 
 void CAntiqueRecord::GetAntiqueTakenDate(ANTIQUEID::VALUE idAntique, CTimeObj& date)
 {
-    date.Init(getAntiqueNode(idAntique).m_uTimestampTakenDate);
+    date.Init(getAntiqueNode(idAntique).m_takenDate);
 };
 
 

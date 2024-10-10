@@ -13,7 +13,7 @@ namespace GAMETYPES
         CHARACTER_MAX = 4,
         PRIZE_MAX = 4,
         STAGE_MAX = 10,
-        CRY_MAX = 30,
+        CRYSTAL_MAX = 30,
     };
 
     enum STAGEMODE
@@ -126,7 +126,7 @@ namespace GAMETYPES
         RIDEACT_MAX         = 0x8,        
     };
 
-    enum CLEARRANK
+    enum CLEARRANK : uint8
     {
         CLEARRANK_NONE = 0,
         CLEARRANK_E,

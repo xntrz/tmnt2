@@ -6,7 +6,7 @@
 class CDatabaseRecord
 {
 public:
-    enum STATE
+    enum STATE : uint8
     {
         STATE_NONE = 0,
         STATE_UNREAD,
@@ -35,7 +35,7 @@ public:
         DBSTATE m_dbstate;
         STATE m_aState[DBITEMID::ID_MAX];
     };
-    
+
 public:
     CDatabaseRecord(void);
     ~CDatabaseRecord(void);

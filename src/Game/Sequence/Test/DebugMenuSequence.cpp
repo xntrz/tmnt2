@@ -80,15 +80,8 @@ static void CallArea(void* param)
     for (int32 i = 0; i < GAMETYPES::PLAYERS_MAX; ++i)
         CGameData::PlayParam().AddPlayerCharacter(0, PLAYERID::VALUE(SecretChar + i), GAMETYPES::COSTUME(Math::Rand() % GAMETYPES::COSTUME_NUM));
     CGameData::PlayParam().SetStartArea(idArea, StageNo);
-    
-    for (int32 i = 0; i < GAMETYPES::CRY_MAX; ++i)
-	{
-		CGameData::Record().Item().DebugSetCryTaken(GAMETYPES::CRYSTALTYPE_RED, i, true);
-		CGameData::Record().Item().DebugSetCryTaken(GAMETYPES::CRYSTALTYPE_GREEN, i, true);
-		CGameData::Record().Item().DebugSetCryTaken(GAMETYPES::CRYSTALTYPE_WHITE, i, true);
-		CGameData::Record().Item().DebugSetCryTaken(GAMETYPES::CRYSTALTYPE_ORANGE, i, true);
-    };
-
+    CGameData::Record().Item().ForceSetCrystalNum(GAMETYPES::CRYSTAL_MAX);
+    CGameData::Record().Item().SetItemTaken(ITEMID::ID_DON_LASER);
     CGameData::Option().Display().SetEnableFontEffect(false);
     CGameData::Option().Play().SetClassicInput(true);
 	CGameData::PlayParam().SetAreaPlaymode(CGamePlayParam::AREAPLAYMODE_ONE_STAGE);

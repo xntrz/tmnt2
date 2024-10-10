@@ -17,13 +17,7 @@ CGameRecord::~CGameRecord(void)
 
 void CGameRecord::Initialize(void)
 {
-    m_uTimestampInit = CSystemTime::Instance().GetLocalTime().GetTimevalue();
-    m_antique.SetDefault();
-    m_area.SetDefault();
-    m_database.SetDefault();
-    m_item.SetDefault();
-    m_nexus.SetDefault();
-    m_secret.SetDefault();
+    SetDefault();
 };
 
 
@@ -36,23 +30,33 @@ void CGameRecord::Terminate(void)
 void CGameRecord::SetDefault(void)
 {
     m_uTimestampInit = CSystemTime::Instance().GetLocalTime().GetTimevalue();
-    m_antique.SetDefault();
-    m_area.SetDefault();
-    m_database.SetDefault();
     m_item.SetDefault();
+    m_antique.SetDefault();
+    m_database.SetDefault();
     m_nexus.SetDefault();
+    m_area.SetDefault();
     m_secret.SetDefault();
 };
 
 
 bool CGameRecord::IsValid(void) const
 {
-    if (!m_antique.IsValid()    ||
-        !m_area.IsValid()       ||
-        !m_database.IsValid()   ||
-        !m_item.IsValid()       ||
-        !m_nexus.IsValid()      ||
-        !m_secret.IsValid())
+    if (!m_item.IsValid())
+        return false;
+
+    if (!m_antique.IsValid())
+        return false;
+
+    if (!m_database.IsValid())
+        return false;
+
+    if (!m_nexus.IsValid())
+        return false;
+
+    if (!m_area.IsValid())
+        return false;
+
+    if (!m_secret.IsValid())
         return false;
 
     return true;
@@ -62,11 +66,11 @@ bool CGameRecord::IsValid(void) const
 void CGameRecord::Snapshot(RAWDATA& rRawData) const
 {
     rRawData.m_uTimestampInit = m_uTimestampInit;
-    m_antique.Snapshot(rRawData.m_antique);
-    m_area.Snapshot(rRawData.m_area);
-    m_database.Snapshot(rRawData.m_database);
     m_item.Snapshot(rRawData.m_item);
+    m_antique.Snapshot(rRawData.m_antique);
+    m_database.Snapshot(rRawData.m_database);
     m_nexus.Snapshot(rRawData.m_nexus);
+    m_area.Snapshot(rRawData.m_area);
     m_secret.Snapshot(rRawData.m_secret);
 };
 
@@ -74,11 +78,11 @@ void CGameRecord::Snapshot(RAWDATA& rRawData) const
 void CGameRecord::Restore(const RAWDATA& rRawData, bool bNotSavedFlag)
 {
     m_uTimestampInit = rRawData.m_uTimestampInit;
-    m_antique.Restore(rRawData.m_antique);
-    m_area.Restore(rRawData.m_area);
-    m_database.Restore(rRawData.m_database);
     m_item.Restore(rRawData.m_item);
+    m_antique.Restore(rRawData.m_antique);
+    m_database.Restore(rRawData.m_database);
     m_nexus.Restore(rRawData.m_nexus);
+    m_area.Restore(rRawData.m_area);
     m_secret.Restore(rRawData.m_secret);
 
     if (bNotSavedFlag)
@@ -193,40 +197,3 @@ uint32 CGameRecord::GetAchievedPoint(void)
 
     return uResult;
 };
-
-
-CAntiqueRecord& CGameRecord::Antique(void)
-{
-    return m_antique;
-};
-
-
-CAreaRecord& CGameRecord::Area(void)
-{
-    return m_area;
-};
-
-
-CDatabaseRecord& CGameRecord::Database(void)
-{
-    return m_database;
-};
-
-
-CItemRecord& CGameRecord::Item(void)
-{
-    return m_item;
-};
-
-
-CNexusRecord& CGameRecord::Nexus(void)
-{
-    return m_nexus;
-};
-
-
-CSecretRecord& CGameRecord::Secret(void)
-{
-    return m_secret;
-};
-

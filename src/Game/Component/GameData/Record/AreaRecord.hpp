@@ -8,7 +8,7 @@
 class CAreaRecord
 {
 public:
-    enum STATE
+    enum STATE : uint8
     {
         STATE_NONE = 0,
         STATE_OPEN,
@@ -27,15 +27,19 @@ public:
         STATE m_state;
         GAMETYPES::CLEARRANK m_clearrank;
         CGameTime m_cleartime;
-        uint32 m_rootflag;
     };
 
     struct RAWDATA
     {
         AREAID::VALUE m_AreaSelected;
-        NODEAREA m_aNodeArea[AREAID::SELECTABLEMAX];
+        uint32 m_rootflagAREA11;
+        uint32 m_rootflagAREA25;
+        uint32 m_rootflagAREA33;
+        STATE m_aAreaState[AREAID::SELECTABLEMAX];
+        GAMETYPES::CLEARRANK m_aAreaClearrank[AREAID::NORMALMAX];
+        CGameTime m_aAreaCleartime[AREAID::NORMALMAX];
     };
-    
+
 public:
     CAreaRecord(void);
     ~CAreaRecord(void);
@@ -64,11 +68,16 @@ public:
     GAMETYPES::CLEARRANK CalcTotalClearTimeRank(void) const;
     
 private:
-    const NODEAREA& getNode(AREAID::VALUE idArea) const;
+    NODEAREA* getNode(AREAID::VALUE idArea) const;
     bool isSelectableArea(AREAID::VALUE idArea) const;
+    void setClearRootFlag(AREAID::VALUE idArea, CLEAR_ROOT root, bool state);
+    bool testClearRootFlag(AREAID::VALUE idArea, CLEAR_ROOT root) const;
 
 private:
     AREAID::VALUE m_AreaNow;
     AREAID::VALUE m_AreaSelected;
-    NODEAREA m_aNodeArea[AREAID::SELECTABLEMAX];
+    mutable NODEAREA m_aNodeArea[AREAID::SELECTABLEMAX];
+    uint32 m_rootflagAREA11;
+    uint32 m_rootflagAREA25;
+    uint32 m_rootflagAREA33;
 };

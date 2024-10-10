@@ -66,21 +66,28 @@ void CAreaRecord::SetDefault(void)
     {
         m_aNodeArea[i].m_clearrank  = GAMETYPES::CLEARRANK_NONE;
         m_aNodeArea[i].m_cleartime  = 0;
-        m_aNodeArea[i].m_rootflag   = 0;
         m_aNodeArea[i].m_state      = STATE_NONE;
     };
+
+    m_rootflagAREA11 = 0;
+    m_rootflagAREA25 = 0;
+    m_rootflagAREA33 = 0;
+
+    m_aNodeArea[m_AreaSelected].m_state = STATE_OPEN;
 };
 
 
 bool CAreaRecord::IsValid(void) const
 {
-    if (m_AreaNow < AREAID::ID_NONE && m_AreaNow >= AREAID::SELECTABLEMAX)
+    if ((m_AreaNow < AREAID::ID_NONE) &&
+        (m_AreaNow >= AREAID::SELECTABLEMAX))
     {
         OUTPUT(" %s is failed: area now\n", __FUNCTION__);
         return false;
     };
 
-    if (m_AreaSelected < AREAID::ID_NONE && m_AreaSelected >= AREAID::SELECTABLEMAX)
+    if ((m_AreaSelected < AREAID::ID_NONE) &&
+        (m_AreaSelected >= AREAID::SELECTABLEMAX))
     {
         OUTPUT(" %s is failed: area selected\n", __FUNCTION__);
         return false;
@@ -88,23 +95,25 @@ bool CAreaRecord::IsValid(void) const
 
     for (int32 i = 0; i < COUNT_OF(m_aNodeArea); ++i)
     {
-        if (m_aNodeArea[i].m_state < 0 ||
-            m_aNodeArea[i].m_state > STATE_CLEAR)
+        if ((m_aNodeArea[i].m_state < 0) ||
+            (m_aNodeArea[i].m_state > STATE_CLEAR))
         {
             OUTPUT(" %s is failed: area node state\n", __FUNCTION__);
             return false;
         };
 
-        if (m_aNodeArea[i].m_clearrank < GAMETYPES::CLEARRANK_NONE ||
-            m_aNodeArea[i].m_clearrank > GAMETYPES::CLEARRANK_SS)
+        if ((m_aNodeArea[i].m_clearrank < GAMETYPES::CLEARRANK_NONE) ||
+            (m_aNodeArea[i].m_clearrank > GAMETYPES::CLEARRANK_SS))
         {
             OUTPUT(" %s is failed: area node clearrank\n", __FUNCTION__);
             return false;
         };
 
-        if (FLAG_TEST_ANY(m_aNodeArea[i].m_rootflag, ~ALL_CLEAR_ROOT_MASK))
+        if ((m_rootflagAREA11 & ~ALL_CLEAR_ROOT_MASK) ||
+            (m_rootflagAREA25 & ~ALL_CLEAR_ROOT_MASK) ||
+            (m_rootflagAREA33 & ~ALL_CLEAR_ROOT_MASK))
         {
-            OUTPUT(" %s is failed: area node root flag\n", __FUNCTION__);
+            OUTPUT(" %s is failed: root flag invalid\n", __FUNCTION__);
             return false;
         };
     };
@@ -116,20 +125,22 @@ bool CAreaRecord::IsValid(void) const
 
 void CAreaRecord::Snapshot(RAWDATA& rRawData) const
 {
+    static_assert(COUNT_OF(RAWDATA::m_aAreaClearrank) == AREAID::NORMALMAX, "should be same count");
+    static_assert(COUNT_OF(RAWDATA::m_aAreaCleartime) == AREAID::NORMALMAX, "should be same count");
+
     rRawData.m_AreaSelected = m_AreaSelected;
 
-    std::memset(rRawData.m_aNodeArea, 0x00, sizeof(rRawData.m_aNodeArea));
-    
+    rRawData.m_rootflagAREA11 = m_rootflagAREA11;
+    rRawData.m_rootflagAREA25 = m_rootflagAREA25;
+    rRawData.m_rootflagAREA33 = m_rootflagAREA33;
+
     for (int32 i = 0; i < COUNT_OF(m_aNodeArea); ++i)
+        rRawData.m_aAreaState[i] = m_aNodeArea[i].m_state;
+
+    for (int32 i = 0; i < AREAID::NORMALMAX; ++i)
     {
-        rRawData.m_aNodeArea[i].m_state = m_aNodeArea[i].m_state;
-        
-        if (i < AREAID::NORMALMAX)
-        {
-            rRawData.m_aNodeArea[i].m_clearrank = m_aNodeArea[i].m_clearrank;
-            rRawData.m_aNodeArea[i].m_cleartime = m_aNodeArea[i].m_cleartime;
-            rRawData.m_aNodeArea[i].m_rootflag  = m_aNodeArea[i].m_rootflag;
-        };
+        rRawData.m_aAreaClearrank[i] = m_aNodeArea[i].m_clearrank;
+        rRawData.m_aAreaCleartime[i] = m_aNodeArea[i].m_cleartime;
     };
 };
 
@@ -137,18 +148,26 @@ void CAreaRecord::Snapshot(RAWDATA& rRawData) const
 void CAreaRecord::Restore(const RAWDATA& rRawData)
 {
     m_AreaSelected = rRawData.m_AreaSelected;
+    m_AreaNow = AREAID::ID_NONE;
 
-    std::memset(m_aNodeArea, 0x00, sizeof(m_aNodeArea));
+    m_rootflagAREA11 = rRawData.m_rootflagAREA11;
+    m_rootflagAREA25 = rRawData.m_rootflagAREA25;
+    m_rootflagAREA33 = rRawData.m_rootflagAREA33;
+
+    for (int32 i = 0; i < COUNT_OF(m_aNodeArea); ++i)
+        m_aNodeArea[i].m_state = rRawData.m_aAreaState[i];
 
     for (int32 i = 0; i < COUNT_OF(m_aNodeArea); ++i)
     {
-        m_aNodeArea[i].m_state = rRawData.m_aNodeArea[i].m_state;
-
-        if (i < AREAID::NORMALMAX)
+        if (i >= AREAID::NORMALMAX)
         {
-            m_aNodeArea[i].m_clearrank  = rRawData.m_aNodeArea[i].m_clearrank;
-            m_aNodeArea[i].m_cleartime  = rRawData.m_aNodeArea[i].m_cleartime;
-            m_aNodeArea[i].m_rootflag   = rRawData.m_aNodeArea[i].m_rootflag;
+            m_aNodeArea[i].m_clearrank = GAMETYPES::CLEARRANK_NONE;
+            m_aNodeArea[i].m_cleartime.Clear();
+        }
+        else
+        {
+            m_aNodeArea[i].m_clearrank = rRawData.m_aAreaClearrank[i];
+            m_aNodeArea[i].m_cleartime = rRawData.m_aAreaCleartime[i];
         };
     };
 };
@@ -164,8 +183,8 @@ bool CAreaRecord::IsNewGame(void) const
 {
     for (int32 i = 0; i < COUNT_OF(m_aNodeArea); ++i)
     {
-        if (i == AREAID::ID_NONE ||
-            i == AREAID::ID_AREA03)
+        if ((i == AREAID::ID_NONE) ||
+            (i == AREAID::HOME))
             continue;
 
         if (m_aNodeArea[i].m_state >= STATE_CLEAR)
@@ -178,7 +197,8 @@ bool CAreaRecord::IsNewGame(void) const
 
 void CAreaRecord::RegistNewArea(void)
 {
-    if (m_AreaSelected < 0 || m_AreaSelected >= AREAID::NORMALMAX)
+    if ((m_AreaSelected < 0) ||
+        (m_AreaSelected >= AREAID::NORMALMAX))
         return;
 
     if (!GetAreaState(m_AreaSelected))
@@ -436,87 +456,84 @@ AREAID::VALUE CAreaRecord::GetNowClearArea(void)
 
 void CAreaRecord::SetAreaOpened(AREAID::VALUE idArea)
 {
-    if (!isSelectableArea(idArea))
-        return;
-
-    NODEAREA& nodearea = m_aNodeArea[idArea];
-    if (nodearea.m_state == STATE_NONE)
+    NODEAREA* pNode = getNode(idArea);
+    if (pNode)
     {
-        nodearea.m_state = STATE_OPEN;
-        nodearea.m_rootflag = 0;
+        if (pNode->m_state == STATE_NONE)
+            pNode->m_state = STATE_OPEN;
     };
 };
 
 
 void CAreaRecord::SetAreaCleared(AREAID::VALUE idArea, CLEAR_ROOT clearroot)
 {
-    if (!isSelectableArea(idArea))
-        return;
+    NODEAREA* pNode = getNode(idArea);
+    if (pNode)
+    {
+        if (pNode->m_state < STATE_CLEAR)
+            pNode->m_state = STATE_CLEAR;
 
-    NODEAREA& nodearea = m_aNodeArea[idArea];
-
-    nodearea.m_state = STATE_CLEAR;    
-    FLAG_SET(nodearea.m_rootflag, BIT(clearroot));
-    
-    ASSERT(!FLAG_TEST_ANY(nodearea.m_rootflag, ~ALL_CLEAR_ROOT_MASK));
+        bool state = true;
+        setClearRootFlag(idArea, clearroot, state);
+    };
 };
 
 
 void CAreaRecord::SetAreaRank(AREAID::VALUE idArea, GAMETYPES::CLEARRANK clearrank)
 {
-    if (!isSelectableArea(idArea))
-        return;
-
-    NODEAREA& nodearea = m_aNodeArea[idArea];
-
-    nodearea.m_clearrank = clearrank;
+    NODEAREA* pNode = getNode(idArea);
+    if (pNode)
+        pNode->m_clearrank = clearrank;
 };
 
 
 void CAreaRecord::UpdateAreaClearTime(AREAID::VALUE idArea, const CGameTime& cleartime)
 {
-    if (!isSelectableArea(idArea))
-        return;
-
-    NODEAREA& nodearea = m_aNodeArea[idArea];
-
-    if (nodearea.m_cleartime < cleartime)
-        nodearea.m_cleartime = cleartime;
+    NODEAREA* pNode = getNode(idArea);
+    if (pNode)
+    {
+        if (pNode->m_cleartime < cleartime)
+            pNode->m_cleartime = cleartime;
+    };
 };
 
 
 CAreaRecord::STATE CAreaRecord::GetAreaState(AREAID::VALUE idArea) const
 {
-    return getNode(idArea).m_state;
+    NODEAREA* pNode = getNode(idArea);
+    if (pNode)
+        return pNode->m_state;
+    
+    return STATE_NONE;
 };
 
 
 bool CAreaRecord::IsAreaRootCleared(AREAID::VALUE idArea, CLEAR_ROOT clearroot) const
 {
-    if (!isSelectableArea(idArea))
-        return false;
+    if (GetAreaState(idArea) == STATE_CLEAR)
+        return testClearRootFlag(idArea, clearroot);
 
-    if (m_aNodeArea[idArea].m_state != STATE_CLEAR)
-        return false;
-
-    uint32 rootlfag = (1 << static_cast<uint32>(clearroot));
-
-    return FLAG_TEST(m_aNodeArea[idArea].m_rootflag, rootlfag);
+    return false;
 };
 
 
 GAMETYPES::CLEARRANK CAreaRecord::GetAreaClearRank(AREAID::VALUE idArea) const
 {
-	if (isSelectableArea(idArea))
-		return getNode(idArea).m_clearrank;
-	else
-		return GAMETYPES::CLEARRANK_NONE;
+    NODEAREA* pNode = getNode(idArea);
+    if (pNode)
+        return pNode->m_clearrank;
+    
+    return GAMETYPES::CLEARRANK_NONE;
 };
 
 
 const CGameTime& CAreaRecord::GetAreaClearTime(AREAID::VALUE idArea) const
 {
-	return getNode(idArea).m_cleartime;
+    NODEAREA* pNode = getNode(idArea);
+    if (pNode)
+        return pNode->m_cleartime;
+    
+    return m_aNodeArea[AREAID::ID_NONE].m_cleartime;
 };
 
 
@@ -538,12 +555,14 @@ int32 CAreaRecord::CountRankedArea(GAMETYPES::CLEARRANK clearrank) const
 
     for (int32 i = 0; i < AREAID::NORMALMAX; ++i)
     {
-        if (i != AREAID::ID_NONE &&
-            i != AREAID::ID_AREA03 &&
-            GetAreaClearRank(AREAID::VALUE(i)) == clearrank)
-        {
+        if (i == AREAID::ID_NONE)
+            continue;
+
+        if (i == AREAID::HOME)
+            continue;
+
+        if (GetAreaClearRank(AREAID::VALUE(i)) == clearrank)
             ++iResult;
-        };
     };
 
     return iResult;
@@ -610,15 +629,61 @@ GAMETYPES::CLEARRANK CAreaRecord::CalcTotalClearTimeRank(void) const
 };
 
 
-const CAreaRecord::NODEAREA& CAreaRecord::getNode(AREAID::VALUE idArea) const
+CAreaRecord::NODEAREA* CAreaRecord::getNode(AREAID::VALUE idArea) const
 {
     ASSERT(isSelectableArea(idArea));
 
-    return m_aNodeArea[idArea];
+    if (isSelectableArea(idArea))
+        return &m_aNodeArea[idArea];
+
+    return nullptr;
 };
 
 
 bool CAreaRecord::isSelectableArea(AREAID::VALUE idArea) const
 {
-    return (idArea >= AREAID::ID_NONE && idArea < AREAID::SELECTABLEMAX);
+    return ((idArea >= AREAID::ID_NONE) &&
+            (idArea < AREAID::SELECTABLEMAX));
+};
+
+
+void CAreaRecord::setClearRootFlag(AREAID::VALUE idArea, CLEAR_ROOT root, bool state)
+{
+    uint32* pRootflag = nullptr;
+
+    switch (idArea)
+    {
+    case AREAID::ID_AREA11: pRootflag = &m_rootflagAREA11; break;
+    case AREAID::ID_AREA25: pRootflag = &m_rootflagAREA25; break;
+    case AREAID::ID_AREA33: pRootflag = &m_rootflagAREA33; break;
+    default: break;
+    };
+
+    if (pRootflag)
+    {
+        uint32 flag = (1 << static_cast<uint32>(root));
+
+        if (state)
+            *pRootflag |=  (flag);
+        else
+            *pRootflag &= (~flag);
+
+        ASSERT( ((*pRootflag & ~ALL_CLEAR_ROOT_MASK) == 0) );
+    };
+};
+
+
+bool CAreaRecord::testClearRootFlag(AREAID::VALUE idArea, CLEAR_ROOT root) const
+{
+    uint32 flag = (1 << static_cast<uint32>(root));
+
+    switch (idArea)
+    {
+    case AREAID::ID_AREA11: return ((flag & m_rootflagAREA11) != 0);
+    case AREAID::ID_AREA25: return ((flag & m_rootflagAREA25) != 0);
+    case AREAID::ID_AREA33: return ((flag & m_rootflagAREA33) != 0);
+    default: break;
+    };
+
+    return root == CLEAR_ROOT_A;
 };

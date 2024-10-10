@@ -12,12 +12,12 @@ public:
     {
         uint32 m_uCrystalRedFlag;
         uint32 m_uCrystalGreenFlag;
-        uint32 m_uCrystalOrangeFlag;
         uint32 m_uCrystalWhiteFlag;
-        uint32 m_uItemTakenFlag;
+        uint32 m_uCrystalOrangeFlag;
         int32 m_iComebackNum;
+        uint32 m_uItemTakenFlag;
     };
-    
+
 public:
     CItemRecord(void);
     ~CItemRecord(void);
@@ -34,8 +34,9 @@ public:
     GAMETYPES::CRYSTALTYPE FindAreaCrystal(AREAID::VALUE idArea) const;
     bool IsAreaCrystalTaken(GAMETYPES::CRYSTALTYPE crytype, AREAID::VALUE idArea) const;
     bool IsComebackProcessed(void) const;
-    void DebugSetCryTaken(GAMETYPES::CRYSTALTYPE crytype, int32 iCryNo, bool bTaken);
-    
+    void ForceSetCrystalNum(GAMETYPES::CRYSTALTYPE crytype, int32 num);
+    void ForceSetCrystalNum(int32 num);
+
 private:
     int32 getCrystalMax(GAMETYPES::CRYSTALTYPE crytype) const;
     bool getAreaCrystalInfo(GAMETYPES::CRYSTALTYPE crytype, AREAID::VALUE idArea, int32* piCryNo) const;

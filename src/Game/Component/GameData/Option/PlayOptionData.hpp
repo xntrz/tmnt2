@@ -8,9 +8,8 @@ class CPlayOptionData
 public:
     struct RAWDATA
     {
-        GAMETYPES::DIFFICULTY m_difficulty;
         bool m_bAutosaveFlag;
-        bool m_bClassicInput;
+        GAMETYPES::DIFFICULTY m_difficulty;
     };
 
 public:

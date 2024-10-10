@@ -127,7 +127,7 @@ uint32 CSaveLoadDataBase::GetCheckSum(void) const
     for (uint32 i = 0; i < uSize; ++i)
         uResult += pData[i];
     
-	return uResult;
+	return (uResult & 0xFF);
 };
 
 
@@ -139,7 +139,10 @@ bool CSaveLoadDataBase::IsValidVersion(void) const
 
 bool CSaveLoadDataBase::IsValidCheckSum(void) const
 {
-    return (Header().m_uChecksum == GetCheckSum());
+	uint32 FileChecksum = Header().m_uChecksum;
+	uint32 CalcChecksum = GetCheckSum();
+
+	return (FileChecksum == CalcChecksum);
 };
 
 

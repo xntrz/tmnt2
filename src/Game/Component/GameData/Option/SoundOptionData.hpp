@@ -15,7 +15,7 @@ public:
         int32 m_iVolumeBGM;
         int32 m_iVolumeVoice;
     };
-    
+
 public:
     CSoundOptionData(void);
     ~CSoundOptionData(void);

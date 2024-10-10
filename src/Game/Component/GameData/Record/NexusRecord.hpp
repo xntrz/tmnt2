@@ -30,8 +30,8 @@ public:
 
     struct NODESTAGE
     {
-        int32 m_iNumPlayed;
-        int32 m_iNumCleared;
+        int16 m_numPlayed;
+        int16 m_numCleared;
         CGameTime m_cleartime;
     };
 

@@ -14,11 +14,11 @@ public:
     struct RAWDATA
     {
         uint32 m_uTimestampInit;
-        CAntiqueRecord::RAWDATA m_antique;
-        CAreaRecord::RAWDATA m_area;
-        CDatabaseRecord::RAWDATA m_database;
         CItemRecord::RAWDATA m_item;
+        CAntiqueRecord::RAWDATA m_antique;
+        CDatabaseRecord::RAWDATA m_database;
         CNexusRecord::RAWDATA m_nexus;
+        CAreaRecord::RAWDATA m_area;
         CSecretRecord::RAWDATA m_secret;
     };
     
@@ -34,19 +34,19 @@ public:
     uint32 GetInitDate(void) const;
     uint32 GetAchievedPoint(void);
 
-    CAntiqueRecord& Antique(void);
-    CAreaRecord& Area(void);
-    CDatabaseRecord& Database(void);
-    CItemRecord& Item(void);
-    CNexusRecord& Nexus(void);
-    CSecretRecord& Secret(void);
+    inline CItemRecord& Item(void) { return m_item; };
+    inline CAntiqueRecord& Antique(void) { return m_antique; };
+    inline CDatabaseRecord& Database(void) { return m_database; };
+    inline CNexusRecord& Nexus(void) { return m_nexus; };
+    inline CAreaRecord& Area(void) { return m_area; };
+    inline CSecretRecord& Secret(void) { return m_secret; };
 
 private:
     uint32 m_uTimestampInit;
-    CAntiqueRecord m_antique;
-    CAreaRecord m_area;
-    CDatabaseRecord m_database;
     CItemRecord m_item;
+    CAntiqueRecord m_antique;
+    CDatabaseRecord m_database;
     CNexusRecord m_nexus;
+    CAreaRecord m_area;
     CSecretRecord m_secret;
 };

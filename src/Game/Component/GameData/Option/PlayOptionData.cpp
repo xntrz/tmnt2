@@ -55,7 +55,7 @@ void CPlayOptionData::Snapshot(RAWDATA& rRawData) const
 {
     rRawData.m_difficulty = m_difficulty;
     rRawData.m_bAutosaveFlag = m_bAutosaveFlag;
-    rRawData.m_bClassicInput = m_bClassicInput;
+    //rRawData.m_bClassicInput = m_bClassicInput;
 };
 
 
@@ -63,7 +63,7 @@ void CPlayOptionData::Restore(const RAWDATA& rRawData)
 {
     m_difficulty = rRawData.m_difficulty;
     m_bAutosaveFlag = rRawData.m_bAutosaveFlag;
-    m_bClassicInput = rRawData.m_bClassicInput;
+    //m_bClassicInput = rRawData.m_bClassicInput;
 };
 
 

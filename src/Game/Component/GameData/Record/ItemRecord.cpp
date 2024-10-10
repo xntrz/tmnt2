@@ -254,9 +254,12 @@ void CItemRecord::Restore(const RAWDATA& rRawData)
 
 void CItemRecord::SetItemTaken(ITEMID::VALUE idItem)
 {
-    ASSERT(idItem > ITEMID::ID_NONE && idItem <= ITEMID::ID_MAX);
+    ASSERT(idItem > ITEMID::ID_NONE);
+    ASSERT(idItem <= ITEMID::ID_MAX);
 
-    FLAG_SET(m_uItemTakenFlag, BIT(idItem));
+    uint32 flag = (1 << static_cast<uint32>(idItem));
+
+    m_uItemTakenFlag |= (flag);
 };
 
 
@@ -375,15 +378,27 @@ bool CItemRecord::IsComebackProcessed(void) const
 };
 
 
-void CItemRecord::DebugSetCryTaken(GAMETYPES::CRYSTALTYPE crytype, int32 iCryNo, bool bTaken)
+void CItemRecord::ForceSetCrystalNum(GAMETYPES::CRYSTALTYPE crytype, int32 num)
 {
-    //
-    //  Used only for debug tests
-    //
-    
-#ifdef _DEBUG
-    setCrystalFlag(crytype, iCryNo, bTaken);
-#endif    
+#ifdef _DEBUG    
+    int32 cryMax = getCrystalMax(crytype);
+    for (int32 i = 0; i < cryMax; ++i)
+    {
+        bool state = (i >= num ? false : true);
+        setCrystalFlag(crytype, i, state);
+    };
+#endif /* _DEBUG */    
+};
+
+
+void CItemRecord::ForceSetCrystalNum(int32 num)
+{
+#ifdef _DEBUG    
+    ForceSetCrystalNum(GAMETYPES::CRYSTALTYPE_RED, num);
+    ForceSetCrystalNum(GAMETYPES::CRYSTALTYPE_GREEN, num);
+    ForceSetCrystalNum(GAMETYPES::CRYSTALTYPE_WHITE, num);
+    ForceSetCrystalNum(GAMETYPES::CRYSTALTYPE_ORANGE, num);
+#endif /* _DEBUG */    
 };
 
 
@@ -395,7 +410,7 @@ int32 CItemRecord::getCrystalMax(GAMETYPES::CRYSTALTYPE crytype) const
     case GAMETYPES::CRYSTALTYPE_GREEN:
     case GAMETYPES::CRYSTALTYPE_ORANGE:
     case GAMETYPES::CRYSTALTYPE_WHITE:
-        return GAMETYPES::CRY_MAX;
+        return GAMETYPES::CRYSTAL_MAX;
 
     default:
         return 0;
