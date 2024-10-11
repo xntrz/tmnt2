@@ -12,9 +12,9 @@ class COptionData
 public:
     struct RAWDATA
     {
-        CDisplayOptionData::RAWDATA m_display;
-        CSoundOptionData::RAWDATA m_sound;
         CPlayOptionData::RAWDATA m_play;
+        CSoundOptionData::RAWDATA m_sound;
+        CDisplayOptionData::RAWDATA m_display;
         CGamepadOptionData::RAWDATA m_aGamepad[6];
 #ifdef TARGET_PC
         CKeyboardOptionData::RAWDATA m_keyboard;

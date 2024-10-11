@@ -227,7 +227,8 @@ void CGamePlayResult::InitForArea(void)
 {
     Clear();
 
-    switch (CGameData::Option().Play().GetDifficulty())
+	GAMETYPES::DIFFICULTY difficulty = CGameData::Option().Play().GetDifficulty();
+    switch (difficulty)
     {
     case GAMETYPES::DIFFICULTY_EASY:
         m_baserank = GAMETYPES::CLEARRANK_E;

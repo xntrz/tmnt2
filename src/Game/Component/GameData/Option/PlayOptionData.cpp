@@ -35,7 +35,11 @@ void CPlayOptionData::SetDefault(void)
 
 void CPlayOptionData::Apply(void)
 {
-    ;
+	if (!IsValid())
+	{
+		OUTPUT("%s is invalid! Set to default!\n", __FUNCTION__);
+		SetDefault();
+	};
 };
 
 
@@ -43,8 +47,8 @@ bool CPlayOptionData::IsValid(void) const
 {
     ASSERT(m_difficulty >= GAMETYPES::DIFFICULTY_EASY && m_difficulty < GAMETYPES::DIFFICULTY_NUM);
 
-    if (m_difficulty < GAMETYPES::DIFFICULTY_EASY ||
-        m_difficulty >= GAMETYPES::DIFFICULTY_NUM)
+    if ((m_difficulty < GAMETYPES::DIFFICULTY_EASY) ||
+        (m_difficulty >= GAMETYPES::DIFFICULTY_NUM))
         return false;
 
     return true;

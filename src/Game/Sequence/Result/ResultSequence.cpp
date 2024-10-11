@@ -432,7 +432,9 @@ void CResultWorkPool::PersonalResultDraw(void)
         for (int32 i = 0; i < COLUMNS; ++i)
         {
             GAMETYPES::CLEARRANK personalrank = CGameData::PlayResult().GetPersonalRank(i);
-            ASSERT(personalrank >= GAMETYPES::CLEARRANK_E && personalrank < GAMETYPES::CLEARRANK_NUM);
+			
+			ASSERT(personalrank >= GAMETYPES::CLEARRANK_E);
+			ASSERT(personalrank < GAMETYPES::CLEARRANK_NUM);
             
             m_sprite.SetTexture(m_apTexture[personalrank - 1]);
             m_sprite.Move(float(i) * 106.0f - 92.0f, 141.0f);
