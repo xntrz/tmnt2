@@ -1111,7 +1111,7 @@ static void SdSetAttackEnemy(const SE_ATTACK_PARAM* pParam)
 
 /*static*/ void CGameSound::PlayVoice(int32 nVoice, PLAYERID::VALUE idPlayer /*= PLAYERID::ID_INVALID*/)
 {
-    ASSERT((nVoice != SD_NOCODE) || (nVoice >= 0x4000));
+    ASSERT((nVoice == SD_NOCODE) || (nVoice >= 0x4000));
 
     m_aVoiceHist[m_nVoiceHistSide++ % COUNT_OF(m_aVoiceHist)] = { nVoice, idPlayer };
 
