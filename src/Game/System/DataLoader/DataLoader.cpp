@@ -5,92 +5,10 @@
 #include "System/Common/File/File.hpp"
 #include "System/Common/File/FileTypes.hpp"
 
-
-IDataLoaderImpl* CreateDataLoaderImplement(void);
-
-
-template<class T>
-class CRequestQueue
-{
-private:
-    struct NODE : public CListNode<NODE>
-    {
-        T m_payload;
-    };
-    
-public:
-    CRequestQueue(int32 nNumNode)
-    : m_paNode(new NODE[nNumNode])
-    , m_nNumNode(nNumNode)
-    {
-        for (int32 i = 0; i < m_nNumNode; ++i)
-        {
-            std::memset(&m_paNode[i].m_payload, 0x00, sizeof(m_paNode[i].m_payload));
-            m_listNodeFree.push_back(&m_paNode[i]);
-        };
-    };
+#include <queue>
 
 
-    ~CRequestQueue(void)
-    {
-        if (m_paNode)
-        {
-            delete[] m_paNode;
-            m_paNode = nullptr;
-        };
-    };
-
-
-    void push(T* data)
-    {
-        if (m_listNodeFree.empty())
-        {
-            ASSERT(false);
-            return;
-        };
-        
-        NODE* pNode = m_listNodeFree.front();
-        m_listNodeFree.erase(pNode);
-        m_listNodeAlloc.push_front(pNode);
-
-        pNode->m_payload = *data;
-    };
-
-
-    void pop(void)
-    {
-        if (m_listNodeAlloc.empty())
-        {
-            ASSERT(false);
-            return;
-        };
-
-        NODE* pNode = m_listNodeAlloc.back();
-        m_listNodeAlloc.erase(pNode);
-        m_listNodeFree.push_back(pNode);
-    };
-
-
-    T* peek(void)
-    {
-        ASSERT(!empty());
-
-        NODE* pNode = m_listNodeAlloc.back();
-        return &pNode->m_payload;
-    };
-
-
-    bool empty(void) const
-    {
-        return m_listNodeAlloc.empty();
-    };
-
-private:
-    NODE* m_paNode;
-    int32 m_nNumNode;
-    CList<NODE> m_listNodeAlloc;
-    CList<NODE> m_listNodeFree;
-};
+extern IDataLoaderImpl* CreateDataLoaderImplement(void);
 
 
 class CDataLoaderContainer
@@ -98,23 +16,28 @@ class CDataLoaderContainer
 private:
     struct REQUEST
     {
-        enum TYPE
-        {
-            TYPE_ID,
-            TYPE_ISO,
-        };
+        enum TYPE { TYPE_ID, TYPE_ISO, };
 
         TYPE m_type;
-        union
-        {
-            int32 m_iFileID;
-            char m_szFilename[FILETYPES::FILE_NAME_MAX];
-        };
+        int32 m_iFileID;
+        char m_szFilename[FILETYPES::FILE_NAME_MAX];
+
+        /* ctor for id file type */
+        inline REQUEST(int32 fileId)
+            : m_type(TYPE_ID), m_iFileID(fileId), m_szFilename() { m_szFilename[0] = '\0'; };
+
+        /* ctor for iso file type */
+        inline REQUEST(const char* filename)
+            : m_type(TYPE_ISO), m_iFileID(-1), m_szFilename() { std::strcpy(m_szFilename, filename); };
+
+        /* default ctor for prealloc */
+        inline REQUEST()
+            : m_type(TYPE_ID), m_iFileID(-1), m_szFilename() { m_szFilename[0] = '\0'; };
     };
-    
+
 public:
     CDataLoaderContainer(void);
-    virtual ~CDataLoaderContainer(void);
+    ~CDataLoaderContainer(void);
     void Period(void);
     void Regist(int32 iFileID);
     void Regist(const char* pszFilename);
@@ -124,34 +47,37 @@ public:
     bool IsLoadEnd(void) const;
 
 private:
-    CRequestQueue<REQUEST> m_RequestQueue;
+    std::queue<REQUEST> m_queueRequest;
     CFile* m_pCurrentFile;
     IDataLoaderImpl* m_pDataLoaderImpl;
 };
 
 
 CDataLoaderContainer::CDataLoaderContainer(void)
-: m_RequestQueue(32)
+: m_queueRequest()
 , m_pCurrentFile(nullptr)
 , m_pDataLoaderImpl(CreateDataLoaderImplement())
 {
     ASSERT(m_pDataLoaderImpl);
+
+    // preallocate space for queue
+    std::deque<REQUEST> container;
+    container.resize(32);
+    container.resize(0);
+
+    m_queueRequest = std::queue<REQUEST>(std::move(container));
 };
 
 
 CDataLoaderContainer::~CDataLoaderContainer(void) 
 {
+    if (m_pCurrentFile)
+        DestroyFile();
+
     if (m_pDataLoaderImpl)
     {
         delete m_pDataLoaderImpl;
         m_pDataLoaderImpl = nullptr;
-    };
-
-    if (m_pCurrentFile)
-    {
-        m_pCurrentFile->Close();
-        delete m_pCurrentFile;
-        m_pCurrentFile = nullptr;
     };
 };
 
@@ -162,30 +88,30 @@ void CDataLoaderContainer::Period(void)
     {
         if (m_pCurrentFile->Stat() == CFile::STAT_READEND)
         {
-            const void* pFileData = m_pCurrentFile->Data();
+            void* pFileData = m_pCurrentFile->Data();
             uint32 uFileSize = m_pCurrentFile->Size();
 
             ASSERT(m_pDataLoaderImpl);
             m_pDataLoaderImpl->Eval(pFileData, uFileSize);
             
             DestroyFile();
-			m_RequestQueue.pop();
+			m_queueRequest.pop();
         };
     }
     else
     {
-        if (!m_RequestQueue.empty())
+        if (!m_queueRequest.empty())
         {
-            REQUEST* pRequest = m_RequestQueue.peek();
+            REQUEST& request = m_queueRequest.front();
 
-            switch (pRequest->m_type)
+            switch (request.m_type)
             {
             case REQUEST::TYPE_ID:
-                CreateFile(pRequest->m_iFileID);
+                CreateFile(request.m_iFileID);
                 break;
 
             case REQUEST::TYPE_ISO:
-                CreateFile(pRequest->m_szFilename);
+                CreateFile(request.m_szFilename);
                 break;
 
             default:
@@ -199,23 +125,13 @@ void CDataLoaderContainer::Period(void)
 
 void CDataLoaderContainer::Regist(int32 iFileID) 
 {
-    REQUEST Request;
-    Request.m_type = REQUEST::TYPE_ID;
-    Request.m_iFileID = iFileID;
-
-    m_RequestQueue.push(&Request);
+    m_queueRequest.push(REQUEST(iFileID));
 };
 
 
 void CDataLoaderContainer::Regist(const char* pszFilename) 
 {
-    ASSERT(strlen(pszFilename) < COUNT_OF(REQUEST::m_szFilename));
-    
-    REQUEST Request;
-    Request.m_type = REQUEST::TYPE_ID;
-    std::strcpy(Request.m_szFilename, pszFilename);
-
-    m_RequestQueue.push(&Request);
+    m_queueRequest.push(REQUEST(pszFilename));
 };
 
 
@@ -232,8 +148,6 @@ void CDataLoaderContainer::CreateFile(int32 iFileID)
 
 void CDataLoaderContainer::CreateFile(const char* pszFilename)
 {
-    ASSERT(!m_pCurrentFile);
-
     CAdxFileISO* pFile = new CAdxFileISO;
     if (pFile)
     {
@@ -245,9 +159,8 @@ void CDataLoaderContainer::CreateFile(const char* pszFilename)
 
 void CDataLoaderContainer::DestroyFile(void)
 {
-    ASSERT(m_pCurrentFile);
-    
     m_pCurrentFile->Close();
+
     delete m_pCurrentFile;
     m_pCurrentFile = nullptr;
 };
@@ -255,7 +168,7 @@ void CDataLoaderContainer::DestroyFile(void)
 
 bool CDataLoaderContainer::IsLoadEnd(void) const
 {
-    return m_RequestQueue.empty();
+    return m_queueRequest.empty();
 };
 
 

@@ -1,4 +1,4 @@
-#include "DataLoaderFromBinary.hpp"
+#include "DataLoaderImpl.hpp"
 
 #include "Game/Component/Effect/EffectManager.hpp"
 #include "Game/Component/Enemy/EnemyParameter.hpp"
@@ -18,13 +18,83 @@
 #include "System/Common/Font.hpp"
 
 
-#define CHUNK_ALIGNMENT_SIZE (64)
-#define LPAC_MAGIC ('CAPL')
+#define CHUNK_ALIGNMENT_SIZE    (64)
+#define LPAC_MAGIC              ('CAPL')
 
 
-IDataLoaderImpl* CreateDataLoaderImplement(void)
+namespace READERTYPE
 {
-    return new CDataLoaderFromBinary;
+    enum VALUE
+    {
+        MODEL = 0,
+        MODEL_TOON,
+        MOTION_SET,
+        MOTION,
+        MOTION_PARAMETER,
+
+        TEXTURE_DICTIONARY = 7,
+        MODEL_BSP,
+        CAMERA,
+        EFFECT,
+        ANIM2D,
+        UVANIM,
+        FONT,
+        MAP_MODEL,
+        MAP_INFO,
+        ADD_TEXTURE_DICTIONARY,
+        GIMMICK,
+        STRINGS,
+        ENEMY_PARAMETER,
+        ICONS_PS2,
+        ICONS_NGC,
+
+        TYPE_MAX,
+    };
+};
+
+
+class CDataLoaderFromBinary : public IDataLoaderImpl
+{
+public:
+    class CFileHeader
+    {
+    public:
+        uint32 m_uMagic;
+        uint32 m_uChunkNum;
+    };
+
+    class CChunkHeader
+    {
+    public:
+        struct HEADER
+        {
+            uint32 m_uType;
+            uint32 m_uSize;
+            uint32 m_uReserved[2];
+            char m_szName[16];
+        };
+
+    public:
+        HEADER* m_pHeader;
+        void* m_pExtraHeader;
+    };
+
+    class IItemReader
+    {
+    public:
+        virtual ~IItemReader(void) {};
+        virtual void Eval(CChunkHeader* pChunkHeader, void* pData) = 0;
+        virtual const char* GetLabel(void) const = 0;
+        virtual READERTYPE::VALUE GetType(void) const = 0;
+    };
+
+public:
+    CDataLoaderFromBinary(void);
+    virtual ~CDataLoaderFromBinary(void);
+    virtual void Eval(void* pBufferOrg, uint32 sizeBuffer) override;
+
+private:
+    IItemReader* m_apItemReader[READERTYPE::TYPE_MAX];
 };
 
 
@@ -72,7 +142,7 @@ void CItemModelReader::Eval(CDataLoaderFromBinary::CChunkHeader* pChunkHeader, v
         char m_szTextureSetName[16];
     };
 
-    MDLHEADER* pMdlHeader = (MDLHEADER*)pChunkHeader->m_pExtraHeader;
+    MDLHEADER* pMdlHeader = static_cast<MDLHEADER*>(pChunkHeader->m_pExtraHeader);
 
     CModelManager::ReadNormal(
         pChunkHeader->m_pHeader->m_szName,
@@ -96,7 +166,7 @@ void CItemModelToonReader::Eval(CDataLoaderFromBinary::CChunkHeader* pChunkHeade
         int32 m_pattern;
     };
 
-    MDLTOONHEADER* pMdlToonHeader = (MDLTOONHEADER*)pChunkHeader->m_pExtraHeader;
+    MDLTOONHEADER* pMdlToonHeader = static_cast<MDLTOONHEADER*>(pChunkHeader->m_pExtraHeader);
 
     CModelManager::ReadToon(
         pChunkHeader->m_pHeader->m_szName,
@@ -121,22 +191,12 @@ void CItemMotionSetReader::Eval(CDataLoaderFromBinary::CChunkHeader* pChunkHeade
         char m_szSetName[16];
     };
 
-    MOTIONSETHEADER* pMotionSetHeader = (MOTIONSETHEADER*)pChunkHeader->m_pExtraHeader;
+    MOTIONSETHEADER* pMotionSetHeader = static_cast<MOTIONSETHEADER*>(pChunkHeader->m_pExtraHeader);
 
-    if (pMotionSetHeader->m_bSetName)
-    {
-        CMotionManager::CreateMotionSet(
-            pChunkHeader->m_pHeader->m_szName,
-            pMotionSetHeader->m_szSetName
-        );
-    }
-    else
-    {
-        CMotionManager::CreateMotionSet(
-            pChunkHeader->m_pHeader->m_szName,
-            CMotionManager::GLOBAL_SET
-        );
-    };
+    CMotionManager::CreateMotionSet(
+        pChunkHeader->m_pHeader->m_szName,
+        (pMotionSetHeader->m_bSetName ? pMotionSetHeader->m_szSetName : CMotionManager::GLOBAL_SET)
+    );
 };
 
 
@@ -282,8 +342,8 @@ void CItemUVAnimReader::Eval(CDataLoaderFromBinary::CChunkHeader* pChunkHeader, 
 void CItemFontReader::Eval(CDataLoaderFromBinary::CChunkHeader* pChunkHeader, void* pData)
 {
 	CGameFont::Open(
-		pChunkHeader->m_pHeader->m_szName,
-		(const char*)pData,
+        pChunkHeader->m_pHeader->m_szName,
+        reinterpret_cast<const char*>(pData),
 		pChunkHeader->m_pHeader->m_szName
 	);
 };
@@ -302,7 +362,7 @@ void CItemMapModelReader::Eval(CDataLoaderFromBinary::CChunkHeader* pChunkHeader
         int32 m_mode;
     };
 
-    MAPMDLHEADER* pMapMdlHeader = (MAPMDLHEADER*)pChunkHeader->m_pExtraHeader;
+    MAPMDLHEADER* pMapMdlHeader = static_cast<MAPMDLHEADER*>(pChunkHeader->m_pExtraHeader);
 
     if (CUVAnim::IsExistsUVAnimDict(pChunkHeader->m_pHeader->m_szName))        
         CUVAnim::SetUVAnimDict(pChunkHeader->m_pHeader->m_szName);
@@ -442,44 +502,54 @@ CDataLoaderFromBinary::~CDataLoaderFromBinary(void)
 };
 
 
-void CDataLoaderFromBinary::Eval(const void* pBuffer, uint32 uBufferSize)
+void CDataLoaderFromBinary::Eval(void* pBufferOrg, uint32 sizeBuffer)
 {
-    CFileHeader* pFileHeader = (CFileHeader*)pBuffer;
-    pBuffer = ((uint8*)pBuffer + ALIGN(sizeof(CFileHeader), CHUNK_ALIGNMENT_SIZE));
+    uint8* pBuffer = static_cast<uint8*>(pBufferOrg)
+                    + sizeof(CFileHeader)
+                    + (CHUNK_ALIGNMENT_SIZE - (sizeof(CFileHeader) % CHUNK_ALIGNMENT_SIZE));
 
-    for (uint32 i = 0; i < pFileHeader->m_uChunkNum; ++i)
+    uint32 uChunkNum = reinterpret_cast<CFileHeader*>(pBufferOrg)->m_uChunkNum;
+    for (uint32 i = 0; i < uChunkNum; ++i)
     {
-        CChunkHeader ChunkHeader;
-        ChunkHeader.m_pHeader = (CChunkHeader::HEADER*)pBuffer;
-        ChunkHeader.m_pExtraHeader = (CChunkHeader::HEADER*)((uint8*)pBuffer + sizeof(CChunkHeader::HEADER));
+        CChunkHeader chunkHeader;
+        chunkHeader.m_pHeader       = reinterpret_cast<CChunkHeader::HEADER*>(pBuffer);
+        chunkHeader.m_pExtraHeader  = reinterpret_cast<CChunkHeader::HEADER*>(pBuffer + sizeof(CChunkHeader::HEADER));
 
-        pBuffer = ((uint8*)pBuffer + (sizeof(CChunkHeader::HEADER) * 2));
-        
+        pBuffer += (sizeof(CChunkHeader::HEADER) * 2);
+
         for (uint32 j = 0; j < COUNT_OF(m_apItemReader); ++j)
         {
-			if (!m_apItemReader[j])
-				continue;
+            if (!m_apItemReader[j])
+                continue;
 
-			if (m_apItemReader[j]->GetType() != READERTYPE::VALUE(ChunkHeader.m_pHeader->m_uType))
-				continue;
-			
-			//OUTPUT(
-			//	"reading file %-20s\t\t(%-20s -- 0x%x)\n",
-			//	ChunkHeader.m_pHeader->m_szName,
-			//	m_apItemReader[j]->GetLabel(),
-			//	m_apItemReader[j]->GetType()
-			//);
+            if (m_apItemReader[j]->GetType() != READERTYPE::VALUE(chunkHeader.m_pHeader->m_uType))
+                continue;
 
-            if (DecideEval(READERTYPE::VALUE(ChunkHeader.m_pHeader->m_uType), &ChunkHeader))
-                m_apItemReader[j]->Eval(&ChunkHeader, (void*)pBuffer);
+            //OUTPUT(
+            //	"reading file %-20s\t\t(%-20s -- 0x%x)\n",
+            //	ChunkHeader.m_pHeader->m_szName,
+            //	m_apItemReader[j]->GetLabel(),
+            //	m_apItemReader[j]->GetType()
+            //);
+
+            m_apItemReader[j]->Eval(&chunkHeader, pBuffer);
         };
 
-        uint32 uChunkSize = ChunkHeader.m_pHeader->m_uSize;
-        
-        if (!ALIGN_CHECK(uChunkSize, CHUNK_ALIGNMENT_SIZE))
-            uChunkSize += ALIGN_ADJUST(uChunkSize, CHUNK_ALIGNMENT_SIZE);
+        uint32 uChunkSize = chunkHeader.m_pHeader->m_uSize;
 
-        ASSERT(ALIGN_CHECK(uChunkSize, CHUNK_ALIGNMENT_SIZE));
-        pBuffer = ((uint8*)pBuffer + uChunkSize);
+        if (uChunkSize % CHUNK_ALIGNMENT_SIZE)
+            uChunkSize += (CHUNK_ALIGNMENT_SIZE - (uChunkSize % CHUNK_ALIGNMENT_SIZE));
+
+        pBuffer += uChunkSize;
+
+        ASSERT((uChunkSize % CHUNK_ALIGNMENT_SIZE) == 0);
+        ASSERT((reinterpret_cast<uint32>(pBuffer) - reinterpret_cast<uint32>(pBufferOrg)) <= sizeBuffer);
+        ASSERT(((reinterpret_cast<uint32>(pBuffer) - reinterpret_cast<uint32>(pBufferOrg)) % CHUNK_ALIGNMENT_SIZE) == 0);
     };
+};
+
+
+IDataLoaderImpl* CreateDataLoaderImplement(void)
+{
+    return new CDataLoaderFromBinary;
 };
