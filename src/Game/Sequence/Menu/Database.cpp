@@ -316,6 +316,9 @@ void CDatabase_Container::DB_DrawText(WNDTYPE Wndtype)
 {
     if (!m_bTextureSettingFlag)
         return;
+
+    if (Wndtype == WNDTYPE_EXIT)
+        return;
     
     CSystem2D::PushRenderState();
     
