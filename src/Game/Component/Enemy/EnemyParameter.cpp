@@ -115,7 +115,7 @@ static void CompensationParameter(ENEMYPARAMCONTAINER* pEnemyParam)
 {
     CEnemyParameter::Initialize();
 
-    const char* ptr = (char*)Buffer;
+    const char* ptr = static_cast<const char*>(Buffer);
     
     if (std::strncmp(ptr, ENEMYPARAM_FILEHEADER, std::strlen(ENEMYPARAM_FILEHEADER)))
         ASSERT(false);
@@ -132,7 +132,8 @@ static void CompensationParameter(ENEMYPARAMCONTAINER* pEnemyParam)
         if ((TmpContainer.m_iHeader == int32('IBPE')) &&
             (TmpContainer.m_eDifficulty == GAMETYPES::DIFFICULTY_NORMAL))
         {
-            ASSERT((TmpContainer.m_eID >= ENEMYID::ID_START) && (TmpContainer.m_eID < ENEMYID::ID_MAX));
+            ASSERT(TmpContainer.m_eID >= ENEMYID::ID_START);
+            ASSERT(TmpContainer.m_eID <  ENEMYID::ID_MAX);
 
             s_aEnemyParam[ParamNo].m_bExist = true;
             std::memcpy(&s_aEnemyParam[ParamNo], &TmpContainer, sizeof(TmpContainer));
@@ -167,17 +168,22 @@ static void CompensationParameter(ENEMYPARAMCONTAINER* pEnemyParam)
 
 /*static*/ int32 CEnemyParameter::GetHP(int32 index)
 {
-    ASSERT((index >= 0) && (index < COUNT_OF(s_aEnemyParam)));
+    ASSERT(index >= 0);
+    ASSERT(index < COUNT_OF(s_aEnemyParam));
     ASSERT(s_aEnemyParam[index].m_bExist);
+
     return s_aEnemyParam[index].m_container.m_iHP;
 };
 
 
 /*static*/ uint8 CEnemyParameter::GetFrequency(int32 index, int32 num)
 {
-    ASSERT((index >= 0) && (index < COUNT_OF(s_aEnemyParam)));
+    ASSERT(index >= 0);
+    ASSERT(index < COUNT_OF(s_aEnemyParam));
     ASSERT(s_aEnemyParam[index].m_bExist);
-    ASSERT((num >= 0) && (num < COUNT_OF(ENEMYPARAMCONTAINER::m_auFrequency)));
+    ASSERT(num >= 0);
+    ASSERT(num < COUNT_OF(ENEMYPARAMCONTAINER::m_auFrequency));
+
     return s_aEnemyParam[index].m_container.m_auFrequency[num];
 };
 
@@ -190,8 +196,10 @@ static void CompensationParameter(ENEMYPARAMCONTAINER* pEnemyParam)
 
 /*static*/ const ENEMYTYPES::CHARACTERISTIC& CEnemyParameter::GetAICharacteristic(int32 index)
 {
-    ASSERT((index >= 0) && (index < COUNT_OF(s_aEnemyParam)));
+    ASSERT(index >= 0);
+    ASSERT(index < COUNT_OF(s_aEnemyParam));
     ASSERT(s_aEnemyParam[index].m_bExist);
+
     return s_aEnemyParam[index].m_container.m_AICharacteristic;
 };
 

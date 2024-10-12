@@ -13,45 +13,6 @@
 #include "Game/System/GameObject/GameObjectManager.hpp"
 
 
-CEnemyCharacter::CStatusObserver::CStatusObserver(CEnemyCharacter& rEnemyCharacter, ENEMYTYPES::STATUS eOwnStatus)
-: m_rEnemyCharacter(rEnemyCharacter)
-, m_pSharedData(m_rEnemyCharacter.StatusSubject().GetSharedData())
-, m_eOwnStatus(eOwnStatus)
-{
-    ;
-};
-
-
-CEnemyCharacter::CStatusObserver::~CStatusObserver(void)
-{
-    ;
-};
-
-
-void CEnemyCharacter::CStatusObserver::Append(void)
-{
-    ;
-};
-
-
-void CEnemyCharacter::CStatusObserver::Remove(void)
-{
-    ;
-};
-
-
-void CEnemyCharacter::CStatusObserver::Update(void)
-{
-    ;
-};
-
-
-ENEMYTYPES::STATUS CEnemyCharacter::CStatusObserver::Status(void) const
-{
-    return m_eOwnStatus;
-};
-
-
 CEnemyCharacter::CStatusSubject::CStatusSubject(void)
 : m_eStatusPrev(ENEMYTYPES::STATUS_HIDE)
 , m_eStatus(ENEMYTYPES::STATUS_HIDE)
@@ -127,17 +88,17 @@ void CEnemyCharacter::CStatusSubject::OnStart(void)
 };
 
 
-void CEnemyCharacter::CStatusSubject::OnEnd(void)
+ENEMYTYPES::STATUS CEnemyCharacter::CStatusSubject::OnEnd(void)
 {
     ASSERT(m_apStatusObservers[m_eStatus]);
-    m_apStatusObservers[m_eStatus]->OnEnd();
+    return m_apStatusObservers[m_eStatus]->OnEnd();
 };
 
 
-void CEnemyCharacter::CStatusSubject::Observing(void)
+CEnemyCharacter::CStatusObserver::RESULT CEnemyCharacter::CStatusSubject::Observing(void)
 {
     ASSERT(m_apStatusObservers[m_eStatus]);
-    m_apStatusObservers[m_eStatus]->Observing();
+    return m_apStatusObservers[m_eStatus]->Observing();
 };
 
 
@@ -222,10 +183,10 @@ CEnemyCharacter::CEnemyCharacter(ENEMYID::VALUE idEnemy)
 CEnemyCharacter::~CEnemyCharacter(void)
 {
     Delete();
-    
-    CCharacterCompositor* pCharacter = (CCharacterCompositor*)CGameObjectManager::GetObject(m_hCharacter);
-    if (pCharacter)
-        delete pCharacter;    
+
+    CGameObject* pObj = CGameObjectManager::GetObject(m_hCharacter);
+    if (pObj)
+        delete pObj;
 };
 
 
@@ -320,9 +281,37 @@ void CEnemyCharacter::Run(void)
     if (m_pAIModerator && m_bRunningAI)
         m_pAIModerator->Run();
 
-    StatusSubject().Observing();
+    if (StatusSubject().Observing() != CStatusObserver::RESULT_END)
+    {
+        StatusSubject().Update();
+        return;
+    };
 
-    
+    ENEMYTYPES::STATUS eStatus = StatusSubject().OnEnd();
+    if (eStatus != ENEMYTYPES::STATUS_QUIT)
+    {
+        if ((eStatus == ENEMYTYPES::STATUS_GETUP) &&
+            TestFlag(ENEMYTYPES::FLAG_DEATH_STATUS) &&
+            (GetStatus() != ENEMYTYPES::STATUS_QUIT) &&
+            (GetStatus() != ENEMYTYPES::STATUS_DEATH))
+        {
+            eStatus = ENEMYTYPES::STATUS_DEATH;
+        };
+
+        StatusSubject().Status(eStatus);
+        StatusSubject().OnStart();
+        StatusSubject().Update();
+        return;
+    };
+
+    CGameObject* pObj = CGameObjectManager::GetObject(m_hOwner);
+    if (pObj)
+    {
+        ASSERT(pObj->GetType() == GAMEOBJECTTYPE::ENEMY);
+
+        CGameObjectManager::DeleteObject(pObj);
+        Stop();
+    };
 };
 
 
@@ -350,7 +339,7 @@ void CEnemyCharacter::Delete(void)
     {
         if (m_pParameter->m_iFrequencyMax)
         {
-            delete[] m_puFrequencyParam;
+            delete [] m_puFrequencyParam;
             m_puFrequencyParam = nullptr;
         };
 
@@ -1195,25 +1184,25 @@ void CEnemyCharacter::StopAI(void)
 };
 
 
+void CEnemyCharacter::SetFlag(ENEMYTYPES::FLAG flag)
+{
+    uint32 eflag = m_eflag;
+    eflag |= (1 << static_cast<uint32>(flag));
+    m_eflag = static_cast<ENEMYTYPES::FLAG>(eflag);
+};
+
+
 void CEnemyCharacter::ClearFlag(ENEMYTYPES::FLAG flag)
 {
     uint32 eflag = m_eflag;
-    FLAG_CLEAR(eflag, flag);
-    m_eflag = ENEMYTYPES::FLAG(eflag);
+    eflag &= ~(1 << static_cast<uint32>(flag));
+    m_eflag = static_cast<ENEMYTYPES::FLAG>(eflag);
 };
 
 
 bool CEnemyCharacter::TestFlag(ENEMYTYPES::FLAG flag) const
 {
-    return FLAG_TEST(m_eflag, flag);
-};
-
-
-void CEnemyCharacter::SetFlag(ENEMYTYPES::FLAG flag)
-{
-    uint32 eflag = m_eflag;
-    FLAG_SET(eflag, flag);
-    m_eflag = ENEMYTYPES::FLAG(eflag);
+    return ((static_cast<uint32>(m_eflag) & static_cast<uint32>(flag)) == static_cast<uint32>(flag));
 };
 
 
@@ -1232,7 +1221,7 @@ CAIModerator& CEnemyCharacter::AIModerator(void) const
 
 CAIThinkOrder& CEnemyCharacter::AIThinkOrder(void) const
 {    
-    return (CAIThinkOrder&)m_AIThinkOrder;
+    return m_AIThinkOrder;
 };
 
 
@@ -1267,5 +1256,5 @@ CCharacterCompositor& CEnemyCharacter::CharacterCompositor(void) const
 {
     CGameObject* pObj = CGameObjectManager::GetObject(m_hCharacter);
     ASSERT(pObj);
-    return *(CCharacterCompositor*)pObj;
+    return static_cast<CCharacterCompositor&>(*pObj);
 };

@@ -170,9 +170,6 @@ void CFramework::Flip(void)
     m_pGraphicsDevice->Flip();
     m_pInputsDevice->Sync();
     m_pFileManager->Sync();
-
-    // TODO impl
-    // SoundFramework()
 };
 
 

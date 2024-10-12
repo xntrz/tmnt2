@@ -23,32 +23,42 @@ public:
     
     struct PARAMETER
     {
-        CAIModerator* (*m_pfnAIInstance)(void);
-        bool m_bToon;
-        float m_fShadowRadius;
-        ENEMYTYPES::FEATURE m_feature;
-        ENEMYTYPES::CHARACTERISTIC m_AICharacteristic;
-        int32 m_iFrequencyMax;
-        uint8* m_puFrequencyParam;
+        CAIModerator*               (*m_pfnAIInstance)(void);
+        bool                        m_bToon;
+        float                       m_fShadowRadius;
+        ENEMYTYPES::FEATURE         m_feature;
+        ENEMYTYPES::CHARACTERISTIC  m_AICharacteristic;
+        int32                       m_iFrequencyMax;
+        uint8*                      m_puFrequencyParam;
     };
     
     class CStatusObserver
     {
     public:
-        CStatusObserver(CEnemyCharacter& rEnemyCharacter, ENEMYTYPES::STATUS eOwnStatus);
-        virtual ~CStatusObserver(void);
-        virtual void Append(void);
-        virtual void Remove(void);
-        virtual void Update(void);
-        virtual void OnStart(void) = 0;
-        virtual void OnEnd(void) = 0;
-        virtual void Observing(void) = 0;
-        ENEMYTYPES::STATUS Status(void) const;
+        enum RESULT
+        {
+            RESULT_CONTINUE = 0,
+            RESULT_END,
+        };
+
+    public:
+        inline CStatusObserver(CEnemyCharacter& rEnemyCharacter, ENEMYTYPES::STATUS eOwnStatus)
+            : m_rEnemyCharacter(rEnemyCharacter) , m_pSharedData(m_rEnemyCharacter.StatusSubject().GetSharedData()) , m_eOwnStatus(eOwnStatus) {};
+
+        virtual                     ~CStatusObserver(void) {};
+        virtual void                Append(void) {};
+        virtual void                Remove(void) {};
+        virtual void                Update(void) {};
+        virtual void                OnStart(void) = 0;
+        virtual ENEMYTYPES::STATUS  OnEnd(void) = 0;
+        virtual RESULT              Observing(void) = 0;
+
+        inline ENEMYTYPES::STATUS Status(void) const { return m_eOwnStatus; };
 
     private:
-        void* m_pSharedData;
-        CEnemyCharacter& m_rEnemyCharacter;
-        ENEMYTYPES::STATUS m_eOwnStatus;
+        void*               m_pSharedData;
+        CEnemyCharacter&    m_rEnemyCharacter;
+        ENEMYTYPES::STATUS  m_eOwnStatus;
     };
     
     class CStatusSubject
@@ -56,24 +66,25 @@ public:
     public:
         CStatusSubject(void);
         ~CStatusSubject(void);
-        bool Attach(CStatusObserver* pStatusObserver);
-        void Detach(ENEMYTYPES::STATUS eStatus);
-        void Update(void);
-        void OnStart(void);
-        void OnEnd(void);
-        void Observing(void);
-        void Status(ENEMYTYPES::STATUS eNewStatus);
-        bool IsContained(ENEMYTYPES::STATUS eStatus) const;
-        ENEMYTYPES::STATUS Status(void);
-        ENEMYTYPES::STATUS StatusPrev(void);
-        void SetSharedData(void* pSharedData);
-        void* GetSharedData(void);
+
+        bool                    Attach(CStatusObserver* pStatusObserver);
+        void                    Detach(ENEMYTYPES::STATUS eStatus);
+        void                    Update(void);
+        void                    OnStart(void);
+        ENEMYTYPES::STATUS      OnEnd(void);
+        CStatusObserver::RESULT Observing(void);
+        void                    Status(ENEMYTYPES::STATUS eNewStatus);
+        bool                    IsContained(ENEMYTYPES::STATUS eStatus) const;
+        ENEMYTYPES::STATUS      Status(void);
+        ENEMYTYPES::STATUS      StatusPrev(void);
+        void                    SetSharedData(void* pSharedData);
+        void*                   GetSharedData(void);
 
     private:
-        std::vector<CStatusObserver*> m_apStatusObservers;        
-        ENEMYTYPES::STATUS m_eStatusPrev;
-        ENEMYTYPES::STATUS m_eStatus;
-        void* m_pSharedData;
+        std::vector<CStatusObserver*>   m_apStatusObservers;        
+        ENEMYTYPES::STATUS              m_eStatusPrev;
+        ENEMYTYPES::STATUS              m_eStatus;
+        void*                           m_pSharedData;
     };
     
 public:
@@ -84,7 +95,6 @@ public:
     virtual bool Initialize(PARAMETER* pParameter, bool bReplaceParameter);
     virtual void Run(void);
     virtual void Draw(void);
-    virtual void Delete(void);
     virtual void OnStart(void);
     virtual void OnStop(void);
     virtual bool OnMessageCanChangingAerial(float fHeight);
@@ -115,13 +125,14 @@ public:
     virtual ENEMYID::VALUE GetID(void);
     virtual const char* GetName(void);
     virtual CHARACTERTYPES::DEFENCERSTATUSFLAG CheckDefenceStatusFlag(void);
+    void Delete(void);
     void Start(void);
     void Stop(void);
     void StartAI(void);
     void StopAI(void);
+    void SetFlag(ENEMYTYPES::FLAG flag);
     void ClearFlag(ENEMYTYPES::FLAG flag);
     bool TestFlag(ENEMYTYPES::FLAG flag) const;
-    void SetFlag(ENEMYTYPES::FLAG flag);
     void* SharedData(void) const;
     CAIModerator& AIModerator(void) const;
     CAIThinkOrder& AIThinkOrder(void) const;
@@ -133,15 +144,16 @@ public:
 
 private:
     static ENEMYTYPES::CREATEINFO m_createinfo;
-    CStatusSubject* m_pStatusSubject;
-    uint32 m_hCharacter;    // CCharacterCompositor
-    CAIModerator* m_pAIModerator;
-    ENEMYID::VALUE m_ID;
-    uint32 m_hOwner;        // CEnemy
-    CAIThinkOrder m_AIThinkOrder;
-    PARAMETER* m_pParameter;
-    ENEMYTYPES::FLAG m_eflag;
-    uint8* m_puFrequencyParam;
-    bool m_bRunning;
-    bool m_bRunningAI;
+
+    CStatusSubject*         m_pStatusSubject;
+    uint32                  m_hCharacter;    // CCharacterCompositor handle
+    CAIModerator*           m_pAIModerator;
+    ENEMYID::VALUE          m_ID;
+    uint32                  m_hOwner;        // CEnemy handle
+    mutable CAIThinkOrder   m_AIThinkOrder;
+    PARAMETER*              m_pParameter;
+    ENEMYTYPES::FLAG        m_eflag;
+    uint8*                  m_puFrequencyParam;
+    bool                    m_bRunning;
+    bool                    m_bRunningAI;
 };

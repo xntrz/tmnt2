@@ -60,8 +60,10 @@ project "TMNT2"
    targetname "%{wks.name}"
    kind "WindowedApp"
    removefiles { 
-      "src/System/Common/MemPool.*",
-      "src/System/Common/Debug/**.*"
+      "src/System/Common/MemPool.*", -- unused in PC version
+      "src/System/Common/Debug/**.*", -- TODO
+      "src/Game/Component/Enemy/ConcreteEnemyCharacter/**.*", -- TODO
+      "src/Game/Component/Enemy/ConcreteAIModerator/**.*", -- TODO
    }
    includedirs  
    {  
