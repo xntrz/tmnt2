@@ -206,9 +206,25 @@ bool CSequence::Call(int32 iLabel, const void* pParam, bool bDrawEnable)
 
 bool CSequence::Jump(int32 iLabel, const void* pParam)
 {
-	if (iLabel == PROCESSTYPES::LABEL_PREV)
-		iLabel = Private().m_iLabelPrev;
+    switch (iLabel)
+    {
+    case PROCESSTYPES::LABEL_SEQ_PREV:
+        iLabel = Private().m_iLabelPrev;
+        break;
 
+    case PROCESSTYPES::LABEL_SEQ_DEC:
+        ASSERT(m_iLabelCurrently > 0);
+        iLabel = (m_iLabelCurrently - 1);
+        break;
+
+    case PROCESSTYPES::LABEL_SEQ_INC:
+        iLabel = (m_iLabelCurrently + 1);
+        break;
+
+    default:
+        break;
+    };
+    
 	CPrivate::MESSAGE* pMsg = &CPrivate::m_SeqMsg;
 
 	pMsg->m_id 			= Private().MESSAGE_ID;

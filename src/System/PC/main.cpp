@@ -8,8 +8,7 @@
 #include "System/Common/Configure.hpp"
 
 
-#define VLDCHECK
-#undef VLDCHECK
+//#define VLDCHECK
 
 #ifdef VLDCHECK
 #include "vld.h"
@@ -19,10 +18,10 @@
 #ifdef TARGET_PC
 int32 APIENTRY
 _tWinMain(
-    HINSTANCE	hInstance,
-    HINSTANCE	hPrevInstance,
-    LPTSTR		lpCmdLine,
-    int32		iCmdShow
+    _In_     HINSTANCE	hInstance,
+    _In_opt_ HINSTANCE	hPrevInstance,
+    _In_     LPTSTR		lpCmdLine,
+    _In_     int32		iCmdShow
 )
 {
 #ifdef VLDCHECK    

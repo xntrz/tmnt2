@@ -50,21 +50,33 @@ template<class T, class tag = CListNodeDefaultTag>
 class CList : public CListNode<T, tag>
 {
 public:
-    typedef T           value_type;
-    typedef T&          reference;
-    typedef const T&    const_reference;
-    typedef T*          pointer;
-    typedef const T*    const_pointer;
+    using value_type        = T;
+    using reference         = T&;
+    using const_reference   = const T&;
+    using pointer           = T*;
+    using const_pointer     = const T*;
 
-
+public:
+#if (__cplusplus < 201703)
     template<class Ty>
     class iterator_base : public std::iterator<std::bidirectional_iterator_tag, T>
+#else
+    template<class Ty>
+    class iterator_base
+#endif        
     {
     public:
-        typedef T value_type;
-        typedef T* pointer;
-        typedef T& reference;
-
+#if (__cplusplus < 201703)
+        using value_type        = T;
+        using pointer           = T*;
+        using reference         = T&;
+#else 
+        using iterator_category = std::bidirectional_iterator_tag;
+        using value_type        = T;
+        using difference_type   = std::ptrdiff_t;
+        using pointer           = T*;
+        using reference         = T&;
+#endif  
         
         inline iterator_base(void)
             : m_list(nullptr)
@@ -179,9 +191,9 @@ public:
         Ty* m_list;
     };
 
-
-    typedef iterator_base<CListNode<T, tag>> iterator;
-    typedef iterator_base<const CListNode<T, tag>> const_iterator;
+    
+    using iterator = iterator_base<CListNode<T, tag>>;
+    using const_iterator = iterator_base<const CListNode<T, tag>>;
 
 
 public:

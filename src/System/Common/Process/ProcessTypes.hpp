@@ -8,15 +8,15 @@ namespace PROCESSTYPES
 {
 	static const int32 LABEL_TOP 			= 0;
 	static const int32 LABEL_EOL 			= ~(1 << 31);
-	static const int32 LABEL_PREV			= (1 << 31);
-	static const int32 LABEL_UNK0 			= -1;	// TODO unknown label -1
-	static const int32 LABEL_UNK1 			= -2;	// TODO unknown label -2
+	static const int32 LABEL_SEQ_PREV		=  (1 << 31);
+	static const int32 LABEL_SEQ_DEC 	    = -1;
+	static const int32 LABEL_SEQ_INC 	    = -2;
 
 	static const int32 PRIORITY_MIN 		= 0;
 	static const int32 PRIORITY_MAX			= 8;	
 	static const int32 PRIORITY_HIGH		= PRIORITY_MIN;
 	static const int32 PRIORITY_LOW			= PRIORITY_MAX - 1;
-	static const int32 PRIORITY_NORMAL		= PRIORITY_MAX / 2;
+    static const int32 PRIORITY_NORMAL      = (PRIORITY_MAX + PRIORITY_MIN) / 2;
 	
 	static const int32 ACCESS_NONE			= 0;
 	static const int32 ACCESS_MOVE			= (1 << 0);

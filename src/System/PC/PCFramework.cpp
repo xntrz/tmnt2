@@ -107,15 +107,17 @@ CPCFramework::CPCFramework(void)
 , m_pTimer(nullptr)
 , m_pPCGraphicsDevice(nullptr)
 , m_pPCSoundDevice(nullptr)
-, m_bFrameworkInitStatus(false)
+, m_pFrameSkipController(nullptr)
 {
-	m_pInstance = this;
+    ASSERT(m_pInstance == nullptr);
+    m_pInstance = this;
 };
 
 
 CPCFramework::~CPCFramework(void)
 {
-    ;
+    ASSERT(m_pInstance == this);
+    m_pInstance = nullptr;
 };
 
 
@@ -159,8 +161,6 @@ bool CPCFramework::Initialize(void)
         return false;
     };
 
-    m_bFrameworkInitStatus = true;
-    
     ShowWindow(CPCSpecific::m_hWnd, SW_SHOW);
     SetForegroundWindow(CPCSpecific::m_hWnd);
 
@@ -170,11 +170,7 @@ bool CPCFramework::Initialize(void)
 
 void CPCFramework::Terminate(void)
 {
-    if (m_bFrameworkInitStatus)
-    {
-        CFramework::Terminate();
-        m_bFrameworkInitStatus = false;
-    };
+    CFramework::Terminate();
 
     if (m_pFrameSkipController)
     {

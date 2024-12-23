@@ -19,7 +19,7 @@ static uint32 s_uOptFlag = 0;
 
 static void OutputCommon(bool ln, const char* fname, int32 fline, const char* format, va_list& vl)
 {
-    char szOutputBuffer[4096 * 16];
+    char szOutputBuffer[4096 * 4];
     szOutputBuffer[0] = '\0';
     
     SYSTEMTIME st = { 0 };
@@ -32,7 +32,7 @@ static void OutputCommon(bool ln, const char* fname, int32 fline, const char* fo
         offset = std::sprintf(
             szOutputBuffer,
             "[%02d:%02d:%02d.%03.0f][%s::%d]: ",
-            st.wHour, st.wMinute, st.wSecond, float(st.wMilliseconds), fname, fline
+            st.wHour, st.wMinute, st.wSecond, static_cast<float>(st.wMilliseconds), fname, fline
         );
     };
     

@@ -140,7 +140,7 @@ void CGameMainSequence::OnMove(bool bRet, const void* pReturnValue)
         else
         {
             m_iLabelNext = Branch(m_iLabelNext);
-            if (m_iLabelNext == PROCESSTYPES::LABEL_PREV)
+            if (m_iLabelNext == PROCESSTYPES::LABEL_SEQ_PREV)
                 m_iLabelNext = m_iLabelPrev;
         };        
 
@@ -193,6 +193,9 @@ void CGameMainSequence::OnMove(bool bRet, const void* pReturnValue)
 #endif                
             }
             break;
+
+        default:
+            break;
         };
     };
 };
@@ -218,7 +221,7 @@ int32 CGameMainSequence::Branch(int32 iLabel)
     case PROCLABEL_SEQ_OPTIONS:
     case PROCLABEL_SEQ_SAVELOADMENULOAD:
     case PROCLABEL_SEQ_SAVELOADMENUSAVE:
-        return PROCESSTYPES::LABEL_PREV;
+        return PROCESSTYPES::LABEL_SEQ_PREV;
 
     case PROCLABEL_SEQ_AREA:
         {

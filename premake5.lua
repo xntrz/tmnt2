@@ -123,8 +123,11 @@ project "TMNT2"
       "rtintsec.lib",
       "rtcharse.lib",
       "legacy_stdio_definitions.lib",
-	   "rptoon.lib"
+	  "rptoon.lib"
    } 
+   linkoptions {
+      "/ignore:4099" -- PDB 'X' was not found with 'X' or at 'X'; linking object as if no debug info
+   }
    filter { "configurations:Debug" }
       libdirs  { "%{dir_lib}/rwsdk37/lib/d3d9/debug", "%{dir_bin}" }
    filter { "configurations:Release" }

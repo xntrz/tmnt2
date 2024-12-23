@@ -35,11 +35,10 @@ public:
     void SetSkipEnable(bool bState);
 
 private:
-    static CPCFramework* m_pInstance;
-    CPCSystem* m_pSystem;
-    CPCTimer* m_pTimer;
-    CPCGraphicsDevice* m_pPCGraphicsDevice;
-    CPCSoundDevice* m_pPCSoundDevice;
-    CFrameSkipController* m_pFrameSkipController;
-    bool m_bFrameworkInitStatus;
+    static CPCFramework*    m_pInstance;
+    CPCSystem*              m_pSystem;
+    CPCTimer*               m_pTimer;
+    CPCGraphicsDevice*      m_pPCGraphicsDevice;
+    CPCSoundDevice*         m_pPCSoundDevice;
+    CFrameSkipController*   m_pFrameSkipController;
 };

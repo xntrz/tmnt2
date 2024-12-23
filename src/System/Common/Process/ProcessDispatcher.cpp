@@ -194,7 +194,7 @@ bool CProcessDispatcher::CAccesser::StrideNext(void)
 					return true;
 			};
 
-			m_currentObject = COUNT_OF(m_aaObjects[0]);
+			m_currentObject = COUNT_OF(m_aaObjects[0]) - 1;
 		};
 	};
 
@@ -643,10 +643,10 @@ void CProcessDispatcher::DispatchMail(void)
 			break;
 		};
 
-		if ((mail.m_iLabel != PROCESSTYPES::LABEL_EOL)
-			&& (mail.m_iLabel != PROCESSTYPES::LABEL_UNK0)
-			&& (mail.m_iLabel != PROCESSTYPES::LABEL_UNK1))
-		{
+        if ((mail.m_iLabel != PROCESSTYPES::LABEL_EOL)      &&
+            (mail.m_iLabel != PROCESSTYPES::LABEL_SEQ_DEC)  &&
+            (mail.m_iLabel != PROCESSTYPES::LABEL_SEQ_INC))
+        {
 			switch (mail.m_type)
 			{
 			case PROCESSTYPES::MAIL::TYPE_MSG:
