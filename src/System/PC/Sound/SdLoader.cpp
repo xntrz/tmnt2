@@ -397,10 +397,9 @@ bool SdLoaderInit(const char* Host)
     {
         std::strncat(SdHost, "\\", (COUNT_OF(SdHost) - std::strlen(SdHost)) - 1);
         std::strncat(SdHost, "\0", (COUNT_OF(SdHost) - std::strlen(SdHost)) - 1);
-        return true;
     };
 
-    return false;
+	return true;
 };
 
 
