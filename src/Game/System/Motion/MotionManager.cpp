@@ -65,6 +65,11 @@ private:
 };
 
 
+//
+// *********************************************************************************
+//
+
+
 CHAnimationContainer::CHAnimation::CHAnimation(void)
 : m_pHAnimation(nullptr)
 {
@@ -117,6 +122,7 @@ RtAnimAnimation* CHAnimationContainer::CHAnimation::ReadRpHAnimatin(const void* 
 
     RwStream* pRwStream = RwStreamOpen(rwSTREAMMEMORY, rwSTREAMREAD, &MemoryStream);
     ASSERT(pRwStream);
+    
     if (pRwStream)
     {
         if (RwStreamFindChunk(pRwStream, rwID_ANIMANIMATION, nullptr, nullptr))
@@ -139,6 +145,11 @@ RtAnimAnimation* CHAnimationContainer::CHAnimation::GetAnimation(void) const
 {
     return m_pHAnimation;
 };
+
+
+//
+// *********************************************************************************
+//
 
 
 CHAnimationContainer::CHAnimationSet::CHAnimationSet(void)
@@ -217,6 +228,11 @@ CHAnimationContainer::CHAnimationSet* CHAnimationContainer::CHAnimationSet::GetP
 };
 
 
+//
+// *********************************************************************************
+//
+
+
 CHAnimationContainer::CHAnimationContainer(void)
 : m_pCurrentSet(nullptr)
 , m_iGeneration(0)
@@ -272,6 +288,7 @@ void CHAnimationContainer::SetCurrentHAnimationSet(const char* pszSetName)
     {
         CHAnimationSet* pHAnimationSet = FindHAnmationSet(pszSetName);
         ASSERT(pHAnimationSet);
+
         SetCurrentHAnimationSet(pHAnimationSet);
     };
 };
@@ -409,10 +426,12 @@ static inline CHAnimationContainer& AnimationContainer(void)
 {
     CHAnimationContainer::CHAnimation* pHAnimation = AnimationContainer().GetHAnimation(pszName);
     ASSERT(pHAnimation);
+    
     if (pHAnimation)
     {
         CMotion* pMotion = new CMotion(pHAnimation->GetName(), pHAnimation->GetAnimation());
         ASSERT(pMotion);
+
         return pMotion;
     };
 

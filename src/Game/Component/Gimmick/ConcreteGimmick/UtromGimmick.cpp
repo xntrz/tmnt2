@@ -122,8 +122,10 @@ CUtromGimmick::CUtromGimmick(const char* pszName, void* pParam)
     //  init body hit
     //
     m_pBodyHitData = CBodyHitManager::AllocData();
+    ASSERT(m_pBodyHitData);
+    
     m_pBodyHitData->InitData(&pBasicParam->m_vPosition, pInitParam->fHitRadius);
-    m_pBodyHitData->SetState(2, true);
+    m_pBodyHitData->SetState(CBodyHitData::STATE_TODO_0x2, true);
 
     //
     //  setup model & movement strategy
@@ -358,7 +360,7 @@ void CUtromGimmick::OnCatch(CHitCatchData::RESULT* pResult)
         m_pUtromMove->SetRotation(&Math::VECTOR3_ZERO);
 
         if (m_pBodyHitData)
-            m_pBodyHitData->SetState(2, false);
+            m_pBodyHitData->SetState(CBodyHitData::STATE_TODO_0x2, false);
 
         m_eState = STATE_LIFTED;
     };
@@ -427,7 +429,7 @@ void CUtromGimmick::onThrow(RwV3d* pvVelocity, bool bMiss)
     m_pUtromMove->Start();
 
     if (m_pBodyHitData)
-        m_pBodyHitData->SetState(2, true);
+        m_pBodyHitData->SetState(CBodyHitData::STATE_TODO_0x2, true);
 
     m_eState = STATE_WAIT;
 };
@@ -504,19 +506,22 @@ void CUtromAreaCheckGimmick::AreaCheckInit(void)
 
     std::sprintf(szObjName, "%s_A", CGimmickInfo::GetBaseName(GIMMICKID::ID_N_UTROM));
 
-    for (CGameObject* pObj = CGameObjectManager::GetNext(); pObj; pObj = CGameObjectManager::GetNext(pObj))
+    CGameObject* pGameObj = CGameObjectManager::GetNext(GAMEOBJECTTYPE::GIMMICK);
+    while (pGameObj)
     {
-        if (pObj->GetType() != GAMEOBJECTTYPE::GIMMICK)
-            continue;
+        ASSERT(pGameObj->GetType() == GAMEOBJECTTYPE::GIMMICK);
+        CGimmick* pGimmick = static_cast<CGimmick*>(pGameObj);
 
-        if (std::strncmp(pObj->GetName(), szObjName, std::strlen(szObjName)))
-            continue;
+        if (!std::strncmp(pGimmick->GetName(), szObjName, std::strlen(szObjName)))
+        {
+            CListNode<CUtromGimmick>* pNode = new CListNode<CUtromGimmick>;
+            pNode->data = static_cast<CUtromGimmick*>(pGimmick);
 
-        CListNode<CUtromGimmick>* pNode = new CListNode<CUtromGimmick>;
-        pNode->data = static_cast<CUtromGimmick*>(pObj);
-        
-        m_listUtrom.push_back(pNode);
-        ++m_iUtromCount;
+            m_listUtrom.push_back(pNode);
+            ++m_iUtromCount;
+        };
+
+        pGameObj = CGameObjectManager::GetNext(GAMEOBJECTTYPE::GIMMICK, pGameObj);
     };
 
     m_state = STATE_ON;

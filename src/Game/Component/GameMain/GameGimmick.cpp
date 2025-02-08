@@ -82,9 +82,7 @@ void CGameGimmick::GetPosition(RwV3d* pvPosition)
 void CGameGimmick::Sleep(void)
 {
     if (IsAlive())
-    {
         CGameObjectManager::SendMessage(m_pGimmick, GAMEOBJECTTYPES::MESSAGEID_SLEEP);
-    };
 };
 
 
@@ -96,7 +94,7 @@ bool CGameGimmick::IsSleep(void) const
 
 bool CGameGimmick::IsAbleToSleep(void) const
 {
-    return FLAG_TEST(Gimmick().GetFeatures(), GIMMICKTYPES::FEATURE_SLEEP);
+    return Gimmick().CheckFeature(GIMMICKTYPES::FEATURE_ABLE_SLEEP);
 };
 
 

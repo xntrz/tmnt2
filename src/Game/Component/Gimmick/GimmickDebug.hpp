@@ -12,6 +12,7 @@ public:
     static bool SHOW_AREA;
     static bool SHOW_ME;
     static bool DISABLE_GENERERATOR;
+    static bool PRINT_EVENT_INFO;
 };
 
 #endif

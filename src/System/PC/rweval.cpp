@@ -27,10 +27,10 @@ bool rwevalInitialize(void)
 
     enum
     {
-        STEP_WND = BIT(0),
-        STEP_INIT = BIT(1),
-        STEP_OPEN = BIT(2),
-        STEP_START = BIT(3),
+        STEP_WND    = (1 << 0),
+        STEP_INIT   = (1 << 1),
+        STEP_OPEN   = (1 << 2),
+        STEP_START  = (1 << 3),
     };
 
     bool bResult = false;
@@ -41,24 +41,24 @@ bool rwevalInitialize(void)
     if (hWnd == NULL)
         goto label_cleanup;
 
-    FLAG_SET(StepFlag, STEP_WND);
+    StepFlag |= STEP_WND;
 
     if (!RwEngineInit(nullptr, 0, 0))
         goto label_cleanup;
 
-    FLAG_SET(StepFlag, STEP_INIT);
+    StepFlag |= STEP_INIT;
 
     RwEngineOpenParams OpenParams;
     OpenParams.displayID = hWnd;
     if (!RwEngineOpen(&OpenParams))
         goto label_cleanup;
 
-    FLAG_SET(StepFlag, STEP_OPEN);
+    StepFlag |= STEP_OPEN;
 
     if (!RwEngineStart())
         goto label_cleanup;
 
-    FLAG_SET(StepFlag, STEP_START);
+    StepFlag |= STEP_START;
 
     pCamera = RwCameraCreate();
     if (pCamera)
@@ -82,16 +82,16 @@ label_cleanup:
     if (pCamera)
         RwCameraDestroy(pCamera);
 
-    if (FLAG_TEST(StepFlag, STEP_START))
+    if (StepFlag & STEP_START)
         RwEngineStop();
 
-    if (FLAG_TEST(StepFlag, STEP_OPEN))
+    if (StepFlag & STEP_OPEN)
         RwEngineClose();
 
-    if (FLAG_TEST(StepFlag, STEP_INIT))
+    if (StepFlag & STEP_INIT)
         RwEngineTerm();
 
-    if (FLAG_TEST(StepFlag, STEP_WND))
+    if (StepFlag & STEP_WND)
         DestroyWindow(hWnd);
 
     return bResult;

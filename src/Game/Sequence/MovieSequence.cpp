@@ -1,6 +1,7 @@
 #include "MovieSequence.hpp"
 
 #include "Game/Component/GameData/GameData.hpp"
+#include "Game/Component/GameMain/MovieID.hpp"
 #include "Game/System/Movie/MovieManager.hpp"
 #include "Game/System/Movie/MovieDataManager.hpp"
 #include "System/Common/Movie.hpp"
@@ -37,8 +38,11 @@ bool CMovieSequence::OnAttach(const void* pParam)
     if (!m_pMovie)
     {
         m_bOwner = true;
-        CMovieManager::PreCreateMovieInstance(int32(pParam));
-        m_pMovie = CMovieManager::GetMovieInstance();        
+
+        MOVIEID::VALUE movieId = static_cast<MOVIEID::VALUE>(reinterpret_cast<int32>(pParam));
+        CMovieManager::PreCreateMovieInstance(movieId);
+        
+        m_pMovie = CMovieManager::GetMovieInstance();
     };
 
     if (CMovieManager::IsCreateSuccess())

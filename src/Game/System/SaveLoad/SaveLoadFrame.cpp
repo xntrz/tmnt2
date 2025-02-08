@@ -41,20 +41,19 @@ void CSaveLoadFrame::Stop(void)
 
 void CSaveLoadFrame::SetModeMessage(void)
 {
-    ASSERT(m_mode >= 0 && m_mode < MODEMAX);
+    ASSERT(m_mode >= 0);
+    ASSERT(m_mode < MODEMAX);
 
-    //if (m_mode != MODE_MESSAGE)
-    {
-        CSaveLoadFrameBase::SetModeMessage();
-        DestroyMessageWindow();
-        CreateMessageWindow();
-    };
+    CSaveLoadFrameBase::SetModeMessage();
+    DestroyMessageWindow();
+    CreateMessageWindow();
 };
 
 
 void CSaveLoadFrame::SetModeSelect(SELECTITEM defselect)
 {
-    ASSERT(m_mode >= 0 && m_mode < MODEMAX);
+    ASSERT(m_mode >= 0);
+    ASSERT(m_mode < MODEMAX);
 
     if (m_mode != MODE_SELECT)
     {
@@ -63,7 +62,7 @@ void CSaveLoadFrame::SetModeSelect(SELECTITEM defselect)
         CreateMessageWindow();
     };
 
-    CDialog* pDialog = (CDialog*)m_pWindow;
+    CDialog* pDialog = static_cast<CDialog*>(m_pWindow);
     
     switch (defselect)
     {
@@ -84,7 +83,8 @@ void CSaveLoadFrame::SetModeSelect(SELECTITEM defselect)
 
 void CSaveLoadFrame::SetModeError(PADBTN ConfirmPadbtn, float fConfirmtimeLimit)
 {
-    ASSERT(ConfirmPadbtn >= 0 && ConfirmPadbtn < PADBTNMAX);
+    ASSERT(ConfirmPadbtn >= 0);
+    ASSERT(ConfirmPadbtn < PADBTNMAX);
     ASSERT(fConfirmtimeLimit >= 0.0f);
 
     if (m_mode != MODE_ERROR)
@@ -98,7 +98,8 @@ void CSaveLoadFrame::SetModeError(PADBTN ConfirmPadbtn, float fConfirmtimeLimit)
 
 bool CSaveLoadFrame::IsErrorConfirmed(void) const
 {
-    ASSERT(m_mode >= 0 && m_mode < MODEMAX);
+    ASSERT(m_mode >= 0);
+    ASSERT(m_mode < MODEMAX);
     ASSERT(m_mode == MODE_ERROR);
     ASSERT(m_pWindow);
 
@@ -122,7 +123,8 @@ bool CSaveLoadFrame::IsErrorConfirmed(void) const
 
 bool CSaveLoadFrame::IsSelected(void) const
 {
-    ASSERT(m_mode >= 0 && m_mode < MODEMAX);
+    ASSERT(m_mode >= 0);
+    ASSERT(m_mode < MODEMAX);
     ASSERT(m_mode == MODE_SELECT);
     ASSERT(m_pWindow);
 
@@ -132,11 +134,12 @@ bool CSaveLoadFrame::IsSelected(void) const
 
 CSaveLoadFrame::SELECTITEM CSaveLoadFrame::GetSelectItem(void) const
 {
-    ASSERT(m_mode >= 0 && m_mode < MODEMAX);
+    ASSERT(m_mode >= 0);
+    ASSERT(m_mode < MODEMAX);
     ASSERT(m_mode == MODE_SELECT);
     ASSERT(m_pWindow);
 
-    CDialog* pDialog = (CDialog*)m_pWindow;
+    CDialog* pDialog = static_cast<CDialog*>(m_pWindow);
     
     switch (pDialog->GetStatus())
     {
@@ -198,7 +201,8 @@ void CSaveLoadFrame::RemoveMessage(void)
 void CSaveLoadFrame::CreateMessageWindow(void)
 {
     ASSERT(!m_pWindow);
-    ASSERT(m_mode >= 0 && m_mode < MODEMAX);
+    ASSERT(m_mode >= 0);
+    ASSERT(m_mode < MODEMAX);
 
     switch (m_mode)
     {
@@ -208,11 +212,7 @@ void CSaveLoadFrame::CreateMessageWindow(void)
         break;
 
     case MODE_SELECT:
-        m_pWindow = new CDialog(
-            CDialog::COLOR_NORMAL,
-            CDialog::STATUS_YES,
-            CGameData::Attribute().GetVirtualPad()
-        );        
+        m_pWindow = new CDialog(CDialog::COLOR_NORMAL, CDialog::STATUS_YES, CGameData::Attribute().GetVirtualPad());
         break;
 
     default:

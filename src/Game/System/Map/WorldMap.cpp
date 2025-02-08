@@ -24,12 +24,13 @@ public:
     CWorldMapManager(void);
     ~CWorldMapManager(void);
     void OnLoaded(void);
-    void ReadWorldBsp(const void* pBuffer, uint32 uBufferSize);
-    void ReadMapInfo(const void* pBuffer, uint32 uBufferSize);
-    void ReadCollisionBsp(const void* pBuffer, uint32 uBufferSize);
-    void ReadCameraAreaBsp(const void* pBuffer, uint32 uBufferSize);
-    RpWorld* ReadBsp(const void* pBuffer, uint32 uBufferSize);
+    void ReadWorldBsp(void* pBuffer, uint32 uBufferSize);
+    void ReadMapInfo(void* pBuffer, uint32 uBufferSize);
+    void ReadCollisionBsp(void* pBuffer, uint32 uBufferSize);
+    void ReadCameraAreaBsp(void* pBuffer, uint32 uBufferSize);
+    RpWorld* ReadBsp(void* pBuffer, uint32 uBufferSize);
     void SetWorldMapEnvironment(void);
+    void DestroyWorld(void);
     void CreateLight(void);
     void DestroyLight(void);
     void Period(void);
@@ -54,7 +55,7 @@ public:
     bool GetCameraAreaName(RwV3d* pPos, char* pszCameraAreaName);
     float GetMapHeight(const RwV3d* pPos);
     float GetMapHeight(const RwV3d* pPos, float fRadius);
-    void SetCharacterMoveSphereOfPos(RwV3d* aOfsPos, float fRadius, float fHeight, RwMatrix* pMatrix = nullptr);
+    void SetCharacterMoveSphereOfPos(RwV3d aOfsPos[4], float fRadius, float fHeight, RwMatrix* pMatrix = nullptr);
     
 private:
     RpWorld* m_pWorld;
@@ -92,36 +93,7 @@ CWorldMapManager::~CWorldMapManager(void)
     };
 
     DestroyLight();
-
-    if (m_hUVAnim)
-    {
-        CUVAnim::DestroyAnimatedMaterialsList(m_hUVAnim);
-        m_hUVAnim = nullptr;
-    };
-
-    if (m_pTexDict)
-    {
-        RwTexDictionaryDestroy(m_pTexDict);
-        m_pTexDict = nullptr;
-    };
-
-    if (m_pWorld)
-    {
-        RpWorldDestroy(m_pWorld);
-        m_pWorld = nullptr;
-    };
-
-    if (m_pWorldCollision)
-    {
-        RpWorldDestroy(m_pWorldCollision);
-        m_pWorldCollision = nullptr;
-    };
-
-    if (m_pWorldCameraArea)
-    {
-        RpWorldDestroy(m_pWorldCameraArea);
-        m_pWorldCameraArea = nullptr;
-    };
+    DestroyWorld();
 };
 
 
@@ -155,6 +127,9 @@ void CWorldMapManager::OnLoaded(void)
         case CWorldMap::WEATHER_SNOW:
             CSnowManager::SetNormalSnow();            
             break;
+
+        default:
+            break;
         };
     }
     else
@@ -170,96 +145,117 @@ void CWorldMapManager::OnLoaded(void)
 };
 
 
-void CWorldMapManager::ReadWorldBsp(const void* pBuffer, uint32 uBufferSize)
+void CWorldMapManager::ReadWorldBsp(void* pBuffer, uint32 uBufferSize)
 {
-    bool bUVExists = false;
-    
-    if (CUVAnim::IsExistsUVAnimDict("mapanim"))
-    {
-        bUVExists = true;
+    bool bUVExists = CUVAnim::IsExistsUVAnimDict("mapanim");    
+    if (bUVExists)
         CUVAnim::SetUVAnimDict("mapanim");
-    };
 
     m_pWorld = ReadBsp(pBuffer, uBufferSize);
     ASSERT(m_pWorld);
 
     SetWorldMapEnvironment();
 
-    uint32 uWorldFlags = RpWorldGetFlagsMacro(m_pWorld);
-    FLAG_SET(uWorldFlags, rpWORLDPRELIT);
-    FLAG_CLEAR(uWorldFlags, rpWORLDLIGHT);
-    RpWorldSetFlagsMacro(m_pWorld, uWorldFlags);
-
     if (bUVExists)
-    {
         m_hUVAnim = CUVAnim::CreateAnimatedMaterialsList(m_pWorld);
-    };
 };
 
 
-void CWorldMapManager::ReadMapInfo(const void* pBuffer, uint32 uBufferSize)
+void CWorldMapManager::ReadMapInfo(void* pBuffer, uint32 uBufferSize)
 {
     ASSERT(!m_pMapInfo);
     ASSERT(uBufferSize == sizeof(CWorldMap::MAPINFO));
     
     m_pMapInfo = new CWorldMap::MAPINFO;
-    ASSERT(m_pMapInfo);
-    
+
     std::memcpy(m_pMapInfo, pBuffer, uBufferSize);
 };
 
 
-void CWorldMapManager::ReadCollisionBsp(const void* pBuffer, uint32 uBufferSize)
+void CWorldMapManager::ReadCollisionBsp(void* pBuffer, uint32 uBufferSize)
 {
     m_pWorldCollision = ReadBsp(pBuffer, uBufferSize);
     ASSERT(m_pWorldCollision);
 };
 
 
-void CWorldMapManager::ReadCameraAreaBsp(const void* pBuffer, uint32 uBufferSize)
+void CWorldMapManager::ReadCameraAreaBsp(void* pBuffer, uint32 uBufferSize)
 {
     m_pWorldCameraArea = ReadBsp(pBuffer, uBufferSize);
     ASSERT(m_pWorldCameraArea);
 };
 
 
-RpWorld* CWorldMapManager::ReadBsp(const void* pBuffer, uint32 uBufferSize)
+RpWorld* CWorldMapManager::ReadBsp(void* pBuffer, uint32 uBufferSize)
 {
-    ASSERT(pBuffer);
+    ASSERT(pBuffer != nullptr);
     ASSERT(uBufferSize > 0);
 
-    RpWorld* pResult = nullptr;
+    RpWorld* pWorld = nullptr;
     
-    RwMemory MemoryStream;
-    MemoryStream.start = (RwUInt8*)pBuffer;
-    MemoryStream.length = uBufferSize;
+    RwMemory memStream;
+    memStream.start  = static_cast<RwUInt8*>(pBuffer);
+    memStream.length = uBufferSize;
 
-    RwStream* pRwStream = RwStreamOpen(rwSTREAMMEMORY, rwSTREAMREAD, &MemoryStream);
+    RwStream* pRwStream = RwStreamOpen(rwSTREAMMEMORY, rwSTREAMREAD, &memStream);
     ASSERT(pRwStream);
+
     if (pRwStream)
     {
         if (RwStreamFindChunk(pRwStream, rwID_WORLD, nullptr, nullptr))
-        {
-            pResult = RpWorldStreamRead(pRwStream);
-        };
+            pWorld = RpWorldStreamRead(pRwStream);
 
         RwStreamClose(pRwStream, nullptr);
     };
 
-    return pResult;
+    return pWorld;
 };
 
 
 void CWorldMapManager::SetWorldMapEnvironment(void)
 {
     CreateLight();
-    
-#ifdef TARGET_PC
-    //D3DRS_AMBIENT
-    RwD3D9SetRenderState(139, 0xFFFFFFFF);
-#else
-#error Not implemented for current target
-#endif    
+
+    RwUInt32 worldFlags = RpWorldGetFlagsMacro(m_pWorld);
+
+    worldFlags &= (~rpWORLDLIGHT);
+    worldFlags |= rpWORLDPRELIT;
+
+    RpWorldSetFlagsMacro(m_pWorld, worldFlags);
+};
+
+
+void CWorldMapManager::DestroyWorld(void)
+{
+    if (m_hUVAnim)
+    {
+        CUVAnim::DestroyAnimatedMaterialsList(m_hUVAnim);
+        m_hUVAnim = nullptr;
+    };
+
+    if (m_pTexDict)
+    {
+        RwTexDictionaryDestroy(m_pTexDict);
+        m_pTexDict = nullptr;
+    };
+
+    if (m_pWorld)
+    {
+        RpWorldDestroy(m_pWorld);
+        m_pWorld = nullptr;
+    };
+
+    if (m_pWorldCollision)
+    {
+        RpWorldDestroy(m_pWorldCollision);
+        m_pWorldCollision = nullptr;
+    };
+
+    if (m_pWorldCameraArea)
+    {
+        RpWorldDestroy(m_pWorldCameraArea);
+        m_pWorldCameraArea = nullptr;
+    };
 };
 
 
@@ -273,49 +269,59 @@ void CWorldMapManager::CreateLight(void)
 
     m_pLightAmbient = RpLightCreate(rpLIGHTAMBIENT);
     ASSERT(m_pLightAmbient);
+
     if (m_pLightAmbient)
     {
-        RwRGBAReal AmbientLightColor = { 0.6f, 0.6f, 0.6f, 1.0f };
-        RpLightSetColor(m_pLightAmbient, &AmbientLightColor);
+        RwRGBAReal lightColor = { 0.6f, 0.6f, 0.6f, 1.0f };
+        RpLightSetColor(m_pLightAmbient, &lightColor);
+
         RpWorldAddLight(m_pWorld, m_pLightAmbient);
-        
-        uint32 uLightAmbientFlags = RpLightGetFlagsMacro(m_pLightAmbient);
-        FLAG_CLEAR(uLightAmbientFlags, rpLIGHTLIGHTWORLD);
-        RpLightSetFlagsMacro(m_pLightAmbient, uLightAmbientFlags);        
+
+        RwUInt8 lightFlags = RpLightGetFlagsMacro(m_pLightAmbient);;
+        lightFlags &= (~rpLIGHTLIGHTWORLD);
+        RpLightSetFlagsMacro(m_pLightAmbient, lightFlags);
     };
 
     m_pLightDirection = RpLightCreate(rpLIGHTDIRECTIONAL);
     ASSERT(m_pLightDirection);
+
     if (m_pLightDirection)
     {
         RwFrame* pFrame = RwFrameCreate();
         if (pFrame)
         {
-            RwRGBAReal DirectionLightColor = { 1.0f, 1.0f, 1.0f, 1.0f };
+            RwRGBAReal lightColor = { 1.0f, 1.0f, 1.0f, 1.0f };
             RwFrameRotate(pFrame, &Math::VECTOR3_AXIS_X, 45.0f, rwCOMBINEREPLACE);
             RwFrameRotate(pFrame, &Math::VECTOR3_AXIS_Y, 45.0f, rwCOMBINEPOSTCONCAT);
             RpLightSetFrame(m_pLightDirection, pFrame);
-            RpLightSetColor(m_pLightDirection, &DirectionLightColor);
+            RpLightSetColor(m_pLightDirection, &lightColor);
+
             RpWorldAddLight(m_pWorld, m_pLightDirection);
 
-            uint32 uLightDirectionFlags = RpLightGetFlagsMacro(m_pLightDirection);
-            FLAG_CLEAR(uLightDirectionFlags, rpLIGHTLIGHTWORLD);
-            RpLightSetFlagsMacro(m_pLightDirection, uLightDirectionFlags);            
+            RwUInt8 lightFlags = RpLightGetFlagsMacro(m_pLightDirection);
+            lightFlags &= (~rpLIGHTLIGHTWORLD);
+            RpLightSetFlagsMacro(m_pLightDirection, lightFlags);            
         };
     };
+
+#ifdef TARGET_PC
+    //D3DRS_AMBIENT
+    RwD3D9SetRenderState(139, 0xFFFFFFFF);
+#else
+#error Not implemented for current target
+#endif
 };
 
 
 void CWorldMapManager::DestroyLight(void)
 {
     if (m_pLightDirection)
-    {
-        ASSERT(m_pWorld);
-        
+    {        
         RpWorldRemoveLight(m_pWorld, m_pLightDirection);
-        
-        if (RpLightGetFrame(m_pLightDirection))
-            RwFrameDestroy(RpLightGetFrame(m_pLightDirection));
+
+        RwFrame* pFrame = RpLightGetFrame(m_pLightDirection);
+        if (pFrame)
+            RwFrameDestroy(pFrame);
         
         RpLightDestroy(m_pLightDirection);
         m_pLightDirection = nullptr;
@@ -323,9 +329,8 @@ void CWorldMapManager::DestroyLight(void)
 
     if (m_pLightAmbient)
     {
-        ASSERT(m_pWorld);
-
         RpWorldRemoveLight(m_pWorld, m_pLightAmbient);
+
         RpLightDestroy(m_pLightAmbient);
         m_pLightAmbient = nullptr;
     };
@@ -335,9 +340,7 @@ void CWorldMapManager::DestroyLight(void)
 void CWorldMapManager::Period(void)
 {
     if (m_hUVAnim)
-    {
         CUVAnim::UpdateUVAnim(m_hUVAnim, CGameProperty::GetElapsedTime());
-    };
 };
 
 
@@ -384,11 +387,11 @@ void CWorldMapManager::Draw(CWorldMap::DRAWTYPE drawtype)
                 {
                     bPVSHookStatus = true;
 
-                    if (CCamera::CameraCurrent())
+                    RwCamera* pCameraCurrent = CCamera::CameraCurrent();
+                    if (pCameraCurrent)
                     {
-                        RwMatrix* pLTM = RwFrameGetLTM(
-                            RwCameraGetFrameMacro(CCamera::CameraCurrent())
-                        );
+                        RwFrame* pFrame = RwCameraGetFrameMacro(pCameraCurrent);
+                        RwMatrix* pLTM = RwFrameGetLTM(pFrame);
 
                         RpPVSSetViewPosition(m_pWorld, &pLTM->pos);
                     };
@@ -398,9 +401,7 @@ void CWorldMapManager::Draw(CWorldMap::DRAWTYPE drawtype)
             RpWorldRender(m_pWorld);
 
             if (bPVSHookStatus)
-            {
-                RpPVSUnhook(m_pWorld);                
-            };
+                RpPVSUnhook(m_pWorld);
         }
         break;
 
@@ -424,18 +425,14 @@ void CWorldMapManager::Draw(CWorldMap::DRAWTYPE drawtype)
 void CWorldMapManager::SetAmbientLightColor(const RwRGBAReal& rColor)
 {
     if (m_pLightAmbient)
-    {
         RpLightSetColor(m_pLightAmbient, &rColor);
-    };
 };
 
 
 void CWorldMapManager::SetDirectionLightColor(const RwRGBAReal& rColor)
 {
     if (m_pLightDirection)
-    {
         RpLightSetColor(m_pLightDirection, &rColor);
-    };
 };
 
 
@@ -443,15 +440,12 @@ void CWorldMapManager::SetDirectionLightMatrix(RwMatrix* pMatrix)
 {
     if (!m_pLightDirection)
         return;
-
-    if (!RpLightGetFrame(m_pLightDirection))
+    
+    RwFrame* pFrame = RpLightGetFrameMacro(m_pLightDirection);
+    if (!pFrame)
         return;
 
-    RwFrameTransform(
-        RpLightGetFrame(m_pLightDirection),
-        pMatrix,
-        rwCOMBINEREPLACE
-    );
+    RwFrameTransform(pFrame, pMatrix, rwCOMBINEREPLACE);
 };
 
 
@@ -475,8 +469,8 @@ const CWorldMap::COLLISIONRESULT* CWorldMapManager::GetCollisionResult(void) con
 
 bool CWorldMapManager::CheckWorldObjCollision(RpIntersection* pIntersection, CMapCollision::COLLISIONPARAM* pCollisionParam, CWorldMap::COLLISIONTYPE collisiontype)
 {
-    if (collisiontype == CWorldMap::COLLISIONTYPE_MAPCAM ||
-        collisiontype == CWorldMap::COLLISIONTYPE_MAPCOL)
+    if ((collisiontype == CWorldMap::COLLISIONTYPE_MAPCAM) ||
+        (collisiontype == CWorldMap::COLLISIONTYPE_MAPCOL))
         return false;
 
     RpIntersection intersection;
@@ -533,10 +527,15 @@ void CWorldMapManager::CheckWorldCollision(RpIntersection* pIntersection, CMapCo
     ASSERT(pIntersection);
     ASSERT(pCollisionParam);
 
-    if(!FLAG_TEST(pCollisionParam->m_checkflag, CWorldMap::CHECKFLAG_MAPONLY))
+    if (pCollisionParam->m_checkflag & CWorldMap::CHECKFLAG_MAPONLY)
+    {
+        CheckWorldMapCollision(pIntersection, pCollisionParam, collisiontype);
+    }
+    else
+    {
         CheckWorldObjCollision(pIntersection, pCollisionParam, collisiontype);
-    
-    CheckWorldMapCollision(pIntersection, pCollisionParam, collisiontype);
+        CheckWorldMapCollision(pIntersection, pCollisionParam, collisiontype);
+    };
 };
 
 
@@ -544,8 +543,7 @@ bool CWorldMapManager::CheckCollision(RpIntersection* pIntersection, RwV3d* pVel
 {
     ASSERT(pIntersection);
     
-    CMapCollision::COLLISIONPARAM CollisionParam;
-    
+    CMapCollision::COLLISIONPARAM CollisionParam;    
     std::memset(&CollisionParam, 0x00, sizeof(CollisionParam));
 
     CollisionParam.m_type               = MAPTYPES::HITTYPE_NONE;
@@ -574,39 +572,41 @@ bool CWorldMapManager::CheckCollisionCharacterMove(RwV3d* pPos, RwV3d* pNewPos, 
     ASSERT(pVel);
     ASSERT(puHitFlag);
 
-    CWorldMap::COLLISIONPARAM_MAPWALL CollisionParamWall;
     uint32 uHitFlag = 0;
-    RwV3d aOfsPos[4] = { Math::VECTOR3_ZERO };
-    RwV3d vVelocity = Math::VECTOR3_ZERO;
     RwV3d vPosition = Math::VECTOR3_ZERO;
     RwV3d vOldPosition = *pPos;
 
+    CWorldMap::COLLISIONPARAM_MAPWALL CollisionParamWall;
     std::memset(&CollisionParamWall, 0x00, sizeof(CollisionParamWall));
 
+    RwV3d aOfsPos[4] = { Math::VECTOR3_ZERO };
     SetCharacterMoveSphereOfPos(aOfsPos, fRadius, fHeight);
 
+    bool bFound = false;
     for (int32 i = 0; i < 4; ++i)
     {
-        vVelocity.x = pVel->x;
-        vVelocity.y = pVel->y;
-        vVelocity.z = pVel->z;
+        RwV3d vVelocity = *pVel;
 
-        vPosition.x = pPos->x + vVelocity.x + aOfsPos[i].x;
-        vPosition.y = pPos->y + vVelocity.y + aOfsPos[i].y;
-        vPosition.z = pPos->z + vVelocity.z + aOfsPos[i].z;
+        vPosition.x = (pPos->x + vVelocity.x + aOfsPos[i].x);
+        vPosition.y = (pPos->y + vVelocity.y + aOfsPos[i].y);
+        vPosition.z = (pPos->z + vVelocity.z + aOfsPos[i].z);
 
         if (CheckCollisionMoveSphere(&vPosition, fRadius, &vVelocity, CWorldMap::CHECKFLAG_WALLJUMP))
-            break;
-
-        if (i + 1 >= 4)
         {
-            Math::Vec3_Add(pNewPos, pPos, pVel);
-            *puHitFlag = uHitFlag;
-            return false;
+            bFound = true;
+            break;
         };
     };
 
+    if (!bFound)
+    {
+        Math::Vec3_Add(pNewPos, pPos, pVel);
+        *puHitFlag = uHitFlag;
+        return false;
+    };
+
     const CWorldMap::COLLISIONRESULT* pCollisionResult = GetCollisionResult();
+    ASSERT(pCollisionResult != nullptr);
 
     if (pCollisionResult->m_attribute != MAPTYPES::ATTRIBUTE_JUMP)
         std::memcpy(&CollisionParamWall, &pCollisionResult->m_mapwall, sizeof(CollisionParamWall));
@@ -640,7 +640,7 @@ bool CWorldMapManager::CheckCollisionCharacterMove(RwV3d* pPos, RwV3d* pNewPos, 
         pNewPos->x = vPosition.x;
         pNewPos->z = vPosition.z;
 
-        if (!FLAG_TEST(uHitFlag, 2) || pVel->y < 0.0f)
+        if (!(uHitFlag & 2) || (pVel->y < 0.0f))
             pNewPos->y = vOldPosition.y + pVel->y;
         else
             pNewPos->y = vOldPosition.y;
@@ -654,6 +654,7 @@ bool CWorldMapManager::CheckCollisionCharacterMove(RwV3d* pPos, RwV3d* pNewPos, 
         if (CheckCollisionMoveSphere(&vPosition, fRadius))
         {
             pCollisionResult = GetCollisionResult();
+            ASSERT(pCollisionResult != nullptr);
 
             pNewPos->x = vOldPosition.x;
             pNewPos->z = vOldPosition.z;
@@ -667,6 +668,7 @@ bool CWorldMapManager::CheckCollisionCharacterMove(RwV3d* pPos, RwV3d* pNewPos, 
             if (CheckCollisionMoveSphere(&vPosition, fRadius))
             {
                 pCollisionResult = GetCollisionResult();
+                ASSERT(pCollisionResult != nullptr);
 
                 RwV3d vNormal = Math::VECTOR3_ZERO;
 
@@ -702,13 +704,7 @@ bool CWorldMapManager::CheckCollisionCharacterMove(RwV3d* pPos, RwV3d* pNewPos, 
         return false;
 
     if (CollisionParamWall.m_bHit)
-    {
-        std::memcpy(
-            &m_CollisionResult.m_mapwall,
-            &CollisionParamWall,
-            sizeof(m_CollisionResult.m_mapwall)
-        );
-    };
+        std::memcpy(&m_CollisionResult.m_mapwall, &CollisionParamWall, sizeof(m_CollisionResult.m_mapwall));
 
     return true;
 };
@@ -721,10 +717,11 @@ bool CWorldMapManager::CheckCollisionCharacterHeight(RwV3d* pPos, RwV3d* pNewPos
     ASSERT(pfRotY);
 
     bool bResult = false;
-    RwV3d vPos = Math::VECTOR3_ZERO;
+
     float fCheckHeight = fHeight * 0.8f;
     float fCheckRadius = fRadius;
 
+    RwV3d vPos = Math::VECTOR3_ZERO;
     vPos.x = pPos->x;
 	vPos.y = pPos->y + fCheckHeight;
     vPos.z = pPos->z;
@@ -733,6 +730,7 @@ bool CWorldMapManager::CheckCollisionCharacterHeight(RwV3d* pPos, RwV3d* pNewPos
         return bResult;
 
     const CWorldMap::COLLISIONRESULT* pCollisionResult = GetCollisionResult();
+    ASSERT(pCollisionResult != nullptr);
 
     while (pPos->y <= pCollisionResult->m_vClosestPt.y)
     {
@@ -772,9 +770,9 @@ bool CWorldMapManager::CheckCollisionCharacterHeight(RwV3d* pPos, RwV3d* pNewPos
 
             if (pCollisionResult->m_attribute == MAPTYPES::ATTRIBUTE_SLIP)
             {
-				pNewPos->x += (pCollisionResult->m_vNormal.x * 0.07f);
-				pNewPos->y += ((-pCollisionResult->m_vNormal.y) * 0.07f);
-				pNewPos->z += (pCollisionResult->m_vNormal.z * 0.07f);				
+				pNewPos->x += ( pCollisionResult->m_vNormal.x * 0.07f);
+				pNewPos->y += (-pCollisionResult->m_vNormal.y * 0.07f);
+				pNewPos->z += ( pCollisionResult->m_vNormal.z * 0.07f);
             };
 
             bResult = true;
@@ -800,19 +798,20 @@ bool CWorldMapManager::CheckCollisionCharacterHeight(RwV3d* pPos, RwV3d* pNewPos
 
 bool CWorldMapManager::CheckCollisionHeight(RwV3d* pPos, float fRadius, float fHeight)
 {
-    CWorldMap::COLLISIONRESULT CollisionResult;
-    CWorldMap::COLLISIONRESULT CollisionResultBest;
-    RwV3d vPtStart = Math::VECTOR3_ZERO;
-    RwV3d vPtEnd = Math::VECTOR3_ZERO;
     bool bFoundGround = false;
 
+    CWorldMap::COLLISIONRESULT CollisionResult;
     std::memset(&CollisionResult, 0x00, sizeof(CollisionResult));
+
+    CWorldMap::COLLISIONRESULT CollisionResultBest;
     std::memset(&CollisionResultBest, 0x00, sizeof(CollisionResultBest));
-
-    vPtStart = { pPos->x, pPos->y, pPos->z };
-    vPtEnd = { pPos->x, pPos->y + fHeight, pPos->z };
-
     CollisionResultBest.m_vClosestPt.y = -1000.0f;
+
+    RwV3d vPtStart = Math::VECTOR3_ZERO;
+    vPtStart = { pPos->x, pPos->y, pPos->z };
+
+    RwV3d vPtEnd = Math::VECTOR3_ZERO;
+    vPtEnd   = { pPos->x, pPos->y + fHeight, pPos->z };
 
     if (CheckCollisionLine(&vPtStart, &vPtEnd))
     {
@@ -825,22 +824,22 @@ bool CWorldMapManager::CheckCollisionHeight(RwV3d* pPos, float fRadius, float fH
         };
     };
 
-    if (!Math::FEqual(fRadius, 0.0f))
+    if (fRadius != 0.0f)
     {
-        int32 nNumDivRadius = int32( ((fRadius > 0.4f) ? (1.0f - (fRadius * -2.5f)) : (1.0f)) );
+        int32 nNumDivRadius = (fRadius > 0.4f) ? (1 + static_cast<int32>(fRadius / 0.4f)) : (1);
         float fCheckRadius = fRadius;
 
-        for (int32 i = nNumDivRadius; i > 0; --i)
+        for (int32 i = 0; i < nNumDivRadius; ++i)
         {
-            int32 nNumAngle = int32(Math::PI2);
-            float fAngleStep = Math::PI2 / 6.0f;
+            int32 nNumAngle  = static_cast<int32>(MATH_PI2);
+            float fAngleStep = (MATH_PI2 / 6.0f);
 
             ASSERT(nNumAngle == 6);
             ASSERT(Math::FEqual(fAngleStep, 1.0471976f));
 
             for (int32 j = 0; j < nNumAngle; ++j)
             {
-                float fAngle = (float(j) * fAngleStep);
+                float fAngle = (static_cast<float>(j) * fAngleStep);
 
                 vPtStart.x = Math::Cos(fAngle) * fCheckRadius + pPos->x;
                 vPtStart.y = pPos->y;
@@ -904,8 +903,8 @@ bool CWorldMapManager::CheckCollisionSphereMove(RwV3d* pPos, float fRadius, RwV3
     ASSERT(pPos);
 
     RpIntersection intersection;
-    intersection.type = rpINTERSECTSPHERE;
-    intersection.t.sphere = { {pPos->x, pPos->y, pPos->z}, fRadius };
+    intersection.type     = rpINTERSECTSPHERE;
+    intersection.t.sphere = { *pPos, fRadius };
 
     return CheckCollision(&intersection, pVel, checkflag);
 };
@@ -916,37 +915,34 @@ bool CWorldMapManager::CheckCollisionMoveSphere(RwV3d* pPos, float fRadius, RwV3
     ASSERT(pPos);
 
     RpIntersection intersection;
-    intersection.type = rpINTERSECTSPHERE;
-    intersection.t.sphere = { {pPos->x, pPos->y, pPos->z}, fRadius };
+    intersection.type     = rpINTERSECTSPHERE;
+    intersection.t.sphere = { *pPos, fRadius };
 
     if (!CheckCollision(&intersection, pVel, checkflag))
         return false;
 
     const CWorldMap::COLLISIONRESULT* pCollisionResult = GetCollisionResult();
+    ASSERT(pCollisionResult != nullptr);
 
     RwV3d vNormalXZ = Math::VECTOR3_ZERO;
-    RwV3d vDirection = Math::VECTOR3_ZERO;
-
     vNormalXZ.x = pCollisionResult->m_vNormal.x;
     vNormalXZ.z = pCollisionResult->m_vNormal.z;
 
     float fVecLen = Math::Vec3_Length(&vNormalXZ);
-    if (!Math::FEqual(fVecLen, 0.0f))
+    if (fVecLen != 0.0f)
         Math::Vec3_Normalize(&vNormalXZ, &vNormalXZ);
 
     Math::Vec3_Scale(&vNormalXZ, &vNormalXZ, fRadius + 0.01f);
     Math::Vec3_Add(pPos, &pCollisionResult->m_vClosestPt, &vNormalXZ);
     
-    if (pCollisionResult->m_type == MAPTYPES::HITTYPE_GIMMICK&&
-        pVel)
+    if ((pCollisionResult->m_type == MAPTYPES::HITTYPE_GIMMICK) && pVel)
     {
         float fD = Math::Vec3_Dot(&pCollisionResult->m_mapobj.m_vVelocity, pVel);
         float fL = Math::Vec3_Length(&pCollisionResult->m_mapobj.m_vVelocity);
 
-        if (fL > 0.0f && fD <= 0.0f)
+        if ((fL > 0.0f) && (fD <= 0.0f))
         {
             RwV3d vTmp = Math::VECTOR3_ZERO;
-
             Math::Vec3_Scale(&vTmp, &pCollisionResult->m_mapobj.m_vVelocity, 2.0f);
             Math::Vec3_Add(pPos, pPos, &vTmp);
         };
@@ -961,16 +957,15 @@ bool CWorldMapManager::GetCameraAreaName(RwV3d* pPos, char* pszCameraAreaName)
     ASSERT(pPos);
     ASSERT(pszCameraAreaName);
 
-    RpIntersection intersection;
     CMapCollision::COLLISIONPARAM CollisionParam;
-
     std::memset(&CollisionParam, 0x00, sizeof(CollisionParam));
 
     CollisionParam.m_fDistance = TYPEDEF::FLOAT_MAX;
 
+    RpIntersection intersection;
     intersection.type = rpINTERSECTLINE;
     intersection.t.line.start = { pPos->x, pPos->y + 20.0f, pPos->z };
-    intersection.t.line.end = { pPos->x, pPos->y - 20.0f, pPos->z };
+    intersection.t.line.end   = { pPos->x, pPos->y - 20.0f, pPos->z };
 
     CheckWorldCollision(&intersection, &CollisionParam, CWorldMap::COLLISIONTYPE_MAPCAM);
 
@@ -987,22 +982,14 @@ float CWorldMapManager::GetMapHeight(const RwV3d* pPos)
 {
     ASSERT(pPos);
 
-    RwV3d vPtStart =
-    {
-        pPos->x,
-        pPos->y + 1.0f,
-        pPos->z
-    };
-    
-    RwV3d vPtEnd =
-    {
-        pPos->x,
-        pPos->y - 100.0f,
-        pPos->z
-    };
+    RwV3d vPtStart = *pPos;
+    vPtStart.y += 1.0f;
+
+    RwV3d vPtEnd = *pPos;
+    vPtEnd.y += CWorldMap::INVALID_MAP_HEIGHT;
 
     if (!CheckCollisionLine(&vPtStart, &vPtEnd))
-        return -100.0f;
+        return CWorldMap::INVALID_MAP_HEIGHT;
 
     return GetCollisionResult()->m_vClosestPt.y;
 };
@@ -1013,15 +1000,15 @@ float CWorldMapManager::GetMapHeight(const RwV3d* pPos, float fRadius)
     ASSERT(pPos);
 
     RwV3d vPtStart = { pPos->x, pPos->y + 1.0f, pPos->z };
-
-    if (!CheckCollisionHeight(&vPtStart, fRadius, -200.0f))
-        return -100.0f;
+    
+    if (!CheckCollisionHeight(&vPtStart, fRadius, CWorldMap::INVALID_MAP_HEIGHT * 2.0f))
+        return CWorldMap::INVALID_MAP_HEIGHT;
 
     return GetCollisionResult()->m_vClosestPt.y;
 };
 
 
-void CWorldMapManager::SetCharacterMoveSphereOfPos(RwV3d* aOfsPos, float fRadius, float fHeight, RwMatrix* pMatrix)
+void CWorldMapManager::SetCharacterMoveSphereOfPos(RwV3d aOfsPos[4], float fRadius, float fHeight, RwMatrix* pMatrix)
 {
     float fStart = fHeight - fRadius;
     float fEnd = fRadius + 0.1f;
@@ -1034,7 +1021,7 @@ void CWorldMapManager::SetCharacterMoveSphereOfPos(RwV3d* aOfsPos, float fRadius
         aOfsPos[i] = Math::VECTOR3_ZERO;
 
         float fDelta = (fEnd - fStart) * 0.25f;
-        aOfsPos[i].y = fStart + (float(i) * fDelta);
+        aOfsPos[i].y = fStart + (static_cast<float>(i) * fDelta);
 
         if (pMatrix)
             RwV3dTransformPoint(&aOfsPos[i], &aOfsPos[i], pMatrix);
@@ -1050,6 +1037,9 @@ static inline CWorldMapManager& WorldMapManager(void)
     ASSERT(s_pWorldMapManager);
     return *s_pWorldMapManager;
 };
+
+
+/*static*/ const float CWorldMap::INVALID_MAP_HEIGHT = -100.0f;
 
 
 /*static*/ void CWorldMap::Initialize(void)
@@ -1104,7 +1094,7 @@ static inline CWorldMapManager& WorldMapManager(void)
 };
 
 
-/*static*/ void CWorldMap::ReadBsp(const char* pszName, const void* pBuffer, uint32 uBufferSize)
+/*static*/ void CWorldMap::ReadBsp(const char* pszName, void* pBuffer, uint32 uBufferSize)
 {
     CTextureManager::SetCurrentTextureSet("maptex");
 
@@ -1127,7 +1117,7 @@ static inline CWorldMapManager& WorldMapManager(void)
 };
 
 
-/*static*/ void CWorldMap::ReadMapInfo(const void* pBuffer, uint32 uBufferSize)
+/*static*/ void CWorldMap::ReadMapInfo(void* pBuffer, uint32 uBufferSize)
 {
     WorldMapManager().ReadMapInfo(pBuffer, uBufferSize);
 };
@@ -1160,8 +1150,8 @@ static inline CWorldMapManager& WorldMapManager(void)
 {
 	if (s_pWorldMapManager && s_pWorldMapManager->GetMapInfo())
 		return WorldMapManager().GetMapInfo()->m_fDeathHeight;
-	else
-		return -100.0f;
+	
+    return INVALID_MAP_HEIGHT;
 };
 
 
@@ -1273,31 +1263,31 @@ static inline CWorldMapManager& WorldMapManager(void)
         return WorldMapManager().CheckCollisionCharacterMove(pPos, pNewPos, pVel, puHitFlag, fRadius, fHeight);
 
     float fDivVelocityScale = (fVecLen / fRadius);
-    int32 nCheck = (int32(fDivVelocityScale) + 1);
+    int32 nCheck = (static_cast<int32>(fDivVelocityScale) + 1);
+
     if (nCheck <= 0)
         return false;
 
-    RwV3d vPosition = *pPos;
-    RwV3d vVelocity = Math::VECTOR3_ZERO;
     RwV3d vVelocityStep = Math::VECTOR3_ZERO;
-
-    vVelocityStep.x = pVel->x * (1.0f / float(nCheck));
-    vVelocityStep.y = pVel->y * (1.0f / float(nCheck));
-    vVelocityStep.z = pVel->z * (1.0f / float(nCheck));
+    vVelocityStep.x = pVel->x * (1.0f / static_cast<float>(nCheck));
+    vVelocityStep.y = pVel->y * (1.0f / static_cast<float>(nCheck));
+    vVelocityStep.z = pVel->z * (1.0f / static_cast<float>(nCheck));
 
     for (int32 i = nCheck; i > 0; --i)
     {
+        RwV3d vVelocity = Math::VECTOR3_ZERO;
         if (i == 1)
         {
-            vVelocity.x = pVel->x - vVelocityStep.x * fDivVelocityScale;
-            vVelocity.y = pVel->y - vVelocityStep.y * fDivVelocityScale;
-            vVelocity.z = pVel->z - vVelocityStep.z * fDivVelocityScale;
+            vVelocity.x = pVel->x - (vVelocityStep.x * fDivVelocityScale);
+            vVelocity.y = pVel->y - (vVelocityStep.y * fDivVelocityScale);
+            vVelocity.z = pVel->z - (vVelocityStep.z * fDivVelocityScale);
         }
         else
         {
             vVelocity = vVelocityStep;
         };
 
+        RwV3d vPosition = *pPos;
         if (WorldMapManager().CheckCollisionCharacterMove(&vPosition, pNewPos, &vVelocity, puHitFlag, fRadius, fHeight))
             return true;
 

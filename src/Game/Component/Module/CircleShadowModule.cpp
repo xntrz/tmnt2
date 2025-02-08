@@ -43,11 +43,11 @@ private:
     switch (pGameObject->GetType())
     {
     case GAMEOBJECTTYPE::CHARACTER:
-        pResult = new CCircleShadowModuleForCharacter((CCharacter*)pGameObject, w, h);
+        pResult = new CCircleShadowModuleForCharacter(static_cast<CCharacter*>(pGameObject), w, h);
         break;
 
     case GAMEOBJECTTYPE::GIMMICK:
-        pResult = new CCircleShadowModuleForGimmick((CGimmick*)pGameObject, w, h);
+        pResult = new CCircleShadowModuleForGimmick(static_cast<CGimmick*>(pGameObject), w, h);
         break;
 
     default:
@@ -106,12 +106,13 @@ CCircleShadowModule::~CCircleShadowModule(void)
 void CCircleShadowModule::Run(void)
 {
     RwV3d vPosition = Math::VECTOR3_ZERO;
-
     GetPosition(&vPosition);
+
     float fHeight = CWorldMap::GetMapHeight(&vPosition);
 
     const CWorldMap::COLLISIONRESULT* pCollisionResult = CWorldMap::GetCollisionResult();
     ASSERT(pCollisionResult);
+
     if (!pCollisionResult)
         return;
 
@@ -163,7 +164,7 @@ void CCircleShadowModule::Run(void)
 
 void CCircleShadowModule::Draw(void)
 {
-    ;
+    m_bDrawRequest = true;
 };
 
 
@@ -198,7 +199,7 @@ bool CCircleShadowModule::IsEnabled(void) const
 
 void CCircleShadowModule::DrawNode(void)
 {
-    if (!m_bEnable)
+    if (!m_bEnable || !m_bDrawRequest)
         return;
 
     if (m_pTexture)
@@ -209,4 +210,6 @@ void CCircleShadowModule::DrawNode(void)
         RwIm3DRenderPrimitive(rwPRIMTYPETRISTRIP);
         RwIm3DEnd();
     };
+
+    m_bDrawRequest = false;
 };

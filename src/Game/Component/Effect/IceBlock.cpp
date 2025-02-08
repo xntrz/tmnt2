@@ -39,17 +39,22 @@ private:
     CIceBlock* workFromHandle(uint32 hIceblock) const;
 
 private:
-    CIceBlock m_aWork[64];
+    CIceBlock m_aWork[10];
     CList<CIceBlock> m_listWorkPool;
     CList<CIceBlock> m_listWorkAlloc;
     RwTexture* m_pTexture;
 };
 
 
+//
+// *********************************************************************************
+//
+
+
 CIceBlock::CIceBlock(void)
 : m_shape(1.0f, 5, 5, 1, 1, { 0xFF, 0xFF, 0xFF, 0xFF }, true)
 , m_vPosition(Math::VECTOR3_ZERO)
-, m_vScaling({ 1.0f,2.0f, 1.0f })
+, m_vScaling({ 1.0f, 2.0f, 1.0f })
 {
     SetPosition(&m_vPosition);
     SetScaling(&m_vScaling);
@@ -90,6 +95,11 @@ void CIceBlock::SetTexture(RwTexture* pTexture)
 };
 
 
+//
+// *********************************************************************************
+//
+
+
 CIceBlockList::CIceBlockList(void)
 : m_pTexture(nullptr)
 {
@@ -109,8 +119,8 @@ void CIceBlockList::Run(void)
     if (!m_pTexture)
     {
         CTextureManager::SetCurrentTextureSet("common_ef");
+
         m_pTexture = CTextureManager::GetRwTexture("frozen");
-        
         ASSERT(m_pTexture);
 
         for (int32 i = 0; i < COUNT_OF(m_aWork); ++i)
@@ -130,6 +140,7 @@ uint32 CIceBlockList::Play(const RwV3d* pvPosition)
 {
     CIceBlock* pWork = workAlloc();
     ASSERT(pWork);
+
     if (pWork)
         pWork->SetPosition(pvPosition);
 
@@ -150,6 +161,7 @@ void CIceBlockList::SetPosition(uint32 hIceBlock, const RwV3d* pvPosition)
 {
     CIceBlock* pWork = workFromHandle(hIceBlock);
     ASSERT(pWork);
+
     if (pWork)
         pWork->SetPosition(pvPosition);
 };
@@ -159,6 +171,7 @@ void CIceBlockList::SetScale(uint32 hIceBlock, const RwV3d* pvScaling)
 {
     CIceBlock* pWork = workFromHandle(hIceBlock);
     ASSERT(pWork);
+    
     if (pWork)
         pWork->SetScaling(pvScaling);
 };
@@ -168,17 +181,14 @@ CIceBlock* CIceBlockList::workAlloc(void)
 {
     ASSERT(!m_listWorkPool.empty());
 
-    if (!m_listWorkPool.empty())
-    {
-        CIceBlock* pNode = m_listWorkPool.front();
-        ASSERT(pNode);
-        m_listWorkPool.erase(pNode);
-        m_listWorkAlloc.push_back(pNode);
-        
-        return pNode;
-    };
+    if (m_listWorkPool.empty())
+        return nullptr;
 
-    return nullptr;
+    CIceBlock* pNode = m_listWorkPool.front();
+    m_listWorkPool.erase(pNode);
+    m_listWorkAlloc.push_back(pNode);
+
+    return pNode;
 };
 
 
@@ -194,7 +204,7 @@ void CIceBlockList::workFree(CIceBlock* pWork)
 CIceBlock* CIceBlockList::workFromHandle(uint32 hIceblock) const
 {
     ASSERT(hIceblock);
-    return (CIceBlock*)hIceblock;
+    return reinterpret_cast<CIceBlock*>(hIceblock);
 };
 
 

@@ -36,12 +36,9 @@ void CAccumulateUnit::Run(void)
     
     m_fTime += CGameProperty::GetElapsedTime();
 
-    float fRadius = (Math::Sin(m_fTime * 62.831856f) * 0.3f) * m_fRadius + m_fRadius;
+    float fRadius = (Math::Sin(m_fTime * (MATH_PI2 * 10.0f)) * 0.3f) * m_fRadius + m_fRadius;
 	
-    m_pAccumulate->SetTextureSize(
-        fRadius,
-        fRadius
-    );
+    m_pAccumulate->SetTextureSize(fRadius, fRadius);
 };
 
 
@@ -64,8 +61,6 @@ void CAccumulateUnit::Initialize(CModel* pModel, int32 nBoneID, const RwV3d* pvT
         return;
 
     m_pAccumulate = new CAccumulate(pModel, nBoneID, pvTop, pvBottom);
-    ASSERT(m_pAccumulate);
-    
     m_bInitialized = true;
 };
 
@@ -90,6 +85,11 @@ void CAccumulateUnit::SetColor(const RwRGBA& color)
         m_pAccumulate->SetColor(color);
     };
 };
+
+
+//
+// *********************************************************************************
+//
 
 
 static const RwRGBA STEPZERO_COLOR  = { 0x00, 0x00, 0x00 ,0x00 };
@@ -294,7 +294,8 @@ void CAccumulateModule::SetStepThree(void)
 
     RwV3d vPosition = Math::VECTOR3_ZERO;
     m_pCharacter->GetBodyPosition(&vPosition);
-    vPosition.y += 0.025f;    
+    vPosition.y += 0.025f;
+    
     CEffectManager::Play(EFFECTID::ID_ALL_TAME_FLASH, &vPosition);
 };
 
@@ -323,6 +324,11 @@ void CAccumulateModule::EffectSetPosition(uint32 hEffect, const RwV3d* pvPositio
     if (hEffect)
         CEffectManager::SetPosition(hEffect, pvPosition);
 };
+
+
+//
+// *********************************************************************************
+//
 
 
 CLeonardoAccumulateModule::CLeonardoAccumulateModule(CCharacter* pCharacter)
@@ -358,6 +364,11 @@ CLeonardoAccumulateModule::CLeonardoAccumulateModule(CCharacter* pCharacter)
 };
 
 
+//
+// *********************************************************************************
+//
+
+
 CRaphaelAccumulateModule::CRaphaelAccumulateModule(CCharacter* pCharacter)
 : CAccumulateModule(pCharacter)
 {
@@ -389,6 +400,11 @@ CRaphaelAccumulateModule::CRaphaelAccumulateModule(CCharacter* pCharacter)
     RegistUnit(&m_aAccumulateUnit[0]);
     RegistUnit(&m_aAccumulateUnit[1]);
 };
+
+
+//
+// *********************************************************************************
+//
 
 
 CMichelangeroAccumulateModule::CMichelangeroAccumulateModule(CCharacter* pCharacter)
@@ -446,6 +462,11 @@ CMichelangeroAccumulateModule::CMichelangeroAccumulateModule(CCharacter* pCharac
 };
 
 
+//
+// *********************************************************************************
+//
+
+
 CDonatelloAccumulateModule::CDonatelloAccumulateModule(CCharacter* pCharacter)
 : CAccumulateModule(pCharacter)
 {
@@ -466,6 +487,11 @@ CDonatelloAccumulateModule::CDonatelloAccumulateModule(CCharacter* pCharacter)
 
     RegistUnit(&m_aAccumulateUnit[0]);
 };
+
+
+//
+// *********************************************************************************
+//
 
 
 CSlashuurAccumulateModule::CSlashuurAccumulateModule(CCharacter* pCharacter)
@@ -534,6 +560,11 @@ CSlashuurAccumulateModule::CSlashuurAccumulateModule(CCharacter* pCharacter)
 };
 
 
+//
+// *********************************************************************************
+//
+
+
 CCaseyAccumulateModule::CCaseyAccumulateModule(CCharacter* pCharacter)
 : CAccumulateModule(pCharacter)
 {
@@ -567,6 +598,11 @@ CCaseyAccumulateModule::CCaseyAccumulateModule(CCharacter* pCharacter)
 };
 
 
+//
+// *********************************************************************************
+//
+
+
 CKaraiAccumulateModule::CKaraiAccumulateModule(CCharacter* pCharacter)
 : CAccumulateModule(pCharacter)
 {
@@ -598,6 +634,11 @@ CKaraiAccumulateModule::CKaraiAccumulateModule(CCharacter* pCharacter)
     RegistUnit(&m_aAccumulateUnit[0]);
     RegistUnit(&m_aAccumulateUnit[1]);
 };
+
+
+//
+// *********************************************************************************
+//
 
 
 CSplinterAccumulateModule::CSplinterAccumulateModule(CCharacter* pCharacter)

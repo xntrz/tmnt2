@@ -56,9 +56,9 @@ void CDisplayOptionData::Terminate(void)
 
 void CDisplayOptionData::SetDefault(void)
 {
-    m_bFontEffectFlag = true;
+    m_bFontEffectFlag   = true;
     m_bPlayerMarkerFlag = true;
-    m_bHelpFlag = true;
+    m_bHelpFlag         = true;
 };
 
 
@@ -139,16 +139,18 @@ bool CDisplayOptionData::IsHelpEnabled(void) const
 
 void CDisplayOptionData::SetVideomode(int32 No)
 {
-    ASSERT(No >= 0 && No < m_iVideomodeNum);
-    
+    ASSERT(No >= 0);
+    ASSERT(No < m_iVideomodeNum);
+
     m_iVideomodeCur = No;
 };
 
 
 bool CDisplayOptionData::ApplyVideomode(void) const
 {
-    ASSERT(m_iVideomodeCur >= 0 && m_iVideomodeCur < m_iVideomodeNum);
-    
+    ASSERT(m_iVideomodeCur >= 0);
+    ASSERT(m_iVideomodeCur < m_iVideomodeNum);
+
     if (CPCSpecific::SetVideomode(m_iVideomodeCur))
     {
         CSystem2D::Reset();
@@ -173,8 +175,9 @@ int32 CDisplayOptionData::GetVideomodeCur(void) const
 
 const char* CDisplayOptionData::GetVideomodeName(int32 No) const
 {
-    ASSERT(No >= 0 && No < m_iVideomodeNum);
-    
+    ASSERT(No >= 0);
+    ASSERT(No < m_iVideomodeNum);
+
     return m_pVideomode[No].m_szName;
 };
 

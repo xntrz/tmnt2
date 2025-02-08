@@ -150,9 +150,9 @@ bool CPlayerStateWatcher::IsAllPlayerFlyawayOrDownState(void) const
 bool CPlayerStateWatcher::IsEnableFlag(int32 iPlayerIndex, uint32 uFlag) const
 {
     if (IsValidIndex(iPlayerIndex))
-        return (FLAG_TEST_ANY(m_aCurrentStateFlag[iPlayerIndex], uFlag));
-    else
-        return (false);
+        return ((m_aCurrentStateFlag[iPlayerIndex] & uFlag) != 0);
+    
+    return (false);
 };
 
 
@@ -306,8 +306,8 @@ void CPlayerWatcher::Update(void)
     CPlayerStateWatcher::Update();
 
     m_vMyPosOld = m_vMyPos;
-    m_fMyAngle = EnemyChara().CharacterCompositor().GetDirection();
-    EnemyChara().CharacterCompositor().GetFootPosition(&m_vMyPos);
+    m_fMyAngle = EnemyChara().Compositor().GetDirection();
+    EnemyChara().Compositor().GetFootPosition(&m_vMyPos);
 
     IsViewArea(CAIUtils::PLAYER_STATE_ENABLE);
     
@@ -471,13 +471,14 @@ bool CPlayerWatcher::IsChargeAttack(float fLength)
 
 bool CPlayerWatcher::IsHighAttack(float fLength, float fLowSide, float fHighSide)
 {
+    // TODO review
+    
     bool bResult = false;
-    float fDistOfSuit = EnemyChara().AICharacteristic().m_fDistanceOfSuitable;
-    float fDistNearest = DIST_MAX;
 
+    float fDistanceOfSuitable = EnemyChara().AICharacteristic().m_fDistanceOfSuitable;
     if (fLength >= 0.0f)
-        fDistOfSuit = fLength;
-
+        fDistanceOfSuitable = fLength;
+    
     int32 nPlayerCnt = CAIUtils::GetPlayerNum();
     for (int32 i = 0; i < nPlayerCnt; ++i)
     {
@@ -492,7 +493,7 @@ bool CPlayerWatcher::IsHighAttack(float fLength, float fLowSide, float fHighSide
 
             if ((vToPlayer.y > fLowSide) && (vToPlayer.y < fHighSide))
             {
-                float fD = ((vToPlayer.y - fLowSide) / (fHighSide - fLength)) * fDistOfSuit;
+                float fD = ((vToPlayer.y - fLowSide) / (fHighSide - fLength)) * fDistanceOfSuitable;
                 
                 float fLengthXZ = Math::Vec3_Length(&vToPlayer);
                 vToPlayer.y = 0.0f;
@@ -532,23 +533,23 @@ bool CPlayerWatcher::IsSuitableArea(float fLength, float fViewAngle)
     for (int32 i = 0; i < nPlayerCnt; ++i)
     {
         CPlayerCharacter* pPlayerChr = CAIUtils::GetActivePlayer(i);
-        if (pPlayerChr)
+        if (!pPlayerChr)
+            continue;
+
+        PLAYERTYPES::STATUS playerStatus = pPlayerChr->GetStatus();
+        CAIUtils::PLAYER_STATE_FLAG playerStateFlag = CAIUtils::GetPlayerStateFlag(playerStatus);
+        if (playerStateFlag & CAIUtils::PLAYER_STATE_ENABLE)
         {
-            PLAYERTYPES::STATUS eStatus = pPlayerChr->GetStatus();
-            uint32 Flag = CAIUtils::GetPlayerStateFlag(eStatus);
-            if (FLAG_TEST_ANY(Flag, CAIUtils::PLAYER_STATE_ENABLE))
+            if (IsPlayerViewArea(i)                 &&
+                IsPlayerWithinRange(i, fDistOfSuit) &&
+                IsPlayerInTheFront(i, fViewAngle))
             {
-                if (IsPlayerViewArea(i)
-                    && IsPlayerWithinRange(i, fDistOfSuit)
-                    && IsPlayerInTheFront(i, fViewAngle))
+                float fDist = GetDistanceFromPlayer(i, &m_vMyPos);
+                if (fDist < fDistNearest)
                 {
-                    float fDist = GetDistanceFromPlayer(i, &m_vMyPos);
-                    if (fDist < fDistNearest)
-                    {
-                        fDistNearest = fDist;
-                        SetPlayerData(i, PLAYER_DATA_SUIT);
-                        bResult = true;
-                    };
+                    fDistNearest = fDist;
+                    SetPlayerData(i, PLAYER_DATA_SUIT);
+                    bResult = true;
                 };
             };
         };
@@ -567,21 +568,22 @@ bool CPlayerWatcher::IsViewArea(CAIUtils::PLAYER_STATE_FLAG state)
     for (int32 i = 0; i < nPlayerCnt; ++i)
     {
         CPlayerCharacter* pPlayerChr = CAIUtils::GetActivePlayer(i);
-        if (pPlayerChr)
+        if (!pPlayerChr)
+            continue;
+
+        PLAYERTYPES::STATUS playerStatus = pPlayerChr->GetStatus();
+        CAIUtils::PLAYER_STATE_FLAG playerStateFlag = CAIUtils::GetPlayerStateFlag(playerStatus);
+
+        if (playerStateFlag & state)
         {
-            PLAYERTYPES::STATUS eStatus = pPlayerChr->GetStatus();
-            uint32 Flag = CAIUtils::GetPlayerStateFlag(eStatus);
-            if (FLAG_TEST_ANY(Flag, state))
+            if (IsPlayerViewArea(i))
             {
-                if (IsPlayerViewArea(i))
+                float fDist = GetDistanceFromPlayer(i, &m_vMyPos);
+                if (fDist < fDistNearest)
                 {
-                    float fDist = GetDistanceFromPlayer(i, &m_vMyPos);
-                    if (fDist < fDistNearest)
-                    {
-                        fDistNearest = fDist;
-                        SetPlayerData(i, PLAYER_DATA_NEAR);
-                        bResult = true;
-                    };
+                    fDistNearest = fDist;
+                    SetPlayerData(i, PLAYER_DATA_NEAR);
+                    bResult = true;
                 };
             };
         };
@@ -914,25 +916,26 @@ int32 CPlayerWatcher::GetPlayerNumThere(RwV3d* pvCenter, float fRadius)
     for (int32 i = 0; i < nPlayerCnt; ++i)
     {
         CPlayerCharacter* pPlayerChr = CAIUtils::GetActivePlayer(i);
-        if (pPlayerChr)
+        if (!pPlayerChr)
+            continue;
+
+        PLAYERTYPES::STATUS playerStatus = pPlayerChr->GetStatus();
+        CAIUtils::PLAYER_STATE_FLAG playerStateFlag = CAIUtils::GetPlayerStateFlag(playerStatus);
+
+        if (playerStateFlag & CAIUtils::PLAYER_STATE_ENABLE)
         {
-            PLAYERTYPES::STATUS eStatus = pPlayerChr->GetStatus();
-            uint32 Flag = CAIUtils::GetPlayerStateFlag(eStatus);
-            if (FLAG_TEST_ANY(Flag, CAIUtils::PLAYER_STATE_ENABLE))
-            {
-                RwV3d vecPos = Math::VECTOR3_ZERO;
-                pPlayerChr->GetFootPosition(&vecPos);
+            RwV3d vecPos = Math::VECTOR3_ZERO;
+            pPlayerChr->GetFootPosition(&vecPos);
 
-                RwV3d vecDist = Math::VECTOR3_ZERO;
-                Math::Vec3_Sub(&vecDist, &vecPos, &vCenter);
+            RwV3d vecDist = Math::VECTOR3_ZERO;
+            Math::Vec3_Sub(&vecDist, &vecPos, &vCenter);
 
-                float fDist = Math::Vec3_Length(&vecDist);
-                if (fDist < fRadius)
-                    ++iResult;
-            };
+            float fDist = Math::Vec3_Length(&vecDist);
+            if (fDist < fRadius)
+                ++iResult;
         };
     };
-
+    
     return iResult;
 };
 
@@ -999,30 +1002,30 @@ int32 CPlayerWatcher::GetNearPlayer(RwV3d* pvCenter, float* pfDistNearest, RwV3d
     int32 iPlayerIndex = -1;
     int32 iPlayerCnt = CAIUtils::GetPlayerNum();
     float fDistNearest = DIST_MAX;
-    
+    float dt = CGameProperty::GetElapsedTime();
+
     for (int32 i = 0; i < iPlayerCnt; ++i)
     {
         CPlayerCharacter* pPlayerChr = CAIUtils::GetActivePlayer(i);
         if (!pPlayerChr)
             continue;
 
-        PLAYERTYPES::STATUS eStatus = pPlayerChr->GetStatus();
-        CAIUtils::PLAYER_STATE_FLAG StateFlag = CAIUtils::GetPlayerStateFlag(eStatus);
-        uint32 Flag = StateFlag;
-        
-        if (!FLAG_TEST_ANY(Flag, state))
+        PLAYERTYPES::STATUS playerStatus = pPlayerChr->GetStatus();
+        CAIUtils::PLAYER_STATE_FLAG playerStateFlag = CAIUtils::GetPlayerStateFlag(playerStatus);
+
+        if (!(playerStateFlag & state))
             continue;
 
         RwV3d vecPos = Math::VECTOR3_ZERO;
-        RwV3d vecVel = Math::VECTOR3_ZERO;
-        RwV3d vecDist = Math::VECTOR3_ZERO;
-        float dt = CGameProperty::GetElapsedTime();
-        
         pPlayerChr->GetFootPosition(&vecPos);
+
+        RwV3d vecVel = Math::VECTOR3_ZERO;
         pPlayerChr->GetVelocity(&vecVel);
 
         Math::Vec3_Scale(&vecVel, &vecVel, dt);
         Math::Vec3_Add(&vecPos, &vecPos, &vecVel);
+
+        RwV3d vecDist = Math::VECTOR3_ZERO;
         Math::Vec3_Sub(&vecDist, &vecPos, pvCenter);
         vecDist.y = 0.0f;
 

@@ -278,7 +278,6 @@ void CParticle::Initialize(void)
 
     m_nTransitionMax = TRANSITIONNUM;
     m_paTransition = new TRANSITION[m_nTransitionMax]();
-    ASSERT(m_paTransition);
 
     if (m_paTransition)
     {
@@ -309,17 +308,15 @@ void CParticle::Run(float dt)
 
     if (m_bRun)
     {
-        if (m_fAppearStart <= m_fCounter &&
-            m_fAppearEnd >= m_fCounter &&
-            m_InitTransition.m_fOccurTiming != 0.0f)
+        if ((m_fAppearStart <= m_fCounter) &&
+            (m_fAppearEnd >= m_fCounter) &&
+            (m_InitTransition.m_fOccurTiming != 0.0f))
         {
-            int32 nAppearNum = int32((m_fCounter - m_fAppearStart) / m_InitTransition.m_fOccurTiming);
+            int32 nAppearNum = static_cast<int32>((m_fCounter - m_fAppearStart) / m_InitTransition.m_fOccurTiming);
 
-            for (
-                m_InitTransition.m_nDisplayNum;
+            for (m_InitTransition.m_nDisplayNum;
                 nAppearNum >= m_InitTransition.m_nDisplayNum;
-                ++m_InitTransition.m_nDisplayNum
-                )
+                ++m_InitTransition.m_nDisplayNum)
             {
                 for (int32 i = 0; i < m_InitTransition.m_nOccurNum; ++i)
                     CreateParticle(&m_InitTransition);
@@ -327,48 +324,42 @@ void CParticle::Run(float dt)
 
             m_bSimple = true;
         }
-        else if (m_fAppearStart == m_fAppearEnd && !m_bSimple && m_fAppearEnd < m_fCounter)
+        else if ((m_fAppearStart == m_fAppearEnd) && (!m_bSimple) && (m_fAppearEnd < m_fCounter))
         {
-            if (m_fAppearStart == m_fAppearEnd &&
-                !m_bSimple &&
-                m_fAppearEnd < m_fCounter)
-            {
-                for (int32 i = 0; i < m_InitTransition.m_nOccurNum; ++i)
-                    CreateParticle(&m_InitTransition);
-            };
-
+            for (int32 i = 0; i < m_InitTransition.m_nOccurNum; ++i)
+                CreateParticle(&m_InitTransition);
+            
             m_bSimple = true;
         };
     };
 
-    if (!m_listTransitionAlloc.empty())
+    auto it = m_listTransitionAlloc.begin();
+    auto itEnd = m_listTransitionAlloc.end();
+    while (it != itEnd)
     {
-        auto it = m_listTransitionAlloc.begin();
-        while (it)
+        TRANSITION* pTransition = &(*it);
+
+        UpdateTransition(pTransition);
+        TransitionColor(pTransition);
+        TransitionSize(pTransition);
+        TransitionAcceleration(pTransition);
+
+        pTransition->m_vRotation.x = (pTransition->m_fCounterNow * (pTransition->m_vRotSpeed.x + m_vAccelRotationBuffer.x));
+        pTransition->m_vRotation.y = (pTransition->m_fCounterNow * (pTransition->m_vRotSpeed.y + m_vAccelRotationBuffer.y));
+        pTransition->m_vRotation.z = (pTransition->m_fCounterNow * (pTransition->m_vRotSpeed.z + m_vAccelRotationBuffer.z));
+
+        pTransition->m_fRotationBillboard = (pTransition->m_fCounterNow * (pTransition->m_fRotSpeedBillboard + m_fAccelRotationBillboardBuffer));
+
+        if (pTransition->m_fLiveCount < pTransition->m_fCounterNow)
         {
-            TRANSITION* pTransition = &(*it);
+            it = m_listTransitionAlloc.erase(it);
+            m_listTransitionPool.push_back(pTransition);
 
-            UpdateTransition(pTransition);
-            TransitionColor(pTransition);
-            TransitionSize(pTransition);
-            TransitionAcceleration(pTransition);
-
-            pTransition->m_vRotation.x = pTransition->m_fCounterNow * (pTransition->m_vRotSpeed.x + m_vAccelRotationBuffer.x);
-            pTransition->m_vRotation.y = pTransition->m_fCounterNow * (pTransition->m_vRotSpeed.y + m_vAccelRotationBuffer.y);
-            pTransition->m_vRotation.z = pTransition->m_fCounterNow * (pTransition->m_vRotSpeed.z + m_vAccelRotationBuffer.z);
-            pTransition->m_fRotationBillboard = pTransition->m_fCounterNow * (pTransition->m_fRotSpeedBillboard + m_fAccelRotationBillboardBuffer);
-            
-            if (pTransition->m_fLiveCount < pTransition->m_fCounterNow)
-            {
-                it = m_listTransitionAlloc.erase(it);
-                m_listTransitionPool.push_back(pTransition);
-
-                --m_nTransitionNum;
-            }
-            else
-            {
-                ++it;                
-            };
+            --m_nTransitionNum;
+        }
+        else
+        {
+            ++it;
         };
     };
 
@@ -468,8 +459,8 @@ void CParticle::Draw(RwCamera* pCamera)
         };
     };
 
-    if (m_type == PEFINFO::PARTICLETYPE_BILLBOARD ||
-        m_type == PEFINFO::PARTICLETYPE_NORMALBOARD)
+    if ((m_type == PEFINFO::PARTICLETYPE_BILLBOARD) ||
+        (m_type == PEFINFO::PARTICLETYPE_NORMALBOARD))
         DrawVertex(pCamera);
 
     RenderStatePop();
@@ -646,7 +637,7 @@ void CParticle::RenderStatePush(void)
     if (m_pMyTexture)
         RENDERSTATE_PUSH(rwRENDERSTATETEXTURERASTER, RwTextureGetRaster(m_pMyTexture));
     else
-        RENDERSTATE_PUSH(rwRENDERSTATETEXTURERASTER, nullptr);
+        RENDERSTATE_PUSH(rwRENDERSTATETEXTURERASTER, 0);
 };
 
 
@@ -674,8 +665,8 @@ void CParticle::SetMatrixDirection(RwMatrix* pMatrix, const RwV3d* pvLookVec)
     vXZ.x = pvLookVec->x;
     vXZ.y = pvLookVec->z;
 
-    vRot.y = Math::ToDegree(Math::ATan2(vXZ.x, vXZ.y));
-    vRot.x = Math::ToDegree(Math::ATan2(Math::Vec2_Length(&vXZ), pvLookVec->y)) - 90.0f;
+    vRot.y = MATH_RAD2DEG(Math::ATan2(vXZ.x, vXZ.y));
+    vRot.x = MATH_RAD2DEG(Math::ATan2(Math::Vec2_Length(&vXZ), pvLookVec->y)) - 90.0f;
 
     vRot.x = InvClamp(vRot.x, -90.0f, 90.0f);
 
@@ -690,7 +681,8 @@ void CParticle::DeleteElement(void)
     if (!m_listTransitionAlloc.empty())
     {
         auto it = m_listTransitionAlloc.begin();
-        while (it)
+        auto itEnd = m_listTransitionAlloc.end();
+        while (it != itEnd)
         {
             TRANSITION* pTransition = &(*it);
             it = m_listTransitionAlloc.erase(it);
@@ -781,6 +773,9 @@ void CParticle::SetVertexInfo(RwIm3DVertex* aVertexList, RwCamera* pCamera, TRAN
                 };
             };            
         }
+        break;
+
+    default:
         break;
     };
 
@@ -1063,7 +1058,6 @@ void CParticle::CreateParticle(TRANSITION* pInitTransition)
         ASSERT(!m_listTransitionPool.empty());
 
         TRANSITION* pNode = m_listTransitionPool.front();
-        ASSERT(pNode);
         m_listTransitionPool.erase(pNode);
         m_listTransitionAlloc.push_back(pNode);
 
@@ -1076,14 +1070,14 @@ void CParticle::CreateParticle(TRANSITION* pInitTransition)
 
 void CParticle::TransitionNatureFall(TRANSITION* pTransition, RwV3d* pvVec)
 {
-    if (FLAG_TEST(m_uPatternFlag, PEFINFO::PATTERNFLAG_FALL))
+    if (m_uPatternFlag & PEFINFO::PATTERNFLAG_FALL)
         pvVec->y += (m_fGravity * pTransition->m_fCounterNow);
 };
 
 
 void CParticle::TransitionNatureRise(TRANSITION* pTransition, RwV3d* pvVec)
 {
-    if (FLAG_TEST(m_uPatternFlag, PEFINFO::PATTERNFLAG_RISE))
+    if (m_uPatternFlag & PEFINFO::PATTERNFLAG_RISE)
         pvVec->y += ((m_fGravity * pTransition->m_fCounterNow) * -1.0f);
 };
 
@@ -1151,35 +1145,35 @@ void CParticle::TransitionScale(TRANSITION* pTransition)
 
 void CParticle::TransitionAcceleration(TRANSITION* pTransition)
 {
-    if (FLAG_TEST(m_uPatternFlag, PEFINFO::PATTERNFLAG_ACCELSIZE2D_X))
+    if (m_uPatternFlag & PEFINFO::PATTERNFLAG_ACCELSIZE2D_X)
     {
         m_fAccelSizeDecayWidthBuffer =
             pTransition->m_fCounterNow * (0.01f * (m_InitTransition.m_vSize.x * m_fAccelSizeDecayWidth));
     };
 
-    if (FLAG_TEST(m_uPatternFlag, PEFINFO::PATTERNFLAG_ACCELSIZE2D_Y))
+    if (m_uPatternFlag & PEFINFO::PATTERNFLAG_ACCELSIZE2D_Y)
     {
         m_fAccelSizeDecayHeightBuffer =
             pTransition->m_fCounterNow * (0.01f * (m_InitTransition.m_vSize.y * m_fAccelSizeDecayHeight));
     };
 
-    if (FLAG_TEST(m_uPatternFlag, PEFINFO::PATTERNFLAG_ACCELROT3D_X))
+    if (m_uPatternFlag & PEFINFO::PATTERNFLAG_ACCELROT3D_X)
         m_vAccelRotationBuffer.x = m_vAccelRotation.x * pTransition->m_fCounterNow;
 
-    if (FLAG_TEST(m_uPatternFlag, PEFINFO::PATTERNFLAG_ACCELROT3D_Y))
+    if (m_uPatternFlag & PEFINFO::PATTERNFLAG_ACCELROT3D_Y)
         m_vAccelRotationBuffer.y = m_vAccelRotation.y * pTransition->m_fCounterNow;
 
-    if (FLAG_TEST(m_uPatternFlag, PEFINFO::PATTERNFLAG_ACCELROT3D_Z))
+    if (m_uPatternFlag & PEFINFO::PATTERNFLAG_ACCELROT3D_Z)
         m_vAccelRotationBuffer.z = m_vAccelRotation.z * pTransition->m_fCounterNow;
 
-    if (FLAG_TEST(m_uPatternFlag, PEFINFO::PATTERNFLAG_ACCELROT2D))
+    if (m_uPatternFlag & PEFINFO::PATTERNFLAG_ACCELROT2D)
         m_fAccelRotationBillboardBuffer = m_fAccelRotationBillboard * pTransition->m_fCounterNow;
 };
 
 
 void CParticle::TransitionRotation(TRANSITION* pTransition, const RwV3d* pCameraPos)
 {
-    if (FLAG_TEST(m_uPatternFlag, PEFINFO::PATTERNFLAG_ROT_X))
+    if (m_uPatternFlag & PEFINFO::PATTERNFLAG_ROT_X)
     {
         RwMatrixRotate(
             &pTransition->m_matrix,
@@ -1189,7 +1183,7 @@ void CParticle::TransitionRotation(TRANSITION* pTransition, const RwV3d* pCamera
         );
     };
 
-    if (FLAG_TEST(m_uPatternFlag, PEFINFO::PATTERNFLAG_ROT_Y))
+    if (m_uPatternFlag & PEFINFO::PATTERNFLAG_ROT_Y)
     {
         RwMatrixRotate(
             &pTransition->m_matrix,
@@ -1199,7 +1193,7 @@ void CParticle::TransitionRotation(TRANSITION* pTransition, const RwV3d* pCamera
         );
     };
 
-    if (FLAG_TEST(m_uPatternFlag, PEFINFO::PATTERNFLAG_ROT_Z))
+    if (m_uPatternFlag & PEFINFO::PATTERNFLAG_ROT_Z)
     {
         RwMatrixRotate(
             &pTransition->m_matrix,
@@ -1209,8 +1203,8 @@ void CParticle::TransitionRotation(TRANSITION* pTransition, const RwV3d* pCamera
         );
     };
 
-    if (FLAG_TEST_ANY(m_uPatternFlag, PEFINFO::PATTERNFLAG_BILLBOARD) ||
-        FLAG_TEST_ANY(m_uRandCheckFlag, PEFINFO::RANDFLAG_RANDANGLE))
+    if ((m_uPatternFlag & PEFINFO::PATTERNFLAG_BILLBOARD) ||
+        (m_uRandCheckFlag & PEFINFO::RANDFLAG_RANDANGLE))
     {
         float fAngle = pTransition->m_fInitRotationBillboard + pTransition->m_fRotationBillboard;
 		
@@ -1278,7 +1272,7 @@ void CParticle::SortZ(RwCamera* pCamera)
 
 void CParticle::AddRandomStartPos(RwV3d* pvStartPos, RwV3d* pvRandElement, uint32 uRandomFlag)
 {
-    if (FLAG_TEST(uRandomFlag, PEFINFO::RANDFLAG_STARTPOS_X))
+    if (uRandomFlag & PEFINFO::RANDFLAG_STARTPOS_X)
     {
         float fRand = Randomize() * pvRandElement->x;
 
@@ -1287,7 +1281,7 @@ void CParticle::AddRandomStartPos(RwV3d* pvStartPos, RwV3d* pvRandElement, uint3
         pvStartPos->z += (m_vAxisX.z * fRand);
     };
 
-    if (FLAG_TEST(uRandomFlag, PEFINFO::RANDFLAG_STARTPOS_Y))
+    if (uRandomFlag & PEFINFO::RANDFLAG_STARTPOS_Y)
     {
         float fRand = Randomize() * pvRandElement->y;
 
@@ -1296,7 +1290,7 @@ void CParticle::AddRandomStartPos(RwV3d* pvStartPos, RwV3d* pvRandElement, uint3
         pvStartPos->z += (m_vAxisY.z * fRand);
     };
 
-    if (FLAG_TEST(uRandomFlag, PEFINFO::RANDFLAG_STARTPOS_Z))
+    if (uRandomFlag & PEFINFO::RANDFLAG_STARTPOS_Z)
     {
         float fRand = Randomize() * pvRandElement->z;
 
@@ -1309,10 +1303,10 @@ void CParticle::AddRandomStartPos(RwV3d* pvStartPos, RwV3d* pvRandElement, uint3
 
 void CParticle::AddRandomStartSize(RwV2d* pvStartSize, RwV2d* pvRandElement, uint32 uRandomFlag)
 {
-    if (FLAG_TEST(uRandomFlag, PEFINFO::RANDFLAG_STARTSIZE_X))
+    if (uRandomFlag & PEFINFO::RANDFLAG_STARTSIZE_X)
         pvStartSize->x += (Randomize() * pvRandElement->x);
 
-    if (FLAG_TEST(uRandomFlag, PEFINFO::RANDFLAG_STARTSIZE_Y))
+    if (uRandomFlag & PEFINFO::RANDFLAG_STARTSIZE_Y)
         pvStartSize->y += (Randomize() * pvRandElement->y);
 };
 
@@ -1321,7 +1315,7 @@ float CParticle::AddRandomStartLive(float fFirstLive, float fRandElement, uint32
 {
     float fRet = fFirstLive;
 
-    if (FLAG_TEST(uRandomFlag, PEFINFO::RANDFLAG_LIVECOUNT))
+    if (uRandomFlag & PEFINFO::RANDFLAG_LIVECOUNT)
         fRet += (Randomize() * fRandElement);
 
     return fRet;
@@ -1330,7 +1324,7 @@ float CParticle::AddRandomStartLive(float fFirstLive, float fRandElement, uint32
 
 void CParticle::AddRandomFirstVec(RwV3d* pvFirstVec, RwV3d* pvRandomElement, uint32 uRandomFlag)
 {
-    if (FLAG_TEST(uRandomFlag, PEFINFO::RANDFLAG_FIRSTVEC_X))
+    if (uRandomFlag & PEFINFO::RANDFLAG_FIRSTVEC_X)
     {
         float fRand = Randomize() * pvRandomElement->x;
 
@@ -1339,7 +1333,7 @@ void CParticle::AddRandomFirstVec(RwV3d* pvFirstVec, RwV3d* pvRandomElement, uin
         pvFirstVec->z += (m_vAxisX.z * fRand);
     };
 
-    if (FLAG_TEST(uRandomFlag, PEFINFO::RANDFLAG_FIRSTVEC_Y))
+    if (uRandomFlag & PEFINFO::RANDFLAG_FIRSTVEC_Y)
     {
         float fRand = Randomize() * pvRandomElement->y;
 
@@ -1348,7 +1342,7 @@ void CParticle::AddRandomFirstVec(RwV3d* pvFirstVec, RwV3d* pvRandomElement, uin
         pvFirstVec->z += (m_vAxisY.z * fRand);
     };
 
-    if (FLAG_TEST(uRandomFlag, PEFINFO::RANDFLAG_FIRSTVEC_Z))
+    if (uRandomFlag & PEFINFO::RANDFLAG_FIRSTVEC_Z)
     {
         float fRand = Randomize() * pvRandomElement->z;
 
@@ -1357,9 +1351,9 @@ void CParticle::AddRandomFirstVec(RwV3d* pvFirstVec, RwV3d* pvRandomElement, uin
         pvFirstVec->z += (m_vAxisZ.z * fRand);
     };
 
-    if (pvFirstVec->x != 0.0f &&
-        pvFirstVec->y != 0.0f &&
-        pvFirstVec->z != 0.0f)
+    if ((pvFirstVec->x != 0.0f) &&
+        (pvFirstVec->y != 0.0f) &&
+        (pvFirstVec->z != 0.0f))
     {
         Math::Vec3_Normalize(pvFirstVec, pvFirstVec);
     };
@@ -1370,7 +1364,7 @@ float CParticle::AddRandomSpeed(float fFirstSpeed, float fRandElement, uint32 uR
 {
     float fRet = fFirstSpeed;
 
-    if (FLAG_TEST(uRandomFlag, PEFINFO::RANDFLAG_FIRSTSPEED))
+    if (uRandomFlag & PEFINFO::RANDFLAG_FIRSTSPEED)
         fRet += (Randomize() * fRandElement);
 
     return fRet;
@@ -1379,7 +1373,7 @@ float CParticle::AddRandomSpeed(float fFirstSpeed, float fRandElement, uint32 uR
 
 void CParticle::AddRandomAccelVec(RwV3d* pvAccelVec, RwV3d* pvRandomElement, uint32 uRandomFlag)
 {
-    if (FLAG_TEST(uRandomFlag, PEFINFO::RANDFLAG_ACCELVEC_X))
+    if (uRandomFlag & PEFINFO::RANDFLAG_ACCELVEC_X)
     {
         float fRand = Randomize() * pvRandomElement->x;
 
@@ -1388,7 +1382,7 @@ void CParticle::AddRandomAccelVec(RwV3d* pvAccelVec, RwV3d* pvRandomElement, uin
         pvAccelVec->z += (m_vAxisX.z * fRand);
     };
 
-    if (FLAG_TEST(uRandomFlag, PEFINFO::RANDFLAG_ACCELVEC_Y))
+    if (uRandomFlag & PEFINFO::RANDFLAG_ACCELVEC_Y)
     {
         float fRand = Randomize() * pvRandomElement->y;
 
@@ -1397,7 +1391,7 @@ void CParticle::AddRandomAccelVec(RwV3d* pvAccelVec, RwV3d* pvRandomElement, uin
         pvAccelVec->z += (m_vAxisY.z * fRand);
     };
 
-    if (FLAG_TEST(uRandomFlag, PEFINFO::RANDFLAG_ACCELVEC_Z))
+    if (uRandomFlag & PEFINFO::RANDFLAG_ACCELVEC_Z)
     {
         float fRand = Randomize() * pvRandomElement->z;
 
@@ -1406,9 +1400,9 @@ void CParticle::AddRandomAccelVec(RwV3d* pvAccelVec, RwV3d* pvRandomElement, uin
         pvAccelVec->z += (m_vAxisZ.z * fRand);
     };
 
-    if (pvAccelVec->x != 0.0f &&
-        pvAccelVec->y != 0.0f &&
-        pvAccelVec->z != 0.0f)
+    if ((pvAccelVec->x != 0.0f) &&
+        (pvAccelVec->y != 0.0f) &&
+        (pvAccelVec->z != 0.0f))
     {
         Math::Vec3_Normalize(pvAccelVec, pvAccelVec);
     };
@@ -1419,7 +1413,7 @@ float CParticle::AddRandomAccel(float fAccel, float fRandElement, uint32 uRandom
 {    
     float fRet = fAccel;
     
-    if (FLAG_TEST(uRandomFlag, PEFINFO::RANDFLAG_ACCELVEC_Z))
+    if (uRandomFlag & PEFINFO::RANDFLAG_ACCELVEC_Z)
         fRet += (Randomize() * fRandElement);
 
     return fRet;
@@ -1428,7 +1422,7 @@ float CParticle::AddRandomAccel(float fAccel, float fRandElement, uint32 uRandom
 
 void CParticle::RandomScale(RwV2d* pvStartSize, float fScaleMin, float fScaleMax, uint32 uRandomFlag)
 {
-    if (FLAG_TEST(uRandomFlag, PEFINFO::RANDFLAG_SCALESIZE2D))
+    if (uRandomFlag & PEFINFO::RANDFLAG_SCALESIZE2D)
     {
         float fValue = (Randomize() * (fScaleMin + (fScaleMax - fScaleMin))) * 0.01f;
         
@@ -1440,13 +1434,13 @@ void CParticle::RandomScale(RwV2d* pvStartSize, float fScaleMin, float fScaleMax
 
 void CParticle::RandomScale3D(RwV3d* pvStartSize, RwV3d* pvRandomElement, uint32 uRandomFlag)
 {
-    if (FLAG_TEST(uRandomFlag, PEFINFO::RANDFLAG_SCALESIZE3D_X))
+    if (uRandomFlag & PEFINFO::RANDFLAG_SCALESIZE3D_X)
         pvStartSize->x += (Randomize() * pvRandomElement->x);
     
-    if (FLAG_TEST(uRandomFlag, PEFINFO::RANDFLAG_SCALESIZE3D_Y))
+    if (uRandomFlag & PEFINFO::RANDFLAG_SCALESIZE3D_Y)
         pvStartSize->y += (Randomize() * pvRandomElement->y);
     
-    if (FLAG_TEST(uRandomFlag, PEFINFO::RANDFLAG_SCALESIZE3D_Z))
+    if (uRandomFlag & PEFINFO::RANDFLAG_SCALESIZE3D_Z)
         pvStartSize->z += (Randomize() * pvRandomElement->z);
 };
 
@@ -1455,7 +1449,7 @@ float CParticle::RandomAngle(float fRandElement, uint32 uRandomFlag)
 {
     float fRet = 0.0f;
     
-    if (FLAG_TEST(uRandomFlag, PEFINFO::RANDFLAG_RANDANGLE))
+    if (uRandomFlag & PEFINFO::RANDFLAG_RANDANGLE)
         fRet = Randomize() * fRandElement;
 
     return fRet;
@@ -1464,9 +1458,9 @@ float CParticle::RandomAngle(float fRandElement, uint32 uRandomFlag)
 
 void CParticle::CircleMove(RwV3d* pvDest, float fRadius, float fSpeed, float fTime, uint32 uFlag)
 {
-    if (FLAG_TEST(uFlag, PEFINFO::MOVEFLAG_CIRCLE))
+    if (uFlag & PEFINFO::MOVEFLAG_CIRCLE)
     {
-        float fBasis = fSpeed * 0.0027777f * fTime * Math::PI2 + m_fCircleBaseRotation;
+        float fBasis = fSpeed * (1.0F / 360.0f) * fTime * MATH_PI2 + m_fCircleBaseRotation;
 
         pvDest->x = Math::Sin(fBasis) * fRadius;
         pvDest->y = 0.0f;
@@ -1481,38 +1475,38 @@ void CParticle::CopyTransition(TRANSITION* pDst, TRANSITION* pOrg)
     ASSERT(pOrg);
     ASSERT(pDst != pOrg);
 
-    pDst->m_vPositionBasis = pOrg->m_vPositionBasis;
-    pDst->m_vPositionNow = pOrg->m_vPositionNow;
-    pDst->m_vPositionRand = pOrg->m_vPositionRand;
-    pDst->m_vPositionCircle = pOrg->m_vPositionCircle;
-    pDst->m_vPosition = pOrg->m_vPosition;
-    pDst->m_Color = pOrg->m_Color;
-    pDst->m_ColorNow = pOrg->m_ColorNow;
+    pDst->m_vPositionBasis          = pOrg->m_vPositionBasis;
+    pDst->m_vPositionNow            = pOrg->m_vPositionNow;
+    pDst->m_vPositionRand           = pOrg->m_vPositionRand;
+    pDst->m_vPositionCircle         = pOrg->m_vPositionCircle;
+    pDst->m_vPosition               = pOrg->m_vPosition;
+    pDst->m_Color                   = pOrg->m_Color;
+    pDst->m_ColorNow                = pOrg->m_ColorNow;
     std::memcpy(&pDst->m_matrix, &pOrg->m_matrix, sizeof(pDst->m_matrix));
-    pDst->m_vSize = pOrg->m_vSize;
-    pDst->m_vSizeNow = pOrg->m_vSizeNow;
-    pDst->m_vScale = pOrg->m_vScale;
-    pDst->m_vScaleNow = pOrg->m_vScaleNow;
-    pDst->m_vDirection = pOrg->m_vDirection;
-    pDst->m_vVecFirst = pOrg->m_vVecFirst;
-    pDst->m_fSpeedFirst = pOrg->m_fSpeedFirst;
-    pDst->m_vAcceleration = pOrg->m_vAcceleration;
-    pDst->m_fAccelSpeed = pOrg->m_fAccelSpeed;
-    pDst->m_fCounter = pOrg->m_fCounter;
-    pDst->m_fCounterNow = pOrg->m_fCounterNow;
-    pDst->m_fLiveCount = pOrg->m_fLiveCount;
-    pDst->m_nOccurNum = pOrg->m_nOccurNum;
-    pDst->m_fOccurTiming = pOrg->m_fOccurTiming;
-    pDst->m_fRotSpeedBillboard = pOrg->m_fRotSpeedBillboard;
-    pDst->m_fRotationBillboard = pOrg->m_fRotationBillboard;
-    pDst->m_fInitRotationBillboard = pOrg->m_fInitRotationBillboard;
-    pDst->m_vRotSpeed = pOrg->m_vRotSpeed;
-    pDst->m_vRotation = pOrg->m_vRotation;
-    pDst->m_fSortZ = pOrg->m_fSortZ;
+    pDst->m_vSize                   = pOrg->m_vSize;
+    pDst->m_vSizeNow                = pOrg->m_vSizeNow;
+    pDst->m_vScale                  = pOrg->m_vScale;
+    pDst->m_vScaleNow               = pOrg->m_vScaleNow;
+    pDst->m_vDirection              = pOrg->m_vDirection;
+    pDst->m_vVecFirst               = pOrg->m_vVecFirst;
+    pDst->m_fSpeedFirst             = pOrg->m_fSpeedFirst;
+    pDst->m_vAcceleration           = pOrg->m_vAcceleration;
+    pDst->m_fAccelSpeed             = pOrg->m_fAccelSpeed;
+    pDst->m_fCounter                = pOrg->m_fCounter;
+    pDst->m_fCounterNow             = pOrg->m_fCounterNow;
+    pDst->m_fLiveCount              = pOrg->m_fLiveCount;
+    pDst->m_nOccurNum               = pOrg->m_nOccurNum;
+    pDst->m_fOccurTiming            = pOrg->m_fOccurTiming;
+    pDst->m_fRotSpeedBillboard      = pOrg->m_fRotSpeedBillboard;
+    pDst->m_fRotationBillboard      = pOrg->m_fRotationBillboard;
+    pDst->m_fInitRotationBillboard  = pOrg->m_fInitRotationBillboard;
+    pDst->m_vRotSpeed               = pOrg->m_vRotSpeed;
+    pDst->m_vRotation               = pOrg->m_vRotation;
+    pDst->m_fSortZ                  = pOrg->m_fSortZ;
 };
 
 
 float CParticle::Randomize(void) const
 {
-    return (float(Math::Rand() % RANDSEED) * 0.001f);
+    return (static_cast<float>(Math::Rand() % RANDSEED) * 0.001f);
 };

@@ -177,49 +177,49 @@ CItemRecord::~CItemRecord(void)
 
 void CItemRecord::SetDefault(void)
 {
-    m_uCrystalRedFlag = 0;
-    m_uCrystalGreenFlag = 0;
+    m_uCrystalRedFlag    = 0;
+    m_uCrystalGreenFlag  = 0;
     m_uCrystalOrangeFlag = 0;
-    m_uCrystalWhiteFlag = 0;
-    m_uItemTakenFlag = 0;
-    m_iComebackNum = 0;
+    m_uCrystalWhiteFlag  = 0;
+    m_uItemTakenFlag     = 0;
+    m_iComebackNum       = 0;
 };
 
 
 bool CItemRecord::IsValid(void) const
 {
-    if (m_iComebackNum < 0 ||
-        m_iComebackNum > 1)
+    if ((m_iComebackNum < 0) ||
+        (m_iComebackNum > 1))
     {
         OUTPUT(" %s is failed: comeback num\n", __FUNCTION__);
         return false;
     };
 
-    if (FLAG_TEST_ANY(m_uCrystalRedFlag, ~ALL_CRY_TAKEN_MASK))
+    if (m_uCrystalRedFlag & ~ALL_CRY_TAKEN_MASK)
     {
         OUTPUT(" %s is failed: red cry flag\n", __FUNCTION__);
         return false;
     };
 
-    if (FLAG_TEST_ANY(m_uCrystalGreenFlag, ~ALL_CRY_TAKEN_MASK))
+    if (m_uCrystalGreenFlag & ~ALL_CRY_TAKEN_MASK)
     {
         OUTPUT(" %s is failed: green cry flag\n", __FUNCTION__);
         return false;
     };
 
-    if (FLAG_TEST_ANY(m_uCrystalOrangeFlag, ~ALL_CRY_TAKEN_MASK))
+    if (m_uCrystalOrangeFlag & ~ALL_CRY_TAKEN_MASK)
     {
         OUTPUT(" %s is failed: orange cry flag\n", __FUNCTION__);
         return false;
     };
 
-    if (FLAG_TEST_ANY(m_uCrystalWhiteFlag, ~ALL_CRY_TAKEN_MASK))
+    if (m_uCrystalWhiteFlag & ~ALL_CRY_TAKEN_MASK)
     {
         OUTPUT(" %s is failed: white cry flag\n", __FUNCTION__);
         return false;
     };
 
-    if (FLAG_TEST_ANY(m_uItemTakenFlag, ~ALL_ITEM_TAKEN_MASK))
+    if (m_uItemTakenFlag & ~ALL_ITEM_TAKEN_MASK)
     {
         OUTPUT(" %s is failed: item taken flag\n", __FUNCTION__);
         return false;
@@ -232,23 +232,23 @@ bool CItemRecord::IsValid(void) const
 
 void CItemRecord::Snapshot(RAWDATA& rRawData) const
 {
-    rRawData.m_uCrystalRedFlag = m_uCrystalRedFlag;
-    rRawData.m_uCrystalGreenFlag = m_uCrystalGreenFlag;
+    rRawData.m_uCrystalRedFlag    = m_uCrystalRedFlag;
+    rRawData.m_uCrystalGreenFlag  = m_uCrystalGreenFlag;
     rRawData.m_uCrystalOrangeFlag = m_uCrystalOrangeFlag;
-    rRawData.m_uCrystalWhiteFlag = m_uCrystalWhiteFlag;
-    rRawData.m_uItemTakenFlag = m_uItemTakenFlag;
-    rRawData.m_iComebackNum = m_iComebackNum;
+    rRawData.m_uCrystalWhiteFlag  = m_uCrystalWhiteFlag;
+    rRawData.m_uItemTakenFlag     = m_uItemTakenFlag;
+    rRawData.m_iComebackNum       = m_iComebackNum;
 };
 
 
 void CItemRecord::Restore(const RAWDATA& rRawData)
 {
-    m_uCrystalRedFlag = rRawData.m_uCrystalRedFlag;
-    m_uCrystalGreenFlag = rRawData.m_uCrystalGreenFlag;
+    m_uCrystalRedFlag    = rRawData.m_uCrystalRedFlag;
+    m_uCrystalGreenFlag  = rRawData.m_uCrystalGreenFlag;
     m_uCrystalOrangeFlag = rRawData.m_uCrystalOrangeFlag;
-    m_uCrystalWhiteFlag = rRawData.m_uCrystalWhiteFlag;
-    m_uItemTakenFlag = rRawData.m_uItemTakenFlag;
-    m_iComebackNum = rRawData.m_iComebackNum;
+    m_uCrystalWhiteFlag  = rRawData.m_uCrystalWhiteFlag;
+    m_uItemTakenFlag     = rRawData.m_uItemTakenFlag;
+    m_iComebackNum       = rRawData.m_iComebackNum;
 };
 
 
@@ -275,7 +275,9 @@ void CItemRecord::SetAreaCrystalTaken(GAMETYPES::CRYSTALTYPE crytype, AREAID::VA
 void CItemRecord::SetComebackTaken(void)
 {
     m_iComebackNum = Clamp(++m_iComebackNum, 0, 1);
-    ASSERT(m_iComebackNum >= 0 && m_iComebackNum <= 1);
+
+    ASSERT(m_iComebackNum >= 0);
+    ASSERT(m_iComebackNum <= 1);
 };
 
 
@@ -290,11 +292,12 @@ void CItemRecord::SetComebackUsed(void)
 
 bool CItemRecord::IsItemTakenYet(ITEMID::VALUE idItem) const
 {
-    ASSERT(idItem > ITEMID::ID_NONE && idItem <= ITEMID::ID_MAX);
+    ASSERT(idItem > ITEMID::ID_NONE);
+    ASSERT(idItem <= ITEMID::ID_MAX);
 
     uint32 flag = (1 << static_cast<uint32>(idItem));
     
-    return FLAG_TEST(m_uItemTakenFlag, flag);
+    return ((m_uItemTakenFlag & flag) != 0);
 };
 
 
@@ -332,7 +335,7 @@ int32 CItemRecord::GetCrystalNum(GAMETYPES::CRYSTALTYPE crytype) const
     for (int32 i = 0; i < cryMax; i++)
     {
         uint32 flag = (1 << static_cast<uint32>(i));
-        if (FLAG_TEST(uCryFlag, flag))
+        if (uCryFlag & flag)
             ++result;
     };
 
@@ -367,8 +370,8 @@ bool CItemRecord::IsAreaCrystalTaken(GAMETYPES::CRYSTALTYPE crytype, AREAID::VAL
     
     if (getAreaCrystalInfo(crytype, idArea, &iCryNo))
         return getCrystalFlag(crytype, iCryNo);
-    else
-        return false;    
+    
+    return false;
 };
 
 
@@ -468,26 +471,26 @@ bool CItemRecord::getCrystalFlag(GAMETYPES::CRYSTALTYPE crytype, int32 no) const
 {
     bool bResult = false;
     
-    if (no >= 0 && no < getCrystalMax(crytype))
+    if ((no >= 0) && (no < getCrystalMax(crytype)))
     {
         uint32 flag = (1 << static_cast<uint32>(no));
 
         switch (crytype)
         {
         case GAMETYPES::CRYSTALTYPE_RED:
-            bResult = FLAG_TEST(m_uCrystalRedFlag, flag);
+            bResult = ((m_uCrystalRedFlag & flag) != 0);
             break;
 
         case GAMETYPES::CRYSTALTYPE_GREEN:
-            bResult = FLAG_TEST(m_uCrystalGreenFlag, flag);
+            bResult = ((m_uCrystalGreenFlag & flag) != 0);
             break;
 
         case GAMETYPES::CRYSTALTYPE_ORANGE:
-            bResult = FLAG_TEST(m_uCrystalOrangeFlag, flag);
+            bResult = ((m_uCrystalOrangeFlag & flag) != 0);
             break;
 
         case GAMETYPES::CRYSTALTYPE_WHITE:
-            bResult = FLAG_TEST(m_uCrystalWhiteFlag, flag);
+            bResult = ((m_uCrystalWhiteFlag & flag) != 0);
             break;
 
         default:
@@ -502,7 +505,7 @@ bool CItemRecord::getCrystalFlag(GAMETYPES::CRYSTALTYPE crytype, int32 no) const
 
 void CItemRecord::setCrystalFlag(GAMETYPES::CRYSTALTYPE crytype, int32 no, bool bProcessed)
 {    
-    if (no >= 0 && no < getCrystalMax(crytype))
+    if ((no >= 0) && (no < getCrystalMax(crytype)))
     {
         uint32* puFlag = nullptr;
         
@@ -534,9 +537,9 @@ void CItemRecord::setCrystalFlag(GAMETYPES::CRYSTALTYPE crytype, int32 no, bool 
             uint32 flag = (1 << static_cast<uint32>(no));
 
             if (bProcessed)
-                FLAG_SET(*puFlag, flag);
+                *puFlag |= flag;
             else
-                FLAG_CLEAR(*puFlag, flag);
+                *puFlag &= (~flag);
         };
     };
 };

@@ -7,7 +7,9 @@
 #include "System/Common/Screen.hpp"
 
 
-CDialog::CDialog(COLOR color, STATUS defaultStatus, int32 iController)
+CDialog::CDialog(COLOR color /*= COLOR_NORMAL*/,
+                 STATUS defaultStatus /*= STATUS_YES*/,
+                 int32 iController /*= CController::CONTROLLER_LOCKED_ON_VIRTUAL*/)
 : CMessageWindow(color)
 , m_status(defaultStatus)
 , m_fCursorRotation(0.0f)
@@ -179,15 +181,15 @@ void CDialog::SetStatus(STATUS status)
 };
 
 
-void CDialog::SetController(int32 iController)
-{
-    m_iController = iController;
-};
-
-
 CDialog::STATUS CDialog::GetStatus(void) const
 {
     return m_status;
+};
+
+
+void CDialog::SetController(int32 iController)
+{
+    m_iController = iController;
 };
 
 

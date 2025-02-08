@@ -74,7 +74,7 @@ void CSphere::Draw(void)
     if (m_pTexture)
     {
         RENDERSTATE_PUSH(rwRENDERSTATETEXTURERASTER, RwTextureGetRaster(m_pTexture));
-        FLAG_SET(uFlags, rwIM3D_VERTEXUV);
+        uFlags |= rwIM3D_VERTEXUV;
     }
     else
     {
@@ -145,7 +145,6 @@ void CSphere::SetScale(const RwV3d* pvScaling)
 void CSphere::Reset(void)
 {
     RwMatrixSetIdentityMacro(&m_matrix);
-    m_matrix.flags = rwMATRIXTYPEMASK;
 
     if (m_bRandom)
         SetVertexRandom();
@@ -240,7 +239,6 @@ void CSphere::SetVertexRandom(void)
 				float x = ((float(Math::Rand() % 20) * 0.01f) - 0.1f) * m_fRadius;
 				float y = ((float(Math::Rand() % 20) * 0.01f) - 0.1f) * m_fRadius;
 				float z = ((float(Math::Rand() % 20) * 0.01f) - 0.1f) * m_fRadius;
-
 
 				pVertexList[nIndex].objVertex.x =
 					x + (m_fRadius * (Math::Sin(float(j) * fDeltaHorizonAngle) * Math::Sin(float(i) * fDeltaVerticalAngle)));

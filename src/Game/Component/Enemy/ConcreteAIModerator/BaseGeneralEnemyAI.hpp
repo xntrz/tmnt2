@@ -8,34 +8,50 @@ namespace AIOT
 {
     enum TYPE
     {
-        MoveTurn = 1,
-        MoveJump = 6,        
-        AttackA = 7,
+        Null            = 0,
 
-        AttackAA = 8,
-        AttackAAA = 9,
-        AttackB = 10,
-        AttackC = 11,
+        MoveTurn        = 1,
+        MoveWalkLeft    = 2,
+        MoveWalkRight   = 3,
+        MoveWalk        = 4,
+        MoveRun         = 5,        
+        MoveJump        = 6,
 
-        FireRepeatA = 16,
-        FireRepeatB = 17,
-
-        FireRepeatC = 18,
-        Special1 = 19,
+        AttackA         = 7,
+        AttackAA        = 8,
+        AttackAAA       = 9,
+        AttackB         = 10,
+        AttackC         = 11,
+        AttackRun       = 12,
+        FireA           = 13,
+        FireB           = 14,
+        FireC           = 15,
+        FireRepeatA     = 16, // FIRE_AA
+        FireRepeatB     = 17, // FIRE_BB
+        FireRepeatC     = 18, // FIRE_CC
+        Special1        = 19,
     };
 
-    int32 Set(int32 idx, int32 target);
+    enum
+    {
+        TargetNo        = (~TYPEDEF::SINT32_MAX),
+    };
+
+    int32 Set(int32 idx,        // idx - is subtype of order (for move its MoveType, for attack - AttackType and so on)
+              int32 target);    // target - is flag indicator only bit, that indicates order type to player (PlayerNo field) or to point
+
     int32 Get(int32 type);
     int32 GetTarget(int32 type);
-    void SetThinkOrder(CAIThinkOrder& rAIThinkOrder, CAIThinkOrder::ORDER eOrder, int32 eTypeIdx, float fTimer, RwV3d* pvVec);
+    void SetThinkOrder(CAIThinkOrder& rAIThinkOrder, CAIThinkOrder::ORDER eOrder, int32 eTypeIdx, float fTimer, RwV3d* pvVec = nullptr);
     void SetThinkOrder(CAIThinkOrder& rAIThinkOrder, CAIThinkOrder::ORDER eOrder, int32 eTypeIdx, float fTimer, int32 iNumber);
-    void SetWaitOrder(CAIThinkOrder& rAIThinkOrder, float fTimer, RwV3d* pvVec);
-    void SetMoveOrder(CAIThinkOrder& rAIThinkOrder, int32 typeIdx, float fTimer, RwV3d* pvVec);
+    void SetWaitOrder(CAIThinkOrder& rAIThinkOrder, float fTimer, RwV3d* pvVec = nullptr);
+    void SetMoveOrder(CAIThinkOrder& rAIThinkOrder, int32 typeIdx, float fTimer, RwV3d* pvVec = nullptr);
     void SetMoveOrder(CAIThinkOrder& rAIThinkOrder, int32 typeIdx, float fTimer, int32 iNumber);
     void SetAttackOrder(CAIThinkOrder& rAIThinkOrder, int32 typeIdx, int32 iNumber);
-    void SetFireOrder(CAIThinkOrder& rAIThinkOrder, int32 typeIdx, int32 iNumber, RwV3d* pvVec);
+    void SetFireOrder(CAIThinkOrder& rAIThinkOrder, int32 typeIdx, int32 iNumber, RwV3d* pvVec = nullptr);
     void SetDefenceOrder(CAIThinkOrder& rAIThinkOrder);
     void SetNothingOrder(CAIThinkOrder& rAIThinkOrder);
+    void SetRunOrder(CAIThinkOrder& rAIThinkOrder, RwV3d* pvAt);
 };
 
 
@@ -135,6 +151,7 @@ public:
     int32 MaxTarget(void) const;
     CTarget* CurrentTarget() const;
     bool CanTheTargetBeChanged(void) const;
+    void SetPermission(bool bState);
 
 private:
     bool m_bPermission;
@@ -148,7 +165,7 @@ private:
 class CTargetInfo
 {
 public:
-    CTargetInfo(CEnemyCharacter& rEnemyCharacter);
+    CTargetInfo(CEnemyCharacter* pEnemyChr);
     virtual ~CTargetInfo(void);
     virtual void Update(void);
     virtual void Set(int32 iNo);
@@ -160,7 +177,7 @@ public:
     virtual bool TestState(CAIUtils::PLAYER_STATE_FLAG eFlag) const;
 
 private:
-    CEnemyCharacter& m_rEnemyCharacter;
+    CEnemyCharacter* m_pEnemyChr;
     mutable bool m_bExist;
     mutable int32 m_iNo;
     float m_fDistance;
@@ -172,14 +189,27 @@ private:
 class CSpecialityConsider
 {
 public:
+    enum STATE_FLAG : uint32
+    {
+        STATE_FLAG_NONE     = 0,
+        //STATE_FLAG_0x1    = (1 << 0), // TODO unknown flag
+        STATE_FLAG_DOWN     = (1 << 1),
+        //STATE_FLAG_0x4    = (1 << 2), // TODO unknown flag
+        STATE_FLAG_WALK     = (1 << 3),
+        STATE_FLAG_RUN      = (1 << 4),
+    };
+
+    DEFINE_ENUM_FLAG_OPS(STATE_FLAG, friend);
+
+public:
     CSpecialityConsider(void);
     virtual ~CSpecialityConsider(void);
     virtual void Update(void);
-    virtual void SetEnemyCharacter(const CEnemyCharacter* pEnemyCharacter);
+    virtual void SetEnemyCharacter(const CEnemyCharacter* pEnemyChr);
     virtual bool TestState(uint32 state);
 
 private:
-    const CEnemyCharacter* m_pEnemyCharacter;
+    const CEnemyCharacter* m_pEnemyChr;
     uint32 m_state;
 };
 
@@ -194,12 +224,21 @@ public:
         UNDERACTIONS_THINKOVER,
     };
 
+    enum SUITABLEDISTANCE
+    {
+        SUITABLEDISTANCE_OUTER = 0,
+        SUITABLEDISTANCE_INNER,
+        SUITABLEDISTANCE_EQUAL,
+    };
+
 public:
-    CBaseGeneralEnemyAIModerator(CEnemyCharacter& rEnemyCharacter);
+    static SUITABLEDISTANCE GetDistanceOfSuitable(float fDistance, float fDistanceOfSuitable);
+    
+    CBaseGeneralEnemyAIModerator(CEnemyCharacter* pEnemyChr);
     virtual ~CBaseGeneralEnemyAIModerator(void);
     virtual void Run(void) override;
     virtual void Draw(void) override;
-    virtual CAIThinkOrder::ORDER ActionSelector(int32) = 0;
+    virtual CAIThinkOrder::ORDER ActionSelector(int32 iNo) = 0;
     virtual bool OnActionOfWait(int32 iNo) { return false; };
     virtual bool OnActionOfMove(int32 iNo) { return false; };
     virtual bool OnActionOfRun(int32 iNo) { return false; };
@@ -215,5 +254,24 @@ public:
     virtual bool IsTakeMove(void);
     virtual bool IsMoveEndForTargetNumber(void) = 0;
     virtual bool IsMoveEndForTargetPosition(void) = 0;
-    virtual bool IsTakeSideWalk(void);
+    virtual AIOT::TYPE IsTakeSideWalk(void);
+    UNDERACTION UnderThinking(void);
+    void Thinking(void);
+    bool EnableThinking(void);
+    bool IsSatifyFrequency(int32 no) const;
+    float GetFrequency(int32 no) const;
+    int32 SearchTarget(void);
+    void DebugDrawMovePoint(void);
+    void DebugDrawPatrolArea(void);
+    void DebugDrawInfo(void);
+    void DebugDrawSuitableArea(void);
+    void DebugDrawViewArea(void);
+
+protected:
+    CTargetCoordinator m_targetCoordinator;
+    CTargetInfo m_targetInfo;
+    CSpecialityConsider* m_pSpecialityConsider;
+    float m_fThinkElapseTime;
+    float m_fThinkBeforeTime;
+    bool m_bActionRun;
 };

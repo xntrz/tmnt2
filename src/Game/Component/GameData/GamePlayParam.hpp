@@ -63,7 +63,7 @@ public:
     bool NextStage(void);
     void SetStage(STAGEID::VALUE idStage);
     void ClearPlayer(void);
-    void AddPlayerCharacter(int32 iPlayerNo, PLAYERID::VALUE idPlayer, GAMETYPES::COSTUME costume);
+    void AddPlayerCharacter(int32 iPlayerNo, PLAYERID::VALUE idPlayer, GAMETYPES::COSTUME costume = GAMETYPES::COSTUME_NONE);
     AREAPLAYMODE GetAreaPlaymode(void) const;
     AREAID::VALUE GetArea(void) const;
     int32 GetStageIndex(void) const;
@@ -74,9 +74,9 @@ public:
     int32 GetPlayerNum(void) const;
     int32 GetCharaInfoNum(void) const;
     int32 GetPrizeInfoNum(void) const;
-    const PRIZEINFO& PrizeInfo(int32 iPrizeIndex) const;
-    const CHARAINFO& CharaInfo(int32 iCharainfoIndex) const;
-    PLAYERCONTEXT& PlayerContext(int32 iPlayerIndex);
+    const PRIZEINFO& PrizeInfo(int32 prizeIndex) const;
+    const CHARAINFO& CharaInfo(int32 charainfoIndex) const;
+    PLAYERCONTEXT& PlayerContext(int32 playerIndex);
     bool IsSpaceRide(void) const;
 
 private:

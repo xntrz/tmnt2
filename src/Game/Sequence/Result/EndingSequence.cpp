@@ -29,7 +29,7 @@ CEndingSequence::~CEndingSequence(void)
 
 bool CEndingSequence::OnAttach(const void* pParam)
 {
-    m_iType = int32(pParam);
+    m_iType = reinterpret_cast<int32>(pParam);
     m_step = STEP_INIT;
     return true;
 };
@@ -85,7 +85,10 @@ void CEndingSequence::PostSequence(void)
         
     case STEP_EOL:
         break;
-    };    
+
+    default:
+        break;
+    };
 };
 
 
@@ -106,15 +109,15 @@ void CEndingSequence::Branch(void)
             switch (m_iType)
             {
             case GAMETYPES::ENDINGTYPE_STORY:
-                Call(PROCLABEL_SEQ_MOVIE, (const void*)MOVIEID::VALUE(70));
+                Call(PROCLABEL_SEQ_MOVIE, reinterpret_cast<const void*>(MOVIEID::ID_M58OB02E));
                 break;
 
             case GAMETYPES::ENDINGTYPE_NEXUS:
-                Call(PROCLABEL_SEQ_MOVIE, (const void*)MOVIEID::VALUE(77));
+                Call(PROCLABEL_SEQ_MOVIE, reinterpret_cast<const void*>(MOVIEID::ID_M60X03E));
                 break;
 
             case GAMETYPES::ENDINGTYPE_SHOP:
-                Call(PROCLABEL_SEQ_MOVIE, (const void*)MOVIEID::VALUE(78));
+                Call(PROCLABEL_SEQ_MOVIE, reinterpret_cast<const void*>(MOVIEID::ID_M62X01E));
                 break;
 
             default:
@@ -161,6 +164,9 @@ void CEndingSequence::Branch(void)
         {
             Ret();
         }
+        break;
+
+    default:
         break;
     };
 };

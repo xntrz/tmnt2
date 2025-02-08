@@ -40,10 +40,6 @@ CGamePropertyObject::CGamePropertyObject(void)
 
     m_pEnemyContainer = new CGameEnemyContainer;
     m_pGimmickContainer = new CGameGimmickContainer;
-
-    ASSERT(m_pPlayerContainer);
-    ASSERT(m_pEnemyContainer);
-    ASSERT(m_pGimmickContainer);
 };
 
 
@@ -88,60 +84,62 @@ void CGamePropertyObject::updateActiveObject(void)
     //
     //  Update game enemies
     //
-    for (int32 i = 0; i < m_pEnemyContainer->GameEnemyMax(); ++i)
+    int32 enemyMax = m_pEnemyContainer->GameEnemyMax();
+    for (int32 i = 0; i < enemyMax; ++i)
     {
-        CGameEnemy& GameEnemy = m_pEnemyContainer->GameEnemy(i);
+        CGameEnemy& gameEnemy = m_pEnemyContainer->GameEnemy(i);
 
-        if (!GameEnemy.IsAlive())
+        if (!gameEnemy.IsAlive())
             continue;
 
         RwV3d vPosition = Math::VECTOR3_ZERO;
-        GameEnemy.GetPosition(&vPosition);
+        gameEnemy.GetPosition(&vPosition);
 
-        if (vPosition.y <= m_fDeathHeight)
+        if (vPosition.y >= m_fDeathHeight)
         {
             if (CGimmickUtils::CalcNearestPlayerDistanceXZ(&vPosition) <= m_fSleepDistance)
             {
-                if (!GameEnemy.IsActive())
-                    GameEnemy.Activate();
+                if (!gameEnemy.IsActive())
+                    gameEnemy.Activate();
             }
             else
             {
-                if(GameEnemy.IsActive())
-                    GameEnemy.Inactivate();
+				if (gameEnemy.IsActive())
+					gameEnemy.Inactivate();
             };
         }
         else
         {
-            GameEnemy.InvokeDeathFloor();
+            gameEnemy.InvokeDeathFloor();
         };
     };
 
     //
     //  Update game gimmicks
     //
-    for (int32 i = 0; i < m_pGimmickContainer->GameGimmickMax(); ++i)
+    int32 gimmickMax = m_pGimmickContainer->GameGimmickMax();
+    for (int32 i = 0; i < gimmickMax; ++i)
     {
-        CGameGimmick& GameGimmick = m_pGimmickContainer->GameGimmick(i);
-		if (!GameGimmick.IsAlive())
+        CGameGimmick& gameGimmick = m_pGimmickContainer->GameGimmick(i);
+		if (!gameGimmick.IsAlive())
 			continue;
 
-		if (!GameGimmick.IsAbleToSleep())
+		if (!gameGimmick.IsAbleToSleep())
 			continue;
 
 		RwV3d vPosition = Math::VECTOR3_ZERO;
-		GameGimmick.GetPosition(&vPosition);
+		gameGimmick.GetPosition(&vPosition);
 
 		if ((m_pMapCamera->GetCameraMode() == CMapCamera::MODE_INTRODUCTION) ||
 			(CGimmickUtils::CalcNearestPlayerDistanceXZ(&vPosition) <= m_fSleepDistance))
 		{
-			if (GameGimmick.IsSleep())
-				GameGimmick.Resume();
+			if (gameGimmick.IsSleep())
+				gameGimmick.Resume();
 		}
 		else
 		{
-			if (!GameGimmick.IsSleep())
-				GameGimmick.Sleep();
+			if (!gameGimmick.IsSleep())
+				gameGimmick.Sleep();
 		};
     };
 };
@@ -149,7 +147,8 @@ void CGamePropertyObject::updateActiveObject(void)
 
 void CGamePropertyObject::watchPlayerFallen(void)
 {
-    for (int32 i = 0; i < m_pPlayerContainer->GetPlayerNum(); ++i)
+    int32 playerNum = m_pPlayerContainer->GetPlayerNum();
+    for (int32 i = 0; i < playerNum; ++i)
     {
         IGamePlayer* pGamePlayer = PlayerContainer().GamePlayer(i);
 

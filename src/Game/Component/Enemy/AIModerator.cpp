@@ -3,15 +3,22 @@
 
 #include "Game/Component/GameMain/GameProperty.hpp"
 
+#include "Game/Component/GameMain/GameEnemy.hpp"
+#include "Game/Component/GameMain/GamePlayer.hpp"
+#include "Game/Component/Player/PlayerCharacter.hpp"
+#include "Game/Component/Enemy/EnemyUtils.hpp"
+#include "Game/Component/Enemy/CharacterCompositor.hpp"
+#include "Game/Component/Enemy/AIUtils.hpp"
 
-CAIModerator::CAIModerator(CEnemyCharacter& rEnemyCharacter)
+
+CAIModerator::CAIModerator(CEnemyCharacter* pEnemyChr)
 : m_fTimer(0.0f)
-, m_rEnemyCharacter(rEnemyCharacter)
+, m_pEnemyChr(pEnemyChr)
 {
-    if (m_rEnemyCharacter.FrequencyParameter())
+    if (pEnemyChr->FrequencyParameter())
     {
-        m_AIFreqParam.Initialize(m_rEnemyCharacter.FrequencyParameter(),
-                                 m_rEnemyCharacter.CharacterParameter().m_iFrequencyMax,
+        m_AIFreqParam.Initialize(pEnemyChr->FrequencyParameter(),
+                                 pEnemyChr->CharacterParameter().m_iFrequencyMax,
                                  GAMETYPES::DIFFICULTY_NUM);
     };
 
@@ -35,17 +42,29 @@ void CAIModerator::Draw(void)
 
 CAIThinkOrder& CAIModerator::ThinkOrder(void)
 {
-    return m_rEnemyCharacter.AIThinkOrder();
+    return m_pEnemyChr->AIThinkOrder();
 };
 
 
 CEnemyCharacter& CAIModerator::EnemyCharacter(void)
 {
-    return m_rEnemyCharacter;
+    return *m_pEnemyChr;
 };
 
 
-ENEMYTYPES::CHARACTERISTIC& CAIModerator::Characteristic(void)
+const ENEMYTYPES::CHARACTERISTIC& CAIModerator::Characteristic(void)
 {
-    return m_rEnemyCharacter.AICharacteristic();
+    return m_pEnemyChr->AICharacteristic();
+};
+
+
+CAIFrequencyParam& CAIModerator::AIFreqParam(void)
+{
+    return m_AIFreqParam;
+};
+
+
+const CAIFrequencyParam& CAIModerator::AIFreqParam(void) const
+{
+    return m_AIFreqParam;
 };

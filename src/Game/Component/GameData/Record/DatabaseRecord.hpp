@@ -33,7 +33,7 @@ public:
     struct RAWDATA
     {
         DBSTATE m_dbstate;
-        STATE m_aState[DBITEMID::ID_MAX];
+        STATE   m_aState[DBITEMID::ID_MAX];
     };
 
 public:

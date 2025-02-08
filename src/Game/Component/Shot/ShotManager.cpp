@@ -56,24 +56,19 @@ void CShotList::Run(void)
 void CShotList::Draw(void)
 {
     for (SHOTWORK& it : m_listWorkAlloc)
-    {
-        CShot* pShot = it.m_pShot;
-        ASSERT(pShot);
-
-        pShot->Draw();
-    };
+        it.m_pShot->Draw();
 };
 
 
 void CShotList::GarbageCollection(void)
 {
     auto it = m_listWorkAlloc.begin();
-    while (it)
+    auto itEnd = m_listWorkAlloc.end();
+    while (it != itEnd)
     {
         SHOTWORK* pWork = &(*it);
-        CShot* pShot = pWork->m_pShot;
-        ASSERT(pShot);
 
+        CShot* pShot = pWork->m_pShot;
         if (pShot->IsEnd())
         {
             delete pShot;
@@ -93,13 +88,14 @@ void CShotList::GarbageCollection(void)
 
 uint32 CShotList::Regist(SHOTID::VALUE idShot, const RwV3d* pvPos, const RwV3d* pvVec, CGameObject* pObject, float fRadian, float fLife)
 {
-    ASSERT(!m_listWorkPool.empty());
+    if (m_listWorkPool.empty())
+        return 0;
 
     SHOTWORK* pWork = m_listWorkPool.front();
-    ASSERT(pWork);
     m_listWorkPool.erase(pWork);
     m_listWorkAlloc.push_back(pWork);
-    ASSERT(!pWork->m_pShot);
+
+    ASSERT(pWork->m_pShot == nullptr);
 
     CShot::PARAMETER param;
     param.m_idShot = idShot;
@@ -110,6 +106,7 @@ uint32 CShotList::Regist(SHOTID::VALUE idShot, const RwV3d* pvPos, const RwV3d* 
 
     CShot* pShot = CShot::New(&param);
     ASSERT(pShot);
+
     pWork->m_pShot = pShot;
 
     return pShot->GetHandle();
@@ -118,14 +115,12 @@ uint32 CShotList::Regist(SHOTID::VALUE idShot, const RwV3d* pvPos, const RwV3d* 
 
 bool CShotList::IsExist(SHOTID::VALUE idShot) const
 {
-    ASSERT(idShot > SHOTID::ID_UNKNOWN && idShot < SHOTID::ID_MAX);
+    ASSERT(idShot > SHOTID::ID_UNKNOWN);
+    ASSERT(idShot < SHOTID::ID_MAX);
 
-    for (SHOTWORK& it : m_listWorkAlloc)
+    for (const SHOTWORK& it : m_listWorkAlloc)
     {
-        CShot* pShot = it.m_pShot;
-        ASSERT(pShot);
-        
-        if (pShot->GetID() == idShot)
+        if (it.m_pShot->GetID() == idShot)
             return true;
     };
 
@@ -149,26 +144,30 @@ static inline bool GetObjectPositionForCorrectDirection(CGameObject* pGameObject
     ASSERT(pResult);
     
     bool bResult = false;
-    
-    switch (pGameObject->GetType())
+
+    GAMEOBJECTTYPE::VALUE goType = pGameObject->GetType();
+    switch (goType)
     {
     case GAMEOBJECTTYPE::ENEMY:
         {
-            CEnemy* pEnemy = (CEnemy*)pGameObject;
-            pEnemy->GetPosition(pResult);            
+            CEnemy* pEnemy = static_cast<CEnemy*>(pGameObject);
+            pEnemy->GetPosition(pResult);
             bResult = true;
         }
         break;
 
     case GAMEOBJECTTYPE::GIMMICK:
         {
-            CGimmick* pGimmick = (CGimmick*)pGameObject;
-            if (FLAG_TEST(pGimmick->GetFeatures(), GIMMICKTYPES::FEATURE_HOMING))
+            CGimmick* pGimmick = static_cast<CGimmick*>(pGameObject);
+            if (pGimmick->GetFeatures() & GIMMICKTYPES::FEATURE_HOMING)
             {
                 pGimmick->GetCenterPosition(pResult);                
                 bResult = true;
             };
         }
+        break;
+
+    default:
         break;
     };
 
@@ -201,7 +200,7 @@ static void CorrectDirection(RwV3d* pvPosition, RwV3d* pvVector, float fRadian)
     float fTargetDistance = fRadian;
     RwV3d vTargetDirection = Math::VECTOR3_ZERO;
     
-    CGameObject* pGameObject = CGameObjectManager::GetNext(nullptr);
+    CGameObject* pGameObject = CGameObjectManager::GetNext();
     while (pGameObject)
     {
         RwV3d vObjectPosition = Math::VECTOR3_ZERO;
@@ -215,7 +214,7 @@ static void CorrectDirection(RwV3d* pvPosition, RwV3d* pvVector, float fRadian)
                 RwV3d vDirection = Math::VECTOR3_ZERO;
                 Math::Vec3_Normalize(&vDirection, &vDistance);
 
-                float fDistance = (1.0f - Math::Vec3_Dot(&vInitDirection, &vDirection)) * Math::PI05;
+				float fDistance = (1.0f - Math::Vec3_Dot(&vInitDirection, &vDirection)) * Math::PI05;
                 if (fDistance < fTargetDistance)
                 {
                     fTargetDistance = fDistance;
@@ -345,7 +344,7 @@ static void CorrectDirection(RwV3d* pvPosition, RwV3d* pvVector, float fRadian)
 
         case GAMEOBJECTTYPE::SHOT:
             {
-                CShot* pShot = (CShot*)pGameObject;
+                CShot* pShot = static_cast<CShot*>(pGameObject);
                 pShot->Finish();
             }
             break;

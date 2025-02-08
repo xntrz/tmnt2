@@ -211,7 +211,7 @@ void CScrEffectAccel::Generate(PARTICLE* pParticle)
 {
     ASSERT(pParticle);
 
-    float fRndAngle = Math::ToRadian(float(Math::Rand() % 360));
+    float fRndAngle = MATH_DEG2RAD(static_cast<float>(Math::Rand() % 360));
     float x = Math::Cos(fRndAngle);
     float y = Math::Sin(fRndAngle);
 

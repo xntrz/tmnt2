@@ -18,8 +18,6 @@ CGimmickData::~CGimmickData(void)
 void CGimmickData::Read(const void* pBuffer, uint32 uBufferSize)
 {
     m_pMGDBuffer = new char[uBufferSize];
-    ASSERT(m_pMGDBuffer);
-    
     std::memcpy(m_pMGDBuffer, pBuffer, uBufferSize);
     
     PostRead();
@@ -47,11 +45,9 @@ void CGimmickData::CreateGimmicks(void)
     for (int32 i = 0; i < GetGimmickDataNum(); ++i)
     {
         GIMMICKDATA* pGimmickData = GetGimmickData(i);
-        CGimmickManager::Create(
-            GIMMICKID::VALUE(pGimmickData->m_id),
-            pGimmickData->m_subid,
-            pGimmickData
-        );
+        GIMMICKID::VALUE id = static_cast<GIMMICKID::VALUE>(pGimmickData->m_id);
+
+        CGimmickManager::Create(id, pGimmickData->m_subid, pGimmickData);
     };
 };
 
@@ -59,7 +55,7 @@ void CGimmickData::CreateGimmicks(void)
 CGimmickData::MGD_HEADER* CGimmickData::GetMGDHeader(void) const
 {
     if (m_pMGDBuffer)
-        return (MGD_HEADER*)m_pMGDBuffer;
+        return reinterpret_cast<MGD_HEADER*>(m_pMGDBuffer);
 
     ASSERT(m_pMGDBuffer);
     return nullptr;
@@ -69,17 +65,17 @@ CGimmickData::MGD_HEADER* CGimmickData::GetMGDHeader(void) const
 CGimmickData::MAPGIMMICK_DATA_LIST* CGimmickData::GetGimmickDataList(void) const
 {
     ASSERT(m_pMGDBuffer);
-    return (MAPGIMMICK_DATA_LIST*)(m_pMGDBuffer + GetMGDHeader()->m_nOffsetDataPos);
+    return reinterpret_cast<MAPGIMMICK_DATA_LIST*>(m_pMGDBuffer + GetMGDHeader()->m_nOffsetDataPos);
 };
 
 
 CGimmickData::GIMMICKDATA* CGimmickData::GetGimmickData(int32 no) const
 {
     MAPGIMMICK_DATA_LIST* pGimmickDataList = GetGimmickDataList();
-    GIMMICKDATA* pResult = (GIMMICKDATA*)pGimmickDataList->m_aGimmickData;
+    GIMMICKDATA* pResult = reinterpret_cast<GIMMICKDATA*>(pGimmickDataList->m_aGimmickData);
 
     for (int32 i = 0; i < no; ++i)
-        pResult = (GIMMICKDATA*)((char*)pResult + pResult->m_size);
+        pResult = reinterpret_cast<GIMMICKDATA*>(reinterpret_cast<char*>(pResult) + pResult->m_size);
 
     return pResult;
 };
@@ -88,16 +84,16 @@ CGimmickData::GIMMICKDATA* CGimmickData::GetGimmickData(int32 no) const
 int32 CGimmickData::GetGimmickDataNum(void) const
 {
 	if (m_pMGDBuffer)
-		return GetGimmickDataList()->m_nGimmickDataNum;
-	else
-		return 0;
+        return GetGimmickDataList()->m_nGimmickDataNum;
+    
+    return 0;
 };
 
 
 CGimmickData::ENEMYSET_DATA_LIST* CGimmickData::GetEnemySetDataList(void) const
 {
     ASSERT(m_pMGDBuffer);
-    return (ENEMYSET_DATA_LIST*)(m_pMGDBuffer + GetMGDHeader()->m_nOffsetEnemySetDataPos);
+    return reinterpret_cast<ENEMYSET_DATA_LIST*>(m_pMGDBuffer + GetMGDHeader()->m_nOffsetEnemySetDataPos);
 };
 
 
@@ -128,14 +124,10 @@ static inline CGimmickData& EffectGimmickData(void)
 /*static*/ void CGimmickDataManager::Initialize(void)
 {
     if (!s_pGimmickData)
-    {
         s_pGimmickData = new CGimmickData;
-    };
 
     if (!s_pEffectGimmickData)
-    {
         s_pEffectGimmickData = new CGimmickData;
-    };
 };
 
 

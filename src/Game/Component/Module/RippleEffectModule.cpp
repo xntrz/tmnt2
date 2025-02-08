@@ -20,7 +20,11 @@ CRippleEffectModule::CRippleEffectModule(CCharacter* pCharacter, float fRadius)
 
 CRippleEffectModule::~CRippleEffectModule(void)
 {
-    ;
+    for (int32 i = 0; i < COUNT_OF(m_aEffectInfo); ++i)
+    {
+        if (m_aEffectInfo[i].m_hEffect)
+            CEffectManager::Finish(m_aEffectInfo[i].m_hEffect);
+    };
 };
 
 
@@ -69,18 +73,28 @@ void CRippleEffectModule::InitializeEffect(float fRadius)
     m_pCharacter->GetFootPosition(&vPosition);
 
     uint32 hEffect0 = CEffectManager::Play(EFFECTID::ID_ALL_W_HAMON, &vPosition, false);
+    ASSERT(hEffect0);
+
+    if (hEffect0)
+    {
+        CEffectManager::SetScale(hEffect0, (fRadius / 1.5f));
+        CEffectManager::SetActive(hEffect0, false);
+
+        m_aEffectInfo[0].m_hEffect = hEffect0;
+        m_aEffectInfo[0].m_bEnable = false;
+    };
+
     uint32 hEffect1 = CEffectManager::Play(EFFECTID::ID_ALL_W_SPLASH, &vPosition, false);
+    ASSERT(hEffect1);
 
-    CEffectManager::SetScale(hEffect0, (fRadius * 0.6f));
-    CEffectManager::SetScale(hEffect1, (fRadius * 0.6f));
-    
-    CEffectManager::SetActive(hEffect0, false);
-    CEffectManager::SetActive(hEffect1, false);
+    if (hEffect1)
+    {
+        CEffectManager::SetScale(hEffect1, (fRadius / 1.5f));
+        CEffectManager::SetActive(hEffect1, false);
 
-    m_aEffectInfo[0].m_hEffect = hEffect0;
-    m_aEffectInfo[0].m_bEnable = false;
-    m_aEffectInfo[1].m_hEffect = hEffect1;
-    m_aEffectInfo[1].m_bEnable = false;
+        m_aEffectInfo[1].m_hEffect = hEffect1;
+        m_aEffectInfo[1].m_bEnable = false;
+    };    
 };
 
 
@@ -121,14 +135,15 @@ bool CRippleEffectModule::IsSubjectMoving(void) const
 {
     bool bResult = false;
 
-    ASSERT(m_pCharacter);
     switch (m_pCharacter->GetCharacterType())
     {
     case CCharacter::TYPE_ENEMY:
         {
-            CCharacterCompositor* pEnemyChr = (CCharacterCompositor*)m_pCharacter;
-            if (pEnemyChr->GetStatus() == ENEMYTYPES::STATUS_RUN ||
-                pEnemyChr->GetStatus() == ENEMYTYPES::STATUS_DASH)
+            CCharacterCompositor* pEnemyChr = static_cast<CCharacterCompositor*>(m_pCharacter);
+            ENEMYTYPES::STATUS enemyStatus = pEnemyChr->GetStatus();
+
+            if ((enemyStatus == ENEMYTYPES::STATUS_RUN) ||
+                (enemyStatus == ENEMYTYPES::STATUS_DASH))
             {
                 bResult = true;
             };
@@ -137,12 +152,14 @@ bool CRippleEffectModule::IsSubjectMoving(void) const
         
     case CCharacter::TYPE_PLAYER:
         {
-            CPlayerCharacter* pPlayerChr = (CPlayerCharacter*)m_pCharacter;
-            if (pPlayerChr->GetStatus() == PLAYERTYPES::STATUS_RUN ||
-                pPlayerChr->GetStatus() == PLAYERTYPES::STATUS_WALK ||
-                pPlayerChr->GetStatus() == PLAYERTYPES::STATUS_DASH ||
-                pPlayerChr->GetStatus() == PLAYERTYPES::STATUS_DASH_CANCEL ||
-                pPlayerChr->GetStatus() == PLAYERTYPES::STATUS_DASH_FINISH)
+            CPlayerCharacter* pPlayerChr = static_cast<CPlayerCharacter*>(m_pCharacter);
+            PLAYERTYPES::STATUS playerStatus = pPlayerChr->GetStatus();
+            
+            if ((playerStatus == PLAYERTYPES::STATUS_RUN)         ||
+                (playerStatus == PLAYERTYPES::STATUS_WALK)        ||
+                (playerStatus == PLAYERTYPES::STATUS_DASH)        ||
+                (playerStatus == PLAYERTYPES::STATUS_DASH_CANCEL) ||
+                (playerStatus == PLAYERTYPES::STATUS_DASH_FINISH))
             {
                 bResult = true;
             };

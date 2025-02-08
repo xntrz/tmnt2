@@ -5,7 +5,7 @@
 
 /*static*/ bool CAdxFileManager::LoadPartition(int32 ptid, const char* fname, void* dir, void* ptinfo)
 {
-    return ((CAdxFileManager&)Instance()).LoadPartition(ptid, fname, ptinfo);
+    return static_cast<CAdxFileManager&>(Instance()).LoadPartition(ptid, fname, ptinfo);
 };
 
 
@@ -79,13 +79,14 @@ CFileAccess* CAdxFileManager::AllocRequest(int32 nType, void* pTypeData)
     if (nType != FILETYPE_ID)
         return nullptr;
 
-	int32 FileID = (int32)pTypeData;
-    ASSERT( (FileID >= 0) && (FileID < FILEID::ID_MAX) );
+    int32 fileId = reinterpret_cast<int32>(pTypeData);
+    ASSERT(fileId >= 0);
+    ASSERT(fileId < FILEID::ID_MAX);
 
-	CRequest req(FileID, &m_aAdxFileAccess[FileID]);
+	CRequest req(fileId, &m_aAdxFileAccess[fileId]);
 	RegistRequest(req);
     
-    return &m_aAdxFileAccess[FileID];
+    return &m_aAdxFileAccess[fileId];
 };
 
 

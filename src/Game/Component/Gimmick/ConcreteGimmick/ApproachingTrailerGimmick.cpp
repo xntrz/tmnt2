@@ -1743,7 +1743,7 @@ RwV3d* CApproachingTrailerGimmick::GetPlayerPos(int32 iPlayerNo)
 
 float CApproachingTrailerGimmick::RateControl(float fCur, float fAim, float dt) const
 {
-    float fDlt = Math::FAbs(fCur - fAim);
+    float fDlt = std::fabs(fCur - fAim);
     
     if (fDlt >= dt)
         return (fCur >= fAim ? (fCur - dt) : (fCur + dt));

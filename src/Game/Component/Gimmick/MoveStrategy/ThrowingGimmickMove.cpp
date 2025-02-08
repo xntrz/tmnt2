@@ -46,7 +46,7 @@ CThrowingGimmickMove::RESULT CThrowingGimmickMove::OnMove(float dt)
         const CWorldMap::COLLISIONRESULT* pResult = CWorldMap::GetCollisionResult();
         ASSERT(pResult);
 
-        if (!FLAG_TEST(pResult->m_attribute, MAPTYPES::ATTRIBUTE_ONEWAY))
+        if (pResult->m_attribute != MAPTYPES::ATTRIBUTE_ONEWAY)
         {
             Result = RESULT_COLLIDED;
 

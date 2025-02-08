@@ -2,6 +2,9 @@
 #include "HitAttackData.hpp"
 #include "HitCatchData.hpp"
 #include "Intersection.hpp"
+#ifdef _DEBUG
+#include "HitDebug.hpp"
+#endif /* _DEBUG */
 
 #include "Game/System/GameObject/GameObject.hpp"
 #include "Game/System/GameObject/GameObjectType.hpp"
@@ -12,9 +15,9 @@
 
 #ifdef _DEBUG
 #define DATA_POOL_SIZE (128)
-#else
+#else /* _DEBUG */
 #define DATA_POOL_SIZE (128)
-#endif
+#endif /* _DEBUG */
 
 
 class CHitRecordContainer;
@@ -299,7 +302,8 @@ void CHitRecordContainer::Cleanup(CList<CAttackDataRecord>* pList)
     ASSERT(pList);
     
     auto it = pList->begin();
-    while (it)
+    auto itEnd = pList->end();
+    while (it != itEnd)
     {
         CAttackDataRecord* pAttack = &(*it);
         ASSERT(pAttack);
@@ -406,8 +410,6 @@ CCatchDataRecord* CHitRecordContainer::GetCatchRecord(void)
         pRet = new CCatchDataRecord;
     };
 
-    ASSERT(pRet);
-
     return pRet;
 };
 
@@ -427,8 +429,6 @@ CAttackDataRecord* CHitRecordContainer::GetAttackRecord(void)
     {
         pRet = new CAttackDataRecord;
     };
-
-    ASSERT(pRet);
     
     return pRet;
 };
@@ -518,11 +518,11 @@ void CHitAttackContainer::CleanupAttack(CList<CHitAttackData>* pList)
     ASSERT(pList);
     
     auto it = pList->begin();
-    while (it)
+    auto itEnd = pList->end();
+    while (it != itEnd)
     {
         CHitAttackData* pHitAttackData = &(*it);
-        ASSERT(pHitAttackData);
-        
+
         it = pList->erase(it);
 
         if (pHitAttackData->IsFlagAllocated())
@@ -543,10 +543,10 @@ void CHitAttackContainer::CleanupCatch(CList<CHitCatchData>* pList)
     ASSERT(pList);
 
     auto it = pList->begin();
-    while (it)
+    auto itEnd = pList->end();
+    while (it != itEnd)
     {
         CHitCatchData* pHitCatchData = &(*it);
-        ASSERT(pHitCatchData);
         
         it = pList->erase(it);
 
@@ -593,13 +593,10 @@ void CHitAttackContainer::Period(void)
                     RwSphere sphereP = *itAttack.GetSphere();
                     RwSphere sphereQ = *itCatch.GetSphere();
                     
-                    bool bIntersection = Intersection::SphereAndSphere(
-                        &sphereP.center,
-                        sphereP.radius,
-                        &sphereQ.center,
-                        sphereQ.radius
-                    );
-
+                    bool bIntersection = Intersection::SphereAndSphere(&sphereP.center,
+                                                                       sphereP.radius,
+                                                                       &sphereQ.center,
+                                                                       sphereQ.radius);
                     if (bIntersection)
                     {
 						if(!HitRecordContainer().IsHit(&itCatch))
@@ -651,17 +648,13 @@ void CHitAttackContainer::Dispatch(CHitAttackData* pAttack, CHitCatchData* pCatc
     CatchData.SetAttack(&AttackData);
     CatchData.SetFlagHitPosCalculated(false);
 
-    CGameObjectManager::SendMessage(
-        CatchData.GetObject(),
-        GAMEOBJECTTYPES::MESSAGEID_CATCHATTACK,
-        &AttackData
-    );
+    CGameObjectManager::SendMessage(CatchData.GetObject(),
+                                    GAMEOBJECTTYPES::MESSAGEID_CATCHATTACK,
+                                    &AttackData);
 
-    CGameObjectManager::SendMessage(
-        AttackData.GetObject(),
-        GAMEOBJECTTYPES::MESSAGEID_ATTACKRESULT,
-        &CatchData
-    );
+    CGameObjectManager::SendMessage(AttackData.GetObject(),
+                                    GAMEOBJECTTYPES::MESSAGEID_ATTACKRESULT,
+                                    &CatchData);
 
     if (pCatch->GetObjectType() == GAMEOBJECTTYPE::SHOT)
     {
@@ -685,8 +678,6 @@ void CHitAttackContainer::RegistAttack(const CHitAttackData* pHitAttack)
         return;
     
     CHitAttackData* pNode = m_listAttackPool.front();
-    ASSERT(pNode);
-    
     m_listAttackPool.erase(pNode);
     m_listAttackAlloc.push_back(pNode);
 
@@ -703,8 +694,6 @@ void CHitAttackContainer::RegistCatch(const CHitCatchData* pHitCatch)
         return;
 
     CHitCatchData* pNode = m_listCatchPool.front();
-    ASSERT(pNode);
-
     m_listCatchPool.erase(pNode);
     m_listCatchAlloc.push_back(pNode);
 
@@ -732,12 +721,12 @@ bool CHitAttackContainer::IsHitTarget(const CHitAttackData* pAttack, const CHitC
     ASSERT(pCatch->GetObject());
 
     if (pAttack->GetObjectHandle() == pCatch->GetObjectHandle())
-        return FLAG_TEST(pAttack->GetTarget(), CHitAttackData::TARGET_SELF);
+        return ((pAttack->GetTarget() & CHitAttackData::TARGET_SELF) != 0);
 
     switch (pCatch->GetObjectType())
     {
     case GAMEOBJECTTYPE::GIMMICK:
-        return FLAG_TEST(pAttack->GetTarget(), CHitAttackData::TARGET_GIMMICK);
+        return ((pAttack->GetTarget() & CHitAttackData::TARGET_GIMMICK) != 0);
         
     case GAMEOBJECTTYPE::CHARACTER:
         {
@@ -746,10 +735,10 @@ bool CHitAttackContainer::IsHitTarget(const CHitAttackData* pAttack, const CHitC
             switch (pCharacter->GetCharacterType())
             {
             case CCharacter::TYPE_ENEMY:
-                return FLAG_TEST(pAttack->GetTarget(), CHitAttackData::TARGET_ENEMY);
+                return ((pAttack->GetTarget() & CHitAttackData::TARGET_ENEMY) != 0);
 
             case CCharacter::TYPE_PLAYER:
-                return FLAG_TEST(pAttack->GetTarget(), CHitAttackData::TARGET_PLAYER);
+                return ((pAttack->GetTarget() & CHitAttackData::TARGET_PLAYER) != 0);
 
             default:
                 ASSERT(false);
@@ -759,10 +748,10 @@ bool CHitAttackContainer::IsHitTarget(const CHitAttackData* pAttack, const CHitC
         return false;
 
     case GAMEOBJECTTYPE::EFFECT:
-        return FLAG_TEST(pAttack->GetTarget(), CHitAttackData::TARGET_ALL_EXCEPT_SELF);
+        return ((pAttack->GetTarget() & CHitAttackData::TARGET_ALL_EXCEPT_SELF) != 0);
 
     case GAMEOBJECTTYPE::SHOT:
-        return FLAG_TEST(pAttack->GetTarget(), CHitAttackData::TARGET_SHOT);
+        return ((pAttack->GetTarget() & CHitAttackData::TARGET_SHOT) != 0);
 
     default:
         ASSERT(false);
@@ -781,12 +770,6 @@ static inline CHitAttackContainer& HitAttackContainer(void)
     ASSERT(s_pHitAttackContainer);
     return *s_pHitAttackContainer;
 };
-
-
-#ifdef _DEBUG
-/*static*/ bool CHitAttackManager::m_bDebugDrawSphereAttack = false;
-/*static*/ bool CHitAttackManager::m_bDebugDrawSphereCatch = false;
-#endif
 
 
 /*static*/ void CHitAttackManager::Initialize(void)
@@ -841,7 +824,7 @@ static inline CHitAttackContainer& HitAttackContainer(void)
     ASSERT(pHitAttack);
     
 #ifdef _DEBUG
-    if (m_bDebugDrawSphereAttack)
+    if (CHitDebug::SHOW_HIT_ATTACK)
     {
         RwSphere sphere = { 0 };
         
@@ -862,7 +845,7 @@ static inline CHitAttackContainer& HitAttackContainer(void)
 
         CDebugShape::ShowSphere(&sphere, { 0xFF, 0xFF, 0x00, 0xFF });
     };
-#endif   
+#endif /* _DEBUG */
     
     ASSERT(pHitAttack->GetObject());
     HitAttackContainer().RegistAttack(pHitAttack);
@@ -874,7 +857,7 @@ static inline CHitAttackContainer& HitAttackContainer(void)
     ASSERT(pHitCatch);
     
 #ifdef _DEBUG
-    if (m_bDebugDrawSphereCatch)
+    if (CHitDebug::SHOW_HIT_CATCH)
     {
         RwSphere sphere = { 0 };
 
@@ -891,7 +874,7 @@ static inline CHitAttackContainer& HitAttackContainer(void)
 
         CDebugShape::ShowSphere(&sphere, { 0xFF, 0x00, 0xFF, 0xFF });
     };
-#endif
+#endif /* _DEBUG */
     
     ASSERT(pHitCatch->GetObject());
     HitAttackContainer().RegistCatch(pHitCatch);

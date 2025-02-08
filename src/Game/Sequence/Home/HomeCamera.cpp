@@ -125,6 +125,9 @@ void CHomeCamera::Update(CMapCamera* pMapCamera)
             };
         }
         break;
+
+    default:
+        break;
     };
 
     SetCamera(pMapCamera);
@@ -206,6 +209,9 @@ void CHomeCamera::SetNextDoorFromPadInput(HOMETYPES::PADINPUT padinput)
         
     case HOMETYPES::PADINPUT_RIGHT:
         m_iNextDoor = m_iDoor - 1;
+        break;
+
+    default:
         break;
     };
 };

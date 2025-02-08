@@ -36,7 +36,6 @@
 #include <algorithm>
 #include <cmath>
 
-
 using int8 	= int8_t;
 using int16 = int16_t;
 using int32 = int32_t;
@@ -71,17 +70,7 @@ typedef unsigned int wchar;
 #define ALIGN_ROUND_UP(v, a) 			(((v) + ((a) - 1u)) & ~((a) - 1u))
 #define ALIGN(v, a) 					(ALIGN_ROUND_UP(v, a))
 
-#define BIT(no)			            	(1 << (no))
 #define BITSOF(var)		            	(sizeof(var) << 3)
-#define BIT_SET(bitfield, no)       	((bitfield) |= (1 << (no)))
-#define BIT_CLEAR(bitfield, no)     	((bitfield) &= ~(1 << (no)))
-#define BIT_TEST(bitfield, no)    		((bitfield >> (no)) & 1)
-
-#define FLAG_SET(flagfield, flag)		((flagfield) |= (flag))
-#define FLAG_CLEAR(flagfield, flag)		((flagfield) &= (~flag))
-#define FLAG_TEST(flagfield, flag)		(((flagfield) & (flag)) == (flag))
-#define FLAG_TEST_ANY(flagfield, flag)	(((flagfield) & (flag)) != 0)
-
 
 #ifdef UINT8_MAX
 #undef UINT8_MAX

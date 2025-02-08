@@ -156,12 +156,12 @@ float CPathMoveGimmickMove::GetPathTByMeterPerSecond(float fMps)
             Math::Vec3_Sub(&vPosDlt, &vPosPost, &vPosPre);
 
             fPathT -= fDeltaPath;
-            fDelta += Math::FAbs(Math::Vec3_Length(&vPosDlt));
+            fDelta += std::fabs(Math::Vec3_Length(&vPosDlt));
 
             if (fPathT <= 0.0f)
                 break;
 
-            if (fDelta >= Math::FAbs(fDistance))
+            if (fDelta >= std::fabs(fDistance))
                 break;
         };
     }
@@ -176,7 +176,7 @@ float CPathMoveGimmickMove::GetPathTByMeterPerSecond(float fMps)
             Math::Vec3_Sub(&vPosDlt, &vPosPost, &vPosPre);
 
             fPathT += fDeltaPath;
-            fDelta += Math::FAbs(Math::Vec3_Length(&vPosDlt));
+            fDelta += std::fabs(Math::Vec3_Length(&vPosDlt));
 
             if (fPathT >= 1.0f)
                 break;
@@ -202,7 +202,7 @@ float CPathMoveGimmickMove::GetNearestPathT(RwV3d* pvPosition)
 
     while (true)
     {
-        float fPathDiff = Math::FAbs(fPrePathT - fPathT);
+        float fPathDiff = std::fabs(fPrePathT - fPathT);
         if (fPathDiff <= 0.001f)
             break;
 
@@ -228,10 +228,10 @@ CPathMoveGimmickMove::IsAccelerationToAimPathT(
     float fAimPathTimerateInterval
 )
 {
-    fAimPathTimerateIntervalStep = Math::FAbs(fAimPathTimerateIntervalStep);
+    fAimPathTimerateIntervalStep = std::fabs(fAimPathTimerateIntervalStep);
     
     float fDir = (fAimPathTimerate < m_fPathTimeRate ? -1.0f : 1.0f);
-    float fDlt = Math::FAbs(m_fPathTimeRate - fAimPathTimerate);
+    float fDlt = std::fabs(m_fPathTimeRate - fAimPathTimerate);
     int32 nDiv = int32(fDlt / fAimPathTimerateIntervalStep);
     if (nDiv >= 300)
         nDiv = 300;

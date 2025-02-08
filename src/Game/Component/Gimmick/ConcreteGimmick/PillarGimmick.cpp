@@ -117,6 +117,9 @@ void CPillarGimmick::PreMove(void)
     case GIMMICKID::ID_N_SHKPIL:
         shake(dt);
         break;
+
+    default:
+        break;
     };
 };
 
@@ -152,6 +155,9 @@ void CPillarGimmick::OnReceiveEvent(const char* pszSender, GIMMICKTYPES::EVENTTY
 
     case GIMMICKID::ID_N_SHKPIL:
         onShake();
+        break;
+
+    default:
         break;
     };
 };
@@ -283,7 +289,7 @@ void CPillarGimmick::crumble(float dt)
                 RwV3d vVelocity = { 0.0f, -1.0f, 0.0f };
                 m_pPillarMove->SetVelocity(&vVelocity);
 
-                m_step = BRKSTEP_STEADY;
+				m_step = BRKSTEP_MOVE;
             };
         }
         break;
@@ -328,6 +334,11 @@ void CPillarGimmick::crumble(float dt)
         break;
     };
 };
+
+
+//
+// *********************************************************************************
+//
 
 
 CSwitchPillarGimmick::CSwitchPillarGimmick(const char* pszName, void* pParam)

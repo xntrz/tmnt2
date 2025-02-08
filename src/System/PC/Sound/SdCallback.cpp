@@ -27,6 +27,9 @@ static const float SdVCfg[] =
 };
 
 
+static_assert(COUNT_OF(SdVCfg) == (CGameSound::VOLUME_MAX + 1), "update me");
+
+
 void SdDrvInitCB(void)
 {
     SdVagInit(0);
@@ -80,6 +83,12 @@ void SdDrvLoaderCommandCB(int32 _command, int32 _param)
 
     case 1:
         {
+            if (SdSeCodeTable[0].Table)
+            {
+                ((SdKdtTableData_t*)SdSeCodeTable[0].Table)[252].Channel = 40;
+                ((SdKdtTableData_t*)SdSeCodeTable[0].Table)[163].Priority = 200;
+            };
+
             SdTransReleaseAll();
             SdWaveReleaseAll();
 
@@ -479,17 +488,17 @@ void SdDrvSetBeforeCB(int32 _reason, SdSetDriverCode_t* CodeBuff)
         case SD_CODEKIND_SE:
         case SD_CODEKIND_TRANS_SE:
         case SD_CODEKIND_TRANS_BGM:
-            if (FLAG_TEST(SdDrvOptFlag, SD_OPTFLAG_NOSEQ))
+            if (SdDrvOptFlag & SD_OPTFLAG_NOSEQ)
                 CodeBuff->Code = 0;
             break;
 
         case SD_CODEKIND_VAG:
-            if (FLAG_TEST(SdDrvOptFlag, SD_OPTFLAG_NOVAG))
+            if (SdDrvOptFlag & SD_OPTFLAG_NOVAG)
                 CodeBuff->Code = 0;
             break;
 
         case SD_CODEKIND_VOX:
-            if (FLAG_TEST(SdDrvOptFlag, SD_OPTFLAG_NOVOX))
+            if (SdDrvOptFlag & SD_OPTFLAG_NOVOX)
                 CodeBuff->Code = 0;
             break;
 
@@ -656,24 +665,16 @@ void SdDrvSetToneBeforeCB(struct SdSeqWork_t* Work, int32 _status, struct SdSetE
 };
 
 
-void SdDrvSeqCorrectionCB(void)
+void SdDrvUserThreadCB(void)
 {
-    /* se seq corrections */
-    if (SdSeCodeTable[0].Table)
-    {
-        ((SdKdtTableData_t*)SdSeCodeTable[0].Table)[252].Channel = 40;
-        ((SdKdtTableData_t*)SdSeCodeTable[0].Table)[252].Option = 0xC8;
-    };
-
-    /* trans seq corrections */
     if (SdTransCodeTable[14].Table
         && SdTransCodeTable[14].Table[198].TableAddress
         && !SdTransCodeTable[14].Table[198].WaveBank)
     {
         SdTransCodeTable[14].Table[198].WaveBank = SdTransCodeTable[14].Table[199].WaveBank;
-        SdTransCodeTable[14].Table[198].SetMode = SdTransCodeTable[14].Table[199].SetMode;
-        SdTransCodeTable[14].Table[198].Channel = SdTransCodeTable[14].Table[199].Channel;
-        SdTransCodeTable[14].Table[198].Count = SdTransCodeTable[14].Table[199].Count;
-        SdTransCodeTable[14].Table[198].Option = SdTransCodeTable[14].Table[199].Option;
+        SdTransCodeTable[14].Table[198].SetMode  = SdTransCodeTable[14].Table[199].SetMode;
+        SdTransCodeTable[14].Table[198].Channel  = SdTransCodeTable[14].Table[199].Channel;
+        SdTransCodeTable[14].Table[198].Count    = SdTransCodeTable[14].Table[199].Count;
+        SdTransCodeTable[14].Table[198].Option   = SdTransCodeTable[14].Table[199].Option;
     };
 };

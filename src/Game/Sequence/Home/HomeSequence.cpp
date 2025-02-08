@@ -77,14 +77,14 @@ void CHomeSequence::OnMove(bool bRet, const void* pReturnValue)
     if (m_iCallLabel == PROCESSTYPES::LABEL_EOL)
     {
         if (iCallParam)
-            bResult = Ret((const void*)iCallParam);
+            bResult = Ret(reinterpret_cast<const void*>(iCallParam));
         else
             bResult = Ret();
     }
     else
     {
         if (iCallParam)
-            bResult = Call(m_iCallLabel, (const void*)iCallParam);
+            bResult = Call(m_iCallLabel, reinterpret_cast<const void*>(iCallParam));
         else
             bResult = Call(m_iCallLabel);
     };
@@ -187,7 +187,7 @@ int32 CHomeSequence::Branch(int32 iLabel, const void* param)
 
     case PROCLABEL_SEQ_NEXUSRETRY:
         {
-            bool bRetryFlag = bool(param != nullptr);
+            bool bRetryFlag = *reinterpret_cast<const bool*>(param);
             
             if (bRetryFlag)
             {

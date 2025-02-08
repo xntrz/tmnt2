@@ -23,26 +23,26 @@ namespace
 {
     struct LOCUSINFO
     {
-        RwRGBA m_Color;
-        uint8 m_uAlphaBasis;
-        int32 m_nPointNum;
+        RwRGBA  m_Color;
+        uint8   m_uAlphaBasis;
+        int32   m_nPointNum;
     };
 
     struct SHOTINFO
     {
-        const char* m_pszModelName;
-        int32 m_nPower;
-        float m_fSpeed;
-        float m_fHitRadius;
-        float m_fRadius;
-        float m_fGravity;
-        CHitAttackData::TARGET m_target;
-        bool m_bReflection;
-        EFFECTID::VALUE m_idEffectTrace;
-        EFFECTID::VALUE m_idEffectHit;
-        EFFECTID::VALUE m_idEffectVanish;
-        MAGICID::VALUE m_idMagicHit;
-        LOCUSINFO m_locusinfo;
+        const char*             m_pszModelName;
+        int32                   m_nPower;
+        float                   m_fSpeed;
+        float                   m_fHitRadius;
+        float                   m_fRadius;
+        float                   m_fGravity;
+        CHitAttackData::TARGET  m_target;
+        bool                    m_bReflection;
+        EFFECTID::VALUE         m_idEffectTrace;
+        EFFECTID::VALUE         m_idEffectHit;
+        EFFECTID::VALUE         m_idEffectVanish;
+        MAGICID::VALUE          m_idMagicHit;
+        LOCUSINFO               m_locusinfo;
     };
 
     
@@ -88,8 +88,8 @@ static_assert(COUNT_OF(s_aShotInfo) == SHOTID::ID_MAX, "update me");
 
 static inline const SHOTINFO& ShotInfo(SHOTID::VALUE idShot)
 {
-    ASSERT(idShot >= 0 && idShot < SHOTID::ID_MAX);
-    ASSERT(idShot >= 0 && idShot < COUNT_OF(s_aShotInfo));
+    ASSERT(idShot >= 0);
+    ASSERT(idShot < SHOTID::ID_MAX);
 
     return s_aShotInfo[idShot];
 };
@@ -189,14 +189,19 @@ CShotArrow::~CShotArrow(void)
 void CShotArrow::SetModel(void)
 {
     RwV3d vMove = Math::VECTOR3_ZERO;
-    RwV3d vRot = Math::VECTOR3_ZERO;
-    
     Math::Vec3_Normalize(&vMove, &m_vVelocity);
+
+    RwV3d vRot = Math::VECTOR3_ZERO;    
     GetRotateFromVector(&vRot, &vMove);
     
     m_pModel->SetRotation(&vRot);
     m_pModel->UpdateFrame();
 };
+
+
+//
+// *********************************************************************************
+//
 
 
 CShotGrenade::CShotGrenade(const PARAMETER* pParameter)
@@ -215,16 +220,21 @@ CShotGrenade::~CShotGrenade(void)
 void CShotGrenade::SetModel(void)
 {
     RwV3d vMove = Math::VECTOR3_ZERO;
-    RwV3d vRot = Math::VECTOR3_ZERO;
-
     Math::Vec3_Normalize(&vMove, &m_vVelocity);
+
+    RwV3d vRot = Math::VECTOR3_ZERO;
     GetRotateFromVector(&vRot, &vMove);
 
-    vRot.x += (m_fTimer * 18.849556f);
+    vRot.x += (m_fTimer * (MATH_PI * 6.0f));
 
     m_pModel->SetRotation(&vRot);
     m_pModel->UpdateFrame();
 };
+
+
+//
+// *********************************************************************************
+//
 
 
 CShotKnife::CShotKnife(const PARAMETER* pParameter)
@@ -242,8 +252,13 @@ CShotKnife::~CShotKnife(void)
 
 void CShotKnife::SetModel(void)
 {
-    RotateModel(25.132742f);
+    RotateModel(MATH_PI * 8.0f);
 };
+
+
+//
+// *********************************************************************************
+//
 
 
 CShotScatterKnife::CShotScatterKnife(const PARAMETER* pParameter)
@@ -264,7 +279,10 @@ void CShotScatterKnife::SetModel(void)
     switch (m_step)
     {
     case STEP_FLY:
-        RotateModel(25.132742f);
+        RotateModel(MATH_PI * 8.0f);
+        break;
+
+    default:
         break;
     };
 };
@@ -279,7 +297,7 @@ void CShotScatterKnife::Move(void)
             if (CheckHit(&m_vPosition))
             {
                 float fNormalY = CWorldMap::GetCollisionResultNormal()->y;
-                fNormalY = Math::FAbs(fNormalY);
+                fNormalY = std::fabs(fNormalY);
 
                 if (fNormalY >= 0.1f)
                 {
@@ -313,7 +331,7 @@ void CShotScatterKnife::Move(void)
             if (CheckHit(&m_vPosition))
             {
                 float fNormalY = CWorldMap::GetCollisionResultNormal()->y;
-                fNormalY = Math::FAbs(fNormalY);
+                fNormalY = std::fabs(fNormalY);
 
                 if (fNormalY >= 0.1f)
                 {
@@ -334,6 +352,11 @@ void CShotScatterKnife::Move(void)
 };
 
 
+//
+// *********************************************************************************
+//
+
+
 CShotSpinningWeight::CShotSpinningWeight(const PARAMETER* pParameter)
 : CShot(pParameter)
 {
@@ -349,8 +372,13 @@ CShotSpinningWeight::~CShotSpinningWeight(void)
 
 void CShotSpinningWeight::SetModel(void)
 {
-    RotateModel(25.132742f);
+    RotateModel(MATH_PI * 8.0f);
 };
+
+
+//
+// *********************************************************************************
+//
 
 
 CShotScythe::CShotScythe(const PARAMETER* pParameter)
@@ -369,10 +397,10 @@ CShotScythe::~CShotScythe(void)
 
 void CShotScythe::SetModel(void)
 {
-    RotateModel(25.132742f);
+    RotateModel(MATH_PI * 8.0f);
 
     RwRGBA ModelColor = m_pModel->GetColor();
-    ModelColor.alpha = uint8(m_fAlpha * 255.0f);
+    ModelColor.alpha = static_cast<uint8>(m_fAlpha * 255.0f);
     m_pModel->SetColor(ModelColor);
 };
 
@@ -393,6 +421,11 @@ void CShotScythe::Move(void)
         m_fAlpha = m_fLife / fTimeNow;
     };
 };
+
+
+//
+// *********************************************************************************
+//
 
 
 CShotSpear::CShotSpear(const PARAMETER* pParameter)
@@ -475,6 +508,11 @@ void CShotSpear::Move(void)
 };
 
 
+//
+// *********************************************************************************
+//
+
+
 CShotRide::CShotRide(const PARAMETER* pParameter)
 : CShot(pParameter)
 {
@@ -505,6 +543,11 @@ void CShotRide::Draw(void)
         RENDERSTATE_POP(rwRENDERSTATEZWRITEENABLE);
     };
 };
+
+
+//
+// *********************************************************************************
+//
 
 
 /*static*/ CShot* CShot::New(const PARAMETER* pParameter)
@@ -557,8 +600,6 @@ void CShotRide::Draw(void)
         break;
     };
 
-    ASSERT(pRet);
-
     return pRet;
 };
 
@@ -587,63 +628,51 @@ CShot::CShot(const PARAMETER* pParameter)
     ASSERT(pParameter->m_pObject);
 
     m_id = pParameter->m_idShot;
+
+    const SHOTINFO& shotInfo = ShotInfo(m_id);
+
     m_fLife = pParameter->m_fLifetime;
     m_vPosition = pParameter->m_vPosition;
     m_hParentObj = pParameter->m_pObject->GetHandle();
-    Math::Vec3_Normalize(&m_vVelocity, &pParameter->m_vDirection);
 
     float dt = CGameProperty::GetElapsedTime();
     float fGravity = (CGameProperty::GetGravity() * dt);
 
-    Math::Vec3_Scale(
-        &m_vVelocity,
-        &m_vVelocity,
-        dt * ShotInfo(m_id).m_fSpeed * 0.27f
-    );
+    Math::Vec3_Normalize(&m_vVelocity, &pParameter->m_vDirection);
+    Math::Vec3_Scale(&m_vVelocity, &m_vVelocity, (dt * shotInfo.m_fSpeed) / 4.0f);
 
-	m_vAcceleration =
-	{
-		0.0f,
-		dt * fGravity * ShotInfo(m_id).m_fGravity,
-        0.0f,
-    };
+    m_vAcceleration = { 0.0f, ((dt * fGravity) * shotInfo.m_fGravity), 0.0f };
 
-    m_pModel = CModelManager::CreateModel(ShotInfo(m_id).m_pszModelName);
+    m_pModel = CModelManager::CreateModel(shotInfo.m_pszModelName);
     ASSERT(m_pModel);
+
     m_pModel->SetPosition(&m_vPosition);
     m_pModel->UpdateFrame();
 
-    if (ShotInfo(m_id).m_locusinfo.m_nPointNum)
+    if (shotInfo.m_locusinfo.m_nPointNum)
     {
-        for (int32 i = 0;i < COUNT_OF(m_apLocus); ++i)
-        {
-            CLocus* pLocus = new CLocus(
-                ShotInfo(m_id).m_locusinfo.m_nPointNum,
-                ShotInfo(m_id).m_locusinfo.m_Color
-            );
-            ASSERT(pLocus);
-            pLocus->SetAlphaBasis(ShotInfo(m_id).m_locusinfo.m_uAlphaBasis);
-            pLocus->SetDrawEnable(true);
+		for (int32 i = 0; i < COUNT_OF(m_apLocus); ++i)
+		{
+			CLocus* pLocus = new CLocus(shotInfo.m_locusinfo.m_nPointNum,
+				shotInfo.m_locusinfo.m_Color);
 
-            m_apLocus[i] = pLocus;
-        };
+			pLocus->SetAlphaBasis(shotInfo.m_locusinfo.m_uAlphaBasis);
+			pLocus->SetDrawEnable(true);
+
+			m_apLocus[i] = pLocus;
+		};
     };
 
-    if (ShotInfo(m_id).m_idEffectTrace)
+    if (shotInfo.m_idEffectTrace)
     {
         RwV3d vOffset = Math::VECTOR3_ZERO;
-        
-        m_hEffect = CEffectManager::PlayTrace(
-            ShotInfo(m_id).m_idEffectTrace,
-            new CShotTracer(this),
-            &vOffset
-        );
+        m_hEffect = CEffectManager::PlayTrace(shotInfo.m_idEffectTrace, new CShotTracer(this), &vOffset);
     };
 
-	m_fRadius = ShotInfo(m_id).m_fRadius;
-	m_nPower = ShotInfo(m_id).m_nPower;
-	m_uTarget = ShotInfo(m_id).m_target;
-	m_bReflection = ShotInfo(m_id).m_bReflection;
+    m_fRadius       = shotInfo.m_fRadius;
+    m_nPower        = shotInfo.m_nPower;
+    m_uTarget       = shotInfo.m_target;
+    m_bReflection   = shotInfo.m_bReflection;
 };
 
 
@@ -709,7 +738,7 @@ void CShot::MessageProc(int32 nMessageID, void* pParam)
     {
     case GAMEOBJECTTYPES::MESSAGEID_ATTACKRESULT:
         {
-            CHitCatchData* pCatch = (CHitCatchData*)pParam;
+            CHitCatchData* pCatch = static_cast<CHitCatchData*>(pParam);
             ASSERT(pCatch);
 
             if (CheckFinishByHit())
@@ -719,7 +748,7 @@ void CShot::MessageProc(int32 nMessageID, void* pParam)
 
     case GAMEOBJECTTYPES::MESSAGEID_CATCHATTACK:
         {
-            CHitAttackData* pAttack = (CHitAttackData*)pParam;
+            CHitAttackData* pAttack = static_cast<CHitAttackData*>(pParam);
             ASSERT(pAttack);
 
             if (pAttack->IsFlagReflectShot())
@@ -727,7 +756,7 @@ void CShot::MessageProc(int32 nMessageID, void* pParam)
                 CGameObject* pParent = CGameObjectManager::GetObject(m_hParentObj);
                 if (pParent->GetType() == GAMEOBJECTTYPE::CHARACTER)
                 {
-                    CCharacter* pCharacter = (CCharacter*)pParent;
+                    CCharacter* pCharacter = static_cast<CCharacter*>(pParent);
 
                     uint32 uTarget = CHitAttackData::TARGET_NONE;
 
@@ -736,20 +765,16 @@ void CShot::MessageProc(int32 nMessageID, void* pParam)
                     else
                         uTarget = CHitAttackData::TARGET_PLAYER;
 
-                    if (FLAG_TEST(m_uTarget, uTarget))
+                    if (m_uTarget & uTarget)
                     {
                         m_vVelocity.x *= -1.0f;
                         m_vVelocity.y = 0.0f;
                         m_vVelocity.z *= -1.0f;
 
                         if (m_uTarget == CHitAttackData::TARGET_ENEMY_GIMMICK)
-                        {
                             m_uTarget = CHitAttackData::TARGET_PLAYER_GIMMICK;
-                        }
                         else if (m_uTarget == CHitAttackData::TARGET_PLAYER_GIMMICK)
-                        {
                             m_uTarget = CHitAttackData::TARGET_ENEMY_GIMMICK;
-                        };
 
                         CEffectManager::Play(EFFECTID::ID_MIC_REFLECT, &m_vPosition);
                     };
@@ -854,7 +879,7 @@ void CShot::CheckAttack(void)
         {
             RwSphere sphere = { 0 };
             SetHitSphere(&sphere);
-            
+
             Attack.SetShape(CHitAttackData::SHAPE_SPHERE);
             Attack.SetSphere(&sphere);
         };
@@ -862,7 +887,7 @@ void CShot::CheckAttack(void)
         Attack.SetPower(m_nPower);
         Attack.SetTarget(CHitAttackData::TARGET(m_uTarget));
         Attack.SetAntiguard(CHitAttackData::ANTIGUARD_ENABLE);
-        
+
         switch (m_id)
         {
         case SHOTID::ID_SCATTER_KNIFE:
@@ -880,7 +905,7 @@ void CShot::CheckAttack(void)
         };
 
         CHitAttackManager::RegistAttack(&Attack);
-    }
+    };
 
     if (m_bReflection)
     {
@@ -901,8 +926,8 @@ void CShot::CheckAttack(void)
 
 bool CShot::CheckFinishByHit(void)
 {
-    if (m_id == SHOTID::ID_SCYTHE ||
-        m_id == SHOTID::ID_SPEAR)
+    if ((m_id == SHOTID::ID_SCYTHE) ||
+        (m_id == SHOTID::ID_SPEAR))
     {
         return false;
     };
@@ -915,7 +940,7 @@ bool CShot::CheckHit(RwV3d* pvCollisionPoint)
 {
     float fSpeed = Math::Vec3_Length(&m_vVelocity);
     
-    if (Math::FEqual(fSpeed, 0.0f))
+    if (fSpeed == 0.0f)
         return false;
 
     RwV3d vPtStart = m_vPosition;
@@ -928,7 +953,7 @@ bool CShot::CheckHit(RwV3d* pvCollisionPoint)
         const CWorldMap::COLLISIONRESULT* pResult = CWorldMap::GetCollisionResult();
         ASSERT(pResult);
 
-        if (FLAG_TEST(pResult->m_attribute, MAPTYPES::ATTRIBUTE_ONEWAY))
+        if (pResult->m_attribute == MAPTYPES::ATTRIBUTE_ONEWAY)
             return false;
 
         RwV3d vPosition = pResult->m_vClosestPt;

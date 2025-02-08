@@ -116,6 +116,9 @@ void CHomeCharacterManipulator::Run(void)
             );
         }
         break;
+
+    default:
+        break;
     };
 };
 
@@ -130,11 +133,9 @@ void CHomeCharacterManipulator::Run(void)
         CPlayerCharacter* pPlayerCharacter = CPlayerCharacter::New(PLAYERID::VALUE(i), GAMETYPES::COSTUME_NONE);
         ASSERT(pPlayerCharacter);
 
-        CHomeCharacterManipulator* pHomeCharacterManipulator = new CHomeCharacterManipulator(pPlayerCharacter);
-        ASSERT(pHomeCharacterManipulator);
-        
-        ASSERT(i >= 0 && i < COUNT_OF(s_apHomeCharacterManipulator));
-        s_apHomeCharacterManipulator[i] = pHomeCharacterManipulator;
+        ASSERT(i >= 0);
+        ASSERT(i < COUNT_OF(s_apHomeCharacterManipulator));
+        s_apHomeCharacterManipulator[i] = new CHomeCharacterManipulator(pPlayerCharacter);
     };
 };
 

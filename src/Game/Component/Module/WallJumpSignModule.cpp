@@ -39,15 +39,18 @@ void CWallJumpSignModule::Run(void)
     if (m_pPlayerCharacter->IsEnableJumpWall())
         bStatus = m_pPlayerCharacter->IsEnableChangeStatus(PLAYERTYPES::STATUS_JUMP_WALL);
 
-    if (bStatus && !m_bEffectRun)
+    if (m_bEffectRun)
+    {
+        if (!bStatus)
+        {
+            StopEffect();
+            m_bEffectRun = false;
+        };
+    }
+    else if (!m_bEffectRun && bStatus)
     {
         StartEffect();
         m_bEffectRun = true;
-    }
-    else if (!bStatus && m_bEffectRun)
-    {
-        StopEffect();
-        m_bEffectRun = false;
     };
 
     if (m_hEffect && m_bEffectRun)

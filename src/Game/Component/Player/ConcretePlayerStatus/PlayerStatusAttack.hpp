@@ -6,7 +6,15 @@
 
 namespace PlayerStatus
 {
-    class CAttackA : public CStatus
+    class CAttackCommon : public CStatus
+    {
+    public:        
+        virtual void OnAttach(void) override;
+        virtual void OnRun(void) override;
+    };
+
+    
+    class CAttackA : public CAttackCommon
     {
     public:
         virtual bool IsEnableChangeStatus(PLAYERTYPES::STATUS status) override;
@@ -16,7 +24,7 @@ namespace PlayerStatus
     };
 
 
-    class CAttackAA : public CStatus
+    class CAttackAA : public CAttackCommon
     {
     public:
         virtual bool IsEnableChangeStatus(PLAYERTYPES::STATUS status) override;
@@ -26,7 +34,7 @@ namespace PlayerStatus
     };
 
     
-    class CAttackAAB : public CStatus
+    class CAttackAAB : public CAttackCommon
     {
     public:
         virtual bool IsEnableChangeStatus(PLAYERTYPES::STATUS status) override;
@@ -36,7 +44,16 @@ namespace PlayerStatus
     };
 
 
-    class CAttackAAC : public CStatus
+    class CAttackAAC : public CAttackCommon
+    {
+    public:
+        virtual bool IsEnableChangeStatus(PLAYERTYPES::STATUS status) override;
+        virtual void OnAttach(void) override;
+        virtual void OnDetach(void) override;
+    };
+
+
+    class CAttackAABB : public CAttackCommon
     {
     public:
         virtual bool IsEnableChangeStatus(PLAYERTYPES::STATUS status) override;
@@ -46,37 +63,25 @@ namespace PlayerStatus
     };
 
 
-    class CAttackAABB : public CStatus
+    class CAttackAABC : public CAttackCommon
     {
     public:
         virtual bool IsEnableChangeStatus(PLAYERTYPES::STATUS status) override;
         virtual void OnAttach(void) override;
         virtual void OnDetach(void) override;
-        virtual void OnRun(void) override;
     };
 
 
-    class CAttackAABC : public CStatus
+    class CAttackAABBB : public CAttackCommon
     {
     public:
         virtual bool IsEnableChangeStatus(PLAYERTYPES::STATUS status) override;
         virtual void OnAttach(void) override;
         virtual void OnDetach(void) override;
-        virtual void OnRun(void) override;
     };
 
 
-    class CAttackAABBB : public CStatus
-    {
-    public:
-        virtual bool IsEnableChangeStatus(PLAYERTYPES::STATUS status) override;
-        virtual void OnAttach(void) override;
-        virtual void OnDetach(void) override;
-        virtual void OnRun(void) override;
-    };
-
-
-    class CAttackAABBC : public CStatus
+    class CAttackAABBC : public CAttackCommon
     {
     public:
         virtual bool IsEnableChangeStatus(PLAYERTYPES::STATUS status) override;
@@ -87,7 +92,7 @@ namespace PlayerStatus
     };
 
 
-    class CAttackB : public CStatus
+    class CAttackB : public CAttackCommon
     {
     public:
         virtual bool IsEnableChangeStatus(PLAYERTYPES::STATUS status) override;
@@ -132,12 +137,11 @@ namespace PlayerStatus
     };
 
 
-    class CAttackRun : public CStatus
+    class CAttackRun : public CAttackCommon
     {
     public:
         virtual bool IsEnableChangeStatus(PLAYERTYPES::STATUS status) override;
         virtual void OnAttach(void) override;
         virtual void OnDetach(void) override;
-        virtual void OnRun(void) override;
     };
 };

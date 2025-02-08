@@ -23,14 +23,15 @@ void CChainMotionParameter::Initialize(INIT_PARAMETER* pParam)
     ASSERT(pParam);
 
     m_fStart = pParam->m_fStart;
-    m_fEnd = pParam->m_fEnd;
+    m_fEnd   = pParam->m_fEnd;
 };
 
 
 void CChainMotionParameter::Attach(ATTACH_PARAMETER* pParam)
 {
     ASSERT(pParam);
-    ASSERT(pParam->m_nButton >= 0 && pParam->m_nButton < CHAIN_MAX);
+    ASSERT(pParam->m_nButton >= 0);
+    ASSERT(pParam->m_nButton < CHAIN_MAX);
 
     std::strcpy(m_aszMotionName[pParam->m_nButton], pParam->m_szMotionName);
 };

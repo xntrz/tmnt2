@@ -37,6 +37,7 @@ void CGameEnemy::Attach(CEnemy* pEnemy)
 
     m_pEnemy = pEnemy;
     m_hObj = pEnemy->GetHandle();
+	m_bActivate = true;
 };
 
 
@@ -51,10 +52,8 @@ void CGameEnemy::InvokeDeathFloor(void)
 {
     if (IsAlive())
     {
-        CGameObjectManager::SendMessage(
-            &Enemy().EnemyCharacter().CharacterCompositor(),
-            CHARACTERTYPES::MESSAGEID_DEATHFLOOR
-        );
+        CCharacterCompositor* pChrCompositor = &Enemy().Character().Compositor();
+        CGameObjectManager::SendMessage(pChrCompositor, CHARACTERTYPES::MESSAGEID_DEATHFLOOR);
     };
 };
 
@@ -83,8 +82,8 @@ bool CGameEnemy::IsActive(void) const
 {
     if (IsAlive())
         return m_bActivate;
-    else
-        return false;
+    
+    return false;
 };
 
 

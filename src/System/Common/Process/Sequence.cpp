@@ -25,8 +25,6 @@ public:
 		int32 m_iLabelPrev;
 	};
 
-	typedef MESSAGE* PMESSAGE;
-
 	static bool m_bMemCheck;
 	static MESSAGE m_SeqMsg;
 
@@ -93,7 +91,7 @@ bool CSequence::Attach(void)
 	PROCESSTYPES::MAIL mail;
 	if (Mail().Recv(mail) && (mail.m_type == PROCESSTYPES::MAIL::TYPE_MSG))
 	{	
-		CPrivate::MESSAGE* pMsg = CPrivate::PMESSAGE(mail.m_param);
+		const CPrivate::MESSAGE* pMsg = reinterpret_cast<const CPrivate::MESSAGE*>(mail.m_param);
 		ASSERT(pMsg->m_id == Private().MESSAGE_ID);
 
 		switch (pMsg->m_type)
@@ -135,7 +133,7 @@ void CSequence::Move(void)
 		&& Mail().Recv(mail)
 		&& (mail.m_type == PROCESSTYPES::MAIL::TYPE_MSG))
 	{
-		CPrivate::MESSAGE* pMsg = CPrivate::PMESSAGE(mail.m_param);
+		const CPrivate::MESSAGE* pMsg = reinterpret_cast<const CPrivate::MESSAGE*>(mail.m_param);
 		ASSERT(pMsg->m_id == Private().MESSAGE_ID);
 
 		switch (pMsg->m_type)
@@ -176,7 +174,7 @@ void CSequence::Draw(void) const
 };
 
 
-bool CSequence::Call(int32 iLabel, const void* pParam, bool bDrawEnable)
+bool CSequence::Call(int32 iLabel, const void* pParam /*= nullptr*/, bool bDrawEnable /*= false*/)
 {
 	CPrivate::MESSAGE* pMsg = &CPrivate::m_SeqMsg;
 
@@ -204,7 +202,7 @@ bool CSequence::Call(int32 iLabel, const void* pParam, bool bDrawEnable)
 };
 
 
-bool CSequence::Jump(int32 iLabel, const void* pParam)
+bool CSequence::Jump(int32 iLabel, const void* pParam /*= nullptr*/)
 {
     switch (iLabel)
     {
@@ -246,7 +244,7 @@ bool CSequence::Jump(int32 iLabel, const void* pParam)
 };
 
 
-bool CSequence::Kill(int32 iBackToLabel, const void* pReturnValue)
+bool CSequence::Kill(int32 iBackToLabel, const void* pReturnValue /*= nullptr*/)
 {
 	CPrivate::MESSAGE* pMsg = &CPrivate::m_SeqMsg;
 
@@ -270,7 +268,7 @@ bool CSequence::Kill(int32 iBackToLabel, const void* pReturnValue)
 };
 
 
-bool CSequence::Ret(const void* pReturnValue)
+bool CSequence::Ret(const void* pReturnValue /*= nullptr*/)
 {
 	CPrivate::MESSAGE* pMsg = &CPrivate::m_SeqMsg;
 	

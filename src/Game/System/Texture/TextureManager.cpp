@@ -75,23 +75,23 @@ private:
 };
 
 
-RwTexture* CTextureContainer::CTextureSet::SetLinearFilterCallback(RwTexture* pRwTexture, void* pData)
+/*static*/ RwTexture* CTextureContainer::CTextureSet::SetLinearFilterCallback(RwTexture* pRwTexture, void* pData)
 {
-    ASSERT(pRwTexture);
-    
+    ASSERT(pRwTexture);    
     RwTextureSetFilterMode(pRwTexture, rwFILTERLINEAR);
+
     return pRwTexture;
 };
 
 
-RwTexture* CTextureContainer::CTextureSet::TexDictionaryAddTextureCallback(RwTexture* pRwTexture, void* pData)
+/*static*/ RwTexture* CTextureContainer::CTextureSet::TexDictionaryAddTextureCallback(RwTexture* pRwTexture, void* pData)
 {
-    RwTexDictionary* pRwTexDictionary = (RwTexDictionary*)pData;
-    
+    RwTexDictionary* pRwTexDictionary = static_cast<RwTexDictionary*>(pData);
     ASSERT(pRwTexDictionary);
+    
     ASSERT(pRwTexture);
-
     RwTexDictionaryAddTexture(pRwTexDictionary, pRwTexture);
+
     return pRwTexture;
 };
 
@@ -149,7 +149,7 @@ void CTextureContainer::CTextureSet::Terminate(void)
         m_pRwTexDictionary = nullptr;
     };
 
-    m_szName[ 0 ] = '\0';
+    m_szName[0] = '\0';
     m_iGeneration = -1;
 };
 
@@ -167,12 +167,7 @@ void CTextureContainer::CTextureSet::AddSet(void* pBuffer, uint32 uBufferSize)
     RwTexDictionary* pRwTexDictionary = ReadRwTexDictionary(pBuffer, uBufferSize);
     ASSERT(pRwTexDictionary);
 
-    RwTexDictionaryForAllTextures(
-        pRwTexDictionary,
-        TexDictionaryAddTextureCallback,
-        m_pRwTexDictionary
-    );
-
+    RwTexDictionaryForAllTextures(pRwTexDictionary, TexDictionaryAddTextureCallback, m_pRwTexDictionary);
     RwTexDictionaryDestroy(pRwTexDictionary);
 };
 
@@ -180,13 +175,14 @@ void CTextureContainer::CTextureSet::AddSet(void* pBuffer, uint32 uBufferSize)
 RwTexDictionary* CTextureContainer::CTextureSet::ReadRwTexDictionary(void* pBuffer, uint32 uBufferSize)
 {
     RwTexDictionary* pResult = nullptr;
-    RwMemory MemoryStream;
+    
+    RwMemory memStream;
+    memStream.start  = static_cast<RwUInt8*>(pBuffer);
+    memStream.length = uBufferSize;
 
-    MemoryStream.start = (RwUInt8*)pBuffer;
-    MemoryStream.length = uBufferSize;
-
-    RwStream* pRwStream = RwStreamOpen(rwSTREAMMEMORY, rwSTREAMREAD, &MemoryStream);
+    RwStream* pRwStream = RwStreamOpen(rwSTREAMMEMORY, rwSTREAMREAD, &memStream);
     ASSERT(pRwStream);
+    
     if (pRwStream)
     {
         RwChunkHeaderInfo ChunkHeaderInfo;
@@ -201,16 +197,14 @@ RwTexDictionary* CTextureContainer::CTextureSet::ReadRwTexDictionary(void* pBuff
             case rwID_PITEXDICTIONARY:
                 pResult = RtPITexDictionaryStreamRead(pRwStream);
                 break;
+
+            default:
+                ASSERT(false);
+                break;
             };
 
             if (pResult)
-            {
-                RwTexDictionaryForAllTextures(
-                    pResult,
-                    SetLinearFilterCallback,
-                    nullptr
-                );
-            };
+                RwTexDictionaryForAllTextures(pResult, SetLinearFilterCallback, nullptr);
         };
 
         RwStreamClose(pRwStream, nullptr);
@@ -245,7 +239,12 @@ int32 CTextureContainer::CTextureSet::Generation(void) const
 };
 
 
-/*static*/ const char CTextureContainer::CNullTextureSet::NAME[] = "NULL";
+//
+// *********************************************************************************
+//
+
+
+/*static*/ const char CTextureContainer::CNullTextureSet::NAME [] = "NULL";
 
 
 CTextureContainer::CNullTextureSet::CNullTextureSet(void)
@@ -258,6 +257,11 @@ CTextureContainer::CNullTextureSet::~CNullTextureSet(void)
 {
     ;
 };
+
+
+//
+// *********************************************************************************
+//
 
 
 CTextureContainer::CTextureContainer(void)
@@ -346,10 +350,6 @@ void CTextureContainer::AddTextureSet(const char* pszName, void* pBuffer, uint32
 
 void CTextureContainer::SetCurrentSet(const char* pszName) 
 {
-    //
-    //  Result may be NULL
-    //
-    
     CTextureSet* pTextureSet = FindTextureSet(pszName);
     SetCurrentSet(pTextureSet);
 };
@@ -401,23 +401,24 @@ CTextureContainer::CTextureSet* CTextureContainer::FindTextureSet(const char* ps
 
 void CTextureContainer::GarbageCollection(void) 
 {
-	auto it = m_listUsing.begin();
-	while (it)
-	{
-		if ((*it).Generation() > m_iGeneration)
-		{
-			CTextureSet* pTextureSet = &*it++;
+    auto it = m_listUsing.begin();
+    auto itEnd = m_listUsing.end();
+    while (it != itEnd)
+    {
+        if ((*it).Generation() > m_iGeneration)
+        {
+            CTextureSet* pTextureSet = &*it++;
 
-			if (m_pCurrentSet == pTextureSet)
-				m_pCurrentSet = nullptr;
+            if (m_pCurrentSet == pTextureSet)
+                m_pCurrentSet = nullptr;
 
-			FreeTextureSet(pTextureSet);
-		}
-		else
-		{
-			++it;
-		};
-	};    
+            FreeTextureSet(pTextureSet);
+        }
+        else
+        {
+            ++it;
+        };
+    };
 };
 
 
@@ -434,9 +435,7 @@ static inline CTextureContainer& TextureContainer(void)
 /*static*/ void CTextureManager::Initialize(void)
 {
     if (!s_pTextureContainer)
-    {
         s_pTextureContainer = new CTextureContainer;
-    };
 };
 
 

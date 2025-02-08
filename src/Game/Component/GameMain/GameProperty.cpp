@@ -29,8 +29,7 @@ static inline CGamePropertyObject& GamePropertyObject(void)
     if (!s_pGamePropertyObject)
     {
         s_pGamePropertyObject = new CGamePropertyObject;
-        ASSERT(s_pGamePropertyObject);
-        
+
         CGameEvent::AttachProperty(s_pGamePropertyObject);
     };
 };
@@ -58,8 +57,8 @@ static inline CGamePropertyObject& GamePropertyObject(void)
 {
     if (CGameData::Attribute().IsNexusMode())
         return GAMETYPES::DIFFICULTY_NORMAL;
-    else
-        return CGameData::Option().Play().GetDifficulty();
+    
+    return CGameData::Option().Play().GetDifficulty();
 };
 
 
@@ -119,7 +118,7 @@ static inline CGamePropertyObject& GamePropertyObject(void)
     ASSERT(pvIn);
     
     CMapCamera* pMapCamera = GetMapCamera();
-    if (!pMapCamera || GetPlayerNum() <= 1)
+    if ((!pMapCamera) || (GetPlayerNum() <= 1))
     {
         *pvOut = *pvIn;
         return false;
@@ -129,21 +128,21 @@ static inline CGamePropertyObject& GamePropertyObject(void)
     if (fMoveBoundaryRadius < 3.0f)
         fMoveBoundaryRadius = 3.0f;
     
-    RwV3d vVec = Math::VECTOR3_ZERO;
-
     RwV3d vAt = Math::VECTOR3_ZERO;
     pMapCamera->GetLookat(&vAt);
 
+    RwV3d vVec = Math::VECTOR3_ZERO;
     Math::Vec3_Sub(&vVec, pvIn, &vAt);
     vVec.y = 0.0f;
 
     float fLen = Math::Vec3_Length(&vVec);
-    if (fLen < 0.0f)
-        fLen = -fLen;
+    fLen = std::fabs(fLen);
 
     if (fMoveBoundaryRadius >= fLen)
     {
-        *pvOut = *pvIn;
+        if (pvOut != pvIn)
+            *pvOut = *pvIn;
+        
         return false;
     };
 
@@ -230,4 +229,28 @@ static inline CGamePropertyObject& GamePropertyObject(void)
 /*static*/ int32 CGameProperty::GetGimmickMax(void)
 {
     return GAMETYPES::GIMMICK_MAX;
+};
+
+
+/*static*/ CGameGimmick* CGameProperty::GetGameGimmick(int32 no)
+{
+    return &GamePropertyObject().GimmickContainer().GameGimmick(no);
+};
+
+
+/*static*/ int32 CGameProperty::GetGameGimmickNum(void)
+{
+    return GamePropertyObject().GimmickContainer().GameGimmickMax();
+};
+
+
+/*static*/ CGameEnemy* CGameProperty::GetGameEnemy(int32 no)
+{
+    return &GamePropertyObject().EnemyContainer().GameEnemy(no);
+};
+
+
+/*static*/ int32 CGameProperty::GetGameEnemyNum(void)
+{
+    return GamePropertyObject().EnemyContainer().GameEnemyMax();
 };

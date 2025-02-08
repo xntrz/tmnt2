@@ -1,14 +1,21 @@
 #include "CharacterEffectModule.hpp"
 #include "Module.hpp"
+#ifdef _DEBUG
+#include "ModuleDebug.hpp"
+#endif /* _DEBUG */
 
 #include "Game/Component/GameMain/GameProperty.hpp"
 #include "Game/Component/Effect/EffectManager.hpp"
 #include "Game/Component/Effect/IceBlock.hpp"
 #include "Game/Component/Enemy/CharacterCompositor.hpp"
+#include "Game/Component/Enemy/EnemyCharacter.hpp"
 #include "Game/Component/Enemy/EnemyTracer.hpp"
 #include "Game/Component/Player/PlayerCharacter.hpp"
 #include "Game/Component/Player/PlayerTracer.hpp"
 #include "Game/System/Character/Character.hpp"
+#ifdef _DEBUG
+#include "Game/System/Misc/DebugShape.hpp"
+#endif /* _DEBUG */
 
 
 namespace EFFECTNAME
@@ -41,6 +48,7 @@ protected:
     RwV3d m_vEffectOffset;
     uint32 m_hEffect;
     bool m_bTracking;
+    float m_fRunTime;
 };
 
 
@@ -117,6 +125,7 @@ CCharacterEffectModule::CCharacterEffectModule(CCharacter* pCharacter)
 , m_vEffectOffset(Math::VECTOR3_ZERO)
 , m_hEffect(0)
 , m_bTracking(false)
+, m_fRunTime(0.0f)
 {
     ASSERT(m_pCharacter);
 };
@@ -142,6 +151,8 @@ CCharacterEffectModule::~CCharacterEffectModule(void)
 
 void CCharacterEffectModule::Run(void)
 {
+    m_fRunTime += CGameProperty::GetElapsedTime();
+
     if (IsEnd())
     {
         StopEffect();
@@ -164,7 +175,61 @@ void CCharacterEffectModule::Run(void)
 
 void CCharacterEffectModule::Draw(void)
 {
-    ;
+#ifdef _DEBUG
+    if (!CModuleDebug::SHOW_CHR_STATUS_DURATION)
+        return;
+
+    /* init pos */
+    RwV3d vecMyPos = Math::VECTOR3_ZERO;
+    m_pCharacter->GetFootPosition(&vecMyPos);
+
+    float fHeight = m_pCharacter->GetCollisionParameter().m_fHeight;
+
+    vecMyPos.y += (fHeight * 1.75f);
+
+    /* get status current & max time */
+    char szStatusTime[128];
+    szStatusTime[0] = '\0';
+
+    float fNowTime = 0.0f;
+    float fMaxTime = 0.0f;
+
+    CCharacter::TYPE chrType = m_pCharacter->GetCharacterType();
+    switch (chrType)
+    {
+    case CCharacter::TYPE_PLAYER:
+        {
+            CPlayerCharacter* pPlayerChr = static_cast<CPlayerCharacter*>(m_pCharacter);
+
+            fNowTime = pPlayerChr->GetStatusDuration();
+            fMaxTime = pPlayerChr->AttackParameter().m_fTroubleTime;
+
+            std::sprintf(szStatusTime, "%.02f / %.02f", fNowTime, fMaxTime);
+        }
+        break;
+
+    case CCharacter::TYPE_ENEMY:
+        {
+            CCharacterCompositor* pChrCompositor = static_cast<CCharacterCompositor*>(m_pCharacter);
+
+            fNowTime = m_fRunTime; // enemy can't reduce effect duration (recovering) by input combination so runtime is enough there
+            fMaxTime = pChrCompositor->AttackParameter().m_fTroubleTime;
+        }
+        break;
+
+    default:
+        ASSERT(false);
+        break;
+    };
+
+    std::sprintf(szStatusTime, "%.02f / %.02f", fNowTime, fMaxTime);
+
+    RwRGBA color = { 0xFF, 0x40, 0x40, 0xFF }; // red
+
+    CDebugShape::m_fLabelHeight = 18.0f;
+    CDebugShape::m_fLabelOffsetY = 0.0f;
+    CDebugShape::ShowLabel(&vecMyPos, szStatusTime, color);
+#endif /* _DEBUG */    
 };
 
 
@@ -218,14 +283,14 @@ void CCharacterEffectModule::PlayEffect(EFFECTID::VALUE idEffect, CCharacter* pC
     {
     case CCharacter::TYPE_ENEMY:
         {
-            CCharacter* pEnemyChr = (CCharacter*)pCharacter;
+            CCharacterCompositor* pEnemyChr = static_cast<CCharacterCompositor*>(pCharacter);
             pTracer = new CEnemyTracer(pEnemyChr);
         }
         break;
 
     case CCharacter::TYPE_PLAYER:
         {
-            CPlayerCharacter* pPlayerChr = (CPlayerCharacter*)pCharacter;
+            CPlayerCharacter* pPlayerChr = static_cast<CPlayerCharacter*>(pCharacter);
             pTracer = new CPlayerTracer(pPlayerChr);
         }
         break;
@@ -250,11 +315,17 @@ void CCharacterEffectModule::StopEffect(void)
 };
 
 
+//
+// *********************************************************************************
+//
+
+
 CDindleEffectModule::CDindleEffectModule(CCharacter* pCharacter)
 : CCharacterEffectModule(pCharacter)
 {
     RwV3d vOffset = { 0.0f, 0.0f, 0.0f };
     PlayEffect(EFFECTID::ID_BIRIBIRI, m_pCharacter, &vOffset);
+
     m_bTracking = true;
 };
 
@@ -269,12 +340,11 @@ bool CDindleEffectModule::IsEnd(void)
 {
     bool bResult = true;
 
-    ASSERT(m_pCharacter);
     switch (m_pCharacter->GetCharacterType())
     {
     case CCharacter::TYPE_ENEMY:
         {
-            CCharacterCompositor* pEnemyChr = (CCharacterCompositor*)m_pCharacter;
+            CCharacterCompositor* pEnemyChr = static_cast<CCharacterCompositor*>(m_pCharacter);
             if (pEnemyChr->GetStatus() == ENEMYTYPES::STATUS_DINDLE)
                 bResult = false;
         }
@@ -282,7 +352,7 @@ bool CDindleEffectModule::IsEnd(void)
 
     case CCharacter::TYPE_PLAYER:
         {
-            CPlayerCharacter* pPlayerChr = (CPlayerCharacter*)m_pCharacter;
+            CPlayerCharacter* pPlayerChr = static_cast<CPlayerCharacter*>(m_pCharacter);
             if (pPlayerChr->GetStatus() == PLAYERTYPES::STATUS_DINDLE)
                 bResult = false;
         }
@@ -297,6 +367,11 @@ bool CDindleEffectModule::IsEnd(void)
 };
 
 
+//
+// *********************************************************************************
+//
+
+
 CStunEffectModule::CStunEffectModule(CCharacter* pCharacter)
 : CCharacterEffectModule(pCharacter)
 {
@@ -305,14 +380,15 @@ CStunEffectModule::CStunEffectModule(CCharacter* pCharacter)
     case CCharacter::TYPE_ENEMY:
         {
             RwV3d vFootPos = Math::VECTOR3_ZERO;
-            RwV3d vBodyPos = Math::VECTOR3_ZERO;
-
             m_pCharacter->GetFootPosition(&vFootPos);
+
+            RwV3d vBodyPos = Math::VECTOR3_ZERO;
             m_pCharacter->GetBodyPosition(&vBodyPos);
 
-            RwV3d vOffset = { 0.0f, vBodyPos.y - vFootPos.y, 0.0f };
-            vOffset.y = Math::FAbs(vOffset.y);
-            
+            RwV3d vOffset = { 0.0f, (vBodyPos.y - vFootPos.y), 0.0f };
+            vOffset.y = std::fabs(vOffset.y);
+            vOffset.y *= 2.0f;
+
             PlayEffect(EFFECTNAME::STUN, m_pCharacter, &vOffset);
             m_bTracking = true;
         }
@@ -343,12 +419,11 @@ bool CStunEffectModule::IsEnd(void)
 {
     bool bResult = true;
 
-    ASSERT(m_pCharacter);
     switch (m_pCharacter->GetCharacterType())
     {
     case CCharacter::TYPE_ENEMY:
         {
-            CCharacterCompositor* pEnemyChr = (CCharacterCompositor*)m_pCharacter;
+            CCharacterCompositor* pEnemyChr = static_cast<CCharacterCompositor*>(m_pCharacter);
             if (pEnemyChr->GetStatus() == ENEMYTYPES::STATUS_STUN)
                 bResult = false;
         }
@@ -356,7 +431,7 @@ bool CStunEffectModule::IsEnd(void)
 
     case CCharacter::TYPE_PLAYER:
         {
-            CPlayerCharacter* pPlayerChr = (CPlayerCharacter*)m_pCharacter;
+            CPlayerCharacter* pPlayerChr = static_cast<CPlayerCharacter*>(m_pCharacter);
             if (pPlayerChr->GetStatus() == PLAYERTYPES::STATUS_STUN)
                 bResult = false;
         }
@@ -371,6 +446,11 @@ bool CStunEffectModule::IsEnd(void)
 };
 
 
+//
+// *********************************************************************************
+//
+
+
 CSleepEffectModule::CSleepEffectModule(CCharacter* pCharacter)
 : CCharacterEffectModule(pCharacter)
 {
@@ -379,14 +459,15 @@ CSleepEffectModule::CSleepEffectModule(CCharacter* pCharacter)
     case CCharacter::TYPE_ENEMY:
         {
             RwV3d vFootPos = Math::VECTOR3_ZERO;
-            RwV3d vBodyPos = Math::VECTOR3_ZERO;
-
             m_pCharacter->GetFootPosition(&vFootPos);
+
+            RwV3d vBodyPos = Math::VECTOR3_ZERO;
             m_pCharacter->GetBodyPosition(&vBodyPos);
 
-            RwV3d vOffset = { 0.0f, vBodyPos.y - vFootPos.y, 0.0f };
-            vOffset.y = Math::FAbs(vOffset.y);
-            
+            RwV3d vOffset = { 0.0f, (vBodyPos.y - vFootPos.y), 0.0f };
+            vOffset.y = std::fabs(vOffset.y);
+            vOffset.y *= 2.0f;
+
             PlayEffect(EFFECTNAME::SLEEP, m_pCharacter, &vOffset);
             m_bTracking = true;
         }
@@ -417,12 +498,11 @@ bool CSleepEffectModule::IsEnd(void)
 {
     bool bResult = true;
 
-    ASSERT(m_pCharacter);
     switch (m_pCharacter->GetCharacterType())
     {
     case CCharacter::TYPE_ENEMY:
         {
-            CCharacterCompositor* pEnemyChr = (CCharacterCompositor*)m_pCharacter;
+            CCharacterCompositor* pEnemyChr = static_cast<CCharacterCompositor*>(m_pCharacter);
             if (pEnemyChr->GetStatus() == ENEMYTYPES::STATUS_SLEEP)
                 bResult = false;
         }
@@ -430,7 +510,7 @@ bool CSleepEffectModule::IsEnd(void)
 
     case CCharacter::TYPE_PLAYER:
         {
-            CPlayerCharacter* pPlayerChr = (CPlayerCharacter*)m_pCharacter;
+            CPlayerCharacter* pPlayerChr = static_cast<CPlayerCharacter*>(m_pCharacter);
             if (pPlayerChr->GetStatus() == PLAYERTYPES::STATUS_SLEEP)
                 bResult = false;
         }
@@ -446,6 +526,11 @@ bool CSleepEffectModule::IsEnd(void)
 
     return bResult;
 };
+
+
+//
+// *********************************************************************************
+//
 
 
 CBindEffectModule::CBindEffectModule(CCharacter* pCharacter)
@@ -470,12 +555,11 @@ bool CBindEffectModule::IsEnd(void)
 {
     bool bResult = true;
 
-    ASSERT(m_pCharacter);
     switch (m_pCharacter->GetCharacterType())
     {
     case CCharacter::TYPE_ENEMY:
         {
-            CCharacterCompositor* pEnemyChr = (CCharacterCompositor*)m_pCharacter;
+            CCharacterCompositor* pEnemyChr = static_cast<CCharacterCompositor*>(m_pCharacter);
             if (pEnemyChr->GetStatus() == ENEMYTYPES::STATUS_BIND)
                 bResult = false;
         }
@@ -483,7 +567,7 @@ bool CBindEffectModule::IsEnd(void)
 
     case CCharacter::TYPE_PLAYER:
         {
-            CPlayerCharacter* pPlayerChr = (CPlayerCharacter*)m_pCharacter;
+            CPlayerCharacter* pPlayerChr = static_cast<CPlayerCharacter*>(m_pCharacter);
             if (pPlayerChr->GetStatus() == PLAYERTYPES::STATUS_BIND)
                 bResult = false;
         }
@@ -501,6 +585,11 @@ bool CBindEffectModule::IsEnd(void)
 };
 
 
+//
+// *********************************************************************************
+//
+
+
 CFreezeEffectModule::CFreezeEffectModule(CCharacter* pCharacter)
 : CCharacterEffectModule(pCharacter)
 , m_hIceblock(0)
@@ -514,17 +603,15 @@ CFreezeEffectModule::CFreezeEffectModule(CCharacter* pCharacter)
             
             m_hIceblock = CIceBlockManager::Play(&vPosition);
             ASSERT(m_hIceblock);
+
             if (m_hIceblock)
             {
                 m_vEffectPositon = vPosition;
 
-                RwV3d vScaling = { 1.0f, 1.5f, 1.0f };
-                Math::Vec3_Scale(
-                    &vScaling,
-                    &vScaling,
-                    pCharacter->GetCollisionParameter().m_fRadius
-                );
+                float fRadius = pCharacter->GetCollisionParameter().m_fRadius;
+                fRadius *= 2.0f;
 
+				RwV3d vScaling = { fRadius, fRadius * 1.5f, fRadius };
                 CIceBlockManager::SetScale(m_hIceblock, &vScaling);
             };
         }
@@ -537,6 +624,7 @@ CFreezeEffectModule::CFreezeEffectModule(CCharacter* pCharacter)
             
             m_hIceblock = CIceBlockManager::Play(&vPosition);
             ASSERT(m_hIceblock);
+
             if (m_hIceblock)
                 m_vEffectPositon = vPosition;            
         }
@@ -577,34 +665,21 @@ bool CFreezeEffectModule::IsEnd(void)
 {
     bool bResult = true;
 
-    ASSERT(m_pCharacter);
     switch (m_pCharacter->GetCharacterType())
     {
     case CCharacter::TYPE_ENEMY:
         {
-            CCharacterCompositor* pEnemyChr = (CCharacterCompositor*)m_pCharacter;
+            CCharacterCompositor* pEnemyChr = static_cast<CCharacterCompositor*>(m_pCharacter);
             if (pEnemyChr->GetStatus() == ENEMYTYPES::STATUS_FREEZE)
-            {
                 bResult = false;
-            }
-            else
-            {
-                FinishIceBlock();
-            };
         }
         break;
 
     case CCharacter::TYPE_PLAYER:
         {
-            CPlayerCharacter* pPlayerChr = (CPlayerCharacter*)m_pCharacter;
+            CPlayerCharacter* pPlayerChr = static_cast<CPlayerCharacter*>(m_pCharacter);
             if (pPlayerChr->GetStatus() == PLAYERTYPES::STATUS_FREEZE)
-            {
                 bResult = false;
-            }
-            else
-            {
-                FinishIceBlock();                
-            };
         }
         break;
 
@@ -613,6 +688,9 @@ bool CFreezeEffectModule::IsEnd(void)
         break;
     };
 
+    if (bResult)
+        FinishIceBlock();
+
     return bResult;
 };
 
@@ -620,8 +698,7 @@ bool CFreezeEffectModule::IsEnd(void)
 void CFreezeEffectModule::FinishIceBlock(void)
 {
     ASSERT(m_hIceblock);
-    ASSERT(m_pCharacter);
-    
+
     if (m_hIceblock)
     {
         CIceBlockManager::Finish(m_hIceblock);
@@ -633,6 +710,11 @@ void CFreezeEffectModule::FinishIceBlock(void)
         CEffectManager::Play(EFFECTID::ID_ALL_FREEZEND, &vPosition);
     };
 };
+
+
+//
+// *********************************************************************************
+//
 
 
 CItemEffectModule::CItemEffectModule(CCharacter* pCharacter, EFFECTID::VALUE idEffect, MODULETYPE::VALUE type)
@@ -654,9 +736,7 @@ CItemEffectModule::~CItemEffectModule(void)
 void CItemEffectModule::Run(void)
 {
     if (IsEnd())
-    {
         Remove();
-    };
 };
 
 
@@ -687,6 +767,11 @@ void CItemEffectModule::SetTime(float fTime)
 };
 
 
+//
+// *********************************************************************************
+//
+
+
 namespace CharacterItemEffectModule
 {
     MODULETYPE::VALUE GetModuleType(EFFECTID::VALUE idEffect)
@@ -714,6 +799,9 @@ namespace CharacterItemEffectModule
         case EFFECTID::ID_SETUP_KNIFE:
             Result = MODULETYPE::ITEM_EFFECT_DART;
             break;
+
+        default:
+            break;
         };
 
         return Result;
@@ -722,7 +810,7 @@ namespace CharacterItemEffectModule
 
     void SetItemEffectModuleEnable(CCharacter* pCharacter, MODULETYPE::VALUE type, bool bEnable)
     {
-        CItemEffectModule* pEffectMod = (CItemEffectModule*)pCharacter->GetModule(type);
+        CItemEffectModule* pEffectMod = static_cast<CItemEffectModule*>(pCharacter->GetModule(type));
         if (pEffectMod)
             pEffectMod->SetEnable(bEnable);
     };
@@ -730,27 +818,30 @@ namespace CharacterItemEffectModule
 
     IModule* CreateItemEffectModule(CCharacter* pCharacter, EFFECTID::VALUE idEffect, float fTime)
     {
-        CItemEffectModule* pRet = nullptr;
-        
-        MODULETYPE::VALUE EffectModuleType = GetModuleType(idEffect);
-        ASSERT(EffectModuleType != MODULETYPE::INVALID);
-        if (EffectModuleType == MODULETYPE::INVALID)
-            return pRet;
+        MODULETYPE::VALUE moduleType = GetModuleType(idEffect);
+        ASSERT(moduleType != MODULETYPE::INVALID);
 
-        if (pCharacter->IsModuleIncluded(EffectModuleType))
+        if (moduleType == MODULETYPE::INVALID)
+            return nullptr;
+
+        if (pCharacter->IsModuleIncluded(moduleType))
         {
-            CItemEffectModule* pEffectMod = (CItemEffectModule*)pCharacter->GetModule(EffectModuleType);
+            CItemEffectModule* pEffectMod = static_cast<CItemEffectModule*>(pCharacter->GetModule(moduleType));
             pEffectMod->Remove();
         };
 
-        pRet = new CItemEffectModule(pCharacter, idEffect, EffectModuleType);
-        ASSERT(pRet);
-        if (pRet)
-            pRet->SetTime(fTime);
+        CItemEffectModule* pModule = new CItemEffectModule(pCharacter, idEffect, moduleType);
+        if (pModule)
+            pModule->SetTime(fTime);
 
-        return pRet;
+        return pModule;
     };
-};
+} /* namespace CharacterItemEffectModule */
+
+
+//
+// *********************************************************************************
+//
 
 
 namespace CharacterEffectModule
@@ -783,4 +874,4 @@ namespace CharacterEffectModule
     {
         return new CDindleEffectModule(pCharacter);
     };
-};
+} /* namespace CharacterEffectModule */

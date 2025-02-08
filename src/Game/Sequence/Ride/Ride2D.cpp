@@ -34,7 +34,8 @@ CRide2DMedalAnimation::CRide2DMedalAnimation(RIDETYPES::SCOREKIND scorekind)
 , m_fTime(0.0f)
 , m_scorekind(scorekind)
 {
-    ASSERT(m_scorekind >= 0 && m_scorekind < RIDETYPES::SCOREKINDNUM);
+    ASSERT(m_scorekind >= 0);
+    ASSERT(m_scorekind < RIDETYPES::SCOREKINDNUM);
 };
 
 
@@ -46,7 +47,7 @@ CRide2DMedalAnimation::~CRide2DMedalAnimation(void)
 
 void CRide2DMedalAnimation::Period(void)
 {
-    m_fTime += (CGameProperty::GetElapsedTime() / 0.1666f);
+    m_fTime += (CGameProperty::GetElapsedTime() * 6.0f);
 };
 
 
@@ -92,13 +93,9 @@ void CRide2DMedalAnimation::Delete(void)
 void CRide2DMedalAnimation::SetNext(CRide2DMedalAnimation* pNext)
 {
     if (m_pNext)
-    {
         m_pNext->SetNext(pNext);
-    }
     else
-    {
         m_pNext = pNext;
-    };
 };
 
 
@@ -200,16 +197,11 @@ static CRide2DMedalAnimation* s_pMedalAnimation = nullptr;
 /*static*/ void CRide2D::AddMedalAnimation(RIDETYPES::SCOREKIND scorekind)
 {
     CRide2DMedalAnimation* pMedalAnim = new CRide2DMedalAnimation(scorekind);
-    ASSERT(pMedalAnim);
-    
+
     if (s_pMedalAnimation)
-    {
         s_pMedalAnimation->SetNext(pMedalAnim);
-    }
     else
-    {
         s_pMedalAnimation = pMedalAnim;
-    };
 };
 
 
@@ -222,7 +214,7 @@ static CRide2DMedalAnimation* s_pMedalAnimation = nullptr;
         IGamePlayer* pGamePlayer = CGameProperty::Player(i);
         CRidePlayer* pRidePlayer = static_cast<CRidePlayer*>(pGamePlayer->GetPlayer());
         
-        float fOfsX = (nGamePlayerNum - i - 1) * -69.0f;
+        float fOfsX = static_cast<float>(nGamePlayerNum - i - 1) * -69.0f;
         
         DrawPersonalWindow(fOfsX, i);
         DrawPersonalPlayer(fOfsX, i);
@@ -294,7 +286,7 @@ static CRide2DMedalAnimation* s_pMedalAnimation = nullptr;
             ASSERT(false);
         };
 
-        DrawPersonalNumber(float(i) * 12.0f + x, y, nNumber);
+        DrawPersonalNumber(static_cast<float>(i) * 12.0f + x, y, nNumber);
     };
 };
 
@@ -348,9 +340,12 @@ static CRide2DMedalAnimation* s_pMedalAnimation = nullptr;
         case 2:
             nNumber = nValue % 10;
             break;
+
+        default:
+            break;
         };
 
-        DrawNumber(float(i) * 14.0f + x, y, nNumber);
+        DrawNumber(static_cast<float>(i) * 14.0f + x, y, nNumber);
     };
 };
 

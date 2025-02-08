@@ -27,17 +27,16 @@ CRideStageSequence::~CRideStageSequence(void)
 
 bool CRideStageSequence::OnAttach(const void* pParam)
 {
-    if (CGameData::PlayParam().GetStage() == STAGEID::ID_ST22R ||
-        CGameData::PlayParam().GetStage() == STAGEID::ID_ST32R)
-        CRideStage::m_bSpace = true;
-    else
-        CRideStage::m_bSpace = false;
+    STAGEID::VALUE stageId = CGameData::PlayParam().GetStage();
+
+    CRideStage::m_bSpace = ((stageId == STAGEID::ID_ST22R) ||
+                            (stageId == STAGEID::ID_ST32R));
 
     CStageBaseSequence::OnAttach(pParam);
 
-    RegisterStateObject(STATE_LOAD, new CLoadRideStageSeqState(CGameData::PlayParam().GetStage()), true);
+    RegisterStateObject(STATE_LOAD,  new CLoadRideStageSeqState(stageId), true);
     RegisterStateObject(STATE_INTRO, new CIntroStageSeqState, true);
-    RegisterStateObject(STATE_PLAY, new CPlayRideStageSeqState, true);
+    RegisterStateObject(STATE_PLAY,  new CPlayRideStageSeqState, true);
     ChangeState(STATE_LOAD);
 
     CRideStage::Initialize();
@@ -68,28 +67,29 @@ void CRideStageSequence::OnStateDetached(STATE state)
     switch (state)
     {
     case STATE_NONE:
-        {
-            ChangeState(STATE_LOAD);
-        }
+        ChangeState(STATE_LOAD);
         break;
 
     case STATE_LOAD:
         {
-            CGameSound::PlayBGM(CStageInfo::GetBgmNo(CGameData::PlayParam().GetStage()));
+            STAGEID::VALUE stageId = CGameData::PlayParam().GetStage();
+            int32 bgmCode = CStageInfo::GetBgmNo(stageId);
+
+            CGameSound::PlayBGM(bgmCode);
+
             ChangeState(STATE_INTRO);
         }
         break;
 
     case STATE_INTRO:
-        {
-            ChangeState(STATE_PLAY);
-        }
+        ChangeState(STATE_PLAY);
         break;
 
     case STATE_PLAY:
-        {
-            ChangeState(STATE_END);
-        }
+        ChangeState(STATE_END);
+        break;
+
+    default:
         break;
     };
 };

@@ -12,6 +12,8 @@ namespace GAMEOBJECTTYPE
         CHARACTER,
         ENEMY,
         EFFECT,
-        SHOT,        
+        SHOT,
+
+        MAX,
     };
 };

@@ -16,8 +16,7 @@ CPlayerStateMachine::CPlayerStateMachine(CPlayerCharacter* pPlayerChr, int32 nNu
     ASSERT(m_iStatusMax > 0);
 
     m_apStatus = new CStatus*[m_iStatusMax];
-    ASSERT(m_apStatus);
-
+    
 	for (int32 i = 0; i < m_iStatusMax; ++i)
 		m_apStatus[i] = nullptr;
 };
@@ -56,7 +55,8 @@ void CPlayerStateMachine::Run(void)
 void CPlayerStateMachine::RegistStatus(PLAYERTYPES::STATUS status, CStatus* pStatus)
 {
     ASSERT(pStatus);
-    ASSERT(status >= 0 && status < m_iStatusMax);
+    ASSERT(status >= 0);
+    ASSERT(status < m_iStatusMax);
 
     if (m_apStatus[status])
     {
@@ -66,8 +66,8 @@ void CPlayerStateMachine::RegistStatus(PLAYERTYPES::STATUS status, CStatus* pSta
 
     m_apStatus[status] = pStatus;
     m_apStatus[status]->m_pStateMachine = this;
-    m_apStatus[status]->m_pPlayerChr = m_pPlayerChr;
-    m_apStatus[status]->m_status = status;
+    m_apStatus[status]->m_pPlayerChr    = m_pPlayerChr;
+    m_apStatus[status]->m_status        = status;
 };
 
 
@@ -84,11 +84,12 @@ void CPlayerStateMachine::ChangeStatus(PLAYERTYPES::STATUS status)
 
     if (m_apStatus[status])
     {
-        m_fElapsedTimeOfStatus = 0.0f;
         m_pCurrentStatus = m_apStatus[status];
-        m_statusBefore = m_statusNow;
-        m_statusNow = m_pCurrentStatus->m_status;
+        m_statusNow      = m_pCurrentStatus->m_status;
+
         m_pCurrentStatus->OnAttach();
+
+        m_fElapsedTimeOfStatus = 0.0f;
     };
 };
 
@@ -107,13 +108,15 @@ PLAYERTYPES::STATUS CPlayerStateMachine::PrevStatus(void) const
 
 bool CPlayerStateMachine::IsEnableChangeStatus(PLAYERTYPES::STATUS status) const
 {
-    ASSERT(status >= 0 && status < m_iStatusMax);
+    ASSERT(status >= 0);
+    ASSERT(status < m_iStatusMax);
 
     if (!m_pCurrentStatus)
         return true;
 
     CStatus* pAfterStatus = m_apStatus[status];
     ASSERT(pAfterStatus);
+    
     return pAfterStatus->IsEnableChangeStatus(m_pCurrentStatus->m_status);
 };
 

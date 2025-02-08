@@ -19,16 +19,29 @@
 #include "Game/System/Sound/MessageManager.hpp"
 
 
+#define RIDE_RACE_FINISH_DISTANCE   (2500.0f)
+#define RIDE_RACE_FINISH_TIME_SEC   (170.0f)
+
+
 static float s_fMoveLimitZBack      = 0.0f;
 static float s_fMoveLimitZFront     = 0.0f;
 static float s_fMoveLimitXBack      = -6.0f;
 static float s_fMoveLimitXFront     = 6.0f;
-static float s_fMoveLimitYBottom    = -15.5f;
+static float s_fMoveLimitYBottom    = -15.0f;
 static float s_fMoveLimitYTop       = 4.5f;
+
 
 
 class CRideStageMessage
 {
+private:
+    enum STEP
+    {
+        STEP_MSG_RACE_START = 0,
+        STEP_MSG_RACE_END,
+        STEP_RACE_OVER,
+    };
+
 public:
     CRideStageMessage(void);
     void Period(void);
@@ -63,8 +76,13 @@ private:
 };
 
 
+//
+// *********************************************************************************
+//
+
+
 CRideStageMessage::CRideStageMessage(void)
-: m_step(0)
+: m_step(STEP_MSG_RACE_START)
 {
     ;
 };
@@ -74,27 +92,35 @@ void CRideStageMessage::Period(void)
 {
     switch (m_step)
     {
-    case 0:
+    case STEP_MSG_RACE_START:
         {
             if (CRideStage::GetTime() > 1.0f)
             {
-                ++m_step;
+                m_step = STEP_MSG_RACE_END;
                 CMessageManager::Request(CRideStage::m_bSpace ? SEGROUPID::VALUE(160) : SEGROUPID::VALUE(159));
             };
         }
         break;
 
-    case 1:
+    case STEP_MSG_RACE_END:
         {
             if (CRideStage::GetTime() > 166.0f)
             {
-                ++m_step;
+                m_step = STEP_RACE_OVER;
                 CMessageManager::Request(SEGROUPID::VALUE(158));
             };
         }
         break;
+
+    default:
+        break;
     };
 };
+
+
+//
+// *********************************************************************************
+//
 
 
 CRideStageContainer::CRideStageContainer(void)
@@ -123,6 +149,7 @@ void CRideStageContainer::Period(void)
     {
         CGameStage* pStage = CGameStage::GetCurrent();
         ASSERT(pStage);
+
         pStage->NotifyGameClear(CGamePlayResult::CLEARSUB_A);
     };
 };
@@ -137,8 +164,9 @@ void CRideStageContainer::Draw(void)
 void CRideStageContainer::MoveBasisPoint(void)
 {
     float dt = CGameProperty::GetElapsedTime();
-    
-    m_vBasisVector.z = 14.722222f;
+
+    const float fSpeed = (RIDE_RACE_FINISH_DISTANCE / RIDE_RACE_FINISH_TIME_SEC);
+    m_vBasisVector.z = fSpeed;
 
     m_vBasisPoint.x += (m_vBasisVector.x * dt);
     m_vBasisPoint.y += (m_vBasisVector.y * dt);
@@ -159,6 +187,7 @@ void CRideStageContainer::InitBasisPoint(void)
 {
     int32 nPathID = CCameraDataManager::GetPathIDFromName("p0_t");
     ASSERT(nPathID != -1);
+
     CCameraDataManager::GetSplinePos(&m_vBasisPoint, nPathID, 0.0f);
 };
 
@@ -167,10 +196,13 @@ bool CRideStageContainer::IsEnd(void) const
 {
     float fExtend = 0.0f;
 
-    if (CGameData::PlayParam().GetArea() == AREAID::ID_AREA38)
+    STAGEID::VALUE stageId = CGameData::PlayParam().GetStage();
+    if (stageId == STAGEID::ID_ST32R)
         fExtend = 20.0f;
 
-    return (CRideStage::GetMoveLimitZMin() > (fExtend + 2500.0f));
+    float fRaceDistMax = (fExtend + RIDE_RACE_FINISH_DISTANCE);
+
+    return (CRideStage::GetMoveLimitZMin() > fRaceDistMax);
 };
 
 
@@ -216,9 +248,7 @@ static inline CRideStageContainer& RideStageContainer(void)
 /*static*/ void CRideStage::Initialize(void)
 {
     if (!s_pRideStageContainer)
-    {
         s_pRideStageContainer = new CRideStageContainer;
-    };
 
 	SetMoveLimit();
     CRideFlagGimmick::Initialize();
@@ -306,6 +336,7 @@ static inline CRideStageContainer& RideStageContainer(void)
     
     CGameObject* pObject = pHitCatchData->GetObject();
     ASSERT(pObject);
+
     CGameObjectManager::SendMessage(pObject, RIDETYPES::MESSAGEID_SCORE_INC, (void*)scorekind);
 };
 
@@ -315,7 +346,7 @@ static inline CRideStageContainer& RideStageContainer(void)
     CGameObject* pObject = pHitAttackData->GetObject();
     if (pObject->GetType() == GAMEOBJECTTYPE::SHOT)
     {
-        CShot* pShot = (CShot*)pObject;
+        CShot* pShot = static_cast<CShot*>(pObject);
         
         CGameObject* pParent = CGameObjectManager::GetObject(pShot->GetParentHandle());
         if (pParent)
@@ -360,7 +391,7 @@ static inline CRideStageContainer& RideStageContainer(void)
     GetBasisPoint(&vBasisPoint);
 
     s_fMoveLimitZFront = vBasisPoint.z - 2.0f;
-    s_fMoveLimitZBack = vBasisPoint.z - 8.0f;
+    s_fMoveLimitZBack  = vBasisPoint.z - 8.0f;
 };
 
 

@@ -75,7 +75,7 @@ void CToGimmickMessageModule::Run(void)
 
     if (pGroundInfo->m_bHit)
     {
-        if (!FLAG_TEST(pGroundInfo->m_attribute, MAPTYPES::ATTRIBUTE_DEATH))
+        if (!(pGroundInfo->m_attribute & MAPTYPES::ATTRIBUTE_DEATH))
         {
             RwV3d vPosition = Math::VECTOR3_ZERO;
             
@@ -205,19 +205,18 @@ void CPowerfullCharacterToGimmickMessageModule::Run(void)
     const CPlayerCharacter::COLLISIONWALLINFO* pWallInfo = m_pPlayerCharacter->GetCollisionWall();
     ASSERT(pWallInfo);
 
-    if ((!pWallInfo->m_bHit || pWallInfo->m_hittype != MAPTYPES::HITTYPE_GIMMICK || !m_pPlayerCharacter->IsPlayerFlagSet(PLAYERTYPES::FLAG_PUSH)) &&
-        m_pPlayerCharacter->GetStatus() == PLAYERTYPES::STATUS_PUSH)
+    if (!pWallInfo->m_bHit || (pWallInfo->m_hittype != MAPTYPES::HITTYPE_GIMMICK) || !m_pPlayerCharacter->TestPlayerFlag(PLAYERTYPES::FLAG_PUSH))
     {
-        m_pPlayerCharacter->ChangeStatus(PLAYERTYPES::STATUS_IDLE);
+        if (m_pPlayerCharacter->GetStatus() == PLAYERTYPES::STATUS_PUSH)
+            m_pPlayerCharacter->ChangeStatus(PLAYERTYPES::STATUS_IDLE);
     };
 
-    if (pWallInfo->m_bHit &&
-        pWallInfo->m_hittype == MAPTYPES::HITTYPE_GIMMICK &&
-        pWallInfo->m_gimmickinfo.m_type == MAPTYPES::GIMMICKTYPE_PUSHOBJ &&
-        DirectionCheck() &&
-        m_pPlayerCharacter->IsPlayerFlagSet(PLAYERTYPES::FLAG_PUSH))
+    if ((pWallInfo->m_bHit) &&
+        (pWallInfo->m_hittype == MAPTYPES::HITTYPE_GIMMICK) &&
+        (pWallInfo->m_gimmickinfo.m_type == MAPTYPES::GIMMICKTYPE_PUSHOBJ))
     {
-        m_pPlayerCharacter->ChangeStatus(PLAYERTYPES::STATUS_PUSH);
+        if (DirectionCheck() && m_pPlayerCharacter->TestPlayerFlag(PLAYERTYPES::FLAG_PUSH))
+            m_pPlayerCharacter->ChangeStatus(PLAYERTYPES::STATUS_PUSH);
     };
 
     CToGimmickMessageModule::Run();
@@ -242,13 +241,13 @@ void CConsoleCharacterToGimmickMessageModule::Run(void)
     const CPlayerCharacter::COLLISIONWALLINFO* pWallInfo = m_pPlayerCharacter->GetCollisionWall();
     ASSERT(pWallInfo);
 
-    if (pWallInfo->m_hittype == MAPTYPES::HITTYPE_GIMMICK &&
-        pWallInfo->m_gimmickinfo.m_type == MAPTYPES::GIMMICKTYPE_CONSOLE &&
+    if ((pWallInfo->m_hittype == MAPTYPES::HITTYPE_GIMMICK) &&
+        (pWallInfo->m_gimmickinfo.m_type == MAPTYPES::GIMMICKTYPE_CONSOLE) &&
         DirectionCheck() &&
-        DistanceCheck() &&
-        m_pPlayerCharacter->IsPlayerFlagSet(PLAYERTYPES::FLAG_CONSOLE))        
+        DistanceCheck())        
     {
-        m_pPlayerCharacter->ChangeStatus(PLAYERTYPES::STATUS_CONSOLE);
+        if (m_pPlayerCharacter->TestPlayerFlag(PLAYERTYPES::FLAG_CONSOLE))
+            m_pPlayerCharacter->ChangeStatus(PLAYERTYPES::STATUS_CONSOLE);
     };
 
     CToGimmickMessageModule::Run();

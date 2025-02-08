@@ -20,10 +20,24 @@ public:
     virtual void SetRemainTime(float fTime);
     virtual float GetRemainTime(void) const;
     
+protected:
+    PLAYERTYPES::ATTRIBUTE  m_attribute;
+    CPlayerCharacter*       m_pPlayerChr;
+    float                   m_fElapsedTime;
+    float                   m_fEndTime;
+    bool                    m_bEnable;
+};
+
+
+class CConfusionAttributeControlModule : public CPlayerAttributeControlModule
+{
 private:
-    PLAYERTYPES::ATTRIBUTE m_attribute;
-    CPlayerCharacter* m_pPlayerChr;
-    float m_fElapsedTime;
-    float m_fEndTime;
-    bool m_bEnable;
+    static const RwRGBA CONFUSION_COLOR;
+
+public:
+    CConfusionAttributeControlModule(MODULETYPE::VALUE type, CPlayerCharacter* pPlayerChr);
+    virtual ~CConfusionAttributeControlModule(void) {};
+    virtual void Run(void) override;
+    virtual void Enable(float fEndTime) override;
+    virtual void Disable(void) override;
 };

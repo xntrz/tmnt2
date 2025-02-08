@@ -76,6 +76,11 @@ public:
 };
 
 
+//
+// *********************************************************************************
+//
+
+
 RpAtomic* CCalcBoundingSphereFunctor::operator()(RpAtomic* pAtomic)
 {
     RwSphere* pSphere = RpAtomicGetBoundingSphereMacro(pAtomic);
@@ -88,31 +93,36 @@ RpAtomic* CCalcBoundingSphereFunctor::operator()(RpAtomic* pAtomic)
         return pAtomic;
     };
 
-    RwV3d vTemp = Math::VECTOR3_ZERO;
     RwSphere shBase;
     RwSphere shChild;
 
     if (m_bsphere.radius <= pSphere->radius)
     {
-        shBase = *pSphere;
+        shBase  = *pSphere;
         shChild = m_bsphere;
     }
     else
     {
-        shBase = m_bsphere;
+        shBase  = m_bsphere;
         shChild = *pSphere;
     };
 
-    Math::Vec3_Sub(&vTemp, &shBase.center, &shChild.center);
-    
-    float fToChildRadius = Math::Vec3_Length(&vTemp);
-    if (fToChildRadius > shChild.radius)
-        shChild.radius = fToChildRadius;
+    RwV3d vTemp = Math::VECTOR3_ZERO;
+    Math::Vec3_Sub(&vTemp, &shChild.center, &shBase.center);
 
-    m_bsphere = shChild;
+    float fToChildRadius = (shChild.radius + Math::Vec3_Length(&vTemp));
+    if (fToChildRadius > shBase.radius)
+        shBase.radius = fToChildRadius;
+
+    m_bsphere = shBase;
 
     return pAtomic;
 };
+
+
+//
+// *********************************************************************************
+//
 
 
 RpAtomic* CGetAtomicFromIndexFunctor::operator()(RpAtomic* pAtomic)
@@ -124,9 +134,16 @@ RpAtomic* CGetAtomicFromIndexFunctor::operator()(RpAtomic* pAtomic)
 };
 
 
+//
+// *********************************************************************************
+//
+
+
 RpAtomic* CGetRootAtomicFunctor::operator()(RpAtomic* pAtomic)
 {
-    if (!RwFrameGetRoot(RpAtomicGetFrame(pAtomic)))
+    RwFrame* pFrame = RpAtomicGetFrameMacro(pAtomic);
+
+    if (!RwFrameGetRoot(pFrame))
         return pAtomic;
 
     m_pRootAtomic = pAtomic;
@@ -134,51 +151,68 @@ RpAtomic* CGetRootAtomicFunctor::operator()(RpAtomic* pAtomic)
 };
 
 
+//
+// *********************************************************************************
+//
+
+
 RpAtomic* CInitializeAtomicFunctor::operator()(RpAtomic* pAtomic)
 {
-    RpGeometry* pGeometry = RpAtomicGetGeometry(pAtomic);
-    
+    RpGeometry* pGeometry = RpAtomicGetGeometry(pAtomic);    
     ASSERT(pGeometry);
 
-	uint32 uGeoFlags = RpGeometryGetFlags(pGeometry);
-	FLAG_SET(uGeoFlags, rpGEOMETRYMODULATEMATERIALCOLOR);
-	RpGeometrySetFlags(pGeometry, uGeoFlags);
+    RwUInt32 geometryFlags = RpGeometryGetFlagsMacro(pGeometry);
+    geometryFlags |= rpGEOMETRYMODULATEMATERIALCOLOR;
+    RpGeometrySetFlagsMacro(pGeometry, geometryFlags);    
     
     return pAtomic;
 };
+
+
+//
+// *********************************************************************************
+//
 
 
 RpAtomic* CReplaceHierarchyFunctor::operator()(RpAtomic* pAtomic)
 {
     if (RpSkinAtomicGetSkin(pAtomic))
         RpSkinAtomicSetHAnimHierarchy(pAtomic, m_pHierarchy);
-    //if(RpSkinAtomicGetHAnimHierarchy(pAtomic))
-        
+
     return pAtomic;
 };
+
+
+//
+// *********************************************************************************
+//
 
 
 RpAtomic* CSetLightingEnableFunctor::operator()(RpAtomic* pAtomic)
 {
     RpGeometry* pGeometry = RpAtomicGetGeometryMacro(pAtomic);
-
     ASSERT(pGeometry);
-
-    uint32 GeometryFlags = RpGeometryGetFlags(pGeometry);
+    
+    RwUInt32 geometryFlags = RpGeometryGetFlagsMacro(pGeometry);
 	if (m_bEnable)
-	{
-        FLAG_CLEAR(GeometryFlags, rpGEOMETRYPRELIT);
-        FLAG_SET(GeometryFlags, rpGEOMETRYLIGHT);
+    {
+        geometryFlags &= (~rpGEOMETRYPRELIT);
+        geometryFlags |= rpGEOMETRYLIGHT;
 	}
 	else
-	{
-        FLAG_SET(GeometryFlags, rpGEOMETRYPRELIT);
-        FLAG_CLEAR(GeometryFlags, rpGEOMETRYLIGHT);
-	};
-    RpGeometrySetFlags(pGeometry, GeometryFlags);
+    {
+        geometryFlags &= (~rpGEOMETRYLIGHT);
+        geometryFlags |= rpGEOMETRYPRELIT;
+    };
+    RpGeometrySetFlagsMacro(pGeometry, geometryFlags);
 
     return pAtomic;
 };
+
+
+//
+// *********************************************************************************
+//
 
 
 RpMaterial* CReplaceMaterialColorFunctor::operator()(RpMaterial* pMaterial)
@@ -189,12 +223,22 @@ RpMaterial* CReplaceMaterialColorFunctor::operator()(RpMaterial* pMaterial)
 };
 
 
+//
+// *********************************************************************************
+//
+
+
 RwFrame* CGetHierarchyFunctor::operator()(RwFrame* pFrame)
 {
     m_pHierarchy = RpHAnimFrameGetHierarchy(pFrame);
 
     return (m_pHierarchy ? nullptr : pFrame);
 };
+
+
+//
+// *********************************************************************************
+//
 
 
 CModel::CModel(const char* pszName, RpClump* pClump)
@@ -215,7 +259,8 @@ CModel::CModel(const char* pszName, RpClump* pClump)
     ASSERT(m_pszName);
     ASSERT(m_pClump);
 
-    RwFrameUpdateObjects(RpClumpGetFrame(m_pClump));
+    RwFrame* pFrame = RpClumpGetFrameMacro(m_pClump);
+    RwFrameUpdateObjects(pFrame);
     
     InitializeAtomic();
     CalcBoundingSphere();
@@ -223,9 +268,10 @@ CModel::CModel(const char* pszName, RpClump* pClump)
     m_pHierarchyOriginal = GetHierarchyFromClump();
     if (m_pHierarchyOriginal)
     {
-        uint32 uFlags = RpHAnimHierarchyGetFlagsMacro(m_pHierarchyOriginal);
-        FLAG_SET(uFlags, rpHANIMHIERARCHYUPDATEMODELLINGMATRICES | rpHANIMHIERARCHYUPDATELTMS);
-        RpHAnimHierarchySetFlagsMacro(m_pHierarchyOriginal, uFlags);        
+        RwInt32 hierarchyFlags = RpHAnimHierarchyGetFlagsMacro(m_pHierarchyOriginal);
+        hierarchyFlags |= rpHANIMHIERARCHYUPDATEMODELLINGMATRICES;
+        hierarchyFlags |= rpHANIMHIERARCHYUPDATELTMS;
+        RpHAnimHierarchySetFlagsMacro(m_pHierarchyOriginal, hierarchyFlags);
 
         ReplaceHierarchyForClump(m_pHierarchyOriginal);
     };
@@ -253,22 +299,26 @@ CModel::~CModel(void)
 
 void CModel::Draw(void)
 {
-    if (m_bDrawEnable)
-    {
-        if (m_bClippingEnable)
-        {
-            RwSphere BoundingSphere;            
-            CalcCurrentBoundingSphere(&BoundingSphere);
-            if (!RwCameraFrustumTestSphere(CCamera::CameraCurrent(), &BoundingSphere))
-                return;
-        };
+    if (!m_bDrawEnable)
+        return;
 
-        CRenderStateManager::BeginBlock(CRenderStateManager::BLOCK_MODEL);
-        UpdateFrame();
-        ReplaceMaterialColor(m_MaterialColor);
-        RpClumpRender(m_pClump);
-        CRenderStateManager::EndBlock();
+    if (m_bClippingEnable)
+    {
+        RwSphere BoundingSphere;
+        CalcCurrentBoundingSphere(&BoundingSphere);
+
+        if (!RwCameraFrustumTestSphere(CCamera::CameraCurrent(), &BoundingSphere))
+            return;
     };
+
+    CRenderStateManager::BeginBlock(CRenderStateManager::BLOCK_MODEL);
+
+    UpdateFrame();
+    ReplaceMaterialColor(m_MaterialColor);
+
+    RpClumpRender(m_pClump);
+
+    CRenderStateManager::EndBlock();
 };
 
 
@@ -280,12 +330,13 @@ CModelManager::MODELTYPE CModel::GetType(void) const
 
 void CModel::CalcCurrentBoundingSphere(RwSphere* pBoundingSphere) const
 {
-    if (pBoundingSphere)
-    {
-        *pBoundingSphere = m_BSphere;        
-        Math::Vec3_Add(&pBoundingSphere->center, &pBoundingSphere->center, &m_vPosition);
-        Math::Vec3_Add(&pBoundingSphere->center, &pBoundingSphere->center, &m_vBSphereOffset);
-    };
+    if (!pBoundingSphere)
+        return;
+    
+    *pBoundingSphere = m_BSphere;
+
+    Math::Vec3_Add(&pBoundingSphere->center, &pBoundingSphere->center, &m_vPosition);
+    Math::Vec3_Add(&pBoundingSphere->center, &pBoundingSphere->center, &m_vBSphereOffset);
 };
 
 
@@ -299,7 +350,8 @@ RwMatrix* CModel::GetBoneMatrix(int32 index)
         {
             RwMatrix* pMatrixArray = RpHAnimHierarchyGetMatrixArray(m_pHierarchyCurrent);
             
-            ASSERT(index >= 0 && index < GetBoneNum());            
+            ASSERT(index >= 0);
+            ASSERT(index < GetBoneNum());
             ASSERT(pMatrixArray);
             
             pResult = &pMatrixArray[index];
@@ -307,10 +359,10 @@ RwMatrix* CModel::GetBoneMatrix(int32 index)
     }
     else
     {
-        RwFrame* pFrame = RpClumpGetFrame(m_pClump);
+        RwFrame* pFrame = RpClumpGetFrameMacro(m_pClump);
         ASSERT(pFrame);
 
-        pResult = RwFrameGetMatrix(pFrame);
+        pResult = RwFrameGetMatrixMacro(pFrame);
         ASSERT(pResult);
     };
 
@@ -327,7 +379,6 @@ RwMatrix* CModel::GetBoneMatrixFromID(int32 id)
         if (m_pHierarchyCurrent)
         {
             int32 index = RpHAnimIDGetIndex(m_pHierarchyCurrent, id);
-            
             ASSERT(index >= 0);
 	
             pResult = GetBoneMatrix(index);            
@@ -335,10 +386,10 @@ RwMatrix* CModel::GetBoneMatrixFromID(int32 id)
     }
     else
     {
-        RwFrame* pFrame = RpClumpGetFrame(m_pClump);
+        RwFrame* pFrame = RpClumpGetFrameMacro(m_pClump);
         ASSERT(pFrame);
 
-        pResult = RwFrameGetMatrix(pFrame);
+        pResult = RwFrameGetMatrixMacro(pFrame);
         ASSERT(pResult);
     };
 
@@ -351,8 +402,8 @@ RwV3d* CModel::GetBonePositionFromID(int32 id)
     RwMatrix* pMatrix = GetBoneMatrixFromID(id);
     if (pMatrix)
         return &pMatrix->pos;
-    else
-        return nullptr;
+    
+    return nullptr;
 };
 
 
@@ -390,16 +441,15 @@ void CModel::SetBoneMatrixInit(bool bSet)
 
 void CModel::SetPartsDrawEnable(int32 index, bool bEnable)
 {
-    RpAtomic* pAtomic = GetAtomicFromIndex(index);
-    
+    RpAtomic* pAtomic = GetAtomicFromIndex(index);    
     ASSERT(pAtomic);
 
-    uint32 AtomicFlags = RpAtomicGetFlags(pAtomic);
+    RwUInt8 atomicFlags = RpAtomicGetFlagsMacro(pAtomic);
     if (bEnable)
-        FLAG_SET(AtomicFlags, rpATOMICRENDER);
+        atomicFlags |= rpATOMICRENDER;
     else
-        FLAG_CLEAR(AtomicFlags, rpATOMICRENDER);
-    RpAtomicSetFlags(pAtomic, AtomicFlags);
+        atomicFlags &= (~rpATOMICRENDER);
+    RpAtomicSetFlagsMacro(pAtomic, atomicFlags);
 };
 
 
@@ -487,10 +537,13 @@ void CModel::UpdateFrame(RpClump* pClump)
 {
     ASSERT(pClump);
 
-    RwMatrix matrix;
-    
+    RwMatrix matrix;    
     Math::Matrix_AffineTransformation(&matrix, nullptr, &m_vRotation, &m_vPosition);
-    RwFrameTransform(RpClumpGetFrame(pClump), &matrix, rwCOMBINEREPLACE);
+
+    RwFrame* pFrame = RpClumpGetFrameMacro(pClump);
+    ASSERT(pFrame);
+
+    RwFrameTransform(pFrame, &matrix, rwCOMBINEREPLACE);
 };
 
 
@@ -523,8 +576,11 @@ void CModel::ForAllChildrenFrameCallback(IFrameCallbackFunctor* pFunctor)
 {
     ASSERT(pFunctor);
     ASSERT(m_pClump);
+
+    RwFrame* pFrame = RpClumpGetFrameMacro(m_pClump);
+    ASSERT(pFrame);
     
-    RwFrameForAllChildren(RpClumpGetFrame(m_pClump), CallbackFrame, pFunctor);
+    RwFrameForAllChildren(pFrame, CallbackFrame, pFunctor);
 };
 
 
@@ -548,8 +604,7 @@ void CModel::ForAllMaterialCallback(IMaterialCallbackFunctor* pFunctor)
 
 /*static*/ RwFrame* CModel::CallbackFrame(RwFrame* frame, void* data)
 {
-    IFrameCallbackFunctor* pFunctor = (IFrameCallbackFunctor*)data;
-
+    IFrameCallbackFunctor* pFunctor = static_cast<IFrameCallbackFunctor*>(data);
     ASSERT(pFunctor);
 
     return (*pFunctor)(frame);
@@ -558,8 +613,7 @@ void CModel::ForAllMaterialCallback(IMaterialCallbackFunctor* pFunctor)
 
 /*static*/ RpMaterial* CModel::CallbackMaterial(RpMaterial* material, void* data)
 {
-    IMaterialCallbackFunctor* pFunctor = (IMaterialCallbackFunctor*)data;
-
+    IMaterialCallbackFunctor* pFunctor = static_cast<IMaterialCallbackFunctor*>(data);
     ASSERT(pFunctor);
 
     return (*pFunctor)(material);
@@ -568,8 +622,7 @@ void CModel::ForAllMaterialCallback(IMaterialCallbackFunctor* pFunctor)
 
 /*static*/ RpAtomic* CModel::CallbackAtomic(RpAtomic* atomic, void* data)
 {
-    IAtomicCallbackFunctor* pFunctor = (IAtomicCallbackFunctor*)data;
-
+    IAtomicCallbackFunctor* pFunctor = static_cast<IAtomicCallbackFunctor*>(data);
     ASSERT(pFunctor);
 
     return (*pFunctor)(atomic);

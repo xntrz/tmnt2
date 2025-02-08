@@ -14,7 +14,7 @@ public:
         uint32 m_uCrystalGreenFlag;
         uint32 m_uCrystalWhiteFlag;
         uint32 m_uCrystalOrangeFlag;
-        int32 m_iComebackNum;
+        int32  m_iComebackNum;
         uint32 m_uItemTakenFlag;
     };
 

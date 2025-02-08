@@ -3,12 +3,10 @@
 
 namespace Intersection
 {
-    float GetSphereDistanceSQ(
-        const RwV3d*    pPosP,
-        float           fRadiusP,
-        const RwV3d*    pPosQ,
-        float           fRadiusQ
-    )
+    float GetSphereDistanceSQ(const RwV3d* pPosP,
+                              float fRadiusP,
+                              const RwV3d* pPosQ,
+                              float fRadiusQ)
     {
         ASSERT(pPosP);
         ASSERT(fRadiusP >= 0.0f);
@@ -22,12 +20,10 @@ namespace Intersection
     };
 
 
-    bool SphereAndSphere(
-        const RwV3d*    pPosP,
-        float           fRadiusP,
-        const RwV3d*    pPosQ,
-        float           fRadiusQ
-    )
+    bool SphereAndSphere(const RwV3d* pPosP,
+                         float fRadiusP,
+                         const RwV3d* pPosQ,
+                         float fRadiusQ)
     {
         ASSERT(pPosQ);
         ASSERT(fRadiusP >= 0.0f);
@@ -36,22 +32,25 @@ namespace Intersection
 
         float fRadiusSQ = fRadiusP + fRadiusQ;
 
-        RwV3d vDist = Math::VECTOR3_ZERO;
-        Math::Vec3_Sub(&vDist, pPosP, pPosQ);
-        Math::Vec3_Abs(&vDist, &vDist);
+        float dx = std::fabs(pPosP->x - pPosQ->x);
+        float dy = std::fabs(pPosP->y - pPosQ->y);
+        float dz = std::fabs(pPosP->z - pPosQ->z);
 
-        return (GetSphereDistanceSQ(pPosP, fRadiusP, pPosQ, fRadiusQ) <= 0.0f);    
+        if ((fRadiusSQ < dx) ||
+            (fRadiusSQ < dy) ||
+            (fRadiusSQ < dz))
+            return false;
+        
+        return (GetSphereDistanceSQ(pPosP, fRadiusP, pPosQ, fRadiusQ) <= 0.0f);
     };
 
 
-    bool SphereAndSphereGetAwayVelocity(
-        const RwV3d*    pPosP,
-        float           fRadiusP,
-        const RwV3d*    pPosQ,
-        float           fRadiusQ,
-        RwV3d*          pOutAwayVelocityP,
-        RwV3d*          pOutAwayVelocityQ
-    )
+    bool SphereAndSphereGetAwayVelocity(const RwV3d*    pPosP,
+                                        float fRadiusP,
+                                        const RwV3d* pPosQ,
+                                        float  fRadiusQ,
+                                        RwV3d* pOutAwayVelocityP /*= nullptr*/,
+                                        RwV3d* pOutAwayVelocityQ /*= nullptr*/)
     {
         ASSERT(pPosQ);
         ASSERT(fRadiusP >= 0.0f);
@@ -60,56 +59,51 @@ namespace Intersection
 
         RwV3d vDist = Math::VECTOR3_ZERO;
         Math::Vec3_Sub(&vDist, pPosQ, pPosP);
+
         float fDistSQ = Math::Vec3_Dot(&vDist, &vDist);
 
         if (((fRadiusP + fRadiusQ) * (fRadiusP + fRadiusQ)) < fDistSQ)
             return false;
 
-        if (fDistSQ > 0.0f)
+        if (fDistSQ > FLT_EPSILON)
         {
             float fDistRoot = Math::Sqrt(fDistSQ);
             
             if (pOutAwayVelocityP)
             {
-                Math::Vec3_Scale(
-                    pOutAwayVelocityP,
-                    &vDist,
-                    ((fRadiusP + fRadiusQ) - fDistRoot) * -1.0f / (fDistRoot + fDistRoot)
-                );
+                Math::Vec3_Scale(pOutAwayVelocityP,
+                                 &vDist,
+                                 ((fRadiusP + fRadiusQ) - fDistRoot) * -1.0f / (fDistRoot + fDistRoot));
             };
 
             if (pOutAwayVelocityQ)
             {
-                Math::Vec3_Scale(
-                    pOutAwayVelocityQ,
-                    pOutAwayVelocityP,
-                    -1.0f
-                );
+                Math::Vec3_Scale(pOutAwayVelocityQ,
+                                 pOutAwayVelocityP,
+                                 -1.0f);
             };
         }
         else
         {
             if (pOutAwayVelocityP)
-                *pOutAwayVelocityP = { 0.0f, 0.0f, (fRadiusQ * 0.5f) };
+                *pOutAwayVelocityP = { 0.0f, 0.0f, (fRadiusQ *  0.5f) };
 
             if (pOutAwayVelocityQ)
-                *pOutAwayVelocityQ = { 0.0f, 0.0f, (fRadiusP * 0.5f) };
+                *pOutAwayVelocityQ = { 0.0f, 0.0f, (fRadiusP * -0.5f) };
         };
 
         return true;
     };
 
 
-    bool MoveSphereAndMoveSphereVelocity(
-        const RwV3d*    pStartPosP,
-        const RwV3d*    pVelocityP,
-        float           fRadiusP,
-        const RwV3d*    pStartPosQ,
-        const RwV3d*    pVelocityQ,
-        float           fRadiusQ,
-        RwV3d*          pOutIntersectVelocityP,
-        RwV3d*          pOutIntersectVelocityQ
-    )
+    bool MoveSphereAndMoveSphereVelocity(const RwV3d* pStartPosP,
+                                         const RwV3d* pVelocityP,
+                                         float fRadiusP,
+                                         const RwV3d* pStartPosQ,
+                                         const RwV3d* pVelocityQ,
+                                         float fRadiusQ,
+                                         RwV3d* pOutIntersectVelocityP /*= nullptr*/,
+                                         RwV3d* pOutIntersectVelocityQ /*= nullptr*/)
     {
         ASSERT(pStartPosP);
         ASSERT(pVelocityP);
@@ -121,15 +115,14 @@ namespace Intersection
         RwV3d vRV = Math::VECTOR3_ZERO;
         Math::Vec3_Sub(&vRV, pVelocityP, pVelocityQ);
 
-        float fD = Math::Vec3_Dot(&vRV, &vRV);
-        
-        if (Math::FEqual(fD, 0.0f))
+        float fD = Math::Vec3_Dot(&vRV, &vRV);        
+        if (fD == 0.0f)
             return false;
 
         RwV3d vD = Math::VECTOR3_ZERO;
         Math::Vec3_Sub(&vD, pStartPosP, pStartPosQ);
-        
-        float fRoot = (Math::Vec3_Dot(&vRV, &vD) * 2.0f) - (Math::Vec3_Dot(&vD, &vD) - ((fRadiusP + fRadiusQ) * (fRadiusQ + fRadiusP))) * fD;
+
+        float fRoot = (Math::Vec3_Dot(&vRV, &vD) * Math::Vec3_Dot(&vRV, &vD)) - (Math::Vec3_Dot(&vD, &vD) - ((fRadiusP + fRadiusQ) * (fRadiusQ + fRadiusP))) * fD;
         if (fRoot < 0.0f)
             return false;
 
@@ -147,11 +140,9 @@ namespace Intersection
     };
 
 
-    bool LineAndSphere(
-        RwLine*         pLine,
-        RwSphere*       pSphere,
-        float*          pfCenterDist
-    )
+    bool LineAndSphere(RwLine* pLine,
+                       RwSphere* pSphere,
+                       float* pfCenterDist /*= nullptr*/)
     {
         ASSERT(pLine);
         ASSERT(pSphere);
@@ -172,7 +163,7 @@ namespace Intersection
         float vl0 = Math::Vec3_Dot(&v0, &vLength);
 
         float fResult = 0.0f;
-        if (vl0 < 0.0f || Math::FEqual(fLengthSQ, 0.0f))
+        if ((vl0 < 0.0f) || (fLengthSQ == 0.0f))
         {
             fResult = v0SQ;
         }
@@ -190,7 +181,7 @@ namespace Intersection
 
         if (pfCenterDist)
         {
-            if (Math::FEqual(fLengthSQ, 0.0f))
+            if (fLengthSQ == 0.0f)
                 *pfCenterDist = 0.0f;
             else
                 *pfCenterDist = vl0 / fLengthSQ;
@@ -235,12 +226,15 @@ namespace Intersection
     {
         ASSERT(pLine);
         
-        return (Math::FEqual(pLine->start.x, pLine->end.x) &&
-                Math::FEqual(pLine->start.z, pLine->end.z));
+        return ((pLine->start.x == pLine->end.x) &&
+                (pLine->start.z == pLine->end.z));
     };
 
 
-    void FindNearestPointOnLine(RwV3d* pPtResult, const RwV3d* pPt, const RwV3d* pPtStart, const RwV3d* pPtEnd)
+    void FindNearestPointOnLine(RwV3d* pPtResult,
+                                const RwV3d* pPt,
+                                const RwV3d* pPtStart,
+                                const RwV3d* pPtEnd)
     {
         RwV3d vTemp = Math::VECTOR3_ZERO;
 

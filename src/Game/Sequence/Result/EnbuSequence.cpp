@@ -138,8 +138,8 @@ void CEnbuSequence::OnMove(bool bRet, const void* pReturnValue)
             {
                 RwBBox bbox =
                 {
-                    { 100.0f,  100.0f,  100.0f  },
-                    { -100.0f, -100.0f, -100.0f },
+                    {  100.0f,  100.0f,  100.0f  },
+                    { -100.0f, -100.0f, -100.0f  },
                 };
 
                 m_pWorld = RpWorldCreate(&bbox);
@@ -147,14 +147,17 @@ void CEnbuSequence::OnMove(bool bRet, const void* pReturnValue)
 
                 m_pLight = RpLightCreate(rpLIGHTDIRECTIONAL);
                 ASSERT(m_pLight);
+                
                 RwFrame* pFrame = RwFrameCreate();
                 ASSERT(pFrame);
+
                 RwFrameRotate(pFrame, &Math::VECTOR3_AXIS_X, 150.0f, rwCOMBINEREPLACE);
                 RwFrameRotate(pFrame, &Math::VECTOR3_AXIS_Y,0.0f, rwCOMBINEPOSTCONCAT);
                 RpLightSetFrameMacro(m_pLight, pFrame);
                 
                 m_pCamera = CCamera::GetCamera();
                 ASSERT(m_pCamera);
+
                 CGameProperty::SetCurrentRwCamera(m_pCamera->GetRwCamera());
 
                 RpWorldAddCamera(m_pWorld, m_pCamera->GetRwCamera());
@@ -185,18 +188,19 @@ void CEnbuSequence::OnMove(bool bRet, const void* pReturnValue)
             CEnbuProc::Period();
             EnbuCameraProc();
 
-            RwV3d vAt = { 0.0f, m_fCameraOfsY, 0.0f };
-            RwV3d vEye = Math::VECTOR3_ZERO;
 
             RwMatrix matrix;
             RwMatrixSetIdentityMacro(&matrix);
-
             Math::Matrix_RotateY(&matrix, m_fCameraRotY);
+
+            RwV3d vEye = Math::VECTOR3_ZERO;
             RwV3dTransformPoint(&vEye, &Math::VECTOR3_AXIS_Z, &matrix);
             Math::Vec3_Normalize(&vEye, &vEye);
-
             Math::Vec3_Scale(&vEye, &vEye, m_fDistEye);
+
+            RwV3d vAt = { 0.0f, m_fCameraOfsY, 0.0f };
             Math::Vec3_Add(&vEye, &vEye, &vAt);
+
             vEye.y += m_fEyeOfsY;
 
             Math::Matrix_LookAt(&matrix, &vEye, &vAt, &Math::VECTOR3_AXIS_Y);
@@ -225,13 +229,17 @@ void CEnbuSequence::OnMove(bool bRet, const void* pReturnValue)
     case STEP_EOL:
         Ret();
         break;
+
+    default:
+        break;
     };
 };
 
 
 void CEnbuSequence::OnDraw(void) const
 {
-    if (m_step > STEP_INIT && m_step <= STEP_END)
+    if ((m_step >  STEP_INIT) &&
+        (m_step <= STEP_END))
     {
         if (m_pCamera->BeginScene())
         {
@@ -421,6 +429,9 @@ void CEnbuSequence::EnbuCameraProc(void)
                         ++m_auCnt[1];
                 }
                 break;
+
+            default:
+                break;
             };
         }
         break;
@@ -462,6 +473,9 @@ void CEnbuSequence::EnbuCameraProc(void)
                     if (m_auCnt[2] < uint32(fDuration))
                         ++m_auCnt[2];
                 }
+                break;
+
+            default:
                 break;
             };
         }
@@ -564,11 +578,13 @@ int32 CEnbuSequence::GetEnbuCameraType(void) const
         { 0, 0,  0,  2,  0,  2,  0, },  // spl
     };
 
-    int32 mvp = CEnbuProc::GetEnbuMvp();
+    int32 mvp = CEnbuProc::GetEnbuMvp();    
+    ASSERT(mvp >= 0);
+    ASSERT(mvp < COUNT_OF(s_aCameraTypeList));
+
     int32 rank = CEnbuProc::GetEnbuRank() - 1;
-    
-    ASSERT(mvp >= 0 && mvp < COUNT_OF(s_aCameraTypeList));
-    ASSERT(rank >= 0 && rank < COUNT_OF(s_aCameraTypeList[0]));
+    ASSERT(rank >= 0);
+    ASSERT(rank < COUNT_OF(s_aCameraTypeList[0]));
 
     return s_aCameraTypeList[mvp][rank];
 };
@@ -623,6 +639,9 @@ void CEnbuSequence::SetEnbuCameraInit(void)
             m_fCameraOfsY = 1.15f;
         else
             m_fCameraOfsY = 1.0f;
+        break;
+
+    default:
         break;
     };
 };

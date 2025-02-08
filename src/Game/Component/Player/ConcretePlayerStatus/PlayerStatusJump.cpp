@@ -13,17 +13,9 @@
 
 namespace PlayerStatus
 {
-    bool CJumpReady::IsEnableChangeStatus(PLAYERTYPES::STATUS status)
-    {
-        PLAYERTYPES::STATUS aStatusArray[] =
-        {
-            PLAYERTYPES::STATUS_IDLE,
-            PLAYERTYPES::STATUS_WALK,
-            PLAYERTYPES::STATUS_RUN,
-        };
-
-        return IsWithinStatusFromArray(status, aStatusArray, COUNT_OF(aStatusArray));
-    };
+    DEFINE_ENABLED_STATUS_FOR(CJumpReady, { PLAYERTYPES::STATUS_IDLE,
+                                            PLAYERTYPES::STATUS_WALK,
+                                            PLAYERTYPES::STATUS_RUN });
 
 
     void CJumpReady::OnAttach(void)
@@ -32,7 +24,7 @@ namespace PlayerStatus
 		Character().SetLastGroundingStatus(status);
         Character().ChangeMotion(PLAYERTYPES::MOTIONNAMES::JUMP_READY);
         Character().ResetVelocity();
-        Character().SetCharacterFlag(CHARACTERTYPES::FLAG_FIXED_MODEL_ROTATION, true);
+        Character().SetCharacterFlag(CHARACTERTYPES::FLAG_FIXED_MODEL_ROTATION);
     };
 
 
@@ -57,8 +49,8 @@ namespace PlayerStatus
     void CJumpCommon::OnAttach(void)
     {
         Character().SetMaxVelocity(Character().Feature().m_fAerialMoveSpeed);
-        Character().SetCharacterFlag(CHARACTERTYPES::FLAG_CLAMP_VELOCITY_XZ, true);
-        Character().SetPlayerFlag(PLAYERTYPES::FLAG_AERIAL_STATUS, true);
+        Character().SetCharacterFlag(CHARACTERTYPES::FLAG_CLAMP_VELOCITY_XZ);
+        Character().SetPlayerFlag(PLAYERTYPES::FLAG_AERIAL_STATUS);
     };
 
 
@@ -73,12 +65,9 @@ namespace PlayerStatus
     //
 
     
-    bool CJump::IsEnableChangeStatus(PLAYERTYPES::STATUS status)
-    {
-        return (status == PLAYERTYPES::STATUS_JUMP_READY);
-    };
+    DEFINE_ENABLED_STATUS_FOR(CJump, { PLAYERTYPES::STATUS_JUMP_READY });
 
-
+    
     void CJump::OnAttach(void)
     {
         Character().ChangeMotion(PLAYERTYPES::MOTIONNAMES::JUMP);
@@ -104,11 +93,12 @@ namespace PlayerStatus
         vVelocity.y += Character().Feature().m_fJumpInitializeSpeed;
         Character().SetVelocity(&vVelocity);
         
-        Character().SetCharacterFlag(CHARACTERTYPES::FLAG_FIXED_MODEL_ROTATION, true);
-        Character().SetPlayerFlag(PLAYERTYPES::FLAG_JUMP_2ND, true);
+        Character().SetCharacterFlag(CHARACTERTYPES::FLAG_FIXED_MODEL_ROTATION);
+        Character().SetPlayerFlag(PLAYERTYPES::FLAG_JUMP_2ND);
         
-        CGameSound::PlayObjectSE(m_pPlayerChr, SDCODE_SE(4124));
         CJumpCommon::OnAttach();
+
+        CGameSound::PlayObjectSE(m_pPlayerChr, SDCODE_SE(4124));
     };
 
 
@@ -143,7 +133,7 @@ namespace PlayerStatus
             };
 
             bResult = IsWithinStatusFromArray(status, aStatusArray, COUNT_OF(aStatusArray));
-        }
+        };
 
         return bResult;
     };
@@ -167,15 +157,15 @@ namespace PlayerStatus
         vVelocity.y = Character().Feature().m_fJumpInitializeSpeed;
         Character().SetVelocity(&vVelocity);
         
-        Character().SetCharacterFlag(CHARACTERTYPES::FLAG_FIXED_DIRECTION, false);
-        Character().SetCharacterFlag(CHARACTERTYPES::FLAG_FIXED_MODEL_ROTATION, false);
-        Character().SetPlayerFlag(PLAYERTYPES::FLAG_JUMP_2ND, false);
+        Character().ClearCharacterFlag(CHARACTERTYPES::FLAG_FIXED_DIRECTION);
+        Character().ClearCharacterFlag(CHARACTERTYPES::FLAG_FIXED_MODEL_ROTATION);
+        Character().ClearPlayerFlag(PLAYERTYPES::FLAG_JUMP_2ND);
+
+        CJumpCommon::OnAttach();
 
         CGameEvent::SetPlayerTechnicalAction(Character().GetPlayerNo(), GAMETYPES::TECACT_JUMP_DOUBLE);
 
         CGameSound::PlayObjectSE(m_pPlayerChr, SDCODE_SE(4124));
-
-        CJumpCommon::OnAttach();
     };
 
 
@@ -219,7 +209,7 @@ namespace PlayerStatus
 
     void CJumpWall::OnAttach(void)
     {
-        Character().SetCharacterFlag(CHARACTERTYPES::FLAG_FIXED_DIRECTION, false);
+        Character().ClearCharacterFlag(CHARACTERTYPES::FLAG_FIXED_DIRECTION);
 
         const CCharacter::COLLISIONWALLINFO* pWallInfo = Character().GetCollisionWall();
         ASSERT(pWallInfo);
@@ -243,9 +233,12 @@ namespace PlayerStatus
         
         Character().ResetAcceleration();
         
-        Character().SetCharacterFlag(CHARACTERTYPES::FLAG_FIXED_DIRECTION, true);
-        Character().SetCharacterFlag(CHARACTERTYPES::FLAG_FIXED_MODEL_ROTATION, false);
-        Character().SetPlayerFlag(PLAYERTYPES::FLAG_JUMP_2ND, true);
+        Character().SetCharacterFlag(CHARACTERTYPES::FLAG_FIXED_DIRECTION);
+        Character().ClearCharacterFlag(CHARACTERTYPES::FLAG_FIXED_MODEL_ROTATION);
+
+        Character().SetPlayerFlag(PLAYERTYPES::FLAG_JUMP_2ND);
+
+        CJumpCommon::OnAttach();
 
         RwV3d vFootPos = Math::VECTOR3_ZERO;
         Character().GetFootPosition(&vFootPos);
@@ -255,8 +248,6 @@ namespace PlayerStatus
         
         PlayerUtil::CallVoiceOfJumpWall(m_pPlayerChr);
         CGameSound::PlayObjectSE(m_pPlayerChr, SDCODE_SE(4124));
-
-        CJumpCommon::OnAttach();
     };
 
 
@@ -277,17 +268,14 @@ namespace PlayerStatus
     //
 
     
-    bool CJumpWallFailure::IsEnableChangeStatus(PLAYERTYPES::STATUS status)
-    {
-        return false;        
-    };
+    DEFINE_EMPTY_ENABLED_STATUS_FOR(CJumpWallFailure, false);
 
     
     void CJumpWallFailure::OnAttach(void)
     {
-        Character().SetCharacterFlag(CHARACTERTYPES::FLAG_FIXED_DIRECTION, false);
-        Character().SetPlayerFlag(PLAYERTYPES::FLAG_JUMP_2ND, false);
-        Character().SetPlayerFlag(PLAYERTYPES::FLAG_AERIAL_STATUS, true);
+        Character().ClearCharacterFlag(CHARACTERTYPES::FLAG_FIXED_DIRECTION);
+        Character().ClearPlayerFlag(PLAYERTYPES::FLAG_JUMP_2ND);
+        Character().SetPlayerFlag(PLAYERTYPES::FLAG_AERIAL_STATUS);
         
         Character().ResetAcceleration();
         
@@ -321,68 +309,59 @@ namespace PlayerStatus
     // *********************************************************************************
     //
 
-    
-    bool CAerialCommon::IsEnableChangeStatus(PLAYERTYPES::STATUS status)
-    {
-        PLAYERTYPES::STATUS aStatusArray[] =
-        {
-            PLAYERTYPES::STATUS_IDLE,
-            PLAYERTYPES::STATUS_WALK,
-            PLAYERTYPES::STATUS_RUN,
-            PLAYERTYPES::STATUS_JUMP,
-            PLAYERTYPES::STATUS_JUMP_2ND,
-            PLAYERTYPES::STATUS_AERIAL,
-            PLAYERTYPES::STATUS_AERIAL_MOVE,
-            PLAYERTYPES::STATUS_ATTACK_A,
-            PLAYERTYPES::STATUS_ATTACK_AA,
-            PLAYERTYPES::STATUS_ATTACK_AAB,
-            PLAYERTYPES::STATUS_ATTACK_AAC,
-            PLAYERTYPES::STATUS_ATTACK_AABB,
-            PLAYERTYPES::STATUS_ATTACK_AABC,
-            PLAYERTYPES::STATUS_ATTACK_AABBB,
-            PLAYERTYPES::STATUS_ATTACK_AABBC,
-            PLAYERTYPES::STATUS_ATTACK_B,
-            PLAYERTYPES::STATUS_ATTACK_B_CHARGE,
-            PLAYERTYPES::STATUS_ATTACK_RUN,
-            PLAYERTYPES::STATUS_LIFT_CHALLENGE,
-            PLAYERTYPES::STATUS_LIFT_SUCCESS,
-            PLAYERTYPES::STATUS_LIFT,
-            PLAYERTYPES::STATUS_LIFT_WALK,
-            PLAYERTYPES::STATUS_LIFTED,
-            PLAYERTYPES::STATUS_LIFTED_WALK,
-            PLAYERTYPES::STATUS_THROWN_MISS,
-            PLAYERTYPES::STATUS_THROWN_COMBINATION_END,
-            PLAYERTYPES::STATUS_DASH_CANCEL,
-            PLAYERTYPES::STATUS_DASH,
-            PLAYERTYPES::STATUS_DASH_FINISH,
-            PLAYERTYPES::STATUS_DINDLE,
-            PLAYERTYPES::STATUS_STUN,
-            PLAYERTYPES::STATUS_SLEEP,
-            PLAYERTYPES::STATUS_BIND,
-            PLAYERTYPES::STATUS_FREEZE,
-            PLAYERTYPES::STATUS_DOWN_FRONT,
-            PLAYERTYPES::STATUS_DOWN_BACK,
-            PLAYERTYPES::STATUS_TUMBLER_FRONT,
-            PLAYERTYPES::STATUS_TUMBLER_BACK,
-            PLAYERTYPES::STATUS_PUSH,
-            PLAYERTYPES::STATUS_CONSOLE,
-            PLAYERTYPES::STATUS_GUARD_READY,
-            PLAYERTYPES::STATUS_GUARD,
-            PLAYERTYPES::STATUS_GUARD_BACK,
-            PLAYERTYPES::STATUS_GUARD_IMPACT,
-            PLAYERTYPES::STATUS_GUARD_FINISH,
-        };
-        
-        return IsWithinStatusFromArray(status, aStatusArray, COUNT_OF(aStatusArray));
-    };
+    DEFINE_ENABLED_STATUS_FOR(CAerialCommon, { PLAYERTYPES::STATUS_IDLE,
+                                               PLAYERTYPES::STATUS_WALK,
+                                               PLAYERTYPES::STATUS_RUN,
+                                               PLAYERTYPES::STATUS_JUMP,
+                                               PLAYERTYPES::STATUS_JUMP_2ND,
+                                               PLAYERTYPES::STATUS_AERIAL,
+                                               PLAYERTYPES::STATUS_AERIAL_MOVE,
+                                               PLAYERTYPES::STATUS_ATTACK_A,
+                                               PLAYERTYPES::STATUS_ATTACK_AA,
+                                               PLAYERTYPES::STATUS_ATTACK_AAB,
+                                               PLAYERTYPES::STATUS_ATTACK_AAC,
+                                               PLAYERTYPES::STATUS_ATTACK_AABB,
+                                               PLAYERTYPES::STATUS_ATTACK_AABC,
+                                               PLAYERTYPES::STATUS_ATTACK_AABBB,
+                                               PLAYERTYPES::STATUS_ATTACK_AABBC,
+                                               PLAYERTYPES::STATUS_ATTACK_B,
+                                               PLAYERTYPES::STATUS_ATTACK_B_CHARGE,
+                                               PLAYERTYPES::STATUS_ATTACK_RUN,
+                                               PLAYERTYPES::STATUS_LIFT_CHALLENGE,
+                                               PLAYERTYPES::STATUS_LIFT_SUCCESS,
+                                               PLAYERTYPES::STATUS_LIFT,
+                                               PLAYERTYPES::STATUS_LIFT_WALK,
+                                               PLAYERTYPES::STATUS_LIFTED,
+                                               PLAYERTYPES::STATUS_LIFTED_WALK,
+                                               PLAYERTYPES::STATUS_THROWN_MISS,
+                                               PLAYERTYPES::STATUS_THROWN_COMBINATION_END,
+                                               PLAYERTYPES::STATUS_DASH_CANCEL,
+                                               PLAYERTYPES::STATUS_DASH,
+                                               PLAYERTYPES::STATUS_DASH_FINISH,
+                                               PLAYERTYPES::STATUS_DINDLE,
+                                               PLAYERTYPES::STATUS_STUN,
+                                               PLAYERTYPES::STATUS_SLEEP,
+                                               PLAYERTYPES::STATUS_BIND,
+                                               PLAYERTYPES::STATUS_FREEZE,
+                                               PLAYERTYPES::STATUS_DOWN_FRONT,
+                                               PLAYERTYPES::STATUS_DOWN_BACK,
+                                               PLAYERTYPES::STATUS_TUMBLER_FRONT,
+                                               PLAYERTYPES::STATUS_TUMBLER_BACK,
+                                               PLAYERTYPES::STATUS_PUSH,
+                                               PLAYERTYPES::STATUS_CONSOLE,
+                                               PLAYERTYPES::STATUS_GUARD_READY,
+                                               PLAYERTYPES::STATUS_GUARD,
+                                               PLAYERTYPES::STATUS_GUARD_BACK,
+                                               PLAYERTYPES::STATUS_GUARD_IMPACT,
+                                               PLAYERTYPES::STATUS_GUARD_FINISH });
 
 
     void CAerialCommon::OnAttach(void)
     {
-        if (!Character().IsPlayerFlagSet(PLAYERTYPES::FLAG_AERIAL_STATUS))
+        if (!Character().TestPlayerFlag(PLAYERTYPES::FLAG_AERIAL_STATUS))
             Character().ChangeMotion(PLAYERTYPES::MOTIONNAMES::AERIAL);
 
-        Character().SetCharacterFlag(CHARACTERTYPES::FLAG_FIXED_MODEL_ROTATION, true);
+        Character().SetCharacterFlag(CHARACTERTYPES::FLAG_FIXED_MODEL_ROTATION);
         
         CJumpCommon::OnAttach();
     };
@@ -420,13 +399,8 @@ namespace PlayerStatus
     {
         CJumpCommon::OnRun();
 
-        RwV3d vAcceleration =
-        {
-            0.0f,
-            0.0f,
-            Character().Feature().m_fAerialAcceleration
-        };
-
+        float fAerialAccel = Character().Feature().m_fAerialAcceleration;
+        RwV3d vAcceleration = { 0.0f, 0.0f, fAerialAccel };
         Character().RotateVectorByDirection(&vAcceleration, &vAcceleration);
         Character().SetAcceleration(&vAcceleration);
     };
@@ -436,22 +410,15 @@ namespace PlayerStatus
     // *********************************************************************************
     //
 
-    
-    bool CTouchdown::IsEnableChangeStatus(PLAYERTYPES::STATUS status)
-    {
-        PLAYERTYPES::STATUS aStatusArray[] =
-        {
-            PLAYERTYPES::STATUS_JUMP,
-            PLAYERTYPES::STATUS_JUMP_2ND,
-            PLAYERTYPES::STATUS_JUMP_WALL,
-            PLAYERTYPES::STATUS_AERIAL,
-            PLAYERTYPES::STATUS_AERIAL_MOVE,
-            PLAYERTYPES::STATUS_ATTACK_JUMP,
-            PLAYERTYPES::STATUS_ATTACK_KNIFE_JUMP,
-        };
 
-        return IsWithinStatusFromArray(status, aStatusArray, COUNT_OF(aStatusArray));
-    };
+
+    DEFINE_ENABLED_STATUS_FOR(CTouchdown, { PLAYERTYPES::STATUS_JUMP,
+                                            PLAYERTYPES::STATUS_JUMP_2ND,
+                                            PLAYERTYPES::STATUS_JUMP_WALL,
+                                            PLAYERTYPES::STATUS_AERIAL,
+                                            PLAYERTYPES::STATUS_AERIAL_MOVE,
+                                            PLAYERTYPES::STATUS_ATTACK_JUMP,
+                                            PLAYERTYPES::STATUS_ATTACK_KNIFE_JUMP });
 
 
     void CTouchdown::OnAttach(void)
@@ -461,17 +428,15 @@ namespace PlayerStatus
         Character().ResetVelocity();
         Character().ResetAcceleration();
 
-        Character().SetCharacterFlag(CHARACTERTYPES::FLAG_FIXED_MODEL_ROTATION, true);
-        Character().SetPlayerFlag(PLAYERTYPES::FLAG_JUMP_2ND, false);
-        Character().SetPlayerFlag(PLAYERTYPES::FLAG_AERIAL_STATUS, false);
+        Character().SetCharacterFlag(CHARACTERTYPES::FLAG_FIXED_MODEL_ROTATION);
+        Character().ClearPlayerFlag(PLAYERTYPES::FLAG_JUMP_2ND);
+        Character().ClearPlayerFlag(PLAYERTYPES::FLAG_AERIAL_STATUS);
 
         RwV3d vFootPos = Math::VECTOR3_ZERO;
         Character().GetFootPosition(&vFootPos);
 
-        EFFECT_GENERIC::CallTouchDownEffect(
-            Character().GetCollisionGround()->m_attribute,
-            &vFootPos
-        );
+        MAPTYPES::ATTRIBUTE attribute = Character().GetCollisionGround()->m_attribute;
+        EFFECT_GENERIC::CallTouchDownEffect(attribute, &vFootPos);
 
         PlayerUtil::CallSEOfTouchdown(m_pPlayerChr);
     };

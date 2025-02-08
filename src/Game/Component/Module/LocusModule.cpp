@@ -188,6 +188,11 @@ void CLocusModule::DrawLocus(void)
 };
 
 
+//
+// *********************************************************************************
+//
+
+
 CLocusModuleForCharacter::CLocusModuleForCharacter(CCharacter* pCharacter, LOCUSPARAMETER* pLocusParameter, int32 nNumLocus)
 : CLocusModule(pCharacter->GetModel(), pLocusParameter, nNumLocus)
 , m_pCharacter(pCharacter)
@@ -229,6 +234,11 @@ void CLocusModuleForCharacter::Run(void)
 
     CLocusModule::Run();
 };
+
+
+//
+// *********************************************************************************
+//
 
 
 class CLocusModuleContainer

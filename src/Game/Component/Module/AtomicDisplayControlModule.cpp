@@ -39,10 +39,7 @@ void CAtomicDisplayControlModule::Run(void)
         CMotionParameterController::DRAW_ATOMIC DrawAtomic = { 0 };
         pMPController->GetDrawAtomicData(i, &DrawAtomic);
         
-        m_pModel->SetPartsDrawEnable(
-            DrawAtomic.m_nAtomic,
-            DrawAtomic.m_bDraw
-        );
+        m_pModel->SetPartsDrawEnable(DrawAtomic.m_nAtomic, DrawAtomic.m_bDraw);
     };
 };
 

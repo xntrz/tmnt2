@@ -162,7 +162,7 @@ void CAreaRecord::Restore(const RAWDATA& rRawData)
         if (i >= AREAID::NORMALMAX)
         {
             m_aNodeArea[i].m_clearrank = GAMETYPES::CLEARRANK_NONE;
-            m_aNodeArea[i].m_cleartime.Clear();
+            m_aNodeArea[i].m_cleartime = 0;
         }
         else
         {
@@ -492,8 +492,8 @@ void CAreaRecord::UpdateAreaClearTime(AREAID::VALUE idArea, const CGameTime& cle
     NODEAREA* pNode = getNode(idArea);
     if (pNode)
     {
-        if (pNode->m_cleartime < cleartime)
-            pNode->m_cleartime = cleartime;
+        if (pNode->m_cleartime < cleartime.GetTotalSecond())
+            pNode->m_cleartime = cleartime.GetTotalSecond();
     };
 };
 
@@ -527,7 +527,7 @@ GAMETYPES::CLEARRANK CAreaRecord::GetAreaClearRank(AREAID::VALUE idArea) const
 };
 
 
-const CGameTime& CAreaRecord::GetAreaClearTime(AREAID::VALUE idArea) const
+uint32 CAreaRecord::GetAreaClearTime(AREAID::VALUE idArea) const
 {
     NODEAREA* pNode = getNode(idArea);
     if (pNode)
@@ -600,8 +600,13 @@ void CAreaRecord::CalcTotalClearTime(CGameTime& totalCleartime) const
 {
     totalCleartime.Clear();
     
-    for (int32 i = 0; i < AREAID::NORMALMAX; ++i)     
-        totalCleartime.Add(CGameTime(m_aNodeArea[i].m_cleartime));
+    for (int32 i = 0; i < AREAID::NORMALMAX; ++i)
+    {
+        uint32 totalsec = GetAreaClearTime(AREAID::VALUE(i));
+        CGameTime cleartime(totalsec);
+
+        totalCleartime.Add(cleartime);
+    };
 };
 
 
@@ -631,8 +636,6 @@ GAMETYPES::CLEARRANK CAreaRecord::CalcTotalClearTimeRank(void) const
 
 CAreaRecord::NODEAREA* CAreaRecord::getNode(AREAID::VALUE idArea) const
 {
-    ASSERT(isSelectableArea(idArea));
-
     if (isSelectableArea(idArea))
         return &m_aNodeArea[idArea];
 

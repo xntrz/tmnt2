@@ -29,17 +29,18 @@ CMotionParameter::~CMotionParameter(void)
     };
 
     DestroyListAttack(m_listAttackParameter);
-
     ASSERT(m_listAttackParameter.empty());
     
     DestroyListTiming(m_listAttackTimingParameter);
-    DestroyListTiming(m_listLocusTimingParameter);
-    DestroyListTiming(m_listAtomicTimingParameter);
-    DestroyListTiming(m_listInvincibleTimingParameter);
-
     ASSERT(m_listAttackTimingParameter.empty());
+
+    DestroyListTiming(m_listLocusTimingParameter);
     ASSERT(m_listLocusTimingParameter.empty());
+
+    DestroyListTiming(m_listAtomicTimingParameter);
     ASSERT(m_listAtomicTimingParameter.empty());
+
+    DestroyListTiming(m_listInvincibleTimingParameter);
     ASSERT(m_listInvincibleTimingParameter.empty());
 };
 
@@ -50,7 +51,7 @@ void CMotionParameter::Initialize(INIT_PARAMETER* pParam)
 
     std::strcpy(m_szName, pParam->m_szName);
     m_fBlendTime = pParam->m_fBlendTime;
-    m_playmode = pParam->m_playmode;
+    m_playmode   = pParam->m_playmode;
 };
 
 
@@ -59,7 +60,6 @@ void CMotionParameter::CreateAttackParameter(CAttackParameter::INIT_PARAMETER* p
     ASSERT(pParam);
 
     CAttackParameter* pAttack = new CAttackParameter(pParam);
-    ASSERT(pAttack);
 
     ++m_nAttack;
     m_listAttackParameter.push_back(pAttack);
@@ -79,8 +79,10 @@ void CMotionParameter::AttachAttackParameter(int32 no, CAttackParameter::ATTACH_
 
 CAttackParameter* CMotionParameter::GetAttackParameter(int32 no)
 {
-    ASSERT(no >= 0 && no < m_nAttack);
-	return m_listAttackParameter.search(no);
+    ASSERT(no >= 0);
+    ASSERT(no < m_nAttack);
+    
+    return m_listAttackParameter.search(no);
 };
 
 
@@ -94,7 +96,6 @@ void CMotionParameter::CreateChainMotionParameter(CChainMotionParameter::INIT_PA
 {
     ASSERT(!m_pChainMotionParameter);
     m_pChainMotionParameter = new CChainMotionParameter(pParam);
-    ASSERT(m_pChainMotionParameter);
 };
 
 
@@ -107,10 +108,10 @@ void CMotionParameter::AttachChainMotionParameter(CChainMotionParameter::ATTACH_
 
 float CMotionParameter::GetNextChainMotionConnectTime(const char* pszNextMotion)
 {
-    if (m_pChainMotionParameter)
-        return m_pChainMotionParameter->GetNextChainMotionConnectTime(pszNextMotion);
-    else
+    if (!m_pChainMotionParameter)
         return 0.0f;
+
+	return m_pChainMotionParameter->GetNextChainMotionConnectTime(pszNextMotion);
 };
 
 
@@ -119,7 +120,6 @@ void CMotionParameter::CreateTimingParameter(CTimingParameter::INIT_PARAMETER* p
     ASSERT(pParam);
 
     CTimingParameter* pTiming = new CTimingParameter(pParam);
-    ASSERT(pTiming);
 
     switch (pTiming->GetKind())
     {
@@ -162,22 +162,19 @@ void CMotionParameter::InsertTimingByTime(CList<CTimingParameter>& rList, CTimin
     else
     {
         auto it = rList.begin();
-        while (it)
+        auto itEnd = rList.end();
+        while (it != itEnd)
         {
             if (pTiming->GetTime() < (*it).GetTime())
                 break;
-            
+
             ++it;
         };
 
         if (it)
-        {
             rList.insert(it, pTiming);
-        }
         else
-        {
             rList.push_back(pTiming);
-        };
     };
 };
 
@@ -185,12 +182,12 @@ void CMotionParameter::InsertTimingByTime(CList<CTimingParameter>& rList, CTimin
 int32 CMotionParameter::GetNumDrawAtomicData(float fPrevTime, float fNowTime)
 {
     ASSERT(fPrevTime >= 0.0f);
-    ASSERT(fNowTime >= 0.0f);
+    ASSERT(fNowTime  >= 0.0f);
     ASSERT(fPrevTime <= fNowTime);
 
     int32 iResult = 0;
 
-    if (Math::FEqual(fPrevTime, 0.0f))
+    if (fPrevTime == 0.0f)
         fPrevTime = -1.0f;
 
     m_nAtomicOffset = 0;
@@ -221,7 +218,8 @@ void CMotionParameter::GetDrawAtomicData(int32 nIndex, CMotionParameterControlle
     nIndex = m_nAtomicOffset;
 
     ASSERT(pData);
-    ASSERT(nIndex >= 0 && nIndex < m_nAtomicTiming);
+    ASSERT(nIndex >= 0);
+    ASSERT(nIndex < m_nAtomicTiming);
 
     CTimingParameter* pTiming = m_listAtomicTimingParameter.search(nIndex);
 
@@ -250,12 +248,12 @@ void CMotionParameter::GetDrawAtomicData(int32 nIndex, CMotionParameterControlle
 int32 CMotionParameter::GetNumDrawLocusData(float fPrevTime, float fNowTime)
 {
     ASSERT(fPrevTime >= 0.0f);
-    ASSERT(fNowTime >= 0.0f);
+    ASSERT(fNowTime  >= 0.0f);
     ASSERT(fPrevTime <= fNowTime);
 
     int32 iResult = 0;
     
-    if (Math::FEqual(fPrevTime, 0.0f))
+    if (fPrevTime == 0.0f)
         fPrevTime = -1.0f;
 
     m_nLocusOffset = 0;
@@ -286,7 +284,8 @@ void CMotionParameter::GetDrawLocusData(int32 nIndex, CMotionParameterController
     nIndex = m_nLocusOffset;
     
     ASSERT(pData);
-    ASSERT(nIndex >= 0 && nIndex < m_nLocusTiming);
+    ASSERT(nIndex >= 0);
+    ASSERT(nIndex < m_nLocusTiming);
 
     CTimingParameter* pTiming = m_listLocusTimingParameter.search(nIndex);
 
@@ -315,10 +314,10 @@ void CMotionParameter::GetDrawLocusData(int32 nIndex, CMotionParameterController
 bool CMotionParameter::IsAttackTiming(float fPrevTime, float fNowTime)
 {
     ASSERT(fPrevTime >= 0.0f);
-    ASSERT(fNowTime >= 0.0f);
+    ASSERT(fNowTime  >= 0.0f);
     ASSERT(fPrevTime <= fNowTime);
 
-    if (Math::FEqual(fPrevTime, 0.0f))
+    if (fPrevTime == 0.0f)
         fPrevTime = -1.0f;
 
     for (CTimingParameter& it : m_listAttackTimingParameter)
@@ -368,8 +367,9 @@ bool CMotionParameter::IsInvincibleTime(float fNowTime)
 
 void CMotionParameter::DestroyListTiming(CList<CTimingParameter>& rList)
 {
-    auto it = rList.begin();
-    while (it)
+    auto it    = rList.begin();
+    auto itEnd = rList.end();
+    while (it != itEnd)
     {
         CTimingParameter* pTiming = &(*it);
         it = rList.erase(it);
@@ -381,8 +381,9 @@ void CMotionParameter::DestroyListTiming(CList<CTimingParameter>& rList)
 
 void CMotionParameter::DestroyListAttack(CList<CAttackParameter>& rList)
 {
-    auto it = rList.begin();
-    while (it)
+    auto it    = rList.begin();
+    auto itEnd = rList.end();
+    while (it != itEnd)
     {
         CAttackParameter* pAttack = &(*it);
         it = rList.erase(it);

@@ -127,9 +127,6 @@ void CRideEffectUnit::Run(void)
 
     m_fTime += CGameProperty::GetElapsedTime();
 
-    RwV3d vPosition = Math::VECTOR3_ZERO;
-    RwV3d vDirection = Math::VECTOR3_ZERO;
-
     CModel* pModel = m_pPlayerChr->GetModel();
     ASSERT(pModel);
 
@@ -139,7 +136,11 @@ void CRideEffectUnit::Run(void)
     RwMatrix matrix;
     RwMatrixSetIdentityMacro(&matrix);
     std::memcpy(&matrix, pMatrix, sizeof(matrix));
+
+    RwV3d vPosition = Math::VECTOR3_ZERO;
     RwV3dTransformPoint(&vPosition, &m_vOffset, &matrix);
+
+    RwV3d vDirection = Math::VECTOR3_ZERO;
 
     switch (m_ridertype)
     {
@@ -261,6 +262,11 @@ void CRideEffectUnit::RevUp(void)
 };
 
 
+//
+// *********************************************************************************
+//
+
+
 CRideExhaustUnit::CRideExhaustUnit(void)
 {
     ;
@@ -302,20 +308,26 @@ void CRideExhaustUnit::Run(void)
     };
 
     PLAYERTYPES::STATUS status = m_pPlayerChr->GetStatus();
-    ASSERT(status >= PLAYERTYPES::RIDESTART && status < PLAYERTYPES::RIDEMAX);
-    
+    ASSERT(status >= PLAYERTYPES::RIDESTART);
+    ASSERT(status < PLAYERTYPES::RIDEMAX);
+
     if (status == PLAYERTYPES::RIDESTATUS_CRASH_WALL)
         SetDrawEnable(false);    
 };
 
 
+//
+// *********************************************************************************
+//
+
+
 CBoardEffectModule::CBoardEffectModule(CPlayerCharacter* pPlayerChr)
 : CRideCharacterEffectModule(pPlayerChr, RIDERTYPE_BOARD)
 {
-    static const RwV3d RIDE_BOARD_LEFTWING  = { -0.47f, 0.44f,  -0.026f };
-    static const RwV3d RIDE_BOARD_RIGHTWING = { 0.47f,  0.44f,  -0.026f };
-    static const RwV3d RIDE_BOARD_CENTER    = { 0.0f,   1.65f,  0.2f    };
-    static const RwV3d RIDE_EXHAUST         = { 0.0f,   0.0f,   1.0f    };
+    static const RwV3d RIDE_BOARD_LEFTWING  = { -0.47f,  0.44f,  -0.026f };
+    static const RwV3d RIDE_BOARD_RIGHTWING = {  0.47f,  0.44f,  -0.026f };
+    static const RwV3d RIDE_BOARD_CENTER    = {  0.0f,   1.65f,   0.2f    };
+    static const RwV3d RIDE_EXHAUST         = {  0.0f,   0.0f,    1.0f    };
 
     m_aRideEffectUnit[0].Initialize(m_ridertype, m_pPlayerChr, CHARACTERTYPES::BONEID_RIDE_WING, EFFECTID::ID_RIDE_PARTICLE, &RIDE_BOARD_LEFTWING);
     m_aRideEffectUnit[1].Initialize(m_ridertype, m_pPlayerChr, CHARACTERTYPES::BONEID_RIDE_WING, EFFECTID::ID_RIDE_PARTICLE, &RIDE_BOARD_RIGHTWING);
@@ -335,11 +347,16 @@ CBoardEffectModule::~CBoardEffectModule(void)
 };
 
 
+//
+// *********************************************************************************
+//
+
+
 CSpaceShipEffectModule::CSpaceShipEffectModule(CPlayerCharacter* pPlayerChr)
 : CRideCharacterEffectModule(pPlayerChr, RIDERTYPE_SHIP)
 {
-    static const RwV3d RIDE_SPACESHIP_LEFTJET   = { -0.152f,    0.03999f,   -0.8f };
-    static const RwV3d RIDE_SPACESHIP_RIGHTJET  = { 0.152f,      0.03999f,  -0.8f };
+    static const RwV3d RIDE_SPACESHIP_LEFTJET   = { -0.152f, 0.04f, -0.8f };
+    static const RwV3d RIDE_SPACESHIP_RIGHTJET  = {  0.152f, 0.04f, -0.8f };
 
     m_aRideEffectUnit[0].Initialize(m_ridertype, m_pPlayerChr, CHARACTERTYPES::BONEID_BODY, EFFECTID::ID_RIDE_ENGINE, &RIDE_SPACESHIP_LEFTJET);
     m_aRideEffectUnit[1].Initialize(m_ridertype, m_pPlayerChr, CHARACTERTYPES::BONEID_BODY, EFFECTID::ID_RIDE_ENGINE, &RIDE_SPACESHIP_RIGHTJET);
@@ -379,6 +396,11 @@ CSpaceShipEffectModule::~CSpaceShipEffectModule(void)
     ASSERT(pRet);
     return pRet;
 };
+
+
+//
+// *********************************************************************************
+//
 
 
 CRideCharacterEffectModule::CRideCharacterEffectModule(CPlayerCharacter* pPlayerChr, RIDERTYPE ridertype)

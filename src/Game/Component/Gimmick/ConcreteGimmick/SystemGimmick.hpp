@@ -190,18 +190,18 @@ protected:
     };
 
 public:
-    static void ReplacePlayer(int32 nPlayerNo, const RwV3d* pvPosition, bool bProtect);
-    static void SetPlayerStartPosition(int32 nPlayerNo, const RwV3d* pvPosition, bool bProtect);
+    static void ReplacePlayer(int32 nPlayerNo, const RwV3d* pvPosition, bool bBlink);
+    static void SetPlayerStartPosition(int32 nPlayerNo, const RwV3d* pvPosition, bool bBlink);
     
     CReplaceGimmick(const char* pszName, void* pParam);
     virtual ~CReplaceGimmick(void);
     virtual void PostMove(void) override;
     virtual void OnReceiveEvent(const char* pszSender, GIMMICKTYPES::EVENTTYPE eventtype) override;
-    void OnReplacePlayer(int32 nPlayerNo, bool bProtect);
+    void OnReplacePlayer(int32 nPlayerNo, bool bBlink);
     bool IsEnableReplaceGimmick(void) const;
     
 protected:
-    static void replacePlayer(const char* pszSearchGimmickName, int32 nPlayerNo, const RwV3d* pvPosition, bool bProtect);
+    static void replacePlayer(const char* pszSearchGimmickName, int32 nPlayerNo, const RwV3d* pvPosition, bool bBlink);
     void setAreaVertex(void);
     bool isAreaRectvertexInScreen(void) const;
 

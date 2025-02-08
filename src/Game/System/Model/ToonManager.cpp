@@ -19,16 +19,19 @@ public:
     void SetTextureSet(const char* pszName);
 
 private:
-    char m_szTextureSetName[NAME_MAX];
-    RpToonPaint* m_apRpToonPaint[CToonManager::PATTERN_MAX];
+    char                  m_szTextureSetName[NAME_MAX];
+    RpToonPaint*          m_apRpToonPaint[CToonManager::PATTERN_MAX];
     CToonManager::PATTERN m_patternCurrent;
-    CList<CModelToon> m_listModel;
-    RpToonInk* m_pRpToonInkSilhouette;
+    CList<CModelToon>     m_listModel;
+    RpToonInk*            m_pRpToonInkSilhouette;
 };
 
 
 CToonManagerImplement::CToonManagerImplement(void)
-: m_patternCurrent(CToonManager::PATTERN_1)
+: m_szTextureSetName()
+, m_apRpToonPaint()
+, m_patternCurrent(CToonManager::PATTERN_1)
+, m_listModel()
 , m_pRpToonInkSilhouette(nullptr)
 {
     m_pRpToonInkSilhouette = RpToonInkCreate();
@@ -75,10 +78,8 @@ void CToonManagerImplement::RegistModel(CModelToon* pModel)
     m_listModel.push_back(pModel);
 
 	CToonManager::PATTERN pattern = pModel->GetPattern();
-	ASSERT(
-		pattern >= CToonManager::PATTERN_START &&
-		pattern < CToonManager::PATTERN_MAX
-	);
+    ASSERT(pattern >= CToonManager::PATTERN_START);
+    ASSERT(pattern <  CToonManager::PATTERN_MAX);
 
 	pModel->SetToonObject(m_pRpToonInkSilhouette, m_apRpToonPaint[pattern]);
 };
@@ -131,9 +132,7 @@ static inline CToonManagerImplement& ToonMan(void)
 /*static*/ void CToonManager::Initialize(void)
 {
     if (!s_pToonManagerImpl)
-    {
         s_pToonManagerImpl = new CToonManagerImplement;
-    };
 };
 
 

@@ -37,7 +37,7 @@ _tWinMain(
 
     if(CConfigure::CheckArg("noeval"))
         rwevalInitialize();
-    
+
     CPCSetting::Initialize();
 	CPCSpecific::m_hInstance = hInstance;
     

@@ -2,11 +2,53 @@
 
 #include "rprandom.h"
 
-#include <cmath>
+#define _USE_MATH_DEFINES
+#include <math.h>
 
 
 namespace Math
 {
+    void SRand(uint32 seed)
+    {
+        RpRandomSeed(seed);
+    };
+
+    
+    uint32 Rand(void)
+    {
+        return RpRandom();
+    };
+
+
+    float RandFloat(void)
+    {
+        return static_cast<float>(Rand() % 0x10000) / static_cast<float>(0x10000);
+    };
+
+
+    uint32 RandRange(uint32 nLow, uint32 nHigh)
+    {
+		uint32 uRand = (Rand() % 0x10000);
+        
+        uint32 nWidth = (nHigh - nLow);
+        ASSERT(nWidth <= 0x8000);
+
+        return ((uRand * nWidth) / 0x10000) + nLow;
+    };
+
+
+    float RandFloatRange(float fLow, float fHigh)
+    {
+        ASSERT(fLow <= fHigh);
+
+        float fResult = RandFloat() * (fHigh - fLow) + fLow;
+        if (fResult > fHigh)
+            fResult = fHigh;
+
+        return fResult;
+    };
+
+
     float RadianInvClamp(float x)
     {
         if (x >= Math::PI)
@@ -19,35 +61,13 @@ namespace Math
     };
     
 
-    float FNegate(float x)
-    {
-        return -x;
-    };
-    
-
-    float Floor(float x)
-    {
-        return std::floor(x);
-    };
-
-    
-    float Round(float x)
-    {
-        return std::round(x);
-    };
-    
-
     float RadianCorrect(float fRadian)
     {
         while (fRadian > PI)
-        {
             fRadian -= PI2;
-        };
         
         while (fRadian < -PI)
-        {
             fRadian += PI2;
-        };
         
         return fRadian;
     };
@@ -59,46 +79,14 @@ namespace Math
     };
 
     
-    int32 Gcd(int32 x, int32 y)
-    {
-        while (x > 0 && y > 0)
-        {
-            if (x > y)
-                x %= y;
-            else
-                y %= x;
-        };
-
-        return (x + y);
-    };
-    
-
-    float ToRadian(float fDegree)
-    {
-        return (fDegree * PI / 180.0f);
-    };
-
-    
-    float ToDegree(float fRadian)
-    {
-        return (fRadian * 180.0f / PI);
-    };
-
-    
     float Fmod(float x, float y)
     {
         if (y == 0.0f)
             return 0.0f;
-        else
-            return std::fmod(x, y);
+        
+        return std::fmod(x, y);
     };
     
-
-    bool FEqual(float a, float b)
-    {
-        return FAbs(a - b) <= EPSILON;
-    };
-
 
     float ACos(float x)
     {
@@ -135,47 +123,7 @@ namespace Math
         return std::tan(x);
     };
 
-
-    void SRand(uint32 seed)
-    {
-        RpRandomSeed(seed);
-    };
-
-
-    uint32 Rand(void)
-    {
-        return RpRandom();
-    };
-
-
-    float RandFloat(void)
-    {
-		uint16 uValue = uint16(Rand() & 0x0000FFFF);
-		return float(uValue) / 65536.0f;
-    };
-
-
-    uint32 RandRange(uint32 nLow, uint32 nHigh)
-    {
-        uint16 uValue = uint16(Rand() & 0x0000FFFF);
-        
-        uint32 nWidth = nHigh - nLow;
-        ASSERT(nWidth <= 0x8000);
-
-        return nLow + ((uValue * nWidth) / 65536);
-    };
-
-
-    float RandFloatRange(float fLow, float fHigh)
-    {
-        float fResult = RandFloat() * (fHigh - fLow) + fLow;
-        if (fResult > fHigh)
-            fResult = fHigh;
-
-        return fResult;
-    };
-
-
+    
     float Vec2_Length(const RwV2d* pvIn)
     {
         float fResult = 0.0f;
@@ -196,7 +144,7 @@ namespace Math
         else
         {
             float len = RwV2dLength(pvIn);
-            if (len > 0.000001)
+            if (len > EPSILON)
             {
                 float n = 1.0f / len;
                 pvOut->x = n * pvIn->x;
@@ -248,15 +196,14 @@ namespace Math
 
     float Vec3_Length(const RwV3d* pvIn)
     {
-		return RwV3dLength(pvIn);
-    };
-
-
-    float Vec3_LengthXZ(const RwV3d* pvIn)
-    {
-        RwV3d vIn = { pvIn->x, 0.0f, pvIn->z };
+        if ((pvIn->x == 0.0f) &&
+            (pvIn->y == 0.0f) &&
+            (pvIn->z == 0.0f))
+        {
+            return 0.0f;
+        };
         
-        return Vec3_Length(&vIn);
+        return RwV3dLength(pvIn);
     };
 
 
@@ -270,32 +217,26 @@ namespace Math
 
     void Vec3_Abs(RwV3d* pvOut, const RwV3d* pvIn)
     {
-        pvOut->x = FAbs(pvIn->x);
-        pvOut->y = FAbs(pvIn->y);
-        pvOut->z = FAbs(pvIn->z);
+        pvOut->x = std::fabs(pvIn->x);
+        pvOut->y = std::fabs(pvIn->y);
+        pvOut->z = std::fabs(pvIn->z);
     };
     
 
     void Vec3_Normalize(RwV3d* pvOut, const RwV3d* pvIn)
     {
-        if (pvIn->x == 0.0f && pvIn->y == 0.0f && pvIn->z == 0.0f)
+        if ((pvIn->x == 0.0f && pvIn->y == 0.0f && pvIn->z == 0.0f) ||
+            (RwV3dLength(pvIn) <= EPSILON))
         {
             pvOut->x = pvOut->y = pvOut->z = 0.0f;
         }
         else
         {
             float len = RwV3dLength(pvIn);
-            if (len > 0.000001)
-            {
-                float invlen = 1.0f / len;
-                pvOut->x = invlen * pvIn->x;
-                pvOut->y = invlen * pvIn->y;
-                pvOut->z = invlen * pvIn->z;
-            }
-            else
-            {
-                pvOut->x = pvOut->y = pvOut->z = 0.0f;
-            };
+            float invlen = 1.0f / len;
+            pvOut->x = invlen * pvIn->x;
+            pvOut->y = invlen * pvIn->y;
+            pvOut->z = invlen * pvIn->z;
         };
     };
 
@@ -372,27 +313,27 @@ namespace Math
 
     void Matrix_RotateX(RwMatrix* matrix, float rad)
     {
-        RwMatrixRotate(matrix, &VECTOR3_AXIS_X, ToDegree(rad), rwCOMBINEREPLACE);
+        RwMatrixRotate(matrix, &VECTOR3_AXIS_X, MATH_RAD2DEG(rad), rwCOMBINEREPLACE);
     };
 
 
     void Matrix_RotateY(RwMatrix* matrix, float rad)
     {
-        RwMatrixRotate(matrix, &VECTOR3_AXIS_Y, ToDegree(rad), rwCOMBINEREPLACE);
+        RwMatrixRotate(matrix, &VECTOR3_AXIS_Y, MATH_RAD2DEG(rad), rwCOMBINEREPLACE);
     };
 
 
     void Matrix_RotateZ(RwMatrix* matrix, float rad)
     {
-        RwMatrixRotate(matrix, &VECTOR3_AXIS_Z, ToDegree(rad), rwCOMBINEREPLACE);
+        RwMatrixRotate(matrix, &VECTOR3_AXIS_Z, MATH_RAD2DEG(rad), rwCOMBINEREPLACE);
     };
 
 
     void Matrix_RotationYawPitchRoll(RwMatrix* matrix, float y, float p, float r)
     {
-        RwMatrixRotate(matrix, &VECTOR3_AXIS_Z, ToDegree(r), rwCOMBINEREPLACE);
-        RwMatrixRotate(matrix, &VECTOR3_AXIS_X, ToDegree(p), rwCOMBINEPOSTCONCAT);
-        RwMatrixRotate(matrix, &VECTOR3_AXIS_Y, ToDegree(y), rwCOMBINEPOSTCONCAT);
+        RwMatrixRotate(matrix, &VECTOR3_AXIS_Z, MATH_RAD2DEG(r), rwCOMBINEREPLACE);
+        RwMatrixRotate(matrix, &VECTOR3_AXIS_X, MATH_RAD2DEG(p), rwCOMBINEPOSTCONCAT);
+        RwMatrixRotate(matrix, &VECTOR3_AXIS_Y, MATH_RAD2DEG(y), rwCOMBINEPOSTCONCAT);
     };
 
 
@@ -416,14 +357,10 @@ namespace Math
         RwV3d vYAxis = VECTOR3_ZERO;
         Vec3_Cross(&vYAxis, &vZAxis, &vXAxis);
         
-		std::memset(matrix, 0, sizeof(*matrix));
+        matrix->flags = 0;
         RwMatrixSetIdentityMacro(matrix);
-        matrix->right = vXAxis;
-        matrix->up = vYAxis;
-        matrix->at = vZAxis;
-        matrix->pos = *pvEye;
 
-        RwMatrixUpdate(matrix);
+        Matrix_Update(matrix, &vXAxis, &vYAxis, &vZAxis, pvEye);
     };
 
 
@@ -444,6 +381,7 @@ namespace Math
         {
             RwMatrix matRotation;
             RwMatrixSetIdentityMacro(&matRotation);
+			matRotation = *matrix;
 
             Math::Matrix_RotationYawPitchRoll(&matRotation, rotation->y, rotation->x, rotation->z);
             Math::Matrix_Multiply(matrix, matrix, &matRotation);

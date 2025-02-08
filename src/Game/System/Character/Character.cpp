@@ -39,7 +39,7 @@ CCharacter::CCharacter(const char* pszName, TYPE type)
 , m_fMaxVelocity(0.0f)
 , m_fMotionSpeed(0.0f)
 , m_chrtype(type)
-, m_characterflag(CHARACTERTYPES::FLAG_NONE)
+, m_cflag(CHARACTERTYPES::FLAG_NONE)
 , m_pModel(nullptr)
 , m_pMotionController(nullptr)
 , m_apBodyHitData(nullptr)
@@ -105,15 +105,20 @@ void CCharacter::Run(void)
     RwV3d vFrameVelocity = Math::VECTOR3_ZERO;
     CalcVelocityPerFrame(vFrameVelocity);
 
-    CheckCollisionForBody(vFrameVelocity);
-    CheckCollisionForWall(vFrameVelocity);
+    bool bPeriod = true;
+    CheckCollisionForBody(vFrameVelocity, bPeriod);
+    CheckCollisionForWall(vFrameVelocity, bPeriod);
     CheckCollisionForGround();
+
     UpdateModel();
+
     UpdateCollisionParameterForBody();
-    UpdateCollisionParameterForAttack();
     UpdateCollisionParameterForCatch();
+    UpdateCollisionParameterForAttack();
+
     CheckTimingData();
-	m_pModuleMan->Run();
+    
+    m_pModuleMan->Run();
 };
 
 
@@ -121,24 +126,36 @@ void CCharacter::MessageProc(int32 nMessageID, void* pParam)
 {
     switch (nMessageID)
     {
-    case GAMEOBJECTTYPES::MESSAGEID_ATTACKRESULT:
-        OnMessageAttackResult((CHitCatchData*)pParam);
+    case GAMEOBJECTTYPES::MESSAGEID_SLEEP:
+        SetEnableBodyHit(false);
+        SetEnableCatchHit(false);
+        CGameObject::MessageProc(nMessageID, pParam);
+        break;
+
+    case GAMEOBJECTTYPES::MESSAGEID_AWAKE:
+        SetEnableBodyHit(true);
+        SetEnableCatchHit(true);
+        CGameObject::MessageProc(nMessageID, pParam);
         break;
 
     case GAMEOBJECTTYPES::MESSAGEID_CATCHATTACK:
-        OnMessageCatchAttack((CHitAttackData*)pParam);
+        OnMessageCatchAttack(static_cast<CHitAttackData*>(pParam));
+        break;
+
+    case GAMEOBJECTTYPES::MESSAGEID_ATTACKRESULT:
+        OnMessageAttackResult(static_cast<CHitCatchData*>(pParam));
         break;
 
     case CHARACTERTYPES::MESSAGEID_AERIAL:
-        OnMessageAerial(*((float*)pParam));
+        OnMessageAerial(*static_cast<float*>(pParam));
         break;
         
     case CHARACTERTYPES::MESSAGEID_TOUCHDOWN:
-        OnMessageTouchdown(*((float*)pParam));
+        OnMessageTouchdown(*static_cast<float*>(pParam));
         break;
         
     case CHARACTERTYPES::MESSAGEID_RECVDMG:
-        OnMessageReceivedDamage(int32(pParam));
+        OnMessageReceivedDamage(reinterpret_cast<int32>(pParam));
         break;
         
     case CHARACTERTYPES::MESSAGEID_DEATHFLOOR:
@@ -180,11 +197,8 @@ CCharacter::TYPE CCharacter::GetAttackCharacterType(void) const
 
 void CCharacter::Draw(void) const
 {
-    if (FLAG_TEST(GetObjectFlag(), GAMEOBJECTTYPES::FLAG_SLEEP))
+    if (TestObjectFlag(GAMEOBJECTTYPES::FLAG_SLEEP))
         return;
-
-    ASSERT(m_pModuleMan);
-    ASSERT(m_pModel);
 
     {
         CRenderStateStack RsStack;
@@ -193,9 +207,11 @@ void CCharacter::Draw(void) const
         RsStack.Set(rwRENDERSTATEFOGENABLE, false);
         RsStack.Set(rwRENDERSTATECULLMODE, rwCULLMODECULLNONE);
 
+        ASSERT(m_pModel);
         m_pModel->Draw();
     };
-    
+
+    ASSERT(m_pModuleMan);
     m_pModuleMan->Draw();
 };
 
@@ -204,12 +220,11 @@ void CCharacter::IncludeBasicModule(void)
 {
     m_pModuleMan->Include(new CAmbientLightModule(this));
     m_pModuleMan->Include(new CAtomicDisplayControlModule(this));
+	m_pModuleMan->Include(new CInkThicknessCtrlModule(this));
 
 	CLocusModuleForCharacter* pLocusModule = CLocusModuleForCharacter::New(this);
 	if (pLocusModule)
 		m_pModuleMan->Include(pLocusModule);
-
-	m_pModuleMan->Include(new CInkThicknessCtrlModule(this));
 };
 
 
@@ -221,20 +236,26 @@ void CCharacter::UpdateParameter(void)
     m_vVelocity.y += m_vAcceleration.y * dt;
     m_vVelocity.z += m_vAcceleration.z * dt;
 
-    if (!IsCharacterFlagSet(CHARACTERTYPES::FLAG_CANCEL_GRAVITY))
+    if (!TestCharacterFlag(CHARACTERTYPES::FLAG_CANCEL_GRAVITY))
     {
         float fGravity = CGameProperty::GetGravity();
         m_vVelocity.y += (dt * fGravity);
     };
 
-    if (IsCharacterFlagSet(CHARACTERTYPES::FLAG_CLAMP_VELOCITY_XZ))
-    {        
-        float fVelocity = Math::Vec3_LengthXZ(&m_vVelocity);
+    if (TestCharacterFlag(CHARACTERTYPES::FLAG_CLAMP_VELOCITY_XZ))
+    {
+        float fBuffY = m_vVelocity.y;
+
+        m_vVelocity.y = 0.0f;
+
+        float fVelocity = Math::Vec3_Length(&m_vVelocity);
         if (fVelocity > m_fMaxVelocity)
         {
             m_vVelocity.x *= (m_fMaxVelocity / fVelocity);
             m_vVelocity.z *= (m_fMaxVelocity / fVelocity);
         };
+
+        m_vVelocity.y = fBuffY;
     };
 };
 
@@ -249,9 +270,9 @@ void CCharacter::CalcVelocityPerFrame(RwV3d& rvVelocityPerFrame)
 };
 
 
-void CCharacter::CheckCollisionForBody(RwV3d& rvVelocityPerFrame)
+void CCharacter::CheckCollisionForBody(RwV3d& rvVelocityPerFrame, bool bPeriod)
 {
-    if (IsCharacterFlagSet(CHARACTERTYPES::FLAG_INVALID_HIT_BODY))
+    if (CheckCharacterFlag(CHARACTERTYPES::FLAG_INVALID_HIT_BODY))
         return;
 
     for (int32 i = 0; i < m_nNumBodyHitData; ++i)
@@ -265,41 +286,39 @@ void CCharacter::CheckCollisionForBody(RwV3d& rvVelocityPerFrame)
 
         ASSERT(m_apBodyHitData[i]);
         m_apBodyHitData[i]->SetCurrentPos(&sphere.center);
-        m_apBodyHitData[i]->SetHitRadius(sphere.radius);
 
-        RwV3d HitResult = Math::VECTOR3_ZERO;
-        
-        if (CBodyHitManager::CheckHit(m_apBodyHitData[i], &rvVelocityPerFrame, &HitResult))
+        RwV3d vecHitResult = Math::VECTOR3_ZERO;        
+        if (CBodyHitManager::CheckHit(m_apBodyHitData[i], &rvVelocityPerFrame, &vecHitResult))
         {
-            rvVelocityPerFrame = HitResult;
+            float buffY = rvVelocityPerFrame.y;
+            rvVelocityPerFrame = vecHitResult;
+            rvVelocityPerFrame.y = buffY;
         };
     };
 };
 
 
-void CCharacter::CheckCollisionForWall(RwV3d& rvVelocityPerFrame)
-{
-    uint32 uHitFlag = 0;
+void CCharacter::CheckCollisionForWall(RwV3d& rvVelocityPerFrame, bool bPeriod)
+{    
     RwV3d vPosition = Math::VECTOR3_ZERO;
-    RwV3d vBonePosition = Math::VECTOR3_ZERO;
-    RwV3d vReplacePosition = Math::VECTOR3_ZERO;
-    RwV3d vBodyCheckPosition = Math::VECTOR3_ZERO;    
-    
 	GetPosition(&vPosition);
 
+    RwV3d vBonePosition = Math::VECTOR3_ZERO;
     GetBonePositionOfGroundCheck(&vBonePosition);
+
+    RwV3d vBodyCheckPosition = Math::VECTOR3_ZERO;    
     Math::Vec3_Add(&vBodyCheckPosition, &m_vPosition, &vBonePosition);
 
-    bool bCollision = CWorldMap::CheckCollisionCharacterMove(
-        &vBodyCheckPosition,
-        &vReplacePosition,
-        &rvVelocityPerFrame,
-        &uHitFlag,
-        m_collision.m_fRadius,
-        m_collision.m_fHeight
-    );
+    uint32 uHitFlag = 0;
+    RwV3d vReplacePosition = Math::VECTOR3_ZERO;
+    bool bCollision = CWorldMap::CheckCollisionCharacterMove(&vBodyCheckPosition,
+                                                             &vReplacePosition,
+                                                             &rvVelocityPerFrame,
+                                                             &uHitFlag,
+                                                             m_collision.m_fRadius,
+                                                             m_collision.m_fHeight);
     
-    if (!bCollision || IsCharacterFlagSet(CHARACTERTYPES::FLAG_CANCEL_COLLISION_WALL))
+    if ((!bCollision) || TestCharacterFlag(CHARACTERTYPES::FLAG_CANCEL_COLLISION_WALL))
     {
         Math::Vec3_Add(&vPosition, &m_vPosition, &rvVelocityPerFrame);
         SetPosition(&vPosition);
@@ -339,38 +358,37 @@ void CCharacter::CheckCollisionForWall(RwV3d& rvVelocityPerFrame)
 
 void CCharacter::CheckCollisionForGround(void)
 {
-    RwV3d vPosition = Math::VECTOR3_ZERO;
-    RwV3d vBonePosition = Math::VECTOR3_ZERO;
-    RwV3d vClosestMapPosition = Math::VECTOR3_ZERO;
-    RwV3d vGroundCheckPosition = Math::VECTOR3_ZERO;
-    float fDirection = m_fDirection;
     float fFieldHeight = 0.0f;
     
+    RwV3d vBonePosition = Math::VECTOR3_ZERO;
     GetBonePositionOfGroundCheck(&vBonePosition);
+
+    RwV3d vGroundCheckPosition = Math::VECTOR3_ZERO;
     Math::Vec3_Add(&vGroundCheckPosition, &m_vPosition, &vBonePosition);
     
-    bool bCollision = CWorldMap::CheckCollisionCharacterHeight(
-        &vGroundCheckPosition,
-        &vClosestMapPosition,
-        &fDirection,
-        m_collision.m_fRadius,
-        m_collision.m_fHeight
-    );
-
+    float fDirection = m_fDirection;
+    RwV3d vClosestMapPosition = Math::VECTOR3_ZERO;
+    bool bCollision = CWorldMap::CheckCollisionCharacterHeight(&vGroundCheckPosition,
+                                                               &vClosestMapPosition,
+                                                               &fDirection,
+                                                               m_collision.m_fRadius,
+                                                               m_collision.m_fHeight);
     if (bCollision)
     {
         m_collisionGroundInfo.m_attribute = CWorldMap::GetCollisionResultAttribute();
         CGameObjectManager::SendMessage(this, CHARACTERTYPES::MESSAGEID_TOUCHDOWN, &fFieldHeight);
 
-        if (!Math::FEqual(m_fDirection, fDirection))
+        if (fDirection != m_fDirection)
             SetDirection(fDirection);
 
-        m_vVelocity.y = 0.0f;
-        m_vAcceleration.y = 0.0f;
-        m_collisionGroundInfo.m_bHit = true;
+        m_vVelocity.y               = 0.0f;
+        m_vAcceleration.y           = 0.0f;
+        m_collisionGroundInfo.m_bHit= true;
 
+        RwV3d vPosition = Math::VECTOR3_ZERO;
         Math::Vec3_Sub(&vPosition, &vClosestMapPosition, &vBonePosition);
-        SetPosition(&vPosition);        
+        
+        SetPosition(&vPosition);
     }
     else
     {
@@ -379,21 +397,21 @@ void CCharacter::CheckCollisionForGround(void)
         CGameObjectManager::SendMessage(this, CHARACTERTYPES::MESSAGEID_AERIAL, &fFieldHeight);
 
         m_collisionGroundInfo.m_attribute = CWorldMap::GetCollisionResultAttribute();
-        m_collisionGroundInfo.m_bHit = false;
+        m_collisionGroundInfo.m_bHit      = false;
     };
 
     const CWorldMap::COLLISIONRESULT* pCollisionResult = CWorldMap::GetCollisionResult();
     ASSERT(pCollisionResult);
 
-    m_collisionGroundInfo.m_Color = pCollisionResult->m_Color;
+    m_collisionGroundInfo.m_Color   = pCollisionResult->m_Color;
     m_collisionGroundInfo.m_hittype = pCollisionResult->m_type;
     
     SetGimmickInfo(&m_collisionGroundInfo.m_gimmickinfo, pCollisionResult->m_type);
 
     if (m_collisionGroundInfo.m_bHit)
     {
-        if (m_collisionGroundInfo.m_attribute == MAPTYPES::ATTRIBUTE_DEATH ||
-            m_collisionGroundInfo.m_attribute == MAPTYPES::ATTRIBUTE_DOBON)
+        if ((m_collisionGroundInfo.m_attribute == MAPTYPES::ATTRIBUTE_DEATH) ||
+            (m_collisionGroundInfo.m_attribute == MAPTYPES::ATTRIBUTE_DOBON))
         {
             OnSteppedDeathFloor();
         };
@@ -406,17 +424,17 @@ void CCharacter::UpdateModel(void)
     ASSERT(m_pMotionController);
     ASSERT(m_pModel);
 
-    RwV3d vPosition = Math::VECTOR3_ZERO;
-    float dt = CGameProperty::GetElapsedTime();
-    
     UpdateTransformForModel();
 
-    if (IsCharacterFlagSet(CHARACTERTYPES::FLAG_MOTION_SPEED_CTRL))
+    float dt = CGameProperty::GetElapsedTime();
+    if (TestCharacterFlag(CHARACTERTYPES::FLAG_MOTION_SPEED_CTRL))
         dt *= m_fMotionSpeed;
 
     m_pMotionController->Update(dt);
 
+    RwV3d vPosition = Math::VECTOR3_ZERO;
     GetBonePositionOfPositionCheck(&vPosition);
+
     m_pModel->SetBoundingSphereOffset(&vPosition);
 };
 
@@ -434,14 +452,13 @@ void CCharacter::UpdateCollisionParameterForBody(void)
 
         ASSERT(m_apBodyHitData[i]);
         m_apBodyHitData[i]->SetCurrentPos(&sphere.center);
-        m_apBodyHitData[i]->SetHitRadius(sphere.radius);
     };
 };
 
 
 void CCharacter::UpdateCollisionParameterForCatch(void)
 {
-    if (IsCharacterFlagSet(CHARACTERTYPES::FLAG_INVALID_HIT_CATCH))
+    if (TestCharacterFlag(CHARACTERTYPES::FLAG_INVALID_HIT_CATCH))
         return;
 
     int32 nNumCatch = m_pMotionParameterController->GetNumHitCatchData();
@@ -516,14 +533,14 @@ void CCharacter::CheckTimingData(void)
         fPrevTime = 0.0f;
 
     if (m_pMotionParameterController->IsAttackTiming(fPrevTime, fNowTime))
-        SetCharacterFlag(CHARACTERTYPES::FLAG_OCCURED_TIMING, true);
+        SetCharacterFlag(CHARACTERTYPES::FLAG_OCCURED_TIMING);
     else
-        SetCharacterFlag(CHARACTERTYPES::FLAG_OCCURED_TIMING, false);
+        ClearCharacterFlag(CHARACTERTYPES::FLAG_OCCURED_TIMING);
 
     if (m_pMotionParameterController->IsInvincibleTime(fNowTime))
-        SetCharacterFlag(CHARACTERTYPES::FLAG_OCCURED_INVINCIBILITY_TIMING, true);
+        SetCharacterFlag(CHARACTERTYPES::FLAG_OCCURED_INVINCIBILITY_TIMING);
     else
-        SetCharacterFlag(CHARACTERTYPES::FLAG_OCCURED_INVINCIBILITY_TIMING, false);
+        ClearCharacterFlag(CHARACTERTYPES::FLAG_OCCURED_INVINCIBILITY_TIMING);
 };
 
 
@@ -533,21 +550,18 @@ void CCharacter::OnMessageAerial(float fFieldHeight)
         return;
 
     RwV3d vGroundBonePos = Math::VECTOR3_ZERO;
-    RwV3d vPosition = Math::VECTOR3_ZERO;
-    RwV3d vCheckPosition = Math::VECTOR3_ZERO;    
-
     GetBonePositionOfGroundCheck(&vGroundBonePos);
+
+    RwV3d vPosition = Math::VECTOR3_ZERO;
     GetPosition(&vPosition);
     
+    RwV3d vCheckPosition = Math::VECTOR3_ZERO;
     Math::Vec3_Add(&vCheckPosition, &vPosition, &vGroundBonePos);
 
-    float fY = vCheckPosition.y - fFieldHeight;
-    if (fY < 0.0f)
-        fY = -fY;
-
-    if (fY <= 0.2f)
+	float fHeight = std::fabs(vCheckPosition.y - fFieldHeight);
+    if (fHeight <= 0.2f)
     {
-        vPosition.y += vGroundBonePos.y + fFieldHeight - vCheckPosition.y;
+        vPosition.y += (vGroundBonePos.y + (fFieldHeight - vCheckPosition.y));
         SetPosition(&vPosition);
     }
     else
@@ -579,16 +593,16 @@ void CCharacter::OnMessageCatchAttack(CHitAttackData* pAttack)
 {
     ASSERT(pAttack);
 
-    if (IsCharacterFlagSet(CHARACTERTYPES::FLAG_INVALID_HIT_CATCH))
+    if (TestCharacterFlag(CHARACTERTYPES::FLAG_INVALID_HIT_CATCH))
         return;
 
     CCharacterAttackCalculator calculator(*this, *pAttack);
     
     CHARACTERTYPES::ATTACKRESULTTYPE attackresult = OnDamage(calculator);
     
-    int32 iDamage = int32(calculator.CalcDamage(attackresult));
+    int32 iDamage = static_cast<int32>(calculator.CalcDamage(attackresult));
     if (iDamage > 0)
-        CGameObjectManager::SendMessage(this, CHARACTERTYPES::MESSAGEID_RECVDMG, (void*)iDamage);
+        CGameObjectManager::SendMessage(this, CHARACTERTYPES::MESSAGEID_RECVDMG, reinterpret_cast<void*>(iDamage));
     
     calculator.PlayEffect(attackresult);
     calculator.PlaySE(attackresult);
@@ -651,13 +665,18 @@ void CCharacter::OnMessageCombination(void* pParam)
 
 void CCharacter::OnChangeMotion(void)
 {
-    CLocusModule* pLocusModule = (CLocusModule*)m_pModuleMan->GetModule(MODULETYPE::LOCUS);
+    CLocusModule* pLocusModule = static_cast<CLocusModule*>(m_pModuleMan->GetModule(MODULETYPE::LOCUS));
 	if (pLocusModule)
 		pLocusModule->Reset();
 
-    CAtomicDisplayControlModule* pAtomicDispCtrlModule = (CAtomicDisplayControlModule*)m_pModuleMan->GetModule(MODULETYPE::ATOMIC_DISPLAY_CONTROL);
+    CAtomicDisplayControlModule* pAtomicDispCtrlModule = static_cast<CAtomicDisplayControlModule*>(m_pModuleMan->GetModule(MODULETYPE::ATOMIC_DISPLAY_CONTROL));
 	if (pAtomicDispCtrlModule)
-		pAtomicDispCtrlModule->Reset();
+        pAtomicDispCtrlModule->Reset();
+
+    CHARACTERTYPES::FLAG cflag  = CHARACTERTYPES::FLAG_OCCURED_TIMING
+                                | CHARACTERTYPES::FLAG_OCCURED_INVINCIBILITY_TIMING;
+
+    ClearCharacterFlag(cflag);
 };
 
 
@@ -670,12 +689,6 @@ void CCharacter::OnSteppedDeathFloor(void)
 void CCharacter::RequestDamage(int32 iDmgReq)
 {
     m_iDamageRequest = iDmgReq;
-};
-
-
-bool CCharacter::IsDamageRequested(void) const
-{
-    return (m_iDamageRequest > 0);
 };
 
 
@@ -704,6 +717,7 @@ void CCharacter::GetBonePosition(RwV3d* pvPosition, int32 nBoneID, const RwV3d* 
 
     RwV3d vModelPos = Math::VECTOR3_ZERO;
     m_pModel->GetPosition(&vModelPos);
+
     Math::Vec3_Sub(pvPosition, pvPosition, &vModelPos);
 };
 
@@ -713,11 +727,10 @@ void CCharacter::GetBonePositionOfPositionCheck(RwV3d* pvPosition) const
     ASSERT(m_pModel);
     ASSERT(pvPosition);
 
-    RwV3d vPosBone = *m_pModel->GetBonePositionFromID(CHARACTERTYPES::BONEID_POSITION);
     RwV3d vPosModel = Math::VECTOR3_ZERO;
-
     m_pModel->GetPosition(&vPosModel);
 
+    RwV3d vPosBone = *m_pModel->GetBonePositionFromID(CHARACTERTYPES::BONEID_POSITION);
     Math::Vec3_Sub(pvPosition, &vPosBone, &vPosModel);
 };
 
@@ -735,11 +748,10 @@ void CCharacter::GetOffsetPosition(RwV3d* pvPosition, int32 no) const
 
 void CCharacter::GetBonePositionOfGroundCheck(RwV3d* pvPosition) const
 {
-    RwV3d vPosBone = *m_pModel->GetBonePositionFromID(CHARACTERTYPES::BONEID_GROUND);
     RwV3d vPosModel = Math::VECTOR3_ZERO;
-
     m_pModel->GetPosition(&vPosModel);
 
+    RwV3d vPosBone = *m_pModel->GetBonePositionFromID(CHARACTERTYPES::BONEID_GROUND);
     Math::Vec3_Sub(pvPosition, &vPosBone, &vPosModel);
 };
 
@@ -749,24 +761,15 @@ void CCharacter::Initialize(PARAMETER* pParameter)
     ASSERT(pParameter);
 
     if (pParameter->m_bToon)
-    {
         m_pModel = CModelManager::CreateModelToon(pParameter->m_pszModelName);
-    }
     else
-    {
         m_pModel = CModelManager::CreateModel(pParameter->m_pszModelName);
-    };
 
     ASSERT(m_pModel);
     
     m_pMotionController = new CMotionController(m_pModel);
-    ASSERT(m_pMotionController);
 
-    m_pMotionParameterController = new CMotionParameterController(
-        pParameter->m_pszModelName,
-        m_pModel->GetPartsNum()
-    );
-    ASSERT(m_pMotionParameterController);
+    m_pMotionParameterController = new CMotionParameterController(pParameter->m_pszModelName, m_pModel->GetPartsNum());
 
     m_collision =
     {
@@ -778,16 +781,11 @@ void CCharacter::Initialize(PARAMETER* pParameter)
     
     int32 nMotionNum = m_pMotionParameterController->GetMotionNum();
     for (int32 i = 0; i < nMotionNum; ++i)
-    {
-        m_pMotionController->AddMotion(
-            m_pMotionParameterController->GetMotionName(i)
-        );
-    };
+        m_pMotionController->AddMotion(m_pMotionParameterController->GetMotionName(i));
 
     m_pModuleMan = new CModuleManager;
-    ASSERT(m_pModuleMan);
 
-	m_characterflag = CHARACTERTYPES::FLAG_NONE;
+	m_cflag = CHARACTERTYPES::FLAG_NONE;
     m_collisionWallInfo.m_bHit = false;
     m_collisionGroundInfo.m_bHit = false;
 
@@ -795,7 +793,6 @@ void CCharacter::Initialize(PARAMETER* pParameter)
     if (nBodyHitNum)
     {
         m_apBodyHitData = new CBodyHitData*[nBodyHitNum];
-        ASSERT(m_apBodyHitData);
 		m_nNumBodyHitData = nBodyHitNum;
         
         for (int32 i = 0; i < m_nNumBodyHitData; ++i)
@@ -808,6 +805,7 @@ void CCharacter::Initialize(PARAMETER* pParameter)
 
             CBodyHitData* pBodyHitData = CBodyHitManager::AllocData();
             ASSERT(pBodyHitData);
+
             pBodyHitData->InitData(&sphere.center, sphere.radius);
             pBodyHitData->SetHitID(GetHandle());
 
@@ -887,18 +885,15 @@ void CCharacter::GetFootPosition(RwV3d* pvPosition) const
 
 void CCharacter::SetDirection(float fDir)
 {
-    if (IsCharacterFlagSet(CHARACTERTYPES::FLAG_FIXED_DIRECTION))
+    if (TestCharacterFlag(CHARACTERTYPES::FLAG_FIXED_DIRECTION))
         return;
 
     fDir = Math::RadianCorrect(fDir);
 
     RwV3d vBodyPosition = Math::VECTOR3_ZERO;
-    RwV3d vNewPosition = Math::VECTOR3_ZERO;
-    RwV3d vAfterPosition = Math::VECTOR3_ZERO;
-
     GetBonePositionOfPositionCheck(&vBodyPosition);
 
-    if (!m_pMotionController->GetCurrentMotion())// || Math::FEqual(vBodyPosition.x, 0.0f) && Math::FEqual(vBodyPosition.z, 0.0f))
+    if (!m_pMotionController->GetCurrentMotion() || (vBodyPosition.x == 0.0f) && (vBodyPosition.z == 0.0f))
     {
         m_fDirection = fDir;
     }
@@ -908,8 +903,11 @@ void CCharacter::SetDirection(float fDir)
 
         UpdateTransformForModel();
         UpdateMatrices();
+
+        RwV3d vAfterPosition = Math::VECTOR3_ZERO;
         GetBonePositionOfPositionCheck(&vAfterPosition);
 
+        RwV3d vNewPosition = Math::VECTOR3_ZERO;
         vNewPosition.x = vBodyPosition.x - vAfterPosition.x;
         vNewPosition.y = 0.0f;
         vNewPosition.z = vBodyPosition.z - vAfterPosition.z;
@@ -959,14 +957,14 @@ void CCharacter::SetDirectionFromModelRotate(void)
 {
     RwV3d vModelRot = Math::VECTOR3_ZERO;
     m_pModel->GetRotation(&vModelRot);
+
     m_fDirection = vModelRot.y;
 };
 
 
 void CCharacter::RotateVectorByDirection(RwV3d* pvOut, const RwV3d* pvIn) const
 {
-    RwMatrix matrixRotY;
-    
+    RwMatrix matrixRotY;    
     RwMatrixSetIdentityMacro(&matrixRotY);
     
     Math::Matrix_RotateY(&matrixRotY, m_fDirection);
@@ -979,23 +977,26 @@ bool CCharacter::IsWallCrashPossible(void) const
     if (!m_collisionWallInfo.m_bHit)
         return false;
 
-    if (m_collisionWallInfo.m_attribute != MAPTYPES::ATTRIBUTE_JUMP &&
-        m_collisionWallInfo.m_attribute != MAPTYPES::ATTRIBUTE_MISSJUMP)
+    if ((m_collisionWallInfo.m_attribute != MAPTYPES::ATTRIBUTE_JUMP) &&
+        (m_collisionWallInfo.m_attribute != MAPTYPES::ATTRIBUTE_MISSJUMP))
         return false;
 
-    if (Math::Vec3_LengthXZ(&m_vVelocity) < 10.0f)
+    RwV3d vecVelocity = m_vVelocity;
+    vecVelocity.y = 0.0f;
+    
+    if (Math::Vec3_Length(&vecVelocity) < 10.0f)
         return false;
 
     RwV3d vCharacter = Math::VECTOR3_ZERO;
-    RwV3d vWall = Math::VECTOR3_ZERO;
-    
     RotateVectorByDirection(&vCharacter, &Math::VECTOR3_AXIS_Z);
-    Math::Vec3_Cross(&vWall, &m_collisionWallInfo.m_vNormal, &Math::VECTOR3_AXIS_Y);
-    
+
+    RwV3d vWall = Math::VECTOR3_ZERO;    
+    Math::Vec3_Cross(&vWall, &m_collisionWallInfo.m_vNormal, &Math::VECTOR3_AXIS_Y);    
     vWall.y = 0.0f;
+
     Math::Vec3_Normalize(&vWall, &vWall);
 
-    if (Math::FAbs(Math::Vec3_Dot(&vWall, &vCharacter)) <= 0.35f)
+    if (std::fabs(Math::Vec3_Dot(&vWall, &vCharacter)) <= 0.35f)
         return true;
 
     return false;
@@ -1008,11 +1009,10 @@ void CCharacter::ChangeMotion(const char* pszMotionName, bool bForce)
     ASSERT(m_pMotionController);
     ASSERT(m_pMotionParameterController);
 
-    float fBlendTime = 0.0f;
-    RwV3d vPos = Math::VECTOR3_ZERO;
     RwV3d vLocalBonePosPrev = Math::VECTOR3_ZERO;
-    RwV3d vLocalBonePosNew = Math::VECTOR3_ZERO;
     GetBonePositionOfPositionCheck(&vLocalBonePosPrev);
+
+    float fBlendTime = 0.0f;
 
     if (m_pMotionParameterController->GetCurrentMotionParameter() &&
         m_pMotionParameterController->GetPlaymode())
@@ -1049,19 +1049,23 @@ void CCharacter::ChangeMotion(const char* pszMotionName, bool bForce)
         break;
     };
 
+    RwV3d vLocalBonePosNew = Math::VECTOR3_ZERO;
     GetBonePositionOfPositionCheck(&vLocalBonePosNew);
     
-    vPos = m_vPosition;    
-    vPos.x += vLocalBonePosPrev.x - vLocalBonePosNew.x;
-    vPos.y += vLocalBonePosPrev.y - vLocalBonePosNew.y;
-    vPos.z += vLocalBonePosPrev.z - vLocalBonePosNew.z;
+    RwV3d vPos = m_vPosition;
+    vPos.x += (vLocalBonePosPrev.x - vLocalBonePosNew.x);
+    vPos.y += (vLocalBonePosPrev.y - vLocalBonePosNew.y);
+    vPos.z += (vLocalBonePosPrev.z - vLocalBonePosNew.z);
     m_vPosition = vPos;
 
     RwV3d vFrameVelocity = Math::VECTOR3_ZERO;
-    //CheckCollisionForBody(vFrameVelocity); TODO
-    //CheckCollisionForWall(vFrameVelocity); TODO
+    bool bPeriod = false;
+    CheckCollisionForBody(vFrameVelocity, bPeriod);
+    CheckCollisionForWall(vFrameVelocity, bPeriod);
+
     UpdateTransformForModel();
     UpdateMatrices();
+    
     OnChangeMotion();
 };
 
@@ -1111,7 +1115,7 @@ float CCharacter::GetMotionEndTime(void) const
 {
     ASSERT(m_pMotionController);
 
-    return m_pMotionController->GetEndTime();
+	return m_pMotionController->GetCurrentMotionEndTime();
 };
 
 
@@ -1128,10 +1132,8 @@ float CCharacter::GetNextChainMotionConnectTime(void) const
     ASSERT(m_pMotionParameterController);
 
     float fResult = m_pMotionParameterController->GetNextChainMotionConnectTime(nullptr);
-    if (Math::FEqual(fResult, 0.0f))
-    {
+    if (fResult == 0.0f)
         fResult = m_pMotionController->GetCurrentMotionEndTime();
-    };
 
     return fResult;
 };
@@ -1139,16 +1141,22 @@ float CCharacter::GetNextChainMotionConnectTime(void) const
 
 void CCharacter::SetEnableBodyHit(bool bEnable)
 {
-    SetCharacterFlag(CHARACTERTYPES::FLAG_INVALID_HIT_BODY, !bEnable);
-
 	for (int32 i = 0; i < m_nNumBodyHitData; ++i)
-		m_apBodyHitData[i]->SetState(CBodyHitData::STATE_ENABLE, bEnable);
+        m_apBodyHitData[i]->SetState(CBodyHitData::STATE_ENABLE, bEnable);
+    
+    if (bEnable)
+        ClearCharacterFlag(CHARACTERTYPES::FLAG_INVALID_HIT_BODY);
+    else
+        SetCharacterFlag(CHARACTERTYPES::FLAG_INVALID_HIT_BODY);
 };
 
 
 void CCharacter::SetEnableCatchHit(bool bEnable)
 {
-    SetCharacterFlag(CHARACTERTYPES::FLAG_INVALID_HIT_CATCH, !bEnable);
+    if (bEnable)
+        ClearCharacterFlag(CHARACTERTYPES::FLAG_INVALID_HIT_CATCH);
+    else
+        SetCharacterFlag(CHARACTERTYPES::FLAG_INVALID_HIT_CATCH);
 };
 
 
@@ -1176,14 +1184,14 @@ void CCharacter::UpdateTransformForModel(void)
     ASSERT(m_pModel);
 
     m_pModel->SetPosition(&m_vPosition);
-
-    if (!IsCharacterFlagSet(CHARACTERTYPES::FLAG_FIXED_MODEL_ROTATION))
+    m_pModel->UpdateFrame();
+    
+    if (!TestCharacterFlag(CHARACTERTYPES::FLAG_FIXED_MODEL_ROTATION))
     {
         RwV3d vRotation = { 0.0f, m_fDirection, 0.0f };
-        m_pModel->SetRotation(&vRotation);       
+        m_pModel->SetRotation(&vRotation);
+        m_pModel->UpdateFrame();
     };
-
-	m_pModel->UpdateFrame();
 };
 
 
@@ -1199,24 +1207,23 @@ void CCharacter::UpdateMatrices(void)
 
 void CCharacter::SetMotionSpeed(float fMotionSpeed)
 {
+    ASSERT(fMotionSpeed > 0.0f);
+    
     m_fMotionSpeed = fMotionSpeed;
 };
 
 
 void CCharacter::SetGimmickInfo(COLLISION_GIMMICK_INFO* pCollGimmickInfo, MAPTYPES::HITTYPE hittype)
 {    
+    ASSERT(pCollGimmickInfo);
+
     if (hittype != MAPTYPES::HITTYPE_GIMMICK)
         return;
 
     const CWorldMap::COLLISIONRESULT* pCollisionResult = CWorldMap::GetCollisionResult();
+    ASSERT(pCollisionResult);
     
-    ASSERT(pCollGimmickInfo);
-
-    std::strcpy(
-        pCollGimmickInfo->m_szGimmickObjName,
-        pCollisionResult->m_mapobj.m_szGimmickObjName
-    );
-
+    std::strcpy(pCollGimmickInfo->m_szGimmickObjName, pCollisionResult->m_mapobj.m_szGimmickObjName);
     pCollGimmickInfo->m_type = pCollisionResult->m_mapobj.m_type;
 };
 
@@ -1248,27 +1255,6 @@ void CCharacter::GetAcceleration(RwV3d* pvAcceleration) const
 float CCharacter::GetDirection(void) const
 {
     return m_fDirection;
-};
-
-
-void CCharacter::SetCharacterFlag(CHARACTERTYPES::FLAG flag, bool bSet)
-{
-    if (bSet)
-        FLAG_SET(m_characterflag, flag);
-    else
-        FLAG_CLEAR(m_characterflag, flag);
-};
-
-
-CHARACTERTYPES::FLAG CCharacter::GetCharacterFlag(void) const
-{
-    return CHARACTERTYPES::FLAG(m_characterflag);
-};
-
-
-bool CCharacter::IsCharacterFlagSet(CHARACTERTYPES::FLAG flag) const
-{
-    return FLAG_TEST(m_characterflag, flag);
 };
 
 
@@ -1325,4 +1311,28 @@ bool CCharacter::IsModuleIncluded(MODULETYPE::VALUE type) const
 CCharacter::LIFT_INFO& CCharacter::LiftInfo(void)
 {
     return m_liftinfo;
+};
+
+
+void CCharacter::SetCharacterFlag(CHARACTERTYPES::FLAG flag)
+{
+    m_cflag |= flag;
+};
+
+
+void CCharacter::ClearCharacterFlag(CHARACTERTYPES::FLAG flag)
+{
+    m_cflag &= (~flag);
+};
+
+
+bool CCharacter::TestCharacterFlag(CHARACTERTYPES::FLAG flag) const
+{
+    return ((m_cflag & flag) == flag);
+};
+
+
+bool CCharacter::CheckCharacterFlag(CHARACTERTYPES::FLAG flag) const
+{
+    return ((m_cflag & flag) != 0);
 };

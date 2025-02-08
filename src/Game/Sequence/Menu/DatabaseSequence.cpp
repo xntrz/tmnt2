@@ -99,7 +99,7 @@ void CDatabaseSequence::OnMove(bool bRet, const void* pReturnValue)
     if (bRet)
     {
         if (pReturnValue)
-            m_iLabelCurrent = int32(pReturnValue);
+            m_iLabelCurrent = reinterpret_cast<int32>(pReturnValue);
         else
             m_iLabelCurrent = DatabaseBranch(m_iLabelCurrent);
     }

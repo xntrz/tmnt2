@@ -90,7 +90,7 @@ void CComingSoonSequence::OnMove(bool bRet, const void* pReturnValue)
 
             m_fTimer += CScreen::TimerStride();
 
-            if ((m_fTimer >= 5.0f) || FLAG_TEST(DigitalTrigger, IPad::DIGITAL_START))
+            if ((m_fTimer >= 5.0f) || (DigitalTrigger & IPad::DIGITAL_START))
             {
                 m_fTimer = 0.0f;
 				m_eStep = STEP_FADEOUT;

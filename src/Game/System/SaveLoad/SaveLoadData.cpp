@@ -45,7 +45,7 @@ void CSaveLoadData::Update(void)
     TMNT2_SAVE_DATA savedata;
 
 	ASSERT((m_uSize - sizeof(HEADER)) == sizeof(savedata));
-	std::memcpy(&savedata, (char*)m_pData + sizeof(HEADER), sizeof(savedata));
+	std::memcpy(&savedata, reinterpret_cast<char*>(m_pData) + sizeof(HEADER), sizeof(savedata));
 
     if (savedata.IsValid())
         CGameData::Load(savedata);        
@@ -63,7 +63,7 @@ bool CSaveLoadData::IsValid(void) const
     TMNT2_SAVE_DATA savedata;
 
     ASSERT((m_uSize - sizeof(HEADER)) == sizeof(savedata));
-    std::memcpy(&savedata, (char*)m_pData + sizeof(HEADER), sizeof(savedata));
+    std::memcpy(&savedata, reinterpret_cast<char*>(m_pData) + sizeof(HEADER), sizeof(savedata));
 
     return savedata.IsValid();
 };

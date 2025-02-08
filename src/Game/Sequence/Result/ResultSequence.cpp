@@ -215,8 +215,9 @@ void CResultWorkPool::CrystalLvlUpDraw(void)
 {
     int32 nCryData = (GetCrystalData(m_nLvlupCryIndex) / 10) - 1;
 
-	float fDuration = Math::Floor(CScreen::Framerate() * 0.16f);
-    if (m_auAnimCnt[0] < uint32(fDuration))
+	float fDuration = (CScreen::Framerate() * 0.16f);
+
+    if (m_auAnimCnt[0] < static_cast<uint32>(fDuration))
         ++m_auAnimCnt[0];
 
     uint8 uAlphaBasis = uint8(Math::LinearTween(0.0f, 255.0f, float(m_auAnimCnt[0]), fDuration));
@@ -300,8 +301,9 @@ void CResultWorkPool::CrystalLvlUpDraw(void)
 
 void CResultWorkPool::PersonalResultDraw(void)
 {
-    float fDuration = Math::Floor(CScreen::Framerate() * 0.26f);
-    if (m_auAnimCnt[0] < uint32(fDuration))
+	float fDuration = (CScreen::Framerate() * 0.26f);
+
+    if (m_auAnimCnt[0] < static_cast<uint32>(fDuration))
         ++m_auAnimCnt[0];
 
     float w = Math::LinearTween(0.0f, 32.0f, float(m_auAnimCnt[0]), fDuration);
@@ -337,6 +339,9 @@ void CResultWorkPool::PersonalResultDraw(void)
                     case 2:
                         nEvalResult = CGameData::PlayResult().GetAerialTechRank(i);
                         break;
+
+                    default:
+                        break;
                     };
                 }
                 break;
@@ -358,6 +363,9 @@ void CResultWorkPool::PersonalResultDraw(void)
                             nEvalResult = CGameData::PlayResult().GetShotRank(i);
                         else
                             nEvalResult = CGameData::PlayResult().GetTrickRank(i);
+                        break;
+                        
+                    default:
                         break;
                     };
                 }
@@ -469,7 +477,7 @@ void CResultWorkPool::PrizeCursorDraw(void)
     RENDERSTATE_PUSH(rwRENDERSTATEZWRITEENABLE, false);
     RENDERSTATE_PUSH(rwRENDERSTATESRCBLEND, rwBLENDSRCALPHA);
     RENDERSTATE_PUSH(rwRENDERSTATEDESTBLEND, rwBLENDONE);
-    RENDERSTATE_PUSH(rwRENDERSTATETEXTURERASTER, nullptr);
+    RENDERSTATE_PUSH(rwRENDERSTATETEXTURERASTER, 0);
 
     m_sprite.SetOffset(0.5f, 0.5f);
     m_sprite.Resize(float(CScreen::Width()), 32.0f);
@@ -572,7 +580,8 @@ void CResultWorkPool::CrystalGrowingDraw(void)
         m_sprite.Resize(wh, wh);
 		m_sprite.SetRGBA(255, 255, 255, uAlphaBasis);
 
-        ASSERT(nComboIndex >= 0 && nComboIndex < COUNT_OF(aComboTexIndex));
+        ASSERT(nComboIndex >= 0);
+        ASSERT(nComboIndex < COUNT_OF(aComboTexIndex));
 
         for (int32 i = 0; i < COUNT_OF(aComboTexIndex[0]); ++i)
         {
@@ -672,8 +681,12 @@ void CResultWorkPool::ResultDataSet(void)
 
 int32 CResultWorkPool::GetCrystalData(int32 index) const
 {
-    ASSERT(index >= 0 && index < COUNT_OF(m_aOldCry));
-    ASSERT(index >= 0 && index < COUNT_OF(m_aAddCry));
+    ASSERT(index >= 0);
+    ASSERT(index < COUNT_OF(m_aOldCry));
+
+    ASSERT(index >= 0);
+    ASSERT(index < COUNT_OF(m_aAddCry));
+
     return (m_aOldCry[index] + m_aAddCry[index]);
 };
 
@@ -768,8 +781,8 @@ CResultSequence::~CResultSequence(void)
 bool CResultSequence::OnAttach(const void* pParam)
 {    
     m_resulttype = CGameData::PlayResult().GetResultType();
+
     m_pResultWorkPool = new CResultWorkPool;
-    ASSERT(m_pResultWorkPool);
     m_pResultWorkPool->ResultDataSet();
 
     bool bResult = false;
@@ -854,6 +867,9 @@ void CResultSequence::OnMove(bool bRet, const void* pReturnValue)
 
             Ret();
         }
+        break;
+
+    default:
         break;
     };
 };
@@ -962,6 +978,9 @@ void CResultSequence::BeginFadein(void)
                 case 3:
                     m_pAnimation2D->SetTexture("result_091", pszTextureName);
                     break;
+
+                default:
+                    break;
                 };
             };
         }
@@ -990,9 +1009,12 @@ void CResultSequence::BeginFadein(void)
             int32 nIndex = 0;
             for (int32 i = 0; i < nNumPrize; ++i)
             {
-                if (CGameData::PlayParam().PrizeInfo(i).m_bTaken && CGameData::PlayParam().PrizeInfo(i).m_PrizeType != GAMETYPES::PRIZE_COMEBACK)
+                if (CGameData::PlayParam().PrizeInfo(i).m_bTaken)
                     continue;
-            
+
+                if (CGameData::PlayParam().PrizeInfo(i).m_PrizeType != GAMETYPES::PRIZE_COMEBACK)
+                    continue;
+
                 const char* pszPrizeName = nullptr;
 
                 switch (CGameData::PlayParam().PrizeInfo(i).m_PrizeType)
@@ -1225,12 +1247,9 @@ void CResultSequence::BeginFadein(void)
                     std::sprintf(szNew, "%s", szBuff);
                     m_pAnimation2D->SetText(szOrg, szNew);
 
+                    CGameTime cleartime = CGameData::PlayResult().GetStageCleartime(i);
                     std::sprintf(szOrg, "NRD_N_%02d", i + 1);
-                    std::sprintf(szNew, "%d:%02d:%02d",
-                        CGameData::PlayResult().GetStageCleartime(i).GetHour(),
-                        CGameData::PlayResult().GetStageCleartime(i).GetMinute(),
-                        CGameData::PlayResult().GetStageCleartime(i).GetSecond()
-                    );
+                    std::sprintf(szNew, "%d:%02d:%02d", cleartime.GetHour(), cleartime.GetMinute(), cleartime.GetSecond());
                     m_pAnimation2D->SetText(szOrg, szNew);
                 
                     const char* pszMvpName = nullptr;
@@ -1285,11 +1304,8 @@ void CResultSequence::BeginFadein(void)
             std::sprintf(szNew, "%.1f%%", fRemainHPRatio);
             m_pAnimation2D->SetText("NRE_N_01", szNew);
 
-            std::sprintf(szNew, "%d:%02d:%02d",
-                CGameData::PlayResult().GetCleartimeTotal().GetHour(),
-                CGameData::PlayResult().GetCleartimeTotal().GetMinute(),
-                CGameData::PlayResult().GetCleartimeTotal().GetSecond()
-            );
+            CGameTime cleartimeTotal = CGameData::PlayResult().GetCleartimeTotal();
+            std::sprintf(szNew, "%d:%02d:%02d", cleartimeTotal.GetHour(), cleartimeTotal.GetMinute(), cleartimeTotal.GetSecond());
             m_pAnimation2D->SetText("NRE_S_02", szNew);            
         }
         break;

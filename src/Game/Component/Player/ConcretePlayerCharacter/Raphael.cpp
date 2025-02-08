@@ -12,19 +12,11 @@
 
 namespace Raphael
 {
-    bool CAttackJump::IsEnableChangeStatus(PLAYERTYPES::STATUS status)
-    {
-        PLAYERTYPES::STATUS aStatusArray[] =
-        {
-            PLAYERTYPES::STATUS_JUMP,
-            PLAYERTYPES::STATUS_JUMP_2ND,
-            PLAYERTYPES::STATUS_JUMP_WALL,
-            PLAYERTYPES::STATUS_AERIAL,
-            PLAYERTYPES::STATUS_AERIAL_MOVE,
-        };
-
-        return IsWithinStatusFromArray(status, aStatusArray, COUNT_OF(aStatusArray));
-    };
+    DEFINE_ENABLED_STATUS_FOR(CAttackJump, { PLAYERTYPES::STATUS_JUMP,
+                                             PLAYERTYPES::STATUS_JUMP_2ND,
+                                             PLAYERTYPES::STATUS_JUMP_WALL,
+                                             PLAYERTYPES::STATUS_AERIAL,
+                                             PLAYERTYPES::STATUS_AERIAL_MOVE });
 
 
     void CAttackJump::OnAttach(void)
@@ -80,10 +72,7 @@ namespace Raphael
     //
 
 
-    bool CAttackAAC::IsEnableChangeStatus(PLAYERTYPES::STATUS status)
-    {
-        return (status == PLAYERTYPES::STATUS_ATTACK_AA);
-    };
+    DEFINE_ENABLED_STATUS_FOR(CAttackAAC, { PLAYERTYPES::STATUS_ATTACK_AA });
 
 
     void CAttackAAC::OnAttach(void)
@@ -124,18 +113,9 @@ namespace Raphael
     // *********************************************************************************
     //
 
-
-    bool CPush::IsEnableChangeStatus(PLAYERTYPES::STATUS status)
-    {
-        PLAYERTYPES::STATUS aStatusArray[] =
-        {
-            PLAYERTYPES::STATUS_IDLE,
-            PLAYERTYPES::STATUS_WALK,
-            PLAYERTYPES::STATUS_RUN,
-        };
-
-        return IsWithinStatusFromArray(status, aStatusArray, COUNT_OF(aStatusArray));
-    };
+    DEFINE_ENABLED_STATUS_FOR(CPush, { PLAYERTYPES::STATUS_IDLE,
+                                       PLAYERTYPES::STATUS_WALK,
+                                       PLAYERTYPES::STATUS_RUN });
 
 
     void CPush::OnAttach(void)
@@ -159,13 +139,11 @@ namespace Raphael
         const CPlayerCharacter::COLLISIONWALLINFO* pWallInfo = Character().GetCollisionWall();
         ASSERT(pWallInfo);
         
-        CGimmickManager::PostEvent(
-            pWallInfo->m_gimmickinfo.m_szGimmickObjName,
-            Character().GetName(),
-            GIMMICKTYPES::EVENTTYPE_ACTIVATE
-        );
+        CGimmickManager::PostEvent(pWallInfo->m_gimmickinfo.m_szGimmickObjName,
+                                   Character().GetName(),
+                                   GIMMICKTYPES::EVENTTYPE_ACTIVATE);
     };
-};
+}; /* namespace Raphael */
 
 
 CRaphael::CRaphael(GAMETYPES::COSTUME costume)
@@ -192,8 +170,7 @@ CRaphael::CRaphael(GAMETYPES::COSTUME costume)
     parameter.m_feature.m_fAerialAcceleration   = 12.0f;
     parameter.m_feature.m_nKnifeAttachBoneID    = CHARACTERTYPES::BONEID_RIGHT_WRIST;
 
-    parameter.m_pStateMachine = new CPlayerStateMachine(this, PLAYERTYPES::NORMALMAX);
-    ASSERT(parameter.m_pStateMachine);
+    parameter.m_pStateMachine = new CPlayerStateMachine(this, PLAYERTYPES::STATUS::NORMALMAX);
 
     CStatus::RegistDefaultForStateMachine(*parameter.m_pStateMachine);
 
@@ -206,17 +183,15 @@ CRaphael::CRaphael(GAMETYPES::COSTUME costume)
 
     Initialize(&parameter);
 
-    m_pModuleMan->Include(CCircleShadowModule::New(this, 1.5f, 1.5f, true));
+    m_pModuleMan->Include(CCircleShadowModule::New(this, 1.5f, 1.5f, false));
 
     if (costume != GAMETYPES::COSTUME_SAMURAI)
     {
-        m_pModuleMan->Include(new CBandanaModule(
-            this,
-            m_pModel,
-            CHARACTERTYPES::BONEID_HEAD,
-            &Raphael::BANDANA_OFFSET,
-            CBandanaModule::BANDANACOLOR_RED
-        ));
+        m_pModuleMan->Include(new CBandanaModule(this,
+                                                 m_pModel,
+                                                 CHARACTERTYPES::BONEID_HEAD,
+                                                 &Raphael::BANDANA_OFFSET,
+                                                 CBandanaModule::BANDANACOLOR_RED));
     };
 };
 

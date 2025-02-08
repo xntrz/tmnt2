@@ -10,6 +10,22 @@
 #include "adx_pc.h"
 
 
+/*static*/ bool CPCFileManager::IsExist(const char* pszFilename)
+{
+    ASSERT(pszFilename != nullptr);
+    
+    CPCFileManager& filemanager = static_cast<CPCFileManager&>(Instance());
+
+    char szFilepath[256];
+    szFilepath[0] = '\0';
+    std::strcpy(szFilepath, filemanager.m_szAfsPath);
+    std::strcat(szFilepath, "/");
+    std::strcat(szFilepath, pszFilename);
+
+    return CPCPhyFileAccess::IsExists(szFilepath);
+};
+
+
 CPCFileManager::CPCFileManager(void)
 : m_rwFileSystemPC()
 , m_aPhyFAccessPool()
@@ -72,12 +88,25 @@ void CPCFileManager::Error(const char* pszDescription)
 
 CFileAccess* CPCFileManager::AllocRequest(int32 nType, void* pTypeData)
 {
+    if (nType == FILETYPE_PC)        
+    {
+        const char* fname = static_cast<const char*>(pTypeData);
+
+        char szFilepath[256];
+        szFilepath[0] = '\0';
+        std::strcpy(szFilepath, m_szAfsPath);
+        std::strcat(szFilepath, "/");
+        std::strcat(szFilepath, fname);
+
+        return PhyAccessAlloc(szFilepath);
+    };
+
     if (nType != CAdxFileManager::FILETYPE_ID)
         return CAdxFileManager::AllocRequest(nType, pTypeData);
 
     if (m_bAfsOverrideFlag)
     {
-        int32 id = int32(pTypeData);
+        int32 id = reinterpret_cast<int32>(pTypeData);
 
         char szFilename[256];
         szFilename[0] = '\0';
@@ -128,7 +157,7 @@ void CPCFileManager::SetAfsPath(void)
     if (CConfigure::CheckArgValue("afspath", &pszArgValue))
     {
         std::strcpy(m_szAfsPath, pszArgValue);
-        CFilename::ConvPathPlatform(m_szAfsPath);
+        //CFilename::ConvPathPlatform(m_szAfsPath);
     }
     else
     {

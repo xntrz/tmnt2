@@ -15,42 +15,45 @@ private:
     static const int32 TRINUM       = 256 * 256;
     static const int32 VERTEXNUM    = TRINUM * 4;
     static const int32 INDEXNUM     = TRINUM * 6;
-    static const int32 SPHERE_DIV_X = 16;
-	static const int32 SPHERE_DIV_Y = 16;
+    static const int32 SPHERE_DIV_X = 8;
+	static const int32 SPHERE_DIV_Y = 8;
 
     struct SHAPE_SPHERE
     {
-        RwV3d m_vPosition;
-        float m_fRadius;
+        RwV3d  m_vPosition;
+        float  m_fRadius;
         RwRGBA m_Color;
+        float  m_fScaleY;
     };
 
     struct SHAPE_LINE
     {
-        RwV3d m_vStart;
-        RwV3d m_vEnd;
+        RwV3d  m_vStart;
+        RwV3d  m_vEnd;
         RwRGBA m_ColorStart;
         RwRGBA m_ColorEnd;
+        float  m_fThickness;
     };
 
     struct SHAPE_PLANE
     {
-        RwV3d m_vPoint[4];
+        RwV3d  m_vPoint[4];
         RwRGBA m_Color;
     };
 
     struct SHAPE_BOX
     {
-        RwV3d m_vPoint[8];
+        RwV3d  m_vPoint[8];
         RwRGBA m_Color;
     };
 
     struct LABEL
     {
-        RwV3d m_vPosition;
-        char m_szLabel[128];
+        RwV3d  m_vPosition;
+        char   m_szLabel[128];
         RwRGBA m_Color;
-        float m_fHeight;
+        float  m_fHeight;
+        float  m_fOffsetY;
     };
 
     struct SHAPE : public CListNode<SHAPE>
@@ -121,6 +124,7 @@ private:
 	int32 m_nIndexOffset;
 	int32 m_nIndexAccum;
     int32 m_nShapeNum;
+	float m_fLabelDiff;
 };
 
 
@@ -132,13 +136,15 @@ CDebugShapeContainer::CDebugShapeContainer(void)
 , m_nIndexOffset(0)
 , m_nIndexAccum(0)
 , m_nShapeNum(0)
+, m_fLabelDiff(0.0f)
 {
     for (int32 i = 0; i < COUNT_OF(m_aShape); ++i)
         m_listShapePool.push_back(&m_aShape[i]);
 
     m_pVertexBuffer = new RwIm3DVertex[VERTEXNUM];
-    m_pIndexBuffer = new RwImVertexIndex[INDEXNUM];
     ASSERT(m_pVertexBuffer);
+    
+    m_pIndexBuffer = new RwImVertexIndex[INDEXNUM];
     ASSERT(m_pIndexBuffer);
 
     m_nVertexMax = VERTEXNUM;
@@ -178,7 +184,7 @@ void CDebugShapeContainer::Run(float dt)
 
 void CDebugShapeContainer::FrameBegin(void)
 {
-	;
+    ;
 };
 
 
@@ -212,6 +218,7 @@ void CDebugShapeContainer::Draw3D(void)
             break;
 
         case SHAPE::TYPE_LINE:
+			DrawLine(&it.m_data.line);
             break;
 
         case SHAPE::TYPE_PLANE:
@@ -237,6 +244,7 @@ void CDebugShapeContainer::Draw3D(void)
 void CDebugShapeContainer::Draw2D(void)
 {
     RSPush2D();
+	m_fLabelDiff = 0.0f;
     for (SHAPE& it : m_listShapeAlloc2D)
     {
         switch (it.m_type)
@@ -264,6 +272,7 @@ void CDebugShapeContainer::ShowSphere(const RwSphere* pSphere, const RwRGBA& rCo
     pShape->m_data.sphere.m_Color       = rColor;
     pShape->m_data.sphere.m_fRadius     = pSphere->radius;
     pShape->m_data.sphere.m_vPosition   = pSphere->center;
+    pShape->m_data.sphere.m_fScaleY     = CDebugShape::m_fSphereScaleY;
 };
 
 
@@ -278,6 +287,7 @@ void CDebugShapeContainer::ShowLine(const RwLine* pLine, const RwRGBA& rColorSta
     pShape->m_data.line.m_vEnd          = pLine->end;
     pShape->m_data.line.m_ColorStart    = rColorStart;
     pShape->m_data.line.m_ColorEnd      = rColorEnd;
+    pShape->m_data.line.m_fThickness    = CDebugShape::m_fLineThickness;
 };
 
 
@@ -327,6 +337,7 @@ void CDebugShapeContainer::ShowLabel(const RwV3d* pvPosition, const char* pszLab
     pShape->m_data.label.m_Color        = rColor;
     pShape->m_data.label.m_fHeight      = fHeight;
     pShape->m_data.label.m_vPosition    = *pvPosition;
+	pShape->m_data.label.m_fOffsetY		= CDebugShape::m_fLabelOffsetY;
 };
 
 
@@ -357,7 +368,8 @@ CDebugShapeContainer::SHAPE* CDebugShapeContainer::ShapeAlloc(SHAPE::TYPE type)
 void CDebugShapeContainer::CleanupShapeList(CList<SHAPE>& list)
 {
     auto it = list.begin();
-    while (it)
+    auto itEnd = list.end();
+    while (it != itEnd)
     {
         SHAPE* pShape = &(*it);
         if (pShape->m_fTime >= pShape->m_fTimeEnd)
@@ -401,7 +413,7 @@ void CDebugShapeContainer::DrawSphere(SHAPE_SPHERE* pShapeSphere)
             float fDeltaY = (float(i) / float(SPHERE_DIV_Y));
 
             pVertex->objVertex.x = fRadius * Math::Cos(fDeltaX * 2.0f * Math::PI) * Math::Sin(fDeltaY * Math::PI);
-            pVertex->objVertex.y = fRadius * Math::Cos(fDeltaY * Math::PI);
+            pVertex->objVertex.y = (fRadius * Math::Cos(fDeltaY * Math::PI)) * pShapeSphere->m_fScaleY;
             pVertex->objVertex.z = fRadius * Math::Sin(fDeltaX * 2.0f * Math::PI) * Math::Sin(fDeltaY * Math::PI);    
 
             Math::Vec3_Add(&pVertex->objVertex, &pVertex->objVertex, &vPosition);
@@ -432,9 +444,77 @@ void CDebugShapeContainer::DrawSphere(SHAPE_SPHERE* pShapeSphere)
 
 void CDebugShapeContainer::DrawLine(SHAPE_LINE* pShapeLine)
 {
+    if (!(IsAnyPointOnScreen(&pShapeLine->m_vStart, 1) ||
+          IsAnyPointOnScreen(&pShapeLine->m_vEnd, 1)))
+        return;
+
+    float thickness = pShapeLine->m_fThickness;
+    RwV3d start = pShapeLine->m_vStart;
+    RwV3d end = pShapeLine->m_vEnd;
+
     //
-    //  TODO
-    //
+    //  draw line as cube
+    // 
+    //             6           7
+    //              x-----------x
+    //             /|          /|
+    //          2 / |       3 / |
+    //           x--|--------x  |
+    //           |  x--------|--x 
+    //           | / 5       | / 4
+    //           |/          |/
+    //           x-----------x 
+    //          1             0
+    // 
+
+    RwIm3DVertex aVertex[8];
+
+    for (int32 i = 0; i < COUNT_OF(aVertex); ++i)
+    {
+        aVertex[i].color     = RWRGBALONGEX((i < 4 ? pShapeLine->m_ColorStart : pShapeLine->m_ColorEnd));
+        aVertex[i].objNormal = { 0.0f, 0.0f, 0.0f };
+        aVertex[i].u         = 0.0f;        
+        aVertex[i].v         = 0.0f;
+    };
+
+    aVertex[0].objVertex = { start.x,               start.y,                start.z };
+    aVertex[1].objVertex = { start.x + thickness,   start.y,                start.z };
+    aVertex[2].objVertex = { start.x + thickness,   start.y + thickness,    start.z };
+    aVertex[3].objVertex = { start.x,               start.y + thickness,    start.z };
+
+    aVertex[4].objVertex = { end.x,                 end.y,                  end.z };
+    aVertex[5].objVertex = { end.x + thickness,     end.y,                  end.z };
+    aVertex[6].objVertex = { end.x + thickness,     end.y + thickness,      end.z };
+    aVertex[7].objVertex = { end.x,                 end.y + thickness,      end.z };
+
+    RwImVertexIndex aIndex[] =
+    {        
+        // up
+        3, 2, 6,
+        6, 7, 3,
+
+        // down
+        0, 1, 5,
+        5, 4, 0,
+
+        // left
+        1, 2, 6,
+        6, 5, 1,
+
+        // right
+        0, 3, 7,
+        7, 4, 0,
+
+        // front
+        0, 1, 2,
+        2, 3, 0,
+
+        // back
+        4, 5, 6,
+        6, 7, 4,
+    };
+    
+    Accumulate(aVertex, COUNT_OF(aVertex), aIndex, COUNT_OF(aIndex));
 };
 
 
@@ -520,6 +600,9 @@ void CDebugShapeContainer::DrawLabel(LABEL* pLabel)
 {
     RwV3d vScPos = Math::VECTOR3_ZERO;
     RwV3d vPt = pLabel->m_vPosition;
+
+	if (Math::FEqual(pLabel->m_fOffsetY, 0.0f))
+		m_fLabelDiff = 0.0f;
         
     if (IsAnyPointOnScreen(&vPt, 1, &vScPos))
     {
@@ -532,9 +615,12 @@ void CDebugShapeContainer::DrawLabel(LABEL* pLabel)
         vDistance.y = 0.0f;
         float fDistance = Math::Vec3_Length(&vDistance);
         
-		float fHeight = ((pLabel->m_fHeight / fDistance) * pLabel->m_fHeight);
-        if(fHeight <= 0.0f)
-            return;
+		float fHeight = (((pLabel->m_fHeight / fDistance) * 0.75f) * pLabel->m_fHeight);
+		if (fHeight <= 0.0f)
+			return;
+
+		float fLabelDiff = m_fLabelDiff;
+        m_fLabelDiff += (fHeight - pLabel->m_fHeight);
 
         RwRGBA TextColor = pLabel->m_Color;
         RwV2d vTextPosition = Math::VECTOR2_ZERO;
@@ -542,9 +628,13 @@ void CDebugShapeContainer::DrawLabel(LABEL* pLabel)
         vTextPosition.x = CSprite::m_fVirtualScreenX + (vScPos.x * CSprite::m_fVirtualScreenW);
         vTextPosition.y = CSprite::m_fVirtualScreenY + (vScPos.y * CSprite::m_fVirtualScreenH);
 
-		CGameFont::SetHeight(fHeight);
+		float fWidth = CGameFont::GetStringWidth(pLabel->m_szLabel, fHeight);
+        vTextPosition.x += (fWidth * -0.5f);
+		vTextPosition.y += fLabelDiff;
+
+        CGameFont::SetHeight(fHeight);
         CGameFont::SetRGBA(TextColor.red, TextColor.green, TextColor.blue, TextColor.alpha);
-        CGameFont::Show(pLabel->m_szLabel, vTextPosition.x, vTextPosition.y);
+        CGameFont::Show(pLabel->m_szLabel, vTextPosition.x, vTextPosition.y + pLabel->m_fOffsetY);
     };
 };
 
@@ -591,14 +681,14 @@ void CDebugShapeContainer::Flush(void)
 
 void CDebugShapeContainer::RSPush3D(void)
 {
-    RENDERSTATE_PUSH(rwRENDERSTATESRCBLEND, rwBLENDSRCALPHA);
-    RENDERSTATE_PUSH(rwRENDERSTATEDESTBLEND, rwBLENDINVSRCALPHA);
-	RENDERSTATE_PUSH(rwRENDERSTATEZWRITEENABLE, false);
-	RENDERSTATE_PUSH(rwRENDERSTATEZTESTENABLE, true);
-    RENDERSTATE_PUSH(rwRENDERSTATEFOGENABLE, false);
+    RENDERSTATE_PUSH(rwRENDERSTATESRCBLEND,          rwBLENDSRCALPHA);
+    RENDERSTATE_PUSH(rwRENDERSTATEDESTBLEND,         rwBLENDINVSRCALPHA);
+	RENDERSTATE_PUSH(rwRENDERSTATEZWRITEENABLE,      false);
+	RENDERSTATE_PUSH(rwRENDERSTATEZTESTENABLE,       true);
+    RENDERSTATE_PUSH(rwRENDERSTATEFOGENABLE,         false);
     RENDERSTATE_PUSH(rwRENDERSTATEVERTEXALPHAENABLE, true);
-    RENDERSTATE_PUSH(rwRENDERSTATECULLMODE, rwCULLMODECULLNONE);
-    RENDERSTATE_PUSH(rwRENDERSTATETEXTURERASTER, 0);
+    RENDERSTATE_PUSH(rwRENDERSTATECULLMODE,          rwCULLMODECULLNONE);
+    RENDERSTATE_PUSH(rwRENDERSTATETEXTURERASTER,     0);
 };
 
 
@@ -648,12 +738,14 @@ bool CDebugShapeContainer::IsAnyPointOnScreen(const RwV3d* aPt, int32 nNumPt, Rw
             vScreenPos.x *= (1.0f / vScreenPos.z);
             vScreenPos.y *= (1.0f / vScreenPos.z);
 
-            if (vScreenPos.z >= 1.0f &&
-                vScreenPos.z <= 100.0f &&
-                vScreenPos.x >= 0.0f &&
-                vScreenPos.x <= 1.0f &&
-                vScreenPos.y >= 0.0f &&
-                vScreenPos.y <= 1.0f)
+            float fExtend = 0.2f;
+
+            if (vScreenPos.z >= 1.0f              &&
+                vScreenPos.z <= 100.0f            &&
+                vScreenPos.x >= (0.0f + -fExtend) &&
+                vScreenPos.x <= (1.0f +  fExtend) &&
+                vScreenPos.y >= (0.0f + -fExtend) &&
+                vScreenPos.y <= (1.0f +  fExtend))
             {
                 if (pvScreenPosRet)
                     *pvScreenPosRet = vScreenPos;
@@ -679,7 +771,10 @@ static inline CDebugShapeContainer& DebugShapeContainer(void)
 
 
 /*static*/ float CDebugShape::m_fLabelHeight = 12.0f;
+/*static*/ float CDebugShape::m_fLabelOffsetY = 0.0f;
 /*static*/ float CDebugShape::m_fDuration = 0.0f;
+/*static*/ float CDebugShape::m_fLineThickness = 0.05f;
+/*static*/ float CDebugShape::m_fSphereScaleY = 1.0f;
 
 
 /*static*/ void CDebugShape::Initialize(void)

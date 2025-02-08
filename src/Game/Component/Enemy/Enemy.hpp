@@ -4,6 +4,7 @@
 #include "EnemyTypes.hpp"
 
 #include "Game/System/GameObject/GameObject.hpp"
+#include "Game/Component/Effect/EffectID.hpp"
 
 
 class CEnemyCharacter;
@@ -16,10 +17,10 @@ public:
     static int32 m_iUniqueCount;
     
     static CEnemy* New(const ENEMYTYPES::CREATEINFO* pCreateInfo);
+    static EFFECTID::VALUE GetNeededEffect(ENEMYID::VALUE enemyId, int32 no); // returns ID_UNKNOWN if there is no more effects
     
     CEnemy(const char* pszName, ENEMYID::VALUE idEnemy, CEnemyCharacter* pEnemyChr);
     virtual ~CEnemy(void);
-    virtual CEnemyCharacter& EnemyCharacter(void) const;
     void Kill(void);
     void Start(void);
     void StartAI(void);
@@ -27,6 +28,8 @@ public:
     void GetPosition(RwV3d* pvPosition) const;
     int32 GetHPMax(void) const;
     int32 GetHP(void);
+    CEnemyCharacter& Character(void);
+    const CEnemyCharacter& Character(void) const;
 
 private:
     CEnemyCharacter* m_pEnemyCharacter;

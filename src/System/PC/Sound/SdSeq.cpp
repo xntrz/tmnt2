@@ -126,6 +126,7 @@ static void SdSeqSetFrequency(SdSeqWork_t* Work, int32 _note)
 
 static int32 SdSeqRandomExe(SdSeqWork_t* Work)
 {
+    ASSERT(Work->Random.Speed == 0);
     return 0;
 };
 
@@ -143,8 +144,8 @@ static int32 SdSeqGetVibratoNote(SdSeqWork_t* Work)
 
     if (Work->Vibrato.ResultDeep >= 0x8000)
         return (((Work->Vibrato.ResultDeep & 0x7FFF) + 512) * Data) / 512;
-    else
-        return (Work->Vibrato.ResultDeep * Data) / 0x8000;
+    
+    return (Work->Vibrato.ResultDeep * Data) / 0x8000;
 };
 
 
@@ -157,9 +158,11 @@ static int32 SdSeqSweepNote(SdSeqWork_t* Work)
         ASSERT(idx >= 0);
         ASSERT(idx < (COUNT_OF(SdSweepTable) - 1));
 
-        int32 Data = SD_INTERPOLATE(SdSweepTable[idx], SdSweepTable[idx + 1], Work->Sweep.Offset);
+        int32 Data = SD_INTERPOLATE((int)SdSweepTable[idx], (int)SdSweepTable[idx + 1], Work->Sweep.Offset);
 
-        return Work->Sweep.StartNote + (((Work->Sweep.PurposeNote - Work->Sweep.StartNote) * Data) >> 16);
+		int32 Diff = Work->Sweep.PurposeNote - Work->Sweep.StartNote;
+
+        return Work->Sweep.StartNote + ((Diff * Data) >> 16);
     };
 
     return Work->Sweep.PurposeNote;
@@ -245,8 +248,8 @@ static void SdSeqPanPotDolby(SdSeqWork_t* Work, int32* _volLeft, int32* _volRigh
 
         SurPos = ((int32)Work->SurCtrl.Rot / 182) + s_acSdSpnAngle[idxSur];
 
-        if (SdDrvSurMode && SurPos < 270 && SurPos > 90)
-            SurPos = 180;
+        //if (SdDrvSurMode && SurPos < 270 && SurPos > 90)
+        //    SurPos = 180;
     };
 
     float c = 0.0f;
@@ -259,7 +262,7 @@ static void SdSeqPanPotDolby(SdSeqWork_t* Work, int32* _volLeft, int32* _volRigh
     }
     else
     {
-        float r = (((float)SurPos + (float)PanPos) * 3.141592f) / 360.0f;
+        float r = ((float)(SurPos + PanPos) * 3.141592f) / 360.0f;
         c = std::cos(r);
         s = std::sin(r);
 
@@ -291,7 +294,7 @@ static void SdSeqOutSideStep(SdSeqWork_t* Work)
 {
     if (Work->Step.GateTime &&
         (Work->Step.StepCount == 1) &&
-        (Work->RrRate < 0x18u))
+        (Work->RrRate < 24))
     {
         SdIOSetRr(Work->ChNo, 24);
         ++Work->NoiseCut;
@@ -352,7 +355,7 @@ static void SdSeqOutSideStep(SdSeqWork_t* Work)
         };
     };
 
-    int32 note = Work->RdcParam[0] + Work->PcParam[0].Data + Work->CrxParam[0].Data + Work->Sweep.Result + vibNote;
+    int32 note = (int32)Work->RdcParam[0] + Work->PcParam[0].Data + Work->CrxParam[0].Data + Work->Sweep.Result + vibNote;
     int32 rnd = SdSeqRandomExe(Work);
 
     SdSeqSetFrequency(Work, note + rnd);
@@ -404,14 +407,14 @@ static void SdSeqInSideStep(SdSeqWork_t* Work)
     };
 
     if (*SeqData >= 0x68)
-        Work->Step.NoteData = *SeqData - 0x68;
+        Work->Step.NoteData = (int16)(*SeqData - 0x68);
     else
-        Work->Step.NoteData = *SeqData;
+        Work->Step.NoteData = (int16)*SeqData;
 
     if (Work->Step.NoteData >= 0x48)
     {
         if (Work->Step.NoteData == 0x67)
-            Work->Step.NoteData = *Data++;
+            Work->Step.NoteData = (int16)*Data++;
 
         SdSeqToneSet(Work, 0, Work->Step.NoteData);
         Work->Step.NoteData = 0x30;
@@ -419,7 +422,7 @@ static void SdSeqInSideStep(SdSeqWork_t* Work)
 
     int32 LastNote = Work->Frequency.Data;
 
-    Work->Frequency.Data = Work->Step.NoteData;
+    Work->Frequency.Data = (int32)Work->Step.NoteData;
     Work->Frequency.Data += Work->Frequency.Trn;
     Work->Frequency.Data <<= 8;
     Work->Frequency.Data += Work->Frequency.Den;
@@ -430,15 +433,15 @@ static void SdSeqInSideStep(SdSeqWork_t* Work)
         Work->Frequency.Data -= 0x6000;
 
     if (*SeqData < 0x68)
-        Work->Step.StepTime = *Data++;
+        Work->Step.StepTime = (int16)*Data++;
 
     Work->Step.StepCount = Work->Step.StepTime;
 
-    int16 GateLast = *Data;
+    int16 GateLast = (int16)*Data;
     if (*Data++ < 0x80)
     {
         Work->Step.GateLast = GateLast;
-        GateLast = *Data++;
+        GateLast = (int16)*Data++;
     };
 
     Work->Step.GateTime = Work->Step.GateLast;
@@ -470,14 +473,14 @@ static void SdSeqInSideStep(SdSeqWork_t* Work)
 
         if (Work->Sweep.PosFlag)
         {
-            Work->Sweep.StartNote = LastNote;
-            Work->Sweep.Result = LastNote;
-            Work->Sweep.OffsetDelta = Work->Sweep.Count << 16 >> 8;
+            Work->Sweep.StartNote   = LastNote;
+            Work->Sweep.Result      = LastNote;
+            Work->Sweep.OffsetDelta = (Work->Sweep.Count << 16) >> 8;
         }
         else
         {
-            Work->Sweep.StartNote = Work->Frequency.Data + Work->Sweep.OffsetDeep;
-            Work->Sweep.Result = Work->Frequency.Data + Work->Sweep.OffsetDeep;
+            Work->Sweep.StartNote   = Work->Frequency.Data + Work->Sweep.OffsetDeep;
+            Work->Sweep.Result      = Work->Frequency.Data + Work->Sweep.OffsetDeep;
             Work->Sweep.OffsetDelta = SdSeqSetSweepDelta(Work);
         };
     };
@@ -488,7 +491,7 @@ static void SdSeqInSideStep(SdSeqWork_t* Work)
     {
         if (Work->NoiseCut)
         {
-            SdIOSetRr(Work->ChNo, Work->RrRate);
+            SdIOSetRr(Work->ChNo, (int32)Work->RrRate);
             --Work->NoiseCut;
         };
 
@@ -499,10 +502,10 @@ static void SdSeqInSideStep(SdSeqWork_t* Work)
 
     if (*Data++ == 228 && !Work->Sweep.Count)
     {
-        Work->Sweep.HoldCount 	= *Data++;
-        Work->Sweep.Count 		= *Data++;
+        Work->Sweep.HoldCount 	= (int16)*Data++;
+        Work->Sweep.Count 		= (int16)*Data++;
         Work->Sweep.StartNote 	= Work->Frequency.Data;
-        Work->Sweep.PurposeNote = ((*Data++ + Work->Frequency.Trn) << 8) + Work->Frequency.Den + Work->L1.Freq + Work->L2.Freq;
+        Work->Sweep.PurposeNote = (((int32)*Data++ + Work->Frequency.Trn) << 8) + Work->Frequency.Den + Work->L1.Freq + Work->L2.Freq;
         Work->Sweep.Offset 		= 0;
         Work->Sweep.OffsetDelta = SdSeqSetSweepDelta(Work);
         Work->Address 			= (uint32)Data;
@@ -512,10 +515,12 @@ static void SdSeqInSideStep(SdSeqWork_t* Work)
 
 static void SdSeqInSideTempo(SdSeqWork_t* Work)
 {
-    if (Work->Step.StepCount-- == 1)
-        SdSeqInSideStep(Work);
-    else
+    --Work->Step.StepCount;
+
+    if (Work->Step.StepCount)
         SdSeqOutSideStep(Work);
+    else
+        SdSeqInSideStep(Work);
 
     if (Work->Tempo.MoveCount)
     {
@@ -633,7 +638,8 @@ static void SdSeqCommand(SdSeqWork_t* Work)
     }
     else
     {
-        Work->Tempo.Count = 0;
+        // clear only high word
+        Work->Tempo.Count = (Work->Tempo.Count & 0x0000FFFF);
 
         SdSeqCrxStepProcess(Work);
         SdSeqInSideTempo(Work);
@@ -839,7 +845,7 @@ void SdSeqMask(int32 _no, int32 _data)
 };
 
 
-void SdSeqAllOff(int32 _option)
+void SdSeqAllOff(int32 _exceptOption)
 {
     for (int32 i = 0; i < COUNT_OF(SdSeqWork); ++i)
     {
@@ -851,7 +857,7 @@ void SdSeqAllOff(int32 _option)
         if (SdSeqMaskCheck(Work))
             continue;
 
-        if ((Work->Option & _option) != 0)
+        if (Work->Option & _exceptOption)
             continue;
 
         SdSeqOff(Work, 3);
@@ -922,7 +928,7 @@ void SdSeqToneSet(SdSeqWork_t* Work, int32 _toneNo, int32 _drumNo)
 };
 
 
-void SdSeqPauseSet(int32 _option)
+void SdSeqPauseSet(void)
 {
     for (int32 i = 0; i < COUNT_OF(SdSeqWork); ++i)
     {
@@ -934,19 +940,19 @@ void SdSeqPauseSet(int32 _option)
         if (SdSeqMaskCheck(Work))
             continue;
 
-        if ((Work->Option & _option) != 0)
-            continue;
+        if (Work->Option & SD_SEQ_OPT_0x4)
+        {
+            Work->KeyOffWait = 2;
 
-        Work->KeyOffWait = 2;
-
-        int32 volLeft = 0;
-        int32 volRight = 0;
-        SdIOSetVolume(Work->ChNo, volLeft, volRight);
+            int32 volLeft = 0;
+            int32 volRight = 0;
+            SdIOSetVolume(Work->ChNo, volLeft, volRight);
+        };        
     };
 };
 
 
-void SdSeqPauseClr(int32 _option)
+void SdSeqPauseClr(void)
 {
-    (void)_option;
+    ;
 };

@@ -8,7 +8,6 @@ CGameGimmickContainer::CGameGimmickContainer(void)
 , m_nGimmickNum(0)
 {
     m_pGameGimmickTable = new CGameGimmick[GAMETYPES::GIMMICK_MAX];
-    ASSERT(m_pGameGimmickTable);
 };
 
 
@@ -26,7 +25,10 @@ CGameGimmickContainer::~CGameGimmickContainer(void)
 
 CGameGimmick& CGameGimmickContainer::GameGimmick(int32 nIndex) const
 {
-	return ((nIndex >= 0 && nIndex < GAMETYPES::GIMMICK_MAX) ? m_pGameGimmickTable[nIndex] : *CGameGimmick::Dummy());
+    if ((nIndex >= 0) && (nIndex < GAMETYPES::GIMMICK_MAX))
+        return  m_pGameGimmickTable[nIndex];
+    
+    return *CGameGimmick::Dummy();
 };
 
 
@@ -34,6 +36,7 @@ void CGameGimmickContainer::Regist(CGimmick* pGimmick)
 {
     CGameGimmick* pNode = findFreeNode();
     ASSERT(pNode);
+
     if (pNode)
     {
         pNode->Attach(pGimmick);
@@ -46,10 +49,12 @@ void CGameGimmickContainer::Remove(CGimmick* pGimmick)
 {
     CGameGimmick* pNode = findNode(pGimmick);
     ASSERT(pNode);
+
     if (pNode)
     {
         ASSERT(m_nGimmickNum > 0);
         --m_nGimmickNum;
+        
         pNode->Detach();
     };
 };

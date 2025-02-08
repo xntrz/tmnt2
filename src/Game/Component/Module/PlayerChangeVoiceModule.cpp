@@ -47,7 +47,7 @@ void CPlayerChangeVoiceModule::Run(void)
     //
     //  update rand voice
     //
-    if (GetTime() >= m_fRandVoxRqTime)
+    if (GetTime() > m_fRandVoxRqTime)
     {
         CMessageManager::Request(SEGROUPID::VALUE(1), m_pPlayerChr->GetID());
         m_fRandVoxRqTime += Math::RandFloatRange(150.0f, 200.0f);

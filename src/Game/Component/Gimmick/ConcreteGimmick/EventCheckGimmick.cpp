@@ -602,7 +602,7 @@ bool CAreaCheckGimmick::isInsideSphere(RwV3d* pvPosition)
     
     float fDist = Math::Vec3_Length(&vDistance);
     
-    return Math::FAbs(fDist) <= m_sphere.radius;
+    return std::fabs(fDist) <= m_sphere.radius;
 };
 
 
@@ -801,24 +801,23 @@ bool CEnemyAreaCheckGimmick::CheckArea(void)
 {
     bool bResult = false;
     
-    CGameObject* pGameObject = CGameObjectManager::GetNext();
+    CGameObject* pGameObject = CGameObjectManager::GetNext(GAMEOBJECTTYPE::CHARACTER);
     while (pGameObject)
     {
-        if (pGameObject->GetType() == GAMEOBJECTTYPE::CHARACTER)
+        ASSERT(pGameObject->GetType() == GAMEOBJECTTYPE::CHARACTER);
+        CCharacter* pCharacter = static_cast<CCharacter*>(pGameObject);
+        
+        if (pCharacter->GetCharacterType() == CCharacter::TYPE_ENEMY)
         {
-            CCharacter* pCharacter = (CCharacter*)pGameObject;
-            if (pCharacter->GetCharacterType() == CCharacter::TYPE_ENEMY)
-            {
-                RwV3d vPosition = Math::VECTOR3_ZERO;
-                pCharacter->GetPosition(&vPosition);
+            RwV3d vPosition = Math::VECTOR3_ZERO;
+            pCharacter->GetPosition(&vPosition);
 
-                bResult = IsInsideArea(&vPosition);
-                if (bResult)
-                    break;
-            };
+            bResult = IsInsideArea(&vPosition);
+            if (bResult)
+                break;
         };
 
-        pGameObject = CGameObjectManager::GetNext(pGameObject);
+        pGameObject = CGameObjectManager::GetNext(GAMEOBJECTTYPE::CHARACTER, pGameObject);
     };
 
     return bResult;
@@ -854,24 +853,23 @@ bool CGimmickObjAreaCheckGimmick::CheckArea(void)
 {
     bool bResult = false;
 
-    CGameObject* pGameObject = CGameObjectManager::GetNext();
+    CGameObject* pGameObject = CGameObjectManager::GetNext(GAMEOBJECTTYPE::GIMMICK);
     while (pGameObject)
     {
-        if (pGameObject->GetType() == GAMEOBJECTTYPE::GIMMICK)
-        {
-            CGimmick* pGimmick = (CGimmick*)pGameObject;
-            if(pGimmick->GetID() == m_idTarget)
-            {
-                RwV3d vPosition = Math::VECTOR3_ZERO;
-                pGimmick->GetPosition(&vPosition);
+        ASSERT(pGameObject->GetType() == GAMEOBJECTTYPE::GIMMICK);
+        CGimmick* pGimmick = static_cast<CGimmick*>(pGameObject);
 
-                bResult = IsInsideArea(&vPosition);
-                if (bResult)
-                    break;
-            };
+        if (pGimmick->GetID() == m_idTarget)
+        {
+            RwV3d vPosition = Math::VECTOR3_ZERO;
+            pGimmick->GetPosition(&vPosition);
+
+            bResult = IsInsideArea(&vPosition);
+            if (bResult)
+                break;
         };
 
-        pGameObject = CGameObjectManager::GetNext(pGameObject);
+        pGameObject = CGameObjectManager::GetNext(GAMEOBJECTTYPE::GIMMICK, pGameObject);
     };
 
     return bResult;
@@ -902,28 +900,28 @@ bool CFugitoidAreaCheckGimmick::CheckArea(void)
 {
     bool bResult = false;
 
-    CGameObject* pGameObject = CGameObjectManager::GetNext();
+    CGameObject* pGameObject = CGameObjectManager::GetNext(GAMEOBJECTTYPE::CHARACTER);
     while (pGameObject)
     {
-        if (pGameObject->GetType() == GAMEOBJECTTYPE::CHARACTER)
-        {
-            CCharacter* pCharacter = (CCharacter*)pGameObject;
-            if (pCharacter->GetCharacterType() == CCharacter::TYPE_ENEMY)
-            {
-                CCharacterCompositor* pEnemyCharacter = (CCharacterCompositor*)pCharacter;
-                if (pEnemyCharacter->GetID() == ENEMYID::ID_FUGITOID)
-                {
-                    RwV3d vPosition = Math::VECTOR3_ZERO;
-                    pEnemyCharacter->GetPosition(&vPosition);
+        ASSERT(pGameObject->GetType() == GAMEOBJECTTYPE::CHARACTER);
+        CCharacter* pCharacter = static_cast<CCharacter*>(pGameObject);
 
-                    bResult = IsInsideArea(&vPosition);
-                    if (bResult)
-                        break;
-                };                
+        if (pCharacter->GetCharacterType() == CCharacter::TYPE_ENEMY)
+        {
+            CCharacterCompositor* pEnemyCharacter = static_cast<CCharacterCompositor*>(pCharacter);
+
+            if (pEnemyCharacter->GetID() == ENEMYID::ID_FUGITOID)
+            {
+                RwV3d vPosition = Math::VECTOR3_ZERO;
+                pEnemyCharacter->GetPosition(&vPosition);
+
+                bResult = IsInsideArea(&vPosition);
+                if (bResult)
+                    break;
             };
         };
 
-        pGameObject = CGameObjectManager::GetNext(pGameObject);
+        pGameObject = CGameObjectManager::GetNext(GAMEOBJECTTYPE::CHARACTER, pGameObject);
     };
 
     return bResult;

@@ -51,11 +51,11 @@ public:
     EFFECTWORK* SearchEffectWork(const char* pszName);
 
 private:
-    EFFECTWORK* m_paEffectWork;
-    int32 m_nEffectListNum;
+    EFFECTWORK*       m_paEffectWork;
+    int32             m_nEffectListNum;
     CList<EFFECTWORK> m_listWorkPool;
     CList<EFFECTWORK> m_listWorkAlloc;
-    int32 m_nActiveEffectNum;
+    int32             m_nActiveEffectNum;
 };
 
 class CEffectContainer
@@ -90,7 +90,7 @@ private:
     CEffectList* m_pListCommonEffectPool;
     CEffectList* m_pListAttachedEffectPool;
     CEffectList* m_pListEffectDisplay;
-    POOLTYPE m_pooltype;
+    POOLTYPE     m_pooltype;
 };
 
 
@@ -102,7 +102,6 @@ CEffectList::CEffectList(int32 nNum)
     ASSERT(m_nEffectListNum > 0);
 
     m_paEffectWork = new EFFECTWORK[m_nEffectListNum];
-    ASSERT(m_paEffectWork);
 
     for (int32 i = 0; i < m_nEffectListNum; ++i)
     {
@@ -134,11 +133,10 @@ CEffectList::~CEffectList(void)
 void CEffectList::Cleanup(void)
 {
     auto it = m_listWorkAlloc.begin();
-    while (it)
+    auto itEnd = m_listWorkAlloc.end();
+    while (it != itEnd)
     {
         EFFECTWORK* pNode = &(*it);
-        ASSERT(pNode);
-
         pNode->m_pEffect = nullptr;
         pNode->m_fSortZ = 0.0f;
 
@@ -162,7 +160,6 @@ void CEffectList::RegistEffect(CEffect* pEffect)
     ASSERT(!m_listWorkPool.empty());
 
     EFFECTWORK* pWork = m_listWorkPool.front();
-    ASSERT(pWork);
     m_listWorkPool.erase(pWork);
     m_listWorkAlloc.push_back(pWork);
 
@@ -177,6 +174,7 @@ void CEffectList::RemoveEffect(CEffect* pEffect)
 {
     EFFECTWORK* pWork = SearchEffectWork(pEffect);
     ASSERT(pWork);
+
     if (pWork)
     {
         --m_nActiveEffectNum;
@@ -197,18 +195,19 @@ CEffect* CEffectList::GetEffect(const char* pszName)
     EFFECTWORK* pWork = SearchEffectWork(pszName);
     if (pWork)
         return pWork->m_pEffect;
-    else
-        return nullptr;
+    
+    return nullptr;
 };
 
 
 void CEffectList::GarbageCollection(void)
 {
     auto it = m_listWorkAlloc.begin();
-    while (it)
+    auto itEnd = m_listWorkAlloc.end();
+    while (it != itEnd)
     {
         EFFECTWORK* pWork = &(*it);
-        ASSERT(pWork);
+
         ASSERT(pWork->m_pEffect);
 
         if (pWork->m_pEffect->IsEnd())
@@ -248,7 +247,7 @@ CEffectList::EFFECTWORK* CEffectList::SearchEffectWork(CEffect* pEffect)
     {
         ASSERT(it.m_pEffect);
         
-        if (it.m_pEffect == pEffect && !std::strcmp(it.m_pEffect->GetName(), pEffect->GetName()))
+        if ((it.m_pEffect == pEffect) && !std::strcmp(it.m_pEffect->GetName(), pEffect->GetName()))
             return &it;
     };
 
@@ -268,6 +267,11 @@ CEffectList::EFFECTWORK* CEffectList::SearchEffectWork(const char* pszName)
 
     return nullptr;
 };
+
+
+//
+// *********************************************************************************
+//
 
 
 CEffectContainer::CEffectContainer(void)
@@ -397,7 +401,7 @@ static inline CEffectContainer& EffectContainer(void)
 };
 
 
-static CEffect* EffectFromHandle(uint32 hEffect)
+static inline CEffect* EffectFromHandle(uint32 hEffect)
 {
     CGameObject* pGameObject = CGameObjectManager::GetObject(hEffect);
     if (pGameObject)
@@ -405,7 +409,7 @@ static CEffect* EffectFromHandle(uint32 hEffect)
         ASSERT(pGameObject->GetType() == GAMEOBJECTTYPE::EFFECT);
         ASSERT(pGameObject->GetHandle() == hEffect);
         
-        return (CEffect*)pGameObject;
+        return static_cast<CEffect*>(pGameObject);
     };
 
     return nullptr;
@@ -415,10 +419,7 @@ static CEffect* EffectFromHandle(uint32 hEffect)
 /*static*/ void CEffectManager::Initialize(void)
 {
     if (!s_pEffectContainer)
-    {
         s_pEffectContainer = new CEffectContainer;
-        ASSERT(s_pEffectContainer);
-    };
 
     CMagicManager::Initialize();
     CIceBlockManager::Initialize();
@@ -447,6 +448,7 @@ static CEffect* EffectFromHandle(uint32 hEffect)
     if (s_pEffectContainer)
     {
         s_pEffectContainer->Cleanup();
+
         delete s_pEffectContainer;
         s_pEffectContainer = nullptr;
     };
@@ -499,10 +501,12 @@ static CEffect* EffectFromHandle(uint32 hEffect)
 
     CEffect* pEffect = new CEffect(pszName);
     ASSERT(pEffect);
+
     if (pEffect)
     {
         pEffect->ReadEffect(pBuffer, uBufferSize);
         pEffect->SetStringEffectOn(CGameData::Option().Display().IsEnabledFontEffect());
+
         EffectContainer().Regist(pEffect);
 
         MAGIC_SETUP::CreateMagic(pszName);
@@ -533,17 +537,15 @@ static CEffect* EffectFromHandle(uint32 hEffect)
     ASSERT(pszName);
     ASSERT(pvPosition);
 
-    uint32 hResult = 0;
-
 	if (!EffectContainer().IsEnableRegistDisplay())
 	{
 		ASSERT(false, "disp pool empty");
-        return hResult;
+        return 0;
 	};
 
     CEffect* pEffect = EffectContainer().Search(pszName);
     if (!pEffect)
-        return hResult;
+        return 0;
 
     CEffect* pEffectPlay = pEffect->Clone();
     ASSERT(pEffectPlay);
@@ -551,11 +553,10 @@ static CEffect* EffectFromHandle(uint32 hEffect)
     pEffectPlay->SetDirection(0.0f);
     pEffectPlay->SetPosition(pvPosition);
     pEffectPlay->SetSoundPlay(bPlaySound);
+
     EffectContainer().Play(pEffectPlay);
 
-    hResult = pEffectPlay->GetHandle();
-
-    return hResult;
+    return pEffectPlay->GetHandle();
 };
 
 
@@ -564,17 +565,15 @@ static CEffect* EffectFromHandle(uint32 hEffect)
     ASSERT(pszName);
     ASSERT(pvPosition);
 
-    uint32 hResult = 0;
-
 	if (!EffectContainer().IsEnableRegistDisplay())
 	{
 		ASSERT(false, "disp pool empty");
-        return hResult;
+        return 0;
 	};
 
     CEffect* pEffect = EffectContainer().Search(pszName);
     if (!pEffect)
-        return hResult;
+        return 0;
 
     CEffect* pEffectPlay = pEffect->Clone();
     ASSERT(pEffectPlay);
@@ -582,11 +581,10 @@ static CEffect* EffectFromHandle(uint32 hEffect)
     pEffectPlay->SetDirection(fDirection);
     pEffectPlay->SetPosition(pvPosition);
     pEffectPlay->SetSoundPlay(bPlaySound);
+
     EffectContainer().Play(pEffectPlay);
 
-    hResult = pEffectPlay->GetHandle();
-
-    return hResult;
+    return pEffectPlay->GetHandle();
 };
 
 
@@ -608,20 +606,18 @@ static CEffect* EffectFromHandle(uint32 hEffect)
     ASSERT(pTracer);
     ASSERT(pvOffset);
 
-    uint32 hResult = 0;
-
     if (!EffectContainer().IsEnableRegistDisplay())
     {
 		ASSERT(false, "disp pool empty");
         delete pTracer;
-        return hResult;
+        return 0;
     };
 
     CEffect* pEffect = EffectContainer().Search(pszName);
     if (!pEffect)
     {
         delete pTracer;
-        return hResult;
+        return 0;
     };
 
     CEffect* pEffectPlay = pEffect->Clone();
@@ -631,11 +627,10 @@ static CEffect* EffectFromHandle(uint32 hEffect)
     pEffectPlay->SetTracer(pTracer, pvOffset, 0.0f);
     pEffectPlay->SetDirectionTraceFlag(true);
     pEffectPlay->SetSoundPlay(bPlaySound);
+
     EffectContainer().Play(pEffectPlay);
 
-    hResult = pEffectPlay->GetHandle();
-
-    return hResult;
+    return pEffectPlay->GetHandle();
 };
 
 
@@ -644,21 +639,19 @@ static CEffect* EffectFromHandle(uint32 hEffect)
     ASSERT(pszName);
     ASSERT(pTracer);
     ASSERT(pvOffset);
-    
-    uint32 hResult = 0;
-    
-    if (EffectContainer().IsEnableRegistDisplay())
+
+    if (!EffectContainer().IsEnableRegistDisplay())
     {
 		ASSERT(false, "disp pool empty");
         delete pTracer;
-        return hResult;
+        return 0;
     };
 
     CEffect* pEffect = EffectContainer().Search(pszName);
     if (!pEffect)
     {
         delete pTracer;
-        return hResult;
+        return 0;
     };
 
     CEffect* pEffectPlay = pEffect->Clone();
@@ -668,11 +661,10 @@ static CEffect* EffectFromHandle(uint32 hEffect)
     pEffectPlay->SetTracer(pTracer, pvOffset, fDirection);
     pEffectPlay->SetDirectionTraceFlag(false);
     pEffectPlay->SetSoundPlay(bPlaySound);
+
     EffectContainer().Play(pEffectPlay);
 
-    hResult = pEffectPlay->GetHandle();
-
-    return hResult;
+    return pEffectPlay->GetHandle();
 };
 
 
@@ -682,13 +674,13 @@ static CEffect* EffectFromHandle(uint32 hEffect)
     if (pEffect)
     {
         CMagic* pMagic = new CMagic(pszName);
-        ASSERT(pMagic);
 
         pMagic->CreateSubstance(pszName);
         pMagic->SetParameter(pMagicParameter);
         pMagic->SetStringEffectOn(CGameData::Option().Display().IsEnabledFontEffect());
 
         CMagicManager::RegistMagic(pMagic);
+
         EffectContainer().Remove(pEffect);
     };
 };
@@ -700,7 +692,6 @@ static CEffect* EffectFromHandle(uint32 hEffect)
     if (pEffect)
     {
         CMagic* pMagic = new CMagic(pszName);
-        ASSERT(pMagic);
 
         pMagic->CreateSubstance(pMagicParameter->GetBaseEffectName());
         pMagic->SetParameter(pMagicParameter);
@@ -814,6 +805,6 @@ static CEffect* EffectFromHandle(uint32 hEffect)
     CEffect* pEffect = EffectFromHandle(hEffect);
     if (pEffect)
         return pEffect->GetID();
-    else        
-        return EFFECTID::ID_UNKNOWN;
+    
+    return EFFECTID::ID_UNKNOWN;
 };

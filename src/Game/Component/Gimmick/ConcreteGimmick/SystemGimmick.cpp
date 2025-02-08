@@ -386,15 +386,16 @@ void CCameraChangeGimmick::ReplacePlayers(void)
     {
         RwMatrix matrix;
         RwMatrixSetIdentityMacro(&matrix);
-        Math::Matrix_RotateY(&matrix, Math::ToRadian(afRotation[i]));
+        Math::Matrix_RotateY(&matrix, MATH_DEG2RAD(afRotation[i]));
 
         RwV3d vPosition = Math::VECTOR3_ZERO;
         RwV3dTransformPoint(&vPosition, &vTmp, &matrix);
         Math::Vec3_Add(&vPosition, &vPosition, &m_vPosition);
 
         float fHeight = CWorldMap::GetMapHeight(&vPosition);
-        
-        if (FLAG_TEST(CWorldMap::GetCollisionResultAttribute(), MAPTYPES::ATTRIBUTE_DEATH))
+
+        MAPTYPES::ATTRIBUTE attribute = CWorldMap::GetCollisionResultAttribute();
+        if (attribute == MAPTYPES::ATTRIBUTE_DEATH)
             vPosition = m_vPosition;
         else
             vPosition.y = fHeight;
@@ -474,7 +475,7 @@ void CSEGimmick::GetPosition(RwV3d* pvPosition) const
 
 void CSEGimmick::PostMove(void)
 {
-    if (FLAG_TEST(m_pNowSEInfo->m_flag, SEINFO::FLAG_LOOP) && m_bPlaying)
+    if ((m_pNowSEInfo->m_flag & SEINFO::FLAG_LOOP) && m_bPlaying)
     {
         if (m_fTimer >= m_pNowSEInfo->m_fDuration)
         {
@@ -513,7 +514,7 @@ void CSEGimmick::startSE(void)
 void CSEGimmick::stopSE(void)
 {
     m_bPlaying = false;
-    if (FLAG_TEST(m_pNowSEInfo->m_flag, SEINFO::FLAG_FADE))
+    if (m_pNowSEInfo->m_flag & SEINFO::FLAG_FADE)
         CGameSound::FadeOutSE(m_pNowSEInfo->m_nSE, CGameSound::FADESPEED_NORMAL);    
 };
 
@@ -685,7 +686,7 @@ void CInvisibleWallGimmick::termCollision(void)
 //
 
 
-/*static*/ void CReplaceGimmick::ReplacePlayer(int32 nPlayerNo, const RwV3d* pvPosition, bool bProtect)
+/*static*/ void CReplaceGimmick::ReplacePlayer(int32 nPlayerNo, const RwV3d* pvPosition, bool bBlink)
 {
     char szSearchGimmickName[GAMEOBJECTTYPES::NAME_MAX];
     szSearchGimmickName[0] = '\0';
@@ -693,12 +694,12 @@ void CInvisibleWallGimmick::termCollision(void)
     const char* pszBaseName = CGimmickInfo::GetBaseName(GIMMICKID::ID_S_RESET);
     ASSERT(pszBaseName);
 
-    sprintf(szSearchGimmickName, "%s_A", pszBaseName);
-    replacePlayer(szSearchGimmickName, nPlayerNo, pvPosition, bProtect);
+    std::sprintf(szSearchGimmickName, "%s_A", pszBaseName);
+    replacePlayer(szSearchGimmickName, nPlayerNo, pvPosition, bBlink);
 };
 
 
-/*static*/ void CReplaceGimmick::SetPlayerStartPosition(int32 nPlayerNo, const RwV3d* pvPosition, bool bProtect)
+/*static*/ void CReplaceGimmick::SetPlayerStartPosition(int32 nPlayerNo, const RwV3d* pvPosition, bool bBlink)
 {
     char szSearchGimmickName[GAMEOBJECTTYPES::NAME_MAX];
     szSearchGimmickName[0] = '\0';
@@ -706,60 +707,64 @@ void CInvisibleWallGimmick::termCollision(void)
     const char* pszBaseName = CGimmickInfo::GetBaseName(GIMMICKID::ID_S_RESET);
     ASSERT(pszBaseName);
 
-    sprintf(szSearchGimmickName, "%s_B", pszBaseName);
-    replacePlayer(szSearchGimmickName, nPlayerNo, pvPosition, bProtect);
+    std::sprintf(szSearchGimmickName, "%s_B", pszBaseName);
+    replacePlayer(szSearchGimmickName, nPlayerNo, pvPosition, bBlink);
 };
 
 
-/*static*/ void CReplaceGimmick::replacePlayer(const char* pszSearchGimmickName, int32 nPlayerNo, const RwV3d* pvPosition, bool bProtect)
+/*static*/ void CReplaceGimmick::replacePlayer(const char* pszSearchGimmickName,
+                                               int32 nPlayerNo,
+                                               const RwV3d* pvPosition,
+                                               bool bBlink)
 {
     float fMinDistance = TYPEDEF::FLOAT_MAX;
     CReplaceGimmick* pOptimalReplaceGimmick = nullptr;
     
-    CGameObject* pGameObject = CGameObjectManager::GetNext();
-    while (pGameObject)
+    CGameObject* pGameObj = CGameObjectManager::GetNext(GAMEOBJECTTYPE::GIMMICK);
+    while (pGameObj)
     {
-        if (pGameObject->GetType() == GAMEOBJECTTYPE::GIMMICK)
-        {
-            CGimmick* pGimmick = (CGimmick*)pGameObject;
-            if (!std::strncmp(pGimmick->GetName(), pszSearchGimmickName, std::strlen(pszSearchGimmickName)))
-            {
-                CReplaceGimmick* pReplaceGimmick = (CReplaceGimmick*)pGimmick;
-                if (!pReplaceGimmick->m_bStartPosition)
-                {
-                    if (pReplaceGimmick->IsEnableReplaceGimmick())
-                    {
-                        RwV3d vDistance = Math::VECTOR3_ZERO;
-                        Math::Vec3_Sub(&vDistance, pvPosition, &pReplaceGimmick->m_vReplacePosition);
+        ASSERT(pGameObj->GetType() == GAMEOBJECTTYPE::GIMMICK);
+        CGimmick* pGimmick = static_cast<CGimmick*>(pGameObj);
 
-                        float fDistance = Math::Vec3_Length(&vDistance);
-                        fDistance = Math::FAbs(fDistance);
-                        if (fDistance < fMinDistance)
-                        {
-                            fMinDistance = fDistance;
-                            pOptimalReplaceGimmick = pReplaceGimmick;
-                        };
-                    };
-                }
-                else
+        if (!std::strncmp(pGimmick->GetName(), pszSearchGimmickName, std::strlen(pszSearchGimmickName)))
+        {
+            CReplaceGimmick* pReplaceGimmick = static_cast<CReplaceGimmick*>(pGimmick);
+
+            if (!pReplaceGimmick->m_bStartPosition)
+            {
+                if (pReplaceGimmick->IsEnableReplaceGimmick())
                 {
-                    pOptimalReplaceGimmick = pReplaceGimmick;
-                    break;
+                    RwV3d vDistance = Math::VECTOR3_ZERO;
+                    Math::Vec3_Sub(&vDistance, pvPosition, &pReplaceGimmick->m_vReplacePosition);
+
+                    float fDistance = Math::Vec3_Length(&vDistance);
+                    fDistance = std::fabs(fDistance);
+
+                    if (fDistance < fMinDistance)
+                    {
+                        fMinDistance = fDistance;
+                        pOptimalReplaceGimmick = pReplaceGimmick;
+                    };
                 };
+            }
+            else
+            {
+                pOptimalReplaceGimmick = pReplaceGimmick;
+                break;
             };
         };
 
-        pGameObject = CGameObjectManager::GetNext(pGameObject);
+        pGameObj = CGameObjectManager::GetNext(GAMEOBJECTTYPE::GIMMICK, pGameObj);
     };
 
     if (pOptimalReplaceGimmick)
     {
-        pOptimalReplaceGimmick->OnReplacePlayer(nPlayerNo, bProtect);
+        pOptimalReplaceGimmick->OnReplacePlayer(nPlayerNo, bBlink);
     }
     else
     {
         IGamePlayer* pGamePlayer = CGameProperty::GetGamePlayer(nPlayerNo);
-        pGamePlayer->Relocation(pvPosition, pGamePlayer->GetRotY(), bProtect);
+        pGamePlayer->Relocation(pvPosition, pGamePlayer->GetRotY(), bBlink);
 		pGamePlayer->Release();
     };
 };
@@ -813,7 +818,7 @@ void CReplaceGimmick::OnReceiveEvent(const char* pszSender, GIMMICKTYPES::EVENTT
 };
 
 
-void CReplaceGimmick::OnReplacePlayer(int32 nPlayerNo, bool bProtect)
+void CReplaceGimmick::OnReplacePlayer(int32 nPlayerNo, bool bBlink)
 {
     const float afRotation[]
     {
@@ -831,7 +836,7 @@ void CReplaceGimmick::OnReplacePlayer(int32 nPlayerNo, bool bProtect)
 
     RwMatrix matrix;
     RwMatrixSetIdentityMacro(&matrix);
-    Math::Matrix_RotateY(&matrix, Math::ToRadian(afRotation[nPlayerNo]));
+    Math::Matrix_RotateY(&matrix, MATH_DEG2RAD(afRotation[nPlayerNo]));
 
     RwV3d vPosition = Math::VECTOR3_ZERO;
     RwV3dTransformPoint(&vPosition, &vTmp, &matrix);
@@ -839,17 +844,14 @@ void CReplaceGimmick::OnReplacePlayer(int32 nPlayerNo, bool bProtect)
 
     float fHeight = CWorldMap::GetMapHeight(&vPosition);
 
-    if (FLAG_TEST(CWorldMap::GetCollisionResultAttribute(), MAPTYPES::ATTRIBUTE_DEATH))
-    {
+    MAPTYPES::ATTRIBUTE attribute = CWorldMap::GetCollisionResultAttribute();
+    if (attribute == MAPTYPES::ATTRIBUTE_DEATH)
         vPosition = m_vReplacePosition;
-    }
     else
-    {
         vPosition.y = fHeight;
-    };
 
 	IGamePlayer* pGamePlayer = CGameProperty::GetGamePlayer(nPlayerNo);
-	pGamePlayer->Relocation(&vPosition, m_fRotationY, bProtect);
+	pGamePlayer->Relocation(&vPosition, m_fRotationY, bBlink);
 	pGamePlayer->Release();
 };
 
@@ -1178,7 +1180,7 @@ bool CHelpGimmick::isSatisfyCrystalMessageCondition(void)
 void CHelpGimmick::showMessage(void)
 {
     if (m_nSeGroupID < SEGROUPID::VALUE(227) || m_nSeGroupID > SEGROUPID::VALUE(231))
-        CMessageManager::Request(SEGROUPID::VALUE(m_nSeGroupID), PLAYERID::VALUE(-1));
+        CMessageManager::Request(SEGROUPID::VALUE(m_nSeGroupID));
     else
         CMessageManager::OnlyTextRequest(SEGROUPID::VALUE(m_nSeGroupID));
 };

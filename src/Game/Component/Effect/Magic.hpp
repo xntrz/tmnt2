@@ -48,8 +48,6 @@ public:
     void Finish(void);
     void RunFinish(void);
     void SetParameter(CMagicParameter* pMagicParameter);
-    void SetFeature(MAGICTYPES::FEATURE feature);
-    void AddFeature(MAGICTYPES::FEATURE feature);
     void SetDamage(int32 nPower);
     void SetStatusTime(float fTime);
     void SetChangeStatus(int32 nStatus);
@@ -77,8 +75,10 @@ public:
     void VanishingSE(void);
     MAGICID::VALUE GetID(void) const;
     bool IsRivalAttack(CHitAttackData* pAttack, const CGameObject* pObject);
-    bool IsFeaturePresent(MAGICTYPES::FEATURE feature) const;
     uint32 GetParent(void) const;
+    void SetFeature(MAGICTYPES::FEATURE feature);
+    void AddFeature(MAGICTYPES::FEATURE feature);
+    bool CheckFeature(MAGICTYPES::FEATURE feature) const;
     
 private:
     MAGICTYPES::FEATURE m_feature;

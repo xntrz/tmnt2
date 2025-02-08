@@ -1156,6 +1156,9 @@ bool CPlayerSelectWorkPool::IsCostumeTaken(int32 iCursor, GAMETYPES::COSTUME Cos
             };
         }
         break;
+
+    default:
+        break;
     };
 
     return bResult;
@@ -1227,6 +1230,8 @@ void CCharacterSelectSequence::OnDetach(void)
 
     if (m_pWorkPool)
     {
+        m_pWorkPool->Detach();
+
         delete m_pWorkPool;
         m_pWorkPool = nullptr;
     };
@@ -1280,6 +1285,9 @@ void CCharacterSelectSequence::OnMove(bool bRet, const void* pReturnValue)
                 Ret();
             };
         }
+        break;
+
+    default:
         break;
     };
 

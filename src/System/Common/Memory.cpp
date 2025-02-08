@@ -10,21 +10,22 @@
 };
 
 
-/*static*/ void* CMemory::_new(size_t size, const char* fname, int fline)
-{
-    return Instance().RepAlloc(size, fname, fline);
-};
-
-
-/*static*/ void CMemory::_delete(void* mem)
-{
-    Instance().RepFree(mem);
-};
-
-
 /*static*/ void* CMemory::malloc(size_t size, const char* fname, int fline)
 {
-    return Instance().RepAlloc(size, fname, fline);
+    void* mem = Instance().RepAlloc(size, fname, fline);
+#ifdef _DEBUG
+    if (mem == nullptr)
+    {
+        FATAL("Memory allocation request failed!\n\n"
+              "bytes: %" PRIuPTR "\n"
+              "file: %s\n"
+              "line: %" PRIi32 "\n",
+              size,
+              fname,
+              fline);
+    };
+#endif
+    return mem;
 };
 
 

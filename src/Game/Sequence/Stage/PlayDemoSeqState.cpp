@@ -10,7 +10,10 @@
 
 void CPlayDemoStageSeqState::OnAttach(CStageBaseSequence* pSeq, const void* pParam)
 {
-    pSeq->Stage().AddPlayers();
+	pSeq->Stage().AddStageObjects();
+
+	bool bBlink = false;
+	pSeq->Stage().AddPlayers(bBlink);
 
     CMapCamera* pMapCamera = pSeq->Stage().GetMapCamera();
     ASSERT(pMapCamera);
@@ -75,6 +78,9 @@ bool CPlayDemoStageSeqState::OnMove(CStageBaseSequence* pSeq)
             if (!CScreenFade::IsFading())
                 m_step = STEP_END;
         }
+        break;
+
+    default:
         break;
     };
 

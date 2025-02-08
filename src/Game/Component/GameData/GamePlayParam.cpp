@@ -11,11 +11,11 @@
 
 /*static*/ int32 CGamePlayParam::m_anPlayerHPMax[] =
 {
-    0,
-    300,
-    500,
-    700,
-    900,
+    0,      // 0 players
+    300,    // 1 player
+    500,    // 2 players
+    700,    // 3 players
+    900,    // 4 players
 };
 
 
@@ -123,11 +123,11 @@ void CGamePlayParam::InitForStage(void)
 
 void CGamePlayParam::ClearArea(void)
 {
-    m_StageID = STAGEID::ID_NONE;
-    m_AreaID = AREAID::ID_NONE;
-    m_iStageIndex = 0;
-    m_playmode = AREAPLAYMODE_SERIES;
-    m_numPrize = 0;
+    m_StageID       = STAGEID::ID_NONE;
+    m_AreaID        = AREAID::ID_NONE;
+    m_iStageIndex   = 0;
+    m_playmode      = AREAPLAYMODE_SERIES;
+    m_numPrize      = 0;
     
     for (int32 i = 0; i < COUNT_OF(m_aPrizeInfo); ++i)
         m_aPrizeInfo[i].Init();
@@ -186,19 +186,20 @@ void CGamePlayParam::ClearPlayer(void)
 };
 
 
-void CGamePlayParam::AddPlayerCharacter(int32 iPlayerNo, PLAYERID::VALUE idPlayer, GAMETYPES::COSTUME costume)
+void CGamePlayParam::AddPlayerCharacter(int32 iPlayerNo,
+                                        PLAYERID::VALUE idPlayer,
+                                        GAMETYPES::COSTUME costume /*= GAMETYPES::COSTUME_NONE*/)
 {
     ASSERT(m_numCharaInfo < COUNT_OF(m_aCharaInfo));
 
     if (m_numCharaInfo >= COUNT_OF(m_aCharaInfo))
         return;
 
-    int32 no = m_numCharaInfo;
+    int32 no = m_numCharaInfo++;
     
-    m_aCharaInfo[no].m_iPlayerNo = iPlayerNo;
-    m_aCharaInfo[no].m_CharacterID = idPlayer;
-    m_aCharaInfo[no].m_Costume = costume;
-    ++m_numCharaInfo;
+    m_aCharaInfo[no].m_iPlayerNo    = iPlayerNo;
+    m_aCharaInfo[no].m_CharacterID  = idPlayer;
+    m_aCharaInfo[no].m_Costume      = costume;
 
     m_aPlayerContext[iPlayerNo].AddChara(idPlayer);
     if (m_aPlayerContext[iPlayerNo].m_iCharacterNum == 1)
@@ -271,35 +272,46 @@ int32 CGamePlayParam::GetPrizeInfoNum(void) const
 };
 
 
-const CGamePlayParam::PRIZEINFO& CGamePlayParam::PrizeInfo(int32 iPrizeIndex) const
+const CGamePlayParam::PRIZEINFO& CGamePlayParam::PrizeInfo(int32 prizeIndex) const
 {
-    if (iPrizeIndex >= 0 && iPrizeIndex < COUNT_OF(m_aPrizeInfo))
-        return m_aPrizeInfo[iPrizeIndex];
-    else
-        return PRIZEINFO::DUMMY;
+    ASSERT(prizeIndex >= 0);
+    ASSERT(prizeIndex < m_numPrize);
+
+    if ((prizeIndex >= 0) && (prizeIndex < m_numPrize))
+        return m_aPrizeInfo[prizeIndex];
+    
+    return PRIZEINFO::DUMMY;
 };
 
 
-const CGamePlayParam::CHARAINFO& CGamePlayParam::CharaInfo(int32 iCharainfoIndex) const
+const CGamePlayParam::CHARAINFO& CGamePlayParam::CharaInfo(int32 charainfoIndex) const
 {
-    if (iCharainfoIndex >= 0 && iCharainfoIndex < COUNT_OF(m_aCharaInfo))
-        return m_aCharaInfo[iCharainfoIndex];
-    else
-        return m_aCharaInfo[0];
+    ASSERT(charainfoIndex >= 0);
+    ASSERT(charainfoIndex < m_numCharaInfo);
+
+    if ((charainfoIndex >= 0) && (charainfoIndex < m_numCharaInfo))
+        return m_aCharaInfo[charainfoIndex];
+
+    return m_aCharaInfo[0];
 };
 
 
-CGamePlayParam::PLAYERCONTEXT& CGamePlayParam::PlayerContext(int32 iPlayerIndex)
+CGamePlayParam::PLAYERCONTEXT& CGamePlayParam::PlayerContext(int32 playerIndex)
 {
-    ASSERT(iPlayerIndex >= 0 && iPlayerIndex < COUNT_OF(m_aPlayerContext));
-    return m_aPlayerContext[iPlayerIndex];
+    ASSERT(playerIndex >= 0);
+    ASSERT(playerIndex < m_numPlayer);
+
+    if ((playerIndex >= 0) && (playerIndex < m_numPlayer))
+        return m_aPlayerContext[playerIndex];
+
+    return m_aPlayerContext[0];
 };
 
 
 bool CGamePlayParam::IsSpaceRide(void) const
 {
-    return (GetArea() == AREAID::ID_AREA22 ||
-            GetArea() == AREAID::ID_AREA32);
+    return ((GetArea() == AREAID::ID_AREA22) ||
+            (GetArea() == AREAID::ID_AREA32));
 };
 
 
@@ -352,6 +364,9 @@ bool CGamePlayParam::isPrizeAlreadyTaken(AREAID::VALUE idArea, GAMETYPES::PRIZE 
             case AREAID::ID_AREA46:
                 idDbitem = CSecretInfo::GetDatabase(SECRETID::ID_DATABASE_SECONDARY_B);
                 break;
+
+            default:
+                break;
             };
 
             if (idDbitem != DBITEMID::ID_NONE)
@@ -365,6 +380,9 @@ bool CGamePlayParam::isPrizeAlreadyTaken(AREAID::VALUE idArea, GAMETYPES::PRIZE 
 
     case GAMETYPES::PRIZE_SECRET:
         bResult = CGameData::Record().Secret().IsUnlockedSecret(SECRETID::ID_SEARCH_ANTIQUE);
+        break;
+
+    default:
         break;
     };
 
@@ -389,7 +407,6 @@ void CGamePlayParam::initPrizeInfo(void)
                 m_aPrizeInfo[i].m_iPointsNum = m_anRidePrizePoint[i];
             else
                 m_aPrizeInfo[i].m_iPointsNum = 0;
-
         }
         else
         {
@@ -474,7 +491,6 @@ GAMETYPES::PRIZE* CGamePlayParam::getPrizeArray(AREAID::VALUE idArea) const
         GAMETYPES::PRIZE_NONE,
     };
 
-
     static GAMETYPES::PRIZE s_aPrizeArea60D[] =
     {
         GAMETYPES::PRIZE_CRYSTAL,
@@ -509,50 +525,51 @@ GAMETYPES::PRIZE* CGamePlayParam::getPrizeArray(AREAID::VALUE idArea) const
     case AREAID::ID_AREA06:
         pPrizeArray = s_aPrizeArea06;
         break;
-        
+
     case AREAID::ID_AREA13:
         pPrizeArray = s_aPrizeArea13;
         break;
-        
+
     case AREAID::ID_AREA22:
         pPrizeArray = s_aPrizeArea22;
         break;
-        
+
     case AREAID::ID_AREA32:
         pPrizeArray = s_aPrizeArea32;
         break;
-        
+
     case AREAID::ID_AREA46:
         pPrizeArray = s_aPrizeArea46;
         break;
-        
+
     case AREAID::ID_AREA60_A:
         pPrizeArray = s_aPrizeArea60A;
         break;
-        
+
     case AREAID::ID_AREA60_B:
         pPrizeArray = s_aPrizeArea60B;
         break;
-        
+
     case AREAID::ID_AREA60_C:
         pPrizeArray = s_aPrizeArea60D;
         break;
-        
+
     case AREAID::ID_AREA60_D:
         pPrizeArray = s_aPrizeArea60C;
         break;
-        
+
     default:
         pPrizeArray = s_aPrizeDummy;
         break;
-    }
+    };
 
-    if (idArea >= AREAID::NEXUSSTART && idArea < AREAID::NEXUSMAX)
+    if ((idArea >= AREAID::NEXUSSTART) &&
+        (idArea <  AREAID::NEXUSMAX))
     {
-        GAMETYPES::NEXUSID NexusID = CAreaInfo::GetNexusID(idArea);
-        ASSERT(NexusID != GAMETYPES::NEXUSID_NUM);
+        GAMETYPES::NEXUSID nexusId = CAreaInfo::GetNexusID(idArea);
+        ASSERT(nexusId != GAMETYPES::NEXUSID_NUM);
         
-        if (CGameData::Record().Nexus().GetTournamentState(NexusID) == CNexusRecord::STATE_CLEAR)
+        if (CGameData::Record().Nexus().GetTournamentState(nexusId) == CNexusRecord::STATE_CLEAR)
             pPrizeArray = s_aPrizeNexus2nd;        
     };
 

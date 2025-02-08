@@ -46,6 +46,58 @@
 #include "System/Common/Controller.hpp"
 
 
+#ifdef _DEBUG
+
+static inline bool IsDuplicateCharacterExist(const char* pszName)
+{
+    CGameObject* pObj = CGameObjectManager::GetNext(GAMEOBJECTTYPE::CHARACTER);
+    while (pObj)
+    {
+        const char* pszObjName = pObj->GetName();
+        if (!std::strcmp(pszObjName, pszName))
+            return true;
+
+        pObj = CGameObjectManager::GetNext(GAMEOBJECTTYPE::CHARACTER, pObj);
+    };
+
+    return false;
+};
+
+
+static const char* CorrectNameFromDuplicate(const char* pszName)
+{
+    /**
+     *  There is able to create multiple characters of same type but it should have different name
+     *  to avoid broke some mechanics that relate on object find by name (e.g. party throw)
+     */
+
+    static char s_szNameCorrectionBuff[GAMEOBJECTTYPES::NAME_MAX];
+    s_szNameCorrectionBuff[0] = '\0';
+
+    std::strcpy(s_szNameCorrectionBuff, pszName);
+
+    int32 number = 0;
+    while (true)
+    {
+        if (!IsDuplicateCharacterExist(s_szNameCorrectionBuff))
+            break;
+        
+        std::sprintf(s_szNameCorrectionBuff, "%s_%" PRIi32, s_szNameCorrectionBuff, ++number);
+    };
+
+    return s_szNameCorrectionBuff;
+};
+
+#else /* _DEBUG */
+
+static const char* CorrectNameFromDuplicate(const char* pszName)
+{
+    return pszName;
+};
+
+#endif /* _DEBUG */
+
+
 /*static*/ CPlayerCharacter* CPlayerCharacter::New(PLAYERID::VALUE idChr, GAMETYPES::COSTUME costume)
 {
     switch (idChr)
@@ -89,7 +141,7 @@
 
 
 CPlayerCharacter::CPlayerCharacter(const char* pszName, PLAYERID::VALUE idPlayer, GAMETYPES::COSTUME costume)
-: CCharacter(pszName, TYPE_PLAYER)
+: CCharacter(CorrectNameFromDuplicate(pszName), TYPE_PLAYER)
 , m_idPlayer(idPlayer)
 , m_costume(costume)
 , m_nPlayerIndex(-1)
@@ -97,16 +149,15 @@ CPlayerCharacter::CPlayerCharacter(const char* pszName, PLAYERID::VALUE idPlayer
 , m_nPadID(-1)
 , m_nNumWallJump(0)
 , m_attackparameter({ 0 })
-, m_attribute(0)
-, m_playerflag(0)
+, m_attribute(PLAYERTYPES::ATTRIBUTE_NONE)
+, m_pflag(PLAYERTYPES::FLAG_NONE)
 , m_pStateMachine(nullptr)
 , m_chargephase(PLAYERTYPES::CHARGEPHASE_ZERO)
 , m_feature({ 0 })
 , m_vReplacepoint(Math::VECTOR3_ZERO)
 , m_bActive(false)
-, m_bClassicInput(false)
 {
-    m_bClassicInput = CGameData::Option().Play().IsClassicInput();
+	;
 };
 
 
@@ -139,78 +190,61 @@ void CPlayerCharacter::IncludeBasicModule(void)
 {
     CCharacter::IncludeBasicModule();
 
-    m_pModuleMan->Include(new CPlayerAttributeControlModule(
-        MODULETYPE::PLAYERATTRCTRL_ATTACK_POWER_UP,
-        PLAYERTYPES::ATTRIBUTE_ATTACK_POWER_UP,
-        this
-    ));
-
-    m_pModuleMan->Include(new CPlayerAttributeControlModule(
-        MODULETYPE::PLAYERATTRCTRL_DEFENCE_POWER_UP,
-        PLAYERTYPES::ATTRIBUTE_DEFENCE_POWER_UP,
-        this
-    ));
-
-    m_pModuleMan->Include(new CPlayerAttributeControlModule(
-        MODULETYPE::PLAYERATTRCTRL_CHANGE_TIME_CUT,
-        PLAYERTYPES::ATTRIBUTE_CHARGE_TIME_CUT,
-        this
-    ));
-
-    m_pModuleMan->Include(new CPlayerAttributeControlModule(
-        MODULETYPE::PLAYERATTRCTRL_INNUMERABLE_KNIFE,
-        PLAYERTYPES::ATTRIBUTE_INNUMERABLE_KNIFE,
-        this
-    ));
-
-    m_pModuleMan->Include(new CPlayerAttributeControlModule(
-        MODULETYPE::PLAYERATTRCTRL_CONFUSION,
-        PLAYERTYPES::ATTRIBUTE_CONFUSION,
-        this
-    ));
-
-	m_pModuleMan->Include(new CPlayerAttributeControlModule(
-		MODULETYPE::PLAYERATTRCTRL_INVINCIBILITY,
-		PLAYERTYPES::ATTRIBUTE_INVINCIBILITY,
-		this
-	));
-
-    m_pModuleMan->Include(new CWallJumpSignModule(this));
-    m_pModuleMan->Include(new CPlayerFootfallModule(this));
+	m_pModuleMan->Include(CAccumulateModule::New(this));
+	m_pModuleMan->Include(CToGimmickMessageModule::New(this));
     m_pModuleMan->Include(new CBlinkCharacterModule(this));
-    m_pModuleMan->Include(new CDamageFloorModule(this));
-    m_pModuleMan->Include(new CPlayerChangeVoiceModule(this));
-    m_pModuleMan->Include(new CRippleEffectModule(this, 1.5f));
-    m_pModuleMan->Include(CToGimmickMessageModule::New(this));
+
+    m_pModuleMan->Include(new CPlayerAttributeControlModule(MODULETYPE::PLAYERATTRCTRL_INVINCIBILITY,
+                                                            PLAYERTYPES::ATTRIBUTE_INVINCIBILITY,
+                                                            this));
+
+    m_pModuleMan->Include(new CPlayerAttributeControlModule(MODULETYPE::PLAYERATTRCTRL_ATTACK_POWER_UP,
+                                                            PLAYERTYPES::ATTRIBUTE_ATTACK_POWER_UP,
+                                                            this));
+
+    m_pModuleMan->Include(new CPlayerAttributeControlModule(MODULETYPE::PLAYERATTRCTRL_DEFENCE_POWER_UP,
+                                                            PLAYERTYPES::ATTRIBUTE_DEFENCE_POWER_UP,
+                                                            this));
+
+    m_pModuleMan->Include(new CPlayerAttributeControlModule(MODULETYPE::PLAYERATTRCTRL_CHANGE_TIME_CUT,
+                                                            PLAYERTYPES::ATTRIBUTE_CHARGE_TIME_CUT,
+                                                            this));
+
+    m_pModuleMan->Include(new CPlayerAttributeControlModule(MODULETYPE::PLAYERATTRCTRL_INNUMERABLE_KNIFE,
+                                                            PLAYERTYPES::ATTRIBUTE_INNUMERABLE_KNIFE,
+                                                            this));
+
+    m_pModuleMan->Include(new CConfusionAttributeControlModule(MODULETYPE::PLAYERATTRCTRL_CONFUSION, this));
+
     m_pModuleMan->Include(CFootprintsModule::New(this));
-    m_pModuleMan->Include(CAccumulateModule::New(this));
+    m_pModuleMan->Include(new CRippleEffectModule(this, 1.5f));
+    m_pModuleMan->Include(new CWallJumpSignModule(this));
+    m_pModuleMan->Include(new CDamageFloorModule(this));
+    m_pModuleMan->Include(new CPlayerFootfallModule(this));
+    m_pModuleMan->Include(new CPlayerChangeVoiceModule(this));
 };
 
 
 void CPlayerCharacter::CalcVelocityPerFrame(RwV3d& rvVelocityPerFrame)
 {
     CCharacter::CalcVelocityPerFrame(rvVelocityPerFrame);
-
-    RwV3d vBeforeBodyPos = Math::VECTOR3_ZERO;
-    RwV3d vAfterBodyPos = Math::VECTOR3_ZERO;
     
-    GetFootPosition(&vBeforeBodyPos);
-    Math::Vec3_Add(&vAfterBodyPos, &vBeforeBodyPos, &rvVelocityPerFrame);
+    RwV3d vecBeforePos = Math::VECTOR3_ZERO;
+    GetFootPosition(&vecBeforePos);
 
-    if (CGameProperty::AdjustWithinMoveBoundary(&vAfterBodyPos, &vAfterBodyPos))
+    RwV3d vecAfterPos = Math::VECTOR3_ZERO;    
+    Math::Vec3_Add(&vecAfterPos, &vecBeforePos, &rvVelocityPerFrame);
+
+    if (CGameProperty::AdjustWithinMoveBoundary(&vecAfterPos, &vecAfterPos))
     {
-        rvVelocityPerFrame.x = vAfterBodyPos.x - vBeforeBodyPos.x;
-        rvVelocityPerFrame.z = vAfterBodyPos.z - vBeforeBodyPos.z;
+        rvVelocityPerFrame.x = (vecAfterPos.x - vecBeforePos.x);
+        rvVelocityPerFrame.z = (vecAfterPos.z - vecBeforePos.z);
     };
 };
 
 
 bool CPlayerCharacter::OnMessageCanChangingAerial(float fFieldHeight)
 {
-    ASSERT(m_pStateMachine);
-
-    bool bResult = false;
-    
     switch (m_pStateMachine->CurrentStatus())
     {
     case PLAYERTYPES::STATUS_JUMP:
@@ -228,25 +262,19 @@ bool CPlayerCharacter::OnMessageCanChangingAerial(float fFieldHeight)
     case PLAYERTYPES::STATUS_THROWN_COMBINATION:
     case PLAYERTYPES::STATUS_FLYAWAY_BACK:
     case PLAYERTYPES::STATUS_FLYAWAY_FRONT:
-        bResult = false;
-        break;
+        return false;
 
     case PLAYERTYPES::STATUS_FLYAWAY_BOUND_FRONT:
         ChangeStatus(PLAYERTYPES::STATUS_FLYAWAY_FRONT);
-        bResult = false;
-        break;
+        return false;
 
     case PLAYERTYPES::STATUS_FLYAWAY_BOUND_BACK:
         ChangeStatus(PLAYERTYPES::STATUS_FLYAWAY_BACK);
-        bResult = false;
-        break;
+        return false;
 
     default:
-        bResult = !IsPlayerFlagSet(PLAYERTYPES::FLAG_AERIAL_STATUS);
-        break;
+        return (!TestPlayerFlag(PLAYERTYPES::FLAG_AERIAL_STATUS));
     };
-
-    return bResult;
 };
 
 
@@ -290,13 +318,18 @@ void CPlayerCharacter::OnMessageTouchdown(float fFieldHeight)
     case PLAYERTYPES::STATUS_CRASH_WALL_FALL_BACK:
         ChangeStatus(PLAYERTYPES::STATUS_CRASH_WALL_TOUCHDOWN_BACK);
         break;
+
+    default:
+        break;
     };
 
     if (GetStatus() != PLAYERTYPES::STATUS_CAUGHT)
     {
         if (m_iDamageRequest > 0)
         {
-            CGameObjectManager::SendMessage(this, CHARACTERTYPES::MESSAGEID_RECVDMG, (void*)m_iDamageRequest);
+            CGameObjectManager::SendMessage(this,
+                                            CHARACTERTYPES::MESSAGEID_RECVDMG,
+                                            reinterpret_cast<void*>(m_iDamageRequest));
             m_iDamageRequest = 0;
         };
     };
@@ -305,30 +338,33 @@ void CPlayerCharacter::OnMessageTouchdown(float fFieldHeight)
 
 void CPlayerCharacter::OnMessageAttackResult(CHitCatchData* pCatch)
 {
-    if (pCatch->GetResult() == CHitCatchData::RESULT_THROWBACK ||
-        pCatch->GetResult() == CHitCatchData::RESULT_THROWFRONT)
+    CHitCatchData::RESULT result = pCatch->GetResult();
+
+    if ((result == CHitCatchData::RESULT_THROWBACK) ||
+        (result == CHitCatchData::RESULT_THROWFRONT))
     {
-        if (GetStatus() == PLAYERTYPES::STATUS_LIFT_CHALLENGE ||
-            (m_idPlayer == PLAYERID::ID_RAP && GetStatus() == PLAYERTYPES::STATUS_ATTACK_AAC))
+        if ((GetStatus() == PLAYERTYPES::STATUS_LIFT_CHALLENGE) ||
+            ((m_idPlayer == PLAYERID::ID_RAP) && (GetStatus() == PLAYERTYPES::STATUS_ATTACK_AAC)))
         {
             CGameObject* pDefender = pCatch->GetObject();
             ASSERT(pDefender);
             
             m_liftinfo.m_bLiftSuccess = true;
             std::strcpy(m_liftinfo.m_szLiftObjectName, pDefender->GetName());
-            m_liftinfo.m_iStatus = pCatch->GetResult();
+            m_liftinfo.m_iStatus = static_cast<int32>(result);
 
-            if (pCatch->GetResult() == CHitCatchData::RESULT_THROWFRONT &&
-                pDefender->GetType() == GAMEOBJECTTYPE::CHARACTER)
+            if ((result == CHitCatchData::RESULT_THROWFRONT) &&
+                (pDefender->GetType() == GAMEOBJECTTYPE::CHARACTER))
             {
-                CCharacter* pDefenderChr = (CCharacter*)pDefender;
+                CCharacter* pDefenderChr = static_cast<CCharacter*>(pDefender);
+
                 if (pDefenderChr->GetAttackCharacterType() == CCharacter::TYPE_ENEMY)
                     pDefenderChr->RequestDamage(pCatch->GetAttack()->GetPower());
             };
         };
     };
 
-    if (pCatch->GetResult() == CHitCatchData::RESULT_HIT)
+    if (result == CHitCatchData::RESULT_HIT)
     {
         switch (GetStatus())
         {
@@ -389,6 +425,9 @@ void CPlayerCharacter::OnMessageAttackResult(CHitCatchData* pCatch)
                 case PLAYERTYPES::CHARGEPHASE_3RD:
                     CGameEvent::SetPlayerTechnicalAction(m_nPlayerNo, GAMETYPES::TECACT_B_PHASE3);
                     break;
+
+                default:
+                    break;
                 };
             }
             break;
@@ -412,15 +451,18 @@ void CPlayerCharacter::OnMessageAttackResult(CHitCatchData* pCatch)
         case PLAYERTYPES::STATUS_THROW_BACK:
             CGameEvent::SetPlayerTechnicalAction(m_nPlayerNo, GAMETYPES::TECACT_THROW_BACK);
             break;
+
+        default:
+            break;
         };
     };
 
-    if (pCatch->GetResult() == CHitCatchData::RESULT_HIT)
+    if (result == CHitCatchData::RESULT_HIT)
     {
-        if (GetStatus() >= PLAYERTYPES::STATUS_ATTACK_AABBB &&
-            GetStatus() <= PLAYERTYPES::STATUS_ATTACK_AABBC)
+        if ((GetStatus() >= PLAYERTYPES::STATUS_ATTACK_AABBB) &&
+            (GetStatus() <= PLAYERTYPES::STATUS_ATTACK_AABBC))
         {
-            CPlayerChangeVoiceModule* pModule = (CPlayerChangeVoiceModule*)GetModule(MODULETYPE::PLAYER_CHNG_VOICE);
+            CPlayerChangeVoiceModule* pModule = static_cast<CPlayerChangeVoiceModule*>(GetModule(MODULETYPE::PLAYER_CHNG_VOICE));
             if (pModule)
                 pModule->SetComboWall();                
         };
@@ -441,13 +483,14 @@ void CPlayerCharacter::CalcAttackPower(CHitAttackData& rAttack)
     if (m_chargephase == PLAYERTYPES::CHARGEPHASE_3RD)
         iPower += iPower;
 
-    if (IsAttributeFlagSet(PLAYERTYPES::ATTRIBUTE_ATTACK_POWER_UP))
+    if (TestAttribute(PLAYERTYPES::ATTRIBUTE_ATTACK_POWER_UP))
         iPower += iPower;
 
     if (CGameData::Record().Secret().GetAttackLevel() >= 3)
         iPower += iPower;
 
-    iPower = int32(CGameData::Record().Secret().GetAttackEnchanceValue() * float(iPower));
+    float fAttackEnchance = CGameData::Record().Secret().GetAttackEnchanceValue();
+    iPower = static_cast<int32>(fAttackEnchance * static_cast<float>(iPower));
     
     rAttack.SetPower(iPower);
 };
@@ -455,82 +498,88 @@ void CPlayerCharacter::CalcAttackPower(CHitAttackData& rAttack)
 
 CHARACTERTYPES::ATTACKRESULTTYPE CPlayerCharacter::OnDamage(CCharacterAttackCalculator& calculator)
 {
-    CHARACTERTYPES::DEFENCERSTATUSFLAG DefenceFlag = CheckDefenceStatusFlag(calculator.GetAttack());
-    CHARACTERTYPES::ATTACKRESULTTYPE AttackResult = calculator.CalcAtackParameter(m_attackparameter, DefenceFlag);
+    CHARACTERTYPES::DEFENCERSTATUSFLAG defenceFlag = CheckDefenceStatusFlag(calculator.GetAttack());
+    CHARACTERTYPES::ATTACKRESULTTYPE attackResult = calculator.CalcAtackParameter(m_attackparameter, defenceFlag);
 
-    if (IsCharacterFlagSet(CHARACTERTYPES::FLAG_OCCURED_INVINCIBILITY_TIMING) ||
-        IsAttributeFlagSet(PLAYERTYPES::ATTRIBUTE_INVINCIBILITY))
+    if (TestCharacterFlag(CHARACTERTYPES::FLAG_OCCURED_INVINCIBILITY_TIMING) ||
+        TestAttribute(PLAYERTYPES::ATTRIBUTE_INVINCIBILITY))
         return CHARACTERTYPES::ATTACKRESULTTYPE_INEFFECTIVE;
 
-    switch (AttackResult)
+    switch (attackResult)
     {
     case CHARACTERTYPES::ATTACKRESULTTYPE_DAMAGE_KNOCK:
         ChangeKnockStatus();
         break;
-        
+
     case CHARACTERTYPES::ATTACKRESULTTYPE_DAMAGE_FLYAWAY:
         ChangeFlyawayStatus();
         break;
-    
+
     case CHARACTERTYPES::ATTACKRESULTTYPE_THROW:
         ChangeThrowStatus(calculator);
         break;
-        
+
     case CHARACTERTYPES::ATTACKRESULTTYPE_DINDLE:
         ChangeStatus(PLAYERTYPES::STATUS_DINDLE);
         break;
-        
+
     case CHARACTERTYPES::ATTACKRESULTTYPE_STUN:
         ChangeStatus(PLAYERTYPES::STATUS_STUN);
         break;
-        
+
     case CHARACTERTYPES::ATTACKRESULTTYPE_SLEEP:
         ChangeStatus(PLAYERTYPES::STATUS_SLEEP);
         break;
-        
+
     case CHARACTERTYPES::ATTACKRESULTTYPE_FREEZE:
         ChangeStatus(PLAYERTYPES::STATUS_FREEZE);
         break;
-        
+
     case CHARACTERTYPES::ATTACKRESULTTYPE_BIND:
         ChangeStatus(PLAYERTYPES::STATUS_BIND);
         break;
-        
+
     case CHARACTERTYPES::ATTACKRESULTTYPE_PARTY_ATTACK:
         CheckPartyAttack(calculator);
         break;
-        
+
     case CHARACTERTYPES::ATTACKRESULTTYPE_GUARD:
         ChangeStatus(PLAYERTYPES::STATUS_GUARD_BACK);
         calculator.SetCatchResult(CHitCatchData::RESULT_GUARD);
         break;
-        
+
     case CHARACTERTYPES::ATTACKRESULTTYPE_GUARD_IMPACT:
         ChangeStatus(PLAYERTYPES::STATUS_GUARD_IMPACT);
         calculator.SetCatchResult(CHitCatchData::RESULT_GUARDIMPACT);
-        CGameEvent::SetPlayerTechnicalAction(m_nPlayerNo, GAMETYPES::TECACT_GUARD_IMPACT);
-        PlayerUtil::CallVoiceOfGuardImpact(this);
+        break;
+
+    default:
         break;
     };
 
-
     if (!CGameData::Record().Secret().IsUnlockedSecret(SECRETID::ID_CHEATCODE_HEALTH) &&
         calculator.IsConfusionAttack() &&
-        AttackResult != CHARACTERTYPES::ATTACKRESULTTYPE_GUARD &&
-        AttackResult != CHARACTERTYPES::ATTACKRESULTTYPE_GUARD_IMPACT)
+        (attackResult != CHARACTERTYPES::ATTACKRESULTTYPE_GUARD) &&
+        (attackResult != CHARACTERTYPES::ATTACKRESULTTYPE_GUARD_IMPACT))
     {
-        SetConfusionEnable(true, 4.0f);                
+        SetConfusionEnable(true, 4.0f);
         IGamepad::StartVibration(GetPadID(), IGamepad::VIBRATIONTYPE_NORMAL, 0.2f);
     };
 
-    if (AttackResult &&
-        AttackResult != CHARACTERTYPES::ATTACKRESULTTYPE_THROW &&
-        AttackResult != CHARACTERTYPES::ATTACKRESULTTYPE_PARTY_ATTACK)
+    if (attackResult &&
+        (attackResult != CHARACTERTYPES::ATTACKRESULTTYPE_THROW) &&
+        (attackResult != CHARACTERTYPES::ATTACKRESULTTYPE_PARTY_ATTACK))
     {
         CGameEvent::SetPlayerDamaged(m_nPlayerNo);
     };
 
-    return AttackResult;
+    if (attackResult == CHARACTERTYPES::ATTACKRESULTTYPE_GUARD_IMPACT)
+    {
+        CGameEvent::SetPlayerTechnicalAction(m_nPlayerNo, GAMETYPES::TECACT_GUARD_IMPACT);
+        PlayerUtil::CallVoiceOfGuardImpact(this);
+    };
+
+    return attackResult;
 };
 
 
@@ -542,10 +591,11 @@ void CPlayerCharacter::OnMessageCatch(void* pParam)
 
 void CPlayerCharacter::OnMessageLift(void* pParam)
 {
-    MSG_LIFT_INFO* pMsgLiftInfo = (MSG_LIFT_INFO*)pParam;
+    MSG_LIFT_INFO* pMsgLiftInfo = static_cast<MSG_LIFT_INFO*>(pParam);
+    ASSERT(pMsgLiftInfo);
 
-    SetCharacterFlag(CHARACTERTYPES::FLAG_CANCEL_GRAVITY, true);
-    SetDirection(pMsgLiftInfo->m_fDirection + Math::PI);
+    SetCharacterFlag(CHARACTERTYPES::FLAG_CANCEL_GRAVITY);
+    SetDirection(pMsgLiftInfo->m_fDirection + MATH_PI);
 
     RwV3d vPosition = Math::VECTOR3_ZERO;
     GetPosition(&vPosition);
@@ -561,10 +611,10 @@ void CPlayerCharacter::OnMessageLift(void* pParam)
 
 void CPlayerCharacter::OnMessageThrow(void* pParam)
 {
-    RwV3d* pvVelocity = (RwV3d*)pParam;
+    RwV3d* pvVelocity = static_cast<RwV3d*>(pParam);
     ASSERT(pvVelocity);
 
-    SetCharacterFlag(CHARACTERTYPES::FLAG_CANCEL_GRAVITY, false);
+    ClearCharacterFlag(CHARACTERTYPES::FLAG_CANCEL_GRAVITY);
     SetVelocity(pvVelocity);
     ChangeStatus(PLAYERTYPES::STATUS_THROWN);
 };
@@ -572,10 +622,10 @@ void CPlayerCharacter::OnMessageThrow(void* pParam)
 
 void CPlayerCharacter::OnMessageMissThrow(void* pParam)
 {
-    RwV3d* pvVelocity = (RwV3d*)pParam;
+    RwV3d* pvVelocity = static_cast<RwV3d*>(pParam);
     ASSERT(pvVelocity);
 
-    SetCharacterFlag(CHARACTERTYPES::FLAG_CANCEL_GRAVITY, false);
+    ClearCharacterFlag(CHARACTERTYPES::FLAG_CANCEL_GRAVITY);
     SetVelocity(pvVelocity);
 	RequestDamage(0);
 	ChangeStatus(PLAYERTYPES::STATUS_THROWN_MISS);
@@ -592,8 +642,8 @@ void CPlayerCharacter::OnSteppedDeathFloor(void)
 {
 	IGamepad::StartVibration(GetPadID(), IGamepad::VIBRATIONTYPE_HARD, 0.2f);
 
-	if (FLAG_TEST(m_collisionGroundInfo.m_attribute, MAPTYPES::ATTRIBUTE_DOBON))
-		CEffectManager::Play(EFFECTID::ID_ALL_W_DOBON, &m_vPosition);
+    if (m_collisionGroundInfo.m_attribute == MAPTYPES::ATTRIBUTE_DOBON)
+        CEffectManager::Play(EFFECTID::ID_ALL_W_DOBON, &m_vPosition);
 
 	CGameEvent::SetPlayerFallen(m_nPlayerNo);
 };
@@ -634,127 +684,130 @@ void CPlayerCharacter::ShootingKnife(void)
         Math::Vec3_Add(&vPosition, &vLocalPos, &m_vPosition);
     };
 
-    CShotManager::Shot(SHOTID::ID_KNIFE_PLAYER, &vPosition, m_fDirection, this, 0.26f, 5.0f);
+    CShotManager::Shot(SHOTID::ID_KNIFE_PLAYER, &vPosition, m_fDirection, this, MATH_DEG2RAD(15.0f), 5.0f);
 
-    if (!IsAttributeFlagSet(PLAYERTYPES::ATTRIBUTE_INNUMERABLE_KNIFE))
+    if (!TestAttribute(PLAYERTYPES::ATTRIBUTE_INNUMERABLE_KNIFE))
         CGameProperty::Player(m_nPlayerNo)->AddShurikenNum(-1);
 };
 
 
-PLAYERTYPES::STATUS CPlayerCharacter::RequestStatusMorphing(PLAYERTYPES::STATUS status)
+PLAYERTYPES::STATUS CPlayerCharacter::RequestStatusMorphing(PLAYERTYPES::STATUS statusNext)
 {
-    switch (status)
+    PLAYERTYPES::STATUS statusCurr = GetStatus();
+
+    switch (statusNext)
     {
 	case PLAYERTYPES::STATUS_JUMP_WALL:
 		++m_nNumWallJump;
 		break;
 
     case PLAYERTYPES::STATUS_JUMP:
-        if (GetStatus() == PLAYERTYPES::STATUS_IDLE ||
-            GetStatus() == PLAYERTYPES::STATUS_WALK ||
-            GetStatus() == PLAYERTYPES::STATUS_RUN)
+        if ((statusCurr == PLAYERTYPES::STATUS_IDLE) ||
+            (statusCurr == PLAYERTYPES::STATUS_WALK) ||
+            (statusCurr == PLAYERTYPES::STATUS_RUN))
         {
             return PLAYERTYPES::STATUS_JUMP_READY;
         };
         break;
 
     case PLAYERTYPES::STATUS_GUARD:
-        if (GetStatus() == PLAYERTYPES::STATUS_IDLE ||
-            GetStatus() == PLAYERTYPES::STATUS_WALK ||
-            GetStatus() == PLAYERTYPES::STATUS_RUN)
+        if ((statusCurr == PLAYERTYPES::STATUS_IDLE) ||
+            (statusCurr == PLAYERTYPES::STATUS_WALK) ||
+            (statusCurr == PLAYERTYPES::STATUS_RUN))
         {
             return PLAYERTYPES::STATUS_GUARD_READY;
         };
         break;
 
     case PLAYERTYPES::STATUS_LIFT:
-        if (GetStatus() == PLAYERTYPES::STATUS_GUARD ||
-            GetStatus() == PLAYERTYPES::STATUS_GUARD_READY)
+        if ((statusCurr == PLAYERTYPES::STATUS_GUARD) ||
+            (statusCurr == PLAYERTYPES::STATUS_GUARD_READY))
         {
             return PLAYERTYPES::STATUS_LIFT_CHALLENGE;
         };
         break;
+
+    default:
+        break;
     };
 
-    if (GetStatus() == PLAYERTYPES::STATUS_GUARD && status == PLAYERTYPES::STATUS_IDLE)
+    if ((statusCurr == PLAYERTYPES::STATUS_GUARD) && (statusNext == PLAYERTYPES::STATUS_IDLE))
         return PLAYERTYPES::STATUS_GUARD_FINISH;
 
-    if (status == PLAYERTYPES::STATUS_ATTACK_A ||
-        status == PLAYERTYPES::STATUS_ATTACK_B)
+    if ((statusNext == PLAYERTYPES::STATUS_ATTACK_A) ||
+        (statusNext == PLAYERTYPES::STATUS_ATTACK_B))
     {
-        if (status == PLAYERTYPES::STATUS_ATTACK_A &&
-			GetStatus() == PLAYERTYPES::STATUS_RUN &&
-            m_pStateMachine->GetStatusDuration() >= 1.0f)
+        if ((statusCurr == PLAYERTYPES::STATUS_RUN) &&
+            (m_pStateMachine->GetStatusDuration() >= 1.0f))
         {
             return PLAYERTYPES::STATUS_ATTACK_RUN;
         };
 
-		if (GetStatus() == PLAYERTYPES::STATUS_ATTACK_B_CHARGE &&
-			status == PLAYERTYPES::STATUS_ATTACK_B)
-		{
-			return PLAYERTYPES::STATUS_ATTACK_B;
-		}
-		else if (status == PLAYERTYPES::STATUS_ATTACK_B)
-		{
-			return PLAYERTYPES::STATUS_ATTACK_B_CHARGE;
-		};
+        if (statusNext == PLAYERTYPES::STATUS_ATTACK_B)
+        {
+            if (statusCurr != PLAYERTYPES::STATUS_ATTACK_B_CHARGE)
+                return PLAYERTYPES::STATUS_ATTACK_B_CHARGE;
+        };
     };
 
-    return status;
+    return statusNext;
 };
 
 
 CHARACTERTYPES::DEFENCERSTATUSFLAG CPlayerCharacter::CheckDefenceStatusFlag(const CHitAttackData& rAttack)
 {
-    uint32 uResult = CHARACTERTYPES::DEFENCERSTATUSFLAG_NONE;
+    CHARACTERTYPES::DEFENCERSTATUSFLAG defenceFlag = CHARACTERTYPES::DEFENCERSTATUSFLAG_NONE;
 
-    if (IsPlayerFlagSet(PLAYERTYPES::FLAG_AERIAL_STATUS))
-        FLAG_SET(uResult, CHARACTERTYPES::DEFENCERSTATUSFLAG_AERIAL);
+    if (TestPlayerFlag(PLAYERTYPES::FLAG_AERIAL_STATUS))
+        defenceFlag |= CHARACTERTYPES::DEFENCERSTATUSFLAG_AERIAL;
 
     if (CGameData::Record().Secret().GetDefenceLevel() >= 3)
-        FLAG_SET(uResult, CHARACTERTYPES::DEFENCERSTATUSFLAG_DEFENCEPOWER_GROWUP);
+        defenceFlag |= CHARACTERTYPES::DEFENCERSTATUSFLAG_DEFENCEPOWER_GROWUP;
 
     switch (GetStatus())
     {
     case PLAYERTYPES::STATUS_GUARD_READY:
-        FLAG_SET(uResult, CHARACTERTYPES::DEFENCERSTATUSFLAG_GUARD);
+        defenceFlag |= CHARACTERTYPES::DEFENCERSTATUSFLAG_GUARD;
         
         if (CGameData::Record().Secret().GetDefenceLevel() >= 1)
-            FLAG_SET(uResult, CHARACTERTYPES::DEFENCERSTATUSFLAG_STATUS_SHIFT);        
+            defenceFlag |= CHARACTERTYPES::DEFENCERSTATUSFLAG_STATUS_SHIFT;
         break;
 
     case PLAYERTYPES::STATUS_GUARD:
     case PLAYERTYPES::STATUS_GUARD_BACK:
-        FLAG_SET(uResult, CHARACTERTYPES::DEFENCERSTATUSFLAG_GUARD);
+        defenceFlag |= CHARACTERTYPES::DEFENCERSTATUSFLAG_GUARD;
         break;
 
     case PLAYERTYPES::STATUS_DINDLE:
-        FLAG_SET(uResult, CHARACTERTYPES::DEFENCERSTATUSFLAG_DINDLE);
+        defenceFlag |= CHARACTERTYPES::DEFENCERSTATUSFLAG_DINDLE;
         break;
 
     case PLAYERTYPES::STATUS_STUN:
-        FLAG_SET(uResult, CHARACTERTYPES::DEFENCERSTATUSFLAG_STUN);
+        defenceFlag |= CHARACTERTYPES::DEFENCERSTATUSFLAG_STUN;
         break;
 
     case PLAYERTYPES::STATUS_SLEEP:
-        FLAG_SET(uResult, CHARACTERTYPES::DEFENCERSTATUSFLAG_SLEEP);
+        defenceFlag |= CHARACTERTYPES::DEFENCERSTATUSFLAG_SLEEP;
         break;
 
     case PLAYERTYPES::STATUS_FREEZE:
-        FLAG_SET(uResult, CHARACTERTYPES::DEFENCERSTATUSFLAG_FREEZE);
-        break;        
+        defenceFlag |= CHARACTERTYPES::DEFENCERSTATUSFLAG_FREEZE;
+        break;
+
+    default:
+        break;
     };
 
     if (!IsThrowable())
-        FLAG_SET(uResult, CHARACTERTYPES::DEFENCERSTATUSFLAG_DISABLE_THROW);
+        defenceFlag |= CHARACTERTYPES::DEFENCERSTATUSFLAG_DISABLE_THROW;
 
-    if (IsAttributeFlagSet(PLAYERTYPES::ATTRIBUTE_DEFENCE_POWER_UP))
-        FLAG_SET(uResult, CHARACTERTYPES::DEFENCERSTATUSFLAG_DEFENCEPOWER_ITEMUP);
+    if (TestAttribute(PLAYERTYPES::ATTRIBUTE_DEFENCE_POWER_UP))
+        defenceFlag |= CHARACTERTYPES::DEFENCERSTATUSFLAG_DEFENCEPOWER_ITEMUP;
 
     if (CGameData::Record().Secret().IsUnlockedSecret(SECRETID::ID_CHEATCODE_HEALTH))
-        FLAG_SET(uResult, CHARACTERTYPES::DEFENCERSTATUSFLAG_CHEATCODE_HEALTH);
+        defenceFlag |= CHARACTERTYPES::DEFENCERSTATUSFLAG_CHEATCODE_HEALTH;
 
-    return CHARACTERTYPES::DEFENCERSTATUSFLAG(uResult);
+    return defenceFlag;
 };
 
 
@@ -769,11 +822,12 @@ void CPlayerCharacter::Initialize(PARAMETER* pParameter)
 	m_pStateMachine = pParameter->m_pStateMachine;
 	ASSERT(m_pStateMachine);
 
-    SetDefaultFlags();    
+    SetDefaultFlags();
+    
     m_attribute = PLAYERTYPES::ATTRIBUTE_NONE;
     SetEnableBodyHit(false);
 
-    CCircleShadowModule* pModule = (CCircleShadowModule*)GetModule(MODULETYPE::CIRCLE_SHADOW);
+    CCircleShadowModule* pModule = static_cast<CCircleShadowModule*>(GetModule(MODULETYPE::CIRCLE_SHADOW));
     if (pModule)
         pModule->SetEnable(false);
     
@@ -823,6 +877,7 @@ void CPlayerCharacter::OnAttach(CPlayerCharacter* pBeforeCharacter, bool bChange
     if (pBandanaMod)
     {
         UpdateModel();
+
         RwV3d vPosition = *m_pModel->GetBonePositionFromID(CHARACTERTYPES::BONEID_HEAD);
         pBandanaMod->Reset(&vPosition);
     };
@@ -842,20 +897,21 @@ void CPlayerCharacter::OnAttach(CPlayerCharacter* pBeforeCharacter, bool bChange
 
 void CPlayerCharacter::OnDetach(CPlayerCharacter* pAfterCharacter)
 {
-    ASSERT(pAfterCharacter);
-
     SetEnableBodyHit(false);
-    
-    pAfterCharacter->SetPosition(&m_vPosition);
-    pAfterCharacter->SetDirection(m_fDirection);
-    
+
+    if (pAfterCharacter)
+    {
+        pAfterCharacter->SetPosition(&m_vPosition);
+        pAfterCharacter->SetDirection(m_fDirection);
+    };
+
     SetEffectEnable(false);
 
-    CCircleShadowModule* pCircleShadowMod = (CCircleShadowModule*)GetModule(MODULETYPE::CIRCLE_SHADOW);
+    CCircleShadowModule* pCircleShadowMod = static_cast<CCircleShadowModule*>(GetModule(MODULETYPE::CIRCLE_SHADOW));
     if (pCircleShadowMod)
         pCircleShadowMod->SetEnable(false);
 
-    CLocusModule* pLocusMod = (CLocusModule*)GetModule(MODULETYPE::LOCUS);
+    CLocusModule* pLocusMod = static_cast<CLocusModule*>(GetModule(MODULETYPE::LOCUS));
     if (pLocusMod)
         pLocusMod->Reset();
 
@@ -869,26 +925,27 @@ void CPlayerCharacter::RotateDirection(float fDirection)
     float fRotateDirectionMax = CGameProperty::GetElapsedTime() * Math::PI05;
     float fDirectionDiff = fDirection - m_fDirection;
 
-    fDirectionDiff = Math::RadianCorrect(fDirectionDiff);    
-    ASSERT(Math::FAbs(fDirectionDiff) <= Math::PI);
+    fDirectionDiff = Math::RadianCorrect(fDirectionDiff);
+    
+    ASSERT(std::fabs(fDirectionDiff) <= Math::PI);
     fDirectionDiff = Clamp(fDirectionDiff, -fRotateDirectionMax, fRotateDirectionMax);
 
     SetDirection(m_fDirection + fDirectionDiff);
 };
 
 
-void CPlayerCharacter::Relocation(const RwV3d* pvPosition, float fDirection, bool bProtect)
+void CPlayerCharacter::Relocation(const RwV3d* pvPosition, float fDirection, bool bBlink)
 {
     ASSERT(pvPosition);
     
     SetConfusionEnable(false, 0.0f);
 
     ChangeStatus(PLAYERTYPES::STATUS_IDLE);
-    ClearSatusParameter();
+    ClearStatusParameter();
     SetPosition(pvPosition);
     SetDirection(fDirection);
     
-    SetBlinkEnable(true, 3.0f);
+    SetBlinkEnable((bBlink ? true : false), 3.0f);
     SetInvincibilityEnable(true, 3.0f);    
 };
 
@@ -914,35 +971,26 @@ void CPlayerCharacter::GenerateItemEffect(ITEMID::VALUE idItem)
         break;
         
     case ITEMID::ID_CRY_RED:
-        CMessageManager::Request(SEGROUPID::VALUE(38), m_idPlayer);
         SetAttackPowerupEnable(true, 15.0f);
-        m_pModuleMan->Include(
-            CharacterItemEffectModule::CreateItemEffectModule(this, EFFECTID::ID_SETUP_ATTACK, 15.0f)
-        );                
+        m_pModuleMan->Include(CharacterItemEffectModule::CreateItemEffectModule(this, EFFECTID::ID_SETUP_ATTACK, 15.0f));
+        CMessageManager::Request(SEGROUPID::VALUE(38), m_idPlayer);
         break;
         
     case ITEMID::ID_CRY_GREEN:
-        CMessageManager::Request(SEGROUPID::VALUE(39), m_idPlayer);
         SetDefencePowerupEnable(true, 15.0f);
-        m_pModuleMan->Include(
-            CharacterItemEffectModule::CreateItemEffectModule(this, EFFECTID::ID_SETUP_DEFENCE, 15.0f)
-        );        
+        m_pModuleMan->Include(CharacterItemEffectModule::CreateItemEffectModule(this, EFFECTID::ID_SETUP_DEFENCE, 15.0f));        
+        CMessageManager::Request(SEGROUPID::VALUE(39), m_idPlayer);
         break;
         
     case ITEMID::ID_CRY_WHITE:
-        CMessageManager::Request(SEGROUPID::VALUE(40), m_idPlayer);
         SetKnifePowerupEnable(true, 15.0f);
-        m_pModuleMan->Include(
-            CharacterItemEffectModule::CreateItemEffectModule(this, EFFECTID::ID_SETUP_KNIFE, 15.0f)
-        );
+        m_pModuleMan->Include(CharacterItemEffectModule::CreateItemEffectModule(this, EFFECTID::ID_SETUP_KNIFE, 15.0f));
+        CMessageManager::Request(SEGROUPID::VALUE(40), m_idPlayer);
         break;
         
     case ITEMID::ID_CRY_ORANGE:
-        CMessageManager::Request(SEGROUPID::VALUE(40), m_idPlayer);
         SetChargePowerupEnable(true, 15.0f);
-        m_pModuleMan->Include(
-            CharacterItemEffectModule::CreateItemEffectModule(this, EFFECTID::ID_SETUP_CHARGE, 15.0f)
-        );
+        m_pModuleMan->Include(CharacterItemEffectModule::CreateItemEffectModule(this, EFFECTID::ID_SETUP_CHARGE, 15.0f));
         CMessageManager::Request(SEGROUPID::VALUE(41), m_idPlayer);
         break;
         
@@ -952,15 +1000,19 @@ void CPlayerCharacter::GenerateItemEffect(ITEMID::VALUE idItem)
         
     case ITEMID::ID_INVINCIBLE:
         SetInvincibilityEnable(true, 15.0f);
-        m_pModuleMan->Include(
-            CharacterItemEffectModule::CreateItemEffectModule(this, EFFECTID::ID_SETUP_METUKEI, 15.0f)
-        );
+        m_pModuleMan->Include(CharacterItemEffectModule::CreateItemEffectModule(this, EFFECTID::ID_SETUP_METUKEI, 15.0f));
         CMessageManager::Request(SEGROUPID::VALUE(43), m_idPlayer);
         break;
         
     case ITEMID::ID_COMEBACK:
         SetBlinkEnable(true, 3.0f);
         SetInvincibilityEnable(true, 3.0f);
+#ifdef _DEBUG        
+        CMessageManager::Request(SEGROUPID::VALUE(44), m_idPlayer);
+#endif /* _DEBUG */        
+        break;
+
+    default:
         break;
     };
 };
@@ -968,8 +1020,9 @@ void CPlayerCharacter::GenerateItemEffect(ITEMID::VALUE idItem)
 
 void CPlayerCharacter::SetPlayerNo(int32 nPlayerNo)
 {
-    ASSERT(nPlayerNo >= 0 && nPlayerNo < GAMETYPES::PLAYERS_MAX);
-    
+    ASSERT(nPlayerNo >= 0);
+    ASSERT(nPlayerNo < GAMETYPES::PLAYERS_MAX);
+
     m_nPlayerNo = nPlayerNo;
 };
 
@@ -982,7 +1035,7 @@ void CPlayerCharacter::SetPadID(int32 nPadID)
 
 void CPlayerCharacter::SetBlinkEnable(bool bEnable, float fDuration)
 {
-    CBlinkCharacterModule* pBlinkCtrlMod = (CBlinkCharacterModule*)GetModule(MODULETYPE::BLINK_CHARACTER);
+    CBlinkCharacterModule* pBlinkCtrlMod = static_cast<CBlinkCharacterModule*>(GetModule(MODULETYPE::BLINK_CHARACTER));
     if (pBlinkCtrlMod)
     {
         if (bEnable)
@@ -995,7 +1048,7 @@ void CPlayerCharacter::SetBlinkEnable(bool bEnable, float fDuration)
 
 void CPlayerCharacter::SetInvincibilityEnable(bool bEnable, float fDuration)
 {
-    CPlayerAttributeControlModule* pInvinCtrlMod = (CPlayerAttributeControlModule*)GetModule(MODULETYPE::PLAYERATTRCTRL_INVINCIBILITY);
+    CPlayerAttributeControlModule* pInvinCtrlMod = static_cast<CPlayerAttributeControlModule*>(GetModule(MODULETYPE::PLAYERATTRCTRL_INVINCIBILITY));
     if (pInvinCtrlMod)
     {
         if (bEnable)
@@ -1008,7 +1061,7 @@ void CPlayerCharacter::SetInvincibilityEnable(bool bEnable, float fDuration)
 
 void CPlayerCharacter::SetAttackPowerupEnable(bool bEnable, float fDuration)
 {
-    CPlayerAttributeControlModule* pAttackCtrlMod = (CPlayerAttributeControlModule*)GetModule(MODULETYPE::PLAYERATTRCTRL_ATTACK_POWER_UP);
+    CPlayerAttributeControlModule* pAttackCtrlMod = static_cast<CPlayerAttributeControlModule*>(GetModule(MODULETYPE::PLAYERATTRCTRL_ATTACK_POWER_UP));
     if (pAttackCtrlMod)
     {
         if (bEnable)
@@ -1021,7 +1074,7 @@ void CPlayerCharacter::SetAttackPowerupEnable(bool bEnable, float fDuration)
 
 void CPlayerCharacter::SetDefencePowerupEnable(bool bEnable, float fDuration)
 {
-    CPlayerAttributeControlModule* pDefenceCtrlMod = (CPlayerAttributeControlModule*)GetModule(MODULETYPE::PLAYERATTRCTRL_DEFENCE_POWER_UP);
+    CPlayerAttributeControlModule* pDefenceCtrlMod = static_cast<CPlayerAttributeControlModule*>(GetModule(MODULETYPE::PLAYERATTRCTRL_DEFENCE_POWER_UP));
     if (pDefenceCtrlMod)
     {
         if (bEnable)
@@ -1034,7 +1087,7 @@ void CPlayerCharacter::SetDefencePowerupEnable(bool bEnable, float fDuration)
 
 void CPlayerCharacter::SetChargePowerupEnable(bool bEnable, float fDuration)
 {
-    CPlayerAttributeControlModule* pChargeCtrlMod = (CPlayerAttributeControlModule*)GetModule(MODULETYPE::PLAYERATTRCTRL_CHANGE_TIME_CUT);
+    CPlayerAttributeControlModule* pChargeCtrlMod = static_cast<CPlayerAttributeControlModule*>(GetModule(MODULETYPE::PLAYERATTRCTRL_CHANGE_TIME_CUT));
     if (pChargeCtrlMod)
     {
         if (bEnable)
@@ -1047,7 +1100,7 @@ void CPlayerCharacter::SetChargePowerupEnable(bool bEnable, float fDuration)
 
 void CPlayerCharacter::SetKnifePowerupEnable(bool bEnable, float fDuration)
 {
-    CPlayerAttributeControlModule* pKnifeCtrlMod = (CPlayerAttributeControlModule*)GetModule(MODULETYPE::PLAYERATTRCTRL_INNUMERABLE_KNIFE);
+    CPlayerAttributeControlModule* pKnifeCtrlMod = static_cast<CPlayerAttributeControlModule*>(GetModule(MODULETYPE::PLAYERATTRCTRL_INNUMERABLE_KNIFE));
     if (pKnifeCtrlMod)
     {
         if (bEnable)
@@ -1060,7 +1113,7 @@ void CPlayerCharacter::SetKnifePowerupEnable(bool bEnable, float fDuration)
 
 void CPlayerCharacter::SetConfusionEnable(bool bEnable, float fDuration)
 {
-    CPlayerAttributeControlModule* pConfusionCtrlMod = (CPlayerAttributeControlModule*)GetModule(MODULETYPE::PLAYERATTRCTRL_CONFUSION);
+    CPlayerAttributeControlModule* pConfusionCtrlMod = static_cast<CPlayerAttributeControlModule*>(GetModule(MODULETYPE::PLAYERATTRCTRL_CONFUSION));
     if (pConfusionCtrlMod)
     {
         if (bEnable)
@@ -1073,7 +1126,7 @@ void CPlayerCharacter::SetConfusionEnable(bool bEnable, float fDuration)
 
 void CPlayerCharacter::SetAmbientLightEnable(bool bEnable)
 {
-    CAmbientLightModule* pAmbientLightMod = (CAmbientLightModule*)GetModule(MODULETYPE::AMBIENT_LIGHT);
+    CAmbientLightModule* pAmbientLightMod = static_cast<CAmbientLightModule*>(GetModule(MODULETYPE::AMBIENT_LIGHT));
     if (pAmbientLightMod)
         pAmbientLightMod->SetEnable(bEnable);
 };
@@ -1081,7 +1134,7 @@ void CPlayerCharacter::SetAmbientLightEnable(bool bEnable)
 
 void CPlayerCharacter::SetEffectEnable(bool bEnable)
 {
-    CRippleEffectModule* pRippleEffMod = (CRippleEffectModule*)GetModule(MODULETYPE::RIPPLE);
+    CRippleEffectModule* pRippleEffMod = static_cast<CRippleEffectModule*>(GetModule(MODULETYPE::RIPPLE));
     if (pRippleEffMod)
         pRippleEffMod->SetEnable(bEnable);
 
@@ -1094,13 +1147,7 @@ void CPlayerCharacter::SetEffectEnable(bool bEnable)
     };
 
     for (int32 i = 0; i < COUNT_OF(aItemEffModule); ++i)
-    {
-        CharacterItemEffectModule::SetItemEffectModuleEnable(
-            this,
-            aItemEffModule[i],
-            bEnable
-        );
-    };
+        CharacterItemEffectModule::SetItemEffectModuleEnable(this, aItemEffModule[i], bEnable);
 };
 
 
@@ -1139,7 +1186,8 @@ void CPlayerCharacter::ChangeKnockStatus(void)
 void CPlayerCharacter::ChangeFlyawayStatus(void)
 {
     ChangeStatus(
-        PLAYERTYPES::STATUS((m_attackparameter.m_direction != CHARACTERTYPES::ATTACKDIRECTIONTYPE_FRONT) + PLAYERTYPES::STATUS_FLYAWAY_FRONT)
+        m_attackparameter.m_direction == CHARACTERTYPES::ATTACKDIRECTIONTYPE_FRONT ?
+        PLAYERTYPES::STATUS_FLYAWAY_FRONT : PLAYERTYPES::STATUS_FLYAWAY_BACK
     );
 };
 
@@ -1150,7 +1198,7 @@ void CPlayerCharacter::ChangeThrowStatus(CCharacterAttackCalculator& calculator)
     ASSERT(pAttacker);
     ASSERT(pAttacker->GetType() == GAMEOBJECTTYPE::CHARACTER);
 
-    CCharacter* pAttackerChr = (CCharacter*)pAttacker;
+    CCharacter* pAttackerChr = static_cast<CCharacter*>(pAttacker);
 
     float fDiff = m_fDirection - pAttackerChr->GetDirection();
 
@@ -1189,134 +1237,111 @@ void CPlayerCharacter::ApplyStatusEffect(void)
 
     default:
         ASSERT(false);
+        break;
     };
 };
 
 
 void CPlayerCharacter::CheckPartyAttack(CCharacterAttackCalculator& calculator)
 {
-    if (GetStatus() >= PLAYERTYPES::STATUS_STUN &&
-        GetStatus() <= PLAYERTYPES::STATUS_SLEEP)
+    if ((GetStatus() >= PLAYERTYPES::STATUS_STUN) &&
+        (GetStatus() <= PLAYERTYPES::STATUS_SLEEP))
     {
         ChangeStatus(PLAYERTYPES::STATUS_IDLE);
     }
     else if (GetStatus() == PLAYERTYPES::STATUS_BIND)
     {
         if (calculator.IsSliceAttack())
-        {
             ChangeStatus(PLAYERTYPES::STATUS_IDLE);
-        };
     };
 };
 
 
 void CPlayerCharacter::RequestAttackA(void)
 {
-    if(!IsPlayerFlagSet(PLAYERTYPES::FLAG_REQUEST_ATTACK_MASK))
-    {
-        SetPlayerFlag(PLAYERTYPES::FLAG_REQUEST_ATTACK_A, true);
-    };
+    if (!TestPlayerFlag(PLAYERTYPES::FLAG_REQUEST_ATTACK_MASK))
+        SetPlayerFlag(PLAYERTYPES::FLAG_REQUEST_ATTACK_A);
 };
 
 
 void CPlayerCharacter::RequestAttackB(void)
 {
-    if (!IsPlayerFlagSet(PLAYERTYPES::FLAG_REQUEST_ATTACK_C))
+    if (!TestPlayerFlag(PLAYERTYPES::FLAG_REQUEST_ATTACK_C))
     {
-        SetPlayerFlag(PLAYERTYPES::FLAG_REQUEST_ATTACK_A, false);
-        SetPlayerFlag(PLAYERTYPES::FLAG_REQUEST_ATTACK_C, false);
-        
-        SetPlayerFlag(PLAYERTYPES::FLAG_REQUEST_ATTACK_B, true);
+        ClearPlayerFlag(PLAYERTYPES::FLAG_REQUEST_ATTACK_MASK);
+        SetPlayerFlag(PLAYERTYPES::FLAG_REQUEST_ATTACK_B);
     };
 };
 
 
 void CPlayerCharacter::RequestAttackC(void)
 {
-    if (!IsPlayerFlagSet(PLAYERTYPES::FLAG_REQUEST_ATTACK_C))
+    if (!TestPlayerFlag(PLAYERTYPES::FLAG_REQUEST_ATTACK_C))
     {
-        SetPlayerFlag(PLAYERTYPES::FLAG_REQUEST_ATTACK_A, false);
-        SetPlayerFlag(PLAYERTYPES::FLAG_REQUEST_ATTACK_B, false);
-
-        SetPlayerFlag(PLAYERTYPES::FLAG_REQUEST_ATTACK_C, true);
+        ClearPlayerFlag(PLAYERTYPES::FLAG_REQUEST_ATTACK_MASK);
+        SetPlayerFlag(PLAYERTYPES::FLAG_REQUEST_ATTACK_C);
     };
 };
 
 
-void CPlayerCharacter::RequestAttackConnect(void)
+PLAYERTYPES::FLAG CPlayerCharacter::CheckAttackConnect(PLAYERTYPES::FLAG mask)
 {
-    SetPlayerFlag(PLAYERTYPES::FLAG_REQUEST_ATTACK_A, false);
-    SetPlayerFlag(PLAYERTYPES::FLAG_REQUEST_ATTACK_B, false);
-    SetPlayerFlag(PLAYERTYPES::FLAG_REQUEST_ATTACK_C, false);
-    SetPlayerFlag(PLAYERTYPES::FLAG_ENABLE_ATTACK_CONNECT, true);
-};
+    PLAYERTYPES::FLAG result = PLAYERTYPES::FLAG_NONE;
 
-
-bool CPlayerCharacter::CheckAttackConnect(PLAYERTYPES::FLAG playerflag)
-{
-    ASSERT(m_pStateMachine);
-    
-    bool bResult = false;
-    
-    if (!IsPlayerFlagSet(PLAYERTYPES::FLAG_ENABLE_ATTACK_CONNECT))
-        return bResult;
-
-    if (m_bClassicInput)
+    if (TestPlayerFlag(PLAYERTYPES::FLAG_ENABLE_ATTACK_CONNECT))
     {
-        //
-        //  A -> A
-        //  B -> A
-        //  C -> B
-        //
-        
-        if (playerflag == PLAYERTYPES::FLAG_REQUEST_ATTACK_C)
+        float fStatusDuration = m_pStateMachine->GetStatusDuration();
+        float fChainMotionConnectTime = GetNextChainMotionConnectTime();
+
+        if (fStatusDuration >= fChainMotionConnectTime)
         {
-            playerflag = PLAYERTYPES::FLAG_REQUEST_ATTACK_B;
-        }
-        else if (playerflag == PLAYERTYPES::FLAG_REQUEST_ATTACK_B)
-        {
-            playerflag = PLAYERTYPES::FLAG_REQUEST_ATTACK_A;
+            ClearPlayerFlag(PLAYERTYPES::FLAG_ENABLE_ATTACK_CONNECT);
+            
+            if (TestPlayerFlag(PLAYERTYPES::FLAG_REQUEST_ATTACK_C))
+            {
+                result = PLAYERTYPES::FLAG_REQUEST_ATTACK_C;
+            }
+            else if (TestPlayerFlag(PLAYERTYPES::FLAG_REQUEST_ATTACK_B))
+            {
+                result = PLAYERTYPES::FLAG_REQUEST_ATTACK_B;
+            }
+            else if (TestPlayerFlag(PLAYERTYPES::FLAG_REQUEST_ATTACK_A))
+            {
+                result = PLAYERTYPES::FLAG_REQUEST_ATTACK_A;
+            };
+
+            result &= mask;
         };
     };
 
-    if (m_pStateMachine->GetStatusDuration() > GetNextChainMotionConnectTime())
-    {
-        bResult = IsPlayerFlagSet(playerflag);
-        if (bResult)
-            SetPlayerFlag(PLAYERTYPES::FLAG_ENABLE_ATTACK_CONNECT, false);
-    };
-
-    return bResult;
+    return result;
 };
 
 
-bool CPlayerCharacter::CheckChargeTime(float fTime, PLAYERTYPES::CHARGEPHASE& chargephase)
+bool CPlayerCharacter::CheckChargeTime(float fTime, PLAYERTYPES::CHARGEPHASE* chargephase)
 {
     bool bResult = false;
     
-	int32 l = CGameData::Record().Secret().GetChargeLevel();
-    if (fTime >= 3.0f ||
-        IsAttributeFlagSet(PLAYERTYPES::ATTRIBUTE_CHARGE_TIME_CUT) &&
-		CGameData::Record().Secret().GetChargeLevel() >= 2)
+    int32 chargeLevel = CGameData::Record().Secret().GetChargeLevel();
+
+    if (((fTime >= 3.0f) || TestAttribute(PLAYERTYPES::ATTRIBUTE_CHARGE_TIME_CUT)) && (chargeLevel >= 2))
     {
         m_chargephase = PLAYERTYPES::CHARGEPHASE_3RD;
         bResult = true;
     }
-    else if ((fTime >= 2.0f ||
-        IsAttributeFlagSet(PLAYERTYPES::ATTRIBUTE_CHARGE_TIME_CUT)) &&
-        CGameData::Record().Secret().GetChargeLevel() >= 1)
+    else if (((fTime >= 2.0f) || TestAttribute(PLAYERTYPES::ATTRIBUTE_CHARGE_TIME_CUT)) && (chargeLevel >= 1))
     {
         m_chargephase = PLAYERTYPES::CHARGEPHASE_2ND;
-		bResult = (CGameData::Record().Secret().GetChargeLevel() < 2);
+		bResult = (chargeLevel < 2);
     }
-    else if (fTime >= 1.0f ||
-        IsAttributeFlagSet(PLAYERTYPES::ATTRIBUTE_CHARGE_TIME_CUT))
+    else if ((fTime >= 1.0f) || TestAttribute(PLAYERTYPES::ATTRIBUTE_CHARGE_TIME_CUT))
     {
         m_chargephase = PLAYERTYPES::CHARGEPHASE_1ST;
-		bResult = (CGameData::Record().Secret().GetChargeLevel() < 1);
+		bResult = (chargeLevel < 1);
     };
 
-    chargephase = m_chargephase;
+    ASSERT(chargephase);
+    *chargephase = m_chargephase;
     
     return bResult;
 };
@@ -1328,23 +1353,24 @@ void CPlayerCharacter::ClearCharge(void)
 };
 
 
-void CPlayerCharacter::ClearSatusParameter(void)
+void CPlayerCharacter::ClearStatusParameter(void)
 {
     SetDefaultFlags();
-    m_vVelocity = Math::VECTOR3_ZERO;
+    m_vVelocity     = Math::VECTOR3_ZERO;
     m_vAcceleration = Math::VECTOR3_ZERO;
-    m_nNumWallJump = 0;
+    m_nNumWallJump  = 0;
 };
 
 
 void CPlayerCharacter::SetDefaultFlags(void)
 {
-    m_playerflag = PLAYERTYPES::FLAG_NONE;
+    m_pflag = PLAYERTYPES::FLAG_NONE;
 
-    FLAG_CLEAR(m_characterflag, CHARACTERTYPES::FLAG_FIXED_DIRECTION);
-    FLAG_CLEAR(m_characterflag, CHARACTERTYPES::FLAG_FIXED_MODEL_ROTATION);
-    FLAG_CLEAR(m_characterflag, CHARACTERTYPES::FLAG_CLAMP_VELOCITY_XZ);
-    FLAG_CLEAR(m_characterflag, CHARACTERTYPES::FLAG_CANCEL_GRAVITY);
+    CHARACTERTYPES::FLAG cflag = CHARACTERTYPES::FLAG_FIXED_DIRECTION
+                               | CHARACTERTYPES::FLAG_FIXED_MODEL_ROTATION
+                               | CHARACTERTYPES::FLAG_CLAMP_VELOCITY_XZ
+                               | CHARACTERTYPES::FLAG_CANCEL_GRAVITY;
+    ClearCharacterFlag(cflag);
 };
 
 
@@ -1355,13 +1381,15 @@ void CPlayerCharacter::ReplayMotion(void)
 };
 
 
-void CPlayerCharacter::SetAerialMotionTime(float fTime)
+void CPlayerCharacter::SetAerialMotionTime(float fMaxSpeed)
 {
-    float fT = Clamp(m_vVelocity.y / fTime, -1.0f, 1.0f);
-    
-    SetMotionTime(
-        GetMotionEndTime() * (fT * -0.5f + 0.5f)
-    );
+    float fTime = (m_vVelocity.y / fMaxSpeed);
+    fTime = Clamp(fTime, -1.0f, 1.0f);
+
+    float fMotionEndT = GetMotionEndTime();
+    float fMotionT = fMotionEndT * (fTime * -0.5f + 0.5f);
+
+    SetMotionTime(fMotionT);
 };
 
 
@@ -1369,64 +1397,70 @@ void CPlayerCharacter::SetAttributeTime(PLAYERTYPES::ATTRIBUTETIME* pAttributeTi
 {
     ASSERT(pAttributeTime);
 
+    /* set attack remain time */
     CPlayerAttributeControlModule* pCtrlAttackMod = static_cast<CPlayerAttributeControlModule*>(GetModule(MODULETYPE::PLAYERATTRCTRL_ATTACK_POWER_UP));
     if (pCtrlAttackMod)
         pCtrlAttackMod->SetRemainTime(pAttributeTime->m_fAttackPowerup);
 
+    if (pAttributeTime->m_fAttackPowerup > 0.0f)
+    {
+        m_pModuleMan->Include(CharacterItemEffectModule::CreateItemEffectModule(this,
+                                                                                EFFECTID::ID_SETUP_ATTACK,
+                                                                                pAttributeTime->m_fAttackPowerup));
+    };
+
+    /* set defence remain time */
     CPlayerAttributeControlModule* pCtrlDefenceMod = static_cast<CPlayerAttributeControlModule*>(GetModule(MODULETYPE::PLAYERATTRCTRL_DEFENCE_POWER_UP));
     if (pCtrlDefenceMod)
         pCtrlDefenceMod->SetRemainTime(pAttributeTime->m_fDefencePowerup);
 
+    if (pAttributeTime->m_fDefencePowerup > 0.0f)
+    {
+        m_pModuleMan->Include(CharacterItemEffectModule::CreateItemEffectModule(this,
+                                                                                EFFECTID::ID_SETUP_DEFENCE,
+                                                                                pAttributeTime->m_fDefencePowerup));
+    };
+
+    /* set charge remain time */
     CPlayerAttributeControlModule* pCtrlChargeMod = static_cast<CPlayerAttributeControlModule*>(GetModule(MODULETYPE::PLAYERATTRCTRL_CHANGE_TIME_CUT));
     if (pCtrlChargeMod)
         pCtrlChargeMod->SetRemainTime(pAttributeTime->m_fChargePowerup);
 
-    CPlayerAttributeControlModule* pCtrlKnifeMod = static_cast<CPlayerAttributeControlModule*>(GetModule(MODULETYPE::PLAYERATTRCTRL_INNUMERABLE_KNIFE));
-    if (pCtrlKnifeMod)
-        pCtrlKnifeMod->SetRemainTime(pAttributeTime->m_fKnifePowerup);
+    if (pAttributeTime->m_fChargePowerup > 0.0f)
+    {
+        m_pModuleMan->Include(CharacterItemEffectModule::CreateItemEffectModule(this,
+                                                                                EFFECTID::ID_SETUP_CHARGE,
+                                                                                pAttributeTime->m_fChargePowerup));
+    };
 
+    /* set invincibility remain time */
     CPlayerAttributeControlModule* pCtrlInvinMod = static_cast<CPlayerAttributeControlModule*>(GetModule(MODULETYPE::PLAYERATTRCTRL_INVINCIBILITY));
     if (pCtrlInvinMod)
         pCtrlInvinMod->SetRemainTime(pAttributeTime->m_fInvincibility);
 
-    CBlinkCharacterModule* pCtrlBlinkMod = static_cast<CBlinkCharacterModule*>(GetModule(MODULETYPE::BLINK_CHARACTER));
-    if (pCtrlAttackMod)
-        pCtrlBlinkMod->SetRemainTime(pAttributeTime->m_fBlink);
-
-    if (pAttributeTime->m_fAttackPowerup > 0.0f)
+    if ((pAttributeTime->m_fInvincibility > 0.0f) && pAttributeTime->m_bItemEffectExists)
     {
-        m_pModuleMan->Include(
-            CharacterItemEffectModule::CreateItemEffectModule(this, EFFECTID::ID_SETUP_ATTACK, pAttributeTime->m_fAttackPowerup)
-        );
+        m_pModuleMan->Include(CharacterItemEffectModule::CreateItemEffectModule(this,
+                                                                                EFFECTID::ID_SETUP_METUKEI,
+                                                                                pAttributeTime->m_fInvincibility));
     };
 
-    if (pAttributeTime->m_fDefencePowerup > 0.0f)
-    {
-        m_pModuleMan->Include(
-            CharacterItemEffectModule::CreateItemEffectModule(this, EFFECTID::ID_SETUP_DEFENCE, pAttributeTime->m_fDefencePowerup)
-        );
-    };
-
-    if (pAttributeTime->m_fChargePowerup > 0.0f)
-    {
-        m_pModuleMan->Include(
-            CharacterItemEffectModule::CreateItemEffectModule(this, EFFECTID::ID_SETUP_CHARGE, pAttributeTime->m_fChargePowerup)
-        );
-    };
+    /* set infinite knife remain time */
+    CPlayerAttributeControlModule* pCtrlKnifeMod = static_cast<CPlayerAttributeControlModule*>(GetModule(MODULETYPE::PLAYERATTRCTRL_INNUMERABLE_KNIFE));
+    if (pCtrlKnifeMod)
+        pCtrlKnifeMod->SetRemainTime(pAttributeTime->m_fKnifePowerup);
 
     if (pAttributeTime->m_fKnifePowerup > 0.0f)
     {
-        m_pModuleMan->Include(
-            CharacterItemEffectModule::CreateItemEffectModule(this, EFFECTID::ID_SETUP_KNIFE, pAttributeTime->m_fKnifePowerup)
-        );
+        m_pModuleMan->Include(CharacterItemEffectModule::CreateItemEffectModule(this,
+                                                                                EFFECTID::ID_SETUP_KNIFE,
+                                                                                pAttributeTime->m_fKnifePowerup));
     };
 
-    if ((pAttributeTime->m_fInvincibility > 0.0f) && pAttributeTime->m_bItemEffectExists)
-    {
-        m_pModuleMan->Include(
-            CharacterItemEffectModule::CreateItemEffectModule(this, EFFECTID::ID_SETUP_METUKEI, pAttributeTime->m_fInvincibility)
-        );
-    };
+    /* set blink remain time */
+    CBlinkCharacterModule* pCtrlBlinkMod = static_cast<CBlinkCharacterModule*>(GetModule(MODULETYPE::BLINK_CHARACTER));
+    if (pCtrlAttackMod)
+        pCtrlBlinkMod->SetRemainTime(pAttributeTime->m_fBlink);
 };
 
 
@@ -1449,22 +1483,11 @@ void CPlayerCharacter::GetAttributeTime(PLAYERTYPES::ATTRIBUTETIME* pAttributeTi
     if (pCtrlChargeMod)
         pAttributeTime->m_fChargePowerup = pCtrlChargeMod->GetRemainTime();
 
-    /* get infinite knife power up remain time */
-    CPlayerAttributeControlModule* pCtrlKnifeMod = static_cast<CPlayerAttributeControlModule*>(GetModule(MODULETYPE::PLAYERATTRCTRL_INNUMERABLE_KNIFE));
-    if (pCtrlKnifeMod)
-        pAttributeTime->m_fKnifePowerup = pCtrlKnifeMod->GetRemainTime();
-
     /* get invincibility remain time */
     CPlayerAttributeControlModule* pCtrlInvinMod = static_cast<CPlayerAttributeControlModule*>(GetModule(MODULETYPE::PLAYERATTRCTRL_INVINCIBILITY));
     if (pCtrlInvinMod)
         pAttributeTime->m_fInvincibility = pCtrlInvinMod->GetRemainTime();
 
-    /* get blink remain time */
-    CBlinkCharacterModule* pCtrlBlinkMod = (CBlinkCharacterModule*)GetModule(MODULETYPE::BLINK_CHARACTER);
-    if (pCtrlAttackMod)
-        pAttributeTime->m_fBlink = pCtrlAttackMod->GetRemainTime();
-
-    /* get invincibility effect status */
     if (IsModuleIncluded(MODULETYPE::ITEM_EFFECT_INVINCIBLE))
     {
         pAttributeTime->m_bItemEffectExists = true;
@@ -1474,6 +1497,16 @@ void CPlayerCharacter::GetAttributeTime(PLAYERTYPES::ATTRIBUTETIME* pAttributeTi
     {
         pAttributeTime->m_bItemEffectExists = false;
     };
+
+    /* get infinite knife power up remain time */
+    CPlayerAttributeControlModule* pCtrlKnifeMod = static_cast<CPlayerAttributeControlModule*>(GetModule(MODULETYPE::PLAYERATTRCTRL_INNUMERABLE_KNIFE));
+    if (pCtrlKnifeMod)
+        pAttributeTime->m_fKnifePowerup = pCtrlKnifeMod->GetRemainTime();
+
+    /* get blink remain time */
+    CBlinkCharacterModule* pCtrlBlinkMod = static_cast<CBlinkCharacterModule*>(GetModule(MODULETYPE::BLINK_CHARACTER));
+	if (pCtrlBlinkMod)
+		pAttributeTime->m_fBlink = pCtrlBlinkMod->GetRemainTime();
 };
 
 
@@ -1488,6 +1521,13 @@ PLAYERTYPES::STATUS CPlayerCharacter::GetStatusPrev(void) const
 {
     ASSERT(m_pStateMachine);
     return m_pStateMachine->PrevStatus();
+};
+
+
+float CPlayerCharacter::GetStatusDuration(void) const
+{
+    ASSERT(m_pStateMachine);
+    return m_pStateMachine->GetStatusDuration();
 };
 
 
@@ -1533,7 +1573,7 @@ bool CPlayerCharacter::IsEnableCharacterChanging(void) const
 
 bool CPlayerCharacter::IsEnableJump2nd(void) const
 {
-    return IsPlayerFlagSet(PLAYERTYPES::FLAG_JUMP_2ND);
+    return TestPlayerFlag(PLAYERTYPES::FLAG_JUMP_2ND);
 };
 
 
@@ -1541,8 +1581,8 @@ bool CPlayerCharacter::IsEnableJumpWall(void) const
 {
     if (m_collisionWallInfo.m_bJumpWallHit)
     {
-        if (m_collisionWallInfo.m_attribute == MAPTYPES::ATTRIBUTE_JUMP ||
-            m_collisionWallInfo.m_attribute == MAPTYPES::ATTRIBUTE_MISSJUMP)
+        if ((m_collisionWallInfo.m_attribute == MAPTYPES::ATTRIBUTE_JUMP) ||
+            (m_collisionWallInfo.m_attribute == MAPTYPES::ATTRIBUTE_MISSJUMP))
             return true;
     };
 
@@ -1552,7 +1592,7 @@ bool CPlayerCharacter::IsEnableJumpWall(void) const
 
 bool CPlayerCharacter::IsEnableAttackJump(void) const
 {
-    return IsPlayerFlagSet(PLAYERTYPES::FLAG_AERIAL_STATUS);
+    return TestPlayerFlag(PLAYERTYPES::FLAG_AERIAL_STATUS);
 };
 
 
@@ -1561,13 +1601,13 @@ bool CPlayerCharacter::IsEnableAttackKnife(void) const
     if (CGameData::Record().Secret().IsUnlockedSecret(SECRETID::ID_CHEATCODE_SHURIKEN))
         return true;
 
-    if (IsAttributeFlagSet(PLAYERTYPES::ATTRIBUTE_INNUMERABLE_KNIFE))
+    if (TestAttribute(PLAYERTYPES::ATTRIBUTE_INNUMERABLE_KNIFE))
         return true;
 
     if (CGameProperty::Player(m_nPlayerNo)->GetShurikenNum() <= 0)
         return false;
 
-    return !IsPlayerFlagSet(PLAYERTYPES::FLAG_DISABLE_THROW_KNIFE);
+    return !TestPlayerFlag(PLAYERTYPES::FLAG_DISABLE_THROW_KNIFE);
 };
 
 
@@ -1581,11 +1621,11 @@ bool CPlayerCharacter::IsEnableAttackKnifeJump(void) const
     if (!IsEnableAttackKnife())
         return false;
 
-    if (!IsPlayerFlagSet(PLAYERTYPES::FLAG_AERIAL_STATUS))
+    if (!TestPlayerFlag(PLAYERTYPES::FLAG_AERIAL_STATUS))
         return false;
 
     return  (GetStatus() != PLAYERTYPES::STATUS_ATTACK_KNIFE_JUMP) ||
-            (m_pStateMachine->GetStatusDuration() > 0.15f);
+            (m_pStateMachine->GetStatusDuration() >= 0.15f);
 };
 
 
@@ -1648,4 +1688,10 @@ bool CPlayerCharacter::IsEnableChangeStatus(PLAYERTYPES::STATUS status) const
 {
     ASSERT(m_pStateMachine);
     return m_pStateMachine->IsEnableChangeStatus(status);
+};
+
+
+bool CPlayerCharacter::IsActive(void) const
+{
+    return m_bActive;
 };

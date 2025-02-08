@@ -6,6 +6,36 @@
 #include "Game/Component/GameMain/AreaInfo.hpp"
 
 
+template<class T>
+static inline int32 evaluateValue(T value, const T* aTable, int32 nTableSize)
+{
+    int32 iResult = 0;
+
+    if (aTable[0] >= aTable[nTableSize - 1])
+    {
+        for (int32 i = 0; i < nTableSize; ++i)
+        {
+            if (value > aTable[i])
+                break;
+
+            ++iResult;
+        };
+    }
+    else
+    {
+        for (int32 i = 0; i < nTableSize; ++i)
+        {
+            if (value < aTable[i])
+                break;
+
+            ++iResult;
+        };
+    };
+
+    return iResult;
+};
+
+
 /*static*/ const float CGamePlayResult::m_afLifeEvalTable[] =
 {
     20.0f,
@@ -46,59 +76,13 @@
 
 /*static*/ int32 CGamePlayResult::EvaluateInt(int32 nValue, const int32* anTable, int32 nTableSize)
 {
-    int32 iResult = 0;
-    
-    if (anTable[0] >= anTable[nTableSize - 1])
-    {
-        for (int32 i = 0; i < nTableSize; ++i)
-        {
-            if (nValue > anTable[i])
-                break;
-
-			++iResult;            
-        };
-    }
-    else
-    {
-        for (int32 i = 0; i < nTableSize; ++i)
-        {
-            if (nValue < anTable[i])
-                break;
-
-			++iResult;            
-        };
-    };
-
-    return iResult;
+    return evaluateValue(nValue, anTable, nTableSize);
 };
 
 
 /*static*/ int32 CGamePlayResult::EvaluateFloat(float fValue, const float* afTable, int32 nTableSize)
 {
-    int32 iResult = 0;
-
-    if (afTable[0] >= afTable[nTableSize - 1])
-    {
-        for (int32 i = 0; i < nTableSize; ++i)
-        {
-            if (fValue > afTable[i])
-                break;
-
-			++iResult;            
-        };
-    }
-    else
-    {
-        for (int32 i = 0; i < nTableSize; ++i)
-        {
-            if (fValue < afTable[i])
-                break;
-
-			++iResult;            
-        };
-    };
-
-    return iResult;
+    return evaluateValue(fValue, afTable, nTableSize);
 };
 
 
@@ -202,18 +186,18 @@ GAMETYPES::RESULTTYPE CGamePlayResult::GetResultType(void) const
 bool CGamePlayResult::IsScenarioEnding(void) const
 {
     if (m_result == AREARESULT_GAMECLEAR)
-        return CGameData::PlayParam().GetArea() == AREAID::ID_AREA58;
-    else
-        return false;
+        return (CGameData::PlayParam().GetArea() == AREAID::ID_AREA58);
+    
+    return false;
 };
 
 
 bool CGamePlayResult::IsNexusEnding(void) const
 {
     if (m_result == AREARESULT_GAMECLEAR)
-        return CGameData::PlayParam().GetArea() == AREAID::ID_AREA60_D;
-    else
-        return false;
+        return (CGameData::PlayParam().GetArea() == AREAID::ID_AREA60_D);
+
+    return false;
 };
 
 
@@ -247,10 +231,22 @@ void CGamePlayResult::InitForArea(void)
         break;
     };
 
-    for (int32 i = 0; i < COUNT_OF(m_aPlayerID); ++i)
-        m_aPlayerID[i] = CGameData::PlayParam().CharaInfo(i).m_CharacterID;
+    int32 charaInfoNum = CGameData::PlayParam().GetCharaInfoNum();
+    ASSERT(charaInfoNum >= 0);
+    ASSERT(charaInfoNum <= COUNT_OF(m_aPlayerID));
+    
+    for (int32 i = 0; i < charaInfoNum; ++i)
+    {
+        const CGamePlayParam::CHARAINFO& charaInfo = CGameData::PlayParam().CharaInfo(i);
+        m_aPlayerID[i] = charaInfo.m_CharacterID;
+    };
 
-    m_nMaxHP = CGameData::PlayParam().PlayerContext(0).m_iHPMax;
+    int32 playerCtxNum = CGameData::PlayParam().GetPlayerNum();
+    if (playerCtxNum > 0)
+    {
+        CGamePlayParam::PLAYERCONTEXT& playerCtx = CGameData::PlayParam().PlayerContext(0);
+        m_nMaxHP = playerCtx.m_iHPMax;
+    };
 };
 
 
@@ -266,6 +262,7 @@ void CGamePlayResult::TermForStage(void)
 
     STAGENODE* pStageNode = getCurrentStage();
     ASSERT(pStageNode);
+
     if (pStageNode)
         pStageNode->m_mvp = m_StageResult.GetMVP();
 };
@@ -285,7 +282,8 @@ void CGamePlayResult::Evaluate(void)
     }
     else
     {
-        initClearTimeEvalTable(CGameData::PlayParam().GetArea());        
+        AREAID::VALUE areaId = CGameData::PlayParam().GetArea();
+        initClearTimeEvalTable(areaId);
 
         int32 nEvalTime = evaluateClearTime();
         int32 nEvalHP   = evaluateRemainingHP();
@@ -305,22 +303,29 @@ void CGamePlayResult::TakePrize(AREAID::VALUE idArea)
     switch (m_type)
     {
     case GAMETYPES::RESULTTYPE_RIDE:
-        for (int32 i = 0; i < CGameData::PlayParam().GetPrizeInfoNum(); ++i)
         {
-            const CGamePlayParam::PRIZEINFO& prizeinfo = CGameData::PlayParam().PrizeInfo(i);
-            
-            if (prizeinfo.m_iPointsNum <= m_RideResult.GetTotalCoinPoint() && !prizeinfo.m_bTaken)
+            for (int32 i = 0; i < CGameData::PlayParam().GetPrizeInfoNum(); ++i)
             {
-                m_nRidePrizeNo = i;
-                takeOnePrize(idArea, prizeinfo.m_PrizeType);
-                break;
+                const CGamePlayParam::PRIZEINFO& prizeinfo = CGameData::PlayParam().PrizeInfo(i);
+
+                if ((prizeinfo.m_iPointsNum <= m_RideResult.GetTotalCoinPoint()) && !prizeinfo.m_bTaken)
+                {
+                    m_nRidePrizeNo = i;
+                    takeOnePrize(idArea, prizeinfo.m_PrizeType);
+                    break;
+                };
             };
-        };
+        }
         break;
 
     case GAMETYPES::RESULTTYPE_NEXUS:
-        for (int32 i = 0; i < CGameData::PlayParam().GetPrizeInfoNum(); ++i)
-            takeOnePrize(idArea, CGameData::PlayParam().PrizeInfo(i).m_PrizeType);
+        {
+            for (int32 i = 0; i < CGameData::PlayParam().GetPrizeInfoNum(); ++i)
+                takeOnePrize(idArea, CGameData::PlayParam().PrizeInfo(i).m_PrizeType);
+        }
+        break;
+
+    default:
         break;
     };
 };
@@ -407,17 +412,20 @@ void CGamePlayResult::ApplyToRecord(void)
             CGameData::Record().Nexus().UpdateTournamentClearTime(idNexus, m_cleartime);
         };
         break;
+
+    default:
+        break;
     };
 };
 
 
 void CGamePlayResult::SetStageClearSecond(float fSeconds)
 {
-    CGameTime cleartime;
-    cleartime.Init(uint32(fSeconds));
+    CGameTime cleartime(static_cast<uint32>(fSeconds));
 
     STAGENODE* pStageNode = getCurrentStage();
     ASSERT(pStageNode);
+
     if (pStageNode)
         pStageNode->m_cleartime = cleartime;
     
@@ -446,7 +454,8 @@ void CGamePlayResult::AddTotalItemCount(void)
 
 void CGamePlayResult::AddTakenItemCount(ITEMID::VALUE idItem)
 {
-    ASSERT(idItem > ITEMID::ID_NONE && idItem < ITEMID::ID_MAX);
+    ASSERT(idItem > ITEMID::ID_NONE);
+    ASSERT(idItem < ITEMID::ID_MAX);
 
     if (idItem == ITEMID::ID_DON_LASER)
         return;
@@ -482,18 +491,24 @@ void CGamePlayResult::AddTakenItemCount(ITEMID::VALUE idItem)
         break;
         
     case ITEMID::ID_COMEBACK:
+#if !defined(_DEBUG)
         ASSERT(!m_bTakenComeback);
+#endif /* !_DEBUG */        
         m_bTakenComeback = true;
         break;
-    };    
+
+    default:
+        break;
+    };
 };
 
 
 void CGamePlayResult::AddTechnicalAction(PLAYERID::VALUE idPlayer, GAMETYPES::TECACT tecact)
 {
-    ASSERT(tecact >= 0 && tecact < GAMETYPES::TECACT_MAX);
+    ASSERT(tecact >= 0);
+    ASSERT(tecact < GAMETYPES::TECACT_MAX);
 
-    if (tecact >= 0 && tecact < GAMETYPES::TECACT_MAX)
+    if ((tecact >= 0) && (tecact < GAMETYPES::TECACT_MAX))
     {
         int32 nIndex = IndexOfChara(idPlayer);
         m_CharaResult.AddTechnicalAction(nIndex, idPlayer, tecact);
@@ -504,8 +519,9 @@ void CGamePlayResult::AddTechnicalAction(PLAYERID::VALUE idPlayer, GAMETYPES::TE
 
 void CGamePlayResult::AddRideAction(PLAYERID::VALUE idPlayer, GAMETYPES::RIDEACT rideact)
 {
-    ASSERT(rideact >= 0 && rideact < GAMETYPES::RIDEACT_MAX);
-    
+    ASSERT(rideact >= 0);
+    ASSERT(rideact < GAMETYPES::RIDEACT_MAX);
+
     int32 nIndex = IndexOfChara(idPlayer);
     m_RideResult.AddRideAction(nIndex, rideact);
 };
@@ -513,8 +529,9 @@ void CGamePlayResult::AddRideAction(PLAYERID::VALUE idPlayer, GAMETYPES::RIDEACT
 
 PLAYERID::VALUE CGamePlayResult::GetPlayerCharacter(int32 nIndex) const
 {
-    ASSERT(nIndex >= 0 && nIndex < COUNT_OF(m_aPlayerID));
-    
+    ASSERT(nIndex >= 0);
+    ASSERT(nIndex < COUNT_OF(m_aPlayerID));
+
     return m_aPlayerID[nIndex];
 };
 
@@ -612,9 +629,9 @@ GAMETYPES::CLEARRANK CGamePlayResult::GetTotalRank(void) const
 };
 
 
-const CGameTime& CGamePlayResult::GetCleartimeTotal(void) const
+CGameTime CGamePlayResult::GetCleartimeTotal(void) const
 {
-    return m_cleartime;
+    return CGameTime(m_cleartime);
 };
 
 
@@ -623,18 +640,18 @@ float CGamePlayResult::GetRemainedHPRatio(void) const
     ASSERT(m_nMaxHP > 0);
 
     if (m_nMaxHP)
-        return (100.0f * float(m_nRemainingHP)) / float(m_nMaxHP);
-    else
-        return 100.0f;
+        return (100.0f * static_cast<float>(m_nRemainingHP)) / static_cast<float>(m_nMaxHP);
+    
+    return 100.0f;
 };
 
 
 float CGamePlayResult::GetItemTakeRatio(void) const
 {
     if (m_nTotalItemCount)
-        return (100.0f * float(m_nTakenItemCount)) / float(m_nTotalItemCount);
-    else
-        return 100.0f;
+        return (100.0f * static_cast<float>(m_nTakenItemCount)) / static_cast<float>(m_nTotalItemCount);
+    
+    return 100.0f;
 };
 
 
@@ -688,17 +705,19 @@ GAMETYPES::CLEARRANK CGamePlayResult::GetShotRank(int32 nIndex) const
 
 int32 CGamePlayResult::GetStageMVP(int32 nIndex) const
 {
-    ASSERT(nIndex >= 0 && nIndex < COUNT_OF(m_aStageNode));
+    ASSERT(nIndex >= 0);
+    ASSERT(nIndex < COUNT_OF(m_aStageNode));
 
     return m_aStageNode[nIndex].m_mvp;
 };
 
 
-const CGameTime& CGamePlayResult::GetStageCleartime(int32 nIndex) const
+CGameTime CGamePlayResult::GetStageCleartime(int32 nIndex) const
 {
-    ASSERT(nIndex >= 0 && nIndex < COUNT_OF(m_aStageNode));
+    ASSERT(nIndex >= 0);
+    ASSERT(nIndex < COUNT_OF(m_aStageNode));
 
-    return m_aStageNode[nIndex].m_cleartime;
+    return CGameTime(m_aStageNode[nIndex].m_cleartime);
 };
 
 
@@ -728,7 +747,9 @@ GAMETYPES::CLEARRANK CGamePlayResult::calcRideClearRank(int32 nEval) const
 
 int32 CGamePlayResult::evaluateClearTime(void) const
 {
-    return EvaluateInt(m_cleartime.GetTotalSecond(), (int32*)m_aClearEvalTable, COUNT_OF(m_aClearEvalTable));
+    uint32 uTotalSec = m_cleartime.GetTotalSecond();
+
+    return evaluateValue(uTotalSec, m_aClearEvalTable, COUNT_OF(m_aClearEvalTable));
 };
 
 
@@ -752,12 +773,13 @@ CGamePlayResult::STAGENODE* CGamePlayResult::getCurrentStage(void)
 {
     int32 nStageIndex = CGameData::PlayParam().GetStageIndex();
     
-    ASSERT(nStageIndex >= 0 && nStageIndex < COUNT_OF(m_aStageNode));
-    
-    if (nStageIndex >= 0 && nStageIndex < COUNT_OF(m_aStageNode))
+    ASSERT(nStageIndex >= 0);
+    ASSERT(nStageIndex < COUNT_OF(m_aStageNode));
+
+    if ((nStageIndex >= 0) && (nStageIndex < COUNT_OF(m_aStageNode)))
         return &m_aStageNode[nStageIndex];
-    else
-        return nullptr;
+    
+    return nullptr;
 };
 
 
@@ -767,8 +789,7 @@ void CGamePlayResult::takeOnePrize(AREAID::VALUE idArea, GAMETYPES::PRIZE prize)
     {
     case GAMETYPES::PRIZE_CRYSTAL:
         {
-            GAMETYPES::CRYSTALTYPE cry = CGameData::Record().Item().FindAreaCrystal(idArea);
-            
+            GAMETYPES::CRYSTALTYPE cry = CGameData::Record().Item().FindAreaCrystal(idArea);            
             switch (cry)
             {
             case GAMETYPES::CRYSTALTYPE_RED:
@@ -793,6 +814,9 @@ void CGamePlayResult::takeOnePrize(AREAID::VALUE idArea, GAMETYPES::PRIZE prize)
                 ASSERT(!m_bTakenOrangeCry);
                 m_bTakenOrangeCry = true;
                 ++m_nTakenItemCount;
+                break;
+
+            default:
                 break;
             };
         }

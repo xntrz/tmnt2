@@ -136,7 +136,7 @@ static void SdDrvSetCode(int32 _reason, SdSetDriverCode_t* CodeBuff)
 
     case SD_CODEKIND_RDC:
         {
-            ;
+            ASSERT(false);
         }
         break;
 
@@ -261,7 +261,7 @@ static DWORD WINAPI SoundThread(LPVOID lpParam)
         SdDrvNextSet();
 
         SdSeqMain();
-        SdDrvSeqCorrectionCB();
+        SdDrvUserThreadCB();
         SdIOSetTask();
         SdSeqPcTask();		
 

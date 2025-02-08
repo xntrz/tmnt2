@@ -31,6 +31,7 @@ RpAtomic* CSetToonObjectFunctor::operator()(RpAtomic* pAtomic)
     {
         if (!RpToonGeoGetCreaseInk(pToonGeometry))
             RpToonGeoSetCreaseInk(pToonGeometry, m_pRpToonInk);
+        
         if (!RpToonGeoGetSilhouetteInk(pToonGeometry))
             RpToonGeoSetSilhouetteInk(pToonGeometry, m_pRpToonInk);
     };

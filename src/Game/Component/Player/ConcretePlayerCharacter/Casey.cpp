@@ -14,19 +14,11 @@
 
 namespace Casey
 {
-    bool CAttackJump::IsEnableChangeStatus(PLAYERTYPES::STATUS status)
-    {
-        PLAYERTYPES::STATUS aStatusArray[] =
-        {
-            PLAYERTYPES::STATUS_JUMP,
-            PLAYERTYPES::STATUS_JUMP_2ND,
-            PLAYERTYPES::STATUS_JUMP_WALL,
-            PLAYERTYPES::STATUS_AERIAL,
-            PLAYERTYPES::STATUS_AERIAL_MOVE,
-        };
-
-        return IsWithinStatusFromArray(status, aStatusArray, COUNT_OF(aStatusArray));
-    };
+    DEFINE_ENABLED_STATUS_FOR(CAttackJump, { PLAYERTYPES::STATUS_JUMP,
+                                             PLAYERTYPES::STATUS_JUMP_2ND,
+                                             PLAYERTYPES::STATUS_JUMP_WALL,
+                                             PLAYERTYPES::STATUS_AERIAL,
+                                             PLAYERTYPES::STATUS_AERIAL_MOVE });    
 
 
     void CAttackJump::OnAttach(void)
@@ -81,17 +73,9 @@ namespace Casey
     //
 
 
-    bool CPush::IsEnableChangeStatus(PLAYERTYPES::STATUS status)
-    {
-        PLAYERTYPES::STATUS aStatusArray[] =
-        {
-            PLAYERTYPES::STATUS_IDLE,
-            PLAYERTYPES::STATUS_WALK,
-            PLAYERTYPES::STATUS_RUN,
-        };
-
-        return IsWithinStatusFromArray(status, aStatusArray, COUNT_OF(aStatusArray));
-    };
+    DEFINE_ENABLED_STATUS_FOR(CPush, { PLAYERTYPES::STATUS_IDLE,
+                                       PLAYERTYPES::STATUS_WALK,
+                                       PLAYERTYPES::STATUS_RUN });
 
 
     void CPush::OnAttach(void)
@@ -119,18 +103,17 @@ namespace Casey
 
         const CPlayerCharacter::COLLISIONWALLINFO* pWallInfo = Character().GetCollisionWall();
         ASSERT(pWallInfo);
+        ASSERT(pWallInfo->m_gimmickinfo.m_szGimmickObjName[0] != '\0');
 
-        CGimmickManager::PostEvent(
-            pWallInfo->m_gimmickinfo.m_szGimmickObjName,
-            Character().GetName(),
-            GIMMICKTYPES::EVENTTYPE_ACTIVATE
-        );
+        CGimmickManager::PostEvent(pWallInfo->m_gimmickinfo.m_szGimmickObjName,
+                                   Character().GetName(),
+                                   GIMMICKTYPES::EVENTTYPE_ACTIVATE);
     };
-};
+}; /* namespace Casey */
 
 
 CCasey::CCasey(GAMETYPES::COSTUME costume)
-: CPlayerCharacter("Casey", PLAYERID::ID_CAS, costume)
+: CPlayerCharacter("casey", PLAYERID::ID_CAS, costume)
 {
     //
 	//	Model parts:
@@ -139,7 +122,7 @@ CCasey::CCasey(GAMETYPES::COSTUME costume)
 	//		2 - bag
 	//		3 - mask
     //
-    
+
     CPlayerCharacter::PARAMETER parameter = { 0 };
     parameter.m_chrparameter.m_bToon            = true;
     parameter.m_chrparameter.m_pszModelName     = "casey";
@@ -155,7 +138,6 @@ CCasey::CCasey(GAMETYPES::COSTUME costume)
     parameter.m_feature.m_nKnifeAttachBoneID    = CHARACTERTYPES::BONEID_RIGHT_WRIST;
 
     parameter.m_pStateMachine = new CPlayerStateMachine(this, PLAYERTYPES::STATUS::NORMALMAX);
-    ASSERT(parameter.m_pStateMachine);
 
     CStatus::RegistDefaultForStateMachine(*parameter.m_pStateMachine);
 
@@ -166,7 +148,7 @@ CCasey::CCasey(GAMETYPES::COSTUME costume)
 
     Initialize(&parameter);
 
-    m_pModuleMan->Include(CCircleShadowModule::New(this, 1.5f, 1.5f, true));
+    m_pModuleMan->Include(CCircleShadowModule::New(this, 1.5f, 1.5f, false));
 };
 
 
@@ -196,15 +178,16 @@ void CCasey::ShootingKnife(void)
     float fLen = Math::Vec3_Length(&vLocalPos);
     if (fLen > 0.6f)
     {
-        vLocalPos.x *= 0.5f / fLen;
-        vLocalPos.z *= 0.5f / fLen;
+        vLocalPos.x *= (0.5f / fLen);
+        vLocalPos.z *= (0.5f / fLen);
         vLocalPos.y = fBuffY;
 
         Math::Vec3_Add(&vPosition, &vLocalPos, &m_vPosition);
     };
 
-    CShotManager::Shot(SHOTID::ID_PACK, &vPosition, m_fDirection, this, 0.26f, 5.0f);
+    uint32 hShot = CShotManager::Shot(SHOTID::ID_PACK, &vPosition, m_fDirection, this, MATH_RAD2DEG(15.0f), 5.0f);
+    ASSERT(hShot);
 
-    if (!IsAttributeFlagSet(PLAYERTYPES::ATTRIBUTE_INNUMERABLE_KNIFE))
+    if (!TestAttribute(PLAYERTYPES::ATTRIBUTE_INNUMERABLE_KNIFE))
         CGameProperty::Player(GetPlayerNo())->AddShurikenNum(-1);
 };

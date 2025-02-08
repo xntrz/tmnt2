@@ -30,6 +30,8 @@ public:
     static float GetScreenHeightEx(float fScreenH);
     static float GetStringWidth(const wchar* pwszString);
     static float GetStringWidth(const wchar* pwszString, float fHeight);
+    static float GetStringWidth(const char* pszString);
+    static float GetStringWidth(const char* pszString, float fHeight);
     static Rt2dFont* GetFontObj(void);
     
 private:

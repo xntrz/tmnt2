@@ -143,10 +143,10 @@ void CPadStream::CPadFileStream::GetPacked(void)
 #else
 #error Not implemented for current target
 #endif    
-    m_uTrigger = m_uDigital & ~(m_uDigitalOld);
+    m_uTrigger    = m_uDigital & ~(m_uDigitalOld);
     m_uDigitalOld = m_uDigital;
-    m_iAnalogX = m_pPacked->m_iAnalogX;
-    m_iAnalogY = m_pPacked->m_iAnalogY;
+    m_iAnalogX    = m_pPacked->m_iAnalogX;
+    m_iAnalogY    = m_pPacked->m_iAnalogY;
 };
 
 
@@ -362,7 +362,7 @@ void CPadStream::Close(void)
 };
 
 
-void CPadStream::GetPad(int32 iController)
+void CPadStream::GetPadData(int32 iController)
 {   
     switch (m_mode)
     {

@@ -9,6 +9,10 @@
 #include "SdLog.hpp"
 
 
+/**
+ *  TODO: there is some really rare trouble when voice not stop playing and playing above loaded data (got it twice for long time)
+ */
+
 static SdStr_t* SdStrSrv[SDSTR_SRV_MAX];
 
 
@@ -171,7 +175,7 @@ static void SdStrQueueAllClear(SdStr_t* SdStr)
     if (!SdStr->FadeFlag)
         return;
     
-    if (FLAG_TEST(SdStr->FadeFlag, SDSTR_FADEOUT_FLAG_RST_QUE))
+    if (SdStr->FadeFlag & SDSTR_FADEOUT_FLAG_RST_QUE)
         SdQueueClear(SdStr->Queue);
 
     SdStr->FadeFlag = 0;
@@ -598,13 +602,10 @@ static void SdStrResume(SdStr_t* SdStr)
 static void SdStrDownloadWait(SdStr_t* SdStr)
 {
     IDirectSoundBuffer* Dma = SdStrGetDMA(SdStr);
-
     if (Dma)
     {
         Dma->SetVolume(DSBVOLUME_MIN);
-        
-        if ((SdStr->DmaStatus & DSBSTATUS_PLAYING) != 0)
-            Dma->Stop();
+		Dma->Stop();
     };
 
     if (SdStr->FileHandle)
@@ -688,7 +689,7 @@ static void SdStrPlay(SdStr_t* SdStr)
     case SDSTR_STATE_READ_NEXT:
     case SDSTR_STATE_DOWNLOAD_WAIT:
         {            
-            if (FLAG_TEST(DmaStatus, DSBSTATUS_PLAYING))
+            if (DmaStatus & DSBSTATUS_PLAYING)
             {
                 ++SdStr->PlayTime;
                 SdStr->DataSize -= (SdStr->DataSize <= 0 ? 0 : SD_PERIOD);

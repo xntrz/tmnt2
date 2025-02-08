@@ -89,7 +89,8 @@ struct CMapInfo::INFO
 {
     static_assert(COUNT_OF(m_aMapInfo) == MAPID::ID_MAX, "update me");
     
-    ASSERT(idMap >= MAPID::ID_NONE && idMap < MAPID::ID_MAX);
+    ASSERT(idMap >= MAPID::ID_NONE);
+    ASSERT(idMap < MAPID::ID_MAX);
 
     return m_aMapInfo[idMap];
 };

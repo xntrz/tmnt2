@@ -24,20 +24,20 @@ public:
 
     struct NODEAREA
     {
-        STATE m_state;
+        STATE                m_state;
         GAMETYPES::CLEARRANK m_clearrank;
-        CGameTime m_cleartime;
+        uint32               m_cleartime;
     };
 
     struct RAWDATA
     {
-        AREAID::VALUE m_AreaSelected;
-        uint32 m_rootflagAREA11;
-        uint32 m_rootflagAREA25;
-        uint32 m_rootflagAREA33;
-        STATE m_aAreaState[AREAID::SELECTABLEMAX];
+        AREAID::VALUE        m_AreaSelected;
+        uint32               m_rootflagAREA11;
+        uint32               m_rootflagAREA25;
+        uint32               m_rootflagAREA33;
+        STATE                m_aAreaState[AREAID::SELECTABLEMAX];
         GAMETYPES::CLEARRANK m_aAreaClearrank[AREAID::NORMALMAX];
-        CGameTime m_aAreaCleartime[AREAID::NORMALMAX];
+        uint32               m_aAreaCleartime[AREAID::NORMALMAX];
     };
 
 public:
@@ -59,7 +59,7 @@ public:
     STATE GetAreaState(AREAID::VALUE idArea) const;
     bool IsAreaRootCleared(AREAID::VALUE idArea, CLEAR_ROOT clearroot) const;
     GAMETYPES::CLEARRANK GetAreaClearRank(AREAID::VALUE idArea) const;
-    const CGameTime& GetAreaClearTime(AREAID::VALUE idArea) const;
+    uint32 GetAreaClearTime(AREAID::VALUE idArea) const;
     void SetCurrentSelectedArea(AREAID::VALUE idArea);
     AREAID::VALUE GetCurrentSelectedArea(void) const;
     int32 CountRankedArea(GAMETYPES::CLEARRANK clearrank) const;

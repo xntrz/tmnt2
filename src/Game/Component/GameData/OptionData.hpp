@@ -12,14 +12,16 @@ class COptionData
 public:
     struct RAWDATA
     {
-        CPlayOptionData::RAWDATA m_play;
-        CSoundOptionData::RAWDATA m_sound;
-        CDisplayOptionData::RAWDATA m_display;
-        CGamepadOptionData::RAWDATA m_aGamepad[6];
+        CPlayOptionData::RAWDATA     m_play;
+        CSoundOptionData::RAWDATA    m_sound;
+        CDisplayOptionData::RAWDATA  m_display;
+        CGamepadOptionData::RAWDATA  m_aGamepad[6];
 #ifdef TARGET_PC
         CKeyboardOptionData::RAWDATA m_keyboard;
 #endif
     };
+
+    static_assert(std::is_pod<RAWDATA>::value, "option RAWDATA should be POD type");
 
 public:
     COptionData(void);

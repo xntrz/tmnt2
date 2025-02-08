@@ -73,7 +73,7 @@ inline void CGamePropertyObject::GetCameraFrameMatrix(RwMatrix* pMatrix) const
 };
 
 
-inline CGamePlayerContainer& CGamePropertyObject::PlayerContainer(void) const
+inline IGamePlayerContainer& CGamePropertyObject::PlayerContainer(void) const
 {
     return *m_pPlayerContainer;
 };

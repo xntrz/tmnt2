@@ -96,7 +96,7 @@ void CSeesawGimmickMove::GetTotalMoment(RwV3d* pvMoment)
         RwV3d vPosition = m_avPosition[i];
         RwV3dTransformPoint(&vPosition, &vPosition, &m_invMat);
         
-        if (Math::FAbs(vPosition.x) >= 0.1f)
+        if (std::fabs(vPosition.x) >= 0.1f)
         {
             pvMoment->z -=
                 Math::Sin(Math::ATan2(vPosition.x, vPosition.y)) *

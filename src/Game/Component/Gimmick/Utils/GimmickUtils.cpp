@@ -158,7 +158,8 @@
     
     float fNearestDistance = TYPEDEF::FLOAT_MAX;
 
-    for (int32 i = 0; i < CGameProperty::GetPlayerNum(); ++i)
+    int32 playerNum = CGameProperty::GetPlayerNum();
+    for (int32 i = 0; i < playerNum; ++i)
     {
         IGamePlayer* pGamePlayer = CGameProperty::Player(i);
         if (!pGamePlayer->IsAlive())
@@ -218,23 +219,22 @@
 {
     RwMatrix matrix;
     RwMatrixSetIdentityMacro(&matrix);
-
     CGameProperty::GetCameraViewMatrix(&matrix);
     
-    RwV3d vScPos = Math::VECTOR3_ZERO;
-    RwV3dTransformPoint(&vScPos, pvPos, &matrix);
+    RwV3d vScreenPos = Math::VECTOR3_ZERO;
+    RwV3dTransformPoint(&vScreenPos, pvPos, &matrix);
 
-    if (vScPos.z > 0.0f)
+    if (vScreenPos.z > 0.0f)
     {
-        vScPos.x *= (1.0f / vScPos.z);
-        vScPos.y *= (1.0f / vScPos.z);
+        vScreenPos.x *= (1.0f / vScreenPos.z);
+        vScreenPos.y *= (1.0f / vScreenPos.z);
 
-        if (vScPos.z >= 1.0f    &&
-            vScPos.z <= 100.0f  &&
-            vScPos.x >= 0.0f    &&
-            vScPos.x <= 1.0f    &&
-            vScPos.y >= 0.0f    &&
-            vScPos.y <= 1.0f)
+        if ((vScreenPos.z >= 1.0f)    &&
+            (vScreenPos.z <= 100.0f)  &&
+            (vScreenPos.x >= 0.0f)    &&
+            (vScreenPos.x <= 1.0f)    &&
+            (vScreenPos.y >= 0.0f)    &&
+            (vScreenPos.y <= 1.0f))
         {
             return true;
         };

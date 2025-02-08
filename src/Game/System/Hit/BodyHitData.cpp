@@ -1,16 +1,14 @@
 #include "BodyHitData.hpp"
 
 
-/*static*/ float CBodyHitData::m_fDefaultHitRadius = 0.5f;
-
-
 CBodyHitData::CBodyHitData(void)
 : m_uHitID(INVALID_HIT_ID)
-, m_uHitState(STATE_DEFAULT)
-, m_fHitRadius(m_fDefaultHitRadius)
+, m_uHitState(0)
+, m_fHitRadius(0.0f)
 , m_vPos(Math::VECTOR3_ZERO)
 {
-    ;
+    InitData(&Math::VECTOR3_ZERO, 0.5f);
+    m_uHitState = 0;
 };
 
 
@@ -43,18 +41,18 @@ uint32 CBodyHitData::GetHitID(void) const
 };
 
 
-void CBodyHitData::SetState(uint32 uState, bool bEnable)
+void CBodyHitData::SetState(STATE state, bool bEnable)
 {
     if (bEnable)
-        FLAG_SET(m_uHitState, uState);
+        m_uHitState |= state;
     else
-        FLAG_CLEAR(m_uHitState, uState);
+        m_uHitState &= (~state);
 };
 
 
-bool CBodyHitData::IsEnableState(uint32 uState) const
+bool CBodyHitData::IsEnableState(STATE state) const
 {
-    return FLAG_TEST(m_uHitState, uState);
+    return ((m_uHitState & state) == state);
 };
 
 

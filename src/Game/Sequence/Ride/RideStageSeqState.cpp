@@ -36,7 +36,6 @@ void CLoadRideStageSeqState::LoadPlayers(void)
 void CPlayRideStageSeqState::OnAttach(CStageBaseSequence* pSeq, const void* pParam)
 {
     m_pRideCamera = new CRideCamera;
-    ASSERT(m_pRideCamera);
 
     pSeq->Stage().SetCameraUpdater(m_pRideCamera);
 
@@ -67,15 +66,16 @@ void CPlayRideStageSeqState::OnDetach(CStageBaseSequence* pSeq)
 bool CPlayRideStageSeqState::OnMove(CStageBaseSequence* pSeq)
 {
 	CGameStage& stage = pSeq->Stage();
-	if (!stage.IsPaused())
-		CRideStage::Period();
+
+    if (!stage.IsPaused())
+        CRideStage::Period();
 
     switch (m_step)
     {
     case STEP_PLAY:
         {            
             if (stage.CheckPauseMenu())
-                stage.StartPause(CGameStage::PAUSETYPE_MENU, nullptr);
+                stage.StartPause(CGameStage::PAUSETYPE_MENU);
 
             if (stage.GetResult())
             {
@@ -98,6 +98,9 @@ bool CPlayRideStageSeqState::OnMove(CStageBaseSequence* pSeq)
             if (!CScreenFade::IsFading())
                 m_step = STEP_END;
         }
+        break;
+
+    default:
         break;
     };
 

@@ -303,7 +303,7 @@ static RENDERSTATEDEFAULT s_RsDefault =
 
 /*static*/ void CRenderStateManager::SetDefault(void)
 {
-    RENDERSTATE_PUSH(rwRENDERSTATETEXTURERASTER,        nullptr);
+    RENDERSTATE_PUSH(rwRENDERSTATETEXTURERASTER,        0);
     RENDERSTATE_PUSH(rwRENDERSTATETEXTUREADDRESSU,      s_RsDefault.m_textureAddressU);
     RENDERSTATE_PUSH(rwRENDERSTATETEXTUREADDRESSV,      s_RsDefault.m_textureAddressV);
     RENDERSTATE_PUSH(rwRENDERSTATEBORDERCOLOR,          s_RsDefault.m_uBorderColor);

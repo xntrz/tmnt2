@@ -17,6 +17,21 @@ static HWND s_hWndConsole = NULL;
 static uint32 s_uOptFlag = 0;
 
 
+static inline void SetOptFlag(uint32 flag, bool state)
+{
+    if (state)
+        s_uOptFlag |= flag;
+    else
+        s_uOptFlag &= (~flag);
+};
+
+
+static inline bool TestOptFlag(uint32 flag)
+{
+    return ((s_uOptFlag & flag) == flag);
+};
+
+
 static void OutputCommon(bool ln, const char* fname, int32 fline, const char* format, va_list& vl)
 {
     char szOutputBuffer[4096 * 4];
@@ -27,7 +42,7 @@ static void OutputCommon(bool ln, const char* fname, int32 fline, const char* fo
 
     int32 offset = 0;
 
-    if (FLAG_TEST(s_uOptFlag, PCDEBUG_FLAG_DISP_TFL))
+    if (TestOptFlag(PCDEBUG_FLAG_DISP_TFL))
     {
         offset = std::sprintf(
             szOutputBuffer,
@@ -103,11 +118,14 @@ static void OutputCommon(bool ln, const char* fname, int32 fline, const char* fo
     static char szFatalBuffer[4096];    
     szFatalBuffer[0] = '\0';
 
-    std::sprintf(szFatalBuffer, "%s\n\n", reason);
-    
+	va_list vl;
+	va_start(vl, reason);
+	std::vsprintf(szFatalBuffer, reason, vl);
+	va_end(vl);
+
     uint32 Flags = (MB_ICONERROR);
 #ifdef _DEBUG    
-    std::strcat(szFatalBuffer, "Press OK to execute debugbreak or CANCEL to terminate program.");
+    std::strcat(szFatalBuffer, "\n\nPress OK to execute debugbreak or CANCEL to terminate program.");
     Flags |= (MB_OKCANCEL | MB_DEFBUTTON2);
 #else
     Flags |= (MB_OK | MB_SYSTEMMODAL);
@@ -124,26 +142,20 @@ static void OutputCommon(bool ln, const char* fname, int32 fline, const char* fo
     (void)iResult;
 #endif    
     
-    if (!FLAG_TEST(s_uOptFlag, PCDEBUG_FLAG_FATAL_RET))
+    if (!TestOptFlag(PCDEBUG_FLAG_FATAL_RET))
         TerminateProcess(GetCurrentProcess(), 0xFFFFFFFF);
     else
         CPCSpecific::DisplayCursor(false);
 };
 
 
-/*static*/ void CPCDebug::SetDispTimeFileLine(bool flag)
+/*static*/ void CPCDebug::SetDispTimeFileLine(bool state)
 {
-    if (flag)
-        FLAG_SET(s_uOptFlag, PCDEBUG_FLAG_DISP_TFL);
-    else
-        FLAG_CLEAR(s_uOptFlag, PCDEBUG_FLAG_DISP_TFL);
+    SetOptFlag(PCDEBUG_FLAG_DISP_TFL, state);
 };
 
 
-/*static*/ void CPCDebug::SetFatalReturn(bool flag)
+/*static*/ void CPCDebug::SetFatalReturn(bool state)
 {
-    if (flag)
-        FLAG_SET(s_uOptFlag, PCDEBUG_FLAG_FATAL_RET);
-    else
-        FLAG_CLEAR(s_uOptFlag, PCDEBUG_FLAG_FATAL_RET);
+    SetOptFlag(PCDEBUG_FLAG_FATAL_RET, state);
 };

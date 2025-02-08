@@ -13,23 +13,28 @@
 #include "Game/System/GameObject/GameObjectManager.hpp"
 
 
-CEnemyCharacter::CStatusSubject::CStatusSubject(void)
-: m_eStatusPrev(ENEMYTYPES::STATUS_HIDE)
+CEnemyCharacter::CStatusSubject::CStatusSubject(CEnemyCharacter* pSubject)
+: m_apStatusObservers()
+, m_eStatusPrev(ENEMYTYPES::STATUS_HIDE)
 , m_eStatus(ENEMYTYPES::STATUS_HIDE)
 , m_pSharedData(nullptr)
+, m_pEnemyChr(pSubject)
 {
-    m_apStatusObservers.reserve(ENEMYTYPES::STATUS_MAX);
+    m_apStatusObservers.resize(ENEMYTYPES::STATUS_MAX);        
 };
 
 
 CEnemyCharacter::CStatusSubject::~CStatusSubject(void)
 {
-    for (int32 i = 0; i < int32(m_apStatusObservers.size()); ++i)
+    int32 count = static_cast<int32>(m_apStatusObservers.size());
+
+    for (int32 i = 0; i < count; ++i)
     {
         CStatusObserver* pStatusObserer = m_apStatusObservers[i];
         if (pStatusObserer)
         {
             pStatusObserer->Remove();
+
             delete pStatusObserer;
             m_apStatusObservers[i] = nullptr;
         };
@@ -39,20 +44,24 @@ CEnemyCharacter::CStatusSubject::~CStatusSubject(void)
 };
 
 
-bool CEnemyCharacter::CStatusSubject::Attach(CStatusObserver* pStatusObserver)
+bool CEnemyCharacter::CStatusSubject::Attach(ENEMYTYPES::STATUS status, CStatusObserver* pStatusObserver)
 {
+    ASSERT(status >= 0);
+    ASSERT(status < static_cast<int32>(m_apStatusObservers.size()));
     ASSERT(pStatusObserver);
 
-    ENEMYTYPES::STATUS StatusObserverID = pStatusObserver->Status();
-    ASSERT( (StatusObserverID >= 0) && (StatusObserverID < int32(m_apStatusObservers.size())) );
-    
-    if (m_apStatusObservers[StatusObserverID] != pStatusObserver)
+    if (m_apStatusObservers[status] != pStatusObserver)
     {
-        if (m_apStatusObservers[StatusObserverID])
-            Detach(StatusObserverID);
+        if (m_apStatusObservers[status])
+            Detach(status);
 
-        m_apStatusObservers[StatusObserverID] = pStatusObserver;
-        m_apStatusObservers[StatusObserverID]->Append();
+        m_apStatusObservers[status] = pStatusObserver;
+
+        m_apStatusObservers[status]->m_pEnemyChr   = m_pEnemyChr;
+        m_apStatusObservers[status]->m_pSharedData = m_pEnemyChr->StatusSubject().GetSharedData();
+        m_apStatusObservers[status]->m_eOwnStatus  = status;
+
+        m_apStatusObservers[status]->Append();
 
         return true;
     };
@@ -63,11 +72,13 @@ bool CEnemyCharacter::CStatusSubject::Attach(CStatusObserver* pStatusObserver)
 
 void CEnemyCharacter::CStatusSubject::Detach(ENEMYTYPES::STATUS eStatus)
 {
-    ASSERT( (eStatus >= 0) && (eStatus < int32(m_apStatusObservers.size())) );
-    
+    ASSERT(eStatus >= 0);
+    ASSERT(eStatus < static_cast<int32>(m_apStatusObservers.size()));
+
     if (m_apStatusObservers[eStatus])
     {
         m_apStatusObservers[eStatus]->Remove();
+    
         delete m_apStatusObservers[eStatus];
         m_apStatusObservers[eStatus] = nullptr;
     };
@@ -139,6 +150,11 @@ void* CEnemyCharacter::CStatusSubject::GetSharedData(void)
 };
 
 
+//
+// *********************************************************************************
+//
+
+
 /*static*/ ENEMYTYPES::CREATEINFO CEnemyCharacter::m_createinfo;
 
 
@@ -161,20 +177,18 @@ CEnemyCharacter::CEnemyCharacter(ENEMYID::VALUE idEnemy)
 {
     char szName[GAMEOBJECTTYPES::NAME_MAX];
     szName[0] = '\0';
+
     std::sprintf(szName, "%s_%04d", ENEMYID::GetExtName(m_ID), CEnemy::m_iUniqueCount);
     ASSERT(std::strlen(szName) < GAMEOBJECTTYPES::NAME_MAX);
 
     CCharacterCompositor* pCharacter = new CCharacterCompositor(szName, CCharacter::TYPE_ENEMY, *this);
-    ASSERT(pCharacter);
 
     m_hCharacter = pCharacter->GetHandle();
     CGameObjectManager::SendMessage(pCharacter, GAMEOBJECTTYPES::MESSAGEID_SLEEP);
 
-    m_pStatusSubject = new CStatusSubject();
-    ASSERT(m_pStatusSubject);
+    m_pStatusSubject = new CStatusSubject(this);
 
     m_pParameter = new PARAMETER;
-    ASSERT(m_pParameter);
     std::memset(m_pParameter, 0x00, sizeof(*m_pParameter));
     m_pParameter->m_feature.m_iPattern = m_createinfo.m_iPattern;
 };
@@ -203,20 +217,20 @@ bool CEnemyCharacter::Initialize(PARAMETER* pParameter, bool bReplaceParameter)
     {
         m_pParameter->m_feature.m_iHPMax = CEnemyParameter::GetHP(idx);
 
-        std::memcpy(
-            &m_pParameter->m_AICharacteristic,
-            &CEnemyParameter::GetAICharacteristic(idx),
-            sizeof(m_pParameter->m_AICharacteristic)
-        );
+        const ENEMYTYPES::CHARACTERISTIC& AICharacteristic = CEnemyParameter::GetAICharacteristic(idx);
+        std::memcpy(&m_pParameter->m_AICharacteristic, &AICharacteristic, sizeof(m_pParameter->m_AICharacteristic));
 
         int32 iFreqMax = CEnemyParameter::GetFrequencyMax(idx);
         if (iFreqMax > 0)
         {
             m_puFrequencyParam = new uint8[GAMETYPES::DIFFICULTY_NUM * iFreqMax];
-            ASSERT(m_puFrequencyParam);
             std::memset(m_puFrequencyParam, 0x00, (GAMETYPES::DIFFICULTY_NUM * iFreqMax));
+
+            GAMETYPES::DIFFICULTY difficulty = CGameProperty::GetDifficulty();
+            uint8* puFreqParamNode = &m_puFrequencyParam[difficulty * iFreqMax];
+
             for (int32 i = 0; i < iFreqMax; ++i)
-                m_puFrequencyParam[i] = CEnemyParameter::GetFrequency(idx, i);
+                puFreqParamNode[i] = CEnemyParameter::GetFrequency(idx, i);
         };
     }
     else
@@ -225,14 +239,26 @@ bool CEnemyCharacter::Initialize(PARAMETER* pParameter, bool bReplaceParameter)
         if (iFreqMax > 0)
         {
             m_puFrequencyParam = new uint8[GAMETYPES::DIFFICULTY_NUM * iFreqMax];
-            ASSERT(m_puFrequencyParam);
             std::memset(m_puFrequencyParam, 0x00, (GAMETYPES::DIFFICULTY_NUM * iFreqMax));
-            for (int32 i = 0; i < iFreqMax; ++i)
-                m_puFrequencyParam[i] = m_pParameter->m_puFrequencyParam[i];
+
+            for (int32 i = 0, j = 0; i < iFreqMax; ++i, j += 3)
+            {
+                static_assert(GAMETYPES::DIFFICULTY_NUM == 3, "add node init");
+                
+                m_puFrequencyParam[(GAMETYPES::DIFFICULTY_EASY   * iFreqMax) + i] = pParameter->m_puFrequencyParam[j + 0];
+                m_puFrequencyParam[(GAMETYPES::DIFFICULTY_NORMAL * iFreqMax) + i] = pParameter->m_puFrequencyParam[j + 1];
+                m_puFrequencyParam[(GAMETYPES::DIFFICULTY_HARD   * iFreqMax) + i] = pParameter->m_puFrequencyParam[j + 2];
+            };
         };
     };
 
-    m_pParameter->m_feature.m_iHP = m_pParameter->m_feature.m_iHPMax;
+#ifdef _DEBUG
+    /* for enemy tests */
+    if (m_createinfo.m_iHPMax != 0)
+        m_pParameter->m_feature.m_iHPMax = m_createinfo.m_iHPMax;
+#endif /* _DEBUG */
+
+    m_pParameter->m_feature.m_iHP           = m_pParameter->m_feature.m_iHPMax;
     m_pParameter->m_feature.m_vPatrolOrigin = m_createinfo.m_vPosition;
     m_pParameter->m_feature.m_fPatrolRadius = m_createinfo.m_fRadius;
 
@@ -252,24 +278,28 @@ bool CEnemyCharacter::Initialize(PARAMETER* pParameter, bool bReplaceParameter)
         };
     };
 
-    CCharacter::PARAMETER ChrParameter;
-    std::memset(&ChrParameter, 0x00, sizeof(ChrParameter));
-    ChrParameter.m_pszMotionSetName = ENEMYID::GetExtName(m_ID);
-    ChrParameter.m_bToon = m_pParameter->m_bToon;
-    CharacterCompositor().Initialize(&ChrParameter);
-    CharacterCompositor().ModuleShadow(m_pParameter->m_fShadowRadius);
-    CharacterCompositor().ModuleRipple(m_pParameter->m_fShadowRadius);
-    CharacterCompositor().SetPosition(&m_createinfo.m_vPosition);
-    CharacterCompositor().SetDirection(m_createinfo.m_fDirection);
+    CCharacter::PARAMETER chrParameter;
+    std::memset(&chrParameter, 0x00, sizeof(chrParameter));
+    chrParameter.m_pszModelName = ENEMYID::GetExtName(m_ID);
+    chrParameter.m_pszMotionSetName = ENEMYID::GetExtName(m_ID);
+    chrParameter.m_bToon = m_pParameter->m_bToon;
+
+    Compositor().Initialize(&chrParameter);
+    Compositor().ModuleShadow(m_pParameter->m_fShadowRadius);
+    Compositor().ModuleRipple(m_pParameter->m_fShadowRadius);
+    Compositor().SetPosition(&m_createinfo.m_vPosition);
+    Compositor().SetDirection(m_createinfo.m_fDirection);
 
     if (m_pParameter->m_pfnAIInstance)
     {
-        m_pAIModerator = m_pParameter->m_pfnAIInstance();
+        m_pAIModerator = m_pParameter->m_pfnAIInstance(this);
         ASSERT(m_pAIModerator);
     };
 
-    SetStatus(m_createinfo.m_status);
-	return true;
+    bool bResult = SetStatus(m_createinfo.m_status);
+	ASSERT(bResult, "cant set default status %" PRId32, m_createinfo.m_status);
+
+	return bResult;
 };
 
 
@@ -287,18 +317,18 @@ void CEnemyCharacter::Run(void)
         return;
     };
 
-    ENEMYTYPES::STATUS eStatus = StatusSubject().OnEnd();
-    if (eStatus != ENEMYTYPES::STATUS_QUIT)
+    ENEMYTYPES::STATUS nextStatus = StatusSubject().OnEnd();
+    if (nextStatus != ENEMYTYPES::STATUS_QUIT)
     {
-        if ((eStatus == ENEMYTYPES::STATUS_GETUP) &&
+        if ((nextStatus == ENEMYTYPES::STATUS_GETUP) &&
             TestFlag(ENEMYTYPES::FLAG_DEATH_STATUS) &&
             (GetStatus() != ENEMYTYPES::STATUS_QUIT) &&
             (GetStatus() != ENEMYTYPES::STATUS_DEATH))
         {
-            eStatus = ENEMYTYPES::STATUS_DEATH;
+            nextStatus = ENEMYTYPES::STATUS_DEATH;
         };
 
-        StatusSubject().Status(eStatus);
+        StatusSubject().Status(nextStatus);
         StatusSubject().OnStart();
         StatusSubject().Update();
         return;
@@ -317,7 +347,10 @@ void CEnemyCharacter::Run(void)
 
 void CEnemyCharacter::Draw(void)
 {
-    ;
+#ifdef _DEBUG
+    if (m_pAIModerator)
+        m_pAIModerator->Draw();
+#endif /* _DEBUG */
 };
 
 
@@ -339,7 +372,7 @@ void CEnemyCharacter::Delete(void)
     {
         if (m_pParameter->m_iFrequencyMax)
         {
-            delete [] m_puFrequencyParam;
+            delete[] m_puFrequencyParam;
             m_puFrequencyParam = nullptr;
         };
 
@@ -416,14 +449,14 @@ void CEnemyCharacter::OnMessageTouchdown(float fHeight)
     case ENEMYTYPES::STATUS_THROWN_FRONT:
         {
             SetStatus(ENEMYTYPES::STATUS_FLYAWAY_BOUND_FRONT);
-            if (CharacterCompositor().GetRequestedDamage() > 0)
+            
+            int32 damageRequested = Compositor().GetRequestedDamage();
+            if (damageRequested > 0)
             {
-                CGameObjectManager::SendMessage(
-                    &CharacterCompositor(),
-                    CHARACTERTYPES::MESSAGEID_RECVDMG,
-                    (void*)CharacterCompositor().GetRequestedDamage()
-                );
-                CharacterCompositor().RequestDamage(0);
+                CGameObjectManager::SendMessage(&Compositor(),
+                                                CHARACTERTYPES::MESSAGEID_RECVDMG,
+                                                reinterpret_cast<void*>(damageRequested));
+                Compositor().RequestDamage(0);
             };
         }
         break;
@@ -431,14 +464,20 @@ void CEnemyCharacter::OnMessageTouchdown(float fHeight)
     case ENEMYTYPES::STATUS_CRASHWALL_FALL_BACK:
         {
             SetStatus(ENEMYTYPES::STATUS_CRASHWALL_TOUCHDOWN_BACK);
-            CGameObjectManager::SendMessage(&CharacterCompositor(), CHARACTERTYPES::MESSAGEID_RECVDMG, (void*)20);
+
+            CGameObjectManager::SendMessage(&Compositor(),
+                                            CHARACTERTYPES::MESSAGEID_RECVDMG,
+                                            reinterpret_cast<void*>(20));
         }
         break;
 
     case ENEMYTYPES::STATUS_CRASHWALL_FALL_FRONT:
         {
             SetStatus(ENEMYTYPES::STATUS_CRASHWALL_TOUCHDOWN_FRONT);
-            CGameObjectManager::SendMessage(&CharacterCompositor(), CHARACTERTYPES::MESSAGEID_RECVDMG, (void*)20);
+
+            CGameObjectManager::SendMessage(&Compositor(),
+                                            CHARACTERTYPES::MESSAGEID_RECVDMG,
+                                            reinterpret_cast<void*>(20));
         }
         break;
 
@@ -493,51 +532,46 @@ void CEnemyCharacter::OnMessageAttackResult(CHitCatchData* pCatch)
 
 CHARACTERTYPES::ATTACKRESULTTYPE CEnemyCharacter::OnDamage(CCharacterAttackCalculator& rCalc)
 {
-    CHARACTERTYPES::DEFENCERSTATUSFLAG DefenceStatusFlag = CheckDefenceStatusFlag();    
-    CHARACTERTYPES::ATTACKRESULTTYPE AttackResult = rCalc.CalcAtackParameter(
-        CharacterCompositor().AttackParameter(),
-        DefenceStatusFlag
-    );
+    CHARACTERTYPES::DEFENCERSTATUSFLAG defenceFlag = CheckDefenceStatusFlag();    
+    CHARACTERTYPES::ATTACKRESULTTYPE attackResult = rCalc.CalcAtackParameter(Compositor().AttackParameter(), defenceFlag);
 
     if (TestFlag(ENEMYTYPES::FLAG_DEATH_STATUS))
     {
-        AttackResult = CHARACTERTYPES::ATTACKRESULTTYPE_INEFFECTIVE;
+        attackResult = CHARACTERTYPES::ATTACKRESULTTYPE_INEFFECTIVE;
     }
-    else if (TestFlag(ENEMYTYPES::FLAG_INVINCIBILITY) || CharacterCompositor().IsCharacterFlagSet(CHARACTERTYPES::FLAG_OCCURED_INVINCIBILITY_TIMING))
+    else if (TestFlag(ENEMYTYPES::FLAG_INVINCIBILITY) ||
+             Compositor().TestCharacterFlag(CHARACTERTYPES::FLAG_OCCURED_INVINCIBILITY_TIMING))
     {
-        AttackResult = CHARACTERTYPES::ATTACKRESULTTYPE_INEFFECTIVE;
+        attackResult = CHARACTERTYPES::ATTACKRESULTTYPE_INEFFECTIVE;
         rCalc.GetAttack().SetPower(0);
     }
     else
     {
-        if ((AttackResult != CHARACTERTYPES::ATTACKRESULTTYPE_GUARD)
-            && (AttackResult != CHARACTERTYPES::ATTACKRESULTTYPE_GUARD_BREAK)
-            && (AttackResult != CHARACTERTYPES::ATTACKRESULTTYPE_GUARD_IMPACT)
-            && TestFlag(ENEMYTYPES::FLAG_NOREACTION))
+        if ((attackResult != CHARACTERTYPES::ATTACKRESULTTYPE_GUARD)        &&
+            (attackResult != CHARACTERTYPES::ATTACKRESULTTYPE_GUARD_BREAK)  &&
+            (attackResult != CHARACTERTYPES::ATTACKRESULTTYPE_GUARD_IMPACT) &&
+            TestFlag(ENEMYTYPES::FLAG_NOREACTION))
         {
-            AttackResult = CHARACTERTYPES::ATTACKRESULTTYPE_DAMAGE_NOREACTION;
+            attackResult = CHARACTERTYPES::ATTACKRESULTTYPE_DAMAGE_NOREACTION;
         };
 
         bool fSetCompleted = false;
         do
         {
-            switch (AttackResult)
+            switch (attackResult)
             {
             case CHARACTERTYPES::ATTACKRESULTTYPE_DAMAGE_KNOCK:
                 {                
                     if (!SetStatus(ENEMYTYPES::STATUS_KNOCK))
                     {
-                        ENEMYTYPES::STATUS eEnemyStatus = ENEMYTYPES::STATUS_HIDE;
-                        if (rCalc.DirectionType() == CHARACTERTYPES::ATTACKDIRECTIONTYPE_FRONT)
-                        {
-                            eEnemyStatus = ENEMYTYPES::STATUS_KNOCK_FRONT;
-                        }
-                        else if (rCalc.DirectionType() == CHARACTERTYPES::ATTACKDIRECTIONTYPE_BACK)
-                        {
-                            eEnemyStatus = ENEMYTYPES::STATUS_KNOCK_BACK;
-                        };
+                        ENEMYTYPES::STATUS status = ENEMYTYPES::STATUS_HIDE;
 
-                        if (!SetStatus(eEnemyStatus))
+                        if (rCalc.DirectionType() == CHARACTERTYPES::ATTACKDIRECTIONTYPE_FRONT)
+                            status = ENEMYTYPES::STATUS_KNOCK_FRONT;
+                        else if (rCalc.DirectionType() == CHARACTERTYPES::ATTACKDIRECTIONTYPE_BACK)
+                            status = ENEMYTYPES::STATUS_KNOCK_BACK;
+
+                        if (!SetStatus(status))
                         {
                             if (!SetStatus(ENEMYTYPES::STATUS_IDLE))
                                 ASSERT(false);
@@ -553,45 +587,43 @@ CHARACTERTYPES::ATTACKRESULTTYPE CEnemyCharacter::OnDamage(CCharacterAttackCalcu
                 {
                     if (GetStatus() == ENEMYTYPES::STATUS_THROWN_BACK)
                     {
-                        RwV3d vecVel = Math::VECTOR3_ZERO;                        
-                        CharacterCompositor().GetVelocity(&vecVel);
+                        RwV3d vecVel = Compositor().AttackParameter().m_vVelocity;
                         vecVel.y = 0.0f;
-                            
-                        vecVel.z = Math::FNegate(Math::Vec3_Length(&vecVel));
-                        vecVel.y = CharacterCompositor().AttackParameter().m_vVelocity.y;
+
+                        float fVel = Math::Vec3_Length(&vecVel);
+
                         vecVel.x = 0.0f;
+                        vecVel.y = Compositor().AttackParameter().m_vVelocity.y;
+                        vecVel.z = std::fabs(fVel);
                 
                         RwMatrix matRotY;
                         RwMatrixSetIdentityMacro(&matRotY);                        
-                        Math::Matrix_RotateY(&matRotY, CharacterCompositor().GetDirection() + Math::PI);
-
+                        Math::Matrix_RotateY(&matRotY, Compositor().GetDirection() + MATH_PI);
                         RwV3dTransformVector(&vecVel, &vecVel, &matRotY);
+
+                        Compositor().AttackParameter().m_vVelocity = vecVel;
 
                         RwV3d vecDir = Math::VECTOR3_AXIS_Z;
                         RwV3dTransformVector(&vecDir, &vecDir, &matRotY);
 
-                        CharacterCompositor().AttackParameter().m_vVelocity = vecVel;
-                        CharacterCompositor().AttackParameter().m_vDirection = vecDir;
+                        Compositor().AttackParameter().m_vDirection = vecDir;
                     };
 
-                    ENEMYTYPES::STATUS eEnemyStatus = ENEMYTYPES::STATUS_HIDE;
+                    ENEMYTYPES::STATUS status = ENEMYTYPES::STATUS_HIDE;
+
                     if (rCalc.DirectionType() == CHARACTERTYPES::ATTACKDIRECTIONTYPE_FRONT)
-                    {
-                        eEnemyStatus = ENEMYTYPES::STATUS_FLYAWAY_BOUND_FRONT;
-                    }
+                        status = ENEMYTYPES::STATUS_FLYAWAY_FRONT;
                     else if (rCalc.DirectionType() == CHARACTERTYPES::ATTACKDIRECTIONTYPE_BACK)
-                    {
-                        eEnemyStatus = ENEMYTYPES::STATUS_FLYAWAY_BOUND_BACK;
-                    };
+                        status = ENEMYTYPES::STATUS_FLYAWAY_BACK;
 
-                    if (SetStatus(eEnemyStatus))
+                    if (SetStatus(status))
                     {
                         fSetCompleted = true;
                         rCalc.GetAttack().GetCatch()->SetResult(CHitCatchData::RESULT_HIT);
                     }
                     else
                     {
-                        AttackResult = CHARACTERTYPES::ATTACKRESULTTYPE_DAMAGE_KNOCK;
+                        attackResult = CHARACTERTYPES::ATTACKRESULTTYPE_DAMAGE_KNOCK;
                     };
                 }
                 break;
@@ -604,22 +636,12 @@ CHARACTERTYPES::ATTACKRESULTTYPE CEnemyCharacter::OnDamage(CCharacterAttackCalcu
                 
             case CHARACTERTYPES::ATTACKRESULTTYPE_THROW:
                 {
-                    switch (rCalc.DirectionType())
-                    {
-                    case CHARACTERTYPES::ATTACKDIRECTIONTYPE_FRONT:
+                    if (rCalc.DirectionType() == CHARACTERTYPES::ATTACKDIRECTIONTYPE_FRONT)
                         rCalc.GetAttack().GetCatch()->SetResult(CHitCatchData::RESULT_THROWFRONT);
-                        break;
-                        
-                    case CHARACTERTYPES::ATTACKDIRECTIONTYPE_BACK:
+                    else if (rCalc.DirectionType() == CHARACTERTYPES::ATTACKDIRECTIONTYPE_BACK)
                         rCalc.GetAttack().GetCatch()->SetResult(CHitCatchData::RESULT_THROWBACK);
-                        break;
 
-                    default:
-                        ASSERT(false);
-                        break;
-                    };
-
-                    std::strcpy(CharacterCompositor().LiftInfo().m_szLiftObjectName, rCalc.GetAttacker()->GetName());
+                    std::strcpy(Compositor().LiftInfo().m_szLiftObjectName, rCalc.GetAttacker()->GetName());
                     
                     fSetCompleted = true;
                 }
@@ -631,38 +653,41 @@ CHARACTERTYPES::ATTACKRESULTTYPE CEnemyCharacter::OnDamage(CCharacterAttackCalcu
             case CHARACTERTYPES::ATTACKRESULTTYPE_FREEZE:
             case CHARACTERTYPES::ATTACKRESULTTYPE_BIND:
                 {
-                    ENEMYTYPES::STATUS eEnemyStatus = ENEMYTYPES::STATUS_HIDE;                    
-                    switch (AttackResult)
+                    ENEMYTYPES::STATUS status = ENEMYTYPES::STATUS_HIDE;                    
+                    switch (attackResult)
                     {
                     case CHARACTERTYPES::ATTACKRESULTTYPE_DINDLE:
-                        eEnemyStatus = ENEMYTYPES::STATUS_DINDLE;
+                        status = ENEMYTYPES::STATUS_DINDLE;
                         break;
                         
                     case CHARACTERTYPES::ATTACKRESULTTYPE_STUN:
-                        eEnemyStatus = ENEMYTYPES::STATUS_STUN;
+                        status = ENEMYTYPES::STATUS_STUN;
                         break;
                         
                     case CHARACTERTYPES::ATTACKRESULTTYPE_SLEEP:
-                        eEnemyStatus = ENEMYTYPES::STATUS_SLEEP;
+                        status = ENEMYTYPES::STATUS_SLEEP;
                         break;
                         
                     case CHARACTERTYPES::ATTACKRESULTTYPE_FREEZE:
-                        eEnemyStatus = ENEMYTYPES::STATUS_FREEZE;
+                        status = ENEMYTYPES::STATUS_FREEZE;
                         break;
                         
                     case CHARACTERTYPES::ATTACKRESULTTYPE_BIND:
-                        eEnemyStatus = ENEMYTYPES::STATUS_BIND;
+                        status = ENEMYTYPES::STATUS_BIND;
+                        break;
+
+                    default:
                         break;
                     };
 
-                    if (SetStatus(eEnemyStatus))
+                    if (SetStatus(status))
                     {
                         fSetCompleted = true;
                         rCalc.GetAttack().GetCatch()->SetResult(CHitCatchData::RESULT_HIT);
                     }
                     else
                     {
-                        AttackResult = CHARACTERTYPES::ATTACKRESULTTYPE_DAMAGE_KNOCK;
+                        attackResult = CHARACTERTYPES::ATTACKRESULTTYPE_DAMAGE_KNOCK;
                     };
                 }
                 break;
@@ -687,21 +712,21 @@ CHARACTERTYPES::ATTACKRESULTTYPE CEnemyCharacter::OnDamage(CCharacterAttackCalcu
                     if (SetStatus(ENEMYTYPES::STATUS_COUNTERACT))
                         fSetCompleted = true;
                     else
-                        AttackResult = CHARACTERTYPES::ATTACKRESULTTYPE_DAMAGE_KNOCK;
+                        attackResult = CHARACTERTYPES::ATTACKRESULTTYPE_DAMAGE_KNOCK;
                 }
                 break;
 
             default:
                 {
                     fSetCompleted = true;
-                    AttackResult = CHARACTERTYPES::ATTACKRESULTTYPE_INEFFECTIVE;
+                    attackResult = CHARACTERTYPES::ATTACKRESULTTYPE_INEFFECTIVE;
                 }
                 break;
             };
         } while (!fSetCompleted);
     };
 
-    return AttackResult;
+    return attackResult;
 };
 
 
@@ -710,6 +735,7 @@ void CEnemyCharacter::OnMessageReceivedDamage(int32 iAmount)
     if (CharacterParameter().m_feature.m_iHP <= iAmount)
     {
         CharacterParameter().m_feature.m_iHP = 0;
+        
         if (!TestFlag(ENEMYTYPES::FLAG_DEATH_STATUS))
         {
             SetFlag(ENEMYTYPES::FLAG_DEATH_STATUS);
@@ -719,7 +745,7 @@ void CEnemyCharacter::OnMessageReceivedDamage(int32 iAmount)
                 switch (GetStatus())
                 {
                 case ENEMYTYPES::STATUS_KNOCK_BACK:
-                    CGameSound::PlayDeathSE(&CharacterCompositor());
+                    CGameSound::PlayDeathSE(&Compositor());
                     SetStatus(ENEMYTYPES::STATUS_FLYAWAY_BACK);
                     break;
 
@@ -731,18 +757,18 @@ void CEnemyCharacter::OnMessageReceivedDamage(int32 iAmount)
                 case ENEMYTYPES::STATUS_CRASHWALL_FALL_BACK:
                 case ENEMYTYPES::STATUS_CRASHWALL_TOUCHDOWN_FRONT:
                 case ENEMYTYPES::STATUS_CRASHWALL_TOUCHDOWN_BACK:
-                    CGameSound::PlayDeathSE(&CharacterCompositor());
+                    CGameSound::PlayDeathSE(&Compositor());
                     break;
 
                 default:
-                    CGameSound::PlayDeathSE(&CharacterCompositor());
+                    CGameSound::PlayDeathSE(&Compositor());
                     SetStatus(ENEMYTYPES::STATUS_FLYAWAY_FRONT);
                     break;
-                }
+                };
             }
             else if (!SetStatus(ENEMYTYPES::STATUS_DEATH))
             {
-                CGameSound::PlayDeathSE(&CharacterCompositor());
+                CGameSound::PlayDeathSE(&Compositor());
                 SetStatus(ENEMYTYPES::STATUS_QUIT);
             };
         };
@@ -752,7 +778,7 @@ void CEnemyCharacter::OnMessageReceivedDamage(int32 iAmount)
         CharacterParameter().m_feature.m_iHP -= iAmount;
     };
 
-    CEnemy* pOwner = (CEnemy*)CGameObjectManager::GetObject(m_hOwner);
+    CEnemy* pOwner = static_cast<CEnemy*>(CGameObjectManager::GetObject(m_hOwner));
     CGameEvent::SetEnemyDamaged(pOwner, CharacterParameter().m_feature.m_iHP);
 };
 
@@ -765,8 +791,9 @@ void CEnemyCharacter::OnSteppedDeathFloor(void)
 
 void CEnemyCharacter::OnMessageCatch(void* pParam)
 {
-    CHitCatchData::RESULT* pCatchResult = (CHitCatchData::RESULT*)pParam;
+    CHitCatchData::RESULT* pCatchResult = static_cast<CHitCatchData::RESULT*>(pParam);
     ASSERT(pCatchResult);
+
     switch (*pCatchResult)
     {
     case CHitCatchData::RESULT_THROWFRONT:
@@ -781,31 +808,30 @@ void CEnemyCharacter::OnMessageCatch(void* pParam)
             if (!SetStatus(ENEMYTYPES::STATUS_THROWN_BACK))
                 ASSERT(false);
 
-            CCharacterCompositor& Compositor = CharacterCompositor();
-            CGameObject* pObj = CGameObjectManager::GetObject(Compositor.LiftInfo().m_szLiftObjectName);
-            if (pObj)
+            CGameObject* pObj = CGameObjectManager::GetObject(Compositor().LiftInfo().m_szLiftObjectName);
+            if (pObj && (pObj->GetType() == GAMEOBJECTTYPE::CHARACTER))
             {
-                if (pObj->GetType() == GAMEOBJECTTYPE::CHARACTER)
-                {
-                    CCharacter* pCharacter = (CCharacter*)pObj;
+                CCharacter* pCharacter = static_cast<CCharacter*>(pObj);
 
-                    RwV3d vec = { 0.0f, 0.0f, 1.0f };
-                    pCharacter->RotateVectorByDirection(&vec, &vec);
+                RwV3d vecVelocity = Math::VECTOR3_AXIS_Z;
+                pCharacter->RotateVectorByDirection(&vecVelocity, &vecVelocity);
 
-                    RwV3d posobj = Math::VECTOR3_ZERO;
-                    pCharacter->GetPosition(&posobj);
+                RwV3d vecPosChr = Math::VECTOR3_ZERO;
+                pCharacter->GetPosition(&vecPosChr);
 
-                    RwV3d posme = Math::VECTOR3_ZERO;
-                    Compositor.GetPosition(&posme);
+                RwV3d vecPosMe = Math::VECTOR3_ZERO;
+                Compositor().GetPosition(&vecPosMe);
 
-                    Math::Vec3_Add(&vec, &vec, &posobj);
-                    Math::Vec3_Sub(&vec, &vec, &posme);
+                Math::Vec3_Add(&vecVelocity, &vecVelocity, &vecPosChr);
+                Math::Vec3_Sub(&vecVelocity, &vecVelocity, &vecPosMe);
 
-                    Compositor.SetVelocity(&vec);
-                    Compositor.SetDirection(pCharacter->GetDirection());
-                };
+                Compositor().SetVelocity(&vecVelocity);
+                Compositor().SetDirection(pCharacter->GetDirection());
             };
         }
+        break;
+
+    default:
         break;
     };
 };
@@ -813,20 +839,20 @@ void CEnemyCharacter::OnMessageCatch(void* pParam)
 
 void CEnemyCharacter::OnMessageLift(void* pParam)
 {
-    CCharacter::MSG_LIFT_INFO* pMsgLiftInfo = (CCharacter::MSG_LIFT_INFO*)pParam;
+    CCharacter::MSG_LIFT_INFO* pMsgLiftInfo = static_cast<CCharacter::MSG_LIFT_INFO*>(pParam);
 
-    CharacterCompositor().SetCharacterFlag(CHARACTERTYPES::FLAG_CANCEL_GRAVITY, true);
-    CharacterCompositor().SetDirection(pMsgLiftInfo->m_fDirection);
+    Compositor().SetCharacterFlag(CHARACTERTYPES::FLAG_CANCEL_GRAVITY);
+    Compositor().SetDirection(pMsgLiftInfo->m_fDirection);
     
     RwV3d vPosition = Math::VECTOR3_ZERO;
-    CharacterCompositor().GetPosition(&vPosition);
+    Compositor().GetPosition(&vPosition);
 
     RwV3d vVelocity = Math::VECTOR3_ZERO;
     vVelocity.x = (pMsgLiftInfo->m_vPosition.x - vPosition.x) * (1.0f / CGameProperty::GetElapsedTime());
     vVelocity.y = (pMsgLiftInfo->m_vPosition.y - vPosition.y) * (1.0f / CGameProperty::GetElapsedTime());
     vVelocity.z = (pMsgLiftInfo->m_vPosition.z - vPosition.z) * (1.0f / CGameProperty::GetElapsedTime());
 
-    CharacterCompositor().SetVelocity(&vVelocity);
+    Compositor().SetVelocity(&vVelocity);
 
     switch (pMsgLiftInfo->m_iStatus)
     {
@@ -849,17 +875,20 @@ void CEnemyCharacter::OnMessageLift(void* pParam)
             };
         }
         break;
+
+    default:
+        break;
     };
 };
 
 
 void CEnemyCharacter::OnMessageThrow(void* pParam)
 {
-    RwV3d* pvVelocity = (RwV3d*)pParam;
+    RwV3d* pvVelocity = static_cast<RwV3d*>(pParam);
     ASSERT(pvVelocity);
 
-    CharacterCompositor().SetCharacterFlag(CHARACTERTYPES::FLAG_CANCEL_GRAVITY, false);
-    CharacterCompositor().SetVelocity(pvVelocity);
+    Compositor().ClearCharacterFlag(CHARACTERTYPES::FLAG_CANCEL_GRAVITY);
+    Compositor().SetVelocity(pvVelocity);
     
     SetStatus(ENEMYTYPES::STATUS_THROWN_FRONT);
 };
@@ -867,23 +896,23 @@ void CEnemyCharacter::OnMessageThrow(void* pParam)
 
 void CEnemyCharacter::OnMessageMissThrow(void* pParam)
 {
-    RwV3d* pvVelocity = (RwV3d*)pParam;
+    RwV3d* pvVelocity = static_cast<RwV3d*>(pParam);
     ASSERT(pvVelocity);
 
-    CharacterCompositor().SetCharacterFlag(CHARACTERTYPES::FLAG_CANCEL_GRAVITY, false);
-    CharacterCompositor().SetVelocity(pvVelocity);
-    CharacterCompositor().RequestDamage(0);
+    Compositor().ClearCharacterFlag(CHARACTERTYPES::FLAG_CANCEL_GRAVITY);
+    Compositor().SetVelocity(pvVelocity);
+    Compositor().RequestDamage(0);
     
     SetStatus(ENEMYTYPES::STATUS_AERIAL);
 };
 
 
-bool CEnemyCharacter::AttachStatusObserver(CStatusObserver* pStatusObserver)
+bool CEnemyCharacter::AttachStatusObserver(ENEMYTYPES::STATUS status, CStatusObserver* pStatusObserver)
 {
     if (m_pStatusSubject)
-        return m_pStatusSubject->Attach(pStatusObserver);
-    else
-        return false;
+        return m_pStatusSubject->Attach(status, pStatusObserver);
+    
+    return false;
 };
 
 
@@ -898,8 +927,8 @@ bool CEnemyCharacter::IsAttachedStatusObserver(ENEMYTYPES::STATUS eStatus)
 {
     if (m_pStatusSubject)
         return m_pStatusSubject->IsContained(eStatus);
-    else
-        return false;
+    
+    return false;
 };
 
 
@@ -917,37 +946,38 @@ uint32 CEnemyCharacter::GetOwner(void)
 
 bool CEnemyCharacter::SetStatus(ENEMYTYPES::STATUS eStatus)
 {
-    ASSERT((eStatus >= ENEMYTYPES::STATUS_HIDE) && (eStatus < ENEMYTYPES::STATUS_MAX));
+    ASSERT(eStatus >= ENEMYTYPES::STATUS_HIDE);
+    ASSERT(eStatus <  ENEMYTYPES::STATUS_MAX);
 
     bool bResult = false;
     CGameObject* pObj = CGameObjectManager::GetObject(m_hOwner);
-    
+
     if ((eStatus == ENEMYTYPES::STATUS_QUIT) && pObj)
     {
         ASSERT(pObj->GetType() == GAMEOBJECTTYPE::ENEMY);
+
         CGameObjectManager::DeleteObject(pObj);
         StatusSubject().OnEnd();
         Stop();
 
         bResult = true;
     }
-    else if(StatusSubject().IsContained(eStatus))
+    else if (StatusSubject().IsContained(eStatus))
     {
-        if (StatusSubject().Status() != eStatus)
-        {
-            StatusSubject().OnEnd();
-            StatusSubject().Status(eStatus);
-            StatusSubject().OnStart();
-            
-            bResult = true;
-        };
+        ASSERT(StatusSubject().Status() != ENEMYTYPES::STATUS_QUIT);
+
+        StatusSubject().OnEnd();
+        StatusSubject().Status(eStatus);
+        StatusSubject().OnStart();
+
+        bResult = true;
     };
 
     return bResult;
 };
 
 
-ENEMYTYPES::STATUS CEnemyCharacter::GetStatus(void)
+ENEMYTYPES::STATUS CEnemyCharacter::GetStatus(void) const
 {
     ASSERT(m_pStatusSubject);
     return m_pStatusSubject->Status();
@@ -966,19 +996,19 @@ void CEnemyCharacter::SetPatrolArea(const RwV3d* pvPosition, float fRadius)
 
 void CEnemyCharacter::SetPosition(const RwV3d* pvPosition)
 {
-    CharacterCompositor().SetPosition(pvPosition);
+    Compositor().SetPosition(pvPosition);
 };
 
 
-void CEnemyCharacter::GetBodyPosition(RwV3d* pvPosition)
+void CEnemyCharacter::GetBodyPosition(RwV3d* pvPosition) const
 {
-    CharacterCompositor().GetBodyPosition(pvPosition);
+    Compositor().GetBodyPosition(pvPosition);
 };
 
 
 void CEnemyCharacter::SetDirection(float fDirection)
 {
-    CharacterCompositor().SetDirection(fDirection);
+    Compositor().SetDirection(fDirection);
 };
 
 
@@ -991,7 +1021,7 @@ void CEnemyCharacter::SetSharedData(void* pSharedData)
 
 CEnemyCharacter::CHRTYPE CEnemyCharacter::GetAttackCharacterType(void)
 {
-    CCharacter::TYPE Type = CharacterCompositor().GetCharacterType();
+    CCharacter::TYPE Type = Compositor().GetCharacterType();
     switch (Type)
     {
     case CCharacter::TYPE_ENEMY:
@@ -1002,7 +1032,7 @@ CEnemyCharacter::CHRTYPE CEnemyCharacter::GetAttackCharacterType(void)
 
     default:
         ASSERT(false);
-        return CHRTYPE(-1);
+        return CHRTYPE_ENEMY;
     };
 };
 
@@ -1015,51 +1045,54 @@ ENEMYID::VALUE CEnemyCharacter::GetID(void)
 
 const char* CEnemyCharacter::GetName(void)
 {
-    return CharacterCompositor().GetName();
+    return Compositor().GetName();
 };
 
 
 CHARACTERTYPES::DEFENCERSTATUSFLAG CEnemyCharacter::CheckDefenceStatusFlag(void)
 {
-    uint32 Flag = 0;
+    CHARACTERTYPES::DEFENCERSTATUSFLAG defenceFlag = CHARACTERTYPES::DEFENCERSTATUSFLAG_NONE;
 
     if (TestFlag(ENEMYTYPES::FLAG_AERIAL_STATUS))
-        FLAG_SET(Flag, CHARACTERTYPES::DEFENCERSTATUSFLAG_AERIAL);
+        defenceFlag |= CHARACTERTYPES::DEFENCERSTATUSFLAG_AERIAL;
 
     if (CGameData::Record().Secret().IsUnlockedSecret(SECRETID::ID_CHALLENGE_SUPERTOUGH))
-        FLAG_SET(Flag, CHARACTERTYPES::DEFENCERSTATUSFLAG_DEFENCEPOWER_GROWUP);
+        defenceFlag |= CHARACTERTYPES::DEFENCERSTATUSFLAG_DEFENCEPOWER_GROWUP;
     
     switch (GetStatus())
     {
     case ENEMYTYPES::STATUS_DINDLE:
-        FLAG_SET(Flag, CHARACTERTYPES::DEFENCERSTATUSFLAG_DINDLE);
+        defenceFlag |= CHARACTERTYPES::DEFENCERSTATUSFLAG_DINDLE;
         break;
 
     case ENEMYTYPES::STATUS_STUN:
-        FLAG_SET(Flag, CHARACTERTYPES::DEFENCERSTATUSFLAG_STUN);
+        defenceFlag |= CHARACTERTYPES::DEFENCERSTATUSFLAG_STUN;
         break;
 
     case ENEMYTYPES::STATUS_COUNTERACT:
-        FLAG_SET(Flag, CHARACTERTYPES::DEFENCERSTATUSFLAG_STAGGER);
+        defenceFlag |= CHARACTERTYPES::DEFENCERSTATUSFLAG_STAGGER;
         break;
 
     case ENEMYTYPES::STATUS_SLEEP:
-        FLAG_SET(Flag, CHARACTERTYPES::DEFENCERSTATUSFLAG_SLEEP);
+        defenceFlag |= CHARACTERTYPES::DEFENCERSTATUSFLAG_SLEEP;
         break;
 
     case ENEMYTYPES::STATUS_FREEZE:
-        FLAG_SET(Flag, CHARACTERTYPES::DEFENCERSTATUSFLAG_FREEZE);
+        defenceFlag |= CHARACTERTYPES::DEFENCERSTATUSFLAG_FREEZE;
         break;
 
     case ENEMYTYPES::STATUS_BIND:
-        FLAG_SET(Flag, CHARACTERTYPES::DEFENCERSTATUSFLAG_BIND);
+        defenceFlag |= CHARACTERTYPES::DEFENCERSTATUSFLAG_BIND;
         break;
 
     case ENEMYTYPES::STATUS_GUARD:
         if (TestFlag(ENEMYTYPES::FLAG_GUARD_ALLRANGE))
-            FLAG_SET(Flag, CHARACTERTYPES::DEFENCERSTATUSFLAG_GUARD_ALLRANGE);
+            defenceFlag |= CHARACTERTYPES::DEFENCERSTATUSFLAG_GUARD_ALLRANGE;
         else
-            FLAG_SET(Flag, CHARACTERTYPES::DEFENCERSTATUSFLAG_GUARD);
+            defenceFlag |= CHARACTERTYPES::DEFENCERSTATUSFLAG_GUARD;
+        break;
+
+    default:
         break;
     };
     
@@ -1096,7 +1129,7 @@ CHARACTERTYPES::DEFENCERSTATUSFLAG CEnemyCharacter::CheckDefenceStatusFlag(void)
         {
             if (!StatusSubject().IsContained(ENEMYTYPES::STATUS_CAUGHT))
             {
-                FLAG_SET(Flag, CHARACTERTYPES::DEFENCERSTATUSFLAG_DISABLE_THROW);
+                defenceFlag |= CHARACTERTYPES::DEFENCERSTATUSFLAG_DISABLE_THROW;
             }
             else
             {
@@ -1110,12 +1143,12 @@ CHARACTERTYPES::DEFENCERSTATUSFLAG CEnemyCharacter::CheckDefenceStatusFlag(void)
 
     default:
         {
-            FLAG_SET(Flag, CHARACTERTYPES::DEFENCERSTATUSFLAG_DISABLE_THROW);
+            defenceFlag |= CHARACTERTYPES::DEFENCERSTATUSFLAG_DISABLE_THROW;
         }
         break;
     };
     
-    return CHARACTERTYPES::DEFENCERSTATUSFLAG(Flag);
+    return defenceFlag;
 };
 
 
@@ -1125,7 +1158,7 @@ void CEnemyCharacter::Start(void)
     {
         m_bRunning = true;
 
-        CCharacterCompositor* pCharacter = (CCharacterCompositor*)CGameObjectManager::GetObject(m_hCharacter);
+        CCharacterCompositor* pCharacter = static_cast<CCharacterCompositor*>(CGameObjectManager::GetObject(m_hCharacter));
         CGameObjectManager::SendMessage(pCharacter, GAMEOBJECTTYPES::MESSAGEID_AWAKE);
 
         StartAI();
@@ -1143,7 +1176,7 @@ void CEnemyCharacter::Stop(void)
 
         StopAI();
 
-        CCharacterCompositor* pCharacter = (CCharacterCompositor*)CGameObjectManager::GetObject(m_hCharacter);
+        CCharacterCompositor* pCharacter = static_cast<CCharacterCompositor*>(CGameObjectManager::GetObject(m_hCharacter));
         CGameObjectManager::SendMessage(pCharacter, GAMEOBJECTTYPES::MESSAGEID_SLEEP);
 
         m_bRunning = false;
@@ -1186,23 +1219,19 @@ void CEnemyCharacter::StopAI(void)
 
 void CEnemyCharacter::SetFlag(ENEMYTYPES::FLAG flag)
 {
-    uint32 eflag = m_eflag;
-    eflag |= (1 << static_cast<uint32>(flag));
-    m_eflag = static_cast<ENEMYTYPES::FLAG>(eflag);
+    m_eflag |= flag;
 };
 
 
 void CEnemyCharacter::ClearFlag(ENEMYTYPES::FLAG flag)
 {
-    uint32 eflag = m_eflag;
-    eflag &= ~(1 << static_cast<uint32>(flag));
-    m_eflag = static_cast<ENEMYTYPES::FLAG>(eflag);
+    m_eflag &= ~(flag);
 };
 
 
 bool CEnemyCharacter::TestFlag(ENEMYTYPES::FLAG flag) const
 {
-    return ((static_cast<uint32>(m_eflag) & static_cast<uint32>(flag)) == static_cast<uint32>(flag));
+    return ((m_eflag & flag) == flag);
 };
 
 
@@ -1225,12 +1254,6 @@ CAIThinkOrder& CEnemyCharacter::AIThinkOrder(void) const
 };
 
 
-ENEMYTYPES::CHARACTERISTIC& CEnemyCharacter::AICharacteristic(void) const
-{
-    return CharacterParameter().m_AICharacteristic;
-};
-
-
 CEnemyCharacter::CStatusSubject& CEnemyCharacter::StatusSubject(void) const
 {
     ASSERT(m_pStatusSubject);
@@ -1238,7 +1261,20 @@ CEnemyCharacter::CStatusSubject& CEnemyCharacter::StatusSubject(void) const
 };
 
 
-CEnemyCharacter::PARAMETER& CEnemyCharacter::CharacterParameter(void) const
+const ENEMYTYPES::CHARACTERISTIC& CEnemyCharacter::AICharacteristic(void) const
+{
+    return CharacterParameter().m_AICharacteristic;
+};
+
+
+CEnemyCharacter::PARAMETER& CEnemyCharacter::CharacterParameter(void)
+{
+    ASSERT(m_pParameter);
+    return *m_pParameter;
+};
+
+
+const CEnemyCharacter::PARAMETER& CEnemyCharacter::CharacterParameter(void) const
 {
     ASSERT(m_pParameter);
     return *m_pParameter;
@@ -1252,9 +1288,37 @@ uint8* CEnemyCharacter::FrequencyParameter(void) const
 };
 
 
-CCharacterCompositor& CEnemyCharacter::CharacterCompositor(void) const
+uint8 CEnemyCharacter::FrequencyParameter(int32 idx) const
+{
+    ASSERT(idx >= 0);
+    ASSERT(idx < m_pParameter->m_iFrequencyMax);
+
+    GAMETYPES::DIFFICULTY difficulty = CGameProperty::GetDifficulty();
+    uint8* puFreqParamNode = &m_puFrequencyParam[difficulty * m_pParameter->m_iFrequencyMax];
+
+    return puFreqParamNode[idx];
+};
+
+
+CCharacterCompositor& CEnemyCharacter::Compositor(void)
 {
     CGameObject* pObj = CGameObjectManager::GetObject(m_hCharacter);
     ASSERT(pObj);
+
     return static_cast<CCharacterCompositor&>(*pObj);
+};
+
+
+const CCharacterCompositor& CEnemyCharacter::Compositor(void) const
+{
+    CGameObject* pObj = CGameObjectManager::GetObject(m_hCharacter);
+    ASSERT(pObj);
+
+    return static_cast<CCharacterCompositor&>(*pObj);
+};
+
+
+const ENEMYTYPES::FEATURE& CEnemyCharacter::Feature(void) const
+{
+    return CharacterParameter().m_feature;
 };

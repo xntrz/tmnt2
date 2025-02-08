@@ -40,7 +40,7 @@ namespace Michelangero
     public:
         virtual void OnDischargeWave(MAGIC_GENERIC::STEP step) override;
     };
-};
+}; /* namespace Michelangero */
 
 
 class CMichelangero : public CPlayerCharacter

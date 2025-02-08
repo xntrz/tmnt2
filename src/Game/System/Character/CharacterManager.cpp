@@ -24,15 +24,6 @@ private:
         CCharacter* m_pTarget;
         CHARACTERWORK* m_pResult;
     };
-
-    class CSearchNameFunctor : public IEnumerateFunctor
-    {
-    public:
-        virtual bool operator()(CHARACTERWORK* pWork) override;
-
-        const char* m_pszTarget;
-        CHARACTERWORK* m_pResult;
-    };
     
     class CDrawFunctor : public IEnumerateFunctor
     {
@@ -59,6 +50,11 @@ private:
 };
 
 
+//
+// *********************************************************************************
+//
+
+
 bool CCharacterContainer::CSearchPtrFunctor::operator()(CHARACTERWORK* pWork)
 {
     ASSERT(m_pTarget);
@@ -74,19 +70,9 @@ bool CCharacterContainer::CSearchPtrFunctor::operator()(CHARACTERWORK* pWork)
 };
 
 
-bool CCharacterContainer::CSearchNameFunctor::operator()(CHARACTERWORK* pWork)
-{
-    ASSERT(m_pszTarget);
-    ASSERT(pWork->m_pCharacter);
-    
-    if (!std::strcmp(pWork->m_pCharacter->GetName(), m_pszTarget))
-	{
-		m_pResult = pWork;
-		return false;
-	};
-
-    return true;
-};
+//
+// *********************************************************************************
+//
 
 
 bool CCharacterContainer::CDrawFunctor::operator()(CHARACTERWORK* pWork)
@@ -97,6 +83,11 @@ bool CCharacterContainer::CDrawFunctor::operator()(CHARACTERWORK* pWork)
     
     return true;
 };
+
+
+//
+// *********************************************************************************
+//
 
 
 CCharacterContainer::CCharacterContainer(void)
@@ -120,10 +111,9 @@ void CCharacterContainer::Regist(CCharacter* pCharacter)
 {
     CHARACTERWORK* pWork = AllocWork();
     ASSERT(pWork);
+
     if (pWork)
-    {
         pWork->m_pCharacter = pCharacter;
-    };
 };
 
 
@@ -131,6 +121,7 @@ void CCharacterContainer::Remove(CCharacter* pCharacter)
 {
     CHARACTERWORK* pWork = SearchWork(pCharacter);
     ASSERT(pWork);
+
     if (pWork)
     {
         pWork->m_pCharacter = nullptr;
@@ -161,13 +152,10 @@ CCharacterContainer::CHARACTERWORK* CCharacterContainer::SearchWork(CCharacter* 
 
 CCharacterContainer::CHARACTERWORK* CCharacterContainer::AllocWork(void)
 {
-    ASSERT(!m_listPool.empty());
-
     if (m_listPool.empty())
         return nullptr;
     
     CHARACTERWORK* pNode = m_listPool.front();
-    ASSERT(pNode);
     m_listPool.erase(pNode);
     m_listAlloc.push_back(pNode);
 
@@ -177,12 +165,11 @@ CCharacterContainer::CHARACTERWORK* CCharacterContainer::AllocWork(void)
 
 void CCharacterContainer::FreeWork(CHARACTERWORK* pWork)
 {
-    ASSERT(!m_listAlloc.empty());
     ASSERT(pWork);
-    ASSERT(m_listAlloc.contains(pWork));
+    ASSERT(!m_listAlloc.empty());
     
     m_listAlloc.erase(pWork);
-    m_listPool.push_back(pWork);
+    m_listPool.push_front(pWork);
 };
 
 
@@ -211,9 +198,7 @@ static inline CCharacterContainer& CharacterContainer(void)
 /*static*/ void CCharacterManager::Initialize(void)
 {
     if (!s_pCharacterContainer)
-    {
         s_pCharacterContainer = new CCharacterContainer;
-    };
 };
 
 

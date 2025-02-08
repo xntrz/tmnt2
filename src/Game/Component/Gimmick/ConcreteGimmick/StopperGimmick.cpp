@@ -22,32 +22,39 @@ CStopperGimmick::CStopperGimmick(const char* pszName, void* pParam)
 
     ASSERT(pParam);
 
-    GIMMICKPARAM::GIMMICK_BASIC* pInitParam = (GIMMICKPARAM::GIMMICK_BASIC*)pParam;
+    GIMMICKPARAM::GIMMICK_BASIC* pInitParam = static_cast<GIMMICKPARAM::GIMMICK_BASIC*>(pParam);
 
     if (pInitParam->m_subid == 0)
     {
+        /* init disp model */
         CModel* pModelDisp = CModelManager::CreateModel("stopper");
-        CModel* pModelAtari = CModelManager::CreateModel("stopper_a");
-        
         ASSERT(pModelDisp);
-        ASSERT(pModelAtari);
 
         pModelDisp->SetLightingEnable(false);
 
         m_model.SetModel(CNormalGimmickModel::MODELTYPE_DRAW_NORMAL, pModelDisp);
+
+        /* init atari model */
+        CModel* pModelAtari = CModelManager::CreateModel("stopper_a");
+        ASSERT(pModelAtari);
+
         m_model.SetModel(CNormalGimmickModel::MODELTYPE_ATARI_NORMAL, pModelAtari);
 
-        RwV3d vRotation = Math::VECTOR3_ZERO;        
+        /* init pos & rot */
         RwMatrix matrix;
-        RwMatrixSetIdentityMacro(&matrix);
-        
+        RwMatrixSetIdentityMacro(&matrix);        
         CGimmickUtils::QuaternionToRotationMatrix(&matrix, &pInitParam->m_quat);
+        
+        RwV3d vRotation = Math::VECTOR3_ZERO;
         CGimmickUtils::MatrixToRotation(&matrix, &vRotation);
-        m_model.SetPosition(&pInitParam->m_vPosition);
-        m_model.SetRotation(&vRotation);
 
+        m_model.SetRotation(&vRotation);
+        m_model.SetPosition(&pInitParam->m_vPosition);
+
+        /* init start */
         SetModelStrategy(&m_model);
 
+        /* init atari */
         if (m_model.GetCollisionModelClump())
         {
             RpClump* pClump = m_model.GetCollisionModelClump();
@@ -63,7 +70,7 @@ CStopperGimmick::CStopperGimmick(const char* pszName, void* pParam)
     float fRotY = CGimmickUtils::QuaternionToRotationY(&pInitParam->m_quat);
     
     vBodyPosition.x += Math::Sin(fRotY) * 1.3f;
-    vBodyPosition.x += 0.5f;
+    vBodyPosition.y += 0.5f;
     vBodyPosition.z += Math::Cos(fRotY) * 1.3f;
 
     for (int32 i = 0; i < COUNT_OF(m_apBodyHitData); ++i)
@@ -73,6 +80,7 @@ CStopperGimmick::CStopperGimmick(const char* pszName, void* pParam)
 
         pBodyHitData->InitData(&vBodyPosition, 0.5f);
         pBodyHitData->SetState(CBodyHitData::STATE_SELF_TO_OTHER, true);
+
         m_apBodyHitData[i] = pBodyHitData;
 
         vBodyPosition.y += 1.0f;        
@@ -105,7 +113,7 @@ void CStopperGimmick::PostMove(void)
 {
     float fNearestPlayerDist = CGimmickUtils::CalcNearestPlayerDistanceXZ(&m_vPosition);
     
-    if (fNearestPlayerDist < 4.0f && isNearRaphRockGimmick())
+    if ((fNearestPlayerDist < 4.0f) && isNearRaphRockGimmick())
         setBodyHitDataState(true);
     else
         setBodyHitDataState(false);
@@ -132,49 +140,41 @@ void CStopperGimmick::setBodyHitDataState(bool bState)
 
 
 bool CStopperGimmick::isNearRaphRockGimmick(void)
-{
-    bool bResult = false;
-    
-    CGameObject* pGameObject = CGameObjectManager::GetNext();
+{ 
+    CGameObject* pGameObject = CGameObjectManager::GetNext(GAMEOBJECTTYPE::GIMMICK);
     while (pGameObject)
     {
-        if (pGameObject->GetType() == GAMEOBJECTTYPE::GIMMICK)
-        {
-            CGimmick* pGimmick = (CGimmick*)pGameObject;
-            if (pGimmick->GetID() == GIMMICKID::ID_N_RAPROC)
-            {
-                CPushingGimmick* pPushingGimmick = (CPushingGimmick*)pGimmick;
-                
-                m_bIsPushingBig = pPushingGimmick->IsBig();
-                
-                RwV3d vPushingPosition = Math::VECTOR3_ZERO;
-                pPushingGimmick->GetPosition(&vPushingPosition);
+        ASSERT(pGameObject->GetType() == GAMEOBJECTTYPE::GIMMICK);
+        CGimmick* pGimmick = static_cast<CGimmick*>(pGameObject);
 
-                RwV3d vDist = Math::VECTOR3_ZERO;
-                Math::Vec3_Sub(&vDist, &vPushingPosition, &m_vPosition);
-                
-                float fDist = Math::Vec3_LengthXZ(&vDist);
-                if (m_bIsPushingBig)
-                {
-                    if (fDist < 3.75f)
-                    {
-                        bResult = true;
-                        break;
-                    };
-                }
-                else
-                {
-                    if (fDist < 3.0f)
-                    {
-                        bResult = true;
-                        break;
-                    };
-                };
+        if (pGimmick->GetID() == GIMMICKID::ID_N_RAPROC)
+        {
+            CPushingGimmick* pPushingGimmick = static_cast<CPushingGimmick*>(pGimmick);
+
+            m_bIsPushingBig = pPushingGimmick->IsBig();
+
+            RwV3d vPushingPosition = Math::VECTOR3_ZERO;
+            pPushingGimmick->GetPosition(&vPushingPosition);
+
+            RwV3d vDist = Math::VECTOR3_ZERO;
+            Math::Vec3_Sub(&vDist, &vPushingPosition, &m_vPosition);
+            vDist.y = 0.0f;
+
+            float fDist = Math::Vec3_Length(&vDist);
+            if (m_bIsPushingBig)
+            {
+                if (fDist < 3.75f)
+                    return true;
+            }
+            else
+            {
+                if (fDist < 3.0f)
+                    return true;
             };
         };
 
-        pGameObject = CGameObjectManager::GetNext(pGameObject);
+        pGameObject = CGameObjectManager::GetNext(GAMEOBJECTTYPE::GIMMICK, pGameObject);
     };
 
-    return bResult;
+    return false;
 };

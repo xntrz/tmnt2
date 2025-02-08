@@ -70,7 +70,7 @@ namespace Raphael
         virtual void OnDetach(void) override;
         virtual void OnRun(void) override;
     };
-};
+}; /* namespace Raphael */
 
 
 class CRaphael : public CPlayerCharacter

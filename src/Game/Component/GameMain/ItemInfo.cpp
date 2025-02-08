@@ -3,6 +3,13 @@
 
 /*static*/ bool CItemInfo::IsValidID(ITEMID::VALUE idItem)
 {
-    return ((idItem >= ITEMID::ID_NONE && idItem <= ITEMID::ID_MISSILE) ||
-            (idItem >= ITEMID::ID_CRY_RED && idItem < ITEMID::ID_MAX));
+    if ((idItem >= ITEMID::ID_NONE) &&
+        (idItem <= ITEMID::ID_MISSILE))
+        return true;
+
+    if ((idItem >= ITEMID::ID_CRY_RED) &&
+        (idItem <  ITEMID::ID_MAX))
+        return true;
+
+    return false;
 };

@@ -118,7 +118,7 @@ void CCuttingGimmick::Draw(void) const
 
 GIMMICKTYPES::FEATURE CCuttingGimmick::GetFeatures(void) const
 {
-    return GIMMICKTYPES::FEATURE_SLEEP;
+    return GIMMICKTYPES::FEATURE_ABLE_SLEEP;
 };
 
 

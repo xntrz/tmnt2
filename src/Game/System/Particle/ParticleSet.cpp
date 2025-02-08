@@ -83,15 +83,13 @@ void CParticleSet::Read(const void* pBuffer, uint32 uBufferSize)
     ASSERT(pStream);
     if (!pStream)
         return;
-
-    PEFINFO::SETINFO setinfo = { 0 };
-    PEFINFO::EFFECTINFO effectinfo = { 0 };
-    PEFINFO::PARTICLEINFO particleinfo = { 0 };
     
+    PEFINFO::SETINFO setinfo = { 0 };
     RwStreamRead(pStream, &setinfo, sizeof(setinfo));
 
     m_nParticleNum = setinfo.m_nParticleNum;
 
+    PEFINFO::EFFECTINFO effectinfo = { 0 };
     RwStreamRead(pStream, &effectinfo, sizeof(effectinfo));
 
     std::memcpy(m_szTexDictName, effectinfo.m_szTexDictName, sizeof(m_szTexDictName));
@@ -108,7 +106,9 @@ void CParticleSet::Read(const void* pBuffer, uint32 uBufferSize)
         CParticle* pParticle = new CParticle();
         ASSERT(pParticle);
 
+        PEFINFO::PARTICLEINFO particleinfo = { 0 };
         RwStreamRead(pStream, &particleinfo, sizeof(particleinfo));
+
         pParticle->ReadParticleData(&particleinfo);
         
         RwTexture* pTexture = CTextureManager::GetRwTexture(m_szTexDictName);

@@ -20,10 +20,14 @@ CCharacterCompositor::~CCharacterCompositor(void)
 {
     m_rEnemyChr.Delete();
     
+    /*
+    TODO: double delete of CEnemy (first from CEnemyCharacter when it die and second here)
     uint32 hOwner = m_rEnemyChr.GetOwner();
+
     CGameObject* pObj = CGameObjectManager::GetObject(hOwner);
     if (pObj && (pObj->GetType() == GAMEOBJECTTYPE::ENEMY))
         CGameObjectManager::DeleteObject(pObj);
+	*/
 };
 
 
@@ -36,7 +40,19 @@ void CCharacterCompositor::Run(void)
 
 CCharacterCompositor::TYPE CCharacterCompositor::GetAttackCharacterType(void) const
 {
-    return CCharacter::GetAttackCharacterType();
+    CEnemyCharacter::CHRTYPE chrType = m_rEnemyChr.GetAttackCharacterType();
+    switch (chrType)
+    {
+    case CEnemyCharacter::CHRTYPE_ENEMY:
+        return TYPE_ENEMY;
+
+    case CEnemyCharacter::CHRTYPE_PLAYER:
+        return TYPE_PLAYER;
+
+    default:
+        ASSERT(false);
+        return TYPE_ENEMY;
+    };
 };
 
 
@@ -134,6 +150,12 @@ void CCharacterCompositor::OnSteppedDeathFloor(void)
 };
 
 
+void CCharacterCompositor::IncludeModule(IModule* pModule)
+{
+    m_pModuleMan->Include(pModule);
+};
+
+
 void CCharacterCompositor::ModuleRipple(float fRadius)
 {
     CRippleEffectModule* pModule = new CRippleEffectModule(this, fRadius);
@@ -159,9 +181,8 @@ void CCharacterCompositor::RotateDirection(float fDirection, float fRotateRate)
     float fRotateDirectionMax = CGameProperty::GetElapsedTime() * (fRotateRate * Math::PI);
     float fDirectionDiff = fDirection - m_fDirection;
 
-    fDirectionDiff = Math::RadianCorrect(fDirectionDiff);
-    
-    ASSERT(Math::FAbs(fDirectionDiff) <= Math::PI);
+	fDirectionDiff = Math::RadianCorrect(fDirectionDiff);
+    ASSERT(std::fabs(fDirectionDiff) <= Math::PI);
     
     fDirectionDiff = Clamp(fDirectionDiff, -fRotateDirectionMax, fRotateDirectionMax);
 
@@ -178,4 +199,10 @@ ENEMYID::VALUE CCharacterCompositor::GetID(void) const
 CHARACTERTYPES::ATTACKPARAMETER& CCharacterCompositor::AttackParameter(void)
 {
     return m_attackparameter;
+};
+
+
+CEnemyCharacter& CCharacterCompositor::EnemyChr(void)
+{
+    return m_rEnemyChr;
 };

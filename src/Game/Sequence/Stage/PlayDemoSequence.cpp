@@ -12,6 +12,7 @@
 #include "Game/System/Texture/TextureManager.hpp"
 #include "System/Common/Controller.hpp"
 #include "System/Common/System2D.hpp"
+#include "System/Common/Camera.hpp"
 
 
 /*static*/ STAGEID::VALUE CPlayDemoSequence::m_idStage = STAGEID::ID_ST02N;
@@ -95,8 +96,28 @@ bool CPlayDemoSequence::OnAttach(const void* pParam)
     RegisterStateObject(STATE_LOAD, new CLoadStageSeqState(CGameData::PlayParam().GetStage()), true);
     RegisterStateObject(STATE_PLAY, new CPlayDemoStageSeqState, true);
 
-    ChangeState(STATE_LOAD);
-    
+    //
+    // TODO demo seq currently erased due impossible to reproduce floating point determinism.
+    // 
+    //      All pc inputs recorded on version that was built on compiler 21 year ago so there is
+    //      some micro pixel incorrections that breaks demo after some time elapsed due floating point precision.
+    // 
+    //      Currently have no idea how to fix that, maybe we will record new demo inputs when project will be done.
+    // 
+    //      Also renderware sdk that we are using is prebuilt with unknown version of compiler. Ideally it should
+    //      be build with same compiler as the game.
+    // 
+    //      So currently main problem with demo version that we get is when some character is colliding with camera 
+    //      view move boundary. If noone is colliding with move boundary of view camera then all ok, otherwise it brokes the simulation.
+    // 
+
+    //ChangeState(STATE_LOAD);
+    ChangeState(STATE_END);
+
+    RwCamera* camera = CSystem2D::Camera().GetRwCamera();
+    float fDepth = (RwCameraGetNearClipPlaneMacro(camera) * 1.01f);
+    Rt2dDeviceSetLayerDepth(fDepth);
+
     Math::SRand(123456);
 
 #ifdef BUILD_TRIAL
@@ -110,13 +131,15 @@ bool CPlayDemoSequence::OnAttach(const void* pParam)
 
 void CPlayDemoSequence::OnDetach(void)
 {
+    Rt2dDeviceSetLayerDepth(1.0f);
+
     CStageBaseSequence::OnDetach();
 
     CGameData::Attribute().SetVirtualPad(CController::CONTROLLER_LOCKED_ON_VIRTUAL);
     UnlockAllControllers();
 
-    if (++m_iStageIndex >= COUNT_OF(m_aStageTable))
-        m_iStageIndex = 0;
+    //if (++m_iStageIndex >= COUNT_OF(m_aStageTable))
+    //    m_iStageIndex = 0;
 
     m_idStage = m_aStageTable[m_iStageIndex].m_idStage;
 
@@ -180,8 +203,6 @@ void CPlayDemoSequence::OnDraw(void) const
             CSystem2D::EndScene();
         };            
     };
-
-
 };
 
 
@@ -190,17 +211,16 @@ void CPlayDemoSequence::OnStateDetached(STATE state)
     switch (state)
     {
     case STATE_LOAD:
-        {
-            InitializeLogo();
-            ChangeState(STATE_PLAY);
-            m_fTime = 0.0f;
-        }
+        InitializeLogo();
+        ChangeState(STATE_PLAY);
+        m_fTime = 0.0f;
         break;
 
     case STATE_PLAY:
-        {
-            ChangeState(STATE_END);
-        }
+        ChangeState(STATE_END);
+        break;
+
+    default:
         break;
     };
 };

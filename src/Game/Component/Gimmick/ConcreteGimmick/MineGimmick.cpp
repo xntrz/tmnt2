@@ -18,8 +18,7 @@
 //
 //  beta code only
 //
-#define MINE_GIMMICK_ATTACK_EXPLODE
-#undef MINE_GIMMICK_ATTACK_EXPLODE
+//#define MINE_GIMMICK_ATTACK_EXPLODE
 
 
 /*static*/ bool CMineGimmick::m_bAnimOwnerExist = false;
@@ -184,14 +183,12 @@ void CMineGimmick::PostMove(void)
             ASSERT(hMagic);
 
             CGameSound::PlayPositionSE(&vPosition, SDCODE_SE(4139), 0);
-
-            Release();
         }
         break;
 
     case STATE_DELETE:
         {
-            ;
+            Release();
         }
         break;
 
@@ -199,6 +196,12 @@ void CMineGimmick::PostMove(void)
         ASSERT(false);
         break;
     };
+
+	if (!m_bAnimOwnerExist)
+	{
+		m_bAnimOwner = true;
+		m_bAnimOwnerExist = true;
+	};
 
     if (m_bAnimOwner)
         CUVAnim::UpdateUVAnim(m_pAnimatedMaterials, dt);

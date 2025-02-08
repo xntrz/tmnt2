@@ -57,7 +57,6 @@ private:
 };
 
 
-
 class CEnemySetData
 {
 public:
@@ -78,7 +77,6 @@ private:
     int32 m_nArraySize;
     ENEMYDATA m_aEnemyData[CGimmickData::ENEMY_PATTERN_NUM];
 };
-
 
 
 class CEnemyGeneratorBase

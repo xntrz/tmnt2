@@ -19,50 +19,50 @@ CHitAttackData::~CHitAttackData(void)
 
 void CHitAttackData::Cleanup(void)
 {
-    m_uObjectHandle = 0;
-    m_posObj = Math::VECTOR3_ZERO;
-    m_target = TARGET_NONE;
-    m_nAttackNo = 0;
-    m_nPower = 0;
-    m_szMotion[0] = '\0';
-    m_shapeType = SHAPE_SPHERE;
+    m_uObjectHandle       = 0;
+    m_posObj              = Math::VECTOR3_ZERO;
+    m_target              = TARGET_NONE;
+    m_nAttackNo           = 0;
+    m_nPower              = 0;
+    m_szMotion[0]         = '\0';
+    m_shapeType           = SHAPE_SPHERE;
     std::memset(&m_shape, 0x00, sizeof(m_shape));    
-    m_antiguard = ANTIGUARD_ENABLE;
-    m_status = STATUS_KNOCK;
-    m_effect = EFFECT_NONE;
+    m_antiguard           = ANTIGUARD_ENABLE;
+    m_status              = STATUS_KNOCK;
+    m_effect              = EFFECT_NONE;
     m_afStatusParametr[0] = 0.0f;
     m_afStatusParametr[1] = 0.0f;
-    m_fHitDist = 0.0f;
-    m_pHitCatchData = nullptr;
-    m_bConfusion = false;
-    m_bSlice = false;
-    m_bGuardImpact = false;
-    m_bReflectShot = false;
-    m_bAlive = true;
+    m_fHitDist            = 0.0f;
+    m_pHitCatchData       = nullptr;
+    m_bConfusion          = false;
+    m_bSlice              = false;
+    m_bGuardImpact        = false;
+    m_bReflectShot        = false;
+    m_bAlive              = true;
 };
 
 
 void CHitAttackData::CopyData(CHitAttackData* pHitAttackData) const
 {
-    pHitAttackData->m_uObjectHandle = m_uObjectHandle;
-    pHitAttackData->m_posObj = m_posObj;
-    pHitAttackData->m_target = m_target;
-    pHitAttackData->m_nAttackNo = m_nAttackNo;
-    pHitAttackData->m_nPower = m_nPower;
+    pHitAttackData->m_uObjectHandle       = m_uObjectHandle;
+    pHitAttackData->m_posObj              = m_posObj;
+    pHitAttackData->m_target              = m_target;
+    pHitAttackData->m_nAttackNo           = m_nAttackNo;
+    pHitAttackData->m_nPower              = m_nPower;
     std::strcpy(pHitAttackData->m_szMotion, m_szMotion);
-    pHitAttackData->m_shapeType = m_shapeType;
+    pHitAttackData->m_shapeType           = m_shapeType;
     std::memcpy(&pHitAttackData->m_shape, &m_shape, sizeof(m_shape));
-    pHitAttackData->m_antiguard = m_antiguard;
-    pHitAttackData->m_status = m_status;
-    pHitAttackData->m_effect = m_effect;
+    pHitAttackData->m_antiguard           = m_antiguard;
+    pHitAttackData->m_status              = m_status;
+    pHitAttackData->m_effect              = m_effect;
     pHitAttackData->m_afStatusParametr[0] = m_afStatusParametr[0];
     pHitAttackData->m_afStatusParametr[1] = m_afStatusParametr[1];
-    pHitAttackData->m_fHitDist = m_fHitDist;
-    pHitAttackData->m_pHitCatchData = m_pHitCatchData;
-    pHitAttackData->m_bConfusion = m_bConfusion;
-    pHitAttackData->m_bSlice = m_bSlice;
-    pHitAttackData->m_bGuardImpact = m_bGuardImpact;
-    pHitAttackData->m_bReflectShot = m_bReflectShot;
+    pHitAttackData->m_fHitDist            = m_fHitDist;
+    pHitAttackData->m_pHitCatchData       = m_pHitCatchData;
+    pHitAttackData->m_bConfusion          = m_bConfusion;
+    pHitAttackData->m_bSlice              = m_bSlice;
+    pHitAttackData->m_bGuardImpact        = m_bGuardImpact;
+    pHitAttackData->m_bReflectShot        = m_bReflectShot;
 };
 
 
@@ -123,7 +123,7 @@ void CHitAttackData::SetAttackNo(int32 no)
 void CHitAttackData::SetMotion(const char* pszMotion)
 {
     ASSERT(pszMotion);
-    ASSERT(std::strlen(pszMotion) < COUNT_OF(m_szMotion));
+    ASSERT(std::strlen(pszMotion) < sizeof(m_szMotion));
     
     std::strcpy(m_szMotion, pszMotion);
 };
@@ -137,6 +137,10 @@ void CHitAttackData::SetPower(int32 amount)
 
 void CHitAttackData::SetAntiguard(ANTIGUARD antiguard)
 {
+    ASSERT((antiguard == ANTIGUARD_ENABLE) ||
+           (antiguard == ANTIGUARD_BREAK)  ||
+           (antiguard == ANTIGUARD_INVALID));
+
     m_antiguard = antiguard;
 };
 
@@ -161,8 +165,11 @@ void CHitAttackData::SetStatusParameter(float param1, float param2)
     case STATUS_FREEZE:
     case STATUS_BIND:
         SetTroubleParameter(param1);
-        if (Math::FEqual(param1, 0.0f))
+        if (param1 == 0.0f)
             SetTroubleParameter(2.0f);        
+        break;
+
+    default:
         break;
     };
 };
@@ -179,13 +186,7 @@ void CHitAttackData::SetFlyawayParameter(float velXZ, float velY)
 
 void CHitAttackData::SetTroubleParameter(float duration)
 {
-    ASSERT(
-        m_status == STATUS_STUN     ||
-        m_status == STATUS_DINDLE   ||
-        m_status == STATUS_SLEEP    ||
-        m_status == STATUS_FREEZE   ||
-        m_status == STATUS_BIND
-    );
+    ASSERT(IsTroubleAttack() == true);
 
     m_afStatusParametr[0] = duration;
 };
@@ -329,14 +330,8 @@ CHitAttackData::STATUS CHitAttackData::GetStatus(void) const
 
 float CHitAttackData::GetStatusDuration(void) const
 {
-    ASSERT(
-        m_status == STATUS_STUN     ||
-        m_status == STATUS_DINDLE   ||
-        m_status == STATUS_SLEEP    ||
-        m_status == STATUS_FREEZE   ||
-        m_status == STATUS_BIND
-    );
-    
+    ASSERT(IsTroubleAttack() == true);
+
     return m_afStatusParametr[0];
 };
 
@@ -355,11 +350,11 @@ float CHitAttackData::GetFlyawayVelY(void) const
 
 bool CHitAttackData::IsTroubleAttack(void) const
 {
-    return (m_status == STATUS_STUN     ||
-            m_status == STATUS_DINDLE   ||
-            m_status == STATUS_SLEEP    ||
-            m_status == STATUS_FREEZE   ||
-            m_status == STATUS_BIND);
+    return ((m_status == STATUS_STUN)   ||
+            (m_status == STATUS_DINDLE) ||
+            (m_status == STATUS_SLEEP)  ||
+            (m_status == STATUS_FREEZE) ||
+            (m_status == STATUS_BIND));
 };
 
 

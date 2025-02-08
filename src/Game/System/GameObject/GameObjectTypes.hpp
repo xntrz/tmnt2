@@ -7,12 +7,13 @@ namespace GAMEOBJECTTYPES
 
     enum FLAG : uint32
     {
-        FLAG_NONE = 0x0,
-        FLAG_PAUSE = 0x1,
-        FLAG_SLEEP = 0x2,
+        FLAG_PAUSE = (1 << 0), // NOTE: unused
+        FLAG_SLEEP = (1 << 1),
         
-        FLAG_DEFAULT = FLAG_NONE,
+        FLAG_DEFAULT = 0,
     };
+
+    DEFINE_ENUM_FLAG_OPS(FLAG);
 
     enum
     {

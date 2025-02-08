@@ -3,11 +3,6 @@
 #include "PCSpecific.hpp"
 #include "resources.hpp"
 
-#ifdef _DEBUG
-#include "Sound/SdDrv.hpp"
-#include "Sound/SdDrvCtrl.hpp"
-#endif
-
 
 static LRESULT CALLBACK WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
@@ -93,47 +88,41 @@ bool CPCSystem::Initialize(void)
     //
     //  Set sticky keys
     //
-    m_StickyKeys = { 0 };
+    m_StickyKeys        = { 0 };
     m_StickyKeys.cbSize = sizeof(m_StickyKeys);
-
     SystemParametersInfo(SPI_GETSTICKYKEYS, sizeof(m_StickyKeys), &m_StickyKeys, 0);
 
     STICKYKEYS StickyKeys = { 0 };
-    StickyKeys.cbSize = sizeof(StickyKeys);
-    StickyKeys.dwFlags = FLAG_CLEAR(m_StickyKeys.dwFlags, SKF_HOTKEYACTIVE);
-
+    StickyKeys.cbSize   = sizeof(StickyKeys);
+    StickyKeys.dwFlags  = (m_StickyKeys.dwFlags & (~SKF_HOTKEYACTIVE));
     SystemParametersInfo(SPI_SETSTICKYKEYS, sizeof(StickyKeys), &StickyKeys, 0);
 
     //
     //  Set toggle keys
     //
-    m_ToggleKeys = { 0 };
+    m_ToggleKeys        = { 0 };
     m_ToggleKeys.cbSize = sizeof(m_ToggleKeys);
-
     SystemParametersInfo(SPI_GETTOGGLEKEYS, sizeof(m_ToggleKeys), &m_ToggleKeys, 0);
 
     TOGGLEKEYS ToggleKeys = { 0 };
-    ToggleKeys.cbSize = sizeof(ToggleKeys);
-    ToggleKeys.dwFlags = FLAG_CLEAR(m_ToggleKeys.dwFlags, TKF_HOTKEYACTIVE | TKF_TOGGLEKEYSON);
-
+    ToggleKeys.cbSize   = sizeof(ToggleKeys);
+    ToggleKeys.dwFlags  = (m_ToggleKeys.dwFlags & (~(TKF_HOTKEYACTIVE | TKF_TOGGLEKEYSON)));
     SystemParametersInfo(SPI_SETTOGGLEKEYS, sizeof(ToggleKeys), &ToggleKeys, 0);
 
     //
     //  Set filter keys
     //
-    m_FilterKeys = { 0 };
+    m_FilterKeys        = { 0 };
     m_FilterKeys.cbSize = sizeof(m_FilterKeys);
-
     SystemParametersInfo(SPI_GETFILTERKEYS, sizeof(m_FilterKeys), &m_FilterKeys, 0);
 
-    FILTERKEYS FilterKeys = { 0 };
-    FilterKeys.cbSize = sizeof(FilterKeys);
-    FilterKeys.iWaitMSec = m_FilterKeys.iWaitMSec;
-    FilterKeys.iRepeatMSec = m_FilterKeys.iRepeatMSec;
-    FilterKeys.iDelayMSec = m_FilterKeys.iDelayMSec;
-    FilterKeys.iBounceMSec = m_FilterKeys.iBounceMSec;
-    FilterKeys.dwFlags = FLAG_CLEAR(m_FilterKeys.dwFlags, FKF_HOTKEYACTIVE);
-
+    FILTERKEYS FilterKeys   = { 0 };
+    FilterKeys.cbSize       = sizeof(FilterKeys);
+    FilterKeys.iWaitMSec    = m_FilterKeys.iWaitMSec;
+    FilterKeys.iRepeatMSec  = m_FilterKeys.iRepeatMSec;
+    FilterKeys.iDelayMSec   = m_FilterKeys.iDelayMSec;
+    FilterKeys.iBounceMSec  = m_FilterKeys.iBounceMSec;
+    FilterKeys.dwFlags      = (m_FilterKeys.dwFlags & (~FKF_HOTKEYACTIVE));
     SystemParametersInfo(SPI_SETFILTERKEYS, sizeof(FilterKeys), &FilterKeys, 0);
 
     //
@@ -263,7 +252,7 @@ bool CPCSystem::WindowCreate(void)
 {
     WNDCLASSEXA WndClass = { 0 };
     WndClass.cbSize         = sizeof(WndClass);
-    WndClass.style          = 0;
+    WndClass.style          = CS_OWNDC;
     WndClass.lpfnWndProc    = WndProc;
     WndClass.cbClsExtra     = 0;
     WndClass.cbWndExtra     = 0;

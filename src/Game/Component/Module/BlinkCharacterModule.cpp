@@ -60,13 +60,14 @@ void CBlinkCharacterModule::Draw(void)
 void CBlinkCharacterModule::Start(float fEndTime)
 {
     ASSERT(fEndTime > 0.0f);
-    
-    if (GetRemainTime() <= fEndTime)
+
+    float fRemainTime = GetRemainTime();
+    if (fRemainTime <= fEndTime)
     {
-        m_fEndTime = fEndTime;
-        m_fElapsedTime = 0.0f;
+        m_fEndTime          = fEndTime;
+        m_fElapsedTime      = 0.0f;
         m_fNextIntervalTime = BLINKINTERVAL;
-        m_bBlinking = true;
+        m_bBlinking         = true;
     };
 };
 
@@ -98,6 +99,6 @@ float CBlinkCharacterModule::GetRemainTime(void) const
 {
     if (m_bBlinking)
         return m_fEndTime - m_fElapsedTime;
-    else
-        return 0.0f;
+    
+    return 0.0f;
 };

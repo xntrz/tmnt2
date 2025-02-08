@@ -31,6 +31,9 @@ bool CGenEnemyManipTable::MANIP::Generate(ENEMYID::VALUE id, int32 nPattern, con
     createinfo.m_status     = status;
     createinfo.m_iPattern   = nPattern;
     createinfo.m_fRadius    = fRange;
+#ifdef _DEBUG
+    createinfo.m_iHPMax     = 0;
+#endif /* _DEBUG */
     
     CEnemy* pEnemy = CEnemy::New(&createinfo);
     if (pEnemy)
@@ -39,7 +42,7 @@ bool CGenEnemyManipTable::MANIP::Generate(ENEMYID::VALUE id, int32 nPattern, con
         m_step = STEP_ENEMY_HIDE;
     };
 
-    return true;
+	return true;
 };
 
 
@@ -98,10 +101,10 @@ bool CGenEnemyManipTable::MANIP::IsOutOfSight(void)
     if (!pEnemy)
         return true;
 
-    CModel* pModel = pEnemy->EnemyCharacter().CharacterCompositor().GetModel();
+    CModel* pModel = pEnemy->Character().Compositor().GetModel();
     if (pModel)
     {
-        if (pModel->IsClippingEnable())
+        if (!pModel->IsClippingEnable())
             return false;
 
         RwSphere BSphere = { 0 };
@@ -131,7 +134,7 @@ bool CGenEnemyManipTable::MANIP::IsAlive(void)
     {
         CEnemy* pEnemy = GetEnemy();
         if (pEnemy)
-            bResult = (pEnemy->EnemyCharacter().GetStatus() != ENEMYTYPES::STATUS_DEATH);
+            bResult = (pEnemy->Character().GetStatus() != ENEMYTYPES::STATUS_DEATH);
 
         if (!bResult)
             m_step = STEP_ENEMY_DEAD;
@@ -149,8 +152,14 @@ CEnemy* CGenEnemyManipTable::MANIP::GetEnemy(void)
 
 bool CGenEnemyManipTable::MANIP::IsActive(void) const
 {
-    return ((m_step >= STEP_ENEMY_APPEAR) && (m_step < STEP_ENEMY_DEAD));
+    return ((m_step >= STEP_ENEMY_HIDE) && 
+			(m_step <  STEP_ENEMY_DEAD));
 };
+
+
+//
+// *********************************************************************************
+//
 
 
 CGenEnemyManipTable::CGenEnemyManipTable(void)
@@ -234,10 +243,15 @@ CGenEnemyManipTable::MANIP* CGenEnemyManipTable::GetManipulator(int32 index) con
     ASSERT(nInternalPattern >= 0);
     ASSERT(nInternalPattern < CGimmickData::ENEMY_PATTERN_NUM);
 
-    if ((nInternalPattern >= 0) && (nInternalPattern < CGimmickData::ENEMY_PATTERN_NUM))
-        return (nInternalPattern - 1);
-    else
-        return 0;
+	nInternalPattern = (nInternalPattern - 1);
+
+	if ((nInternalPattern < 0) ||
+		(nInternalPattern >= CGimmickData::ENEMY_PATTERN_NUM))
+	{
+		nInternalPattern = 0;
+	};
+
+	return nInternalPattern;
 };
 
 
@@ -280,17 +294,17 @@ const CEnemySetData::ENEMYDATA& CEnemySetData::GetEnemyData(int32 nIndex)
 
 void CEnemyGeneratorBase::GENERATEPOINT::Init(GIMMICKPARAM::GIMMICK_BASIC* pParam)
 {
-    m_vPos = pParam->m_vPosition;
+    m_vPos  = pParam->m_vPosition;
     m_fRotY = Math::ACos(pParam->m_quat.w) * 2.0f;
     
     if (pParam->m_quat.y < 0.0f)
-        m_fRotY = Math::FNegate(m_fRotY);
+        m_fRotY = -m_fRotY;
 };
 
 
 void CEnemyGeneratorBase::GENERATEPOINT::Clear(void)
 {
-    m_vPos = Math::VECTOR3_ZERO;
+    m_vPos  = Math::VECTOR3_ZERO;
     m_fRotY = 0.0f;
 };
 
@@ -319,7 +333,7 @@ CEnemyGeneratorBase::CEnemyGeneratorBase(void)
 
 CEnemyGeneratorBase::~CEnemyGeneratorBase(void)
 {
-    m_enemyManipTable.Cleanup();
+    Cleanup();
 };
 
 
@@ -377,7 +391,8 @@ bool CEnemyGeneratorBase::IsActive(void) const
     if (!CGimmickManager::IsPlayStarted())
         return false;
 
-    if ((m_state == STATE_END) || (m_state == STATE_NONE))
+    if ((m_state == STATE_END) ||
+        (m_state == STATE_NONE))
         return false;
 
     if (m_nSuspendCount)
@@ -385,7 +400,8 @@ bool CEnemyGeneratorBase::IsActive(void) const
 
     if (m_bAutoActivate)
     {
-        if (CGimmickUtils::CalcNearestPlayerDistance(&m_origin.m_vPos) > m_fActivateDistance)
+        float fDist = CGimmickUtils::CalcNearestPlayerDistance(&m_origin.m_vPos);
+        if (fDist > m_fActivateDistance)
             return false;
     };    
 
@@ -464,6 +480,9 @@ bool CEnemyGeneratorBase::HandleQuery(CGimmickQuery* pQuery) const
             bHandled = true;
         };
         break;
+
+    default:
+        break;
     };
 
     return bHandled;
@@ -472,16 +491,15 @@ bool CEnemyGeneratorBase::HandleQuery(CGimmickQuery* pQuery) const
 
 bool CEnemyGeneratorBase::HandleEvent(const char* pszSender, GIMMICKTYPES::EVENTTYPE eventtype)
 {
-    bool bHandled = false;
-
     if (eventtype == GIMMICKTYPES::EVENTTYPE_ENEMYKILL)
     {
         m_enemyManipTable.KillOutOfSightEnemy();
         Finish();
-        bHandled = true;
+
+        return true;
     };
 
-    return bHandled;
+    return false;
 };
 
 
@@ -533,7 +551,7 @@ int32 CEnemyGeneratorBase::generate(int32 nGenerateNum)
     
     for (int32 i = 0; i < nGenerateNum; ++i)
     {
-        CGenEnemyManipTable::MANIP* pManip = m_enemyManipTable.GetManipulator(i);        
+        CGenEnemyManipTable::MANIP* pManip = m_enemyManipTable.GetManipulator(m_nAppearedEnemy);        
         if (!OnGenerate(pManip, m_nAppearedEnemy))
             break;
         
@@ -554,8 +572,8 @@ int32 CEnemyGeneratorBase::calcGenerateNum(int32 nRequestNum) const
 
     if ((nAliveEnemy + nRequestNum) <= m_nAliveEnemyMax)
         return nRequestNum;
-    else
-        return (m_nAliveEnemyMax - nAliveEnemy);
+    
+    return (m_nAliveEnemyMax - nAliveEnemy);
 };
 
 
@@ -648,11 +666,10 @@ void CSettingEnemyGenerator::Init(GIMMICKPARAM::GIMMICK_ENEMY_PLACE* pParam, int
 
     Setup(InitParam);
 
-    initTable(
-        ENEMYID::VALUE(pParam->m_enemyID),
-        CEnemySetData::ConvertEnemyPatternFromMGD(pParam->m_enemyPattern),
-        nEnemyNum
-    );
+    int32 pattern = CEnemySetData::ConvertEnemyPatternFromMGD(pParam->m_enemyPattern);
+    ENEMYID::VALUE id = ENEMYID::VALUE(pParam->m_enemyID);
+
+    initTable(id, pattern, nEnemyNum);
 };
 
 
@@ -721,9 +738,9 @@ void CSettingEnemyGenerator::initTable(ENEMYID::VALUE idEnemy, int32 nPattern, i
             {
                 SetGenerateInfo(0, Math::VECTOR3_ZERO, 0.0f, idEnemy, nPattern);
 
-                vLeft.x =  0.5f;
-                vRight.x= -0.5f;
-                nIndex  = 1;                
+                vLeft.x  =  0.5f;
+                vRight.x = -0.5f;
+                nIndex   = 1;                
             };
 
             for (int32 i = nIndex; i < nEnemyNum; i += 2)
@@ -731,8 +748,8 @@ void CSettingEnemyGenerator::initTable(ENEMYID::VALUE idEnemy, int32 nPattern, i
                 SetGenerateInfo(i,      vLeft, 0.0f, idEnemy, nPattern);
                 SetGenerateInfo(i + 1,  vRight, 0.0f, idEnemy, nPattern);
 
-                vLeft.x += 1.0f;
-                vRight.x-= 1.0f;
+                vLeft.x  += 1.0f;
+                vRight.x -= 1.0f;
             };
         }
         break;
@@ -833,13 +850,13 @@ bool CMultipleEnemyGenerator::OnGenerate(CGenEnemyManipTable::MANIP* pManip, int
 void CMultipleEnemyGenerator::Init(GIMMICKPARAM::GIMMICK_ENEMY_APPEARANCE_MULTIPLE* pParam, bool bAutoActivate)
 {
     INITPARAM InitParam = { 0 };
-    InitParam.m_bAutoActivate = bAutoActivate;
-    InitParam.m_nTotalEnemy = pParam->m_numTotal;
-    InitParam.m_nAliveEnemyMax = pParam->m_numAppearanceEnemyMax;
-    InitParam.m_nEnemyPerAppear = pParam->m_numAppearanceEnemyOnSameTime;
-    InitParam.m_fAppearInterval = pParam->m_fIntervalTime;
-    InitParam.m_fActivateDistance = CStageInfo::GetEnemyAppearDistance(CGameData::PlayParam().GetStage());
-    InitParam.m_fEnemyRange = pParam->m_fEnemyRange;
+    InitParam.m_bAutoActivate       = bAutoActivate;
+    InitParam.m_nTotalEnemy         = pParam->m_numTotal;
+    InitParam.m_nAliveEnemyMax      = pParam->m_numAppearanceEnemyMax;
+    InitParam.m_nEnemyPerAppear     = pParam->m_numAppearanceEnemyOnSameTime;
+    InitParam.m_fAppearInterval     = pParam->m_fIntervalTime;
+    InitParam.m_fActivateDistance   = CStageInfo::GetEnemyAppearDistance(CGameData::PlayParam().GetStage());
+    InitParam.m_fEnemyRange         = pParam->m_fEnemyRange;
     InitParam.m_origin.Init(pParam);
 
     Setup(InitParam);
@@ -901,7 +918,12 @@ bool CDoorEnemyGenerator::OnGenerate(CGenEnemyManipTable::MANIP* pManip, int32 n
     GENERATEPOINT point;
     CalcWorldPoint(point, m_genpoint);
 
-    return pManip->Generate(enemyData.m_id, enemyData.m_nPattern, point.m_vPos, point.m_fRotY, m_fEnemyRange, ENEMYTYPES::STATUS_HIDE);
+    return pManip->Generate(enemyData.m_id,
+                            enemyData.m_nPattern,
+                            point.m_vPos,
+                            point.m_fRotY,
+                            m_fEnemyRange,
+                            ENEMYTYPES::STATUS_HIDE);
 };
 
 

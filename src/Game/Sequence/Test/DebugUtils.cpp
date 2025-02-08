@@ -101,8 +101,7 @@ void CDebugFontCtrl::Reset(void)
 
 CDebugMenuCtrl::CDebugMenuCtrl(void)
 : m_aItem()
-, m_listItemAlloc()
-, m_listItemFree()
+, m_nItemAllocCnt(0)
 , m_font()
 , m_ColorUnselect()
 , m_ColorSelect()
@@ -118,9 +117,6 @@ CDebugMenuCtrl::CDebugMenuCtrl(void)
 , m_uDigitalOK(CController::DIGITAL_START | CController::DIGITAL_RDOWN)         // START or A
 , m_uDigitalCANCEL(CController::DIGITAL_SELECT | CController::DIGITAL_RRIGHT)   // SELECT or B
 {
-	for (int32 i = 0; i < COUNT_OF(m_aItem); ++i)
-        m_listItemFree.push_back(&m_aItem[i]);
-
     SetHeight(15);
     SetDispMax(10);
     SetPos(100, 100);
@@ -132,9 +128,9 @@ CDebugMenuCtrl::CDebugMenuCtrl(void)
 
 CDebugMenuCtrl::~CDebugMenuCtrl(void)
 {
-    while (!m_listItemAlloc.empty())
+    for (int32 i = m_nItemAllocCnt - 1; i >= 0; --i)
     {
-        ITEM* pItem = m_listItemAlloc.front();
+        ITEM* pItem = &m_aItem[i];
         itemFree(pItem);
     };
 };
@@ -142,11 +138,11 @@ CDebugMenuCtrl::~CDebugMenuCtrl(void)
 
 void CDebugMenuCtrl::Reset(void)
 {
-	while (!m_listItemAlloc.empty())
-	{
-		ITEM* pItem = m_listItemAlloc.front();
-		itemFree(pItem);
-	};
+    for (int32 i = m_nItemAllocCnt - 1; i >= 0; --i)
+    {
+        ITEM* pItem = &m_aItem[i];
+        itemFree(pItem);
+    };
 
 	m_iSelect = 0;
 	m_iSelectMax = 0;
@@ -174,19 +170,17 @@ void CDebugMenuCtrl::Period(void)
     m_Result = RESULT_NONE;
 
 	/* check out for selectable item if its in first position */
-	int32 i = 0;
-	for (auto& it : m_listItemAlloc)
-	{
-		/* if item is NOT selectable and select cursor on it so move it to the next item if in range of max selectable */
-		if (!it.State && (m_iSelect == i))
+    for (int32 i = 0; i < m_nItemAllocCnt; ++i)
+    {
+        /* if item is NOT selectable and select cursor on it so move it to the next item if in range of max selectable */
+		if (!m_aItem[i].State && (m_iSelect == i))
 		{
 			if (m_iSelect < m_iSelectMax)
 				++m_iSelect;
 		};
-		++i;
 	};
 
-	if (m_listItemAlloc.empty())
+    if (m_nItemAllocCnt == 0)
         return;
 
     if (m_iDispMax > m_iSelectMax)
@@ -198,7 +192,7 @@ void CDebugMenuCtrl::Period(void)
 
 void CDebugMenuCtrl::Draw(void) const
 {
-    if (m_listItemAlloc.empty())
+    if (m_nItemAllocCnt == 0)
         return;
 
     int32 x = m_iPosX + 10;
@@ -218,19 +212,33 @@ void CDebugMenuCtrl::Draw(void) const
     //
     //  draw items
     //
-    int32 i = 0;
-
-    for (auto& it : m_listItemAlloc)
+    for (int32 i = 0; i < m_nItemAllocCnt; ++i)
     {
-        ITEM* pItem = &it;
+        ITEM* pItem = &m_aItem[i];
 
         if ((i < m_iDispMin) || (i >= m_iDispMax))
-        {
-            ++i;
             continue;
+
+        RwRGBA color;
+        if (i == m_iSelect)
+        {
+			color = m_ColorSelect;
+        }
+        else
+        {
+            if (!pItem->State)
+            {
+                color.red   = static_cast<RwUInt8>(static_cast<float>(m_ColorUnselect.red)   * 0.75f);
+                color.green = static_cast<RwUInt8>(static_cast<float>(m_ColorUnselect.green) * 0.75f);
+                color.blue  = static_cast<RwUInt8>(static_cast<float>(m_ColorUnselect.blue)  * 0.75f);
+            }
+            else
+            {
+                color = m_ColorUnselect;
+            };
         };
 
-        m_font.Color(i == m_iSelect ? m_ColorSelect : m_ColorUnselect);
+        m_font.Color(color);
         m_font.Position(x, y + ((i - m_iDispMin) * h));
 
         switch (pItem->Type)
@@ -248,6 +256,15 @@ void CDebugMenuCtrl::Draw(void) const
                     else
                         m_font.Print("%-*s %" PRIi32, pad, pItem->Name, pItem->Int.Value);
                 };
+            }
+            break;
+
+        case ITEM::TYPE_INT_DISP:
+            {
+                if (pItem->Hex)
+                    m_font.Print("%-*s 0x%" PRIx32, pad, pItem->Name, *pItem->IntDisp.piValue);
+                else
+                    m_font.Print("%-*s %" PRIi32, pad, pItem->Name, *pItem->IntDisp.piValue);
             }
             break;
 
@@ -294,12 +311,14 @@ void CDebugMenuCtrl::Draw(void) const
 			m_font.Print("%-*s", pad, pItem->Name);
 			break;
 
+        case ITEM::TYPE_TEXT_DISP:
+            m_font.Print("%-*s", pad, pItem->TextDisp.pszText);
+            break;
+
         default:
             ASSERT(false);
             break;
         };
-
-        ++i;
     };
 };
 
@@ -369,7 +388,26 @@ void CDebugMenuCtrl::AddInt(
 };
 
 
+void CDebugMenuCtrl::AddIntDisp(const char* pszName, int32* piValue)
+{
+    ITEM* pItem = itemAlloc();
+    ASSERT(pItem);
+
+    pItem->Type = ITEM::TYPE_INT_DISP;
+    pItem->Name = itemCopyString(pszName);
+
+    ITEM::INT_DISP* pItemFloat = &pItem->IntDisp;
+    pItemFloat->piValue = piValue;
+};
+
+
 void CDebugMenuCtrl::AddBool(const char* pszName, bool_cb cb)
+{
+    AddBool(pszName, false, cb);
+};
+
+
+void CDebugMenuCtrl::AddBool(const char* pszName, bool bInitState, bool_cb cb)
 {
     ITEM* pItem = itemAlloc();
     ASSERT(pItem);
@@ -378,7 +416,7 @@ void CDebugMenuCtrl::AddBool(const char* pszName, bool_cb cb)
     pItem->Name = itemCopyString(pszName);
 
     ITEM::BOOLEAN* pItemBoolean = &pItem->Boolean;
-    pItemBoolean->Value = false;
+    pItemBoolean->Value = bInitState;
     pItemBoolean->Callback = cb;
 };
 
@@ -413,13 +451,7 @@ void CDebugMenuCtrl::AddFloatDisp(const char* pszName, float* pfValue)
 };
 
 
-void CDebugMenuCtrl::AddTrigger(const char* pszName, trig_cb cb)
-{
-    AddTrigger(pszName, cb, nullptr);
-};
-
-
-void CDebugMenuCtrl::AddTrigger(const char* pszName, trig_cb cb, void* param)
+void CDebugMenuCtrl::AddTrigger(const char* pszName, trig_cb cb /*= nullptr*/, void* param /*= nullptr*/)
 {
     ITEM* pItem = itemAlloc();
     ASSERT(pItem);
@@ -458,6 +490,20 @@ void CDebugMenuCtrl::AddText(const char* pszText, bool bSelectable /*= false*/)
 };
 
 
+void CDebugMenuCtrl::AddTextDisp(const char* pszText, bool bSelectable /*= false*/)
+{
+    ITEM* pItem = itemAlloc();
+    ASSERT(pItem);
+
+    pItem->Type = ITEM::TYPE_TEXT_DISP;
+    pItem->Name = nullptr;
+    pItem->State = bSelectable;
+
+    ITEM::TEXT_DISP* pItemTextDisp = &pItem->TextDisp;
+    pItemTextDisp->pszText = pszText;
+};
+
+
 void CDebugMenuCtrl::AddItem(const char* pszText, void* param)
 {
     AddTrigger(pszText, nullptr, param);    
@@ -470,6 +516,63 @@ void* CDebugMenuCtrl::GetItemParam(void) const
         return nullptr;
 
     return m_aItem[m_iSelect].Trigger.Param;
+};
+
+
+void CDebugMenuCtrl::SetSelectAtTop(int32 select)
+{
+    SetSelect(GetSelectMax() - 1);
+    SetSelect(select);
+};
+
+
+void CDebugMenuCtrl::SetSelectAtBottom(int32 select)
+{
+    SetSelect(0);
+    SetSelect(select);
+};
+
+
+void CDebugMenuCtrl::SetSelect(int32 select)
+{
+    ASSERT(select >= 0);
+    ASSERT(select < m_iSelectMax);
+
+    /* correct selection if it points to an disabled item */
+    while (!m_aItem[select].State)
+		++select;
+
+    /* move selection until match select */
+    bool bMoveDown = (select > m_iSelect);
+    while (m_iSelect != select)
+        handleMove(bMoveDown ? MOVEDIR_DOWN : MOVEDIR_UP);
+};
+
+
+int32 CDebugMenuCtrl::GetSelect(void) const
+{
+    return m_iSelect;
+};
+
+
+int32 CDebugMenuCtrl::GetSelectMax(void) const
+{
+    return m_iSelectMax;
+};
+
+
+void CDebugMenuCtrl::SetItemEnable(int32 select, bool bState)
+{
+    ASSERT(select >= 0);
+    ASSERT(select < m_iSelectMax);
+
+    m_aItem[select].State = bState;
+};
+
+
+void CDebugMenuCtrl::SetLastItemEnable(bool bState)
+{
+    m_aItem[m_iSelectMax - 1].State = bState;
 };
 
 
@@ -559,8 +662,10 @@ void CDebugMenuCtrl::handleMove(MOVEDIR MoveDir)
             break;
 
         case ITEM::TYPE_TRIGGER:
-		case ITEM::TYPE_FLOAT_DISP:            
-			break;
+        case ITEM::TYPE_FLOAT_DISP:
+        case ITEM::TYPE_INT_DISP:
+        case ITEM::TYPE_TEXT_DISP:
+            break;
 
         case ITEM::TYPE_SEPARATOR:
             ASSERT(false);
@@ -675,15 +780,12 @@ void CDebugMenuCtrl::handleCancel(void)
 
 CDebugMenuCtrl::ITEM* CDebugMenuCtrl::itemAlloc(void)
 {
-    if (m_listItemFree.empty())
+    if (m_nItemAllocCnt >= COUNT_OF(m_aItem))
         return nullptr;
 
-    ITEM* pItem = m_listItemFree.front();
-    m_listItemFree.erase(pItem);
-    m_listItemAlloc.push_back(pItem);
-
+    ITEM* pItem = &m_aItem[m_nItemAllocCnt++];
     pItem->State = true;
-    pItem->Hex = bool(FLAG_TEST(m_uOptFlag, OPTFLAG_DISP_HEX));
+    pItem->Hex = (m_uOptFlag & OPTFLAG_DISP_HEX);
 
     ++m_iSelectMax;
     
@@ -693,7 +795,8 @@ CDebugMenuCtrl::ITEM* CDebugMenuCtrl::itemAlloc(void)
 
 void CDebugMenuCtrl::itemFree(ITEM* pItem)
 {
-    ASSERT(!m_listItemAlloc.empty());
+    ASSERT(m_nItemAllocCnt > 0);
+    --m_nItemAllocCnt;
 
     ASSERT(m_iSelectMax > 0);
     --m_iSelectMax;
@@ -719,9 +822,6 @@ void CDebugMenuCtrl::itemFree(ITEM* pItem)
             pItemInt->ValueStrList = nullptr;
         };
     };
-
-    m_listItemAlloc.erase(pItem);
-    m_listItemFree.push_back(pItem);
 };
 
 
@@ -760,11 +860,16 @@ CDebugSequenceCheckObj::CDebugSequenceCheckObj(void)
 };
 
 
-CDebugSequenceCheckObj& CDebugSequenceCheckObj::Check(int32 iTargetSeqLbl)
+void CDebugSequenceCheckObj::Update(void)
 {
-    m_iTargSeqLbl = iTargetSeqLbl;
     m_iPrevSeqLbl = m_iCurrSeqLbl;
     m_iCurrSeqLbl = CSequence::GetCurrently();
+};
+
+
+CDebugSequenceCheckObj& CDebugSequenceCheckObj::Check(int32 iTargetSeqLbl)
+{
+    m_iTargSeqLbl = iTargetSeqLbl;    
 
     return *this;
 };

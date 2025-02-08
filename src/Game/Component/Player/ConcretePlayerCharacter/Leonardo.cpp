@@ -11,19 +11,11 @@
 
 namespace Leonardo
 {
-    bool CAttackJump::IsEnableChangeStatus(PLAYERTYPES::STATUS status)
-    {
-        PLAYERTYPES::STATUS aStatusArray[] =
-        {
-            PLAYERTYPES::STATUS_JUMP,
-            PLAYERTYPES::STATUS_JUMP_2ND,
-            PLAYERTYPES::STATUS_JUMP_WALL,
-            PLAYERTYPES::STATUS_AERIAL,
-            PLAYERTYPES::STATUS_AERIAL_MOVE,
-        };
-
-        return IsWithinStatusFromArray(status, aStatusArray, COUNT_OF(aStatusArray));
-    };
+    DEFINE_ENABLED_STATUS_FOR(CAttackJump, { PLAYERTYPES::STATUS_JUMP,
+                                             PLAYERTYPES::STATUS_JUMP_2ND,
+                                             PLAYERTYPES::STATUS_JUMP_WALL,
+                                             PLAYERTYPES::STATUS_AERIAL,
+                                             PLAYERTYPES::STATUS_AERIAL_MOVE });
 
 
     void CAttackJump::OnAttach(void)
@@ -34,8 +26,10 @@ namespace Leonardo
         Character().RotateVectorByDirection(&vVelocity, &Leonardo::JUMPATTACK_VELOCITY);
 		Character().SetVelocity(&vVelocity);
 
-        Character().SetCharacterFlag(CHARACTERTYPES::FLAG_FIXED_MODEL_ROTATION, false);
-        Character().SetCharacterFlag(CHARACTERTYPES::FLAG_CLAMP_VELOCITY_XZ, false);
+        CHARACTERTYPES::FLAG cflag = CHARACTERTYPES::FLAG_FIXED_MODEL_ROTATION
+                                   | CHARACTERTYPES::FLAG_CLAMP_VELOCITY_XZ;
+        Character().ClearCharacterFlag(cflag);
+
         CGameSound::PlayAttackSE(m_pPlayerChr);
     };
 
@@ -72,21 +66,15 @@ namespace Leonardo
 
     void CAttackAABBC::OnDischargeWave(void)
     {
-        RwV3d vPosBody = Math::VECTOR3_ZERO;
-        RwV3d vDir = Math::VECTOR3_ZERO;
-        RwV3d vPos = Math::VECTOR3_ZERO;
-        
-        Character().GetBodyPosition(&vPosBody);
-        Character().RotateVectorByDirection(&vDir, &Leonardo::CHARGE_ATTACK_LOCAL_POSITION);
+        RwV3d vPosition = Math::VECTOR3_ZERO;
+        Character().GetBodyPosition(&vPosition);
 
-        Math::Vec3_Add(&vPos, &vDir, &vPosBody);
+        RwV3d vPositionLocal = Math::VECTOR3_ZERO;
+        Character().RotateVectorByDirection(&vPositionLocal, &Leonardo::CHARGE_ATTACK_LOCAL_POSITION);
+
+        Math::Vec3_Add(&vPosition, &vPosition, &vPositionLocal);
         
-        MAGIC_GENERIC::ChargeAttackLeonardo(
-            &vPos,
-            Character().GetDirection(),
-            m_pPlayerChr,
-            MAGIC_GENERIC::STEP_THREE
-        );
+        MAGIC_GENERIC::ChargeAttackLeonardo(&vPosition, Character().GetDirection(), m_pPlayerChr, MAGIC_GENERIC::STEP_THREE);
     };
 
 
@@ -97,26 +85,17 @@ namespace Leonardo
 
     void CAttackB::OnDischargeWave(MAGIC_GENERIC::STEP step)
     {
-        RwV3d vPosBody = Math::VECTOR3_ZERO;
-        RwV3d vDir = Math::VECTOR3_ZERO;
-        RwV3d vPos = Math::VECTOR3_ZERO;
+        RwV3d vPosition = Math::VECTOR3_ZERO;
+        Character().GetBodyPosition(&vPosition);
 
-        Character().GetBodyPosition(&vPosBody);
-        Character().RotateVectorByDirection(&vDir, &Leonardo::CHARGE_ATTACK_LOCAL_POSITION);
+        RwV3d vPositionLocal = Math::VECTOR3_ZERO;
+        Character().RotateVectorByDirection(&vPositionLocal, &Leonardo::CHARGE_ATTACK_LOCAL_POSITION);
 
-        Math::Vec3_Add(&vPos, &vDir, &vPosBody);
+        Math::Vec3_Add(&vPosition, &vPosition, &vPositionLocal);
 
-        Character().GetBodyPosition(&vPos);
-
-        MAGIC_GENERIC::ChargeAttackLeonardo(
-            &vPos,
-            Character().GetDirection(),
-            m_pPlayerChr,
-            step
-        );
+        MAGIC_GENERIC::ChargeAttackLeonardo(&vPosition, Character().GetDirection(), m_pPlayerChr, step);
     };
-};
-
+}; /* namespace Leonardo */
 
 
 CLeonardo::CLeonardo(GAMETYPES::COSTUME costume)
@@ -146,8 +125,7 @@ CLeonardo::CLeonardo(GAMETYPES::COSTUME costume)
     parameter.m_feature.m_fAerialAcceleration   = 12.0f;
     parameter.m_feature.m_nKnifeAttachBoneID    = CHARACTERTYPES::BONEID_RIGHT_WRIST;
 
-    parameter.m_pStateMachine = new CPlayerStateMachine(this, PLAYERTYPES::NORMALMAX);
-    ASSERT(parameter.m_pStateMachine);
+    parameter.m_pStateMachine = new CPlayerStateMachine(this, PLAYERTYPES::STATUS::NORMALMAX);
 
     CStatus::RegistDefaultForStateMachine(*parameter.m_pStateMachine);
 
@@ -157,17 +135,15 @@ CLeonardo::CLeonardo(GAMETYPES::COSTUME costume)
 
     Initialize(&parameter);
 
-    m_pModuleMan->Include(CCircleShadowModule::New(this, 1.5f, 1.5f, true));
+    m_pModuleMan->Include(CCircleShadowModule::New(this, 1.5f, 1.5f, false));
 
     if (costume != GAMETYPES::COSTUME_SAMURAI)
     {
-        m_pModuleMan->Include(new CBandanaModule(
-            this,
-            m_pModel,
-            CHARACTERTYPES::BONEID_HEAD,
-            &Leonardo::BANDANA_OFFSET,
-            CBandanaModule::BANDANACOLOR_BLUE
-        ));
+        m_pModuleMan->Include(new CBandanaModule(this,
+                                                 m_pModel,
+                                                 CHARACTERTYPES::BONEID_HEAD,
+                                                 &Leonardo::BANDANA_OFFSET,
+                                                 CBandanaModule::BANDANACOLOR_BLUE));
     };    
 };
 

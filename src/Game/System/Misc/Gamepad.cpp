@@ -11,9 +11,12 @@
 
 /*static*/ bool IGamepad::CheckFunction(uint32 uDigital, FUNCTION function)
 {
-    ASSERT(function >= 0 && function < FUNCTION_MAX);
+    ASSERT(function >= 0);
+    ASSERT(function < FUNCTION_MAX);
 
-    return FLAG_TEST(uDigital, uint32(1 << (16 + function)));
+    uint32 uDigitalFunction = (1 << (16 + function));
+
+    return ((uDigital & uDigitalFunction) != 0);
 };
 
 
@@ -33,7 +36,8 @@
 {
     if (isExist(iController))
     {
-        ASSERT(function >= 0 && function < FUNCTION_MAX);
+        ASSERT(function >= 0);
+        ASSERT(function < FUNCTION_MAX);
         ASSERT(uBasicButton != 0);
 
         uint32 uDigitalMapping = CController::GetMapping(iController, uBasicButton);
@@ -66,7 +70,7 @@
 
     for (int32 i = 0; i < FUNCTION_MAX; ++i)
     {
-        if (FLAG_TEST(s_aDefaultFuncToDigitMapping[i], uBasicButton))
+        if (s_aDefaultFuncToDigitMapping[i] & uBasicButton)
             uVirtualButton |= IPadFunctionMask(i);
     };
 
@@ -79,7 +83,8 @@
 
 /*static*/ bool IGamepad::StartVibration(int32 iController, VIBRATIONTYPE type, float fTime)
 {
-    ASSERT(type >= 0 && type < VIBRATIONTYPE_MAX);
+    ASSERT(type >= 0);
+    ASSERT(type < VIBRATIONTYPE_MAX);
     ASSERT(fTime >= 0.0f);
     
     if (isExist(iController) && !CGameData::Attribute().IsPlayDemoMode())
@@ -97,9 +102,9 @@
 
         static_assert(COUNT_OF(aVibMax) == VIBRATIONTYPE_MAX, "update me");
 
-        int32 VibFrames = int32(CScreen::Framerate() * fTime);
-        if (VibFrames > 0)
-            return CController::StartVibration(iController, aVibMax[type], VibFrames);
+        int32 vibrateFrames = static_cast<int32>(CScreen::Framerate() * fTime);
+        if (vibrateFrames > 0)
+            return CController::StartVibration(iController, aVibMax[type], vibrateFrames);
     };
 
     return false;
@@ -131,5 +136,8 @@
 
 /*static*/ bool IGamepad::isExist(int32 iController)
 {
-    return (iController >= 0 && iController < Max());
+    int32 controllerMax = Max();
+    
+    return ((iController >= 0) &&
+            (iController < controllerMax));
 };

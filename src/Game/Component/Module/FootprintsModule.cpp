@@ -196,8 +196,10 @@ void CFootprintsModule::Stamp(const RwV3d* pvPosition, float fDirection, FOOTTYP
     if (fHeight >= 0.1f)
         return;
 
-    if (FLAG_TEST(pCollisionResult->m_attribute, MAPTYPES::ATTRIBUTE_SNOW) ||
-        FLAG_TEST(pCollisionResult->m_attribute, MAPTYPES::ATTRIBUTE_SAND))
+    uint32 uAttributeMask = MAPTYPES::ATTRIBUTE_SAND
+                          | MAPTYPES::ATTRIBUTE_SNOW;
+
+    if (pCollisionResult->m_attribute & uAttributeMask)
     {
         RwV3d vAxisX = Math::VECTOR3_ZERO;
         RwV3d vAxisY = Math::VECTOR3_ZERO;
@@ -233,7 +235,7 @@ void CFootprintsModule::Stamp(const RwV3d* pvPosition, float fDirection, FOOTTYP
         pWork->m_vPosition.y = fMapHeight + 0.05f;
         pWork->m_foottype = foottype;
 
-        if (FLAG_TEST(pCollisionResult->m_attribute, MAPTYPES::ATTRIBUTE_SNOW))
+        if (pCollisionResult->m_attribute & MAPTYPES::ATTRIBUTE_SNOW)
             CEffectManager::Play(EFFECTID::ID_ALL_DASH_SNOW, &pWork->m_vPosition);
     };
 };

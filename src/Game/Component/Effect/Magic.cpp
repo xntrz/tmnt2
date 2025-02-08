@@ -94,9 +94,9 @@ void CMagic::Run(void)
         CLocus* pLocus = m_apLocus[LOCUSKIND_HOR];
 
         RwV3d vHigh = vMyPosition;
-        RwV3d vLow = vMyPosition;
-
         vHigh.y += m_locusinfo.m_fRadius;
+
+        RwV3d vLow = vMyPosition;
         vLow.y -= m_locusinfo.m_fRadius;
 
         pLocus->SetPosition(&vHigh, &vLow);
@@ -105,18 +105,20 @@ void CMagic::Run(void)
     if (m_apLocus[LOCUSKIND_VER])
     {
         CLocus* pLocus = m_apLocus[LOCUSKIND_VER];
-
-        RwV3d vHigh = vMyPosition;
-        RwV3d vLow = vMyPosition;
         
         RwV3d vMove = Math::VECTOR3_ZERO;
-        RwV3d vVerVec = Math::VECTOR3_ZERO;
-        
         Math::Vec3_Normalize(&vMove, &m_movement.m_vVelocity);
+        
+        RwV3d vVerVec = Math::VECTOR3_ZERO;
         Math::Vec3_Cross(&vVerVec, &Math::VECTOR3_AXIS_Y, &vMove);
         Math::Vec3_Scale(&vVerVec, &vVerVec, m_locusinfo.m_fRadius);
+
+        RwV3d vHigh = vMyPosition;
         Math::Vec3_Add(&vHigh, &vHigh, &vVerVec);
+
         Math::Vec3_Scale(&vVerVec, &vVerVec, -1.0f);
+
+        RwV3d vLow = vMyPosition;
         Math::Vec3_Add(&vLow, &vLow, &vVerVec);
 
         pLocus->SetPosition(&vHigh, &vLow);
@@ -133,10 +135,10 @@ void CMagic::MessageProc(int32 nMessageID, void* pParam)
     {
     case GAMEOBJECTTYPES::MESSAGEID_CATCHATTACK:
         {
-            CHitAttackData* pAttack = (CHitAttackData*)pParam;
+            CHitAttackData* pAttack = static_cast<CHitAttackData*>(pParam);
             ASSERT(pAttack);
             
-            if (IsFeaturePresent(MAGICTYPES::FEATURE_COLLISION_ATTACKED_HIT))
+            if (CheckFeature(MAGICTYPES::FEATURE_COLLISION_ATTACKED_HIT))
             {
                 if (IsRivalAttack(pAttack, m_pParent))
                 {
@@ -154,29 +156,24 @@ void CMagic::MessageProc(int32 nMessageID, void* pParam)
         
     case GAMEOBJECTTYPES::MESSAGEID_ATTACKRESULT:
         {
-            CHitCatchData* pCatch = (CHitCatchData*)pParam;
+            CHitCatchData* pCatch = static_cast<CHitCatchData*>(pParam);
             ASSERT(pCatch);
 
-            if (IsFeaturePresent(MAGICTYPES::FEATURE_ATTACK_HIT))
+            if (CheckFeature(MAGICTYPES::FEATURE_ATTACK_HIT))
             {
                 RwV3d vMyPosition = Math::VECTOR3_ZERO;
                 GetPosition(&vMyPosition);
                 
-                if (!IsFeaturePresent(MAGICTYPES::FEATURE_APPEAR_HORIZON))
+                if (!CheckFeature(MAGICTYPES::FEATURE_APPEAR_HORIZON))
                     Vanishing(&vMyPosition);
 
                 Finish();         
             };
 
-            if (IsFeaturePresent(MAGICTYPES::FEATURE_PARENT))
+            if (CheckFeature(MAGICTYPES::FEATURE_PARENT))
             {
                 ASSERT(m_pParent);
-
-                CGameObjectManager::SendMessage(
-                    m_pParent,
-                    GAMEOBJECTTYPES::MESSAGEID_ATTACKRESULT,
-                    pParam
-                );
+                CGameObjectManager::SendMessage(m_pParent, GAMEOBJECTTYPES::MESSAGEID_ATTACKRESULT, pParam);
             };
         }
         break;
@@ -197,60 +194,59 @@ void CMagic::CreateSubstance(const char* pszName)
     
     ASSERT(!m_pParticleSet);
     m_pParticleSet = pEffect->CloneParticle();
+
     RwV3d vEffectPos = Math::VECTOR3_ZERO;
     pEffect->GetPosition(&vEffectPos);
+
     m_vPosition = vEffectPos;
-    m_pTarget = nullptr;
-    m_bPlay = false;    
+    m_pTarget   = nullptr;
+    m_bPlay     = false;    
 };
 
 
 CMagic* CMagic::Clone(void)
 {
     CMagic* pMagic = new CMagic(GetName());
-    ASSERT(pMagic);
 
-    pMagic->m_vPosition = m_vPosition;
-    pMagic->m_pParticleSet = m_pParticleSet->Clone();
-    pMagic->m_feature = m_feature;
-    pMagic->m_collisionBody = m_collisionBody;
-    pMagic->m_collisionAttack = m_collisionAttack;
-    pMagic->m_movement = m_movement;
-    pMagic->m_locusinfo = m_locusinfo;
-    pMagic->m_fLivetime = m_fLivetime;
-    pMagic->m_fHitTimingStart = m_fHitTimingStart;
-    pMagic->m_fHitTimingEnd = m_fHitTimingEnd;
-    pMagic->m_nReflectNumMax = m_nReflectNumMax;
-    pMagic->m_pParent = m_pParent;
-    pMagic->m_fChangeSize = m_fChangeSize;
-    pMagic->m_bFinish = m_bFinish;
-    pMagic->m_bFinishStart = m_bFinishStart;
-    pMagic->m_fInitBodyRadius = m_fInitBodyRadius;
+    pMagic->m_vPosition         = m_vPosition;
+    pMagic->m_pParticleSet      = m_pParticleSet->Clone();
+    pMagic->m_feature           = m_feature;
+    pMagic->m_collisionBody     = m_collisionBody;
+    pMagic->m_collisionAttack   = m_collisionAttack;
+    pMagic->m_movement          = m_movement;
+    pMagic->m_locusinfo         = m_locusinfo;
+    pMagic->m_fLivetime         = m_fLivetime;
+    pMagic->m_fHitTimingStart   = m_fHitTimingStart;
+    pMagic->m_fHitTimingEnd     = m_fHitTimingEnd;
+    pMagic->m_nReflectNumMax    = m_nReflectNumMax;
+    pMagic->m_pParent           = m_pParent;
+    pMagic->m_fChangeSize       = m_fChangeSize;
+    pMagic->m_bFinish           = m_bFinish;
+    pMagic->m_bFinishStart      = m_bFinishStart;
+    pMagic->m_fInitBodyRadius   = m_fInitBodyRadius;
     pMagic->m_fInitAttackRadius = m_fInitAttackRadius;
-    pMagic->m_fNowTime = m_fNowTime;
-    pMagic->m_nCharaHitNum = m_nCharaHitNum;
-    pMagic->m_nMapObjectHitNum = m_nMapObjectHitNum;
+    pMagic->m_fNowTime          = m_fNowTime;
+    pMagic->m_nCharaHitNum      = m_nCharaHitNum;
+    pMagic->m_nMapObjectHitNum  = m_nMapObjectHitNum;
 
-    std::strcpy(pMagic->m_szBaseEffectName, m_szBaseEffectName);
-    std::strcpy(pMagic->m_szAppearEffectName, m_szAppearEffectName);
-    std::strcpy(pMagic->m_szVanishEffectName, m_szVanishEffectName);
-    std::strcpy(pMagic->m_szReflectEffectName, m_szReflectEffectName);
-    std::strcpy(pMagic->m_szVanishMagicName, m_szVanishMagicName);
+    std::strcpy(pMagic->m_szBaseEffectName,     m_szBaseEffectName);
+    std::strcpy(pMagic->m_szAppearEffectName,   m_szAppearEffectName);
+    std::strcpy(pMagic->m_szVanishEffectName,   m_szVanishEffectName);
+    std::strcpy(pMagic->m_szReflectEffectName,  m_szReflectEffectName);
+    std::strcpy(pMagic->m_szVanishMagicName,    m_szVanishMagicName);
 
-    if (IsFeaturePresent(MAGICTYPES::FEATURE_LOCUS_VER))
+    if (CheckFeature(MAGICTYPES::FEATURE_LOCUS_VER))
     {
         CLocus* pLocus = new CLocus(m_locusinfo.m_nNumPoint, m_locusinfo.m_Color);
-        ASSERT(pLocus);
         pLocus->SetDrawEnable(true);
 		pLocus->SetAlphaBasis(uint8(m_locusinfo.m_uAlphaBasis));
 
         pMagic->m_apLocus[LOCUSKIND_VER] = pLocus;
     };
 
-    if (IsFeaturePresent(MAGICTYPES::FEATURE_LOCUS_HOR))
+    if (CheckFeature(MAGICTYPES::FEATURE_LOCUS_HOR))
     {
         CLocus* pLocus = new CLocus(m_locusinfo.m_nNumPoint, m_locusinfo.m_Color);
-        ASSERT(pLocus);
         pLocus->SetDrawEnable(true);
 		pLocus->SetAlphaBasis(uint8(m_locusinfo.m_uAlphaBasis));
 
@@ -295,7 +291,7 @@ void CMagic::Finish(void)
 {
     CEffect::Finish();
 
-    if (IsFeaturePresent(MAGICTYPES::FEATURE_LOST_IMMEDIATE))
+    if (CheckFeature(MAGICTYPES::FEATURE_LOST_IMMEDIATE))
         m_bFinish = true;
 };
 
@@ -324,60 +320,44 @@ void CMagic::SetParameter(CMagicParameter* pMagicParameter)
     if (pMagicParameter->m_pszVanishMagicName)
         std::strcpy(m_szVanishMagicName, pMagicParameter->m_pszVanishMagicName);
 
-    m_feature = pMagicParameter->m_feature;
-    m_collisionBody = pMagicParameter->m_collisionBody;
-    m_collisionAttack = pMagicParameter->m_collisionAttack;
-	m_movement = pMagicParameter->m_movement;
-    m_locusinfo = pMagicParameter->m_locusinfo;
-    m_fLivetime = pMagicParameter->m_fLivetime;
-    m_nReflectNumMax = pMagicParameter->m_nReflectNumMax;
-    m_fChangeSize = pMagicParameter->m_fChangeSize;
-    m_fHitTimingStart = pMagicParameter->m_fHitTimingStart;
-    m_fHitTimingEnd = pMagicParameter->m_fHitTimingEnd;
+    m_feature           = pMagicParameter->m_feature;
+    m_collisionBody     = pMagicParameter->m_collisionBody;
+    m_collisionAttack   = pMagicParameter->m_collisionAttack;
+	m_movement          = pMagicParameter->m_movement;
+    m_locusinfo         = pMagicParameter->m_locusinfo;
+    m_fLivetime         = pMagicParameter->m_fLivetime;
+    m_nReflectNumMax    = pMagicParameter->m_nReflectNumMax;
+    m_fChangeSize       = pMagicParameter->m_fChangeSize;
+    m_fHitTimingStart   = pMagicParameter->m_fHitTimingStart;
+    m_fHitTimingEnd     = pMagicParameter->m_fHitTimingEnd;
     
 	if (!Math::FEqual(pMagicParameter->m_fScale, 1.0f))
 		SetScale(pMagicParameter->m_fScale);
 
-    m_fInitBodyRadius = m_collisionBody.m_fRadius;
+    m_fInitBodyRadius   = m_collisionBody.m_fRadius;
     m_fInitAttackRadius = m_collisionAttack.m_fRadius;
-    m_fNowTime = 0.0f;
-    m_nMapHitNum = 0;
-    m_nCharaHitNum = 0;
-    m_nMapObjectHitNum = 0;
+    m_fNowTime          = 0.0f;
+    m_nMapHitNum        = 0;
+    m_nCharaHitNum      = 0;
+    m_nMapObjectHitNum  = 0;
 
-    if (IsFeaturePresent(MAGICTYPES::FEATURE_LOCUS_VER))
+    if (CheckFeature(MAGICTYPES::FEATURE_LOCUS_VER))
     {
         CLocus* pLocus = new CLocus(m_locusinfo.m_nNumPoint, m_locusinfo.m_Color);
-        ASSERT(pLocus);
         pLocus->SetDrawEnable(true);
 		pLocus->SetAlphaBasis(uint8(m_locusinfo.m_uAlphaBasis));
 
         m_apLocus[LOCUSKIND_VER] = pLocus;
     };
 
-    if (IsFeaturePresent(MAGICTYPES::FEATURE_LOCUS_HOR))
+    if (CheckFeature(MAGICTYPES::FEATURE_LOCUS_HOR))
     {
         CLocus* pLocus = new CLocus(m_locusinfo.m_nNumPoint, m_locusinfo.m_Color);
-        ASSERT(pLocus);
         pLocus->SetDrawEnable(true);
 		pLocus->SetAlphaBasis(uint8(m_locusinfo.m_uAlphaBasis));
 
         m_apLocus[LOCUSKIND_HOR] = pLocus;
     };
-};
-
-
-void CMagic::SetFeature(MAGICTYPES::FEATURE feature)
-{
-    m_feature = feature;
-};
-
-
-void CMagic::AddFeature(MAGICTYPES::FEATURE feature)
-{
-    uint32 flagfield = m_feature;
-    FLAG_SET(flagfield, feature);
-    m_feature = MAGICTYPES::FEATURE(flagfield);
 };
 
 
@@ -468,11 +448,11 @@ void CMagic::SetDirection(const RwV3d* pvDirection)
     RwV3d vAxisZ = Math::VECTOR3_ZERO;
 
     Math::Vec3_Normalize(&vBuffer, pvDirection);
-    vBuffer.y = Math::FAbs(vBuffer.y);
+    vBuffer.y = std::fabs(vBuffer.y);
 
     if (vBuffer.y > 0.3f)
     {
-        vBuffer.z = Math::FAbs(vBuffer.z);
+        vBuffer.z = std::fabs(vBuffer.z);
         if (vBuffer.z > 0.3f)
             Math::Vec3_Cross(&vAxisX, &Math::VECTOR3_AXIS_X, pvDirection);
         else
@@ -558,10 +538,10 @@ void CMagic::Transition(void)
     if (m_feature == MAGICTYPES::FEATURE_NONE)
         return;
 
-    if (IsFeaturePresent(MAGICTYPES::FEATURE_LIVETIME))
+    if (CheckFeature(MAGICTYPES::FEATURE_LIVETIME))
     {
-        if (m_fHitTimingStart <= m_fNowTime &&
-            m_fHitTimingEnd >= m_fNowTime &&
+        if ((m_fHitTimingStart <= m_fNowTime) &&
+            (m_fHitTimingEnd >= m_fNowTime) &&
             (CheckBody() || CheckAttack()))
             return;
     }
@@ -570,7 +550,7 @@ void CMagic::Transition(void)
         return;
     };
 
-    if (IsFeaturePresent(MAGICTYPES::FEATURE_LIVETIME))
+    if (CheckFeature(MAGICTYPES::FEATURE_LIVETIME))
     {
         if (m_fNowTime >= m_fLivetime)
         {
@@ -583,7 +563,7 @@ void CMagic::Transition(void)
         };
     };
     
-    if (IsFeaturePresent(MAGICTYPES::FEATURE_GRAVITY))
+    if (CheckFeature(MAGICTYPES::FEATURE_GRAVITY))
     {
         float dt = CGameProperty::GetElapsedTime();
         float fGravity = CGameProperty::GetGravity();
@@ -591,17 +571,17 @@ void CMagic::Transition(void)
         m_movement.m_vVelocity.y += (dt * fGravity);
     };
 
-    if (IsFeaturePresent(MAGICTYPES::FEATURE_COLLISION_HIT_NUM))
+    if (CheckFeature(MAGICTYPES::FEATURE_COLLISION_HIT_NUM))
     {
         int32 nReflectNum = 0;
         
-        if (IsFeaturePresent(MAGICTYPES::FEATURE_COLLISION_MAP))
+        if (CheckFeature(MAGICTYPES::FEATURE_COLLISION_MAP))
             nReflectNum += m_nMapHitNum;
 
-        if (IsFeaturePresent(MAGICTYPES::FEATURE_COLLISION_CHARA))
+        if (CheckFeature(MAGICTYPES::FEATURE_COLLISION_CHARA))
             nReflectNum += m_nCharaHitNum;
 
-        if (IsFeaturePresent(MAGICTYPES::FEATURE_COLLISION_MAPOBJECT))
+        if (CheckFeature(MAGICTYPES::FEATURE_COLLISION_MAPOBJECT))
             nReflectNum += m_nMapObjectHitNum;
 
         if (nReflectNum >= m_nReflectNumMax)
@@ -615,7 +595,7 @@ void CMagic::Transition(void)
         };
     };
 
-    if (IsFeaturePresent(MAGICTYPES::FEATURE_COLLISION_HIT) &&
+    if (CheckFeature(MAGICTYPES::FEATURE_COLLISION_HIT) &&
         (m_nMapHitNum || m_nCharaHitNum || m_nMapObjectHitNum))
     {
         RwV3d vMyPosition = Math::VECTOR3_ZERO;
@@ -626,7 +606,7 @@ void CMagic::Transition(void)
         return;
     };
 
-    if (IsFeaturePresent(MAGICTYPES::FEATURE_COLLISION_CHANGE_SIZE))
+    if (CheckFeature(MAGICTYPES::FEATURE_COLLISION_CHANGE_SIZE))
     {
         float dt = CGameProperty::GetElapsedTime();
         
@@ -634,7 +614,7 @@ void CMagic::Transition(void)
         m_collisionAttack.m_fRadius += (dt * m_fInitAttackRadius * m_fChangeSize);
     };
 
-    if (IsFeaturePresent(MAGICTYPES::FEATURE_HOMING))
+    if (CheckFeature(MAGICTYPES::FEATURE_HOMING))
     {
         if (m_pTarget)
         {
@@ -659,7 +639,7 @@ void CMagic::Transition(void)
         };
     };
 
-    if (IsFeaturePresent(MAGICTYPES::FEATURE_STRAIGHT))
+    if (CheckFeature(MAGICTYPES::FEATURE_STRAIGHT))
     {
         float dt = CGameProperty::GetElapsedTime();        
         RwV3d vFrameVelocity = Math::VECTOR3_ZERO;
@@ -669,7 +649,7 @@ void CMagic::Transition(void)
         
         m_pParticleSet->SetBasisPositionForAll(&m_vPosition);
     }
-    else if (IsFeaturePresent(MAGICTYPES::FEATURE_ACCELERATE))
+    else if (CheckFeature(MAGICTYPES::FEATURE_ACCELERATE))
     {
         float dt = CGameProperty::GetElapsedTime();
         RwV3d vFrameVelocity = Math::VECTOR3_ZERO;
@@ -694,24 +674,23 @@ void CMagic::Transition(void)
 
 bool CMagic::CheckBody(void)
 {
-    if (!IsFeaturePresent(MAGICTYPES::FEATURE_BODY))
+    if (!CheckFeature(MAGICTYPES::FEATURE_BODY))
         return false;
 
-    MAGICTYPES::FEATURE flag = MAGICTYPES::FEATURE(
-        MAGICTYPES::FEATURE_COLLISION_MAP |
-        MAGICTYPES::FEATURE_COLLISION_MAPOBJECT
-    );
+    MAGICTYPES::FEATURE feature = MAGICTYPES::FEATURE_COLLISION_MAP
+                                | MAGICTYPES::FEATURE_COLLISION_MAPOBJECT;
 
-    if (IsFeaturePresent(flag) && m_fNowTime > 0.0f)
+    if (CheckFeature(feature) && (m_fNowTime > 0.0f))
     {
         float dt = CGameProperty::GetElapsedTime();
-        RwV3d vMyPosition = Math::VECTOR3_ZERO;
-        RwV3d vMyPrevPosition = Math::VECTOR3_ZERO;
-        RwV3d vFrameVelocity = Math::VECTOR3_ZERO;
 
+        RwV3d vMyPosition = Math::VECTOR3_ZERO;
         GetPosition(&vMyPosition);
 
+        RwV3d vFrameVelocity = Math::VECTOR3_ZERO;
         Math::Vec3_Scale(&vFrameVelocity, &m_movement.m_vVelocity, dt);
+
+        RwV3d vMyPrevPosition = Math::VECTOR3_ZERO;
         Math::Vec3_Sub(&vMyPrevPosition, &vMyPosition, &vFrameVelocity);
 
         RwLine line = { 0 };
@@ -725,17 +704,15 @@ bool CMagic::CheckBody(void)
 
             ++m_nMapHitNum;
 
-            if (!FLAG_TEST(pResult->m_attribute, MAPTYPES::ATTRIBUTE_ONEWAY))
+            if (pResult->m_attribute != MAPTYPES::ATTRIBUTE_ONEWAY)
             {
-                flag = MAGICTYPES::FEATURE(
-                    MAGICTYPES::FEATURE_COLLISION_MAP_HIT |
-                    MAGICTYPES::FEATURE_COLLISION_MAPOBJECT_HIT
-                );
+                feature = MAGICTYPES::FEATURE_COLLISION_MAP_HIT
+                        | MAGICTYPES::FEATURE_COLLISION_MAPOBJECT_HIT;
 
                 RwV3d vNormal = pResult->m_vNormal;
                 RwV3d vPosition = pResult->m_vClosestPt;
 
-                if (IsFeaturePresent(flag))
+                if (CheckFeature(feature))
                 {
                     VanishingHorizontal(&vNormal, &vPosition);
                     Finish();
@@ -744,7 +721,7 @@ bool CMagic::CheckBody(void)
                 }
                 else
                 {
-                    if (IsFeaturePresent(MAGICTYPES::FEATURE_COLLISION_REFLECTION))
+                    if (CheckFeature(MAGICTYPES::FEATURE_COLLISION_REFLECTION))
                     {
                         Reflect(&vNormal);
                         Reflecting(&vPosition);
@@ -764,17 +741,15 @@ bool CMagic::CheckBody(void)
 
                 ++m_nMapHitNum;
 
-                if (!FLAG_TEST(pResult->m_attribute, MAPTYPES::ATTRIBUTE_ONEWAY))
+                if (pResult->m_attribute != MAPTYPES::ATTRIBUTE_ONEWAY)
                 {
-                    flag = MAGICTYPES::FEATURE(
-                        MAGICTYPES::FEATURE_COLLISION_MAP_HIT |
-                        MAGICTYPES::FEATURE_COLLISION_MAPOBJECT_HIT
-                    );
+                    feature = MAGICTYPES::FEATURE_COLLISION_MAP_HIT
+                            | MAGICTYPES::FEATURE_COLLISION_MAPOBJECT_HIT;
 
                     RwV3d vNormal = pResult->m_vNormal;
                     RwV3d vPosition = pResult->m_vClosestPt;
 
-                    if (IsFeaturePresent(flag))
+                    if (CheckFeature(feature))
                     {
                         VanishingHorizontal(&vNormal, &vPosition);
                         Finish();
@@ -783,7 +758,7 @@ bool CMagic::CheckBody(void)
                     }
                     else
                     {
-                        if (IsFeaturePresent(MAGICTYPES::FEATURE_COLLISION_REFLECTION))
+                        if (CheckFeature(MAGICTYPES::FEATURE_COLLISION_REFLECTION))
                         {
                             Reflect(&vNormal);
                             Reflecting(&vPosition);
@@ -794,7 +769,7 @@ bool CMagic::CheckBody(void)
         };
     };
 
-    if (IsFeaturePresent(MAGICTYPES::FEATURE_COLLISION_CHARA))
+    if (CheckFeature(MAGICTYPES::FEATURE_COLLISION_CHARA))
     {
         RwV3d vMyPosition = Math::VECTOR3_ZERO;
         GetPosition(&vMyPosition);
@@ -809,7 +784,7 @@ bool CMagic::CheckBody(void)
         {
             ++m_nCharaHitNum;
 
-            if (IsFeaturePresent(MAGICTYPES::FEATURE_COLLISION_CHARA_HIT))
+            if (CheckFeature(MAGICTYPES::FEATURE_COLLISION_CHARA_HIT))
             {
                 GetPosition(&vMyPosition);
                 
@@ -818,14 +793,8 @@ bool CMagic::CheckBody(void)
                 return true;
             };
 
-            if (IsFeaturePresent(MAGICTYPES::FEATURE_COLLISION_REFLECTION))
-            {
-                Math::Vec3_Scale(
-                    &m_movement.m_vVelocity,
-                    &m_movement.m_vVelocity,
-                    -1.0f
-                );
-            };
+            if (CheckFeature(MAGICTYPES::FEATURE_COLLISION_REFLECTION))
+                Math::Vec3_Scale(&m_movement.m_vVelocity, &m_movement.m_vVelocity, -1.0f);
         };
     };
 
@@ -835,13 +804,14 @@ bool CMagic::CheckBody(void)
 
 bool CMagic::CheckAttack(void)
 {
-    if (IsFeaturePresent(MAGICTYPES::FEATURE_ATTACK))
+    if (CheckFeature(MAGICTYPES::FEATURE_ATTACK))
     {
         RwV3d vMyPosition = Math::VECTOR3_ZERO;
-        RwV3d vMyPrevPosition = Math::VECTOR3_ZERO;
         GetPosition(&vMyPosition);
 
         Math::Vec3_Add(&vMyPosition, &vMyPosition, &m_collisionAttack.m_vPosition);
+
+        RwV3d vMyPrevPosition = Math::VECTOR3_ZERO;
         Math::Vec3_Sub(&vMyPrevPosition, &vMyPosition, &m_movement.m_vVelocity);
 
         RwSphere sphere;
@@ -860,24 +830,13 @@ bool CMagic::CheckAttack(void)
 		if (Attack.GetStatus() != CHitAttackData::STATUS_KNOCK)
 		{
 			if (Attack.IsTroubleAttack())
-			{
 				Attack.SetTroubleParameter(m_collisionAttack.m_fStatusTime);
-			}
 			else
-			{
-				Attack.SetFlyawayParameter(
-					m_collisionAttack.m_fFlyawayX,
-					m_collisionAttack.m_fFlyawayY
-				);
-			};
+				Attack.SetFlyawayParameter(m_collisionAttack.m_fFlyawayX, m_collisionAttack.m_fFlyawayY);
 		};
 
-        uint32 uTargetFeatureFlag =
-            (uint32(m_feature) & (MAGICTYPES::FEATURE_ATTACK_TO_PLAYER   |
-                                  MAGICTYPES::FEATURE_ATTACK_TO_ENEMY    |
-                                  MAGICTYPES::FEATURE_ATTACK_TO_MAPOBJ));
-
-        switch (uTargetFeatureFlag)
+        MAGICTYPES::FEATURE featureAttack = (m_feature & MAGICTYPES::FEATURE_MASK_ATTACK_TO);
+        switch (featureAttack)
         {
         case MAGICTYPES::FEATURE_ATTACK_TO_PLAYER:
             Attack.SetTarget(CHitAttackData::TARGET_PLAYER);
@@ -891,19 +850,16 @@ bool CMagic::CheckAttack(void)
             Attack.SetTarget(CHitAttackData::TARGET_GIMMICK);
             break;
 
-        case (MAGICTYPES::FEATURE_ATTACK_TO_MAPOBJ | MAGICTYPES::FEATURE_ATTACK_TO_PLAYER):
+        case MAGICTYPES::FEATURE_ATTACK_TO_PLAYER_MAPOBJ:                    
             Attack.SetTarget(CHitAttackData::TARGET_PLAYER_GIMMICK);
             break;
 
-        case (MAGICTYPES::FEATURE_ATTACK_TO_MAPOBJ | MAGICTYPES::FEATURE_ATTACK_TO_ENEMY):
+        case MAGICTYPES::FEATURE_ATTACK_TO_ENEMY_MAPOBJ:
             Attack.SetTarget(CHitAttackData::TARGET_ENEMY_GIMMICK);
             break;
 
-        case (MAGICTYPES::FEATURE_ATTACK_TO_PLAYER | MAGICTYPES::FEATURE_ATTACK_TO_ENEMY):
-            {
-                uint32 uTargetMask = (CHitAttackData::TARGET_PLAYER | CHitAttackData::TARGET_ENEMY);
-                Attack.SetTarget(CHitAttackData::TARGET(uTargetMask));
-            }
+        case MAGICTYPES::FEATURE_ATTACK_TO_PLAYER_ENEMY:
+            Attack.SetTarget(CHitAttackData::TARGET_PLAYER | CHitAttackData::TARGET_ENEMY);
             break;
 
         default:
@@ -914,7 +870,7 @@ bool CMagic::CheckAttack(void)
         CHitAttackManager::RegistAttack(&Attack);
     };
 
-    if (IsFeaturePresent(MAGICTYPES::FEATURE_COLLISION_ATTACKED))
+    if (CheckFeature(MAGICTYPES::FEATURE_COLLISION_ATTACKED))
     {
         RwV3d vMyPosition = Math::VECTOR3_ZERO;
         GetPosition(&vMyPosition);
@@ -939,20 +895,20 @@ bool CMagic::CheckAttack(void)
 
 
 void CMagic::Homing(void)
-{
-    RwV3d vHomingVector = Math::VECTOR3_ZERO;
+{    
     RwV3d vTargetPosition = Math::VECTOR3_ZERO;
-    RwV3d vMyPosition = Math::VECTOR3_ZERO;
-    
     m_pTracer->GetPosition(&vTargetPosition);
+
+    RwV3d vMyPosition = Math::VECTOR3_ZERO;
     GetPosition(&vMyPosition);
     
+    RwV3d vHomingVector = Math::VECTOR3_ZERO;
     Math::Vec3_Sub(&vHomingVector, &vTargetPosition, &vMyPosition);
 
     float fLength = Math::Vec3_Length(&m_movement.m_vVelocity);
-    float fLengthAccel = Math::Vec3_Length(&m_movement.m_vAcceleration);
-
     Math::Vec3_Scale(&m_movement.m_vVelocity, &vHomingVector, fLength);
+
+    float fLengthAccel = Math::Vec3_Length(&m_movement.m_vAcceleration);
     Math::Vec3_Scale(&m_movement.m_vAcceleration, &vHomingVector, fLengthAccel);
 };
 
@@ -961,6 +917,7 @@ void CMagic::Reflect(RwV3d* pvNormal)
 {
     RwV3d vResult = Math::VECTOR3_ZERO;
     Math::Vec3_Reflect(&vResult, &m_movement.m_vVelocity, pvNormal);
+
     SetDirection(&vResult);
 };
 
@@ -1013,7 +970,7 @@ void CMagic::VanishingHorizontal(RwV3d* pvNormal, RwV3d* pvPosition)
 
     if (std::strlen(m_szVanishEffectName) > 0)
     {
-        if (IsFeaturePresent(MAGICTYPES::FEATURE_APPEAR_HORIZON))
+        if (CheckFeature(MAGICTYPES::FEATURE_APPEAR_HORIZON))
         {
             RwV3d vAxisX = Math::VECTOR3_ZERO;
             RwV3d vAxisY = Math::VECTOR3_ZERO;
@@ -1049,7 +1006,7 @@ void CMagic::VanishingHorizontal(RwV3d* pvNormal, RwV3d* pvPosition)
     {
         RwV3d vDirection = Math::VECTOR3_ZERO;
         
-        if (IsFeaturePresent(MAGICTYPES::FEATURE_APPEAR_HORIZON))
+        if (CheckFeature(MAGICTYPES::FEATURE_APPEAR_HORIZON))
         {
             RwV3d vAxisX = Math::VECTOR3_ZERO;
             RwV3d vAxisY = Math::VECTOR3_ZERO;
@@ -1099,6 +1056,9 @@ void CMagic::VanishingSE(void)
     case MAGICID::ID_GUNBALL:
         CGameSound::PlayObjectSE(this, SDCODE_SE(4139));
         break;
+
+    default:
+        break;
     };
 };
 
@@ -1130,7 +1090,7 @@ bool CMagic::IsRivalAttack(CHitAttackData* pAttack, const CGameObject* pObject)
 
     case GAMEOBJECTTYPE::CHARACTER:
         {
-            CCharacter* pCharacter = (CCharacter*)pObject;
+            const CCharacter* pCharacter = static_cast<const CCharacter*>(pObject);
             switch (pCharacter->GetCharacterType())
             {
             case CCharacter::TYPE_ENEMY:
@@ -1154,24 +1114,25 @@ bool CMagic::IsRivalAttack(CHitAttackData* pAttack, const CGameObject* pObject)
 
     case GAMEOBJECTTYPE::EFFECT:
         {
-            CMagic* pMagic = (CMagic*)pObject;
+            const CMagic* pMagic = static_cast<const CMagic*>(pObject);
+
             CGameObject* pParentObj = CGameObjectManager::GetObject(pMagic->m_hParentObj);
             if (pParentObj)
-            {
                 bResult = IsRivalAttack(pAttack, pParentObj);
-            };
         }
         break;
 
     case GAMEOBJECTTYPE::SHOT:
         {
-            CShot* pShot = (CShot*)pObject;
+            const CShot* pShot = static_cast<const CShot*>(pObject);
+
             CGameObject* pParentObj = CGameObjectManager::GetObject(pShot->GetParentHandle());
             if (pParentObj)
-            {
                 bResult = IsRivalAttack(pAttack, pParentObj);
-            };
         }
+        break;
+
+    default:
         break;
     };
 
@@ -1179,13 +1140,25 @@ bool CMagic::IsRivalAttack(CHitAttackData* pAttack, const CGameObject* pObject)
 };
 
 
-bool CMagic::IsFeaturePresent(MAGICTYPES::FEATURE feature) const
-{
-    return FLAG_TEST(m_feature, feature);
-};
-
-
 uint32 CMagic::GetParent(void) const
 {
     return m_hParentObj;
+};
+
+
+void CMagic::SetFeature(MAGICTYPES::FEATURE feature)
+{
+    m_feature = feature;
+};
+
+
+void CMagic::AddFeature(MAGICTYPES::FEATURE feature)
+{
+    m_feature |= feature;
+};
+
+
+bool CMagic::CheckFeature(MAGICTYPES::FEATURE feature) const
+{
+    return ((m_feature & feature) != 0);
 };

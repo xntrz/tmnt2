@@ -35,5 +35,4 @@ public:
     static uint32 GetWorstRankClearTime(AREAID::VALUE idArea);
     static WORLDID::VALUE GetWorldNo(AREAID::VALUE idArea);
     static int32 GetDiscNo(AREAID::VALUE idArea);
-    static bool IsStation(AREAID::VALUE idArea);
 };

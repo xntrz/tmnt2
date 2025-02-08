@@ -11,7 +11,8 @@ static void PlayCharaSE(const CPlayerCharacter* pPlayerChara, int32* aiVoiceIDLi
     ASSERT(aiVoiceIDList);
 
     PLAYERID::VALUE idPlayer = pPlayerChara->GetID();
-    ASSERT(idPlayer >= PLAYERID::ID_START && idPlayer < PLAYERID::ID_MAX);
+    ASSERT(idPlayer >= PLAYERID::ID_START);
+    ASSERT(idPlayer <  PLAYERID::ID_MAX);
 
     if (aiVoiceIDList[idPlayer] != -1)
         CGameSound::PlayObjectSE(pPlayerChara, aiVoiceIDList[idPlayer]);
@@ -38,7 +39,7 @@ namespace PlayerUtil
         {
             CGameSound::PlayObjectSE(pPlayerChr, SDCODE_SE(4117), 0);
         }
-        else if (!FLAG_TEST(pGndInfo->m_attribute, MAPTYPES::ATTRIBUTE_DEATH))
+        else if (pGndInfo->m_attribute != MAPTYPES::ATTRIBUTE_DEATH)
         {
             CGameSound::PlayObjectSE(pPlayerChr, SDCODE_SE(4116), 0);
         };

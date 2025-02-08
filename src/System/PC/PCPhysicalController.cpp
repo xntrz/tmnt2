@@ -83,16 +83,18 @@ public:
 	void MapDigital(uint32 btn, int32 iDIKey);
 	void MapDigitalFixed(uint32 btn, int32 iDIKey);
 	void MapAnalog(CController::ANALOG analog, int32 iDIKeyX, int32 iDIKeyY);
-	bool IsKeyDown(int32 iDIKey) const;
-	bool IsKeyNotFixed(int32 iDIKey) const;
+    bool IsKeyDown(int32 iDIKey) const;
+    bool IsKeyTrigger(int32 iDIKey) const;
+    bool IsKeyNotFixed(int32 iDIKey) const;
 	int32 GetDownKey(void) const;
 
 private:
 	DIGITALINFO m_aDigitalFixedInfo[FIXED_DIGITAL_MAX];
 	DIGITALINFO m_aDigitalInfo[CController::DIGITAL_NUM];
 	ANALOGINFO m_aAnalogInfo[CController::ANALOG_NUM];
-	uint8 m_keybuffer[KEYBUFFER_SIZE];
-	int32 m_numUsedFixedDigital;
+    uint8 m_keybufferCurr[KEYBUFFER_SIZE];
+    uint8 m_keybufferPrev[KEYBUFFER_SIZE];
+    int32 m_numUsedFixedDigital;
 	IDirectInputDevice8* m_pDIDevice;
 };
 
@@ -111,6 +113,11 @@ private:
 	int32 m_iPort;
 	DIJOYSTATE2 m_joystate;
 };
+
+
+//
+// *********************************************************************************
+//
 
 
 CPCKeyboardController::CPCKeyboardController(int32 iController)
@@ -160,8 +167,9 @@ void CPCKeyboardController::Update(void)
 
 	m_info.m_eState = CController::STATE_CONNECT;
 
-	std::memset(m_keybuffer, 0x00, sizeof(m_keybuffer));
-	if (FAILED(m_pDIDevice->GetDeviceState(sizeof(m_keybuffer), m_keybuffer)))
+    std::memcpy(m_keybufferPrev, m_keybufferCurr, sizeof(m_keybufferCurr));
+    std::memset(m_keybufferCurr, 0x00, sizeof(m_keybufferCurr));
+	if (FAILED(m_pDIDevice->GetDeviceState(sizeof(m_keybufferCurr), m_keybufferCurr)))
 	{
 		IPhysicalController::Update();
 		return;
@@ -305,9 +313,14 @@ void CPCKeyboardController::MapDigitalFixed(uint32 btn, int32 iDIKey)
 
 void CPCKeyboardController::MapAnalog(CController::ANALOG analog, int32 iDIKeyX, int32 iDIKeyY)
 {
-	ASSERT(iDIKeyX >= 0 && iDIKeyX < KEYBUFFER_SIZE);
-	ASSERT(iDIKeyY >= 0 && iDIKeyY < KEYBUFFER_SIZE);
-	ASSERT(analog >= 0 && analog < CController::ANALOG_NUM);
+    ASSERT(iDIKeyX >= 0);
+    ASSERT(iDIKeyX < KEYBUFFER_SIZE);
+
+    ASSERT(iDIKeyY >= 0);
+    ASSERT(iDIKeyY < KEYBUFFER_SIZE);
+
+    ASSERT(analog >= 0);
+    ASSERT(analog < CController::ANALOG_NUM);
 
 	for (int32 i = 0; i < COUNT_OF(m_aAnalogInfo); ++i)
 	{
@@ -323,9 +336,20 @@ void CPCKeyboardController::MapAnalog(CController::ANALOG analog, int32 iDIKeyX,
 
 bool CPCKeyboardController::IsKeyDown(int32 iDIKey) const
 {
-	ASSERT(iDIKey >= 0 && iDIKey < KEYBUFFER_SIZE);
-	
-	return ((m_keybuffer[iDIKey] & uint8(0x80)) != 0);
+    ASSERT(iDIKey >= 0);
+    ASSERT(iDIKey < KEYBUFFER_SIZE);
+
+    return ((m_keybufferCurr[iDIKey] & 0x80) != 0);
+};
+
+
+bool CPCKeyboardController::IsKeyTrigger(int32 iDIKey) const
+{
+    ASSERT(iDIKey >= 0);
+    ASSERT(iDIKey < KEYBUFFER_SIZE);
+
+    return ((m_keybufferPrev[iDIKey] & 0x80) == 0) &&
+           ((m_keybufferCurr[iDIKey] & 0x80) != 0);
 };
 
 
@@ -353,6 +377,11 @@ int32 CPCKeyboardController::GetDownKey(void) const
 };
 
 
+//
+// *********************************************************************************
+//
+
+
 CPCGamepadController::CPCGamepadController(int32 iController)
 : m_iPort(iController)
 , m_joystate({})
@@ -377,8 +406,9 @@ void CPCGamepadController::Update(void)
 {
 	Clear();
 
-	JOYSTICKSTATE* pJoystickState = s_JoystickInfo.m_apJoystickState[m_iPort];
-	IDirectInputDevice8* pDevice = pJoystickState->m_pDevice;
+    JOYSTICKSTATE* pJoystickState = s_JoystickInfo.m_apJoystickState[m_iPort];
+    
+    IDirectInputDevice8* pDevice = pJoystickState->m_pDevice;
 	if (!pJoystickState || !pDevice)
 	{
 		m_info.m_eState = CController::STATE_UNCONNECT;
@@ -386,16 +416,17 @@ void CPCGamepadController::Update(void)
 		return;
 	};
 
-	m_info.m_eState = CController::STATE_CONNECT;
-
 	if (FAILED(pDevice->Poll()))
 	{
 		if (!AcquireDevice(pDevice))
 		{
+			m_info.m_eState = CController::STATE_UNCONNECT;
 			IPhysicalController::Update();
 			return;
 		};
 	};
+
+	m_info.m_eState = CController::STATE_CONNECT;
 
 	std::memset(&m_joystate, 0x00, sizeof(m_joystate));
 	if (FAILED(pDevice->GetDeviceState(sizeof(DIJOYSTATE2), &m_joystate)))
@@ -449,18 +480,18 @@ void CPCGamepadController::Update(void)
 	};
 
 #ifdef _DEBUG
-	//switch (pJoystickState->m_guidprod.Data1)
-	//{
-	//case MAKELONG(0x0810, 0x0001):
-	//	{
-	//		//
-	//		//	VID_0810&PID_0001 gamepad case:
-	//		// 		- correcting right stick axis values
-	//		//
-	//		m_joystate.rglSlider[0] = m_joystate.lZ;
-	//	}
-	//	break;
-	//};		
+	switch (pJoystickState->m_guidprod.Data1)
+	{
+	case MAKELONG(0x0810, 0x0001):
+		{
+			//
+			//	VID_0810&PID_0001 gamepad case:
+			// 		- correcting right stick axis values
+			//
+			m_joystate.rglSlider[0] = m_joystate.lZ;
+		}
+		break;
+	};		
 #endif	
 
 	const int32 DEADZONE = int32(float(TYPEDEF::SINT16_MAX) * 0.25f);
@@ -789,33 +820,42 @@ label_failure:
 {
 	if (s_pPCKeyboardController)
 		return KeyboardController().IsKeyDown(iDIKey);
-	else
-		return false;
+	
+	return false;
+};
+
+
+/*static*/ bool CPCPhysicalController::IsKeyTrigger(int32 iDIKey)
+{
+    if (s_pPCKeyboardController)
+        return KeyboardController().IsKeyTrigger(iDIKey);
+
+    return false;
 };
 
 
 /*static*/ bool CPCPhysicalController::IsKeyNotFixed(int32 iDIKey)
 {
 	if (s_pPCKeyboardController)
-		return KeyboardController().IsKeyNotFixed(iDIKey);
-	else
-		return false;
+        return KeyboardController().IsKeyNotFixed(iDIKey);
+    
+    return false;
 };
 
 
 /*static*/ int32 CPCPhysicalController::GetDownKey(void)
 {
 	if (s_pPCKeyboardController)
-		return KeyboardController().GetDownKey();
-	else
-		return -1;
+        return KeyboardController().GetDownKey();
+    
+    return -1;
 };
 
 
 /*static*/ int32 CPCPhysicalController::GetPort(void)
 {
 	if (s_pPCKeyboardController)
-		return KeyboardController().Info().m_iPhysicalPort;
-	else
-		return CController::Max();
+        return KeyboardController().Info().m_iPhysicalPort;
+    
+    return CController::Max();
 };

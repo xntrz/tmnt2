@@ -146,13 +146,15 @@ void CWaterSplash::SetTexture(RwTexture* pTexture)
 void CWaterSplash::Generate(WATERSPLASH* pWaterSplash)
 {
     RwV3d vAppearPosition = m_vBasisPosition;
-    float fScale = (float(Math::Rand() % 50) * 0.01f + 0.5f);
-    float fLifespan = (float(Math::Rand() % 10) * 0.01f + 0.1f);
 
     vAppearPosition.x += (float(Math::Rand() % uint32(m_fRadius * 20.0f)) - m_fRadius * 10.0f) * 0.1f;
     vAppearPosition.z += (float(Math::Rand() % uint32(m_fRadius * 20.0f)) - m_fRadius * 10.0f) * 0.1f;
+
     float fMapHeight = CWorldMap::GetMapHeight(&vAppearPosition);
     vAppearPosition.y = fMapHeight;
+
+    float fScale = (float(Math::Rand() % 50) * 0.01f + 0.5f);
+    float fLifespan = (float(Math::Rand() % 10) * 0.01f + 0.1f);
 
     pWaterSplash->m_vPosition = vAppearPosition;
     pWaterSplash->m_fBaseScale = fScale;

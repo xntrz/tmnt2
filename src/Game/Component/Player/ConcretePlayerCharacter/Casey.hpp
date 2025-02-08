@@ -43,7 +43,7 @@ namespace Casey
         virtual void OnDetach(void) override;
         virtual void OnRun(void) override;
     };
-};
+} /* namespace Casey */
 
 
 class CCasey : public CPlayerCharacter

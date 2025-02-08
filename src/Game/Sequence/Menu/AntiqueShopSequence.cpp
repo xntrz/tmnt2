@@ -1171,7 +1171,6 @@ bool CAntiqueShopSequence::OnAttach(const void* pParam)
     ASSERT(!s_pAntiqueShop);
     
     s_pAntiqueShop = new CAntiqueShop;
-    ASSERT(s_pAntiqueShop);
     if (s_pAntiqueShop)
     {
         s_pAntiqueShop->Attach();
@@ -1237,6 +1236,9 @@ void CAntiqueShopSequence::OnMove(bool bRet, const void* pReturnValue)
             };
         }
         break;
+
+    default:
+        break;
     };
 
     CAnim2DSequence::OnMove(bRet, pReturnValue);
@@ -1254,6 +1256,8 @@ void CAntiqueShopSequence::BeginFadein(void)
 {
 	s_pAntiqueShop->Loaded(m_pAnimation2D);
     s_pAntiqueShop->AntiqueDispChange();
+
     CGameSound::PlayBGM(SDCODE_BGM(0x3023));
+    
     CAnim2DSequence::BeginFadein();
 };

@@ -42,7 +42,8 @@ public:
     CHitAttackData& GetAttack(void) const;
 	CHARACTERTYPES::ATTACKDIRECTIONTYPE DirectionType(void) const;
 	int32 GetCharacterID(CCharacter* pCharacter) const;
-
+    CHARACTERTYPES::ATTACKTYPE GetAttackType(void) const;
+    
 private:
     CCharacter& m_rCharacter;
     CHitAttackData& m_rAttack;

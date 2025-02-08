@@ -64,7 +64,7 @@ public:
     MODE GetCameraMode(void) const;
     void SetPathMode(PATHMODE pathmode);
     bool IsPosVisible(const RwV3d* pvPos);
-    float CalcNiceZoon(RwV3d* avPos, int32 nNumPos);
+    float CalcNiceZoom(RwV3d* avPos, int32 nNumPos);
     RwCamera* GetRwCamera(void) const;
     bool IsIntroductionEnd(void) const;
     float GetViewRatio(void) const;
@@ -80,7 +80,8 @@ private:
     void VibrationDestroy(void);
     void VibrationUpdate(void);
 
-private:
+    //private:
+public:    
     static float m_fDefaultClipFar;
     static float m_fDefaultClipNear;
     static float m_fDefaultFogDist;

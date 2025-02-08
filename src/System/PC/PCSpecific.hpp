@@ -18,6 +18,7 @@ public:
     static void MapAnalog(CController::ANALOG analog, int32 iDIKeyX, int32 iDIKeyY);
     static int32 GetDownKey(void);
     static bool IsKeyDown(int32 iDIKey);
+    static bool IsKeyTrigger(int32 iDIKey);
     static bool IsKeyValid(int32 iDIKey);
     static const char* GetKeyName(int32 iDIKey);
     static bool SetVideomode(int32 No);
@@ -27,4 +28,5 @@ public:
     static void FrameSkipEnable(bool bEnable);
     static void DisplayCursor(bool bDispFlag);
     static void PathCorrection(std::string& str);
+    static bool MakeWindowScreenshotToClipboard(void); // do not call it within RwCameraBeginUpdate / RwCameraEndUpdate
 };

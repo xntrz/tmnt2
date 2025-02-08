@@ -82,7 +82,7 @@ public:
     GAMETYPES::CLEARRANK GetPersonalRank(int32 nIndex) const;
     int32 GetMVP(void) const;
     GAMETYPES::CLEARRANK GetTotalRank(void) const;
-    const CGameTime& GetCleartimeTotal(void) const;
+    CGameTime GetCleartimeTotal(void) const;
     float GetRemainedHPRatio(void) const;
     float GetItemTakeRatio(void) const;
     int32 GetRideGoldCoin(void) const;
@@ -94,7 +94,7 @@ public:
     GAMETYPES::CLEARRANK GetTrickRank(int32 nIndex) const;
     GAMETYPES::CLEARRANK GetShotRank(int32 nIndex) const;
     int32 GetStageMVP(int32 nIndex) const;
-    const CGameTime& GetStageCleartime(int32 nIndex) const;
+    CGameTime GetStageCleartime(int32 nIndex) const;
 
 private:
     void initClearTimeEvalTable(AREAID::VALUE idArea);

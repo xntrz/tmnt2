@@ -10,20 +10,24 @@
 
 static RwRGBA s_aBandanaColor[] =
 {
-    { 0x75, 0x09, 0x01, 0xFF },
-    { 0xCF, 0x4B, 0x0E, 0xFF },
-    { 0x33, 0x1F, 0x44, 0xFF },
-    { 0x06, 0x56, 0x86, 0xFF },
-    { 0x00, 0x00, 0x00, 0xFF },
-    { 0x33, 0x33, 0x33, 0xFF },
-    { 0x0D, 0x20, 0x3D, 0xFF },
-    { 0x3A, 0x38, 0x3E, 0xFF },
-    { 0x47, 0x47, 0x47, 0xFF },
-    { 0x59, 0x13, 0x18, 0xFF },
+   /* BANDANACOLOR_RED          */  { 0x75, 0x09, 0x01, 0xFF }, 
+   /* BANDANACOLOR_ORANGE       */  { 0xCF, 0x4B, 0x0E, 0xFF }, 
+   /* BANDANACOLOR_PURPLE       */  { 0x33, 0x1F, 0x44, 0xFF }, 
+   /* BANDANACOLOR_BLUE         */  { 0x06, 0x56, 0x86, 0xFF }, 
+   /* BANDANACOLOR_BLACK        */  { 0x00, 0x00, 0x00, 0xFF }, 
+   /* BANDANACOLOR_DARKGREY     */  { 0x33, 0x33, 0x33, 0xFF }, 
+   /* BANDANACOLOR_DARKBLUE     */  { 0x0D, 0x20, 0x3D, 0xFF }, 
+   /* BANDANACOLOR_SHREDDERGREY */  { 0x3A, 0x38, 0x3E, 0xFF }, 
+   /* BANDANACOLOR_SLASHUURGREY */  { 0x47, 0x47, 0x47, 0xFF }, 
+   /* BANDANACOLOR_DARKRED      */  { 0x59, 0x13, 0x18, 0xFF }, 
 };
 
 
-CBandanaModule::CBandanaModule(CCharacter* pCharacter, CModel* pModel, int32 nBoneID, const RwV3d* pvOffset, BANDANACOLOR color)
+CBandanaModule::CBandanaModule(CCharacter* pCharacter,
+                               CModel* pModel,
+                               int32 nBoneID,
+                               const RwV3d* pvOffset,
+                               BANDANACOLOR color)
 : IModule(MODULETYPE::BANDANA)
 , m_pCharacter(pCharacter)
 , m_pModel(pModel)
@@ -37,8 +41,7 @@ CBandanaModule::CBandanaModule(CCharacter* pCharacter, CModel* pModel, int32 nBo
     ASSERT(m_pModel);
     
     m_pCloth = new CCloth;
-    ASSERT(m_pCloth);
-
+    
     m_pCloth->SetBaseParameter(2, 8, 0.06f, 0.7f);
     m_pCloth->SetColor(s_aBandanaColor[color]);
     m_pCloth->SetGravity(CGameProperty::GetGravity() * (1.0f / CScreen::Framerate()));
@@ -65,11 +68,11 @@ CBandanaModule::~CBandanaModule(void)
 
 void CBandanaModule::Run(void)
 {
-    RwMatrix matrix;
-    Math::Matrix_RotateY(&matrix, m_pCharacter->GetDirection());
+    RwMatrix matRotY;
+    Math::Matrix_RotateY(&matRotY, m_pCharacter->GetDirection());
 
     RwV3d vJointPos = m_vOffset;
-    RwV3dTransformPoint(&vJointPos, &vJointPos, &matrix);
+    RwV3dTransformPoint(&vJointPos, &vJointPos, &matRotY);
 
     RwV3d vBonePos = *m_pModel->GetBonePositionFromID(m_nBoneID);
     Math::Vec3_Add(&vJointPos, &vJointPos, &vBonePos);
@@ -105,23 +108,23 @@ void CBandanaModule::Draw(void)
     RwMatrix* pViewMat = RwCameraGetViewMatrixMacro(pCameraCurrent);
     ASSERT(pViewMat);
     
-    RwV3d vPosition = Math::VECTOR3_ZERO;
-    RwV3dTransformPoint(&vPosition, &m_vJointPosition, pViewMat);
+    RwV3d vScreenPos = Math::VECTOR3_ZERO;
+    RwV3dTransformPoint(&vScreenPos, &m_vJointPosition, pViewMat);
 
-    if (vPosition.z > 0.0f)
+    if (vScreenPos.z > 0.0f)
     {
-        float fNear = RwCameraGetNearClipPlaneMacro(pCameraCurrent);
-        float fFar = RwCameraGetFarClipPlaneMacro(pCameraCurrent);
+        float fClipNear = RwCameraGetNearClipPlaneMacro(pCameraCurrent);
+        float fClipFar  = RwCameraGetFarClipPlaneMacro(pCameraCurrent);
         
-        vPosition.x *= (1.0f / vPosition.z);
-        vPosition.y *= (1.0f / vPosition.y);
+        vScreenPos.x *= (1.0f / vScreenPos.z);
+        vScreenPos.y *= (1.0f / vScreenPos.z);
 
-        if (vPosition.z >= fNear    &&
-            vPosition.z <= fFar     &&
-            vPosition.x >= -0.2f    &&
-            vPosition.x <= 1.2f     &&
-            vPosition.y >= -0.2f    &&
-            vPosition.y <= 1.2f)
+        if ((vScreenPos.z >=  fClipNear)&&
+            (vScreenPos.z <=  fClipFar) &&
+            (vScreenPos.x >= -0.2f)     &&
+            (vScreenPos.x <=  1.2f)     &&
+            (vScreenPos.y >= -0.2f)     &&
+            (vScreenPos.y <=  1.2f))
         {
             m_pCloth->Draw();
         };

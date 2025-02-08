@@ -5,6 +5,7 @@
 #include "Game/Component/Effect/Magic.hpp"
 #include "Game/Component/Effect/Effect.hpp"
 #include "Game/Component/Player/PlayerCharacter.hpp"
+#include "Game/Component/Shot/Shot.hpp"
 #include "Game/System/GameObject/GameObject.hpp"
 #include "Game/System/GameObject/GameObjectManager.hpp"
 #include "Game/System/Character/Character.hpp"
@@ -36,7 +37,7 @@ static void CallCharacterHitEffect(const CCharacter* pCharacter, const RwV3d* pv
 
     case CCharacter::TYPE_PLAYER:
         {
-            CPlayerCharacter* pPlayerCharacter = (CPlayerCharacter*)pCharacter;
+            const CPlayerCharacter* pPlayerCharacter = static_cast<const CPlayerCharacter*>(pCharacter);
             switch (pPlayerCharacter->GetID())
             {
             case PLAYERID::ID_LEO:
@@ -99,13 +100,9 @@ static void CallObjectHitEffect(const CGameObject* pGameObject, const RwV3d* pvP
     
     switch (pGameObject->GetType())
     {
-    case GAMEOBJECTTYPE::GIMMICK:
-        CallHitEffectCommon(pvPosition, nPower);
-        break;
-        
     case GAMEOBJECTTYPE::CHARACTER:
         {
-            CCharacter* pCharacter = (CCharacter*)pGameObject;
+            const CCharacter* pCharacter = static_cast<const CCharacter*>(pGameObject);
             
             CallCharacterHitEffect(pCharacter, pvPosition, nPower);
         }
@@ -113,17 +110,20 @@ static void CallObjectHitEffect(const CGameObject* pGameObject, const RwV3d* pvP
         
     case GAMEOBJECTTYPE::EFFECT:
         {
-            CEffect* pEffect = (CEffect*)pGameObject;
+            const CEffect* pEffect = static_cast<const CEffect*>(pGameObject);
 
             switch (pEffect->GetEffectType())
             {
             case CEffect::TYPE_WITHHIT:
                 {
-                    CMagic* pMagic = (CMagic*)pEffect;
+                    const CMagic* pMagic = static_cast<const CMagic*>(pEffect);
                     
                     uint32 hParent = pMagic->GetParent();
-                    if (CGameObjectManager::GetObject(hParent))
-                        CallHitEffectCommon(pvPosition, nPower);                    
+                    CGameObject* pParentObj = CGameObjectManager::GetObject(hParent);
+                    if (pParentObj)
+                        CallObjectHitEffect(pParentObj, pvPosition, nPower);
+                    else
+                        CallHitEffectCommon(pvPosition, nPower);
                 }
                 break;
 
@@ -135,6 +135,20 @@ static void CallObjectHitEffect(const CGameObject* pGameObject, const RwV3d* pvP
         break;
         
     case GAMEOBJECTTYPE::SHOT:
+        {
+            const CShot* pShot = static_cast<const CShot*>(pGameObject);
+
+            uint32 hParent = pShot->GetParentHandle();
+
+            CGameObject* pParentObj = CGameObjectManager::GetObject(hParent);
+            if (pParentObj)
+                CallObjectHitEffect(pParentObj, pvPosition, nPower);
+            else
+                CallHitEffectCommon(pvPosition, nPower);
+        }
+        break;
+
+    default:
         CallHitEffectCommon(pvPosition, nPower);
         break;
     };
@@ -157,6 +171,7 @@ namespace EFFECT_GENERIC
             {
                 uint32 hEffect = CEffectManager::Play(EFFECTID::ID_KO_FLASH, pvPosition);
                 ASSERT(hEffect);
+                
                 if (hEffect)
                     CEffectManager::SetScale(hEffect, fScale);
             }
@@ -170,6 +185,7 @@ namespace EFFECT_GENERIC
                 
                 uint32 hMagic = CMagicManager::Play(MAGICID::ID_KO_EXPL, &param);
                 ASSERT(hMagic);
+
                 if (hMagic)
                     CMagicManager::SetScale(hMagic, fScale);
             }
@@ -179,6 +195,7 @@ namespace EFFECT_GENERIC
             {
                 uint32 hEffect = CEffectManager::Play(EFFECTID::ID_KO_SMOKE, pvPosition);
                 ASSERT(hEffect);
+
                 if (hEffect)
                     CEffectManager::SetScale(hEffect, fScale);
             }
@@ -195,36 +212,41 @@ namespace EFFECT_GENERIC
     {
         ASSERT(pvPosition);
         
-        if (attribute == MAPTYPES::ATTRIBUTE_DOBON ||
-            attribute == MAPTYPES::ATTRIBUTE_POISON ||
-            attribute == MAPTYPES::ATTRIBUTE_MAGMA ||
-            attribute == MAPTYPES::ATTRIBUTE_WATER)
+        if ((attribute == MAPTYPES::ATTRIBUTE_DOBON)  ||
+            (attribute == MAPTYPES::ATTRIBUTE_POISON) ||
+            (attribute == MAPTYPES::ATTRIBUTE_MAGMA)  ||
+            (attribute == MAPTYPES::ATTRIBUTE_WATER))
         {
             RwV3d vPosition = *pvPosition;
             CWorldMap::GetWaterSurfacePosition(&vPosition);
             
             uint32 hEffect = CEffectManager::Play(EFFECTID::ID_ALL_W_DOBON, &vPosition, bPlaySound);
             ASSERT(hEffect);
-            CEffectManager::SetScale(hEffect, fScale);
+
+            if (hEffect)
+                CEffectManager::SetScale(hEffect, fScale);
         }
-        else if (attribute == MAPTYPES::ATTRIBUTE_UNKNOWN ||
-                attribute == MAPTYPES::ATTRIBUTE_SNOW ||
-                attribute == MAPTYPES::ATTRIBUTE_SLIP ||
-                attribute == MAPTYPES::ATTRIBUTE_SAND ||
-                attribute == MAPTYPES::ATTRIBUTE_MESH)
+        else if ((attribute == MAPTYPES::ATTRIBUTE_UNKNOWN) ||
+                 (attribute == MAPTYPES::ATTRIBUTE_SNOW)    ||
+                 (attribute == MAPTYPES::ATTRIBUTE_SLIP)    ||
+                 (attribute == MAPTYPES::ATTRIBUTE_SAND)    ||
+                 (attribute == MAPTYPES::ATTRIBUTE_MESH))
         {
             RwV3d vPosition = *pvPosition;
             vPosition.y += 0.2f;
             
             uint32 hEffect = CEffectManager::Play(EFFECTID::ID_ALL_DOWNSMOKE, &vPosition, bPlaySound);
             ASSERT(hEffect);
-            CEffectManager::SetScale(hEffect, fScale);
+
+            if (hEffect)
+                CEffectManager::SetScale(hEffect, fScale);
         };
     };
 
 
     bool IsNeedWaterEffect(MAPTYPES::ATTRIBUTE attribute)
     {
-        return FLAG_TEST_ANY(attribute, MAPTYPES::ATTRIBUTE_WATER | MAPTYPES::ATTRIBUTE_POISON);
+        return ((attribute == MAPTYPES::ATTRIBUTE_WATER) ||
+                (attribute == MAPTYPES::ATTRIBUTE_POISON));
     };
 };

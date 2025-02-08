@@ -13,19 +13,11 @@
 
 namespace Michelangero
 {
-    bool CAttackJump::IsEnableChangeStatus(PLAYERTYPES::STATUS status)
-    {
-        PLAYERTYPES::STATUS aStatusArray[] =
-        {
-            PLAYERTYPES::STATUS_JUMP,
-            PLAYERTYPES::STATUS_JUMP_2ND,
-            PLAYERTYPES::STATUS_JUMP_WALL,
-            PLAYERTYPES::STATUS_AERIAL,
-            PLAYERTYPES::STATUS_AERIAL_MOVE,
-        };
-
-        return IsWithinStatusFromArray(status, aStatusArray, COUNT_OF(aStatusArray));
-    };
+    DEFINE_ENABLED_STATUS_FOR(CAttackJump, { PLAYERTYPES::STATUS_JUMP,
+                                             PLAYERTYPES::STATUS_JUMP_2ND,
+                                             PLAYERTYPES::STATUS_JUMP_WALL,
+                                             PLAYERTYPES::STATUS_AERIAL,
+                                             PLAYERTYPES::STATUS_AERIAL_MOVE });
 
 
     void CAttackJump::OnAttach(void)
@@ -43,21 +35,21 @@ namespace Michelangero
         vAcceleration.y = 19.0f;
         Character().SetAcceleration(&vAcceleration);
 
-        Character().SetCharacterFlag(CHARACTERTYPES::FLAG_FIXED_DIRECTION, false);
-        Character().SetCharacterFlag(CHARACTERTYPES::FLAG_FIXED_MODEL_ROTATION, false);
-        Character().SetPlayerFlag(PLAYERTYPES::FLAG_REQUEST_ATTACK_A, false);
-        Character().SetPlayerFlag(PLAYERTYPES::FLAG_REQUEST_ATTACK_B, false);
-        Character().SetPlayerFlag(PLAYERTYPES::FLAG_REQUEST_ATTACK_C, false);
+        CHARACTERTYPES::FLAG cflag = CHARACTERTYPES::FLAG_FIXED_DIRECTION
+                                   | CHARACTERTYPES::FLAG_FIXED_MODEL_ROTATION;
+        Character().ClearCharacterFlag(cflag);
 
-        CGameSound::PlayAttackSE(m_pPlayerChr);
+        Character().ClearPlayerFlag(PLAYERTYPES::FLAG_REQUEST_ATTACK_MASK);
 
         ClearTimer();
+
+        CGameSound::PlayAttackSE(m_pPlayerChr);
     };
 
 
     void CAttackJump::OnDetach(void)
     {
-        Character().SetCharacterFlag(CHARACTERTYPES::FLAG_MOTION_SPEED_CTRL, false);
+        Character().ClearCharacterFlag(CHARACTERTYPES::FLAG_MOTION_SPEED_CTRL);
     };
 
 
@@ -71,21 +63,17 @@ namespace Michelangero
         Math::Vec3_Add(&vNowVelocity, &vNowVelocity, &vVelocity);
         Character().SetVelocity(&vNowVelocity);        
 
-        if (Character().IsPlayerFlagSet(PLAYERTYPES::FLAG_REQUEST_ATTACK_A) ||
-            Character().IsPlayerFlagSet(PLAYERTYPES::FLAG_REQUEST_ATTACK_B) ||
-            Character().IsPlayerFlagSet(PLAYERTYPES::FLAG_REQUEST_ATTACK_C))
+        if (Character().CheckPlayerFlag(PLAYERTYPES::FLAG_REQUEST_ATTACK_MASK))
         {
             ClearTimer();
-            
+            Character().ClearPlayerFlag(PLAYERTYPES::FLAG_REQUEST_ATTACK_MASK);
+
             RwV3d vAcceleration = Math::VECTOR3_ZERO;
             Character().GetAcceleration(&vAcceleration);
             vAcceleration.y = 19.0f;
             Character().SetAcceleration(&vAcceleration);
 
-            Character().SetCharacterFlag(CHARACTERTYPES::FLAG_MOTION_SPEED_CTRL, false);
-            Character().SetPlayerFlag(PLAYERTYPES::FLAG_REQUEST_ATTACK_A, false);
-            Character().SetPlayerFlag(PLAYERTYPES::FLAG_REQUEST_ATTACK_B, false);
-            Character().SetPlayerFlag(PLAYERTYPES::FLAG_REQUEST_ATTACK_C, false);
+            Character().ClearCharacterFlag(CHARACTERTYPES::FLAG_MOTION_SPEED_CTRL);
         };
 
         if (GetTimer() > 0.2f)
@@ -95,7 +83,7 @@ namespace Michelangero
             vAcceleration.y = 0.0f;
             Character().SetAcceleration(&vAcceleration);
             
-            Character().SetCharacterFlag(CHARACTERTYPES::FLAG_MOTION_SPEED_CTRL, true);
+            Character().SetCharacterFlag(CHARACTERTYPES::FLAG_MOTION_SPEED_CTRL);
             Character().SetMotionSpeed(0.4f);
         };
     };
@@ -139,11 +127,11 @@ namespace Michelangero
 
         MAGIC_GENERIC::ChargeAttackMichelangero(&vPosition, Character().GetDirection(), m_pPlayerChr, step);
     };
-};
+}; /* namespace Michelangero */
 
 
 CMichelangero::CMichelangero(GAMETYPES::COSTUME costume)
-: CPlayerCharacter("Michelangero", PLAYERID::ID_MIC, costume)
+: CPlayerCharacter("michelangero", PLAYERID::ID_MIC, costume)
 {
     //
 	//	Model parts:
@@ -166,8 +154,7 @@ CMichelangero::CMichelangero(GAMETYPES::COSTUME costume)
     parameter.m_feature.m_fAerialAcceleration   = 12.0f;
     parameter.m_feature.m_nKnifeAttachBoneID    = CHARACTERTYPES::BONEID_RIGHT_WRIST;
 
-    parameter.m_pStateMachine = new CPlayerStateMachine(this, PLAYERTYPES::NORMALMAX);
-    ASSERT(parameter.m_pStateMachine);
+    parameter.m_pStateMachine = new CPlayerStateMachine(this, PLAYERTYPES::STATUS::NORMALMAX);
 
     CStatus::RegistDefaultForStateMachine(*parameter.m_pStateMachine);
 
@@ -177,17 +164,15 @@ CMichelangero::CMichelangero(GAMETYPES::COSTUME costume)
 
     Initialize(&parameter);
 
-    m_pModuleMan->Include(CCircleShadowModule::New(this, 1.5f, 1.5f, true));
+    m_pModuleMan->Include(CCircleShadowModule::New(this, 1.5f, 1.5f, false));
 
     if (costume != GAMETYPES::COSTUME_SAMURAI)
     {
-        m_pModuleMan->Include(new CBandanaModule(
-            this,
-            m_pModel,
-            CHARACTERTYPES::BONEID_HEAD,
-            &Michelangero::BANDANA_OFFSET,
-            CBandanaModule::BANDANACOLOR_ORANGE
-        ));
+        m_pModuleMan->Include(new CBandanaModule(this,
+                                                 m_pModel,
+                                                 CHARACTERTYPES::BONEID_HEAD,
+                                                 &Michelangero::BANDANA_OFFSET,
+                                                 CBandanaModule::BANDANACOLOR_ORANGE));
     };
 };
 

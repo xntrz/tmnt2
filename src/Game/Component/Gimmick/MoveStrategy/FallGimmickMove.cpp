@@ -80,5 +80,5 @@ CFallGimmickMove::RESULT CFallGimmickMove::OnMove(float dt)
 void CFallGimmickMove::collisionRadiusAutoChange(void)
 {
     if (m_bColRadiusAutoChangeEnable)
-		m_fCollisionRadius = Clamp(Math::FAbs(m_vVelocity.y) / 98.0f * 1.7f, 0.35f, 1.7f);
+		m_fCollisionRadius = Clamp(std::fabs(m_vVelocity.y) / 98.0f * 1.7f, 0.35f, 1.7f);
 };

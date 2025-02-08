@@ -53,7 +53,7 @@ public:
     void OnAttach(CPlayerCharacter* pBeforeCharacter, bool bChangeEffectEnable);
     void OnDetach(CPlayerCharacter* pAfterCharacter);
     void RotateDirection(float fDirection);
-    void Relocation(const RwV3d* pvPosition, float fDirection, bool bProtect);
+    void Relocation(const RwV3d* pvPosition, float fDirection, bool bBlink);
     void GenerateItemEffect(ITEMID::VALUE idItem);
     void SetPlayerNo(int32 nPlayerNo);
     void SetPadID(int32 nPadID);
@@ -77,18 +77,18 @@ public:
     void RequestAttackA(void);
     void RequestAttackB(void);
     void RequestAttackC(void);
-    void RequestAttackConnect(void);
-    bool CheckAttackConnect(PLAYERTYPES::FLAG playerflag);
-    bool CheckChargeTime(float fTime, PLAYERTYPES::CHARGEPHASE& chargephase);
+    PLAYERTYPES::FLAG CheckAttackConnect(PLAYERTYPES::FLAG mask);
+    bool CheckChargeTime(float fTime, PLAYERTYPES::CHARGEPHASE* chargephase);
     void ClearCharge(void);
-    void ClearSatusParameter(void);
+    void ClearStatusParameter(void);
     void SetDefaultFlags(void);
     void ReplayMotion(void);
-    void SetAerialMotionTime(float fTime);
+    void SetAerialMotionTime(float fMaxSpeed);
     void SetAttributeTime(PLAYERTYPES::ATTRIBUTETIME* pAttributeTime);
     void GetAttributeTime(PLAYERTYPES::ATTRIBUTETIME* pAttributeTime);    
     PLAYERTYPES::STATUS GetStatus(void) const;
     PLAYERTYPES::STATUS GetStatusPrev(void) const;
+    float GetStatusDuration(void) const;
     PLAYERID::VALUE GetID(void) const;
     int32 GetPadID(void) const;
     int32 GetPlayerNo(void) const;
@@ -105,11 +105,16 @@ public:
     CHARACTERTYPES::ATTACKPARAMETER& AttackParameter(void);
     PLAYERTYPES::CHARGEPHASE GetChargePhase(void) const;
 	bool IsEnableChangeStatus(PLAYERTYPES::STATUS status) const;
-	
-	/*inline*/ void SetPlayerFlag(PLAYERTYPES::FLAG flag, bool bSet);
-    /*inline*/ void SetAttributeFlag(PLAYERTYPES::ATTRIBUTE flag, bool bSet);
-    /*inline*/ bool IsPlayerFlagSet(PLAYERTYPES::FLAG flag) const;
-	/*inline*/ bool IsAttributeFlagSet(PLAYERTYPES::ATTRIBUTE flag) const;
+    bool IsActive(void) const;
+    
+    /*inline*/ void SetPlayerFlag(PLAYERTYPES::FLAG flag);
+    /*inline*/ void ClearPlayerFlag(PLAYERTYPES::FLAG flag);
+    /*inline*/ bool TestPlayerFlag(PLAYERTYPES::FLAG flag) const;
+    /*inline*/ bool CheckPlayerFlag(PLAYERTYPES::FLAG flag) const;
+
+    /*inline*/ void SetAttribute(PLAYERTYPES::ATTRIBUTE attribute);
+    /*inline*/ void ClearAttribute(PLAYERTYPES::ATTRIBUTE attribute);
+    /*inline*/ bool TestAttribute(PLAYERTYPES::ATTRIBUTE attribute) const;
 
 	/*inline*/ int32 GetNumWallJump() const;
 
@@ -121,45 +126,56 @@ private:
     int32 m_nPadID;
     int32 m_nNumWallJump;
     CHARACTERTYPES::ATTACKPARAMETER m_attackparameter;
-    uint32 m_attribute;
-    uint32 m_playerflag;
+    PLAYERTYPES::ATTRIBUTE m_attribute;
+    PLAYERTYPES::FLAG m_pflag;
     CPlayerStateMachine* m_pStateMachine;
     PLAYERTYPES::CHARGEPHASE m_chargephase;
     PLAYERTYPES::FEATURE m_feature;
     PLAYERTYPES::STATUS m_lastGrondingStatus;
     RwV3d m_vReplacepoint;
     bool m_bActive;
-    bool m_bClassicInput;
 };
 
 
-inline void CPlayerCharacter::SetPlayerFlag(PLAYERTYPES::FLAG flag, bool bSet)
+inline void CPlayerCharacter::SetPlayerFlag(PLAYERTYPES::FLAG flag)
 {
-	if (bSet)
-		FLAG_SET(m_playerflag, flag);
-	else
-		FLAG_CLEAR(m_playerflag, flag);
+    m_pflag |= flag;
 };
 
 
-inline void CPlayerCharacter::SetAttributeFlag(PLAYERTYPES::ATTRIBUTE flag, bool bSet)
+inline void CPlayerCharacter::ClearPlayerFlag(PLAYERTYPES::FLAG flag)
 {
-	if (bSet)
-		FLAG_SET(m_attribute, flag);
-	else
-		FLAG_CLEAR(m_attribute, flag);
+    m_pflag &= (~flag);
 };
 
 
-inline bool CPlayerCharacter::IsPlayerFlagSet(PLAYERTYPES::FLAG flag) const
+inline bool CPlayerCharacter::TestPlayerFlag(PLAYERTYPES::FLAG flag) const
 {
-	return FLAG_TEST(m_playerflag, flag);
+    return ((m_pflag & flag) == flag);
 };
 
 
-inline bool CPlayerCharacter::IsAttributeFlagSet(PLAYERTYPES::ATTRIBUTE flag) const
+inline bool CPlayerCharacter::CheckPlayerFlag(PLAYERTYPES::FLAG flag) const
 {
-	return FLAG_TEST(m_attribute, flag);
+    return ((m_pflag & flag) != 0);
+};
+
+
+inline void CPlayerCharacter::SetAttribute(PLAYERTYPES::ATTRIBUTE attribute)
+{
+    m_attribute |= attribute;
+};
+
+
+inline void CPlayerCharacter::ClearAttribute(PLAYERTYPES::ATTRIBUTE attribute)
+{
+    m_attribute &= (~attribute);
+};
+
+
+inline bool CPlayerCharacter::TestAttribute(PLAYERTYPES::ATTRIBUTE attribute) const
+{
+    return ((m_attribute & attribute) == attribute);
 };
 
 

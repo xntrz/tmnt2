@@ -183,7 +183,6 @@ namespace EFFECTID
                 return s_aEffectNameList[i].m_idEffect;
         };
 
-        ASSERT(false);
         return ID_UNKNOWN;
     };
 

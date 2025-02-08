@@ -65,7 +65,8 @@ public:
     CAIThinkOrder(void);
     virtual ~CAIThinkOrder(void);
     virtual ORDER GetOrder(void) const;
-    virtual void SetAnswer(RESULT eResult);    
+    virtual RESULT GetAnswer(void) const;
+    virtual void SetAnswer(RESULT eResult);
     virtual ORDERNOTHING& OrderNothing(void);
     virtual ORDERWAIT& OrderWait(void);
     virtual ORDERMOVE& OrderMove(void);
@@ -80,10 +81,10 @@ private:
     union
     {
         ORDERNOTHING m_nothing;
-        ORDERWAIT m_wait;
-        ORDERMOVE m_move;
-        ORDERRUN m_run;
-        ORDERATTACK m_attack;
+        ORDERWAIT    m_wait;
+        ORDERMOVE    m_move;
+        ORDERRUN     m_run;
+        ORDERATTACK  m_attack;
         ORDERDEFENCE m_defence;
     } m_order;
     RESULT m_eResult;

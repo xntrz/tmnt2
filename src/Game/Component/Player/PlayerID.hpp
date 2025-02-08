@@ -30,4 +30,4 @@ namespace PLAYERID
     bool IsImplemented(VALUE idPlayer);
     bool IsEnabled(VALUE idPlayer);
     RwRGBA GetColor(VALUE idPlayer);
-};
+} /* namespace PLAYERID */;

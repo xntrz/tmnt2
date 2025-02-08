@@ -8,7 +8,7 @@
 
 bool CPrintTextSequence::OnAttach(const void* pParam)
 {
-    m_type = int32(pParam);
+    m_type = reinterpret_cast<int32>(pParam);
     
     return true;
 };

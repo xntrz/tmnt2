@@ -5,15 +5,19 @@
 /*static*/ CGameObject* CGameObject::m_pRunningObject = nullptr;
 
 
-CGameObject::CGameObject(const char* pszName, GAMEOBJECTTYPE::VALUE type, const char* pszParentName)
+CGameObject::CGameObject(const char* pszName, GAMEOBJECTTYPE::VALUE type, const char* pszParentName /*= nullptr*/)
 : m_objtype(type)
-, m_objflag(0)
+, m_oflag(GAMEOBJECTTYPES::FLAG_DEFAULT)
 , m_hObject(0)
 {
-    ASSERT(std::strlen(pszName) < COUNT_OF(m_szObjName));
+    ASSERT(type >= 0);
+    ASSERT(type < GAMEOBJECTTYPE::MAX);
 
+    ASSERT(std::strlen(pszName) < COUNT_OF(m_szObjName));
     std::strcpy(m_szObjName, pszName);
+
     m_hObject = CGameObjectManager::RegistObject(this, m_objtype, pszParentName);
+    ASSERT(m_hObject != 0);
 };
 
 
@@ -34,11 +38,14 @@ void CGameObject::MessageProc(int32 nMessageID, void* pParam)
     switch (nMessageID)
     {
     case GAMEOBJECTTYPES::MESSAGEID_SLEEP:
-        SetObjectFlag(GAMEOBJECTTYPES::FLAG_SLEEP, true);
+        SetObjectFlag(GAMEOBJECTTYPES::FLAG_SLEEP);
         break;
         
     case GAMEOBJECTTYPES::MESSAGEID_AWAKE:
-        SetObjectFlag(GAMEOBJECTTYPES::FLAG_SLEEP, false);
+        ClearObjectFlag(GAMEOBJECTTYPES::FLAG_SLEEP);
+        break;
+
+    default:
         break;
     };
 };
@@ -46,27 +53,12 @@ void CGameObject::MessageProc(int32 nMessageID, void* pParam)
 
 void CGameObject::Period(void)
 {
-    if (!IsObjectFlagSet(GAMEOBJECTTYPES::FLAG_SLEEP))
+    if (!TestObjectFlag(GAMEOBJECTTYPES::FLAG_SLEEP))
     {
         m_pRunningObject = this;
         Run();
         m_pRunningObject = nullptr;
     };
-};
-
-
-void CGameObject::SetObjectFlag(GAMEOBJECTTYPES::FLAG flag, bool bSet)
-{
-    if (bSet)
-        FLAG_SET(m_objflag, flag);
-    else
-        FLAG_CLEAR(m_objflag, flag);
-};
-
-
-bool CGameObject::IsObjectFlagSet(GAMEOBJECTTYPES::FLAG flag) const
-{
-    return FLAG_TEST(m_objflag, flag);
 };
 
 
@@ -82,13 +74,31 @@ GAMEOBJECTTYPE::VALUE CGameObject::GetType(void) const
 };
 
 
-GAMEOBJECTTYPES::FLAG CGameObject::GetObjectFlag(void) const
-{
-    return GAMEOBJECTTYPES::FLAG(m_objflag);
-};
-
-
 uint32 CGameObject::GetHandle(void) const
 {
     return m_hObject;
+};
+
+
+void CGameObject::SetObjectFlag(GAMEOBJECTTYPES::FLAG flag)
+{
+    m_oflag |= flag;
+};
+
+
+void CGameObject::ClearObjectFlag(GAMEOBJECTTYPES::FLAG flag)
+{
+    m_oflag &= (~flag);
+};
+
+
+bool CGameObject::TestObjectFlag(GAMEOBJECTTYPES::FLAG flag) const
+{
+    return ((m_oflag & flag) == flag);
+};
+
+
+bool CGameObject::CheckObjectFlag(GAMEOBJECTTYPES::FLAG flag) const
+{
+    return ((m_oflag & flag) != 0);
 };

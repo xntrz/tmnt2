@@ -14,8 +14,8 @@ class CEffect : public CGameObject
 public:
     enum TYPE
     {
-        TYPE_NORMAL = 0,
-        TYPE_WITHHIT,        
+        TYPE_NORMAL = 0,    // CEffect
+        TYPE_WITHHIT,       // CMagic
     };
     
 public:

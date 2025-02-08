@@ -93,6 +93,7 @@ CHitSphereParameter* CCharacterParameter::GetPositionParameter(int32 no)
 {
     CHitSphereParameter* pPosition = m_listPos.search(no);
     ASSERT(pPosition);
+
     return pPosition;
 };
 
@@ -111,10 +112,12 @@ void CCharacterParameter::CreateHitBody(CHitSphereParameter::INIT_PARAMETER* pPa
 
 CHitSphereParameter* CCharacterParameter::GetHitBodyParameter(int32 no)
 {
-    ASSERT(no >= 0 && no < m_nBody);
+    ASSERT(no >= 0);
+    ASSERT(no < m_nBody);
 
     CHitSphereParameter* pBody = m_listBody.search(no);
     ASSERT(pBody);
+    
     return pBody;
 };
 
@@ -139,10 +142,12 @@ void CCharacterParameter::CreateHitCatch(CHitSphereParameter::INIT_PARAMETER* pP
 
 CHitSphereParameter* CCharacterParameter::GetHitCatchParameter(int32 no)
 {
-    ASSERT(no >= 0 && no < m_nCatch);
-    
+    ASSERT(no >= 0);
+    ASSERT(no < m_nCatch);
+
     CHitSphereParameter* pCatch = m_listCatch.search(no);
     ASSERT(pCatch);
+
     return pCatch;
 };
 
@@ -168,10 +173,12 @@ void CCharacterParameter::CreateMotion(CMotionParameter::INIT_PARAMETER* pParam)
 
 const char* CCharacterParameter::GetMotionName(int32 no)
 {
-    ASSERT(no >= 0 && no < m_nMotion);
-    
+    ASSERT(no >= 0);
+    ASSERT(no < m_nMotion);
+
     CMotionParameter* pMotion = m_listMotion.search(no);
     ASSERT(pMotion);
+
     return pMotion->GetName();
 };
 
@@ -267,8 +274,9 @@ void CCharacterParameter::CreateLocus(CLocusParameter::INIT_PARAMETER* pParam)
 void CCharacterParameter::GetLocusParamter(int32 no, CMotionParameterController::LOCUSPARAMETER* pParam)
 {
     ASSERT(pParam);
-    ASSERT(no >= 0 && no < m_nLocus);
-    
+    ASSERT(no >= 0);
+    ASSERT(no < m_nLocus);
+
     CLocusParameter* pLocus = m_listLocus.search(no);
 
     ASSERT(pLocus);
@@ -348,7 +356,8 @@ int32 CCharacterParameter::GetAtomicNum(void) const
 void CCharacterParameter::DestroyHitList(CList<CHitSphereParameter>& rList)
 {
     auto it = rList.begin();
-    while (it)
+    auto itEnd = rList.end();
+    while (it != itEnd)
     {
         CHitSphereParameter* pHit = &(*it);
         it = rList.erase(it);
@@ -361,7 +370,8 @@ void CCharacterParameter::DestroyHitList(CList<CHitSphereParameter>& rList)
 void CCharacterParameter::DestroyLocusList(CList<CLocusParameter>& rList)
 {
     auto it = rList.begin();
-    while (it)
+    auto itEnd = rList.end();
+    while (it != itEnd)
     {
         CLocusParameter* pLocus = &(*it);
         it = rList.erase(it);
@@ -374,7 +384,8 @@ void CCharacterParameter::DestroyLocusList(CList<CLocusParameter>& rList)
 void CCharacterParameter::DestroyMotionList(CList<CMotionParameter>& rList)
 {
     auto it = rList.begin();
-    while (it)
+    auto itEnd = rList.end();
+    while (it != itEnd)
     {
         CMotionParameter* pMotion = &(*it);
         it = rList.erase(it);

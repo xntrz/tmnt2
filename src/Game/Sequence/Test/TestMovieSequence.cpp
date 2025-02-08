@@ -39,7 +39,7 @@ bool CTestMovieSequence::OnAttach(const void* pParam)
     m_menu.DigitalCANCEL(IPad::DIGITAL_SELECT);
 
     for (int32 i = MOVIEID::ID_START; i < MOVIEID::ID_MAX; ++i)
-        m_menu.AddTrigger(CMovieDataManager::GetLabel(i), nullptr); // trigger item index equals to movie id
+        m_menu.AddTrigger(CMovieDataManager::GetLabel(i));
 
     return true;
 };
@@ -59,7 +59,7 @@ void CTestMovieSequence::OnMove(bool bRet, const void* pReturnValue)
     switch (Result)
     {
     case CDebugMenuCtrl::RESULT_OK:
-        Call(PROCLABEL_SEQ_MOVIE, (void*)m_menu.GetSelect());
+        Call(PROCLABEL_SEQ_MOVIE, reinterpret_cast<const void*>(m_menu.GetSelect()));
         break;
 
     case CDebugMenuCtrl::RESULT_CANCEL:

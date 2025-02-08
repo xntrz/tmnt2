@@ -206,11 +206,11 @@ void CEffect::SetDirection(const RwV3d* pvDirection)
     RwV3d vAxisZ = Math::VECTOR3_ZERO;
 
     Math::Vec3_Normalize(&vBuffer, pvDirection);
-    vBuffer.y = Math::FAbs(vBuffer.y);
+    vBuffer.y = std::fabs(vBuffer.y);
     
     if (vBuffer.y > 0.3f)
     {
-        vBuffer.z = Math::FAbs(vBuffer.z);
+        vBuffer.z = std::fabs(vBuffer.z);
         if (vBuffer.z > 0.3f)
             Math::Vec3_Cross(&vAxisX, &Math::VECTOR3_AXIS_X, pvDirection);
         else

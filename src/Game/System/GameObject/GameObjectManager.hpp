@@ -17,6 +17,7 @@ public:
     static void RemoveObject(CGameObject* pObject);
     static void DeleteObject(CGameObject* pObject);
     static CGameObject* GetNext(CGameObject* pObject = nullptr);
+    static CGameObject* GetNext(GAMEOBJECTTYPE::VALUE type, CGameObject* pObject = nullptr);
     static CGameObject* GetObject(uint32 hObject);
     static CGameObject* GetObject(const char* pszName);
 };

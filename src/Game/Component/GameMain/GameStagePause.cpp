@@ -44,6 +44,11 @@ void CDummyStagePause::Draw(void)
 };
 
 
+//
+// *********************************************************************************
+//
+
+
 /*static*/ CMenuStagePause* CMenuStagePause::Instance(void)
 {
     static CMenuStagePause s_MenuStagePause;
@@ -134,7 +139,12 @@ void CMenuStagePause::Draw(void)
 };
 
 
-/*static*/ const CTutorialStagePause::TUTORIALINFO CTutorialStagePause::m_aTutorialMessageInfo[] =
+//
+// *********************************************************************************
+//
+
+
+/*static*/ const CTutorialStagePause::TUTORIALINFO CTutorialStagePause::m_aTutorialMessageInfo [] =
 {
     { GAMETEXT(0x0),     SEGROUPID::VALUE(-1)    },
     { GAMETEXT(0x47B),   SEGROUPID::VALUE(0xA8)  },
@@ -159,21 +169,23 @@ void CMenuStagePause::Draw(void)
 
 void CTutorialStagePause::Start(void* param)
 {
-    int32 nTutoNo = int32(param);
-    ASSERT(nTutoNo >= 0 && nTutoNo < COUNT_OF(m_aTutorialMessageInfo));
-    
-    CVoiceManager::SetVoice(SEGROUPID::VALUE(m_aTutorialMessageInfo[nTutoNo].m_nSeGroup), true);
-    const wchar* pwszText = CGameText::GetText(GAMETEXT(m_aTutorialMessageInfo[nTutoNo].m_nTextID));
+    int32 tutorialNo = reinterpret_cast<int32>(param);
+    ASSERT(tutorialNo >= 0);
+    ASSERT(tutorialNo < COUNT_OF(m_aTutorialMessageInfo));    
 
-    m_fTimer = 1.0f;
-	m_bComplete = false;
+    CVoiceManager::SetVoice(SEGROUPID::VALUE(m_aTutorialMessageInfo[tutorialNo].m_nSeGroup), true);
+
+    const wchar* pwszText = CGameText::GetText(GAMETEXT(m_aTutorialMessageInfo[tutorialNo].m_nTextID));
 
     m_pMsgWnd = new CMessageWindow(CMessageWindow::COLOR_TUTORIAL);
-    ASSERT(m_pMsgWnd);
     m_pMsgWnd->Set(0.0f, 0.0f, 480.0f, 180.0f);
     m_pMsgWnd->SetOpenAction(true);
     m_pMsgWnd->SetText(pwszText, 16.0f, { 0xFF, 0xFF, 0xFF, 0xFF });
     m_pMsgWnd->Open();
+
+    m_fTimer = 1.0f;
+
+    m_bComplete = false;
 };
 
 

@@ -17,7 +17,7 @@
 bool CPCPhyFileAccess::Open(const char* pszFilename)
 {
     bool bResult = false;
-    
+
     void* hFile = RwFopen(pszFilename, "rb");
     if (hFile)
     {

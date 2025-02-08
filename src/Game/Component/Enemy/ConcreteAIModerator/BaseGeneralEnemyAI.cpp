@@ -1,9 +1,16 @@
 #include "BaseGeneralEnemyAI.hpp"
 
+#include "Game/Component/Enemy/EnemyUtils.hpp"
+#include "Game/Component/Enemy/ConcreteEnemyCharacter/BaseGeneralEnemyChr.hpp"
+#include "Game/Component/Enemy/CharacterCompositor.hpp"
+#include "Game/Component/Player/PlayerCharacter.hpp"
 #include "Game/Component/GameMain/GameProperty.hpp"
 #include "Game/Component/GameMain/GamePlayer.hpp"
-#include "Game/Component/Enemy/ConcreteEnemyCharacter/BaseGeneralEnemyChr.hpp"
-#include "Game/Component/Player/PlayerCharacter.hpp"
+
+#ifdef _DEBUG
+#include "Game/Component/Enemy/EnemyDebug.hpp"
+#include "Game/System/Misc/DebugShape.hpp"
+#endif /* _DEBUG */
 
 
 namespace AIOT
@@ -16,19 +23,28 @@ namespace AIOT
 
     int32 Get(int32 type)
     {
-        return (type & 0x7FFFFFFF);
+        static_assert(~AIOT::TargetNo == 0x7FFFFFFF, "checkout");
+
+        return (type & (~AIOT::TargetNo));
     };
 
 
     int32 GetTarget(int32 type)
     {
-        return (type & 0x80000000);
+        static_assert(AIOT::TargetNo == 0x80000000, "checkout");
+
+        return (type & AIOT::TargetNo);
     };
 
 
-    void SetThinkOrder(CAIThinkOrder& rAIThinkOrder, CAIThinkOrder::ORDER eOrder, int32 eTypeIdx, float fTimer, RwV3d* pvVec)
+    void SetThinkOrder(CAIThinkOrder& rAIThinkOrder,
+                       CAIThinkOrder::ORDER eOrder,
+                       int32 eTypeIdx,
+                       float fTimer,
+                       RwV3d* pvVec /*= nullptr*/)
     {
         RwV3d vAt = Math::VECTOR3_ZERO;
+
         if (pvVec)
             vAt = *pvVec;
 
@@ -49,7 +65,8 @@ namespace AIOT
             
         case CAIThinkOrder::ORDER_MOVE:
             {
-                ASSERT((eTypeIdx >= AIOT::TYPE::MoveTurn) && (eTypeIdx <= AIOT::TYPE::MoveJump));
+                ASSERT(eTypeIdx >= AIOT::MoveTurn);
+                ASSERT(eTypeIdx <= AIOT::MoveJump);
 
                 CAIThinkOrder::ORDERMOVE& move = rAIThinkOrder.OrderMove();
                 move.m_vAt          = vAt;
@@ -68,7 +85,8 @@ namespace AIOT
 
         case CAIThinkOrder::ORDER_ATTACK:
             {
-                ASSERT((eTypeIdx >= AIOT::TYPE::AttackA) && (eTypeIdx <= AIOT::TYPE::FireRepeatC));
+                ASSERT(eTypeIdx >= AIOT::AttackA);
+                ASSERT(eTypeIdx <= AIOT::FireRepeatC);
 
                 CAIThinkOrder::ORDERATTACK& attack = rAIThinkOrder.OrderAttack();
                 attack.m_vAt            = vAt;
@@ -83,7 +101,11 @@ namespace AIOT
     };
 
 
-    void SetThinkOrder(CAIThinkOrder& rAIThinkOrder, CAIThinkOrder::ORDER eOrder, int32 eTypeIdx, float fTimer, int32 iNumber)
+    void SetThinkOrder(CAIThinkOrder& rAIThinkOrder,
+                       CAIThinkOrder::ORDER eOrder,
+                       int32 eTypeIdx,
+                       float fTimer,
+                       int32 iNumber)
     {
         rAIThinkOrder.SetOrder(eOrder);
         rAIThinkOrder.SetAnswer(CAIThinkOrder::RESULT_WAITING);
@@ -96,19 +118,20 @@ namespace AIOT
                 wait.m_vAt          = Math::VECTOR3_ZERO;
                 wait.m_fWaitTimer   = fTimer;
                 wait.m_iPlayerNo    = iNumber;
-                wait.m_iWaitType    = Set(eTypeIdx, 0x80000000);
+                wait.m_iWaitType    = Set(eTypeIdx, AIOT::TargetNo);
             }
             break;
             
         case CAIThinkOrder::ORDER_MOVE:
             {
-                ASSERT((eTypeIdx >= AIOT::TYPE::MoveTurn) && (eTypeIdx <= AIOT::TYPE::MoveJump));
+                ASSERT(eTypeIdx >= AIOT::MoveTurn);
+                ASSERT(eTypeIdx <= AIOT::MoveJump);
 
                 CAIThinkOrder::ORDERMOVE& move = rAIThinkOrder.OrderMove();
                 move.m_vAt          = Math::VECTOR3_ZERO;
                 move.m_fMoveTimer   = fTimer;
                 move.m_iPlayerNo    = iNumber;
-                move.m_iMoveType    = Set(eTypeIdx, 0x80000000);
+                move.m_iMoveType    = Set(eTypeIdx, AIOT::TargetNo);
             }
             break;
 
@@ -121,12 +144,13 @@ namespace AIOT
 
         case CAIThinkOrder::ORDER_ATTACK:
             {
-                ASSERT((eTypeIdx >= AIOT::TYPE::AttackA) && (eTypeIdx <= AIOT::TYPE::FireRepeatC));
+                ASSERT(eTypeIdx >= AIOT::AttackA);
+                ASSERT(eTypeIdx <= AIOT::Special1);
 
                 CAIThinkOrder::ORDERATTACK& attack = rAIThinkOrder.OrderAttack();
                 attack.m_vAt            = Math::VECTOR3_ZERO;
                 attack.m_iPlayerNo      = iNumber;
-                attack.m_iAttackType    = Set(eTypeIdx, 0x80000000);
+                attack.m_iAttackType    = Set(eTypeIdx, AIOT::TargetNo);
             }
             break;
 
@@ -136,13 +160,13 @@ namespace AIOT
     };
 
 
-    void SetWaitOrder(CAIThinkOrder& rAIThinkOrder, float fTimer, RwV3d* pvVec)
+    void SetWaitOrder(CAIThinkOrder& rAIThinkOrder, float fTimer, RwV3d* pvVec /*= nullptr*/)
     {
-        SetThinkOrder(rAIThinkOrder, CAIThinkOrder::ORDER_WAIT, 0, fTimer, pvVec);
+        SetThinkOrder(rAIThinkOrder, CAIThinkOrder::ORDER_WAIT, AIOT::Null, fTimer, pvVec);
     };
 
 
-    void SetMoveOrder(CAIThinkOrder& rAIThinkOrder, int32 typeIdx, float fTimer, RwV3d* pvVec)
+    void SetMoveOrder(CAIThinkOrder& rAIThinkOrder, int32 typeIdx, float fTimer, RwV3d* pvVec /*= nullptr*/)
     {
         SetThinkOrder(rAIThinkOrder, CAIThinkOrder::ORDER_MOVE, typeIdx, fTimer, pvVec);
     };
@@ -160,9 +184,11 @@ namespace AIOT
     };
 
 
-    void SetFireOrder(CAIThinkOrder& rAIThinkOrder, int32 typeIdx, int32 iNumber, RwV3d* pvVec)
+    void SetFireOrder(CAIThinkOrder& rAIThinkOrder, int32 typeIdx, int32 iNumber, RwV3d* pvVec /*= nullptr*/)
     {
-        SetThinkOrder(rAIThinkOrder, CAIThinkOrder::ORDER_ATTACK, typeIdx, 0.0f, pvVec);
+        SetThinkOrder(rAIThinkOrder, CAIThinkOrder::ORDER_ATTACK, typeIdx, 0.0f, iNumber);
+		if (pvVec)
+			rAIThinkOrder.OrderAttack().m_vAt = *pvVec;
     };
 
 
@@ -176,44 +202,74 @@ namespace AIOT
     {
         SetThinkOrder(rAIThinkOrder, CAIThinkOrder::ORDER_NOTHING, 0, 0.0f, nullptr);
     };
+
+    
+    void SetRunOrder(CAIThinkOrder& rAIThinkOrder, RwV3d* pvAt)
+    {
+        ASSERT(pvAt != nullptr);
+        SetThinkOrder(rAIThinkOrder, CAIThinkOrder::ORDER_RUN, AIOT::Null, 0.0f, pvAt);
+    };
 }; /* namespace AIOT */
+
+
+//
+// *********************************************************************************
+//
 
 
 /*static*/ const float CTarget::HateMax = 1.0f;
 
 
-float CTarget::ICalcHateOfGeometry::Importance(void)
+/*virtual*/ float CTarget::ICalcHateOfGeometry::Importance(void) /*override*/
 {
     return HateMax;
 };
 
 
-float CTarget::ICalcHateOfGeometry::Get(int32 iNo, ReferenceInfo& rReferenceInfo)
+/*virtual*/ float CTarget::ICalcHateOfGeometry::Get(int32 iNo, ReferenceInfo& rReferenceInfo) /*override*/
 {
-    CPlayerCharacter* pPlayerCharacter = CAIUtils::GetActivePlayer(iNo);
-    if (!pPlayerCharacter)
+    CPlayerCharacter* pPlayerChr = CAIUtils::GetActivePlayer(iNo);
+    if (!pPlayerChr)
         return 0.0f;
 
-    RwV3d vPosition = Math::VECTOR3_ZERO;
-    pPlayerCharacter->GetFootPosition(&vPosition);
+    RwV3d vPlayerPos = Math::VECTOR3_ZERO;
+    pPlayerChr->GetFootPosition(&vPlayerPos);
 
-    CBaseGeneralEnemyChr* pBaseGeneralEnemyChr = static_cast<CBaseGeneralEnemyChr*>(rReferenceInfo.m_pEnemyCharacter);
-    CCharacterCompositor& rCharaterCompositor = pBaseGeneralEnemyChr->CharacterCompositor();
+    if (!CAIUtils::IsObjectViewArea(rReferenceInfo.m_pEnemyCharacter, &vPlayerPos))
+        return 0.0f;
 
-    /* TODO CEnemyUtils */
-    /* TODO CAIUtils */
+    CEnemyCharacter* pEnemyChr = rReferenceInfo.m_pEnemyCharacter;
+    CCharacterCompositor* pChrCompositor = &pEnemyChr->Compositor();
 
-    return 0.0f;
+    RwV3d vEnemyPos = Math::VECTOR3_ZERO;
+    pChrCompositor->GetPosition(&vEnemyPos);
+
+    if (!CAIUtils::IsInsidePatrolArea(&vEnemyPos, &pEnemyChr->Feature()))
+        return 0.0f;
+
+    float fDistance = CEnemyUtils::GetDistance(pChrCompositor, &vPlayerPos);
+    float fRadiusOfAction = pEnemyChr->AICharacteristic().m_fRadiusOfAction;
+    if (fDistance > fRadiusOfAction)
+        return 0.0f;
+
+    ASSERT(fRadiusOfAction > 0.0f);
+
+    return (1.0f - (fDistance / fRadiusOfAction));
 };
 
 
-float CTarget::ICalcHateOfCollision::Importance(void)
+//
+// *********************************************************************************
+//
+
+
+/*virtual*/ float CTarget::ICalcHateOfCollision::Importance(void) /*override*/
 {
     return HateMax;
 };
 
 
-float CTarget::ICalcHateOfCollision::Get(int32 iNo, ReferenceInfo& rReferenceInfo)
+/*virtual*/ float CTarget::ICalcHateOfCollision::Get(int32 iNo, ReferenceInfo& rReferenceInfo) /*override*/
 {
     CPlayerCharacter* pPlayerCharacter = CAIUtils::GetActivePlayer(iNo);
     if (!pPlayerCharacter)
@@ -229,67 +285,83 @@ float CTarget::ICalcHateOfCollision::Get(int32 iNo, ReferenceInfo& rReferenceInf
     case CBaseGeneralEnemyChr::MOVABLETYPE_JUMP:
     case CBaseGeneralEnemyChr::MOVABLETYPE_POSSIBLE:
         return 1.0f;
+
+    default:
+        break;
     };
 
     return 0.0f;
 };
 
 
-float CTarget::ICalcHateOfTargetDamaged::Importance(void)
+//
+// *********************************************************************************
+//
+
+
+/*virtual*/ float CTarget::ICalcHateOfTargetDamaged::Importance(void) /*override*/
 {
     return (HateMax * 0.5f);
 };
 
 
-float CTarget::ICalcHateOfTargetDamaged::Get(int32 iNo, ReferenceInfo& rReferenceInfo)
+/*virtual*/ float CTarget::ICalcHateOfTargetDamaged::Get(int32 iNo, ReferenceInfo& rReferenceInfo) /*override*/
 {
     CPlayerCharacter* pPlayerCharacter = CAIUtils::GetActivePlayer(iNo);
     if (!pPlayerCharacter)
         return 0.0f;
 
-    int32 playerNum = CGameProperty::GetPlayerNum();
-    int32 totalDamage = 0;
+    int32 totalDamage = 1;
 
-    for (int32 i = 1; i < playerNum; ++i)
+    int32 playerNum = CGameProperty::GetPlayerNum();
+    for (int32 i = 0; i < playerNum; ++i)
     {
         IGamePlayer* pPlayer = CGameProperty::Player(i);
         if (pPlayer->IsAlive())
             totalDamage += pPlayer->GetDamage();
     };
 
-    /* TODO test it */
-    return static_cast<float>((CGameProperty::GetGamePlayer(iNo)->GetDamage() + 1) / totalDamage);
+    return static_cast<float>(CGameProperty::GetGamePlayer(iNo)->GetDamage() + 1) / static_cast<float>(totalDamage);
 };
 
 
-float CTarget::ICalcHateOfDamageAccumulation::Importance(void)
+//
+// *********************************************************************************
+//
+
+
+/*virtual*/ float CTarget::ICalcHateOfDamageAccumulation::Importance(void) /*override*/
 {
     return (HateMax * 0.5f);
 };
 
 
-float CTarget::ICalcHateOfDamageAccumulation::Get(int32 iNo, ReferenceInfo& rReferenceInfo)
+/*virtual*/ float CTarget::ICalcHateOfDamageAccumulation::Get(int32 iNo, ReferenceInfo& rReferenceInfo) /*override*/
 {
     CBaseGeneralEnemyChr* pBaseGeneralEnemyChr = static_cast<CBaseGeneralEnemyChr*>(rReferenceInfo.m_pEnemyCharacter);
 
-    int32 totalDamage = 0;
-    int32 playerNum = CGameProperty::GetPlayerNum();
+    int32 totalDamage = 1;
 
+    int32 playerNum = CGameProperty::GetPlayerNum();
     for (int32 i = 0; i < playerNum; ++i)
         totalDamage += pBaseGeneralEnemyChr->GetDamageAccumulation(i);
-
-    /* TODO test it */
-    return static_cast<float>((pBaseGeneralEnemyChr->GetDamageAccumulation(iNo) + 1) / totalDamage);
+    
+    return static_cast<float>(pBaseGeneralEnemyChr->GetDamageAccumulation(iNo) + 1) / static_cast<float>(totalDamage);
 };
 
 
-float CTarget::ICalcHateOfTurtleCharacteristic::Importance(void)
+//
+// *********************************************************************************
+//
+
+
+/*virtual*/ float CTarget::ICalcHateOfTurtleCharacteristic::Importance(void) /*override*/
 {
     return (HateMax * 0.3f);
 };
 
 
-float CTarget::ICalcHateOfTurtleCharacteristic::Get(int32 iNo, ReferenceInfo& rReferenceInfo)
+/*virtual*/ float CTarget::ICalcHateOfTurtleCharacteristic::Get(int32 iNo, ReferenceInfo& rReferenceInfo) /*override*/
 {
     CPlayerCharacter* pPlayerCharacter = CAIUtils::GetActivePlayer(iNo);
     if (!pPlayerCharacter)
@@ -305,8 +377,6 @@ float CTarget::ICalcHateOfTurtleCharacteristic::Get(int32 iNo, ReferenceInfo& rR
         return 0.8f;
 
     case PLAYERID::ID_MIC:
-    case PLAYERID::ID_CAS:
-    case PLAYERID::ID_KAR:
         return 0.9f;
 
     case PLAYERID::ID_DON:
@@ -315,7 +385,17 @@ float CTarget::ICalcHateOfTurtleCharacteristic::Get(int32 iNo, ReferenceInfo& rR
     case PLAYERID::ID_SLA:
         return 0.1f;
 
+    case PLAYERID::ID_CAS:
+        return 0.9f;
+
+    case PLAYERID::ID_KAR:
+        return 0.9f;
+
+    case PLAYERID::ID_SPL:
+        return 1.0f;
+
     default:
+        ASSERT(false);
         break;
     };
 
@@ -323,13 +403,18 @@ float CTarget::ICalcHateOfTurtleCharacteristic::Get(int32 iNo, ReferenceInfo& rR
 };
 
 
-float CTarget::ICalcHateOfTurtleStatus::Importance(void)
+//
+// *********************************************************************************
+//
+
+
+/*virtual*/ float CTarget::ICalcHateOfTurtleStatus::Importance(void) /*override*/
 {
     return (HateMax * 0.3f);
 };
 
 
-float CTarget::ICalcHateOfTurtleStatus::Get(int32 iNo, ReferenceInfo& rReferenceInfo)
+/*virtual*/ float CTarget::ICalcHateOfTurtleStatus::Get(int32 iNo, ReferenceInfo& rReferenceInfo) /*override*/
 {
     CPlayerCharacter* pPlayerCharacter = CAIUtils::GetActivePlayer(iNo);
     if (!pPlayerCharacter)
@@ -345,13 +430,13 @@ float CTarget::ICalcHateOfTurtleStatus::Get(int32 iNo, ReferenceInfo& rReference
             return 1.0f;
     };
 
-    const uint32 stateFlag =  CAIUtils::PLAYER_STATE_ATTACK
-                            | CAIUtils::PLAYER_STATE_AERIAL
-                            | CAIUtils::PLAYER_STATE_DOWN
-                            | CAIUtils::PLAYER_STATE_UNUSUAL
-                            | CAIUtils::PLAYER_STATE_KNIFE;
+    CAIUtils::PLAYER_STATE_FLAG stateFlag = CAIUtils::PLAYER_STATE_ATTACK
+                                          | CAIUtils::PLAYER_STATE_AERIAL
+                                          | CAIUtils::PLAYER_STATE_DOWN
+                                          | CAIUtils::PLAYER_STATE_UNUSUAL
+                                          | CAIUtils::PLAYER_STATE_KNIFE;
 
-    static_assert(stateFlag == 0x7C, "update me");
+    ASSERT(stateFlag == 0x7C, "update me");
 
     if (!(CAIUtils::GetPlayerStateFlag(eStatus) & stateFlag))
         return 1.0f;
@@ -360,16 +445,26 @@ float CTarget::ICalcHateOfTurtleStatus::Get(int32 iNo, ReferenceInfo& rReference
 };
 
 
-float CTarget::ICalcHateOfRandom::Importance(void)
+//
+// *********************************************************************************
+//
+
+
+/*virtual*/ float CTarget::ICalcHateOfRandom::Importance(void) /*override*/
 {
     return (HateMax * 0.3f);
 };
 
 
-float CTarget::ICalcHateOfRandom::Get(int32 iNo, ReferenceInfo& rReferenceInfo)
+/*virtual*/ float CTarget::ICalcHateOfRandom::Get(int32 iNo, ReferenceInfo& rReferenceInfo) /*override*/
 {
     return Math::RandFloat();
 };
+
+
+//
+// *********************************************************************************
+//
 
 
 CTarget::CTarget(int32 iNo)
@@ -381,10 +476,11 @@ CTarget::CTarget(int32 iNo)
 };
 
 
-CTarget::~CTarget(void)
+/*virtual*/ CTarget::~CTarget(void)
 {
     auto it = m_listRoot.begin();
-    while (it != m_listRoot.end())
+    auto itEnd = m_listRoot.end();
+    while (it != itEnd)
     {
         ICalcHate* pCalcHate = &(*it);
         ++it;
@@ -394,12 +490,12 @@ CTarget::~CTarget(void)
 };
 
 
-void CTarget::Update(ICalcHate::ReferenceInfo& rReferenceInfo)
+/*virtual*/ void CTarget::Update(ICalcHate::ReferenceInfo& rReferenceInfo)
 {
     float fHateMax = 0.0f;
     float fHate = 0.0f;
 
-    for (auto& it : m_listRoot)
+    for (ICalcHate& it : m_listRoot)
     {
         float fHateOne = it.Get(m_iNumber, rReferenceInfo) * it.Importance();
 
@@ -417,7 +513,7 @@ void CTarget::Update(ICalcHate::ReferenceInfo& rReferenceInfo)
 };
 
 
-void CTarget::Regist(ICalcHate* pCalcHate)
+/*virtual*/ void CTarget::Regist(ICalcHate* pCalcHate)
 {
     ASSERT(pCalcHate);
     ASSERT(m_listRoot.contains(pCalcHate) == false);
@@ -426,7 +522,7 @@ void CTarget::Regist(ICalcHate* pCalcHate)
 };
 
 
-void CTarget::Remove(ICalcHate* pCalcHate)
+/*virtual*/ void CTarget::Remove(ICalcHate* pCalcHate)
 {
     ASSERT(pCalcHate);
     ASSERT(m_listRoot.contains(pCalcHate) == true);
@@ -435,16 +531,21 @@ void CTarget::Remove(ICalcHate* pCalcHate)
 };
 
 
-int32 CTarget::GetNumber(void) const
+/*virtual*/ int32 CTarget::GetNumber(void) const
 {
     return m_iNumber;
 };
 
 
-float CTarget::GetHate(void) const
+/*virtual*/ float CTarget::GetHate(void) const
 {
     return m_fHate;
 };
+
+
+//
+// *********************************************************************************
+//
 
 
 CTargetCoordinator::CTargetCoordinator(void)
@@ -463,10 +564,11 @@ CTargetCoordinator::CTargetCoordinator(void)
 };
 
 
-CTargetCoordinator::~CTargetCoordinator(void)
+/*virtual*/ CTargetCoordinator::~CTargetCoordinator(void)
 {
     auto it = m_listRoot.begin();
-    while (it != m_listRoot.end())
+    auto itEnd = m_listRoot.end();
+    while (it != itEnd)
     {
         CTarget* pTarget = &(*it);
         ++it;
@@ -476,23 +578,23 @@ CTargetCoordinator::~CTargetCoordinator(void)
 };
 
 
-void CTargetCoordinator::SetReferenceInfo(CTarget::ICalcHate::ReferenceInfo& rReferenceInfo)
+/*virtual*/ void CTargetCoordinator::SetReferenceInfo(CTarget::ICalcHate::ReferenceInfo& rReferenceInfo)
 {
     m_referenceInfo = rReferenceInfo;
 };
 
 
-void CTargetCoordinator::Update(void)
+/*virtual*/ void CTargetCoordinator::Update(void)
 {
-    if (!m_bPermission)
+    if (!CanTheTargetBeChanged())
         return;
 
-    m_pBeforeTarget = m_pCurrentTarget;
+    m_pBeforeTarget  = m_pCurrentTarget;
     m_pCurrentTarget = nullptr;
 
     float fHate = 0.0f;
 
-    for (auto& it : m_listRoot)
+    for (CTarget& it : m_listRoot)
     {
         it.Update(m_referenceInfo);
         if (it.GetHate() > fHate)
@@ -509,7 +611,7 @@ bool CTargetCoordinator::RegistForHateCalculator(int32 iTarget, CTarget::ICalcHa
     ASSERT(iTarget < MaxTarget());
     ASSERT(pCalcHate);
 
-    for (auto& it : m_listRoot)
+    for (CTarget& it : m_listRoot)
     {
         if (it.GetNumber() == iTarget)
         {
@@ -540,8 +642,19 @@ bool CTargetCoordinator::CanTheTargetBeChanged(void) const
 };
 
 
-CTargetInfo::CTargetInfo(CEnemyCharacter& rEnemyCharacter)
-: m_rEnemyCharacter(rEnemyCharacter)
+void CTargetCoordinator::SetPermission(bool bState)
+{
+    m_bPermission = bState;
+};
+
+
+//
+// *********************************************************************************
+//
+
+
+CTargetInfo::CTargetInfo(CEnemyCharacter* pEnemyChr)
+: m_pEnemyChr(pEnemyChr)
 , m_bExist(false)
 , m_iNo(0)
 , m_fDistance(0.0f)
@@ -552,13 +665,13 @@ CTargetInfo::CTargetInfo(CEnemyCharacter& rEnemyCharacter)
 };
 
 
-CTargetInfo::~CTargetInfo(void)
+/*virtual*/ CTargetInfo::~CTargetInfo(void)
 {
     ;
 };
 
 
-void CTargetInfo::Update(void)
+/*virtual*/ void CTargetInfo::Update(void)
 {
     if (m_bExist)
     {
@@ -566,12 +679,22 @@ void CTargetInfo::Update(void)
         if (!pPlayerChr)
             return;
 
-        RwV3d vPosition = Math::VECTOR3_ZERO;
-        pPlayerChr->GetFootPosition(&vPosition);
+        RwV3d vPlayerPos = Math::VECTOR3_ZERO;
+        pPlayerChr->GetFootPosition(&vPlayerPos);
+        vPlayerPos.y = 0.0f;
 
-        vPosition.y = 0.0f;
+        RwV3d vEnemyPos = Math::VECTOR3_ZERO;
+        m_pEnemyChr->Compositor().GetFootPosition(&vEnemyPos);
+        vEnemyPos.y = 0.0f;
 
-        /* TODO CEnemyUtils */
+        if (Math::FEqual(vEnemyPos.x, vPlayerPos.x) &&
+            Math::FEqual(vEnemyPos.z, vPlayerPos.z))
+            m_fAngle = (m_pEnemyChr->Compositor().GetDirection());
+        else
+            m_fAngle = CEnemyUtils::GetDirection(&vEnemyPos, &vPlayerPos);
+
+        m_fDistance = CEnemyUtils::GetDistance(&vEnemyPos, &vPlayerPos);
+        m_eState = CAIUtils::GetPlayerStateFlag(pPlayerChr->GetStatus());
     }
     else
     {
@@ -582,7 +705,7 @@ void CTargetInfo::Update(void)
 };
 
 
-void CTargetInfo::Set(int32 iNo)
+/*virtual*/ void CTargetInfo::Set(int32 iNo)
 {
     if (CAIUtils::GetActivePlayer(iNo))
     {
@@ -599,7 +722,7 @@ void CTargetInfo::Set(int32 iNo)
 };
 
 
-void CTargetInfo::Reset(void)
+/*virtual*/ void CTargetInfo::Reset(void)
 {
     m_iNo = 0;
     m_bExist = false;
@@ -608,7 +731,7 @@ void CTargetInfo::Reset(void)
 };
 
 
-int32 CTargetInfo::Get(void) const
+/*virtual*/ int32 CTargetInfo::Get(void) const
 {
     if (!m_bExist)
         return -1;
@@ -622,57 +745,790 @@ int32 CTargetInfo::Get(void) const
 };
 
 
-float CTargetInfo::GetDistance(void) const
+/*virtual*/ float CTargetInfo::GetDistance(void) const
 {
     return m_fDistance;
 };
 
 
-float CTargetInfo::GetAngle(void) const
+/*virtual*/ float CTargetInfo::GetAngle(void) const
 {
     return m_fAngle;
 };
 
 
-CAIUtils::PLAYER_STATE_FLAG CTargetInfo::GetState(void) const
+/*virtual*/ CAIUtils::PLAYER_STATE_FLAG CTargetInfo::GetState(void) const
 {
     return m_eState;
 };
 
 
-bool CTargetInfo::TestState(CAIUtils::PLAYER_STATE_FLAG eFlag) const
+/*virtual*/ bool CTargetInfo::TestState(CAIUtils::PLAYER_STATE_FLAG eFlag) const
 {
-    return (m_eState & eFlag) != 0;
+    return ((m_eState & eFlag) != 0);
 };
 
 
+//
+// *********************************************************************************
+//
+
+
 CSpecialityConsider::CSpecialityConsider(void)
-: m_pEnemyCharacter(nullptr)
+: m_pEnemyChr(nullptr)
 , m_state(0)
 {
     ;
 };
 
 
-CSpecialityConsider::~CSpecialityConsider(void)
+/*virtual*/ CSpecialityConsider::~CSpecialityConsider(void)
 {
     ;
 };
 
 
-void CSpecialityConsider::Update(void)
+/*virtual*/ void CSpecialityConsider::Update(void)
 {
+    m_state = 0;
 
+    if (!m_pEnemyChr)
+        return;
+
+    ENEMYTYPES::STATUS status = m_pEnemyChr->GetStatus();
+
+    if ((status == ENEMYTYPES::STATUS_GETUP) ||
+        ((status > ENEMYTYPES::STATUS_CRASHWALL_TOUCHDOWN_BACK) && (status <= ENEMYTYPES::STATUS_DEATH)))
+    {
+        m_state |= STATE_FLAG_DOWN;
+    };
+
+    CAIThinkOrder& AIThinkOrder = m_pEnemyChr->AIThinkOrder();
+    if (AIThinkOrder.GetOrder() == CAIThinkOrder::ORDER_MOVE)
+    {
+        int32 moveType = AIThinkOrder.OrderMove().m_iMoveType;
+        int32 moveId = AIOT::Get(moveType);
+
+        if (moveId == AIOT::MoveRun)
+            m_state |= STATE_FLAG_RUN;
+        else if(moveId == AIOT::MoveWalk)
+            m_state |= STATE_FLAG_WALK;
+    };
 };
 
 
-void CSpecialityConsider::SetEnemyCharacter(const CEnemyCharacter* pEnemyCharacter)
+/*virtual*/ void CSpecialityConsider::SetEnemyCharacter(const CEnemyCharacter* pEnemyChr)
 {
-    m_pEnemyCharacter = pEnemyCharacter;
+    m_pEnemyChr = pEnemyChr;
+    Update();
 };
 
 
-bool CSpecialityConsider::TestState(uint32 state)
+/*virtual*/ bool CSpecialityConsider::TestState(uint32 state)
 {
     return (m_state & state) != 0;
+};
+
+
+//
+// *********************************************************************************
+//
+
+
+/*static*/ CBaseGeneralEnemyAIModerator::SUITABLEDISTANCE
+CBaseGeneralEnemyAIModerator::GetDistanceOfSuitable(float fDistance, float fDistanceOfSuitable)
+{
+    if (fDistance < (fDistanceOfSuitable - 1.0f))
+        return SUITABLEDISTANCE_INNER;
+
+    if (fDistance > (fDistanceOfSuitable + 1.0f))
+        return SUITABLEDISTANCE_OUTER;
+
+    return SUITABLEDISTANCE_EQUAL;
+};
+
+
+CBaseGeneralEnemyAIModerator::CBaseGeneralEnemyAIModerator(CEnemyCharacter* pEnemyChr)
+: CAIModerator(pEnemyChr)
+, m_targetCoordinator()
+, m_targetInfo(pEnemyChr)
+, m_pSpecialityConsider(reinterpret_cast<CSpecialityConsider*>(pEnemyChr->SharedData()))
+, m_fThinkElapseTime(0.0f)
+, m_fThinkBeforeTime(0.0f)
+, m_bActionRun(false)
+{
+    CTarget::ICalcHate::ReferenceInfo refInfo;
+    refInfo.m_pEnemyCharacter = pEnemyChr;
+    refInfo.m_pAIModerator = this;
+
+    m_targetCoordinator.SetReferenceInfo(refInfo);
+
+    ThinkOrder().SetOrder(CAIThinkOrder::ORDER_NOTHING);
+    ThinkOrder().SetAnswer(CAIThinkOrder::RESULT_WAITING);
+
+    if (m_pSpecialityConsider)
+        m_pSpecialityConsider->SetEnemyCharacter(pEnemyChr);
+
+    float fElapsedFrames = (1.0f / CGameProperty::GetElapsedTime());
+    m_fThinkElapseTime = 1.0f / (fElapsedFrames * Characteristic().m_fThinkingFrequency);
+};
+
+
+CBaseGeneralEnemyAIModerator::~CBaseGeneralEnemyAIModerator(void)
+{
+    ;
+};
+
+
+void CBaseGeneralEnemyAIModerator::Run(void)
+{
+    m_fTimer += CGameProperty::GetElapsedTime();
+
+    m_targetInfo.Update();
+
+    if (m_pSpecialityConsider)
+    {
+        m_pSpecialityConsider->Update();
+        if (m_pSpecialityConsider->TestState(CSpecialityConsider::STATE_FLAG_DOWN))
+            m_targetInfo.Reset();
+    };
+
+    CAIThinkOrder::RESULT answer = ThinkOrder().GetAnswer();
+    switch (answer)
+    {
+    case CAIThinkOrder::RESULT_WAITING:
+        if (EnableThinking())
+        {
+            UNDERACTION underAction = UnderThinking();
+            if (underAction == UNDERACTIONS_THINKOVER)
+                Thinking();
+        };
+        break;
+
+    case CAIThinkOrder::RESULT_ACCEPT:
+        Thinking();
+        break;
+
+    case CAIThinkOrder::RESULT_REFUSE:
+        m_targetInfo.Reset();
+        Thinking();
+        break;
+
+    default:
+        ASSERT(false);
+        ThinkOrder().SetAnswer(CAIThinkOrder::RESULT_WAITING);
+        break;
+    };
+};
+
+
+void CBaseGeneralEnemyAIModerator::Draw(void)
+{
+    CAIModerator::Draw();
+#ifdef _DEBUG
+    DebugDrawPatrolArea();
+    DebugDrawSuitableArea();
+    DebugDrawInfo();
+    DebugDrawViewArea();
+#endif /* _DEBUG */
+};
+
+
+CBaseGeneralEnemyAIModerator::UNDERACTION CBaseGeneralEnemyAIModerator::OnUnderMove(void)
+{
+    UNDERACTION underAction = OnUnderWait();
+    if (underAction)
+        return underAction;
+
+    ENEMYTYPES::STATUS status = EnemyCharacter().GetStatus();
+    if ((status < ENEMYTYPES::STATUS_TURN) ||
+        (status > ENEMYTYPES::STATUS_DASH))
+        return UNDERACTIONS_CONTINUOUS;
+
+    int32 moveType   = ThinkOrder().OrderMove().m_iMoveType;
+    int32 moveId     = AIOT::Get(moveType);
+    
+    if (!((moveId == AIOT::MoveRun)      ||
+          (moveId == AIOT::MoveWalk)     ||
+          (moveId == AIOT::MoveWalkLeft) ||
+          (moveId == AIOT::MoveWalkRight)))
+    {
+        return UNDERACTIONS_CONTINUOUS;
+    };
+
+    int32 moveTarget = AIOT::GetTarget(moveType);
+
+    if ((moveId == AIOT::MoveRun) ||
+        (moveId == AIOT::MoveWalk))
+    {
+#ifdef _DEBUG
+        DebugDrawMovePoint();
+#endif /* _DEBUG */
+        
+        if (moveTarget)
+        {
+            if (!IsTakeMove())
+            {
+                ThinkOrder().SetAnswer(CAIThinkOrder::RESULT_REFUSE);
+                return UNDERACTIONS_THINKOVER;
+            };
+
+            if (!IsMoveEndForTargetNumber())
+            {
+                RwV3d vecPos = Math::VECTOR3_ZERO;
+                EnemyCharacter().Compositor().GetFootPosition(&vecPos);
+                vecPos.y = 0.0f;
+
+                RwV3d vecAt = Math::VECTOR3_ZERO;
+                CBaseGeneralEnemyChr::GetMoveAt(ThinkOrder(), &vecAt);
+                vecAt.y = 0.0f;
+
+                float fDist = CEnemyUtils::GetDistance(&vecPos, &vecAt);
+                float fRadiusOfAction = EnemyCharacter().AICharacteristic().m_fRadiusOfAction;
+
+                if ((fRadiusOfAction * 0.5f) <= fDist)
+                {
+                    if (moveId != AIOT::MoveRun)
+                        ThinkOrder().OrderMove().m_iMoveType = AIOT::Set(AIOT::MoveRun, AIOT::TargetNo);
+                };
+            }
+            else
+            {
+                ThinkOrder().SetAnswer(CAIThinkOrder::RESULT_ACCEPT);
+                return UNDERACTIONS_THINKOVER;
+            };
+        }
+        else
+        {
+            if (IsMoveEndForTargetPosition())
+            {
+                ThinkOrder().SetAnswer(CAIThinkOrder::RESULT_ACCEPT);
+                return UNDERACTIONS_THINKOVER;
+            };
+        };
+    };
+
+    float fCollRadius = EnemyCharacter().Compositor().GetCollisionParameter().m_fRadius;
+
+    /* init pos */
+    RwV3d vecChrPos = Math::VECTOR3_ZERO;
+    EnemyCharacter().Compositor().GetFootPosition(&vecChrPos);
+
+    RwV3d vecChrVel = Math::VECTOR3_ZERO;
+    EnemyCharacter().Compositor().GetVelocity(&vecChrVel);
+    vecChrVel.y = 0.0f;
+
+    Math::Vec3_Normalize(&vecChrVel, &vecChrVel);
+    Math::Vec3_Scale(&vecChrVel, &vecChrVel, fCollRadius * 4.0f);
+
+    RwV3d vecPos = Math::VECTOR3_ZERO;
+    Math::Vec3_Add(&vecPos, &vecChrPos, &vecChrVel);
+
+    /* init at */
+    RwV3d vecAt = Math::VECTOR3_ZERO;
+    CBaseGeneralEnemyChr::GetMoveAt(ThinkOrder(), &vecAt);
+
+    Math::Vec3_Sub(&vecAt, &vecAt, &vecChrPos);
+    vecAt.y = 0.0f;
+
+    Math::Vec3_Normalize(&vecAt, &vecAt);
+    Math::Vec3_Scale(&vecAt, &vecAt, fCollRadius * 4.0f);
+    Math::Vec3_Add(&vecAt, &vecAt, &vecChrPos);
+
+    CBaseGeneralEnemyChr::MOVABLETYPE movableType = static_cast<CBaseGeneralEnemyChr&>(EnemyCharacter()).GetMovableType(&vecPos);
+    if (movableType == CBaseGeneralEnemyChr::MOVABLETYPE_POSSIBLE)
+    {
+        return UNDERACTIONS_CONTINUOUS;
+    }
+    else if (movableType == CBaseGeneralEnemyChr::MOVABLETYPE_IMPOSSIBLE)
+    {
+        movableType = static_cast<CBaseGeneralEnemyChr&>(EnemyCharacter()).GetMovableType(&vecAt);
+        if (movableType == CBaseGeneralEnemyChr::MOVABLETYPE_POSSIBLE)
+            return UNDERACTIONS_CONTINUOUS;
+
+        if (movableType == CBaseGeneralEnemyChr::MOVABLETYPE_IMPOSSIBLE)
+        {
+            ThinkOrder().OrderMove().m_iMoveType = AIOT::Set(AIOT::MoveTurn, moveTarget);            
+            return UNDERACTIONS_CONTINUOUS;
+        };
+    }
+    else if (movableType == CBaseGeneralEnemyChr::MOVABLETYPE_JUMP)
+    {
+        ThinkOrder().OrderMove().m_iMoveType = AIOT::Set(AIOT::MoveJump, moveTarget);
+        return UNDERACTIONS_CONTINUOUS;
+    };
+
+    ASSERT((movableType == CBaseGeneralEnemyChr::MOVABLETYPE_FALLDOWN)    ||
+           (movableType == CBaseGeneralEnemyChr::MOVABLETYPE_HOLE)        ||
+           (movableType == CBaseGeneralEnemyChr::MOVABLETYPE_BODILYCRUSH) ||
+           (movableType == CBaseGeneralEnemyChr::MOVABLETYPE_IMPOSSIBLE)  ||
+		   (movableType == CBaseGeneralEnemyChr::MOVABLETYPE_JUMP));
+
+    movableType = static_cast<CBaseGeneralEnemyChr&>(EnemyCharacter()).GetMovableType(&vecAt);
+    if (movableType == CBaseGeneralEnemyChr::MOVABLETYPE_POSSIBLE)
+    {
+        ThinkOrder().OrderMove().m_iMoveType = AIOT::Set(AIOT::MoveTurn, moveTarget);
+        return UNDERACTIONS_CONTINUOUS;
+    };
+
+    if (movableType == CBaseGeneralEnemyChr::MOVABLETYPE_IMPOSSIBLE)
+        return UNDERACTIONS_CONTINUOUS;
+
+    ThinkOrder().SetAnswer(CAIThinkOrder::RESULT_REFUSE);
+    if (m_bActionRun)
+    {
+        float fPatrolRadius = EnemyCharacter().Feature().m_fPatrolRadius;
+        EnemyCharacter().SetPatrolArea(&vecChrPos, fPatrolRadius);
+    };
+
+    return UNDERACTIONS_THINKOVER;
+};
+
+
+bool CBaseGeneralEnemyAIModerator::IsOutsidePatrolArea(void)
+{
+    RwV3d vPosition = Math::VECTOR3_ZERO;
+    EnemyCharacter().Compositor().GetPosition(&vPosition);
+
+    return (!CAIUtils::IsInsidePatrolArea(&vPosition, &EnemyCharacter().Feature()));
+};
+
+
+bool CBaseGeneralEnemyAIModerator::IsTakeMove(void)
+{
+    RwV3d vPosition = Math::VECTOR3_ZERO;
+    EnemyCharacter().Compositor().GetPosition(&vPosition);
+
+    if (CAIUtils::IsInsidePatrolArea(&vPosition, &EnemyCharacter().Feature()))
+        return (m_targetInfo.Get() != -1);
+
+    return false;
+};
+
+
+AIOT::TYPE CBaseGeneralEnemyAIModerator::IsTakeSideWalk(void)
+{
+    int32 no = m_targetInfo.Get();
+
+    if (!CAIUtils::GetActivePlayer(no))
+        return AIOT::Null;
+
+    if (!EnemyCharacter().IsAttachedStatusObserver(ENEMYTYPES::STATUS_WALK_LEFT))
+        return AIOT::Null;
+
+    if (!EnemyCharacter().IsAttachedStatusObserver(ENEMYTYPES::STATUS_WALK_RIGHT))
+        return AIOT::Null;
+
+    float fDistanceOfSuitable = (Characteristic().m_fDistanceOfSuitable * 1.5f);    
+    if (m_targetInfo.GetDistance() > fDistanceOfSuitable)
+        return AIOT::Null;
+
+    float fDir = EnemyCharacter().Compositor().GetDirection();
+    float fDiff = m_targetInfo.GetAngle() - fDir;
+    float fDiffAbs = std::fabs(fDiff);
+
+    float fRatioOfFrontView = Characteristic().m_fRatioOfFrontView;
+    float fFrontView = fRatioOfFrontView * MATH_DEG2RAD(54.0f);
+
+    if (fFrontView < fDiffAbs)
+        return AIOT::Null;
+
+    if ((fDiff < 0.0f) ||
+        (fDiff > MATH_PI))
+        return AIOT::MoveWalkLeft;
+
+    return AIOT::MoveWalkRight;
+};
+
+
+CBaseGeneralEnemyAIModerator::UNDERACTION CBaseGeneralEnemyAIModerator::UnderThinking(void)
+{
+    UNDERACTION underAction = OnUnderAllActions();
+    if (underAction != UNDERACTIONS_CONTINUOUS)
+        return underAction;
+
+    CAIThinkOrder::ORDER order = ThinkOrder().GetOrder();
+    switch (order)
+    {
+    case CAIThinkOrder::ORDER_NOTHING:
+    case CAIThinkOrder::ORDER_WAIT:
+        underAction = OnUnderWait();
+        break;
+
+    case CAIThinkOrder::ORDER_MOVE:
+        underAction = OnUnderMove();
+        break;
+
+    case CAIThinkOrder::ORDER_RUN:
+        underAction = OnUnderRun();
+        break;
+
+    case CAIThinkOrder::ORDER_ATTACK:
+        underAction = OnUnderAttack();
+        break;
+
+    case CAIThinkOrder::ORDER_DEFENCE:
+        underAction = OnUnderDefence();
+        break;
+
+    default:
+        ASSERT(false);
+        break;
+    };
+
+    return underAction;
+};
+
+
+void CBaseGeneralEnemyAIModerator::Thinking(void)
+{
+    int32 playerNo = SearchTarget();
+
+    CAIThinkOrder::ORDER order = ActionSelector(playerNo);
+
+    m_bActionRun = false;
+
+    while (true)
+    {
+        switch (order)
+        {
+        case CAIThinkOrder::ORDER_NOTHING:
+        case CAIThinkOrder::ORDER_WAIT:
+            {
+                if (OnActionOfWait(playerNo))
+                    return;
+                
+                ASSERT(false);
+            }
+            break;
+
+        case CAIThinkOrder::ORDER_MOVE:
+            {
+                if (OnActionOfMove(playerNo))
+                    return;
+                
+                order = CAIThinkOrder::ORDER_WAIT;
+            }
+            break;
+
+        case CAIThinkOrder::ORDER_RUN:
+            {
+                if (OnActionOfRun(playerNo))
+                {
+                    m_bActionRun = true;
+                    return;
+                };
+
+                order = CAIThinkOrder::ORDER_WAIT;
+            }
+            break;
+
+        case CAIThinkOrder::ORDER_ATTACK:
+            {
+                if (OnActionOfAttack(playerNo))
+                    return;
+
+                order = CAIThinkOrder::ORDER_WAIT;
+            }
+            break;
+
+        case CAIThinkOrder::ORDER_DEFENCE:
+            {
+                if (OnActionOfDefence(playerNo))
+                    return;
+
+                order = CAIThinkOrder::ORDER_WAIT;
+            }
+            break;
+
+        default:
+            ASSERT(false);
+            break;
+        };
+    };
+};
+
+
+bool CBaseGeneralEnemyAIModerator::EnableThinking(void)
+{
+    ENEMYTYPES::STATUS status = EnemyCharacter().GetStatus();
+
+    if (status == ENEMYTYPES::STATUS_THINKING)
+        return false;
+
+    if ((status >= ENEMYTYPES::STATUS_KNOCK) &&
+        (status <= ENEMYTYPES::STATUS_THROWN_BACK))
+        return false;
+
+    if ((ThinkOrder().GetOrder()  == CAIThinkOrder::ORDER_NOTHING) &&
+        (ThinkOrder().GetAnswer() == CAIThinkOrder::RESULT_WAITING))
+        return false;
+
+    if ((m_fTimer - m_fThinkBeforeTime) < m_fThinkElapseTime)
+        return false;
+
+    m_fThinkBeforeTime = m_fTimer;
+
+    return true;
+};
+
+
+bool CBaseGeneralEnemyAIModerator::IsSatifyFrequency(int32 no) const
+{
+    uint8 freq = AIFreqParam().GetFrequency(no);
+    uint8 rnd = static_cast<uint8>(Math::RandRange(0, 100));
+
+    return (freq > rnd);
+};
+
+
+float CBaseGeneralEnemyAIModerator::GetFrequency(int32 no) const
+{
+    return static_cast<float>(AIFreqParam().GetFrequency(no));
+};
+
+
+int32 CBaseGeneralEnemyAIModerator::SearchTarget(void)
+{
+    int32 beforeTarget = -1;
+    int32 newTarget = -1;
+
+    if (m_targetInfo.Get() >= 0)
+    {
+        int32 no = m_targetInfo.Get();
+        if (CAIUtils::GetActivePlayer(no))
+            beforeTarget = no;
+    };
+
+    m_targetCoordinator.Update();
+
+    CTarget* pTarget = m_targetCoordinator.CurrentTarget();
+    if (pTarget)
+    {
+        int32 no = pTarget->GetNumber();
+
+#ifdef _DEBUG        
+        CPlayerCharacter* pPlayerChr = CAIUtils::GetActivePlayer(no);
+        ASSERT(pPlayerChr != nullptr);
+#endif /* _DEBUG */        
+
+        float fRatioOfActivity = Characteristic().m_fRatioOfActivity;
+        float fRand = Math::RandFloat();
+
+        if (fRand < fRatioOfActivity)
+            newTarget = no;
+    }
+    else if (beforeTarget >= 0)
+    {
+        m_targetInfo.Set(-1);
+        return -1;
+    };
+	
+    if ((beforeTarget < 0) || (newTarget < 0))
+    {
+        if ((beforeTarget >= 0) && (newTarget == -1))
+            newTarget = beforeTarget;
+    }
+    else
+    {
+        float fRatioOfImpulsiveness = Characteristic().m_fRatioOfImpulsiveness;
+        float fRand = Math::RandFloat();
+
+        if (fRatioOfImpulsiveness < fRand)
+            newTarget = beforeTarget;
+    };
+	
+    m_targetInfo.Set(newTarget);
+
+    return newTarget;
+};
+
+
+void CBaseGeneralEnemyAIModerator::DebugDrawMovePoint(void)
+{
+#ifdef _DEBUG
+    if (!CEnemyDebug::SHOW_AI_MOVE_POINT)
+        return;
+
+    /* draw order destination point */
+    RwV3d vecOrderPos = Math::VECTOR3_ZERO;
+    CBaseGeneralEnemyChr::GetMoveAt(ThinkOrder(), &vecOrderPos);
+
+    RwSphere sphere;
+    sphere.center = vecOrderPos;
+    sphere.radius = 0.5f;
+
+    RwRGBA color = { 0xFF, 0xFF, 0x30, 0xFF };
+
+    CDebugShape::m_fDuration = m_fThinkElapseTime;
+
+    CDebugShape::ShowSphere(&sphere, color);
+
+    /* draw name of enemy */
+    const char* pszObjName = EnemyCharacter().GetName();
+    ASSERT(pszObjName);
+
+    CDebugShape::m_fLabelHeight = 12.0f;
+    CDebugShape::m_fLabelOffsetY = -14.0f;
+
+    CDebugShape::ShowLabel(&vecOrderPos, pszObjName, color);
+
+    CDebugShape::m_fDuration = 0.0f;
+#endif /* _DEBUG */
+};
+
+
+void CBaseGeneralEnemyAIModerator::DebugDrawPatrolArea(void)
+{
+#ifdef _DEBUG
+    if (!CEnemyDebug::SHOW_AI_PATROL_AREA)
+        return;
+
+    RwV3d vecPatrolOrigin = EnemyCharacter().Feature().m_vPatrolOrigin;
+    float fPatrolRadius = EnemyCharacter().Feature().m_fPatrolRadius;
+
+    RwSphere sphere;
+    sphere.center = vecPatrolOrigin;
+    sphere.radius = fPatrolRadius;
+
+    RwRGBA color = { 0xFF, 0x00, 0x00, 0x40 };
+    CDebugShape::ShowSphere(&sphere, color);
+#endif /* _DEBUG */
+};
+
+
+void CBaseGeneralEnemyAIModerator::DebugDrawInfo(void)
+{
+#ifdef _DEBUG
+    if (!CEnemyDebug::SHOW_AI_INFO)
+        return;
+
+    RwV3d vecMyPos = Math::VECTOR3_ZERO;
+    EnemyCharacter().Compositor().GetFootPosition(&vecMyPos);
+
+    float fHeight = EnemyCharacter().Compositor().GetCollisionParameter().m_fHeight;
+
+    vecMyPos.y += (fHeight * 1.5f);
+
+    enum
+    {
+        INFOFLAG_NAME       = (1 << 0),
+        INFOFLAG_ORDER      = (1 << 2),
+        INFOFLAG_TARGET_NO  = (1 << 3),
+        INFOFLAG_TARGET_HATE= (1 << 4),
+    };
+
+    uint32 infoFlag = 0;
+
+    char szName[128];
+    szName[0] = '\0';
+
+    char szInfoOrder[128];
+    szInfoOrder[0] = '\0';
+
+    char szInfoTarget[128];
+    szInfoTarget[0] = '\0';
+
+    char szInfoHate[128];
+    szInfoHate[0] = '\0';
+
+    /* get name */
+    const char* pszObjName = EnemyCharacter().GetName();
+    ASSERT(pszObjName);
+
+    std::sprintf(szName, "%s", pszObjName);
+    infoFlag |= INFOFLAG_NAME;
+
+    /* get order info */
+    static const char* s_apszOrderName[] =
+    {
+        "NOTHING",
+        "WAIT",
+        "MOVE",
+        "RUN",
+        "ATTACK",
+        "DEFENCE",
+    };
+
+    static_assert(COUNT_OF(s_apszOrderName) == CAIThinkOrder::ORDER_MAX, "update table");
+
+    std::sprintf(szInfoOrder, "ORDER: %s", s_apszOrderName[ThinkOrder().GetOrder()]);
+    infoFlag |= INFOFLAG_ORDER;
+
+    /* get target info */
+    CTarget* pTarget = m_targetCoordinator.CurrentTarget();
+    if (pTarget)
+    {
+        std::sprintf(szInfoTarget, "TARGET: %" PRId32, pTarget->GetNumber());
+        infoFlag |= INFOFLAG_TARGET_NO;
+
+        std::sprintf(szInfoHate, "HATE: %.02f", pTarget->GetHate());
+        infoFlag |= INFOFLAG_TARGET_HATE;
+    }
+    else
+    {
+        std::sprintf(szInfoTarget, "NO TARGET");
+        infoFlag |= INFOFLAG_TARGET_NO;
+    };
+
+    /* draw by info flag */
+    RwRGBA color = { 0xFF, 0xFF, 0x7F, 0xFF }; // yellow
+
+    CDebugShape::m_fLabelHeight = 14.0f;
+    CDebugShape::m_fLabelOffsetY = 0.0f;
+
+    if (infoFlag & INFOFLAG_NAME)
+    {
+        CDebugShape::ShowLabel(&vecMyPos, szName, color);
+        CDebugShape::m_fLabelOffsetY += CDebugShape::m_fLabelHeight;
+    };
+
+    if (infoFlag & INFOFLAG_ORDER)
+    {
+        CDebugShape::ShowLabel(&vecMyPos, szInfoOrder, color);
+        CDebugShape::m_fLabelOffsetY += CDebugShape::m_fLabelHeight;
+    };
+
+    if (infoFlag & INFOFLAG_TARGET_NO)
+    {
+        CDebugShape::ShowLabel(&vecMyPos, szInfoTarget, color);
+        CDebugShape::m_fLabelOffsetY += CDebugShape::m_fLabelHeight;
+    };
+
+    if (infoFlag & INFOFLAG_TARGET_HATE)
+    {
+        CDebugShape::ShowLabel(&vecMyPos, szInfoHate, color);
+        CDebugShape::m_fLabelOffsetY += CDebugShape::m_fLabelHeight;
+    };
+
+    CDebugShape::m_fLabelOffsetY = 0.0f;
+#endif /* _DEBUG */
+};
+
+
+void CBaseGeneralEnemyAIModerator::DebugDrawSuitableArea(void)
+{
+#ifdef _DEBUG
+    if (!CEnemyDebug::SHOW_AI_SUITABLE_AREA)
+        return;
+
+    float fDistOfSuit = Characteristic().m_fDistanceOfSuitable;
+    float fRadiusOfAction = Characteristic().m_fRadiusOfAction;
+
+    RwV3d vecPosition = Math::VECTOR3_ZERO;
+    EnemyCharacter().Compositor().GetFootPosition(&vecPosition);
+
+    RwSphere sphere;
+    sphere.center = vecPosition;
+    sphere.radius = (fRadiusOfAction - fDistOfSuit);
+
+    RwRGBA color = { 0x00, 0xFF, 0x00, 0x40 };
+    CDebugShape::ShowSphere(&sphere, color);
+#endif /* _DEBUG */
+};
+
+
+void CBaseGeneralEnemyAIModerator::DebugDrawViewArea(void)
+{
+
 };

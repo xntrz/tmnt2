@@ -317,6 +317,12 @@ static_assert(COUNT_OF(s_aKeyInfoTbl) == 256, "check out");
 };
 
 
+/*static*/ bool CPCSpecific::IsKeyTrigger(int32 iDIKey)
+{
+    return CPCPhysicalController::IsKeyTrigger(iDIKey);
+};
+
+
 /*static*/ bool CPCSpecific::IsKeyValid(int32 iDIKey)
 {
 	if (!CPCPhysicalController::IsKeyNotFixed(iDIKey))
@@ -391,4 +397,45 @@ static_assert(COUNT_OF(s_aKeyInfoTbl) == 256, "check out");
 		str.erase(std::remove(str.begin(), str.end(), it), str.end());
 
 	std::replace(str.begin(), str.end(), '/', '\\');
+};
+
+
+/*static*/ bool CPCSpecific::MakeWindowScreenshotToClipboard(void)
+{
+    bool bResult = false;
+
+    RECT rcWnd;
+    GetClientRect(m_hWnd, &rcWnd);
+
+    HDC hDCScr = GetDC(NULL);
+    if (hDCScr != NULL)
+    {
+        HDC hDC = CreateCompatibleDC(hDCScr);
+        if (hDC != NULL)
+        {
+            HBITMAP hBitmap = CreateCompatibleBitmap(hDCScr,
+                                                     rcWnd.right - rcWnd.left,
+                                                     rcWnd.bottom - rcWnd.top);
+            if (hBitmap != NULL)
+            {
+                SelectObject(hDC, hBitmap);
+                PrintWindow(m_hWnd, hDC, PW_CLIENTONLY);
+
+                OpenClipboard(NULL);
+                EmptyClipboard();
+                SetClipboardData(CF_BITMAP, hBitmap);
+                CloseClipboard();
+
+                bResult = true;
+
+                DeleteObject(hBitmap);
+            };
+
+            DeleteDC(hDC);
+        };
+
+        ReleaseDC(NULL, hDCScr);
+    };
+
+    return bResult;
 };

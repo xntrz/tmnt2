@@ -5,10 +5,95 @@
 
 namespace ENEMYTYPES
 {
-    enum MOTIONNAMES
+    enum APPEARTYPE
     {
-
+        // TODO appear type
+        APPEARTYPE_WALK_SLOW    = 0,
+        APPEARTYPE_WALK_FAST    = 1,
+        //APPEARTYPE_UNKNOWN    = 2,
+        APPEARTYPE_FALL         = 3,
+        APPEARTYPE_FLY_UP       = 4,
+        APPEARTYPE_FLY_DOWN     = 5,
+        APPEARTYPE_MOTION       = 6, // MOTIONNAMES::TOJO
     };
+
+    namespace MOTIONNAMES
+    {
+        static const char* IDLE                      = "Idle";
+        static const char* WALK                      = "Walk";
+        static const char* WALKR                     = "WalkR";
+        static const char* WALKL                     = "WalkL";
+        static const char* TURNL                     = "TurnL";
+        static const char* TURNR                     = "TurnR";
+        static const char* RUN                       = "Run";
+        static const char* JUMP_READY                = "J1";
+        static const char* JUMP                      = "J2";
+        static const char* TOUCHDOWN                 = "J3";
+        static const char* ATTACK_A                  = "A";
+        static const char* ATTACK_AA                 = "AA";
+        static const char* ATTACK_AAA                = "AAA";
+        static const char* ATTACK_B                  = "B";
+        static const char* ATTACK_C                  = "C";
+        static const char* ATTACK_C1                 = "C1";
+        static const char* ATTACK_C2                 = "C2";
+        static const char* ATTACK_RUN                = "RunAttack";
+        static const char* JATTACK                   = "JAttack";
+        static const char* BACKAWAY                  = "BackAway";
+        static const char* GUARD_1                   = "G1";
+        static const char* GUARD_2                   = "G2";
+        static const char* GUARD_3                   = "G3";
+        static const char* DASH1                     = "Dash1";
+        static const char* DASH2                     = "Dash2";
+        static const char* KNOCK                     = "Yarare";
+        static const char* KNOCK_BACK                = "YBack";
+        static const char* KNOCK_FRONT               = "YFront";
+        static const char* FLYAWAY_IDLING            = "YFrontFuttobi3";
+        static const char* FLYAWAY_FRONT             = "YFrontFuttobi1";
+        static const char* FLYAWAY_FRONT1            = "YFrontFuttobi1";
+        static const char* FLYAWAY_FRONT2            = "YFrontFuttobi2";
+        static const char* FLYAWAY_BOUND_FRONT       = "YFrontFuttobi2";
+        static const char* FLYAWAY_BOUND_FRONT1      = "YFrontFuttobi3";
+        static const char* FLYAWAY_BOUND_FRONT2      = "YFrontFuttobi4";
+        static const char* FLYAWAY_BACK              = "YBackFuttobi1";
+        static const char* FLYAWAY_BACK1             = "YBackFuttobi1";
+        static const char* FLYAWAY_BACK2             = "YBackFuttobi2";
+        static const char* FLYAWAY_BOUND_BACK        = "YBackFuttobi2";
+        static const char* FLYAWAY_BOUND_BACK1       = "YBackFuttobi3";
+        static const char* FLYAWAY_BOUND_BACK2       = "YBackFuttobi4";
+        static const char* FLYAWAY_GETUP             = "YFrontFuttobi4";
+        static const char* CRASHWALL_TOUCHDOWN_FRONT = "YWall2";
+        static const char* CRASHWALL_BACK            = "YWall1";
+        static const char* CRASHWALL_FRONT           = "YWall1";
+        static const char* CRASHWALL_TOUCHDOWN_BACK  = "YWall2";
+        static const char* THROW_BACK                = "NagerareBack";
+        static const char* THROW_STANDBY             = "Nage1";
+        static const char* THROW_SUCCESS             = "Nage2";
+        static const char* LIFT_WALK                 = "NagerareWalk";
+        static const char* LIFT                      = "NagerareIdle";
+        static const char* LIFT_CHALLENGE            = "Nagerare1";
+        static const char* LIFT_SUCCESS              = "Nagerare2";
+        static const char* FIRE_C1                   = "ADown1";
+        static const char* FIRE_C2                   = "ADown2";
+        static const char* FIRE_C3                   = "ADown3";
+        static const char* FIRE_B1                   = "A1";
+        static const char* FIRE_B2                   = "A2";
+        static const char* FIRE_B3                   = "A3";
+        static const char* FIRE_A1                   = "AUp1";
+        static const char* FIRE_A2                   = "AUp2";
+        static const char* FIRE_A3                   = "AUp3";
+        static const char* DINDLE                    = "BiriBiri";
+        static const char* INASARE                   = "Inasare";
+        static const char* STUN                      = "Piyori";
+        static const char* DEATH                     = "Death";
+        static const char* DEATH1                    = "Death1";
+        static const char* DEATH2                    = "Death2";
+        static const char* TOJO                      = "Tojo";
+        static const char* BODYBLOW_B1               = "B1";
+        static const char* BODYBLOW_B2               = "B2";
+        static const char* A1                        = "A1";
+        static const char* A2                        = "A2";
+        static const char* A3                        = "A3";
+    }; /* namespace MOTIONNAMES */
 
     struct CHARACTERISTIC
     {
@@ -92,12 +177,15 @@ namespace ENEMYTYPES
     
     struct CREATEINFO
     {
-        ENEMYID::VALUE m_idEnemy;
-        RwV3d m_vPosition;
-        float m_fDirection;
-        STATUS m_status;
-        int32 m_iPattern;
-        float m_fRadius;
+        ENEMYID::VALUE  m_idEnemy;
+        RwV3d           m_vPosition;
+        float           m_fDirection;
+        STATUS          m_status;
+        int32           m_iPattern;
+        float           m_fRadius;
+#ifdef _DEBUG
+        int32           m_iHPMax;
+#endif /* _DEBUG */   
     };
 
     struct FEATURE
@@ -128,4 +216,6 @@ namespace ENEMYTYPES
 
         FLAG_DEFAULT        = FLAG_NONE,
     };
-};
+
+    DEFINE_ENUM_FLAG_OPS(FLAG);
+}; /* namespace ENEMYTYPES */

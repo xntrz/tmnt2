@@ -42,7 +42,7 @@ CTitleSequence::CTitleSequence(void)
 , m_phase(PHASE_NONE)
 , m_iCurrentSelect(0)
 , m_fTimer(0.0f)
-, m_Dialog(CDialog::COLOR_ERROR, CDialog::STATUS_NO, CController::CONTROLLER_UNLOCKED_ON_VIRTUAL)
+, m_Dialog(CDialog::COLOR_ERROR, CDialog::STATUS_YES, CController::CONTROLLER_UNLOCKED_ON_VIRTUAL)
 {
     ;
 };
@@ -141,15 +141,18 @@ void CTitleSequence::OnMove(bool bRet, const void* pReturnValue)
 			if (bRet)
 			{
 				CConfigure::SetLaunchMode(TYPEDEF::CONFIG_LAUNCH_ARCADE);
-				Ret((const void*)PROCESSTYPES::LABEL_EOL);
+                Ret(reinterpret_cast<const void*>(PROCESSTYPES::LABEL_EOL));
 			}
 			else
 			{
 				Branch();
 			};
 		}
-		break;
-	};
+        break;
+
+    default:
+        break;
+    };
 
 	CAnim2DSequence::OnMove(bRet, pReturnValue);
 };
@@ -162,8 +165,9 @@ void CTitleSequence::OnDraw(void) const
 	
 	CAnim2DSequence::OnDraw();
 
-	if (m_phase != PHASE_CHOICE)
-		return;
+    if (!((m_phase == PHASE_CHOICE) ||
+          (m_phase == PHASE_CHOICE_WARNING)))
+        return;
 
 	if (CSystem2D::BeginScene())
 	{
@@ -239,8 +243,8 @@ void CTitleSequence::OpenNewGameWarning(void)
 	ASSERT(!m_Dialog.IsActive());
 
 	m_Dialog.SetColor(CDialog::COLOR_ERROR);
+    m_Dialog.SetStatus(CDialog::STATUS_NO);
 	m_Dialog.Set(0.0f, 0.0f, CSprite::m_fVirtualScreenW, 180.0f);
-
 	m_Dialog.SetText(
 		CSystemText::GetText(SYSTEXT(121)),
 		CGameFont::GetScreenHeightEx(TYPEDEF::VSCR_H / 2.0f),
@@ -365,7 +369,6 @@ int32 CTitleSequence::GetSelectByItemIndex(int32 iItemIndex) const
 
 void CTitleSequence::SetMenuItem(void)
 {
-
 #ifdef TARGET_PC
 	m_aMenuItemInfoTable[MENUITEMID_QUIT].m_bEnabled = true;
 	m_aMenuItemInfoTable[MENUITEMID_QUIT].m_bVisible = true;
@@ -394,16 +397,16 @@ void CTitleSequence::Branch(void)
 		break;
 
 	case NEXT_SEQUENCE_DEMO:
-		Ret((const void*)PROCLABEL_SEQ_PLAYDEMO);
+		Ret(reinterpret_cast<const void*>(PROCLABEL_SEQ_PLAYDEMO));
 		break;
 
 	case NEXT_SEQUENCE_OPTIONS:
-		Ret((const void*)PROCLABEL_SEQ_OPTIONS);
+		Ret(reinterpret_cast<const void*>(PROCLABEL_SEQ_OPTIONS));
 		break;
 
 	case NEXT_SEQUENCE_ARCADE:
 	case NEXT_SEQUENCE_QUIT:
-		Ret((const void*)PROCESSTYPES::LABEL_EOL);
+		Ret(reinterpret_cast<const void*>(PROCESSTYPES::LABEL_EOL));
 		break;
 
 	default:

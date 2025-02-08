@@ -14,8 +14,10 @@ CEnemySettingGimmick::CEnemySettingGimmick(const char* pszName, void* pParam)
 {
     GIMMICKPARAM::GIMMICK_ENEMY_PLACE* pInitParam = static_cast<GIMMICKPARAM::GIMMICK_ENEMY_PLACE*>(pParam);
 
-    m_bAutoActivate = ((pInitParam->m_subid == 0) || (pInitParam->m_subid == 1));
-    m_mode          = (pInitParam->m_subid == 2 ? MODE_AIR : MODE_GROUND);
+    m_bAutoActivate = ((pInitParam->m_subid == 0) ||
+                       (pInitParam->m_subid == 1));
+
+    m_mode = (pInitParam->m_subid == 2 ? MODE_AIR : MODE_GROUND);
 
     //
     //  init generator
@@ -63,14 +65,19 @@ bool CEnemySettingGimmick::Query(CGimmickQuery* pQuery) const
 
 void CEnemySettingGimmick::PreMove(void)
 {
-    CEnemyGeneratorBase::STATE State = m_generator.Run(CGameProperty::GetElapsedTime());
-    switch (State)
+    float dt = CGameProperty::GetElapsedTime();
+
+    CEnemyGeneratorBase::STATE state = m_generator.Run(dt);
+    switch (state)
     {
     case CEnemyGeneratorBase::STATE_GENERATE_ENEMY:
         {
             if (m_mode == MODE_GROUND)
                 m_generator.ActivateEnemy();
         }
+        break;
+
+    default:
         break;
     };
 };
@@ -93,9 +100,12 @@ void CEnemySettingGimmick::OnReceiveEvent(const char* pszSender, GIMMICKTYPES::E
 
         case MODE_AIR:
             {
-                ASSERT(m_generator.CountAliveEnemy() > 0);
+                //ASSERT(m_generator.CountAliveEnemy() > 0); TODO uncomment this when enemies done, this assert fire when no enemies created
                 m_generator.ActivateEnemy();
             }
+            break;
+
+        default:
             break;
         };
     }

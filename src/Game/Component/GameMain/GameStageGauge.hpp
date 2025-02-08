@@ -2,7 +2,9 @@
 
 #include "Game/Component/Enemy/EnemyID.hpp"
 
+
 class CEnemy;
+
 
 class IGameStageExGauge
 {
@@ -13,8 +15,12 @@ public:
     virtual void Update(void) = 0;
 };
 
+
 class CBossExGauge : public IGameStageExGauge
 {
+private:
+    static const int32 BOSS_MAX = 2;
+
 public:
     virtual void Start(void) override;
     virtual void Stop(void) override;
@@ -22,17 +28,16 @@ public:
     void HandleEnemyDamaged(CEnemy* pEnemy, int32 nRemainHP);
     
 private:
-    bool isBoss(ENEMYID::VALUE IdEnemy, int32 No);
-    ENEMYID::VALUE getStageBoss(int32 No) const;
-    uint32 findBoss(int32 No) const;
+    bool isBoss(ENEMYID::VALUE enemyId, int32 no) const;
+    ENEMYID::VALUE getStageBoss(int32 no) const;
+    uint32 findBoss(int32 no) const;
 
 private:
-    uint32 m_hBoss0;
-    uint32 m_hBoss1;
-    ENEMYID::VALUE m_IdBoss0;
-    ENEMYID::VALUE m_IdBoss1;
-    int32 m_nBossNum;
+    uint32          m_ahBoss[BOSS_MAX];
+    ENEMYID::VALUE  m_aBossId[BOSS_MAX];
+    int32           m_nBossNum;
 };
+
 
 class CTimerExGauge : public IGameStageExGauge
 {
@@ -47,6 +52,7 @@ private:
     float m_fTimeTarget;
 };
 
+
 class CCounterExGauge : public IGameStageExGauge
 {
 public:
@@ -54,6 +60,7 @@ public:
     virtual void Stop(void) override;
     virtual void Update(void) override;  
 };
+
 
 class CLifeExGauge : public IGameStageExGauge
 {
@@ -66,6 +73,7 @@ public:
 private:
     uint32 m_hObj;
 };
+
 
 class CThreeRaceExGauge : public IGameStageExGauge
 {

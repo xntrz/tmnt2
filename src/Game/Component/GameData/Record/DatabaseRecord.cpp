@@ -82,7 +82,8 @@ bool CDatabaseRecord::IsNewItemExisted(void) const
 
 int32 CDatabaseRecord::CountUnlockedItemInGroup(GROUP group) const
 {
-    ASSERT(group >= 0 && group < GROUP_NUM);
+    ASSERT(group >= 0);
+    ASSERT(group < GROUP_NUM);
 
     int32 iResult = 0;
     DBITEMID::VALUE idItemBase = DBITEMID::ID_NONE;
@@ -127,7 +128,8 @@ int32 CDatabaseRecord::CountUnlockedItemInGroup(GROUP group) const
 
 bool CDatabaseRecord::IsItemReadInGroup(GROUP group) const
 {
-    ASSERT(group >= 0 && group < GROUP_NUM);
+    ASSERT(group >= 0);
+    ASSERT(group < GROUP_NUM);
 
     bool bResult = true;
     DBITEMID::VALUE idItemBase = DBITEMID::ID_NONE;
@@ -200,7 +202,8 @@ bool CDatabaseRecord::IsItemRead(DBITEMID::VALUE idItem) const
 
 CDatabaseRecord::STATE CDatabaseRecord::getItemState(DBITEMID::VALUE idItem) const
 {
-    ASSERT(idItem > DBITEMID::ID_NONE && idItem < DBITEMID::ID_MAX);
+    ASSERT(idItem > DBITEMID::ID_NONE);
+    ASSERT(idItem < DBITEMID::ID_MAX);
 
     return m_aState[idItem];
 };
@@ -208,8 +211,11 @@ CDatabaseRecord::STATE CDatabaseRecord::getItemState(DBITEMID::VALUE idItem) con
 
 void CDatabaseRecord::setItemState(DBITEMID::VALUE idItem, STATE state)
 {
-    ASSERT(idItem > DBITEMID::ID_NONE && idItem < DBITEMID::ID_MAX);
-    ASSERT(idItem >= 0 && idItem < COUNT_OF(m_aState));
+    ASSERT(idItem > DBITEMID::ID_NONE);
+    ASSERT(idItem < DBITEMID::ID_MAX);
+
+    ASSERT(idItem >= 0);
+    ASSERT(idItem < COUNT_OF(m_aState));
 
     m_aState[idItem] = state;
 };

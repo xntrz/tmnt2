@@ -19,12 +19,14 @@ namespace GIMMICKTYPES
         QUERY_EVE_BROKEN,
     };
 
-    enum FEATURE
+    enum FEATURE : uint32
     {
-        FEATURE_NONE    = 0x0,
-        FEATURE_HOMING  = 0x1,
-        FEATURE_SLEEP   = 0x2,
+        FEATURE_NONE        = 0,
+        FEATURE_HOMING      = (1 << 0), // gimmick can be used for shot direction correction (see ShotManager)
+        FEATURE_ABLE_SLEEP  = (1 << 1), // gimmick is able to enter gameobject sleep state (see GamePropertyObj active object update)
     };
+
+    DEFINE_ENUM_FLAG_OPS(FEATURE);
 
     enum
     {

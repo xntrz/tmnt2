@@ -1,7 +1,7 @@
 #pragma once
 
 
-#define GAMETIME_HMS(h, m, s) uint32((((s) + (m) * 60) + (h) * 3600))
+#define GAMETIME_HMS(h, m, s) static_cast<uint32>((((s) + (m) * 60) + (h) * 3600))
 
 
 class CGameTime

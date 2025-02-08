@@ -6,76 +6,89 @@ class CCameraData
 private:
     struct CMDHEADER
     {
-        char m_szIdentity[4];
-        int32 m_nType;
-        uint32 m_uOffsetPathDataList;
-        uint32 m_uOffsetSetCamDataList;
+        char    szIdentity[4];
+        int32   type;
+        uint32  ofsPathDataList;
+        uint32  ofsSetCamDataList;
     };
+
+    CHECK_SIZE(CMDHEADER, 0x10);
 
     struct PATHKEY
     {
-        float m_fX;
-        float m_fY;
-        float m_fZ;
-        float m_fOffsetX;
-        float m_fOffsetY;
-        float m_fOffsetZ;
-        float m_fValue;
+        float x;
+        float y;
+        float z;
+        float ofsX;
+        float ofsY;
+        float ofsZ;
+        float value;
     };
+
+    CHECK_SIZE(PATHKEY, 0x1C);
 
     struct PATHDATA
     {
-        char m_szName[32];
-        int32 m_nType;
-        int32 m_nNumKey;
+        char    szName[32];
+        int32   type;
+        int32   numPathKey;
+        PATHKEY aPathKey[1];
     };
+
+    CHECK_SIZE(PATHDATA, 0x44);
 
     struct SETCAMDATA
     {
-        char m_szName[32];
-        RwV3d m_vPosEye;
-        RwV3d m_vPosLookat;
-        float m_fFOV;
-        int32 m_nType;
+        char  szName[32];
+        RwV3d posEye;
+        RwV3d posLookat;
+        float fov;
+        int32 type;
     };
+
+    CHECK_SIZE(SETCAMDATA, 0x40);
 
     struct PATHDATALIST
     {
-        int32 m_nNumPathData;
-        PATHDATA m_aPathData[];
+        int32    numPathData;
+        PATHDATA aPathData[1];
     };
+
+    CHECK_SIZE(PATHDATALIST, 0x48);
 
     struct SETCAMDATALIST
     {
-        int32 m_nNumSetCamData;
-        SETCAMDATA m_aSetCamData[];
+        int32      numSetCamData;
+        SETCAMDATA aSetCamData[1];
     };
+
+    CHECK_SIZE(SETCAMDATALIST, 0x44);
 
 public:
     CCameraData(void);
     ~CCameraData(void);
-    void Read(const void* pBuffer, uint32 uBufferSize);
+    void Read(void* pBuffer, uint32 uBufferSize);
     void PostRead(void);
     const CMDHEADER* GetCmdHeader(void) const;
     const PATHDATALIST* GetPathDataList(void) const;
     const PATHDATA* GetPathData(const PATHDATALIST* pPathDataList, int32 nPathID) const;
     const PATHKEY* GetPathKey(const PATHDATA* pPathData, int32 nIndex) const;
-    bool GetSpline(RwV3d* pPos, const PATHDATA* pPathData, float fTime);
-    bool GetSplinePos(RwV3d* pPos, int32 nPathID, float fTime);
-    float FindNearestPosValue(RwV3d* pPos, int32 nPathID, int32 nNumDivPath);
-    float FindNearestPosValueLight(RwV3d* pPos, int32 nPathID, float fNowTime);
-    int32 GetPathIDFromName(const char* pszName);
-    int32 GetPathType(int32 nPathID);    
+    bool GetSpline(RwV3d* pPos, const PATHDATA* pPathData, float fTime) const;
+    bool GetSplinePos(RwV3d* pPos, int32 nPathID, float fTime) const;
+    float FindNearestPosValue(RwV3d* pPos, int32 nPathID, int32 nNumDivPath) const;
+    float FindNearestPosValueLight(RwV3d* pPos, int32 nPathID, float fNowTime) const;
+    int32 GetPathIDFromName(const char* pszName) const;
+    int32 GetPathType(int32 nPathID) const;
     const SETCAMDATALIST* GetSetCamDataList(void) const;
     const SETCAMDATA* GetSetCamData(int32 id) const;
-    int32 GetSetCamIDNearestPos(RwV3d* pPos, const char* pszName = nullptr);
-    int32 GetSetCamIDFromName(const char* pszName);
+    int32 GetSetCamIDNearestPos(RwV3d* pPos, const char* pszName = nullptr) const;
+    int32 GetSetCamIDFromName(const char* pszName) const;
     float GetSetCamFOV(int32 id) const;
     const RwV3d* GetSetCamPosLookat(int32 id) const;
     const RwV3d* GetSetCamPosEye(int32 id) const;
 
 private:
-    void* m_pCmdBuffer;
+    char* m_pCmdBuffer;
 };
 
 
@@ -96,16 +109,16 @@ CCameraData::~CCameraData(void)
 };
 
 
-void CCameraData::Read(const void* pBuffer, uint32 uBufferSize)
+void CCameraData::Read(void* pBuffer, uint32 uBufferSize)
 {
     ASSERT(pBuffer);
     ASSERT(uBufferSize > 0);
-    ASSERT(!m_pCmdBuffer);
+    ASSERT(m_pCmdBuffer == nullptr);
     
     m_pCmdBuffer = new char[uBufferSize];
-    ASSERT(m_pCmdBuffer);
-    
     std::memcpy(m_pCmdBuffer, pBuffer, uBufferSize);
+
+    PostRead();
 };
 
 
@@ -118,26 +131,29 @@ void CCameraData::PostRead(void)
 const CCameraData::CMDHEADER* CCameraData::GetCmdHeader(void) const
 {
     ASSERT(m_pCmdBuffer);
-    
-    return ((CMDHEADER*)m_pCmdBuffer);
+
+    return reinterpret_cast<const CMDHEADER*>(m_pCmdBuffer);
 };
 
 
 const CCameraData::PATHDATALIST* CCameraData::GetPathDataList(void) const
 {
-    return ((PATHDATALIST*)((uint8*)m_pCmdBuffer + GetCmdHeader()->m_uOffsetPathDataList));
+    const CCameraData::CMDHEADER* pCmdHeader = GetCmdHeader();
+
+    return reinterpret_cast<const PATHDATALIST*>(m_pCmdBuffer + pCmdHeader->ofsPathDataList);
 };
 
 
 const CCameraData::PATHDATA* CCameraData::GetPathData(const PATHDATALIST* pPathDataList, int32 nPathID) const
 {
     ASSERT(pPathDataList);
-    ASSERT(nPathID >= 0 && nPathID < pPathDataList->m_nNumPathData);
-    
-    const PATHDATA* pResult = pPathDataList->m_aPathData;
+    ASSERT(nPathID >= 0);
+    ASSERT(nPathID < pPathDataList->numPathData);
+
+    const PATHDATA* pResult = pPathDataList->aPathData;
 
     for (int32 i = 0; i < nPathID; ++i)
-        pResult = (const PATHDATA*)((uint8*)pResult + (sizeof(PATHDATA) + pResult->m_nNumKey * sizeof(PATHKEY)));
+        pResult = reinterpret_cast<const PATHDATA*>(pResult->aPathKey + pResult->numPathKey);
 
     return pResult;
 };
@@ -146,28 +162,30 @@ const CCameraData::PATHDATA* CCameraData::GetPathData(const PATHDATALIST* pPathD
 const CCameraData::PATHKEY* CCameraData::GetPathKey(const PATHDATA* pPathData, int32 nIndex) const
 {
     ASSERT(pPathData);
-    ASSERT(nIndex >= 0 && nIndex < pPathData->m_nNumKey);
-    
-    return (const PATHKEY*)( ((uint8*)pPathData + sizeof(PATHDATA)) + (nIndex * sizeof(PATHKEY)) );
+    ASSERT(nIndex >= 0);
+    ASSERT(nIndex < pPathData->numPathKey);
+
+    return &pPathData->aPathKey[nIndex];
 };
 
 
-bool CCameraData::GetSpline(RwV3d* pPos, const PATHDATA* pPathData, float fTime)
+bool CCameraData::GetSpline(RwV3d* pPos, const PATHDATA* pPathData, float fTime) const
 {
-    ASSERT(fTime >= 0.0f && fTime <= 1.0f);
+    ASSERT(fTime >= 0.0f);
+    ASSERT(fTime <= 1.0f);
     ASSERT(pPos);
     ASSERT(pPathData);
 
     fTime = Clamp(fTime, 0.0f, 1.0f);
 
     int32 nKeyIndex = 0;
-    int32 nNumKey = pPathData->m_nNumKey - 1;
+    int32 nNumKey = pPathData->numPathKey - 1;
     
     for (int32 i = 0; i < nNumKey;)
     {
         const PATHKEY* pKey = GetPathKey(pPathData, (i + nNumKey) / 2);
 
-        if (pKey->m_fValue >= fTime)
+        if (pKey->value >= fTime)
         {
             nNumKey = (i + nNumKey) / 2;
         }
@@ -184,45 +202,44 @@ bool CCameraData::GetSpline(RwV3d* pPos, const PATHDATA* pPathData, float fTime)
     const PATHKEY* pKey0 = GetPathKey(pPathData, nKeyIndex);
     const PATHKEY* pKey1 = GetPathKey(pPathData, nKeyIndex + 1);
 
-    float duration = pKey1->m_fValue - pKey0->m_fValue;
-    float progress = fTime - pKey0->m_fValue;
+    float duration = pKey1->value - pKey0->value;
+    float progress = fTime - pKey0->value;
 
-    pPos->x = ((pKey1->m_fX - pKey0->m_fX) * (1.0f / duration)
-        - (pKey0->m_fOffsetX + pKey0->m_fOffsetX + pKey1->m_fOffsetX) * duration
-        + ((pKey1->m_fOffsetX - pKey0->m_fOffsetX) * (1.0f / duration) * progress + pKey0->m_fOffsetX * 3.0f)
+    pPos->x = ((pKey1->x - pKey0->x) * (1.0f / duration)
+        - (pKey0->ofsX + pKey0->ofsX + pKey1->ofsX) * duration
+        + ((pKey1->ofsX - pKey0->ofsX) * (1.0f / duration) * progress + pKey0->ofsX * 3.0f)
         * progress)
         * progress
-        + pKey0->m_fX;
+        + pKey0->x;
 
-    pPos->y = ((pKey1->m_fY - pKey0->m_fY) * (1.0f / duration)
-        - (pKey0->m_fOffsetY + pKey0->m_fOffsetY + pKey1->m_fOffsetY) * duration
-        + ((pKey1->m_fOffsetY - pKey0->m_fOffsetY) * (1.0f / duration) * progress + pKey0->m_fOffsetY * 3.0f)
+    pPos->y = ((pKey1->y - pKey0->y) * (1.0f / duration)
+        - (pKey0->ofsY + pKey0->ofsY + pKey1->ofsY) * duration
+        + ((pKey1->ofsY - pKey0->ofsY) * (1.0f / duration) * progress + pKey0->ofsY * 3.0f)
         * progress)
         * progress
-        + pKey0->m_fY;
+        + pKey0->y;
 
-    pPos->z = ((pKey1->m_fZ - pKey0->m_fZ) * (1.0f / duration)
-        - (pKey0->m_fOffsetZ + pKey0->m_fOffsetZ + pKey1->m_fOffsetZ) * duration
-        + ((pKey1->m_fOffsetZ - pKey0->m_fOffsetZ) * (1.0f / duration) * progress + pKey0->m_fOffsetZ * 3.0f)
+    pPos->z = ((pKey1->z - pKey0->z) * (1.0f / duration)
+        - (pKey0->ofsZ + pKey0->ofsZ + pKey1->ofsZ) * duration
+        + ((pKey1->ofsZ - pKey0->ofsZ) * (1.0f / duration) * progress + pKey0->ofsZ * 3.0f)
         * progress)
         * progress
-        + pKey0->m_fZ;
+        + pKey0->z;
 
     return true;
 };
 
 
-bool CCameraData::GetSplinePos(RwV3d* pPos, int32 nPathID, float fTime)
+bool CCameraData::GetSplinePos(RwV3d* pPos, int32 nPathID, float fTime) const
 {
-    return GetSpline(
-        pPos, 
-        GetPathData(GetPathDataList(), nPathID),
-        fTime
-    );
+    const PATHDATALIST* pPathDataList = GetPathDataList();
+    const PATHDATA* pPathData = GetPathData(pPathDataList, nPathID);
+
+    return GetSpline(pPos, pPathData, fTime);
 };
 
 
-float CCameraData::FindNearestPosValue(RwV3d* pPos, int32 nPathID, int32 nNumDivPath)
+float CCameraData::FindNearestPosValue(RwV3d* pPos, int32 nPathID, int32 nNumDivPath) const
 {
     const PATHDATALIST* pPathDataList = GetPathDataList();
     const PATHDATA* pPathData = GetPathData(pPathDataList, nPathID);
@@ -232,8 +249,8 @@ float CCameraData::FindNearestPosValue(RwV3d* pPos, int32 nPathID, int32 nNumDiv
 
     for (int32 i = 0; i < nNumDivPath; ++i)
     {
-        float fDeltaDivPath = 1.0f / nNumDivPath;
-        float fPathT = float(i) * fDeltaDivPath;
+        float fDeltaDivPath = (1.0f / nNumDivPath);
+        float fPathT = (static_cast<float>(i) * fDeltaDivPath);
         
         RwV3d vPathPos = Math::VECTOR3_ZERO;
         GetSpline(&vPathPos, pPathData, fPathT);
@@ -245,7 +262,7 @@ float CCameraData::FindNearestPosValue(RwV3d* pPos, int32 nPathID, int32 nNumDiv
         if (fDist < fMinDist)
         {
             fMinDist = fDist;
-			fNearestTime = fPathT;
+            fNearestTime = fPathT;
         };
     };
 
@@ -253,12 +270,14 @@ float CCameraData::FindNearestPosValue(RwV3d* pPos, int32 nPathID, int32 nNumDiv
 };
 
 
-float CCameraData::FindNearestPosValueLight(RwV3d* pPos, int32 nPathID, float fNowTime)
+float CCameraData::FindNearestPosValueLight(RwV3d* pPos, int32 nPathID, float fNowTime) const
 {
     const PATHDATALIST* pPathDataList = GetPathDataList();
     const PATHDATA* pPathData = GetPathData(pPathDataList, nPathID);
+
     const int32 nDivPath = 200;
-    const float fDeltaDivPath = (1.0f / float(nDivPath)) / 100.0f;
+    const float fDeltaDivPath = (1.0f / static_cast<float>(nDivPath)) / 100.0f;
+
     float fMinDist = 1000.0f;
     float fNearestTime = 0.0f;
 
@@ -266,14 +285,15 @@ float CCameraData::FindNearestPosValueLight(RwV3d* pPos, int32 nPathID, float fN
     {
         for (int32 i = 0; i < nDivPath; ++i)
         {
-            float fValue = (i * fDeltaDivPath) + fNowTime;
-            RwV3d vPathPos = Math::VECTOR3_ZERO;
-            RwV3d vTemp = Math::VECTOR3_ZERO;
+            float fValue = (static_cast<float>(i) * fDeltaDivPath) + fNowTime;
 
             if (fValue > 1.0f)
                 fValue = 1.0f;
 
+            RwV3d vPathPos = Math::VECTOR3_ZERO;
             GetSpline(&vPathPos, pPathData, fValue);
+
+            RwV3d vTemp = Math::VECTOR3_ZERO;
             Math::Vec3_Sub(&vTemp, &vPathPos, pPos);
 
             float fDist = Math::Vec3_Length(&vTemp);
@@ -285,19 +305,19 @@ float CCameraData::FindNearestPosValueLight(RwV3d* pPos, int32 nPathID, float fN
         };
     };    
 
-    if (Math::FEqual(fNowTime, fNearestTime) ||
-        Math::FEqual(fNowTime, 1.0f))
+    if ((fNowTime == fNearestTime) || (fNowTime == 1.0f))
     {
         for (int32 i = 0; i < nDivPath; ++i)
         {
-            float fValue = (i * -fDeltaDivPath) + fNowTime;
-            RwV3d vPathPos = Math::VECTOR3_ZERO;
-            RwV3d vTemp = Math::VECTOR3_ZERO;
+            float fValue = (static_cast<float>(i) * -fDeltaDivPath) + fNowTime;
 
             if (fValue < 0.0f)
                 fValue = 0.0f;
 
+            RwV3d vPathPos = Math::VECTOR3_ZERO;
             GetSpline(&vPathPos, pPathData, fValue);
+
+            RwV3d vTemp = Math::VECTOR3_ZERO;
             Math::Vec3_Sub(&vTemp, &vPathPos, pPos);
 
             float fDist = Math::Vec3_Length(&vTemp);
@@ -313,13 +333,15 @@ float CCameraData::FindNearestPosValueLight(RwV3d* pPos, int32 nPathID, float fN
 };
 
 
-int32 CCameraData::GetPathIDFromName(const char* pszName)
+int32 CCameraData::GetPathIDFromName(const char* pszName) const
 {
     const PATHDATALIST* pPathDataList = GetPathDataList();
-    
-    for (int32 i = 0; i < pPathDataList->m_nNumPathData; ++i)
+
+    for (int32 i = 0; i < pPathDataList->numPathData; ++i)
     {
-        if (!std::strcmp(GetPathData(pPathDataList, i)->m_szName, pszName))
+        const PATHDATA* pPathData = GetPathData(pPathDataList, i);
+
+        if (!std::strcmp(pPathData->szName, pszName))
             return i;
     };
 
@@ -327,42 +349,49 @@ int32 CCameraData::GetPathIDFromName(const char* pszName)
 };
 
 
-int32 CCameraData::GetPathType(int32 nPathID)
+int32 CCameraData::GetPathType(int32 nPathID) const
 {
-    return GetPathData(GetPathDataList(), nPathID)->m_nType;
+    const PATHDATALIST* pPathDataList = GetPathDataList();
+    const PATHDATA* pPathData = GetPathData(pPathDataList, nPathID);
+
+    return pPathData->type;
 };
 
 
 const CCameraData::SETCAMDATALIST* CCameraData::GetSetCamDataList(void) const
 {
-    ASSERT(m_pCmdBuffer);
-    
-    return ((SETCAMDATALIST*)((uint8*)m_pCmdBuffer + GetCmdHeader()->m_uOffsetSetCamDataList));
+    const CMDHEADER* pCmdHeader = GetCmdHeader();
+
+    return reinterpret_cast<const SETCAMDATALIST*>(m_pCmdBuffer + pCmdHeader->ofsSetCamDataList);
 };
 
 
 const CCameraData::SETCAMDATA* CCameraData::GetSetCamData(int32 id) const
 {
-    ASSERT(id >= 0 && id < GetSetCamDataList()->m_nNumSetCamData);
-    
-    return &GetSetCamDataList()->m_aSetCamData[id];
+    const SETCAMDATALIST* pSetCamDataList = GetSetCamDataList();
+
+    ASSERT(id >= 0);
+    ASSERT(id < pSetCamDataList->numSetCamData);
+
+    return &pSetCamDataList->aSetCamData[id];
 };
 
 
-int32 CCameraData::GetSetCamIDNearestPos(RwV3d* pPos, const char* pszName)
+int32 CCameraData::GetSetCamIDNearestPos(RwV3d* pPos, const char* pszName /*= nullptr*/) const
 {
     const SETCAMDATALIST* pSetCamDataList = GetSetCamDataList();
+
     float fMinDist = 1000.0f;
     int32 nMinSetCamID = -1;
 
-    for (int32 i = 0; i < pSetCamDataList->m_nNumSetCamData; ++i)
+    for (int32 i = 0; i < pSetCamDataList->numSetCamData; ++i)
     {
         const SETCAMDATA* pSetCamData = GetSetCamData(i);
 
-        if (!pszName || !std::strcmp(pSetCamData->m_szName, pszName))
+        if (!pszName || !std::strcmp(pSetCamData->szName, pszName))
         {
             RwV3d vTemp = Math::VECTOR3_ZERO;
-            Math::Vec3_Sub(&vTemp, pPos, &pSetCamData->m_vPosLookat);
+            Math::Vec3_Sub(&vTemp, pPos, &pSetCamData->posLookat);
             
             float fDist = Math::Vec3_Length(&vTemp);
             if (fDist < fMinDist)
@@ -377,13 +406,15 @@ int32 CCameraData::GetSetCamIDNearestPos(RwV3d* pPos, const char* pszName)
 };
 
 
-int32 CCameraData::GetSetCamIDFromName(const char* pszName)
+int32 CCameraData::GetSetCamIDFromName(const char* pszName) const
 {
     const SETCAMDATALIST* pSetCamDataList = GetSetCamDataList();
 
-    for (int32 i = 0; i < pSetCamDataList->m_nNumSetCamData; ++i)
+    for (int32 i = 0; i < pSetCamDataList->numSetCamData; ++i)
     {
-        if (!std::strcmp(GetSetCamData(i)->m_szName, pszName))
+        const SETCAMDATA* pSetCamData = GetSetCamData(i);
+
+        if (!std::strcmp(pSetCamData->szName, pszName))
             return i;
     };
 
@@ -393,19 +424,25 @@ int32 CCameraData::GetSetCamIDFromName(const char* pszName)
 
 float CCameraData::GetSetCamFOV(int32 id) const
 {
-    return GetSetCamData(id)->m_fFOV;
+    const SETCAMDATA* pSetCamData = GetSetCamData(id);
+
+    return pSetCamData->fov;
 };
 
 
 const RwV3d* CCameraData::GetSetCamPosLookat(int32 id) const
 {
-    return &GetSetCamData(id)->m_vPosLookat;
+    const SETCAMDATA* pSetCamData = GetSetCamData(id);
+
+    return &pSetCamData->posLookat;
 };
 
 
 const RwV3d* CCameraData::GetSetCamPosEye(int32 id) const
 {
-    return &GetSetCamData(id)->m_vPosEye;
+    const SETCAMDATA* pSetCamData = GetSetCamData(id);
+
+    return &pSetCamData->posEye;
 };
 
 
@@ -422,9 +459,7 @@ static inline CCameraData& CameraData(void)
 /*static*/ void CCameraDataManager::Initialize(void)
 {
     if (!s_pCameraData)
-    {
         s_pCameraData = new CCameraData;
-    };
 };
 
 
@@ -438,7 +473,7 @@ static inline CCameraData& CameraData(void)
 };
 
 
-/*static*/ void CCameraDataManager::Read(const void* pBuffer, uint32 uBufferSize)
+/*static*/ void CCameraDataManager::Read(void* pBuffer, uint32 uBufferSize)
 {
     CameraData().Read(pBuffer, uBufferSize);
 };

@@ -83,7 +83,7 @@ static void SdDrvCtrlPauseSet(uint32 _param1, uint32 _param2)
     
     SdDrvPause = true;
 
-    SdSeqPauseSet(SD_SEQ_OPT_0x4);
+    SdSeqPauseSet();
     SdStrPauseSet();
 };
 
@@ -95,7 +95,7 @@ static void SdDrvCtrlPauseClr(uint32 _param1, uint32 _param2)
     
     SdDrvPause = false;
     
-    SdSeqPauseClr(SD_SEQ_OPT_0x4);
+    SdSeqPauseClr();
     SdStrPauseClr();
 };
 

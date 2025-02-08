@@ -67,25 +67,27 @@ bool CSecretRecord::IsValid(void) const
 
 void CSecretRecord::SetNotSavedFlagOff(void)
 {
-	for (int32 i = SECRETID::SECRETSTART; i < SECRETID::SECRETMAX; i++)
+	for (int32 i = SECRETID::SECRETSTART; i < SECRETID::SECRETMAX; ++i)
 		setFlag(FLAGTYPE_UNLOCKED, SECRETID::VALUE(i), false);
 };
 
 
 void CSecretRecord::Snapshot(RAWDATA& rRawData) const
 {
-	std::memcpy(rRawData.m_auUnlockedFlag, m_auUnlockedFlag, sizeof(rRawData.m_auUnlockedFlag));
+	std::memcpy(rRawData.m_auUnlockedFlag,   m_auUnlockedFlag,   sizeof(rRawData.m_auUnlockedFlag));
 	std::memcpy(rRawData.m_auUnnotifiedFlag, m_auUnnotifiedFlag, sizeof(rRawData.m_auUnnotifiedFlag));
-	rRawData.m_fAttackEnchanceValue = m_fAttackEnchanceValue;
+    
+	rRawData.m_fAttackEnchanceValue  = m_fAttackEnchanceValue;
 	rRawData.m_fDefenceEnchanceValue = m_fDefenceEnchanceValue;
 };
 
 
 void CSecretRecord::Restore(const RAWDATA& rRawData)
 {
-	std::memcpy(m_auUnlockedFlag, rRawData.m_auUnlockedFlag, sizeof(m_auUnlockedFlag));
+	std::memcpy(m_auUnlockedFlag,   rRawData.m_auUnlockedFlag,   sizeof(m_auUnlockedFlag));
 	std::memcpy(m_auUnnotifiedFlag, rRawData.m_auUnnotifiedFlag, sizeof(m_auUnnotifiedFlag));
-	m_fAttackEnchanceValue = rRawData.m_fAttackEnchanceValue;
+	
+    m_fAttackEnchanceValue  = rRawData.m_fAttackEnchanceValue;
 	m_fDefenceEnchanceValue = rRawData.m_fDefenceEnchanceValue;
 };
 
@@ -93,9 +95,9 @@ void CSecretRecord::Restore(const RAWDATA& rRawData)
 bool CSecretRecord::IsUnlockedSecret(SECRETID::VALUE idSecret) const
 {
 	if (CGameData::Attribute().IsNexusMode())
-		return false;
-	else
-		return getFlag(FLAGTYPE_UNLOCKED, idSecret);
+        return false;
+    
+    return getFlag(FLAGTYPE_UNLOCKED, idSecret);
 };
 
 
@@ -104,9 +106,9 @@ void CSecretRecord::UnlockSecret(SECRETID::VALUE idSecret)
 	if (getFlag(FLAGTYPE_UNLOCKED, idSecret))
 		return;		
 			
-	if (idSecret >= SECRETID::CHEATCODESTART && idSecret < SECRETID::CHEATCODEMAX)
+	if ((idSecret >= SECRETID::CHEATCODESTART) && (idSecret < SECRETID::CHEATCODEMAX))
 		setOffGroupA();
-	else if (idSecret >= SECRETID::CHALLENGESTART && idSecret < SECRETID::CHALLENGEMAX)
+	else if ((idSecret >= SECRETID::CHALLENGESTART) && (idSecret < SECRETID::CHALLENGEMAX))
 		setOffGroupB();
 
 	if (isDatabase(idSecret))
@@ -169,8 +171,11 @@ void CSecretRecord::UnlockSecret(SECRETID::VALUE idSecret)
 
 	case SECRETID::ID_HOME_TOURNAMENT_BATTLENEXUS:
 		CGameData::Record().Nexus().SetTournamentState(GAMETYPES::NEXUSID_BATTLE_NEXUS, CNexusRecord::STATE_OPEN);
-		break;
-	};
+        break;
+
+    default:
+        break;
+    };
 
 	setFlag(FLAGTYPE_UNLOCKED, idSecret, true);
 
@@ -225,17 +230,17 @@ float CSecretRecord::GetAttackEnchanceValue(void) const
 {
 	if (IsUnlockedSecret(SECRETID::ID_CHEATCODE_SUPERATTACK))
 		return 2.0f;
-	else
-		return m_fAttackEnchanceValue;
+
+    return m_fAttackEnchanceValue;
 };
 
 
 float CSecretRecord::GetDefenceEnchanceValue(void) const
 {
 	if (IsUnlockedSecret(SECRETID::ID_CHEATCODE_SUPERDEFENCE))
-		return 2.0f;
-	else
-		return m_fAttackEnchanceValue;
+        return 2.0f;
+    
+    return m_fAttackEnchanceValue;
 };
 
 
@@ -279,50 +284,58 @@ void CSecretRecord::setOffGroupB(void)
 
 bool CSecretRecord::isValidSecretID(SECRETID::VALUE idSecret) const
 {
-	return (idSecret >= SECRETID::ID_NONE && idSecret < SECRETID::NORMALMAX);
+    return ((idSecret >= SECRETID::ID_NONE) &&
+            (idSecret < SECRETID::NORMALMAX));
 };
 
 
 bool CSecretRecord::isDatabase(SECRETID::VALUE idSecret) const
 {
-	return (idSecret >= SECRETID::DATABASESTART && idSecret < SECRETID::DATABASEMAX);
+    return ((idSecret >= SECRETID::DATABASESTART) &&
+            (idSecret < SECRETID::DATABASEMAX));
 };
 
 
 void CSecretRecord::setFlag(FLAGTYPE flagtype, SECRETID::VALUE idSecret, bool bSet)
 {
-	ASSERT(idSecret >= SECRETID::ID_FIRST && idSecret < SECRETID::ID_MAX);
-	
-	int32 FlagNo = (idSecret / 32);
-	int32 SecretNo = (idSecret % 32);
+    ASSERT(idSecret >= SECRETID::ID_FIRST);
+    ASSERT(idSecret < SECRETID::ID_MAX);
 
-	ASSERT(FlagNo >= 0 && FlagNo < FLAGNUM);
-	ASSERT(SecretNo >= 0 && SecretNo < BITSOF(uint32));
+	int32 flagNo = (idSecret / 32);
+    ASSERT(flagNo >= 0);
+    ASSERT(flagNo < FLAGNUM);
+
+	int32 secretNo = (idSecret % 32);
+    ASSERT(secretNo >= 0);
+    ASSERT(secretNo < BITSOF(uint32));
 
 	uint32* puFlag = (flagtype == FLAGTYPE_UNLOCKED ? m_auUnlockedFlag : m_auUnnotifiedFlag);
 
-	uint32 flag = (1 << static_cast<uint32>(SecretNo));
+	uint32 flag = (1 << static_cast<uint32>(secretNo));
 
-	if (bSet)
-		FLAG_SET(puFlag[FlagNo], flag);
-	else
-		FLAG_CLEAR(puFlag[FlagNo], flag);
+    if (bSet)
+        puFlag[flagNo] |= flag;
+    else
+        puFlag[flagNo] &= (~flag);
 };
 
 
 bool CSecretRecord::getFlag(FLAGTYPE flagtype, SECRETID::VALUE idSecret) const
 {
-	ASSERT(idSecret >= SECRETID::ID_FIRST && idSecret < SECRETID::ID_MAX);
-	
-	int32 FlagNo = (idSecret / 32);
-	int32 SecretNo = (idSecret % 32);
+    ASSERT(idSecret >= SECRETID::ID_FIRST);
+    ASSERT(idSecret < SECRETID::ID_MAX);
 
-	ASSERT(FlagNo >= 0 && FlagNo < FLAGNUM);
-	ASSERT(SecretNo >= 0 && SecretNo < BITSOF(uint32));
+	int32 flagNo = (idSecret / 32);
+    ASSERT(flagNo >= 0);
+    ASSERT(flagNo < FLAGNUM);
+    
+    int32 secretNo = (idSecret % 32);
+    ASSERT(secretNo >= 0);
+    ASSERT(secretNo < BITSOF(uint32));
 
 	const uint32* puFlag = (flagtype == FLAGTYPE_UNLOCKED ? m_auUnlockedFlag : m_auUnnotifiedFlag);
 
-	uint32 flag = (1 << static_cast<uint32>(SecretNo));
+	uint32 flag = (1 << static_cast<uint32>(secretNo));
 
-	return FLAG_TEST(puFlag[FlagNo], flag);
+    return ((puFlag[flagNo] & flag) != 0);
 };

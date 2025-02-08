@@ -65,7 +65,7 @@
 /*static*/ CGimmick* CGimmickFactory::Create(GIMMICKID::VALUE idGimmick, int32 subid, void* pParam)
 {    
     ASSERT(pParam);
-    
+
     GIMMICKPARAM::GIMMICK_COMMON_HEAD* pHeader = static_cast<GIMMICKPARAM::GIMMICK_COMMON_HEAD*>(pParam);
     const char* pszName = pHeader->m_szName;
 

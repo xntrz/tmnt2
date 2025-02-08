@@ -11,6 +11,14 @@
 class CPCFileManager final : public CAdxFileManager
 {
 public:
+    enum FILETYPE
+    {
+        FILETYPE_PC = FILETYPE_EXTEND,
+    };
+
+public:
+    static bool IsExist(const char* pszFilename);
+
     CPCFileManager(void);
     virtual ~CPCFileManager(void);
     virtual bool Start(void) override;

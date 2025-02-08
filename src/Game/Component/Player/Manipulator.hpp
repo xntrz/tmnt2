@@ -12,19 +12,82 @@ class CPlayerCharacter;
 class CManipulator : public CGameObject
 {
 protected:
+    enum MOVE
+    {
+        MOVE_IDLE = 0,
+        MOVE_WALK,
+        MOVE_RUN,
+    };
+
+    enum DASH
+    {
+        DASH_OFF = 0,
+        DASH_ON,
+    };
+
+    enum JUMP
+    {
+        JUMP_OFF = 0,
+        JUMP_ON
+    };
+
+    enum ATTACK
+    {
+        ATTACK_OFF = 0,
+        ATTACK_A,
+        ATTACK_B,
+        ATTACK_C,
+    };
+
+    enum ATTACK_CHARGE
+    {
+        ATTACK_CHARGE_OFF = 0,
+        ATTACK_CHARGE_ON,
+    };
+
+    enum KNIFE
+    {
+        KNIFE_OFF = 0,
+        KNIFE_ON,
+    };
+
+    enum GUARD
+    {
+        GUARD_OFF = 0,
+        GUARD_ON
+    };
+
+    enum LIFT
+    {
+        LIFT_OFF = 0,
+        LIFT_ON,
+    };
+
+    enum RECOVER
+    {
+        RECOVER_OFF = 0,
+        RECOVER_ON,
+    };
+
+    enum PASSIVE
+    {
+        PASSIVE_OFF = 0,
+        PASSIVE_ON
+    };
+
     struct INPUT
     {
-        uint32 m_uMove;
-        uint32 m_uDash;
-        uint32 m_uJump;
-        uint32 m_uAttack;
-        uint32 m_uAttackCharge;
-        uint32 m_uKnife;
-        uint32 m_uGuard;
-        uint32 m_uLift;
-        uint32 m_uRecover;
-        uint32 m_uPassive;
-        float m_fDirection;
+        MOVE            m_move;
+        DASH            m_dash;
+        JUMP            m_jump;
+        ATTACK          m_attack;
+        ATTACK_CHARGE   m_attackCharge;
+        KNIFE           m_knife;
+        GUARD           m_guard;
+        LIFT            m_lift;
+        RECOVER         m_recover;
+        PASSIVE         m_passive;
+        float           m_fDirection;
     };
     
 public:
@@ -71,6 +134,7 @@ public:
     void AnalyzeInputVector(RwV3d& rvInputVector, float& rfInputVectorLength);
     void SetSpecificAbilityFlag(void);
     void SetConfusionInput(void);
+    void ClearInput(void);
 
 protected:
     CPlayerCharacter* m_pPlayerChr;

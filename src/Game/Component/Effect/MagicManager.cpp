@@ -42,6 +42,7 @@ private:
     int32 m_nActiveMagicNum;
 };
 
+
 class CMagicContainer
 {
 public:
@@ -79,6 +80,11 @@ private:
 };
 
 
+//
+// *********************************************************************************
+//
+
+
 CMagicList::CMagicList(int32 nNum)
 : m_paMagicWork(nullptr)
 , m_nMagicListNum(nNum)
@@ -86,8 +92,7 @@ CMagicList::CMagicList(int32 nNum)
 {
     ASSERT(m_nMagicListNum > 0);
 
-    m_paMagicWork = new MAGICWORK[ m_nMagicListNum ];
-    ASSERT(m_paMagicWork);
+    m_paMagicWork = new MAGICWORK[m_nMagicListNum];
 
     for (int32 i = 0; i < m_nMagicListNum; ++i)
     {
@@ -106,7 +111,7 @@ CMagicList::~CMagicList(void)
     {
         ASSERT(m_nMagicListNum > 0);
 
-        delete [] m_paMagicWork;
+        delete[] m_paMagicWork;
         m_paMagicWork = nullptr;
 
         m_nMagicListNum = 0;
@@ -119,10 +124,10 @@ CMagicList::~CMagicList(void)
 void CMagicList::Cleanup(void)
 {
     auto it = m_listWorkAlloc.begin();
-    while (it)
+    auto itEnd = m_listWorkAlloc.end();
+    while (it != itEnd)
     {
         MAGICWORK* pNode = &(*it);
-        ASSERT(pNode);
 
         pNode->m_pMagic = nullptr;
         pNode->m_fSortZ = 0.0f;
@@ -147,7 +152,6 @@ void CMagicList::RegistMagic(CMagic* pMagic)
     ASSERT(!m_listWorkPool.empty());
 
     MAGICWORK* pWork = m_listWorkPool.front();
-    ASSERT(pWork);
     m_listWorkPool.erase(pWork);
     m_listWorkAlloc.push_back(pWork);
 
@@ -162,6 +166,7 @@ void CMagicList::RemoveMagic(CMagic* pMagic)
 {
     MAGICWORK* pWork = SearchMagicWork(pMagic);
     ASSERT(pWork);
+
     if (pWork)
     {
 		--m_nActiveMagicNum;
@@ -182,18 +187,19 @@ CMagic* CMagicList::GetMagic(const char* pszName)
     MAGICWORK* pWork = SearchMagicWork(pszName);
     if (pWork)
         return pWork->m_pMagic;
-    else
-        return nullptr;
+    
+    return nullptr;
 };
 
 
 void CMagicList::GarbageCollection(void)
 {
     auto it = m_listWorkAlloc.begin();
-    while (it)
+    auto itEnd = m_listWorkAlloc.end();
+    while (it != itEnd)
     {
         MAGICWORK* pWork = &(*it);
-        ASSERT(pWork);
+
         ASSERT(pWork->m_pMagic);
 
         if (pWork->m_pMagic->IsEnd())
@@ -219,10 +225,8 @@ void CMagicList::Draw(RwCamera* pCamera)
 {
     for (MAGICWORK& it : m_listWorkAlloc)
     {
-        CMagic* pMagic = it.m_pMagic;
-        ASSERT(pMagic);
-
-        pMagic->Draw(pCamera);
+        ASSERT(it.m_pMagic);
+        it.m_pMagic->Draw(pCamera);
     };
 };
 
@@ -233,7 +237,7 @@ CMagicList::MAGICWORK* CMagicList::SearchMagicWork(CMagic* pMagic)
     {
         ASSERT(it.m_pMagic);
 
-        if (it.m_pMagic == pMagic && !std::strcmp(it.m_pMagic->GetName(), pMagic->GetName()))
+        if ((it.m_pMagic == pMagic) && !std::strcmp(it.m_pMagic->GetName(), pMagic->GetName()))
             return &it;
     };
 
@@ -255,6 +259,11 @@ CMagicList::MAGICWORK* CMagicList::SearchMagicWork(const char* pszName)
 };
 
 
+//
+// *********************************************************************************
+//
+
+
 CMagicContainer::CMagicContainer(void)
 : m_pCurrentMagicPool(nullptr)
 , m_pListCommonMagicPool(nullptr)
@@ -264,13 +273,9 @@ CMagicContainer::CMagicContainer(void)
 {
     const int32 MagicNum = MAGIC_MAX_NUM;
     
-    m_pListCommonMagicPool = new CMagicList(MagicNum);
+    m_pListCommonMagicPool   = new CMagicList(MagicNum);
     m_pListAttachedMagicPool = new CMagicList(MagicNum);
-    m_pListMagicDisplay = new CMagicList(MagicNum);
-
-    ASSERT(m_pListAttachedMagicPool);
-    ASSERT(m_pListCommonMagicPool);
-    ASSERT(m_pListMagicDisplay);
+    m_pListMagicDisplay      = new CMagicList(MagicNum);
 
     m_pCurrentMagicPool = m_pListCommonMagicPool;
 };
@@ -408,15 +413,14 @@ static inline CMagicContainer& MagicContainer(void)
 };
 
 
-static CMagic* MagicFromHandle(uint32 hMagic)
+static inline CMagic* MagicFromHandle(uint32 hMagic)
 {
     CGameObject* pGameObject = CGameObjectManager::GetObject(hMagic);
     if (pGameObject)
     {
         ASSERT(pGameObject->GetType() == GAMEOBJECTTYPE::EFFECT);
-        ASSERT(pGameObject->GetHandle() == hMagic);
 
-        return (CMagic*)pGameObject;
+        return static_cast<CMagic*>(pGameObject);
     };
 
     return nullptr;
@@ -476,9 +480,7 @@ void CMagicManager::CParameter::SetSoundPlay(bool bSet)
 /*static*/ void CMagicManager::Initialize(void)
 {
     if (!s_pMagicContainer)
-    {
         s_pMagicContainer = new CMagicContainer;
-    };
 };
 
 
@@ -487,6 +489,7 @@ void CMagicManager::CParameter::SetSoundPlay(bool bSet)
     if (s_pMagicContainer)
     {
         s_pMagicContainer->Cleanup();
+
         delete s_pMagicContainer;
         s_pMagicContainer = nullptr;
     };
@@ -539,14 +542,12 @@ void CMagicManager::CParameter::SetSoundPlay(bool bSet)
     ASSERT(pszMagicName);
     ASSERT(pParameter);
 
-    uint32 hResult = 0;
-
     if (!MagicContainer().IsEnableRegistDisplay())
-        return hResult;
+        return 0;
 
     CMagic* pMagic = MagicContainer().Search(pszMagicName);
-    if(!pMagic)
-        return hResult;
+    if (!pMagic)
+        return 0;
 
     CMagic* pMagicPlay = pMagic->Clone();
     ASSERT(pMagicPlay);
@@ -559,9 +560,7 @@ void CMagicManager::CParameter::SetSoundPlay(bool bSet)
 
     MagicContainer().Play(pMagicPlay);
     
-    hResult = pMagicPlay->GetHandle();
-
-    return hResult;
+    return pMagicPlay->GetHandle();
 };
 
 
@@ -570,14 +569,12 @@ void CMagicManager::CParameter::SetSoundPlay(bool bSet)
     ASSERT(pszMagicName);
     ASSERT(pvPosition);
 
-    uint32 hResult = 0;
-
     if (!MagicContainer().IsEnableRegistDisplay())
-        return hResult;
+        return 0;
     
     CMagic* pMagic = MagicContainer().Search(pszMagicName);
     if (!pMagic)
-        return hResult;
+        return 0;
 
     CMagic* pMagicPlay = pMagic->Clone();
     ASSERT(pMagicPlay);
@@ -590,9 +587,7 @@ void CMagicManager::CParameter::SetSoundPlay(bool bSet)
 
     MagicContainer().Play(pMagicPlay);
 
-    hResult = pMagicPlay->GetHandle();
-
-    return hResult;
+    return pMagicPlay->GetHandle();
 };
 
 
@@ -601,14 +596,12 @@ void CMagicManager::CParameter::SetSoundPlay(bool bSet)
     ASSERT(pszMagicName);
     ASSERT(pvPosition);
 
-    uint32 hResult = 0;
-
     if (!MagicContainer().IsEnableRegistDisplay())
     {
         if (pTarget)
             delete pTarget;
 
-        return hResult;
+        return 0;
     };
 
     CMagic* pMagic = MagicContainer().Search(pszMagicName);
@@ -617,7 +610,7 @@ void CMagicManager::CParameter::SetSoundPlay(bool bSet)
         if (pTarget)
             delete pTarget;
 
-        return hResult;
+        return 0;
     };
 
     CMagic* pMagicPlay = pMagic->Clone();
@@ -632,9 +625,7 @@ void CMagicManager::CParameter::SetSoundPlay(bool bSet)
 
     MagicContainer().Play(pMagicPlay);
 
-    hResult = pMagicPlay->GetHandle();
-
-    return hResult;
+    return pMagicPlay->GetHandle();
 };
 
 

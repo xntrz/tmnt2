@@ -84,14 +84,14 @@ bool CKeyboardOptionData::IsValid(void) const
 {
     for (int32 i = 0; i < COUNT_OF(m_aiKeyAssign); ++i)
     {
-        if (m_aiKeyAssign[i] < 0 ||
-            m_aiKeyAssign[i] > 256)
+        if ((m_aiKeyAssign[i] < 0) ||
+            (m_aiKeyAssign[i] > 256))
             return false;        
     };
 
     for (int32 i = 0; i < COUNT_OF(m_auButtonAssign); ++i)
     {
-        if (FLAG_TEST_ANY(m_auButtonAssign[i], ~CController::DIGITAL_MASK))
+        if (m_auButtonAssign[i] & ~CController::DIGITAL_MASK)
             return false;
     };
 
@@ -113,11 +113,12 @@ void CKeyboardOptionData::Restore(const RAWDATA& rRawData)
 
 void CKeyboardOptionData::AssignKey(OPTIONTYPES::KEYFUNC func, int32 iDIKey)
 {
-    ASSERT(func >= 0 && func < OPTIONTYPES::KEYFUNCMAX);
+    ASSERT(func >= 0);
+    ASSERT(func < OPTIONTYPES::KEYFUNCMAX);
 
     OPTIONTYPES::KEYFUNC funcOld = findFunction(iDIKey);
 
-    if (funcOld != OPTIONTYPES::KEYFUNCMAX && funcOld != func)
+    if ((funcOld != OPTIONTYPES::KEYFUNCMAX) && (funcOld != func))
         m_aiKeyAssign[funcOld] = m_aiKeyAssign[func];
 
     m_aiKeyAssign[func] = iDIKey;
@@ -126,8 +127,9 @@ void CKeyboardOptionData::AssignKey(OPTIONTYPES::KEYFUNC func, int32 iDIKey)
 
 bool CKeyboardOptionData::AssignDownKey(OPTIONTYPES::KEYFUNC func)
 {
-    ASSERT(func >= 0 && func < OPTIONTYPES::KEYFUNCMAX);
-    
+    ASSERT(func >= 0);
+    ASSERT(func < OPTIONTYPES::KEYFUNCMAX);
+
     int32 iDIKey = CPCSpecific::GetDownKey();
     
     if (iDIKey == -1)
@@ -149,7 +151,9 @@ bool CKeyboardOptionData::AssignDownKey(OPTIONTYPES::KEYFUNC func)
 
 int32 CKeyboardOptionData::GetAssignedKey(OPTIONTYPES::KEYFUNC func) const
 {
-    ASSERT(func >= 0 && func < OPTIONTYPES::KEYFUNCMAX);
+    ASSERT(func >= 0);
+    ASSERT(func < OPTIONTYPES::KEYFUNCMAX);
+    
     return m_aiKeyAssign[func];
 };
 

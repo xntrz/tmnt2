@@ -13,30 +13,40 @@
 
 namespace PlayerStatus
 {
-    bool CAttackA::IsEnableChangeStatus(PLAYERTYPES::STATUS status)
+    void CAttackCommon::OnAttach(void)
     {
-        PLAYERTYPES::STATUS aStatusArray[] =
-        {
-            PLAYERTYPES::STATUS_IDLE,
-            PLAYERTYPES::STATUS_WALK,
-            PLAYERTYPES::STATUS_RUN,
-        };
+        Character().ClearPlayerFlag(PLAYERTYPES::FLAG_REQUEST_ATTACK_MASK);
+        Character().SetPlayerFlag(PLAYERTYPES::FLAG_ENABLE_ATTACK_CONNECT);
 
-        return IsWithinStatusFromArray(status, aStatusArray, COUNT_OF(aStatusArray));
+        CGameSound::PlayAttackSE(m_pPlayerChr);
     };
 
-    
+
+    void CAttackCommon::OnRun(void)
+    {
+        if (Character().IsMotionEnd())
+            StateMachine().ChangeStatus(PLAYERTYPES::STATUS_IDLE);
+    };
+
+
+    //
+    // *********************************************************************************
+    //
+
+
+    DEFINE_ENABLED_STATUS_FOR(CAttackA, { PLAYERTYPES::STATUS_IDLE,
+                                          PLAYERTYPES::STATUS_WALK,
+                                          PLAYERTYPES::STATUS_RUN, });
+
+
     void CAttackA::OnAttach(void)
     {
         Character().ResetVelocity();
         Character().ResetAcceleration();
+
         Character().ChangeMotion(PLAYERTYPES::MOTIONNAMES::ATTACK_A);
-        
-        Character().SetPlayerFlag(PLAYERTYPES::FLAG_REQUEST_ATTACK_A, false);
-        Character().SetPlayerFlag(PLAYERTYPES::FLAG_REQUEST_ATTACK_B, false);
-        Character().SetPlayerFlag(PLAYERTYPES::FLAG_REQUEST_ATTACK_C, false);
-        Character().SetPlayerFlag(PLAYERTYPES::FLAG_ENABLE_ATTACK_CONNECT, true);
-        CGameSound::PlayAttackSE(m_pPlayerChr);
+
+        CAttackCommon::OnAttach();
     };
 
     
@@ -48,14 +58,13 @@ namespace PlayerStatus
     
     void CAttackA::OnRun(void)
     {
-        if (Character().CheckAttackConnect(PLAYERTYPES::FLAG_REQUEST_ATTACK_A))
-        {
+        uint32 mask = PLAYERTYPES::FLAG_REQUEST_ATTACK_A;
+        uint32 result = Character().CheckAttackConnect(static_cast<PLAYERTYPES::FLAG>(mask));
+
+        if (result == PLAYERTYPES::FLAG_REQUEST_ATTACK_A)
             StateMachine().ChangeStatus(PLAYERTYPES::STATUS_ATTACK_AA);
-        }
-        else if (Character().IsMotionEnd())
-        {
-            StateMachine().ChangeStatus(PLAYERTYPES::STATUS_IDLE);
-        };
+
+        CAttackCommon::OnRun();
     };
 
 
@@ -64,21 +73,14 @@ namespace PlayerStatus
     //
 
 
-    bool CAttackAA::IsEnableChangeStatus(PLAYERTYPES::STATUS status)
-    {
-        return (status == PLAYERTYPES::STATUS_ATTACK_A);
-    };
+    DEFINE_ENABLED_STATUS_FOR(CAttackAA, { PLAYERTYPES::STATUS_ATTACK_A });
 
-    
+
     void CAttackAA::OnAttach(void)
     {
         Character().ChangeMotion(PLAYERTYPES::MOTIONNAMES::ATTACK_AA);
 
-        Character().SetPlayerFlag(PLAYERTYPES::FLAG_REQUEST_ATTACK_A, false);
-        Character().SetPlayerFlag(PLAYERTYPES::FLAG_REQUEST_ATTACK_B, false);
-        Character().SetPlayerFlag(PLAYERTYPES::FLAG_REQUEST_ATTACK_C, false);
-        Character().SetPlayerFlag(PLAYERTYPES::FLAG_ENABLE_ATTACK_CONNECT, true);
-        CGameSound::PlayAttackSE(m_pPlayerChr);
+        CAttackCommon::OnAttach();    
     };
 
     
@@ -90,19 +92,20 @@ namespace PlayerStatus
     
     void CAttackAA::OnRun(void)
     {
-        if (Character().CheckAttackConnect(PLAYERTYPES::FLAG_REQUEST_ATTACK_C))
-        {
-            if (CGameData::Record().Secret().GetAttackLevel() >= 1)
-                StateMachine().ChangeStatus(PLAYERTYPES::STATUS_ATTACK_AAC);
-        }
-        else if (Character().CheckAttackConnect(PLAYERTYPES::FLAG_REQUEST_ATTACK_B))
+        uint32 mask   = PLAYERTYPES::FLAG_REQUEST_ATTACK_MASK;
+        uint32 result = Character().CheckAttackConnect(static_cast<PLAYERTYPES::FLAG>(mask));
+
+        if (result == PLAYERTYPES::FLAG_REQUEST_ATTACK_B)
         {
             StateMachine().ChangeStatus(PLAYERTYPES::STATUS_ATTACK_AAB);
         }
-        else if (Character().IsMotionEnd())
+        else if (result == PLAYERTYPES::FLAG_REQUEST_ATTACK_C)
         {
-            StateMachine().ChangeStatus(PLAYERTYPES::STATUS_IDLE);
+            if (CGameData::Record().Secret().GetAttackLevel() >= 1)
+                StateMachine().ChangeStatus(PLAYERTYPES::STATUS_ATTACK_AAC);
         };
+
+        CAttackCommon::OnRun();
     };
 
 
@@ -111,21 +114,14 @@ namespace PlayerStatus
     //
 
 
-    bool CAttackAAB::IsEnableChangeStatus(PLAYERTYPES::STATUS status)
-    {
-        return (status == PLAYERTYPES::STATUS_ATTACK_AA);
-    };
+    DEFINE_ENABLED_STATUS_FOR(CAttackAAB, { PLAYERTYPES::STATUS_ATTACK_AA });
 
     
     void CAttackAAB::OnAttach(void)
     {
         Character().ChangeMotion(PLAYERTYPES::MOTIONNAMES::ATTACK_AAB);
 
-        Character().SetPlayerFlag(PLAYERTYPES::FLAG_REQUEST_ATTACK_A, false);
-        Character().SetPlayerFlag(PLAYERTYPES::FLAG_REQUEST_ATTACK_B, false);
-        Character().SetPlayerFlag(PLAYERTYPES::FLAG_REQUEST_ATTACK_C, false);
-        Character().SetPlayerFlag(PLAYERTYPES::FLAG_ENABLE_ATTACK_CONNECT, true);
-        CGameSound::PlayAttackSE(m_pPlayerChr);
+        CAttackCommon::OnAttach();        
     };
 
     
@@ -137,20 +133,21 @@ namespace PlayerStatus
     
     void CAttackAAB::OnRun(void)
     {
-        if (Character().CheckAttackConnect(PLAYERTYPES::FLAG_REQUEST_ATTACK_C))
-        {
-            if (CGameData::Record().Secret().GetDefenceLevel() >= 2)
-                StateMachine().ChangeStatus(PLAYERTYPES::STATUS_ATTACK_AABC);
-        }
-        else if (Character().CheckAttackConnect(PLAYERTYPES::FLAG_REQUEST_ATTACK_B))
+        uint32 mask   = PLAYERTYPES::FLAG_REQUEST_ATTACK_C | PLAYERTYPES::FLAG_REQUEST_ATTACK_B;
+        uint32 result = Character().CheckAttackConnect(static_cast<PLAYERTYPES::FLAG>(mask));
+
+        if (result == PLAYERTYPES::FLAG_REQUEST_ATTACK_B)
         {
             if (CGameData::Record().Secret().GetAttackLevel() >= 2)
                 StateMachine().ChangeStatus(PLAYERTYPES::STATUS_ATTACK_AABB);
         }
-        else if (Character().IsMotionEnd())
+        else if (result == PLAYERTYPES::FLAG_REQUEST_ATTACK_C)
         {
-            StateMachine().ChangeStatus(PLAYERTYPES::STATUS_IDLE);
+            if (CGameData::Record().Secret().GetDefenceLevel() >= 2)
+                StateMachine().ChangeStatus(PLAYERTYPES::STATUS_ATTACK_AABC);
         };
+
+        CAttackCommon::OnRun();
     };
 
 
@@ -159,21 +156,14 @@ namespace PlayerStatus
     //
 
 
-    bool CAttackAAC::IsEnableChangeStatus(PLAYERTYPES::STATUS status)
-    {
-        return (status == PLAYERTYPES::STATUS_ATTACK_AA);
-    };
+    DEFINE_ENABLED_STATUS_FOR(CAttackAAC, { PLAYERTYPES::STATUS_ATTACK_AA });
 
     
     void CAttackAAC::OnAttach(void)
     {
         Character().ChangeMotion(PLAYERTYPES::MOTIONNAMES::ATTACK_AAC);
 
-        Character().SetPlayerFlag(PLAYERTYPES::FLAG_REQUEST_ATTACK_A, false);
-        Character().SetPlayerFlag(PLAYERTYPES::FLAG_REQUEST_ATTACK_B, false);
-        Character().SetPlayerFlag(PLAYERTYPES::FLAG_REQUEST_ATTACK_C, false);
-        Character().SetPlayerFlag(PLAYERTYPES::FLAG_ENABLE_ATTACK_CONNECT, true);
-        CGameSound::PlayAttackSE(m_pPlayerChr);
+        CAttackCommon::OnAttach();
     };
 
     
@@ -182,34 +172,20 @@ namespace PlayerStatus
         ;
     };
 
-    
-    void CAttackAAC::OnRun(void)
-    {
-        if (Character().IsMotionEnd())
-            StateMachine().ChangeStatus(PLAYERTYPES::STATUS_IDLE);
-    };
-
 
     //
     // *********************************************************************************
     //
 
 
-    bool CAttackAABB::IsEnableChangeStatus(PLAYERTYPES::STATUS status)
-    {
-        return (status == PLAYERTYPES::STATUS_ATTACK_AAB);
-    };
-
+    DEFINE_ENABLED_STATUS_FOR(CAttackAABB, { PLAYERTYPES::STATUS_ATTACK_AAB });
+    
     
     void CAttackAABB::OnAttach(void)
     {
         Character().ChangeMotion(PLAYERTYPES::MOTIONNAMES::ATTACK_AABB);
 
-        Character().SetPlayerFlag(PLAYERTYPES::FLAG_REQUEST_ATTACK_A, false);
-        Character().SetPlayerFlag(PLAYERTYPES::FLAG_REQUEST_ATTACK_B, false);
-        Character().SetPlayerFlag(PLAYERTYPES::FLAG_REQUEST_ATTACK_C, false);
-        Character().SetPlayerFlag(PLAYERTYPES::FLAG_ENABLE_ATTACK_CONNECT, true);
-        CGameSound::PlayAttackSE(m_pPlayerChr);
+        CAttackCommon::OnAttach();    
     };
 
     
@@ -221,20 +197,21 @@ namespace PlayerStatus
     
     void CAttackAABB::OnRun(void)
     {
-        if (Character().CheckAttackConnect(PLAYERTYPES::FLAG_REQUEST_ATTACK_C))
+        uint32 mask = PLAYERTYPES::FLAG_REQUEST_ATTACK_C | PLAYERTYPES::FLAG_REQUEST_ATTACK_B;
+        uint32 result = Character().CheckAttackConnect(static_cast<PLAYERTYPES::FLAG>(mask));
+
+        if (result == PLAYERTYPES::FLAG_REQUEST_ATTACK_B)
         {
-            if (CGameData::Record().Secret().GetChargeLevel() >= 2)
-                StateMachine().ChangeStatus(PLAYERTYPES::STATUS_ATTACK_AABBC);
-        }
-        else if (Character().CheckAttackConnect(PLAYERTYPES::FLAG_REQUEST_ATTACK_B))
-        {
-            if (CGameData::Record().Secret().GetAerialLevel() >= 2)
+            if (CGameData::Record().Secret().GetAerialLevel() >= 3)
                 StateMachine().ChangeStatus(PLAYERTYPES::STATUS_ATTACK_AABBB);
         }
-        else if (Character().IsMotionEnd())
+        else if (result == PLAYERTYPES::FLAG_REQUEST_ATTACK_C)
         {
-            StateMachine().ChangeStatus(PLAYERTYPES::STATUS_IDLE);
+            if (CGameData::Record().Secret().GetChargeLevel() >= 3)
+                StateMachine().ChangeStatus(PLAYERTYPES::STATUS_ATTACK_AABBC);
         };
+
+        CAttackCommon::OnRun();
     };
 
 
@@ -242,22 +219,15 @@ namespace PlayerStatus
     // *********************************************************************************
     //
 
-
-    bool CAttackAABC::IsEnableChangeStatus(PLAYERTYPES::STATUS status)
-    {
-        return (status == PLAYERTYPES::STATUS_ATTACK_AAB);
-    };
+    
+    DEFINE_ENABLED_STATUS_FOR(CAttackAABC, { PLAYERTYPES::STATUS_ATTACK_AAB });
 
     
     void CAttackAABC::OnAttach(void)
     {
         Character().ChangeMotion(PLAYERTYPES::MOTIONNAMES::ATTACK_AABC);
 
-        Character().SetPlayerFlag(PLAYERTYPES::FLAG_REQUEST_ATTACK_A, false);
-        Character().SetPlayerFlag(PLAYERTYPES::FLAG_REQUEST_ATTACK_B, false);
-        Character().SetPlayerFlag(PLAYERTYPES::FLAG_REQUEST_ATTACK_C, false);
-        Character().SetPlayerFlag(PLAYERTYPES::FLAG_ENABLE_ATTACK_CONNECT, true);
-        CGameSound::PlayAttackSE(m_pPlayerChr);
+        CAttackCommon::OnAttach();    
     };
 
     
@@ -266,39 +236,25 @@ namespace PlayerStatus
         ;
     };
 
-    
-    void CAttackAABC::OnRun(void)
-    {
-        if (Character().IsMotionEnd())
-            StateMachine().ChangeStatus(PLAYERTYPES::STATUS_IDLE);
-    };
-
 
     //
     // *********************************************************************************
     //
 
 
-    bool CAttackAABBB::IsEnableChangeStatus(PLAYERTYPES::STATUS status)
-    {
-        return (status == PLAYERTYPES::STATUS_ATTACK_AABB);
-    };
+    DEFINE_ENABLED_STATUS_FOR(CAttackAABBB, { PLAYERTYPES::STATUS_ATTACK_AABB });    
 
     
     void CAttackAABBB::OnAttach(void)
     {
         Character().ChangeMotion(PLAYERTYPES::MOTIONNAMES::ATTACK_AABBB);
 
-        Character().SetPlayerFlag(PLAYERTYPES::FLAG_REQUEST_ATTACK_A, false);
-        Character().SetPlayerFlag(PLAYERTYPES::FLAG_REQUEST_ATTACK_B, false);
-        Character().SetPlayerFlag(PLAYERTYPES::FLAG_REQUEST_ATTACK_C, false);
-        Character().SetPlayerFlag(PLAYERTYPES::FLAG_ENABLE_ATTACK_CONNECT, true);
-        CGameSound::PlayAttackSE(m_pPlayerChr);
-
-        RwV3d vPosBody = Math::VECTOR3_ZERO;
-        RwV3d vPosChr = Math::VECTOR3_ZERO;
+        CAttackCommon::OnAttach();        
         
+        RwV3d vPosBody = Math::VECTOR3_ZERO;
         Character().GetBodyPosition(&vPosBody);
+
+        RwV3d vPosChr = Math::VECTOR3_ZERO;
         Character().GetPosition(&vPosChr);
 
         RwV3d vOffset = Math::VECTOR3_ZERO;
@@ -315,34 +271,20 @@ namespace PlayerStatus
         ;
     };
 
-    
-    void CAttackAABBB::OnRun(void)
-    {
-        if (Character().IsMotionEnd())
-            StateMachine().ChangeStatus(PLAYERTYPES::STATUS_IDLE);
-    };
-
 
     //
     // *********************************************************************************
     //
 
 
-    bool CAttackAABBC::IsEnableChangeStatus(PLAYERTYPES::STATUS status)
-    {
-        return (status == PLAYERTYPES::STATUS_ATTACK_AABB);
-    };
-
+    DEFINE_ENABLED_STATUS_FOR(CAttackAABBC, { PLAYERTYPES::STATUS_ATTACK_AABB });
+    
     
     void CAttackAABBC::OnAttach(void)
     {
         Character().ChangeMotion(PLAYERTYPES::MOTIONNAMES::ATTACK_AABBC);
 
-        Character().SetPlayerFlag(PLAYERTYPES::FLAG_REQUEST_ATTACK_A, false);
-        Character().SetPlayerFlag(PLAYERTYPES::FLAG_REQUEST_ATTACK_B, false);
-        Character().SetPlayerFlag(PLAYERTYPES::FLAG_REQUEST_ATTACK_C, false);
-        Character().SetPlayerFlag(PLAYERTYPES::FLAG_ENABLE_ATTACK_CONNECT, true);
-        CGameSound::PlayAttackSE(m_pPlayerChr);
+        CAttackCommon::OnAttach();        
 
         PlayerUtil::CallVoiceOfAABBC(m_pPlayerChr);
     };
@@ -356,14 +298,10 @@ namespace PlayerStatus
     
     void CAttackAABBC::OnRun(void)
     {
-        if (Character().IsCharacterFlagSet(CHARACTERTYPES::FLAG_OCCURED_TIMING))
-        {
+        if (Character().TestCharacterFlag(CHARACTERTYPES::FLAG_OCCURED_TIMING))
             OnDischargeWave();
-        }
-        else if (Character().IsMotionEnd())
-        {
-            StateMachine().ChangeStatus(PLAYERTYPES::STATUS_IDLE);
-        };        
+
+        CAttackCommon::OnRun();
     };
 
 
@@ -372,27 +310,20 @@ namespace PlayerStatus
     //
 
 
-    bool CAttackB::IsEnableChangeStatus(PLAYERTYPES::STATUS status)
-    {
-        return (status == PLAYERTYPES::STATUS_ATTACK_B_CHARGE);
-    };
-
+    DEFINE_ENABLED_STATUS_FOR(CAttackB, { PLAYERTYPES::STATUS_ATTACK_B_CHARGE });
+    
     
     void CAttackB::OnAttach(void)
     {
-        Character().SetPlayerFlag(PLAYERTYPES::FLAG_REQUEST_ATTACK_A, false);
-        Character().SetPlayerFlag(PLAYERTYPES::FLAG_REQUEST_ATTACK_B, false);
-        Character().SetPlayerFlag(PLAYERTYPES::FLAG_REQUEST_ATTACK_C, false);
-        Character().SetPlayerFlag(PLAYERTYPES::FLAG_ENABLE_ATTACK_CONNECT, true);
-        CGameSound::PlayAttackSE(m_pPlayerChr);
+        CAttackCommon::OnAttach();        
 
-        CAccumulateModule* pModule = (CAccumulateModule*)Character().GetModule(MODULETYPE::ACCUMULATE);
+        CAccumulateModule* pModule = static_cast<CAccumulateModule*>(Character().GetModule(MODULETYPE::ACCUMULATE));
         if (pModule)
             pModule->SetDrawOn();
 
-        if (Character().GetChargePhase() == PLAYERTYPES::CHARGEPHASE_1ST ||
-            Character().GetChargePhase() == PLAYERTYPES::CHARGEPHASE_2ND ||
-            Character().GetChargePhase() == PLAYERTYPES::CHARGEPHASE_3RD)
+        if ((Character().GetChargePhase() == PLAYERTYPES::CHARGEPHASE_1ST) ||
+            (Character().GetChargePhase() == PLAYERTYPES::CHARGEPHASE_2ND) ||
+            (Character().GetChargePhase() == PLAYERTYPES::CHARGEPHASE_3RD))
         {
             PlayerUtil::CallVoiceOfChargeAttack(m_pPlayerChr);
         };
@@ -401,7 +332,7 @@ namespace PlayerStatus
     
     void CAttackB::OnDetach(void)
     {
-        CAccumulateModule* pModule = (CAccumulateModule*)Character().GetModule(MODULETYPE::ACCUMULATE);
+        CAccumulateModule* pModule = static_cast<CAccumulateModule*>(Character().GetModule(MODULETYPE::ACCUMULATE));
         if (pModule)
             pModule->SetDrawOff();
         
@@ -411,17 +342,16 @@ namespace PlayerStatus
     
     void CAttackB::OnRun(void)
     {
-        if (Character().IsCharacterFlagSet(CHARACTERTYPES::FLAG_OCCURED_TIMING))
+        if (Character().TestCharacterFlag(CHARACTERTYPES::FLAG_OCCURED_TIMING))
         {
             CallDischargeWave();
 
-            CAccumulateModule* pModule = (CAccumulateModule*)Character().GetModule(MODULETYPE::ACCUMULATE);
+            CAccumulateModule* pModule = static_cast<CAccumulateModule*>(Character().GetModule(MODULETYPE::ACCUMULATE));
             if (pModule)
                 pModule->SetDrawOff();
 		};
 
-        if (Character().IsMotionEnd())
-            StateMachine().ChangeStatus(PLAYERTYPES::STATUS_IDLE);
+        CAttackCommon::OnRun();
     };
 
     
@@ -440,6 +370,9 @@ namespace PlayerStatus
         case PLAYERTYPES::CHARGEPHASE_3RD:
             OnDischargeWave(MAGIC_GENERIC::STEP_THREE);
             break;
+            
+        default:
+            break;
         };
     };
 
@@ -449,46 +382,42 @@ namespace PlayerStatus
     //
 
 
-    bool CAttackBCharge::IsEnableChangeStatus(PLAYERTYPES::STATUS status)
-    {
-        PLAYERTYPES::STATUS aStatusArray[] =
-        {
-            PLAYERTYPES::STATUS_IDLE,
-            PLAYERTYPES::STATUS_WALK,
-            PLAYERTYPES::STATUS_RUN,
-        };
-
-        return IsWithinStatusFromArray(status, aStatusArray, COUNT_OF(aStatusArray));
-    };
+    DEFINE_ENABLED_STATUS_FOR(CAttackBCharge, { PLAYERTYPES::STATUS_IDLE,
+                                                PLAYERTYPES::STATUS_WALK,
+                                                PLAYERTYPES::STATUS_RUN, });
 
     
     void CAttackBCharge::OnAttach(void)
     {
         Character().ChangeMotion(PLAYERTYPES::MOTIONNAMES::ATTACK_B);
-        Character().SetCharacterFlag(CHARACTERTYPES::FLAG_MOTION_SPEED_CTRL, true);
+        
+        Character().SetCharacterFlag(CHARACTERTYPES::FLAG_MOTION_SPEED_CTRL);
         Character().SetMotionSpeed(0.05f);
+
         Character().ResetVelocity();
         Character().ResetAcceleration();
-		Character().ClearCharge();
+        
+        Character().ClearCharge();
 
-        m_bCallEffect = false;
-
-        CAccumulateModule* pModule = (CAccumulateModule*)Character().GetModule(MODULETYPE::ACCUMULATE);
+        CAccumulateModule* pModule = static_cast<CAccumulateModule*>(Character().GetModule(MODULETYPE::ACCUMULATE));
         if (pModule)
         {
             pModule->SetStepZero();
             pModule->SetEffectOff();
             pModule->SetDrawOff();
         };
+
+        m_bCallEffect = false;
     };
 
     
     void CAttackBCharge::OnDetach(void)
     {
-        Character().SetCharacterFlag(CHARACTERTYPES::FLAG_MOTION_SPEED_CTRL, false);
+        Character().ClearCharacterFlag(CHARACTERTYPES::FLAG_MOTION_SPEED_CTRL);
+
         if (m_bCallEffect)
         {
-            CAccumulateModule* pModule = (CAccumulateModule*)Character().GetModule(MODULETYPE::ACCUMULATE);
+            CAccumulateModule* pModule = static_cast<CAccumulateModule*>(Character().GetModule(MODULETYPE::ACCUMULATE));
             if (pModule)
             {
                 pModule->SetEffectOff();
@@ -500,9 +429,9 @@ namespace PlayerStatus
     
     void CAttackBCharge::OnRun(void)
     {
-        CAccumulateModule* pModule = (CAccumulateModule*)Character().GetModule(MODULETYPE::ACCUMULATE);
+        CAccumulateModule* pModule = static_cast<CAccumulateModule*>(Character().GetModule(MODULETYPE::ACCUMULATE));
         
-        if (!m_bCallEffect && StateMachine().GetStatusDuration() >= 0.3f)
+        if (!m_bCallEffect && (StateMachine().GetStatusDuration() >= 0.3f))
         {
             if (pModule)
             {
@@ -516,15 +445,12 @@ namespace PlayerStatus
 		PLAYERTYPES::CHARGEPHASE phasePrev = Character().GetChargePhase();
 		PLAYERTYPES::CHARGEPHASE phaseNow = PLAYERTYPES::CHARGEPHASE_ZERO;
         
-        bool bResult = Character().CheckChargeTime(
-            StateMachine().GetStatusDuration(),
-            phaseNow
-        );
+        bool bResult = Character().CheckChargeTime(StateMachine().GetStatusDuration(), &phaseNow);
 
         if (bResult)
             StateMachine().ChangeStatus(PLAYERTYPES::STATUS_ATTACK_B); 
 
-        if (phaseNow != phasePrev && pModule)
+        if ((phaseNow != phasePrev) && pModule)
         {
             switch (phaseNow)
             {
@@ -538,6 +464,9 @@ namespace PlayerStatus
 
             case PLAYERTYPES::CHARGEPHASE_3RD:
                 pModule->SetStepThree();
+                break;
+
+            default:
                 break;
             };
 
@@ -555,18 +484,10 @@ namespace PlayerStatus
     //
 
 
-    bool CAttackKnife::IsEnableChangeStatus(PLAYERTYPES::STATUS status)
-    {
-        PLAYERTYPES::STATUS aStatusArray[] =
-        {
-            PLAYERTYPES::STATUS_IDLE,
-            PLAYERTYPES::STATUS_WALK,
-            PLAYERTYPES::STATUS_RUN,
-            PLAYERTYPES::STATUS_ATTACK_KNIFE,
-        };
-
-        return IsWithinStatusFromArray(status, aStatusArray, COUNT_OF(aStatusArray));
-    };
+    DEFINE_ENABLED_STATUS_FOR(CAttackKnife, { PLAYERTYPES::STATUS_IDLE,
+                                              PLAYERTYPES::STATUS_WALK,
+                                              PLAYERTYPES::STATUS_RUN,
+                                              PLAYERTYPES::STATUS_ATTACK_KNIFE });
 
     
     void CAttackKnife::OnAttach(void)
@@ -578,25 +499,26 @@ namespace PlayerStatus
 
         Character().ResetAcceleration();
         Character().ResetVelocity();
-        Character().SetPlayerFlag(PLAYERTYPES::FLAG_DISABLE_THROW_KNIFE, true);
+
+        Character().SetPlayerFlag(PLAYERTYPES::FLAG_DISABLE_THROW_KNIFE);
     };
 
     
     void CAttackKnife::OnDetach(void)
     {
-        Character().SetPlayerFlag(PLAYERTYPES::FLAG_DISABLE_THROW_KNIFE, false);
+        Character().ClearPlayerFlag(PLAYERTYPES::FLAG_DISABLE_THROW_KNIFE);
     };
 
     
     void CAttackKnife::OnRun(void)
     {
-        if (Character().IsCharacterFlagSet(CHARACTERTYPES::FLAG_OCCURED_TIMING))
+        if (Character().TestCharacterFlag(CHARACTERTYPES::FLAG_OCCURED_TIMING))
         {
 			CGameSound::PlayObjectSE(m_pPlayerChr, SDCODE_SE(0x1020));
             Character().ShootingKnife();
             CGameEvent::SetPlayerTechnicalAction(Character().GetPlayerNo(), GAMETYPES::TECACT_KNIFE);
 
-            Character().SetPlayerFlag(PLAYERTYPES::FLAG_DISABLE_THROW_KNIFE, false);
+            Character().ClearPlayerFlag(PLAYERTYPES::FLAG_DISABLE_THROW_KNIFE);
         };
 
         if (Character().IsMotionEnd())
@@ -609,19 +531,11 @@ namespace PlayerStatus
     //
 
 
-    bool CAttackKnifeJump::IsEnableChangeStatus(PLAYERTYPES::STATUS status)
-    {
-        PLAYERTYPES::STATUS aStatusArray[] =
-        {
-            PLAYERTYPES::STATUS_JUMP,
-            PLAYERTYPES::STATUS_JUMP_2ND,
-            PLAYERTYPES::STATUS_AERIAL,
-            PLAYERTYPES::STATUS_AERIAL_MOVE,
-            PLAYERTYPES::STATUS_ATTACK_KNIFE_JUMP,
-        };
-
-        return IsWithinStatusFromArray(status, aStatusArray, COUNT_OF(aStatusArray));
-    };
+    DEFINE_ENABLED_STATUS_FOR(CAttackKnifeJump, { PLAYERTYPES::STATUS_JUMP,
+                                                  PLAYERTYPES::STATUS_JUMP_2ND,
+                                                  PLAYERTYPES::STATUS_AERIAL,
+                                                  PLAYERTYPES::STATUS_AERIAL_MOVE,
+                                                  PLAYERTYPES::STATUS_ATTACK_KNIFE_JUMP });
 
     
     void CAttackKnifeJump::OnAttach(void)
@@ -631,29 +545,30 @@ namespace PlayerStatus
         else
             Character().ChangeMotion(PLAYERTYPES::MOTIONNAMES::ATTACK_KNIFE_JUMP);
 
-        Character().SetPlayerFlag(PLAYERTYPES::FLAG_AERIAL_STATUS, true);
-        Character().SetPlayerFlag(PLAYERTYPES::FLAG_DISABLE_THROW_KNIFE, true);
-        Character().SetCharacterFlag(CHARACTERTYPES::FLAG_FIXED_DIRECTION, true);
-        Character().SetCharacterFlag(CHARACTERTYPES::FLAG_FIXED_MODEL_ROTATION, false);
+        Character().SetPlayerFlag(PLAYERTYPES::FLAG_AERIAL_STATUS);
+        Character().SetPlayerFlag(PLAYERTYPES::FLAG_DISABLE_THROW_KNIFE);
+
+        Character().SetCharacterFlag(CHARACTERTYPES::FLAG_FIXED_DIRECTION);
+        Character().ClearCharacterFlag(CHARACTERTYPES::FLAG_FIXED_MODEL_ROTATION);
     };
 
     
     void CAttackKnifeJump::OnDetach(void)
     {
-        Character().SetPlayerFlag(PLAYERTYPES::FLAG_DISABLE_THROW_KNIFE, false);
-        Character().SetCharacterFlag(CHARACTERTYPES::FLAG_FIXED_DIRECTION, false);
+        Character().ClearPlayerFlag(PLAYERTYPES::FLAG_DISABLE_THROW_KNIFE);
+        Character().ClearCharacterFlag(CHARACTERTYPES::FLAG_FIXED_DIRECTION);
     };
 
     
     void CAttackKnifeJump::OnRun(void)
     {
-        if (Character().IsCharacterFlagSet(CHARACTERTYPES::FLAG_OCCURED_TIMING))
+        if (Character().TestCharacterFlag(CHARACTERTYPES::FLAG_OCCURED_TIMING))
         {
             CGameSound::PlayObjectSE(m_pPlayerChr, SDCODE_SE(4128));
             Character().ShootingKnife();
             CGameEvent::SetPlayerTechnicalAction(Character().GetPlayerNo(), GAMETYPES::TECACT_KNIFE_JUMP);
 
-            Character().SetPlayerFlag(PLAYERTYPES::FLAG_DISABLE_THROW_KNIFE, false);
+            Character().ClearPlayerFlag(PLAYERTYPES::FLAG_DISABLE_THROW_KNIFE);
         };
     };
 
@@ -663,30 +578,22 @@ namespace PlayerStatus
     //
 
 
-    bool CAttackRun::IsEnableChangeStatus(PLAYERTYPES::STATUS status)
-    {
-        return (status == PLAYERTYPES::STATUS_RUN);
-    };
+    DEFINE_ENABLED_STATUS_FOR(CAttackRun, { PLAYERTYPES::STATUS_RUN });    
 
     
     void CAttackRun::OnAttach(void)
     {
         Character().ChangeMotion(PLAYERTYPES::MOTIONNAMES::ATTACK_RUN);
+
         Character().ResetVelocity();
-		Character().ResetAcceleration();
-		CGameSound::PlayAttackSE(&Character());
+        Character().ResetAcceleration();
+        
+        CGameSound::PlayAttackSE(&Character());
 	};
 
     
     void CAttackRun::OnDetach(void)
     {
         ;
-    };
-
-    
-    void CAttackRun::OnRun(void)
-    {
-        if (Character().IsMotionEnd())
-            StateMachine().ChangeStatus(PLAYERTYPES::STATUS_IDLE);
     };
 };

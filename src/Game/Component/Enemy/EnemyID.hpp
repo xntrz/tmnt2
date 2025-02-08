@@ -1,6 +1,66 @@
 #pragma once
 
 
+/**
+ *  List of implemented enemies ID by AI group, all groups use different AI implementation.
+ *  (probably some of them were developing at the same time by different devs group back in 2004)
+ *
+ *
+ *  CBaseGeneralEnemyAI (grappler & gunner & flying) list:
+ *  - ID_DUMMY
+ *  - ID_PURPLE_DRAGON_GANG
+ *  - ID_FOOT_NINJA_SWORD
+ *  - ID_FOOT_NINJA_STAFF
+ *  - ID_FEUDAL_FOOT_NINJA_SWORD
+ *  - ID_FEUDAL_FOOT_NINJA_STAFF
+ *  - ID_UTROMS_SECURITY_PATROL
+ *  - ID_FEDERATION_SOLDIER
+ *  - ID_MOBSTER
+ *  - ID_FOOT_NINJA_ARCHER
+ *  - ID_FEUDAL_FOOT_NINJA_ARCHER
+ *  - ID_FEDERATION_SHOOTER
+ *  - ID_EXO_SUITED_UTROMS
+ *  - ID_CAPTAIN_OF_FEDERATION
+ *  - ID_LARGE_MOBSTER
+ *  - ID_LARGE_FOOT_NINJA
+ *  - ID_FEUDAL_LARGE_FOOT_NINJA
+ *  - ID_LARGE_FEDERATION_SOLDIET
+ *  - ID_LARGE_EXO_SUITED_UTROMS
+ *  - ID_FOOT_TECH_NINJA
+ *  - ID_FOOT_SUMO_NINJA
+ *  - ID_FOOT_GUNNER_FOOT_MECH
+ *  - ID_CAPTAIN_OF_FEUDAL_FOOT_NINJA
+ *  - ID_TRICERATION_SOLDIER
+ *  - ID_TRICERATION_SHOOTER
+ *  - ID_TRICERATION_FLYING_HARNESS
+ *  - ID_BLOOD_SUCKER
+ *  - ID_POISON_BAT
+ *  - ID_HYPNOSIS_BAT
+ *  - ID_BOMB_BAT_MECH
+ *  - ID_KURAGE
+ *  - ID_KABUTO
+ *  - ID_UTROM_SAUCER
+ *  - ID_FUGITOID
+ *
+ *
+ *  CBaseEliteAI list:
+ *    TODO
+ *
+ *
+ *  CBaseAI6045 list:
+ *    TODO
+ *
+ *
+ *  CBaseAI6043 enemy list:
+ *    TODO
+ *
+ *
+ *  Others (that not use any base) list:
+ *    TODO
+ *
+ */
+        
+
 namespace ENEMYID
 {
     enum VALUE

@@ -69,6 +69,11 @@ private:
 };
 
 
+//
+// *********************************************************************************
+//
+
+
 CBinaryReader::CBinaryReader(const void* pBuffer, uint32 uBufferSize)
 : m_pBuffOrg((char*)pBuffer)
 , m_pBuffPos(m_pBuffOrg)
@@ -131,6 +136,11 @@ T CBinaryReader::buff_io(bool peek)
 };
 
 
+//
+// *********************************************************************************
+//
+
+
 CCharacterParameterContainer::CPackage::CPackage(void)
 : m_iGeneration(-1)
 {
@@ -173,20 +183,19 @@ void CCharacterParameterContainer::CPackage::Initialize(const char* pszName, con
         ID_OFF_ATOMIC_DATA,
         ID_POSITION,
     };
-
     
     ASSERT(pszName);
     ASSERT(std::strlen(pszName) < CMotionParameterManager::MODEL_NAME_MAX);
     ASSERT(pBuffer);
 
-
     m_iGeneration = iGeneration;
-    HEADER* pHeader = (HEADER*)pBuffer;
+
+    const HEADER* pHeader = reinterpret_cast<const HEADER*>(pBuffer);
     if (pHeader->flags < 7)
         m_bReverseAtomicNo = true;
     
     uint8 id = 0;
-    CBinaryReader br((char*)pBuffer + sizeof(HEADER), uBufferSize);
+    CBinaryReader br(++pHeader, uBufferSize);
 
     id = br.read<uint8>();
     ASSERT(id == ID_HIT_MAP);
@@ -208,15 +217,15 @@ void CCharacterParameterContainer::CPackage::Initialize(const char* pszName, con
     {
 		br.read<uint8>();
 
-        int32 nPosNum = br.read<uint8>();
+        int32 nPosNum = static_cast<int32>(br.read<uint8>());
         for (int32 i = 0; i < nPosNum; ++i)
         {
             CHitSphereParameter::INIT_PARAMETER InitParam;
-            InitParam.m_nBoneID = br.read<uint8>();
+            InitParam.m_nBoneID         = static_cast<int32>(br.read<uint8>());
             InitParam.m_sphere.center.x = br.read<float>();
             InitParam.m_sphere.center.y = br.read<float>();
             InitParam.m_sphere.center.z = br.read<float>();
-            InitParam.m_sphere.radius = br.read<float>();
+            InitParam.m_sphere.radius   = br.read<float>();
 
             CCharacterParameter::CreatePosition(&InitParam);
 
@@ -232,15 +241,15 @@ void CCharacterParameterContainer::CPackage::Initialize(const char* pszName, con
     id = br.read<uint8>();
     ASSERT(id == ID_HIT_BODY);
 
-    int32 nBodyNum = br.read<uint8>();
+    int32 nBodyNum = static_cast<int32>(br.read<uint8>());
     for (int32 i = 0; i < nBodyNum; ++i)
     {
         CHitSphereParameter::INIT_PARAMETER BodyParam;
-        BodyParam.m_nBoneID = br.read<uint8>();
+        BodyParam.m_nBoneID         = static_cast<int32>(br.read<uint8>());
         BodyParam.m_sphere.center.x = br.read<float>();
         BodyParam.m_sphere.center.y = br.read<float>();
         BodyParam.m_sphere.center.z = br.read<float>();
-        BodyParam.m_sphere.radius = br.read<float>();
+        BodyParam.m_sphere.radius   = br.read<float>();
 
         CCharacterParameter::CreateHitBody(&BodyParam);
 
@@ -255,15 +264,15 @@ void CCharacterParameterContainer::CPackage::Initialize(const char* pszName, con
     id = br.read<uint8>();
     ASSERT(id == ID_HIT_CATCH);
 
-    int32 nCatchNum = br.read<uint8>();
+    int32 nCatchNum = static_cast<int32>(br.read<uint8>());
     for (int32 i = 0; i < nCatchNum; ++i)
     {
         CHitSphereParameter::INIT_PARAMETER CatchParam;
-        CatchParam.m_nBoneID = br.read<uint8>();
+        CatchParam.m_nBoneID         = static_cast<int32>(br.read<uint8>());
         CatchParam.m_sphere.center.x = br.read<float>();
         CatchParam.m_sphere.center.y = br.read<float>();
         CatchParam.m_sphere.center.z = br.read<float>();
-        CatchParam.m_sphere.radius = br.read<float>();
+        CatchParam.m_sphere.radius   = br.read<float>();
 
         CCharacterParameter::CreateHitCatch(&CatchParam);
 
@@ -278,7 +287,7 @@ void CCharacterParameterContainer::CPackage::Initialize(const char* pszName, con
     id = br.read<uint8>();
     ASSERT(id == ID_MOTION);
 
-    int32 nMotionNum = br.read<uint8>();
+    int32 nMotionNum = static_cast<int32>(br.read<uint8>());
     for (int32 i = 0; i < nMotionNum; ++i)
     {
         //
@@ -301,7 +310,7 @@ void CCharacterParameterContainer::CPackage::Initialize(const char* pszName, con
 
         id = br.read<uint8>();
         ASSERT(id == ID_PLAYMODE);
-        MotionParam.m_playmode = br.read<uint8>();
+        MotionParam.m_playmode = static_cast<int32>(br.read<uint8>());
         CCharacterParameter::CreateMotion(&MotionParam);
 
         //
@@ -311,18 +320,18 @@ void CCharacterParameterContainer::CPackage::Initialize(const char* pszName, con
         {
             br.read<uint8>();
 
-            int32 nAttackNum = br.read<uint8>();
+            int32 nAttackNum = static_cast<int32>(br.read<uint8>());
             for (int32 j = 0; j < nAttackNum; ++j)
             {
                 CAttackParameter::INIT_PARAMETER AttackParam;
-                AttackParam.m_no = j;
-                AttackParam.m_nBoneID = br.read<uint8>();
+                AttackParam.m_no              = j;
+                AttackParam.m_nBoneID         = br.read<uint8>();
                 AttackParam.m_sphere.center.x = br.read<float>();
                 AttackParam.m_sphere.center.y = br.read<float>();
                 AttackParam.m_sphere.center.z = br.read<float>();
-                AttackParam.m_sphere.radius = br.read<float>();
-                AttackParam.m_fStart = br.read<float>();
-                AttackParam.m_fEnd = br.read<float>();
+                AttackParam.m_sphere.radius   = br.read<float>();
+                AttackParam.m_fStart          = br.read<float>();
+                AttackParam.m_fEnd            = br.read<float>();
 
                 CCharacterParameter::CreateAttack(&AttackParam);
 
@@ -341,15 +350,15 @@ void CCharacterParameterContainer::CPackage::Initialize(const char* pszName, con
 
             CChainMotionParameter::INIT_PARAMETER ChainInitParam;
             ChainInitParam.m_fStart = br.read<float>();
-            ChainInitParam.m_fEnd = br.read<float>();
+            ChainInitParam.m_fEnd   = br.read<float>();
 
             CCharacterParameter::CreateChainMotion(&ChainInitParam);
 
-            int32 nChainNum = br.read<uint8>();
+            int32 nChainNum = static_cast<int32>(br.read<uint8>());
             for (int32 j = 0; j < nChainNum; ++j)
             {
                 CChainMotionParameter::ATTACH_PARAMETER ChainAttachParam;
-                ChainAttachParam.m_nButton = br.read<uint8>();
+                ChainAttachParam.m_nButton = static_cast<int32>(br.read<uint8>());
                 ReadMotionName(br, ChainAttachParam.m_szMotionName);
 
                 CCharacterParameter::AttachChainMotion(&ChainAttachParam);
@@ -367,13 +376,13 @@ void CCharacterParameterContainer::CPackage::Initialize(const char* pszName, con
         {
             br.read<uint8>();
 
-            int32 nTimingNum = br.read<uint8>();
+            int32 nTimingNum = static_cast<int32>(br.read<uint8>());
             for (int32 j = 0; j < nTimingNum; ++j)
             {
                 CTimingParameter::INIT_PARAMETER timingParameter;
-                timingParameter.m_kind = CTimingParameter::TIMING_KIND(br.read<uint8>());
-                timingParameter.m_fTime = br.read<float>();
-                timingParameter.m_nParam = br.read<int32>();
+                timingParameter.m_kind   = static_cast<CTimingParameter::TIMING_KIND>(br.read<uint8>());
+                timingParameter.m_fTime  = br.read<float>();
+                timingParameter.m_nParam = static_cast<int32>(br.read<int32>());
 
                 CCharacterParameter::CreateTiming(&timingParameter);
 
@@ -395,20 +404,20 @@ void CCharacterParameterContainer::CPackage::Initialize(const char* pszName, con
     if (br.peek<uint8>() == ID_LOCUS)
     {
 		br.read<uint8>();
-        int32 nLocusNum = br.read<uint8>();
 
+        int32 nLocusNum = static_cast<int32>(br.read<uint8>());
         for (int32 i = 0; i < nLocusNum; ++i)
         {
             CLocusParameter::INIT_PARAMETER LocusParam;
-            LocusParam.m_nBoneID        = br.read<uint8>();
+            LocusParam.m_nBoneID        = static_cast<int32>(br.read<uint8>());
             LocusParam.m_vPositionHigh.x= br.read<float>();
             LocusParam.m_vPositionHigh.y= br.read<float>();
             LocusParam.m_vPositionHigh.z= br.read<float>();
 
-            LocusParam.m_Color.red      = br.read<uint8>();
-            LocusParam.m_Color.green    = br.read<uint8>();
-            LocusParam.m_Color.blue     = br.read<uint8>();
-            LocusParam.m_Color.alpha    = br.read<uint8>();
+            LocusParam.m_Color.red      = static_cast<RwUInt8>(br.read<uint8>());
+            LocusParam.m_Color.green    = static_cast<RwUInt8>(br.read<uint8>());
+            LocusParam.m_Color.blue     = static_cast<RwUInt8>(br.read<uint8>());
+            LocusParam.m_Color.alpha    = static_cast<RwUInt8>(br.read<uint8>());
 
             LocusParam.m_vPositionLow.x = br.read<float>();
             LocusParam.m_vPositionLow.y = br.read<float>();
@@ -436,13 +445,14 @@ void CCharacterParameterContainer::CPackage::Initialize(const char* pszName, con
 
     if (br.peek<uint8>() == ID_OFF_ATOMIC_DATA)
     {
-        br.read<uint8>();        
-        int32 nOffAtomic = br.read<uint8>();
+        br.read<uint8>();
         
+        int32 nOffAtomic = static_cast<int32>(br.read<uint8>());
         CCharacterParameter::SetDefaultOffAtomicNum(nOffAtomic);
+        
         for (int32 i = 0; i < nOffAtomic; ++i)
         {
-            int32 atomicID = br.read<uint8>();
+            int32 atomicID = static_cast<int32>(br.read<uint8>());
             CCharacterParameter::SetDefaultOffAtomicNo(i, atomicID);
         };
     };
@@ -491,7 +501,7 @@ void CCharacterParameterContainer::CPackage::Initialize(const char* pszName, con
                             break;
 
                         case 4:
-                            AttackAttachParam.m_nStatus = br.read<uint8>();
+                            AttackAttachParam.m_nStatus = static_cast<int32>(br.read<uint8>());
                             break;
 
                         case 5:
@@ -503,19 +513,19 @@ void CCharacterParameterContainer::CPackage::Initialize(const char* pszName, con
                             break;
 
                         case 7:
-                            AttackAttachParam.m_bConfusion = br.read<uint8>() > 0;
+                            AttackAttachParam.m_bConfusion = (br.read<uint8>() > 0);
                             break;
 
                         case 8:
-                            AttackAttachParam.m_nAntiguard = br.read<uint8>() > 0;
+							AttackAttachParam.m_nAntiguard = static_cast<int32>(br.read<uint8>());
                             break;
 
                         case 9:
-                            AttackAttachParam.m_bGuardImpact = br.read<uint8>() > 0;
+                            AttackAttachParam.m_bGuardImpact = (br.read<uint8>() > 0);
                             break;
 
                         case 10:
-                            AttackAttachParam.m_bSlice = br.read<uint8>() > 0;
+                            AttackAttachParam.m_bSlice = (br.read<uint8>() > 0);
                             break;
 
                         case 11:
@@ -543,13 +553,17 @@ void CCharacterParameterContainer::CPackage::Initialize(const char* pszName, con
                         attackParamType = br.read<uint8>();
 
                     } while (attackParamType);
-                };
 
-                if (AttackAttachParam.m_nStatus != CHitAttackData::STATUS_STUN   &&
-                    AttackAttachParam.m_nStatus != CHitAttackData::STATUS_DINDLE &&
-                    AttackAttachParam.m_nStatus != CHitAttackData::STATUS_SLEEP  &&
-                    AttackAttachParam.m_nStatus != CHitAttackData::STATUS_FREEZE &&
-                    AttackAttachParam.m_nStatus != CHitAttackData::STATUS_BIND)
+                    if ((AttackAttachParam.m_nStatus != CHitAttackData::STATUS_STUN)   &&
+                        (AttackAttachParam.m_nStatus != CHitAttackData::STATUS_DINDLE) &&
+                        (AttackAttachParam.m_nStatus != CHitAttackData::STATUS_SLEEP)  &&
+                        (AttackAttachParam.m_nStatus != CHitAttackData::STATUS_FREEZE) &&
+                        (AttackAttachParam.m_nStatus != CHitAttackData::STATUS_BIND))
+                    {
+                        ++attackNo;
+                    };
+                }
+                else
                 {
                     ++attackNo;
                 };
@@ -577,12 +591,11 @@ void CCharacterParameterContainer::CPackage::ReadMotionName(CBinaryReader& br, c
         ASSERT(false);
     };
 
-    uint8 numString = br.read<uint8>();
+    uint8 len = br.read<uint8>();
+    ASSERT(len <= CMotionParameterManager::MOTION_NAME_MAX);
     
-    ASSERT(numString <= CMotionParameterManager::MOTION_NAME_MAX);
-    
-    strncpy(pszName, br.PosCurrent(), numString);
-    br.skip(numString);
+    std::strncpy(pszName, br.PosCurrent(), len);
+    br.skip(len);
 };
 
 
@@ -590,6 +603,11 @@ int32 CCharacterParameterContainer::CPackage::GetGeneration(void) const
 {
     return m_iGeneration;
 };
+
+
+//
+// *********************************************************************************
+//
 
 
 CCharacterParameterContainer::CCharacterParameterContainer(void)
@@ -642,8 +660,9 @@ CCharacterParameterContainer::CPackage* CCharacterParameterContainer::FindPackag
 
 CCharacterParameterContainer::CPackage* CCharacterParameterContainer::AllocPackage(void)
 {
-    ASSERT(!m_listPackageFree.empty());
-
+    if (m_listPackageFree.empty())
+        return nullptr;
+    
     CPackage* pNode = m_listPackageFree.front();
     m_listPackageFree.erase(pNode);
     m_listPackageAlloc.push_back(pNode);
@@ -665,9 +684,7 @@ static inline CCharacterParameterContainer& CharacterParamContainer(void)
 /*static*/ void CMotionParameterManager::Initialize(void)
 {
     if (!s_pCharacterParameterContainer)
-    {
         s_pCharacterParameterContainer = new CCharacterParameterContainer;
-    };
 };
 
 

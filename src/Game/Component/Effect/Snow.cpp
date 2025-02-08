@@ -303,14 +303,14 @@ void CSnow::Generate(PARTICLE* pParticle)
 {
     ASSERT(pParticle);
 
+    float fRandScale = (float(Math::Rand() % 100) * 0.01f) + 0.5f;
+
     if (m_fRadius >= 0.0f)
     {
         pParticle->m_vPosition.x = m_vBasisPosition.x + ((Math::Rand() % uint32(m_fRadius + m_fRadius)) - m_fRadius);
         pParticle->m_vPosition.y = m_vBasisPosition.y + (Math::Rand() % uint32(m_fHeight));
         pParticle->m_vPosition.z = m_vBasisPosition.z + ((Math::Rand() % uint32(m_fRadius + m_fRadius)) - m_fRadius);
     };
-
-    float fRandScale = (float(Math::Rand() % 100) * 0.01f) + 0.5f;
 
     pParticle->m_vVelocity = m_vAppearVector;
 

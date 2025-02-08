@@ -1,6 +1,9 @@
 #pragma once
 
 
+class CCamera;
+
+
 class CSystem2D
 {
 public:
@@ -11,4 +14,5 @@ public:
     static void PushRenderState(void);
     static void PopRenderState(void);
     static bool Reset(void);
+    static CCamera& Camera(void);
 };

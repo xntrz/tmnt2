@@ -5,6 +5,10 @@
 #include "System/Common/RenderState.hpp"
 
 
+#define DEFAULT_GRAVITY_MS      (9.80665f)
+#define DEFAULT_GRAVITY_DAMS    (DEFAULT_GRAVITY_MS / 10.0f)
+
+
 static RwIm3DVertex s_aVertices[100] = { 0 };
 
 
@@ -24,13 +28,13 @@ CCloth::CCloth(void)
 , m_fSpringLength(100.0f)
 , m_fDragCoefficient(0.01f)
 , m_nWindFactor(30)
-, m_fGravity(-0.98f)
+, m_fGravity(-DEFAULT_GRAVITY_DAMS)
 , m_Color({ 0xFF, 0xFF, 0xFF,0xFF })
 , m_vWind(Math::VECTOR3_ZERO)
 , m_pTexture(nullptr)
 , m_fDt(0.0f)
 {
-    ;
+    
 };
 
 
@@ -85,30 +89,28 @@ void CCloth::Draw(void)
     uint32 uNumVertices = 0;
     uint32 uFlags = rwIM3D_VERTEXXYZ | rwIM3D_VERTEXRGBA;
     if (m_pTexture)
-        FLAG_SET(uFlags, rwIM3D_VERTEXUV);
+        uFlags |= rwIM3D_VERTEXUV;
 
     for (int32 i = 0; i < m_nDivisionWidth; ++i)
     {
         for (int32 j = 0; j < m_nColumns; ++j)
         {
             int32 nIndex = i + j * m_nRows;
-            float v = (1.0f / float(m_nDivisionHeight)) * float(j);
+
+            float v  = (1.0f / float(m_nDivisionHeight)) * float(j);
+
             float u0 = (1.0f / float(m_nDivisionWidth)) * float(i);
             float u1 = (1.0f / float(m_nDivisionWidth)) * float(i + 1);
 
-            SetVertex(
-                &s_aVertices[uNumVertices],
-                &m_pClothPointList[nIndex].m_vPosition,
-                u0,
-                v
-            );
+            SetVertex(&s_aVertices[uNumVertices],
+                      &m_pClothPointList[nIndex].m_vPosition,
+                      u0,
+                      v);
 
-            SetVertex(
-                &s_aVertices[uNumVertices + 1],
-                &m_pClothPointList[nIndex + 1].m_vPosition,
-                u1,
-                v
-            );
+            SetVertex(&s_aVertices[uNumVertices + 1],
+                      &m_pClothPointList[nIndex + 1].m_vPosition,
+                      u1,
+                      v);
 
             uNumVertices += 2;
         };
@@ -129,13 +131,13 @@ void CCloth::Draw(void)
 
 void CCloth::SetBaseParameter(int32 nDivisionWidth, int32 nDivisionHeight, float w, float h)
 {
-    m_nDivisionWidth = nDivisionWidth;
+    m_nDivisionWidth  = nDivisionWidth;
     m_nDivisionHeight = nDivisionHeight;
     
-    m_nRows = m_nDivisionWidth + 1;
-    m_nColumns = m_nDivisionHeight + 1;
+    m_nRows     = m_nDivisionWidth + 1;
+    m_nColumns  = m_nDivisionHeight + 1;
 
-    m_fWidth = w;
+    m_fWidth  = w;
     m_fHeight = h;
 };
 
@@ -237,9 +239,11 @@ void CCloth::CreateCloth(void)
         m_pSpringList = nullptr;
     };
 
-    float x = (m_fWidth / float(m_nDivisionWidth));
-    float y = -1.0f * (m_fHeight / float(m_nDivisionHeight));
-    float fClothBlockMass = (m_fClothMass / float(2 * m_nDivisionWidth * m_nDivisionHeight));
+    float x = (m_fWidth / static_cast<float>(m_nDivisionWidth));
+    float y = -1.0f * (m_fHeight / static_cast<float>(m_nDivisionHeight));
+
+    float fClothBlockMass = (m_fClothMass / static_cast<float>(2 * m_nDivisionWidth * m_nDivisionHeight));
+
     const int32 nSpringMax = (m_nRows * m_nDivisionHeight) + (m_nColumns * m_nDivisionWidth);
     const int32 nClothPtMax = m_nRows * m_nColumns;
 
@@ -254,15 +258,11 @@ void CCloth::CreateCloth(void)
 
             ASSERT(fClothBlockMass > 0.0f);
 
-            if (
-                (i || j) &&
-                ((m_nDivisionHeight != i) || (m_nDivisionWidth != j))
-                )
+            if ((i || j) &&
+                ((m_nDivisionHeight != i) || (m_nDivisionWidth != j)))
             {
-                if (
-                    (i || (m_nDivisionWidth != j)) &&
-                    (j || (m_nDivisionHeight != i))
-                    )
+                if ((i || (m_nDivisionWidth != j)) &&
+                    (j || (m_nDivisionHeight != i)))
                 {
                     if (j && (m_nDivisionWidth != j) || !i || (i == m_nDivisionHeight))
                         fMass = 6.0f;
@@ -281,7 +281,8 @@ void CCloth::CreateCloth(void)
 
 			pClothPoint->m_fMass = (fMass * fClothBlockMass) / 3.0f;
             pClothPoint->m_fInvMass = 1.0f / pClothPoint->m_fMass;
-            pClothPoint->m_vPosition.x = j * x;
+
+			pClothPoint->m_vPosition.x = j * x;
             pClothPoint->m_vPosition.y = i * y;
             pClothPoint->m_vPosition.z = 0.0f;
             
@@ -321,13 +322,12 @@ void CCloth::CreateCloth(void)
             CLOTHPOINT* pClothPoint1 = &m_pClothPointList[pSpring->m_nPointIndex2];
 
             RwV3d vDistance = Math::VECTOR3_ZERO;
-            Math::Vec3_Sub(
-                &vDistance,
-                &pClothPoint0->m_vPosition,
-                &pClothPoint1->m_vPosition
-            );
+            Math::Vec3_Sub(&vDistance,
+                           &pClothPoint0->m_vPosition,
+                           &pClothPoint1->m_vPosition);
 
             pSpring->m_fLength = Math::Vec3_Length(&vDistance);
+
             ++nSpringIndex;
         };
     };
@@ -347,13 +347,12 @@ void CCloth::CreateCloth(void)
             CLOTHPOINT* pClothPoint1 = &m_pClothPointList[pSpring->m_nPointIndex2];
 
             RwV3d vDistance = Math::VECTOR3_ZERO;
-            Math::Vec3_Sub(
-                &vDistance,
-                &pClothPoint0->m_vPosition,
-                &pClothPoint1->m_vPosition
-            );
+            Math::Vec3_Sub(&vDistance,
+                           &pClothPoint0->m_vPosition,
+                           &pClothPoint1->m_vPosition);
 
             pSpring->m_fLength = Math::Vec3_Length(&vDistance);
+
             ++nSpringIndex;
         };
     };
@@ -368,9 +367,7 @@ void CCloth::CalcForces(void)
     const int32 nSpringMax = (m_nRows * m_nDivisionHeight) + (m_nColumns * m_nDivisionWidth);
     
     for (int32 i = 0; i < nClothPtMax; ++i)
-    {
         m_pClothPointList[i].m_vForces = Math::VECTOR3_ZERO;
-    };
 
     for (int32 i = 0; i < nClothPtMax; ++i)
     {
@@ -390,7 +387,8 @@ void CCloth::CalcForces(void)
         Math::Vec3_Scale(&vDragVector, &vDragVector, fDragScale);
         Math::Vec3_Add(&pClothPoint->m_vForces, &pClothPoint->m_vForces, &vDragVector);
 
-		float fRandScale = (Math::Rand() % 30) * 0.033333335f;
+		float fRandScale = static_cast<float>(Math::Rand() % 30) / 30.0f;
+
         RwV3d vWind = m_vWind;
         Math::Vec3_Scale(&vWind, &vWind, fRandScale);
         Math::Vec3_Add(&pClothPoint->m_vForces, &pClothPoint->m_vForces, &vWind);
@@ -431,20 +429,16 @@ void CCloth::CalcForces(void)
 
         if (!pClothPt0->m_bLock)
         {
-            Math::Vec3_Add(
-                &pClothPt0->m_vForces,
-                &pClothPt0->m_vForces,
-                &vForce0
-            );
+            Math::Vec3_Add(&pClothPt0->m_vForces,
+                           &pClothPt0->m_vForces,
+                           &vForce0);
         };
 
         if (!pClothPt1->m_bLock)
         {
-            Math::Vec3_Add(
-                &pClothPt1->m_vForces,
-                &pClothPt1->m_vForces,
-                &vForce1
-            );
+            Math::Vec3_Add(&pClothPt1->m_vForces,
+                           &pClothPt1->m_vForces,
+                           &vForce1);
         };
     };
 };
@@ -506,16 +500,12 @@ void CCloth::StepSimulation(void)
     {
         for (int32 j = 1; j < m_nRows - 1; ++j)
         {
-            CheckCollision(
-                &m_pClothPointList[j + i * m_nRows]
-            );
+            CheckCollision(&m_pClothPointList[j + i * m_nRows]);
         };
     };
 
     for (int32 i = 0; i < nClothPtMax; ++i)
-    {
         Integration(&m_pClothPointList[i], m_fDt);
-    };
 };
 
 
@@ -551,8 +541,7 @@ void CCloth::CheckCollision(CLOTHPOINT* pClothPoint)
     CBodyHitData BodyHitData;
     BodyHitData.InitData(&pClothPoint->m_vPosition, 0.01f);
 
-    RwV3d vResult = Math::VECTOR3_ZERO;
-	
+    RwV3d vResult = Math::VECTOR3_ZERO;	
     if (CBodyHitManager::CheckHit(&BodyHitData, &pClothPoint->m_vVelocity, &vResult))
     {
         pClothPoint->m_vVelocity = vResult;
@@ -593,7 +582,7 @@ void CCloth::RenderStatePush(void)
     if (m_pTexture)
         RENDERSTATE_PUSH(rwRENDERSTATETEXTURERASTER, RwTextureGetRaster(m_pTexture));
     else
-        RENDERSTATE_PUSH(rwRENDERSTATETEXTURERASTER, nullptr);
+        RENDERSTATE_PUSH(rwRENDERSTATETEXTURERASTER, 0);
 
     RENDERSTATE_PUSH(rwRENDERSTATECULLMODE, rwCULLMODECULLNONE);
     RENDERSTATE_PUSH(rwRENDERSTATEVERTEXALPHAENABLE, true);

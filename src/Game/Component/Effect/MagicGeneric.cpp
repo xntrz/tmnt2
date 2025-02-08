@@ -33,17 +33,17 @@ namespace MAGIC_GENERIC
         {
         case STEP_ONE:
             CMagicManager::SetSpeed(hMagic, 3.0f);
-            CMagicManager::SetDamage(hMagic, int32(GetPower() * 10.0f));
+            CMagicManager::SetDamage(hMagic, static_cast<int32>(GetPower() * 10.0f));
             break;
 
         case STEP_TWO:
             CMagicManager::SetSpeed(hMagic, 6.0f);
-            CMagicManager::SetDamage(hMagic, int32(GetPower() * 20.0f));
+            CMagicManager::SetDamage(hMagic, static_cast<int32>(GetPower() * 20.0f));
             break;
 
         case STEP_THREE:
             CMagicManager::SetSpeed(hMagic, 9.0f);
-            CMagicManager::SetDamage(hMagic, int32(GetPower() * 30.0f));
+            CMagicManager::SetDamage(hMagic, static_cast<int32>(GetPower() * 30.0f));
             break;
 
         default:
@@ -66,15 +66,15 @@ namespace MAGIC_GENERIC
         switch (step)
         {
         case STEP_ONE:
-            CMagicManager::SetDamage(hMagic, int32(GetPower() * 30.0f));
+            CMagicManager::SetDamage(hMagic, static_cast<int32>(GetPower() * 30.0f));
             break;
 
         case STEP_TWO:
-            CMagicManager::SetDamage(hMagic, int32(GetPower() * 40.0f));
+            CMagicManager::SetDamage(hMagic, static_cast<int32>(GetPower() * 40.0f));
             break;
 
         case STEP_THREE:
-            CMagicManager::SetDamage(hMagic, int32(GetPower() * 50.0f));
+            CMagicManager::SetDamage(hMagic, static_cast<int32>(GetPower() * 50.0f));
             break;
 
         default:
@@ -89,8 +89,7 @@ namespace MAGIC_GENERIC
         CMagicManager::CParameter param;
         param.SetPositon(pvPosition);
         param.SetObject(pCharacter);
-        
-        uint32 hEffect = 0;
+
         float fPower = GetPower();
         float fAngleStep = Math::PI / 6.0f;
         
@@ -98,9 +97,12 @@ namespace MAGIC_GENERIC
         {
         case STEP_ONE:
             {
-                param.SetDirection(fDirection);                
-                hEffect = CMagicManager::Play(MAGICID::ID_MIC_SP, &param);
-                CMagicManager::SetDamage(hEffect, int32(fPower * 10.0f));
+                param.SetDirection(fDirection);
+                
+                uint32 hEffect = CMagicManager::Play(MAGICID::ID_MIC_SP, &param);
+                ASSERT(hEffect);
+
+                CMagicManager::SetDamage(hEffect, static_cast<int32>(fPower * 10.0f));
             }
             break;
 
@@ -121,10 +123,15 @@ namespace MAGIC_GENERIC
                     case 2:
                         param.SetDirection(fDirection + fAngleStep);
                         break;
+
+                    default:
+                        break;
                     };
 
-                    hEffect = CMagicManager::Play(MAGICID::ID_MIC_SP, &param);
-                    CMagicManager::SetDamage(hEffect, int32(fPower * 20.0f));
+                    uint32 hEffect = CMagicManager::Play(MAGICID::ID_MIC_SP, &param);
+                    ASSERT(hEffect);
+
+                    CMagicManager::SetDamage(hEffect, static_cast<int32>(fPower * 20.0f));
                 };
             }
             break;
@@ -154,10 +161,15 @@ namespace MAGIC_GENERIC
                     case 4:
                         param.SetDirection(fDirection + (fAngleStep * 2.0f));
                         break;
+
+                    default:
+                        break;
                     };
 
-                    hEffect = CMagicManager::Play(MAGICID::ID_MIC_SP, &param);
-                    CMagicManager::SetDamage(hEffect, int32(fPower * 20.0f));
+                    uint32 hEffect = CMagicManager::Play(MAGICID::ID_MIC_SP, &param);
+                    ASSERT(hEffect);
+                    
+                    CMagicManager::SetDamage(hEffect, static_cast<int32>(fPower * 20.0f));
                 };
             }
             break;
@@ -182,15 +194,15 @@ namespace MAGIC_GENERIC
         switch (step)
         {
         case STEP_ONE:
-            CMagicManager::SetDamage(hMagic, int32(GetPower() * 30.0f));
+            CMagicManager::SetDamage(hMagic, static_cast<int32>(GetPower() * 30.0f));
             break;
 
         case STEP_TWO:
-            CMagicManager::SetDamage(hMagic, int32(GetPower() * 40.0f));
+            CMagicManager::SetDamage(hMagic, static_cast<int32>(GetPower() * 40.0f));
             break;
 
         case STEP_THREE:
-            CMagicManager::SetDamage(hMagic, int32(GetPower() * 50.0f));
+            CMagicManager::SetDamage(hMagic, static_cast<int32>(GetPower() * 50.0f));
             break;
 
         default:
@@ -206,7 +218,6 @@ namespace MAGIC_GENERIC
         param.SetPositon(pvPosition);
         param.SetObject(pCharacter);
 
-        uint32 hEffect = 0;
         float fPower = GetPower();
         float fAngleStep = Math::PI / 6.0f;
 
@@ -215,8 +226,11 @@ namespace MAGIC_GENERIC
         case STEP_ONE:
             {
                 param.SetDirection(fDirection);
-                hEffect = CMagicManager::Play(MAGICID::ID_CAS_SP, &param);
-				CMagicManager::SetDamage(hEffect, int32(fPower * 10.0f));
+
+                uint32 hEffect = CMagicManager::Play(MAGICID::ID_CAS_SP, &param);
+                ASSERT(hEffect);
+
+                CMagicManager::SetDamage(hEffect, static_cast<int32>(fPower * 10.0f));
             }
             break;
 
@@ -237,10 +251,15 @@ namespace MAGIC_GENERIC
                     case 2:
                         param.SetDirection(fDirection + fAngleStep);
                         break;
+
+                    default:
+                        break;
                     };
 
-                    hEffect = CMagicManager::Play(MAGICID::ID_CAS_SP, &param);
-                    CMagicManager::SetDamage(hEffect, int32(fPower * 20.0f));
+                    uint32 hEffect = CMagicManager::Play(MAGICID::ID_CAS_SP, &param);
+                    ASSERT(hEffect);
+
+                    CMagicManager::SetDamage(hEffect, static_cast<int32>(fPower * 20.0f));
                 };
             }
             break;
@@ -272,8 +291,10 @@ namespace MAGIC_GENERIC
                         break;
                     };
 
-                    hEffect = CMagicManager::Play(MAGICID::ID_CAS_SP, &param);
-                    CMagicManager::SetDamage(hEffect, int32(fPower * 20.0f));
+                    uint32 hEffect = CMagicManager::Play(MAGICID::ID_CAS_SP, &param);
+                    ASSERT(hEffect);
+                    
+                    CMagicManager::SetDamage(hEffect, static_cast<int32>(fPower * 20.0f));
                 };
             }
             break;
@@ -299,17 +320,17 @@ namespace MAGIC_GENERIC
         {
         case STEP_ONE:
             CMagicManager::SetSpeed(hMagic, 3.0f);
-            CMagicManager::SetDamage(hMagic, int32(GetPower() * 10.0f));
+            CMagicManager::SetDamage(hMagic, static_cast<int32>(GetPower() * 10.0f));
             break;
 
         case STEP_TWO:
             CMagicManager::SetSpeed(hMagic, 6.0f);
-            CMagicManager::SetDamage(hMagic, int32(GetPower() * 20.0f));
+            CMagicManager::SetDamage(hMagic, static_cast<int32>(GetPower() * 20.0f));
             break;
 
         case STEP_THREE:
             CMagicManager::SetSpeed(hMagic, 9.0f);
-            CMagicManager::SetDamage(hMagic, int32(GetPower() * 30.0f));
+            CMagicManager::SetDamage(hMagic, static_cast<int32>(GetPower() * 30.0f));
             break;
 
         default:

@@ -33,7 +33,7 @@ public:
     void Push(RwRenderState rs);
 
     template<class T>
-    void Set(RwRenderState rs, T value);
+    /*inline*/ void Set(RwRenderState rs, T value);
 
 private:    
     void set(RwRenderState rs, void* pValue);
@@ -45,8 +45,8 @@ private:
 
 
 template<class T>
-void CRenderStateStack::Set(RwRenderState rs, T value)
+inline void CRenderStateStack::Set(RwRenderState rs, T value)
 {
 	Push(rs);
-    set(rs, (void*)value);
+    set(rs, reinterpret_cast<void*>(value));
 };

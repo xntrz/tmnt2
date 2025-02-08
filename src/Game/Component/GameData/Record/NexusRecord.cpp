@@ -51,8 +51,8 @@ bool CNexusRecord::IsValid(void) const
             return false;
         };
 
-        if (m_aNodeTour[i].m_state != STATE_CLEAR &&
-            (m_aNodeTour[i].m_cleartime.GetTotalSecond() > 0))
+        if ((m_aNodeTour[i].m_state != STATE_CLEAR) &&
+            (m_aNodeTour[i].m_cleartime > 0))
         {
             OUTPUT(" %s is failed: tour node clear time\n", __FUNCTION__);
             return false;
@@ -74,8 +74,8 @@ bool CNexusRecord::IsValid(void) const
             return false;
         };
 
-        if (!m_aNodeStage[i].m_numCleared &&
-            (m_aNodeStage[i].m_cleartime.GetTotalSecond() > 0))
+        if ((!m_aNodeStage[i].m_numCleared) &&
+            (m_aNodeStage[i].m_cleartime > 0))
         {
             OUTPUT(" %s is failed: node stage clear time\n", __FUNCTION__);
             return false;
@@ -170,14 +170,14 @@ void CNexusRecord::UpdateTournamentClearTime(GAMETYPES::NEXUSID idNexus, const C
 {
     NODETOUR& nodetour = m_aNodeTour[getTourIndex(idNexus)];
 
-    if (nodetour.m_cleartime < cleartime)
-        nodetour.m_cleartime = cleartime;
+    if (nodetour.m_cleartime < cleartime.GetTotalSecond())
+        nodetour.m_cleartime = cleartime.GetTotalSecond();
 };
 
 
-const CGameTime& CNexusRecord::GetTournamentClearTime(GAMETYPES::NEXUSID idNexus) const
+CGameTime CNexusRecord::GetTournamentClearTime(GAMETYPES::NEXUSID idNexus) const
 {
-    return m_aNodeTour[getTourIndex(idNexus)].m_cleartime;
+    return CGameTime(m_aNodeTour[getTourIndex(idNexus)].m_cleartime);
 };
 
 
@@ -209,8 +209,8 @@ void CNexusRecord::UpdateStageClearTime(GAMETYPES::NEXUSID idNexus, int32 stageN
 
 	++nodestage.m_numCleared;
 
-    if (nodestage.m_cleartime < cleartime)
-        nodestage.m_cleartime = cleartime;
+    if (nodestage.m_cleartime < cleartime.GetTotalSecond())
+        nodestage.m_cleartime = cleartime.GetTotalSecond();
 };
 
 
@@ -237,9 +237,9 @@ int32 CNexusRecord::GetStageClearPercent(GAMETYPES::NEXUSID idNexus, int32 stage
 };
 
 
-const CGameTime& CNexusRecord::GetStageClearTime(GAMETYPES::NEXUSID idNexus, int32 stageNo) const
+CGameTime CNexusRecord::GetStageClearTime(GAMETYPES::NEXUSID idNexus, int32 stageNo) const
 {
-	return m_aNodeStage[getStageIndex(idNexus, stageNo)].m_cleartime;
+    return CGameTime(m_aNodeStage[getStageIndex(idNexus, stageNo)].m_cleartime);
 };
 
 

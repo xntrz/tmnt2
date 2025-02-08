@@ -16,17 +16,14 @@ CPlayerTracer::~CPlayerTracer(void)
 
 
 float CPlayerTracer::GetDirection(void)
-{
-    ASSERT(m_pPlayerChr);
-    
+{   
     return m_pPlayerChr->GetDirection();
 };
 
 
 void CPlayerTracer::GetPosition(RwV3d* pvPosition)
 {
-    ASSERT(m_pPlayerChr);
     ASSERT(pvPosition);
-
-    return m_pPlayerChr->GetFootPosition(pvPosition);
+    
+    m_pPlayerChr->GetFootPosition(pvPosition);
 };

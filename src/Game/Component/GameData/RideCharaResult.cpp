@@ -194,22 +194,25 @@ void CRideCharaResult::NODE::Evaluate(MODE mode)
 int32 CRideCharaResult::NODE::EvaluateCoin(void)
 {
     m_nCoinPoint = (500 * m_nScoreGoldCount) + (100 * m_nScoreSilverCount);
+
     return CGamePlayResult::EvaluateInt(m_nCoinPoint, m_anCoinEvalTable, COUNT_OF(m_anCoinEvalTable));
 };
 
 
 int32 CRideCharaResult::NODE::EvaluateControl(void)
 {
-    return CGamePlayResult::EvaluateInt(int32(m_fPlaytimeSeconds) - m_nCrashCount, m_anControlEvalTable, COUNT_OF(m_anControlEvalTable));
+    int32 nPlaytimeSeconds = static_cast<int32>(m_fPlaytimeSeconds);
+
+    return CGamePlayResult::EvaluateInt(nPlaytimeSeconds - m_nCrashCount, m_anControlEvalTable, COUNT_OF(m_anControlEvalTable));
 };
 
 
 int32 CRideCharaResult::NODE::EvaluateTrick(void)
 {    
-	if (m_nJumpCount)
-		m_fTrickRatio = float((100 * m_nTrickCount) / m_nJumpCount);
-    else
-        m_fTrickRatio = 0.0f;
+    m_fTrickRatio = 0.0f;
+    
+    if (m_nJumpCount)
+        m_fTrickRatio = (static_cast<float>(m_nTrickCount) / static_cast<float>(m_nJumpCount)) * 100.0f;
 
     return CGamePlayResult::EvaluateFloat(m_fTrickRatio, m_afTrickEvalTable, COUNT_OF(m_afTrickEvalTable));
 };
@@ -225,10 +228,11 @@ int32 CRideCharaResult::NODE::EvaluateShot(void)
 {
     AREAID::VALUE idArea = CGameData::PlayParam().GetArea();
     
-    if ((idArea == AREAID::ID_AREA22) || (idArea == AREAID::ID_AREA32))
+    if ((idArea == AREAID::ID_AREA22) ||
+        (idArea == AREAID::ID_AREA32))
         return MODE_SHOTRACE;
-    else
-        return MODE_TRICKRACE;
+    
+    return MODE_TRICKRACE;
 };
 
 
@@ -258,7 +262,8 @@ void CRideCharaResult::Clear(void)
 
 void CRideCharaResult::SetCharaPlaytime(int32 nIndex, float fPlaytime)
 {
-    ASSERT(nIndex >= 0 && nIndex < COUNT_OF(m_aNode));
+    ASSERT(nIndex >= 0);
+    ASSERT(nIndex < COUNT_OF(m_aNode));
 
     m_aNode[nIndex].m_fPlaytimeSeconds = fPlaytime;
 };
@@ -266,7 +271,8 @@ void CRideCharaResult::SetCharaPlaytime(int32 nIndex, float fPlaytime)
 
 void CRideCharaResult::AddRideAction(int32 nIndex, GAMETYPES::RIDEACT rideact)
 {
-    ASSERT(nIndex >= 0 && nIndex < COUNT_OF(m_aNode));
+    ASSERT(nIndex >= 0);
+    ASSERT(nIndex < COUNT_OF(m_aNode));
 
     m_aNode[nIndex].AddRideAction(rideact);
 };
@@ -326,11 +332,12 @@ int32 CRideCharaResult::GetTotalCoinPoint(void) const
 
 const CRideCharaResult::NODE& CRideCharaResult::Chara(int32 nIndex) const
 {
-    ASSERT(nIndex >= 0 && nIndex < COUNT_OF(m_aNode));
+    ASSERT(nIndex >= 0);
+    ASSERT(nIndex < COUNT_OF(m_aNode));
 
-    if (nIndex >= 0 && nIndex < COUNT_OF(m_aNode))
+    if ((nIndex >= 0) && (nIndex < COUNT_OF(m_aNode)))
         return m_aNode[nIndex];
-    else
-        return m_aNode[0];
+    
+    return m_aNode[0];
 };
 

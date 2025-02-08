@@ -1,5 +1,7 @@
 #include "PlayerStatusDamage.hpp"
 
+#include "Game/Component/Effect/EffectManager.hpp"
+#include "Game/Component/Effect/EffectGeneric.hpp"
 #include "Game/Component/GameData/GameData.hpp"
 #include "Game/Component/GameMain/GameEvent.hpp"
 #include "Game/Component/Module/AccumulateModule.hpp"
@@ -7,81 +9,65 @@
 #include "Game/Component/Player/PlayerCharacter.hpp"
 #include "Game/Component/Player/PlayerTracer.hpp"
 #include "Game/Component/Player/PlayerUtil.hpp"
-#include "Game/Component/Effect/EffectManager.hpp"
-#include "Game/Component/Effect/EffectGeneric.hpp"
 #include "Game/System/GameObject/GameObjectManager.hpp"
-#include "Game/System/Sound/GameSound.hpp"
-#include "Game/System/Misc/Gamepad.hpp"
 #include "Game/System/Map/WorldMap.hpp"
+#include "Game/System/Misc/Gamepad.hpp"
+#include "Game/System/Sound/GameSound.hpp"
 
 
 namespace PlayerStatus
 {
-    bool CKnockCommon::IsEnableChangeStatus(PLAYERTYPES::STATUS status)
-    {
-        PLAYERTYPES::STATUS aStatusArray[] =
-        {
-            PLAYERTYPES::STATUS_ATTACK_B,
-            PLAYERTYPES::STATUS_ATTACK_B,
-            PLAYERTYPES::STATUS_IDLE,
-            PLAYERTYPES::STATUS_WALK,
-            PLAYERTYPES::STATUS_RUN,
-            PLAYERTYPES::STATUS_DASH,
-            PLAYERTYPES::STATUS_DASH_FINISH,
-            PLAYERTYPES::STATUS_JUMP_READY,
-            PLAYERTYPES::STATUS_TOUCHDOWN,
-            PLAYERTYPES::STATUS_GUARD_READY,
-            PLAYERTYPES::STATUS_GUARD,
-            PLAYERTYPES::STATUS_GUARD_FINISH,
-            PLAYERTYPES::STATUS_ATTACK_A,
-            PLAYERTYPES::STATUS_ATTACK_AA,
-            PLAYERTYPES::STATUS_ATTACK_AAB,
-            PLAYERTYPES::STATUS_ATTACK_AAC,
-            PLAYERTYPES::STATUS_ATTACK_AABB,
-            PLAYERTYPES::STATUS_ATTACK_AABC,
-            PLAYERTYPES::STATUS_ATTACK_AABBB,
-            PLAYERTYPES::STATUS_ATTACK_AABBC,
-            PLAYERTYPES::STATUS_ATTACK_B_CHARGE,
-            PLAYERTYPES::STATUS_ATTACK_RUN,
-            PLAYERTYPES::STATUS_ATTACK_KNIFE,
-            PLAYERTYPES::STATUS_KNOCK_BACK,
-            PLAYERTYPES::STATUS_KNOCK_FRONT,
-            PLAYERTYPES::STATUS_STUN,
-            PLAYERTYPES::STATUS_LIFT_CHALLENGE,
-            PLAYERTYPES::STATUS_LIFT_SUCCESS,
-            PLAYERTYPES::STATUS_LIFT,
-            PLAYERTYPES::STATUS_LIFT_WALK,
-            PLAYERTYPES::STATUS_THROW,
-            PLAYERTYPES::STATUS_THROW_BACK,
-            PLAYERTYPES::STATUS_THROWN,
-            PLAYERTYPES::STATUS_THROWN_MISS,
-            PLAYERTYPES::STATUS_PUSH,
-            PLAYERTYPES::STATUS_CONSOLE,
-        };
-
-        return IsWithinStatusFromArray(status, aStatusArray, COUNT_OF(aStatusArray));
-    };
+    DEFINE_ENABLED_STATUS_FOR(CKnockCommon, { PLAYERTYPES::STATUS_ATTACK_B,
+                                              PLAYERTYPES::STATUS_ATTACK_B,
+                                              PLAYERTYPES::STATUS_IDLE,
+                                              PLAYERTYPES::STATUS_WALK,
+                                              PLAYERTYPES::STATUS_RUN,
+                                              PLAYERTYPES::STATUS_DASH,
+                                              PLAYERTYPES::STATUS_DASH_FINISH,
+                                              PLAYERTYPES::STATUS_JUMP_READY,
+                                              PLAYERTYPES::STATUS_TOUCHDOWN,
+                                              PLAYERTYPES::STATUS_GUARD_READY,
+                                              PLAYERTYPES::STATUS_GUARD,
+                                              PLAYERTYPES::STATUS_GUARD_FINISH,
+                                              PLAYERTYPES::STATUS_ATTACK_A,
+                                              PLAYERTYPES::STATUS_ATTACK_AA,
+                                              PLAYERTYPES::STATUS_ATTACK_AAB,
+                                              PLAYERTYPES::STATUS_ATTACK_AAC,
+                                              PLAYERTYPES::STATUS_ATTACK_AABB,
+                                              PLAYERTYPES::STATUS_ATTACK_AABC,
+                                              PLAYERTYPES::STATUS_ATTACK_AABBB,
+                                              PLAYERTYPES::STATUS_ATTACK_AABBC,
+                                              PLAYERTYPES::STATUS_ATTACK_B_CHARGE,
+                                              PLAYERTYPES::STATUS_ATTACK_RUN,
+                                              PLAYERTYPES::STATUS_ATTACK_KNIFE,
+                                              PLAYERTYPES::STATUS_KNOCK_BACK,
+                                              PLAYERTYPES::STATUS_KNOCK_FRONT,
+                                              PLAYERTYPES::STATUS_STUN,
+                                              PLAYERTYPES::STATUS_LIFT_CHALLENGE,
+                                              PLAYERTYPES::STATUS_LIFT_SUCCESS,
+                                              PLAYERTYPES::STATUS_LIFT,
+                                              PLAYERTYPES::STATUS_LIFT_WALK,
+                                              PLAYERTYPES::STATUS_THROW,
+                                              PLAYERTYPES::STATUS_THROW_BACK,
+                                              PLAYERTYPES::STATUS_THROWN,
+                                              PLAYERTYPES::STATUS_THROWN_MISS,
+                                              PLAYERTYPES::STATUS_PUSH,
+                                              PLAYERTYPES::STATUS_CONSOLE });
 
 
     void CKnockCommon::OnAttach(void)
     {
-        Character().ClearSatusParameter();
-        
-        Character().SetDirectionFromVector(
-            &Character().AttackParameter().m_vDirection
-        );
-        
-        Character().SetVelocity(
-            &Character().AttackParameter().m_vVelocity
-        );
+        Character().ClearStatusParameter();
 
-        RwV3d vAccleration = Math::VECTOR3_ZERO;
-        Math::Vec3_Scale(
-            &vAccleration,
-            &Character().AttackParameter().m_vVelocity,
-            -(1.0f / Character().GetMotionEndTime())
-        );
-		Character().SetAcceleration(&vAccleration);
+        RwV3d vecAttackDir = Character().AttackParameter().m_vDirection;
+        Character().SetDirectionFromVector(&vecAttackDir);
+
+        RwV3d vecAttackVel = Character().AttackParameter().m_vVelocity;
+        Character().SetVelocity(&vecAttackVel);
+
+        RwV3d vecAccel = Math::VECTOR3_ZERO;
+        Math::Vec3_Scale(&vecAccel, &vecAttackVel, -(1.0f / Character().GetMotionEndTime()));        
+        Character().SetAcceleration(&vecAccel);
 
         IGamepad::StartVibration(Character().GetPadID(), IGamepad::VIBRATIONTYPE_LOW, 0.2f);        
     };
@@ -137,85 +123,75 @@ namespace PlayerStatus
     //
 
 
-    bool CFlyawayCommon::IsEnableChangeStatus(PLAYERTYPES::STATUS status)
-    {
-        PLAYERTYPES::STATUS aStatusArray[] =
-        {
-            PLAYERTYPES::STATUS_IDLE,
-            PLAYERTYPES::STATUS_WALK,
-            PLAYERTYPES::STATUS_RUN,
-            PLAYERTYPES::STATUS_DASH,
-            PLAYERTYPES::STATUS_DASH_FINISH,
-            PLAYERTYPES::STATUS_JUMP_READY,
-            PLAYERTYPES::STATUS_TOUCHDOWN,
-            PLAYERTYPES::STATUS_GUARD_READY,
-            PLAYERTYPES::STATUS_GUARD,
-            PLAYERTYPES::STATUS_GUARD_FINISH,
-            PLAYERTYPES::STATUS_ATTACK_A,
-            PLAYERTYPES::STATUS_ATTACK_AA,
-            PLAYERTYPES::STATUS_ATTACK_AAB,
-            PLAYERTYPES::STATUS_ATTACK_AAC,
-            PLAYERTYPES::STATUS_ATTACK_AABB,
-            PLAYERTYPES::STATUS_ATTACK_AABC,
-            PLAYERTYPES::STATUS_ATTACK_AABBB,
-            PLAYERTYPES::STATUS_ATTACK_AABBC,
-            PLAYERTYPES::STATUS_ATTACK_B_CHARGE,
-            PLAYERTYPES::STATUS_ATTACK_B,
-            PLAYERTYPES::STATUS_ATTACK_RUN,
-            PLAYERTYPES::STATUS_ATTACK_JUMP,
-            PLAYERTYPES::STATUS_ATTACK_KNIFE,
-            PLAYERTYPES::STATUS_ATTACK_KNIFE_JUMP,
-            PLAYERTYPES::STATUS_JUMP,
-            PLAYERTYPES::STATUS_JUMP_2ND,
-            PLAYERTYPES::STATUS_JUMP_WALL,
-            PLAYERTYPES::STATUS_AERIAL,
-            PLAYERTYPES::STATUS_AERIAL_MOVE,
-            PLAYERTYPES::STATUS_DINDLE,
-            PLAYERTYPES::STATUS_STUN,
-            PLAYERTYPES::STATUS_SLEEP,
-            PLAYERTYPES::STATUS_FREEZE,
-            PLAYERTYPES::STATUS_KNOCK_FRONT,
-            PLAYERTYPES::STATUS_KNOCK_BACK,
-            PLAYERTYPES::STATUS_FLYAWAY_BACK,
-            PLAYERTYPES::STATUS_FLYAWAY_FRONT,
-            PLAYERTYPES::STATUS_THROW,
-            PLAYERTYPES::STATUS_THROW_BACK,
-            PLAYERTYPES::STATUS_THROWN_BACK,
-            PLAYERTYPES::STATUS_THROWN,
-            PLAYERTYPES::STATUS_LIFT_CHALLENGE,
-            PLAYERTYPES::STATUS_LIFT_SUCCESS,
-            PLAYERTYPES::STATUS_LIFT,
-            PLAYERTYPES::STATUS_LIFT_WALK,
-            PLAYERTYPES::STATUS_PUSH,
-            PLAYERTYPES::STATUS_CONSOLE,
-            PLAYERTYPES::STATUS_DEAD_FLYAWAY,
-        };
-
-        return IsWithinStatusFromArray(status, aStatusArray, COUNT_OF(aStatusArray));
-    };
+    DEFINE_ENABLED_STATUS_FOR(CFlyawayCommon, { PLAYERTYPES::STATUS_IDLE,
+                                                PLAYERTYPES::STATUS_WALK,
+                                                PLAYERTYPES::STATUS_RUN,
+                                                PLAYERTYPES::STATUS_DASH,
+                                                PLAYERTYPES::STATUS_DASH_FINISH,
+                                                PLAYERTYPES::STATUS_JUMP_READY,
+                                                PLAYERTYPES::STATUS_TOUCHDOWN,
+                                                PLAYERTYPES::STATUS_GUARD_READY,
+                                                PLAYERTYPES::STATUS_GUARD,
+                                                PLAYERTYPES::STATUS_GUARD_FINISH,
+                                                PLAYERTYPES::STATUS_ATTACK_A,
+                                                PLAYERTYPES::STATUS_ATTACK_AA,
+                                                PLAYERTYPES::STATUS_ATTACK_AAB,
+                                                PLAYERTYPES::STATUS_ATTACK_AAC,
+                                                PLAYERTYPES::STATUS_ATTACK_AABB,
+                                                PLAYERTYPES::STATUS_ATTACK_AABC,
+                                                PLAYERTYPES::STATUS_ATTACK_AABBB,
+                                                PLAYERTYPES::STATUS_ATTACK_AABBC,
+                                                PLAYERTYPES::STATUS_ATTACK_B_CHARGE,
+                                                PLAYERTYPES::STATUS_ATTACK_B,
+                                                PLAYERTYPES::STATUS_ATTACK_RUN,
+                                                PLAYERTYPES::STATUS_ATTACK_JUMP,
+                                                PLAYERTYPES::STATUS_ATTACK_KNIFE,
+                                                PLAYERTYPES::STATUS_ATTACK_KNIFE_JUMP,
+                                                PLAYERTYPES::STATUS_JUMP,
+                                                PLAYERTYPES::STATUS_JUMP_2ND,
+                                                PLAYERTYPES::STATUS_JUMP_WALL,
+                                                PLAYERTYPES::STATUS_AERIAL,
+                                                PLAYERTYPES::STATUS_AERIAL_MOVE,
+                                                PLAYERTYPES::STATUS_DINDLE,
+                                                PLAYERTYPES::STATUS_STUN,
+                                                PLAYERTYPES::STATUS_SLEEP,
+                                                PLAYERTYPES::STATUS_FREEZE,
+                                                PLAYERTYPES::STATUS_KNOCK_FRONT,
+                                                PLAYERTYPES::STATUS_KNOCK_BACK,
+                                                PLAYERTYPES::STATUS_FLYAWAY_BACK,
+                                                PLAYERTYPES::STATUS_FLYAWAY_FRONT,
+                                                PLAYERTYPES::STATUS_THROW,
+                                                PLAYERTYPES::STATUS_THROW_BACK,
+                                                PLAYERTYPES::STATUS_THROWN_BACK,
+                                                PLAYERTYPES::STATUS_THROWN,
+                                                PLAYERTYPES::STATUS_LIFT_CHALLENGE,
+                                                PLAYERTYPES::STATUS_LIFT_SUCCESS,
+                                                PLAYERTYPES::STATUS_LIFT,
+                                                PLAYERTYPES::STATUS_LIFT_WALK,
+                                                PLAYERTYPES::STATUS_PUSH,
+                                                PLAYERTYPES::STATUS_CONSOLE,
+                                                PLAYERTYPES::STATUS_DEAD_FLYAWAY });
 
 
     void CFlyawayCommon::OnAttach(void)
     {
-        if (Character().GetStatusPrev() == PLAYERTYPES::STATUS_FLYAWAY_BOUND_FRONT ||
-            Character().GetStatusPrev() == PLAYERTYPES::STATUS_FLYAWAY_BOUND_BACK)
+        if ((Character().GetStatusPrev() == PLAYERTYPES::STATUS_FLYAWAY_BOUND_FRONT) ||
+            (Character().GetStatusPrev() == PLAYERTYPES::STATUS_FLYAWAY_BOUND_BACK))
         {
             Character().ResetAcceleration();
-            Character().SetPlayerFlag(PLAYERTYPES::FLAG_AERIAL_STATUS, true);
+            Character().SetPlayerFlag(PLAYERTYPES::FLAG_AERIAL_STATUS);
         }
         else
         {
-            Character().ClearSatusParameter();
+            Character().ClearStatusParameter();
 
-            Character().SetDirectionFromVector(
-                &Character().AttackParameter().m_vDirection
-            );
+            RwV3d vAttackDir = Character().AttackParameter().m_vDirection;
+            Character().SetDirectionFromVector(&vAttackDir);
 
-            Character().SetVelocity(
-                &Character().AttackParameter().m_vVelocity
-            );
+            RwV3d vAttackVel = Character().AttackParameter().m_vVelocity;
+            Character().SetVelocity(&vAttackVel);
             
-            Character().SetPlayerFlag(PLAYERTYPES::FLAG_AERIAL_STATUS, true);
+            Character().SetPlayerFlag(PLAYERTYPES::FLAG_AERIAL_STATUS);
 
             IGamepad::StartVibration(Character().GetPadID(), IGamepad::VIBRATIONTYPE_HARD, 0.2f);
         };
@@ -286,8 +262,8 @@ namespace PlayerStatus
         Math::Vec3_Scale(&vVelocity, &vVelocity, -(1.0f / Character().GetMotionEndTime()));
         Character().SetAcceleration(&vVelocity);
 
-        Character().SetPlayerFlag(PLAYERTYPES::FLAG_AERIAL_STATUS, false);
-        Character().SetPlayerFlag(PLAYERTYPES::FLAG_REQUEST_PASSIVE, false);
+        Character().ClearPlayerFlag(PLAYERTYPES::FLAG_AERIAL_STATUS);
+        Character().ClearPlayerFlag(PLAYERTYPES::FLAG_REQUEST_PASSIVE);
         Character().SetEnableCatchHit(false);
 
         RwV3d vPosition = Math::VECTOR3_ZERO;
@@ -299,7 +275,7 @@ namespace PlayerStatus
 
         EFFECT_GENERIC::CallTouchDownEffect(pGroundInfo->m_attribute, &vPosition);
         
-        if (!FLAG_TEST(pGroundInfo->m_attribute, MAPTYPES::ATTRIBUTE_DEATH))
+        if (pGroundInfo->m_attribute != MAPTYPES::ATTRIBUTE_DEATH)
             CGameSound::PlayObjectSE(m_pPlayerChr, SDCODE_SE(4121));
 
         IGamepad::StartVibration(Character().GetPadID(), IGamepad::VIBRATIONTYPE_HARD, 0.2f);
@@ -315,7 +291,7 @@ namespace PlayerStatus
     void CFlyawayBoundCommon::OnRun(void)
     {
         if (StateMachine().GetStatusDuration() < 0.2f &&
-            Character().IsPlayerFlagSet(PLAYERTYPES::FLAG_REQUEST_PASSIVE))
+            Character().TestPlayerFlag(PLAYERTYPES::FLAG_REQUEST_PASSIVE))
         {
             RwV3d vOffset = Math::VECTOR3_ZERO;
             
@@ -338,11 +314,8 @@ namespace PlayerStatus
     // *********************************************************************************
     //
 
-    
-    bool CFlyawayBoundFront::IsEnableChangeStatus(PLAYERTYPES::STATUS status)
-    {
-        return (status == PLAYERTYPES::STATUS_FLYAWAY_FRONT);
-    };
+
+    DEFINE_ENABLED_STATUS_FOR(CFlyawayBoundFront, { PLAYERTYPES::STATUS_FLYAWAY_FRONT });
 
 
     const char* CFlyawayBoundFront::GetMotionName(void) const
@@ -368,11 +341,8 @@ namespace PlayerStatus
     //
 
     
-    bool CFlyawayBoundBack::IsEnableChangeStatus(PLAYERTYPES::STATUS status)
-    {
-        return (status == PLAYERTYPES::STATUS_THROWN ||
-                status == PLAYERTYPES::STATUS_FLYAWAY_BACK);
-    };
+    DEFINE_ENABLED_STATUS_FOR(CFlyawayBoundBack, { PLAYERTYPES::STATUS_THROWN,
+                                                   PLAYERTYPES::STATUS_FLYAWAY_BACK });
 
 
     void CFlyawayBoundBack::OnDetach(void)
@@ -410,8 +380,8 @@ namespace PlayerStatus
         Character().ChangeMotion(GetMotionName());
         Character().ResetVelocity();
         Character().ResetAcceleration();
-        Character().SetCharacterFlag(CHARACTERTYPES::FLAG_CANCEL_GRAVITY, true);
-        Character().SetPlayerFlag(PLAYERTYPES::FLAG_AERIAL_STATUS, true);
+        Character().SetCharacterFlag(CHARACTERTYPES::FLAG_CANCEL_GRAVITY);
+        Character().SetPlayerFlag(PLAYERTYPES::FLAG_AERIAL_STATUS);
         Character().SetEnableCatchHit(false);
 
         const CPlayerCharacter::COLLISIONWALLINFO* pWallInfo = Character().GetCollisionWall();
@@ -419,15 +389,20 @@ namespace PlayerStatus
 
         float fDirection = Character().GetDirection();
         RwV3d vPosition = pWallInfo->m_vPosition;
-		vPosition.y -= 0.5f;
+        
+        uint32 hEffect = CEffectManager::Play(PLAYERTYPES::EFFECTNAMES::CRASH_WALL, &vPosition, fDirection);
+        ASSERT(hEffect);
 
-        CEffectManager::Play(PLAYERTYPES::EFFECTNAMES::CRASH_WALL, &vPosition, fDirection);
+        CGameObjectManager::SendMessage(m_pPlayerChr,
+                                        CHARACTERTYPES::MESSAGEID_RECVDMG,
+                                        reinterpret_cast<void*>(10));
 
-        CGameObjectManager::SendMessage(m_pPlayerChr, CHARACTERTYPES::MESSAGEID_RECVDMG, (void*)10);
-
-        if (Character().IsDamageRequested())
+        int32 damageRequested = Character().GetRequestedDamage();
+        if (damageRequested)
         {
-            CGameObjectManager::SendMessage(m_pPlayerChr, CHARACTERTYPES::MESSAGEID_RECVDMG, (void*)20);            
+            CGameObjectManager::SendMessage(m_pPlayerChr,
+                                            CHARACTERTYPES::MESSAGEID_RECVDMG,
+                                            reinterpret_cast<void*>(damageRequested));
             Character().RequestDamage(0);
         };
 
@@ -454,11 +429,8 @@ namespace PlayerStatus
     // *********************************************************************************
     //
 
-    
-    bool CCrashWallFront::IsEnableChangeStatus(PLAYERTYPES::STATUS status)
-    {
-        return (status == PLAYERTYPES::STATUS_FLYAWAY_FRONT);
-    };
+
+    DEFINE_ENABLED_STATUS_FOR(CCrashWallFront, { PLAYERTYPES::STATUS_FLYAWAY_FRONT });
 
 
     const char* CCrashWallFront::GetMotionName(void) const
@@ -477,11 +449,8 @@ namespace PlayerStatus
     // *********************************************************************************
     //
 
-    
-    bool CCrashWallBack::IsEnableChangeStatus(PLAYERTYPES::STATUS status)
-    {
-        return (status == PLAYERTYPES::STATUS_FLYAWAY_BACK);
-    };
+
+    DEFINE_ENABLED_STATUS_FOR(CCrashWallBack, { PLAYERTYPES::STATUS_FLYAWAY_BACK });
 
 
     const char* CCrashWallBack::GetMotionName(void) const
@@ -511,7 +480,7 @@ namespace PlayerStatus
 
     void CCrashWallFallCommon::OnDetach(void)
     {
-        Character().SetCharacterFlag(CHARACTERTYPES::FLAG_CANCEL_GRAVITY, false);
+        Character().ClearCharacterFlag(CHARACTERTYPES::FLAG_CANCEL_GRAVITY);
         Character().SetEnableCatchHit(true);
     };
 
@@ -526,22 +495,16 @@ namespace PlayerStatus
     // *********************************************************************************
     //
 
-    
-    bool CCrashWallFallFront::IsEnableChangeStatus(PLAYERTYPES::STATUS status)
-    {
-        return (status == PLAYERTYPES::STATUS_CRASH_WALL_FRONT);
-    };
+
+    DEFINE_ENABLED_STATUS_FOR(CCrashWallFallFront, { PLAYERTYPES::STATUS_CRASH_WALL_FRONT });
 
 
     //
     // *********************************************************************************
     //
 
-    
-    bool CCrashWallFallBack::IsEnableChangeStatus(PLAYERTYPES::STATUS status)
-    {
-        return (status == PLAYERTYPES::STATUS_CRASH_WALL_BACK);
-    };
+
+    DEFINE_ENABLED_STATUS_FOR(CCrashWallFallBack, { PLAYERTYPES::STATUS_CRASH_WALL_BACK });
 
 
     //
@@ -553,7 +516,7 @@ namespace PlayerStatus
     {
         Character().ChangeMotion(GetMotionName());
         Character().ResetVelocity();
-        Character().SetPlayerFlag(PLAYERTYPES::FLAG_AERIAL_STATUS, false);
+        Character().ClearPlayerFlag(PLAYERTYPES::FLAG_AERIAL_STATUS);
         Character().SetEnableCatchHit(false);
 
         IGamepad::StartVibration(Character().GetPadID(), IGamepad::VIBRATIONTYPE_LOW, 0.2f);
@@ -578,10 +541,7 @@ namespace PlayerStatus
     //
 
     
-    bool CCrashWallTouchdownFront::IsEnableChangeStatus(PLAYERTYPES::STATUS status)
-    {
-        return (status == PLAYERTYPES::STATUS_CRASH_WALL_FALL_FRONT);
-    };
+    DEFINE_ENABLED_STATUS_FOR(CCrashWallTouchdownFront, { PLAYERTYPES::STATUS_CRASH_WALL_FALL_FRONT });
 
 
     const char* CCrashWallTouchdownFront::GetMotionName(void) const
@@ -599,12 +559,9 @@ namespace PlayerStatus
     //
     // *********************************************************************************
     //
-    
 
-    bool CCrashWallTouchdownBack::IsEnableChangeStatus(PLAYERTYPES::STATUS status)
-    {
-        return (status == PLAYERTYPES::STATUS_CRASH_WALL_FALL_BACK);
-    };
+
+    DEFINE_ENABLED_STATUS_FOR(CCrashWallTouchdownBack, { PLAYERTYPES::STATUS_CRASH_WALL_FALL_BACK });
 
 
     const char* CCrashWallTouchdownBack::GetMotionName(void) const
@@ -669,17 +626,22 @@ namespace PlayerStatus
             PLAYERTYPES::STATUS_CONSOLE,
         };
 
+        if (GetID() == status)
+            return false;
+
         return IsWithinStatusFromArray(status, aStatusArray, COUNT_OF(aStatusArray));
     };
 
     
     void CStatusDamage::OnAttach(void)
     {
-        Character().ClearSatusParameter();
+        Character().ClearStatusParameter();
         Character().SetEnableBodyHitSelfToOther(false);
 
-        m_fTime = 0.1f;
-        m_fEndTime = Character().AttackParameter().m_fTroubleTime;
+        m_fRecoverWait  = 0.1f;
+        m_fEndTime      = Character().AttackParameter().m_fTroubleTime;
+
+        Character().ClearPlayerFlag(PLAYERTYPES::FLAG_REQUEST_RECOVER);
 
         IGamepad::StartVibration(Character().GetPadID(), IGamepad::VIBRATIONTYPE_NORMAL, 0.2f);
     };
@@ -693,26 +655,36 @@ namespace PlayerStatus
 
     void CStatusDamage::OnRun(void)
     {
-        if (StateMachine().GetStatusDuration() < m_fEndTime)
+        if (IsEnd())
         {
-            if (GetID() == PLAYERTYPES::STATUS_STUN ||
-                GetID() == PLAYERTYPES::STATUS_BIND)
-            {
-                if (StateMachine().GetStatusDuration() >= m_fTime)
-                {
-                    if (Character().IsPlayerFlagSet(PLAYERTYPES::FLAG_REQUEST_RECOVER))
-                    {
-                        m_fEndTime -= 0.1f;
-                        m_fTime += 1.0f;
-                        Character().SetPlayerFlag(PLAYERTYPES::FLAG_REQUEST_RECOVER, false);
-                    };
-                };
-            };
+            StateMachine().ChangeStatus(PLAYERTYPES::STATUS_IDLE);
         }
         else
         {
-            StateMachine().ChangeStatus(PLAYERTYPES::STATUS_IDLE);
+            PLAYERTYPES::STATUS currentStatus = GetID();
+
+            if ((currentStatus == PLAYERTYPES::STATUS_STUN) ||
+                (currentStatus == PLAYERTYPES::STATUS_BIND) ||
+                (currentStatus == PLAYERTYPES::STATUS_DINDLE))
+            {
+                if (StateMachine().GetStatusDuration() >= m_fRecoverWait)
+                {
+                    if (Character().TestPlayerFlag(PLAYERTYPES::FLAG_REQUEST_RECOVER))
+                    {
+                        Character().ClearPlayerFlag(PLAYERTYPES::FLAG_REQUEST_RECOVER);
+
+                        m_fEndTime     -= 0.1f;
+                        m_fRecoverWait += 0.1f;
+                    };
+                };
+            };
         };
+    };
+
+
+    bool CStatusDamage::IsEnd(void) const
+    {
+        return (StateMachine().GetStatusDuration() >= m_fEndTime);
     };
 
 
@@ -766,8 +738,8 @@ namespace PlayerStatus
         {
             if (CStatusDamage::IsEnableChangeStatus(status))
             {
-                return (status != PLAYERTYPES::STATUS_KNOCK_FRONT &&
-                        status != PLAYERTYPES::STATUS_KNOCK_BACK);
+                return ((status != PLAYERTYPES::STATUS_KNOCK_FRONT) &&
+                        (status != PLAYERTYPES::STATUS_KNOCK_BACK));
             };
         };
 

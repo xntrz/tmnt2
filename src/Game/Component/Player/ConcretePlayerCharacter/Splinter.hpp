@@ -61,7 +61,7 @@ namespace Splinter
     protected:
         PHASE m_phase;
     };
-};
+}; /* namespace Splinter */
 
 
 class CSplinter : public CPlayerCharacter

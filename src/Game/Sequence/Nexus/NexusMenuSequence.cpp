@@ -210,7 +210,8 @@ void CNexusMenuSequence::OnMove(bool bRet, const void* pReturnValue)
                 };
 
                 GAMETYPES::NEXUSID idNexus = CAreaInfo::GetNexusID(idArea);
-                ASSERT(idNexus >= 0 && idNexus < GAMETYPES::NEXUSID_NUM);
+                ASSERT(idNexus >= 0);
+                ASSERT(idNexus < GAMETYPES::NEXUSID_NUM);
 
                 CGameData::Record().Nexus().SetTournamentState(idNexus, CNexusRecord::STATE_NORMAL);
                 CGameData::PlayParam().SetStartArea(idArea, 0);
@@ -313,9 +314,9 @@ void CNexusMenuSequence::replaceText(void)
 
         for (int32 j = 0; j < GAMETYPES::STAGE_MAX; ++j)
         {
-            const CGameTime& StageClearTime = CGameData::Record().Nexus().GetStageClearTime(GAMETYPES::NEXUSID(i), j);
+            CGameTime stageCleartime = CGameData::Record().Nexus().GetStageClearTime(GAMETYPES::NEXUSID(i), j);
             std::sprintf(s_szTmpRep, "%stime_%d", s_apszTournamentHeadLabel[i], j);
-            std::sprintf(s_szTmpOrg, "%02d:%02d:%02d", StageClearTime.GetHour(), StageClearTime.GetMinute(), StageClearTime.GetSecond());
+            std::sprintf(s_szTmpOrg, "%02d:%02d:%02d", stageCleartime.GetHour(), stageCleartime.GetMinute(), stageCleartime.GetSecond());
             m_pAnimation2D->SetText(s_szTmpRep, s_szTmpOrg);
 
             int32 nStageClearCount = CGameData::Record().Nexus().GetStageClearCount(GAMETYPES::NEXUSID(i), j);
@@ -351,9 +352,9 @@ void CNexusMenuSequence::replaceText(void)
             };
         };
 
-        const CGameTime& TourneyClearTime = CGameData::Record().Nexus().GetTournamentClearTime(GAMETYPES::NEXUSID(i));
+        CGameTime cleartime = CGameData::Record().Nexus().GetTournamentClearTime(GAMETYPES::NEXUSID(i));
         std::sprintf(s_szTmpRep, "%stotaltime", s_apszTournamentHeadLabel[i]);
-        std::sprintf(s_szTmpOrg, "Total Time %02d:%02d:%02d", TourneyClearTime.GetHour(), TourneyClearTime.GetMinute(), TourneyClearTime.GetSecond());
+        std::sprintf(s_szTmpOrg, "Total Time %02d:%02d:%02d", cleartime.GetHour(), cleartime.GetMinute(), cleartime.GetSecond());
         m_pAnimation2D->SetText(s_szTmpRep, s_szTmpOrg);        
     };
 };

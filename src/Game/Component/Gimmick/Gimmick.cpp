@@ -20,7 +20,7 @@ CGimmick::CGimmick(const char* pszName, void* pParam)
     ASSERT(pParam);
     
 #ifdef _DEBUG
-    GIMMICKPARAM::GIMMICK_BASIC* pBasic = (GIMMICKPARAM::GIMMICK_BASIC*)pParam;
+	GIMMICKPARAM::GIMMICK_BASIC* pBasic = static_cast<GIMMICKPARAM::GIMMICK_BASIC*>(pParam);
     m_vDebugInitialPos = pBasic->m_vPosition;
 #endif    
 };
@@ -59,16 +59,16 @@ void CGimmick::MessageProc(int32 nMessageID, void* pParam)
     switch (nMessageID)
     {
     case GAMEOBJECTTYPES::MESSAGEID_ATTACKRESULT:
-        OnAttackResult((CHitCatchData*)pParam);
+        OnAttackResult(static_cast<CHitCatchData*>(pParam));
         break;
 
     case GAMEOBJECTTYPES::MESSAGEID_CATCHATTACK:
-        OnCatchAttack((CHitAttackData*)pParam);
+        OnCatchAttack(static_cast<CHitAttackData*>(pParam));
         break;
 
     case GIMMICKTYPES::MESSAGEID_RECVEVENT:
         {
-            GIMMICKTYPES::EVENT_ARGS* pEventArgs = (GIMMICKTYPES::EVENT_ARGS*)pParam;
+		    GIMMICKTYPES::EVENT_ARGS* pEventArgs = static_cast<GIMMICKTYPES::EVENT_ARGS*>(pParam);
             OnReceiveEvent(pEventArgs->m_szSender, pEventArgs->m_type);
         }
         break;
@@ -82,7 +82,7 @@ void CGimmick::MessageProc(int32 nMessageID, void* pParam)
 
 void CGimmick::Draw(void) const
 {
-    RENDERSTATE_PUSH(rwRENDERSTATETEXTURERASTER, nullptr);
+    RENDERSTATE_PUSH(rwRENDERSTATETEXTURERASTER, 0);
     RENDERSTATE_PUSH(rwRENDERSTATECULLMODE, rwCULLMODECULLNONE);
     RENDERSTATE_PUSH(rwRENDERSTATETEXTUREADDRESSU, rwTEXTUREADDRESSCLAMP);
     RENDERSTATE_PUSH(rwRENDERSTATETEXTUREADDRESSV, rwTEXTUREADDRESSCLAMP);
@@ -189,5 +189,11 @@ void CGimmick::Release(void)
 
 bool CGimmick::IsSleep(void) const
 {
-    return (FLAG_TEST(GetObjectFlag(), GAMEOBJECTTYPES::FLAG_SLEEP));
+    return TestObjectFlag(GAMEOBJECTTYPES::FLAG_SLEEP);
+};
+
+
+bool CGimmick::CheckFeature(GIMMICKTYPES::FEATURE feature) const
+{
+    return ((GetFeatures() & feature) != 0);
 };

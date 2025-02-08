@@ -1,16 +1,22 @@
 #include "EnemyTracer.hpp"
+#include "EnemyCharacter.hpp"
 #include "CharacterCompositor.hpp"
 
 #include "Game/System/GameObject/GameObjectManager.hpp"
 
 
-CEnemyTracer::CEnemyTracer(CCharacter* pCharacter)
+CEnemyTracer::CEnemyTracer(CCharacterCompositor* pChrCompositor)
 : m_hObj(0)
 {
-    ASSERT(pCharacter);
-    ASSERT(pCharacter->GetCharacterType() == CCharacter::TYPE_ENEMY);
+    ASSERT(pChrCompositor->GetCharacterType() == CCharacter::TYPE_ENEMY);
+    m_hObj = pChrCompositor->GetHandle();
+};
 
-    m_hObj = pCharacter->GetHandle();
+
+CEnemyTracer::CEnemyTracer(CEnemyCharacter* pEnemyChr)
+: CEnemyTracer(&pEnemyChr->Compositor())
+{
+    ;
 };
 
 
@@ -27,10 +33,10 @@ float CEnemyTracer::GetDirection(void)
     {
         ASSERT(pObj->GetType() == GAMEOBJECTTYPE::CHARACTER);
         
-        CCharacter* pChr = (CCharacter*)pObj;
-        ASSERT(pChr->GetCharacterType() == CCharacter::TYPE_ENEMY);
+        CCharacterCompositor* pChrCompositor = static_cast<CCharacterCompositor*>(pObj);
+        ASSERT(pChrCompositor->GetCharacterType() == CCharacter::TYPE_ENEMY);
         
-        return pChr->GetDirection();
+        return pChrCompositor->GetDirection();
     };
 
     return 0.0f;
@@ -46,9 +52,9 @@ void CEnemyTracer::GetPosition(RwV3d* pvPosition)
     {
         ASSERT(pObj->GetType() == GAMEOBJECTTYPE::CHARACTER);
         
-        CCharacter* pChr = (CCharacter*)pObj;
-        ASSERT(pChr->GetCharacterType() == CCharacter::TYPE_ENEMY);
+        CCharacterCompositor* pChrCompositor = static_cast<CCharacterCompositor*>(pObj);
+        ASSERT(pChrCompositor->GetCharacterType() == CCharacter::TYPE_ENEMY);
         
-        pChr->GetFootPosition(pvPosition);
+        pChrCompositor->GetFootPosition(pvPosition);
     };
 };

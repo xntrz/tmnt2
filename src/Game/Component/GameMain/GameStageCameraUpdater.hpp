@@ -17,7 +17,7 @@ class CDefaultCameraUpdater : public IGameStageCameraUpdater
 public:
     static CDefaultCameraUpdater* Instance(void);
     
-    virtual void Update(CMapCamera* pMapCamera) override;
+    virtual void Update(CMapCamera* pMapCamera) override;  
 };
 
 

@@ -33,4 +33,5 @@ protected:
     RwMatrix m_matrix;
     RwTexture* m_pTexture;
     bool m_bEnable;
+    bool m_bDrawRequest;
 };

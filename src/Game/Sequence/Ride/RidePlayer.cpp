@@ -1,24 +1,21 @@
 #include "RidePlayer.hpp"
 #include "RideCharacter.hpp"
-#include "RideManipulator.hpp"
-
-
-static const char* s_apszRidePlayerClassName[] =
-{
-    "ride_player_1",
-    "ride_player_2",
-    "ride_player_3",
-    "ride_player_4",
-};
 
 
 /*static*/ CRidePlayer* CRidePlayer::New(int32 nNo, int32 nControllerNo)
 {
-    ASSERT(nNo >= 0 && nNo < COUNT_OF(s_apszRidePlayerClassName));
-    
-    CRidePlayer* pRidePlayer = new CRidePlayer(s_apszRidePlayerClassName[nNo], nNo, nControllerNo);
-    ASSERT(pRidePlayer);
+    static const char* s_apszRidePlayerClassName[] =
+    {
+        "ride_player_1",
+        "ride_player_2",
+        "ride_player_3",
+        "ride_player_4",
+    };
 
+    ASSERT(nNo >= 0);
+    ASSERT(nNo < COUNT_OF(s_apszRidePlayerClassName));
+
+    CRidePlayer* pRidePlayer = new CRidePlayer(s_apszRidePlayerClassName[nNo], nNo, nControllerNo);
     return pRidePlayer;
 };
 
@@ -43,13 +40,8 @@ CRidePlayer::~CRidePlayer(void)
     {
         CHARACTERINFO* pCharacterInfo = &m_aCharacterInfo[i];
 
-        ASSERT(pCharacterInfo->m_pManipulator);
         ASSERT(pCharacterInfo->m_pCharacter);
-
-        CRideManipulator::Delete((CRideManipulator*)pCharacterInfo->m_pManipulator);
-        pCharacterInfo->m_pManipulator = nullptr;
-
-        CRideCharacter::Delete((CRideCharacter*)pCharacterInfo->m_pCharacter);
+        CRideCharacter::Delete(static_cast<CRideCharacter*>(pCharacterInfo->m_pCharacter));
         pCharacterInfo->m_pCharacter = nullptr;
     };
 
@@ -59,18 +51,19 @@ CRidePlayer::~CRidePlayer(void)
 
 void CRidePlayer::AddCharacter(PLAYERID::VALUE idChr, GAMETYPES::COSTUME costume)
 {
-    ASSERT(m_nNumCharacter >= 0 && m_nNumCharacter < COUNT_OF(m_aCharacterInfo));
-    ASSERT(idChr >= PLAYERID::ID_START && idChr < PLAYERID::ID_MAX);
+    ASSERT(idChr >= PLAYERID::ID_START);
+    ASSERT(idChr <  PLAYERID::ID_MAX);
+
+    CRideCharacter* pRideChr = CRideCharacter::New(idChr, this, costume);
+    ASSERT(pRideChr);
+    pRideChr->SetPlayerNo(m_nNo);
+    pRideChr->SetPadID(m_nControllerNo);
+
+    ASSERT(m_nNumCharacter >= 0);
+    ASSERT(m_nNumCharacter < COUNT_OF(m_aCharacterInfo));
 
     CHARACTERINFO* pCharacterInfo = &m_aCharacterInfo[m_nNumCharacter];
-
-    pCharacterInfo->m_pCharacter = CRideCharacter::New(idChr, this, costume);
-    ASSERT(pCharacterInfo->m_pCharacter);
-    pCharacterInfo->m_pCharacter->SetPlayerNo(m_nNo);
-    pCharacterInfo->m_pCharacter->SetPadID(m_nControllerNo);
-
-    pCharacterInfo->m_pManipulator = CRideManipulator::New((CRideCharacter*)pCharacterInfo->m_pCharacter, m_nControllerNo);
-    ASSERT(pCharacterInfo->m_pManipulator);
+    pCharacterInfo->m_pCharacter = pRideChr;
 
     if (m_pCurrentCharacterInfo)
     {
@@ -89,12 +82,12 @@ void CRidePlayer::AddCharacter(PLAYERID::VALUE idChr, GAMETYPES::COSTUME costume
 void CRidePlayer::SetCurrentCharacter(PLAYERID::VALUE idChr, bool bPlayChangeEffect)
 {
     CHARACTERINFO* pCharacterInfo = SearchCharacter(idChr);
-
     ASSERT(pCharacterInfo);
+
     ASSERT(m_pCurrentCharacterInfo);
 
-    CRideCharacter* pBeforeCharacter = (CRideCharacter*)m_pCurrentCharacterInfo->m_pCharacter;
-    CRideCharacter* pAfterCharacter = (CRideCharacter*)pCharacterInfo->m_pCharacter;
+    CRideCharacter* pBeforeCharacter = static_cast<CRideCharacter*>(m_pCurrentCharacterInfo->m_pCharacter);
+    CRideCharacter* pAfterCharacter = static_cast<CRideCharacter*>(pCharacterInfo->m_pCharacter);
 
     SetSleepCharacter(m_pCurrentCharacterInfo);
     SetAwakeCharacter(pCharacterInfo);
@@ -124,6 +117,12 @@ int32 CRidePlayer::GetScore(RIDETYPES::SCOREKIND scorekind)
 
 CRideCharacter* CRidePlayer::GetRideCharacter(int32 no) const
 {
-    ASSERT(no >= 0 && no < GetCharacterNum());
-    return (CRideCharacter*)GetCharacter(no);
+#ifdef _DEBUG    
+    int32 characterNum = GetCharacterNum();
+    
+    ASSERT(no >= 0);
+    ASSERT(no < characterNum);
+#endif /* _DEBUG */   
+    
+    return static_cast<CRideCharacter*>(GetCharacter(no));
 };

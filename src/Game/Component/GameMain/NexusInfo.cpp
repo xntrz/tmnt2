@@ -26,7 +26,9 @@ namespace
     
     static inline const NEXUSINFO NexusInfo(GAMETYPES::NEXUSID idNexus)
     {
-        ASSERT(idNexus >= 0 && idNexus < COUNT_OF(s_aNexusInfoList));
+        ASSERT(idNexus >= 0);
+        ASSERT(idNexus < COUNT_OF(s_aNexusInfoList));
+
         return s_aNexusInfoList[idNexus];
     };
 };
@@ -34,7 +36,8 @@ namespace
 
 /*static*/ const wchar* CNexusInfo::GetTeamName(GAMETYPES::NEXUSID idNexus, int32 nRoundNo)
 {
-    ASSERT(nRoundNo >= 0 && nRoundNo < GAMETYPES::STAGE_MAX);
+    ASSERT(nRoundNo >= 0);
+    ASSERT(nRoundNo < GAMETYPES::STAGE_MAX);
 
     GAMETEXT idText = GAMETEXT(NexusInfo(idNexus).m_idTextStart + nRoundNo);
     

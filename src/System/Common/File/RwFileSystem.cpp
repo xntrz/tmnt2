@@ -16,13 +16,13 @@
 
 /*static*/ RtFile* CRwFileSystem::rwFileSystemGetFile(RtFileSystem* fs, RwUInt32 index)
 {
-    return &((CRwFileSystem*)fs)->m_pFile[index];
+    return &static_cast<CRwFileSystem*>(fs)->m_pFile[index];
 };
 
 
 /*static*/ RtFileSystemError CRwFileSystem::rwOpen(RtFileSystem* fs, RtFile* file, const RwChar* filename, RwUInt32 flags)
 {
-    if (!((CRwFile*)file)->m_extFile.Open(filename))
+    if (!static_cast<CRwFile*>(file)->m_extFile.Open(filename))
         return RTFS_ERROR_FILENOTFOUND;
 
     file->fileSystem = fs;
@@ -33,13 +33,13 @@
 
 /*static*/ void CRwFileSystem::rwClose(RtFile* file)
 {
-    ((CRwFile*)file)->m_extFile.Close();
+    static_cast<CRwFile*>(file)->m_extFile.Close();
 };
 
 
 /*static*/ RwUInt32 CRwFileSystem::rwRead(RtFile* file, void* pBuffer, RwUInt32 nBytes)
 {
-    return ((CRwFile*)file)->m_extFile.Read(pBuffer, nBytes);
+    return static_cast<CRwFile*>(file)->m_extFile.Read(pBuffer, nBytes);
 };
 
 
@@ -62,7 +62,7 @@
     );
 
     RtInt64 Result;
-    Result.supportValue = ((CRwFile*)file)->m_extFile.Seek(nOffset, fPosition - 1);
+    Result.supportValue = (static_cast<CRwFile*>(file)->m_extFile.Seek(nOffset, fPosition - 1));
 
     return Result;
 };
@@ -82,13 +82,13 @@
 
 /*static*/ RwBool CRwFileSystem::rwEof(RtFile* file)
 {
-    return ((CRwFile*)file)->m_extFile.IsEof();
+    return static_cast<CRwFile*>(file)->m_extFile.IsEof();
 };
 
 
 /*static*/ RtFileStatus CRwFileSystem::rwGetStatus(RtFile* file)
 {
-    return (((CRwFile*)file)->m_extFile.IsOpen() ? RTFILE_STATUS_READY : RTFILE_STATUS_CLOSED);
+    return (static_cast<CRwFile*>(file)->m_extFile.IsOpen() ? RTFILE_STATUS_READY : RTFILE_STATUS_CLOSED);
 };
 
 

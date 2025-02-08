@@ -21,14 +21,20 @@ void CAIFrequencyParam::Initialize(uint8* pParam, int32 nParam, int32 iLevelMax)
 {
     GAMETYPES::DIFFICULTY Level = CGameProperty::GetDifficulty();
 
-    ASSERT(Level >= iLevelMax);
+    ASSERT(Level < iLevelMax);
 
     m_nParam = nParam;
     m_pParamTable = (pParam + (Level * m_nParam));
 };
 
 
-uint8 CAIFrequencyParam::GetFrequency(int32 No)
+void CAIFrequencyParam::DrawFreqTable(void)
+{
+    // TODO CBaseStoneBiterChr::Draw
+};
+
+
+uint8 CAIFrequencyParam::GetFrequency(int32 No) const
 {
     ASSERT(No >= 0);
     ASSERT(No < m_nParam);

@@ -127,10 +127,12 @@ bool CAntiqueRecord::CheckJustCompleted(void)
 
 void CAntiqueRecord::SetAntiqueTaken(ANTIQUEID::VALUE idAntique)
 {
-    ASSERT(getAntiqueNode(idAntique).m_state == STATE_NONE);
+    NODEANTIQUE& node = getAntiqueNode(idAntique);
+    
+    ASSERT(node.m_state == STATE_NONE);
 
-    getAntiqueNode(idAntique).m_state = STATE_UNIDENTIFIED;
-    getAntiqueNode(idAntique).m_takenDate = CSystemTime::Instance().GetLocalTime().GetTimevalue();
+    node.m_state     = STATE_UNIDENTIFIED;
+    node.m_takenDate = CSystemTime::Instance().GetLocalTime().GetTimevalue();
 };
 
 
@@ -166,7 +168,8 @@ bool CAntiqueRecord::IsAreaAntiqueTaken(AREAID::VALUE idArea) const
     if (idAreaAntiq == ANTIQUEID::ID_NONE)
         return false;
 
-    ASSERT(idAreaAntiq >= ANTIQUEID::ID_FIRST && idAreaAntiq <= ANTIQUEID::ID_MAX);
+    ASSERT(idAreaAntiq >= ANTIQUEID::ID_FIRST);
+    ASSERT(idAreaAntiq <= ANTIQUEID::ID_MAX);
 
     return (getAntiqueNode(idAreaAntiq).m_state > STATE_NONE);
 };
@@ -174,7 +177,8 @@ bool CAntiqueRecord::IsAreaAntiqueTaken(AREAID::VALUE idArea) const
 
 CAntiqueRecord::NODEANTIQUE& CAntiqueRecord::getAntiqueNode(ANTIQUEID::VALUE idAntique)
 {
-    ASSERT(idAntique >= 0 && idAntique < ANTIQUEID::ID_MAX);
+    ASSERT(idAntique >= 0);
+    ASSERT(idAntique < ANTIQUEID::ID_MAX);
 
     return m_aNodeAntique[idAntique];
 };
@@ -182,7 +186,8 @@ CAntiqueRecord::NODEANTIQUE& CAntiqueRecord::getAntiqueNode(ANTIQUEID::VALUE idA
 
 const CAntiqueRecord::NODEANTIQUE& CAntiqueRecord::getAntiqueNode(ANTIQUEID::VALUE idAntique) const
 {
-    ASSERT(idAntique >= 0 && idAntique < ANTIQUEID::ID_MAX);
+    ASSERT(idAntique >= 0);
+    ASSERT(idAntique < ANTIQUEID::ID_MAX);
 
     return m_aNodeAntique[idAntique];
 };

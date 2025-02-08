@@ -18,7 +18,7 @@ CHitSphereParameter::~CHitSphereParameter(void)
 void CHitSphereParameter::Initialize(INIT_PARAMETER* pParam)
 {
     m_nBoneID = pParam->m_nBoneID;
-    m_sphere = pParam->m_sphere;
+    m_sphere  = pParam->m_sphere;
 };
 
 

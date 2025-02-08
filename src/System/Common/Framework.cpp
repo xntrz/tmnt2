@@ -80,24 +80,25 @@ bool CFramework::Initialize(void)
     ASSERT(m_pGraphicsDevice);
     ASSERT(m_pInputsDevice);
     ASSERT(m_pFileManager);
-    ASSERT(!m_pProcessDispatcher);    
+    ASSERT(!m_pProcessDispatcher);
 
-    if (!m_pGraphicsDevice->Initialize() ||
-        !m_pGraphicsDevice->Start())
+    if (!m_pGraphicsDevice->Initialize())
+        return false;
+
+    if (!m_pFileManager->Start())
         return false;
 
     if (!m_pInputsDevice->Start())
         return false;
 
-    if (!m_pFileManager->Start())
+    if (!m_pGraphicsDevice->Start())
         return false;
-    
+
     CSystemTime::Instance().AttachClock(m_pClockDevice);
     CSystemText::Initialize();
 
     m_pProcessDispatcher = new CProcessDispatcher(g_aProcessList);
-    ASSERT(m_pProcessDispatcher);
-    
+
     return m_pProcessDispatcher->Start();
 };
 
@@ -107,6 +108,7 @@ void CFramework::Terminate(void)
     if (m_pProcessDispatcher)
     {
         m_pProcessDispatcher->Stop();
+
         delete m_pProcessDispatcher;
         m_pProcessDispatcher = nullptr;
     };
@@ -114,17 +116,17 @@ void CFramework::Terminate(void)
     CSystemText::Terminate();
     CSystemTime::Instance().DetachClock();
 
-    if(m_pFileManager)
-        m_pFileManager->Stop();
+    if (m_pGraphicsDevice)
+        m_pGraphicsDevice->Stop();
 
-    if(m_pInputsDevice)
+    if (m_pInputsDevice)
         m_pInputsDevice->Stop();
 
+    if (m_pFileManager)
+        m_pFileManager->Stop();
+
     if (m_pGraphicsDevice)
-    {
-        m_pGraphicsDevice->Stop();
         m_pGraphicsDevice->Terminate();
-    };
 };
 
 

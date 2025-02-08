@@ -29,8 +29,10 @@ bool CNormalStageSequence::OnAttach(const void* pParam)
     CStageBaseSequence::OnAttach(pParam);
 
     RegisterStateObject(STATE_LOAD, new CLoadNormalStageSeqState(CGameData::PlayParam().GetStage()), true);
-    if(CGameData::PlayParam().IsFirstStage())
-        RegisterStateObject(STATE_INTRO, new CIntroStageSeqState, true);    
+    
+    if (CGameData::PlayParam().IsFirstStage())
+        RegisterStateObject(STATE_INTRO, new CIntroStageSeqState, true);
+    
     RegisterStateObject(STATE_PLAY, new CPlayStageSeqState, true);
 
     ChangeState(STATE_LOAD);
@@ -46,25 +48,21 @@ void CNormalStageSequence::OnStateDetached(STATE state)
     case STATE_LOAD:
         {
             STAGEID::VALUE idStage = CGameData::PlayParam().GetStage();
-
-            CGameSound::PlayBGM(
-                SDCODE_BGM(CStageInfo::GetBgmNo(idStage))
-            );
+            CGameSound::PlayBGM(SDCODE_BGM(CStageInfo::GetBgmNo(idStage)));
 
             ChangeState(STATE_INTRO);
         }
         break;
 
     case STATE_INTRO:
-        {
-            ChangeState(STATE_PLAY);
-        }
+        ChangeState(STATE_PLAY);
         break;
 
     case STATE_PLAY:
-        {
-            ChangeState(STATE_END);
-        }
+        ChangeState(STATE_END);
+        break;
+
+    default:
         break;
     };
 };

@@ -117,20 +117,21 @@ namespace RidePlayerStatus
         {
         case PLAYERTYPES::RIDESTATUS_RUN:
             {
-				if (RideCharacter().PadInfo().m_fStickX > 0.4f)
+				if (RideCharacter().PadInfo().fStickX > 0.4f)
 				{
 					StateMachine().ChangeStatus(PLAYERTYPES::RIDESTATUS_RIGHT);					
 				}
-				else if (RideCharacter().PadInfo().m_fStickX < -0.4f)
+				else if (RideCharacter().PadInfo().fStickX < -0.4f)
 				{
 					StateMachine().ChangeStatus(PLAYERTYPES::RIDESTATUS_LEFT);					
 				}
-				else if (RideCharacter().PadInfo().m_fStickY > 0.4f)
+				else if (RideCharacter().PadInfo().fStickY > 0.4f)
 				{
-					StateMachine().ChangeStatus(PLAYERTYPES::RIDESTATUS_SPEED_UP);
-					CGameSound::PlayObjectSE(&Character(), SDCODE_SE(0x1096));
+                    StateMachine().ChangeStatus(PLAYERTYPES::RIDESTATUS_SPEED_UP);
+                    if (!RideCharacter().IsShip())
+                        CGameSound::PlayObjectSE(&Character(), SDCODE_SE(0x1096));
 				}
-				else if (RideCharacter().PadInfo().m_fStickY < -0.4f)
+				else if (RideCharacter().PadInfo().fStickY < -0.4f)
 				{
 					StateMachine().ChangeStatus(PLAYERTYPES::RIDESTATUS_SPEED_DOWN);
 				};
@@ -139,32 +140,35 @@ namespace RidePlayerStatus
 
         case PLAYERTYPES::RIDESTATUS_RIGHT:
             {
-                if (RideCharacter().PadInfo().m_fStickX < 0.4f)
+                if (RideCharacter().PadInfo().fStickX < 0.4f)
                     StateMachine().ChangeStatus(PLAYERTYPES::RIDESTATUS_RUN);
             }
             break;
 
         case PLAYERTYPES::RIDESTATUS_LEFT:
             {
-                if (RideCharacter().PadInfo().m_fStickX > -0.4f)
+                if (RideCharacter().PadInfo().fStickX > -0.4f)
                     StateMachine().ChangeStatus(PLAYERTYPES::RIDESTATUS_RUN);
             }
             break;
 
         case PLAYERTYPES::RIDESTATUS_SPEED_UP:
             {
-				if (RideCharacter().PadInfo().m_fStickY < 0.4f)
+				if (RideCharacter().PadInfo().fStickY < 0.4f)
 					StateMachine().ChangeStatus(PLAYERTYPES::RIDESTATUS_RUN);
             }
             break;
 
         case PLAYERTYPES::RIDESTATUS_SPEED_DOWN:
             {
-                if (RideCharacter().PadInfo().m_fStickY > -0.4f)
+                if (RideCharacter().PadInfo().fStickY > -0.4f)
                     StateMachine().ChangeStatus(PLAYERTYPES::RIDESTATUS_RUN);
             }
             break;
-        };        
+
+        default:
+            break;
+        };
     };
 
 
@@ -298,7 +302,7 @@ namespace RidePlayerStatus
     {
         RideCharacter().ResetAcceleration();
         RideCharacter().ResetVelocity();
-        RideCharacter().SetPlayerFlag(PLAYERTYPES::FLAG_AERIAL_STATUS, true);
+        RideCharacter().SetPlayerFlag(PLAYERTYPES::FLAG_AERIAL_STATUS);
         RideCharacter().SetEnableBodyHit(false);
         RideCharacter().SetEnableCatchHit(false);
         RideCharacter().SetGravityEnable(false);
@@ -350,7 +354,7 @@ namespace RidePlayerStatus
     {
         RideCharacter().ResetAcceleration();
         RideCharacter().ResetVelocity();
-        RideCharacter().SetPlayerFlag(PLAYERTYPES::FLAG_AERIAL_STATUS, true);
+        RideCharacter().SetPlayerFlag(PLAYERTYPES::FLAG_AERIAL_STATUS);
         RideCharacter().SetEnableBodyHit(true);
         RideCharacter().SetEnableCatchHit(true);
         RideCharacter().SetGravityEnable(false);
@@ -450,7 +454,7 @@ namespace RidePlayerStatus
         vVelocity.y = 11.0f;
         RideCharacter().SetVelocity(&vVelocity);
 
-        RideCharacter().SetPlayerFlag(PLAYERTYPES::FLAG_AERIAL_STATUS, true);
+        RideCharacter().SetPlayerFlag(PLAYERTYPES::FLAG_AERIAL_STATUS);
 
         if (Math::RandFloat() < 0.5f)
             CMessageManager::Request(SEGROUPID::VALUE(157), RideCharacter().GetID());
@@ -492,7 +496,7 @@ namespace RidePlayerStatus
 
     void CTouchdown::OnAttach(void)
     {
-        RideCharacter().SetPlayerFlag(PLAYERTYPES::FLAG_AERIAL_STATUS, false);
+        RideCharacter().ClearPlayerFlag(PLAYERTYPES::FLAG_AERIAL_STATUS);
 
         if (!RideCharacter().IsShip())
         {
@@ -546,7 +550,7 @@ namespace RidePlayerStatus
 
     void CAerial::OnAttach(void)
     {
-        RideCharacter().SetPlayerFlag(PLAYERTYPES::FLAG_AERIAL_STATUS, true);
+        RideCharacter().SetPlayerFlag(PLAYERTYPES::FLAG_AERIAL_STATUS);
     };
 
 
@@ -624,7 +628,7 @@ namespace RidePlayerStatus
     {
         RideCharacter().ResetAcceleration();
         RideCharacter().ResetVelocity();
-        RideCharacter().SetPlayerFlag(PLAYERTYPES::FLAG_AERIAL_STATUS, true);
+        RideCharacter().SetPlayerFlag(PLAYERTYPES::FLAG_AERIAL_STATUS);
         RideCharacter().SetEnableBodyHit(false);
         RideCharacter().SetEnableCatchHit(false);
         RideCharacter().SetGravityEnable(false);

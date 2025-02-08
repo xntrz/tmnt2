@@ -38,7 +38,7 @@ public:
     PLAYERID::VALUE GetCurrentCharacterID(void) const;
     bool IsIncludedCharacter(PLAYERID::VALUE idChr);
     void GetPosition(RwV3d* pvPosition) const;
-    void Relocation(const RwV3d* pvPosition, float fDirection, bool bProtect);
+    void Relocation(const RwV3d* pvPosition, float fDirection, bool bBlink);
     void Sleep(void);
     void Awake(void);
     bool IsEnableCharacterChanging(void);

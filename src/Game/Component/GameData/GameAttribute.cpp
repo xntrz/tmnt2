@@ -24,8 +24,8 @@ void CGameAttribute::Clear(void)
 
 void CGameAttribute::SetVirtualPad(int32 iController)
 {
-    ASSERT( iController == CController::CONTROLLER_LOCKED_ON_VIRTUAL ||
-            iController == CController::CONTROLLER_UNLOCKED_ON_VIRTUAL);
+    ASSERT((iController == CController::CONTROLLER_LOCKED_ON_VIRTUAL) ||
+           (iController == CController::CONTROLLER_UNLOCKED_ON_VIRTUAL));
     
     m_iVirtualPad = iController;
 };

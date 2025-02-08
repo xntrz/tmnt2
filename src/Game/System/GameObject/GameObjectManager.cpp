@@ -8,10 +8,12 @@ private:
     static const int32 MAX_OBJ = 512;
 
     struct TAG_GARBAGE {};
+    struct TAG_TYPE {};
 
     struct GAMEOBJECTWORK
         : public CListNode<GAMEOBJECTWORK>              // common list link
         , public CListNode<GAMEOBJECTWORK, TAG_GARBAGE> // garbage list link
+        , public CListNode<GAMEOBJECTWORK, TAG_TYPE>    // type list link
     {
         enum FLAG
         {
@@ -94,7 +96,8 @@ public:
     uint32 RegistObject(CGameObject* pObject, GAMEOBJECTTYPE::VALUE type, const char* pszParent);
     void RemoveObject(CGameObject* pObject);
     void DeleteObject(CGameObject* pObject);
-    CGameObject* GetNext(CGameObject* pObject);
+    CGameObject* GetNext(CGameObject* pObject = nullptr);
+    CGameObject* GetNext(GAMEOBJECTTYPE::VALUE type, CGameObject* pObject = nullptr);
     CGameObject* GetObject(uint32 hObject);
     CGameObject* GetObject(const char* pszName);
     void PeriodForList(CList<GAMEOBJECTWORK>& rList, CGameObject* pParent = nullptr);
@@ -107,16 +110,25 @@ public:
     void InsertObjectWork(CList<GAMEOBJECTWORK>& rList, GAMEOBJECTWORK* pWork);
     bool EnumerateWork(IEnumerateFunctor* pFunctor);
     bool EnumerateWorkFromList(CList<GAMEOBJECTWORK>& rList, IEnumerateFunctor* pFunctor);
-    
+
+    template<class TAG = CListNodeDefaultTag>
+    /*inline*/ CGameObject* GetNextFromList(CList<GAMEOBJECTWORK, TAG>& list, CGameObject* pObject = nullptr);
+
 private:
     GAMEOBJECTWORK                      m_aWorkPool[MAX_OBJ];
     CList<GAMEOBJECTWORK>               m_listWorkAlloc;
     CList<GAMEOBJECTWORK>               m_listWorkFree;
     CList<GAMEOBJECTWORK, TAG_GARBAGE>  m_listWorkGarbage;
+    CList<GAMEOBJECTWORK, TAG_TYPE>     m_aListWorkType[GAMEOBJECTTYPE::MAX];
     int32                               m_nNumActiveObj;
     int32                               m_iGeneration;
     CGameObject*                        m_pCurrentParent;
 };
+
+
+//
+// *********************************************************************************
+//
 
 
 bool CGameObjectContainer::CObjectCollector::operator()(GAMEOBJECTWORK* pWork)
@@ -126,6 +138,11 @@ bool CGameObjectContainer::CObjectCollector::operator()(GAMEOBJECTWORK* pWork)
 
     return true;
 };
+
+
+//
+// *********************************************************************************
+//
 
 
 bool CGameObjectContainer::COutOfGenerationCollector::operator()(GAMEOBJECTWORK* pWork)
@@ -138,6 +155,11 @@ bool CGameObjectContainer::COutOfGenerationCollector::operator()(GAMEOBJECTWORK*
 
     return true;
 };
+
+
+//
+// *********************************************************************************
+//
 
 
 bool CGameObjectContainer::CFindFromName::operator()(GAMEOBJECTWORK* pWork)
@@ -155,11 +177,17 @@ bool CGameObjectContainer::CFindFromName::operator()(GAMEOBJECTWORK* pWork)
 };
 
 
+//
+// *********************************************************************************
+//
+
+
 CGameObjectContainer::CGameObjectContainer(void)
 : m_aWorkPool()
 , m_listWorkAlloc()
 , m_listWorkFree()
 , m_listWorkGarbage()
+, m_aListWorkType()
 , m_nNumActiveObj(0)
 , m_iGeneration(0)
 , m_pCurrentParent(nullptr)
@@ -226,7 +254,12 @@ uint32 CGameObjectContainer::RegistObject(CGameObject* pObject, GAMEOBJECTTYPE::
     ++pWork->counter;
 
     InsertObjectWork(*pList, pWork);
-    
+
+    /* regist in type list */
+    ASSERT(type >= 0);
+    ASSERT(type < COUNT_OF(m_aListWorkType));
+    m_aListWorkType[type].push_back(pWork);
+
     return CalcHandle(pWork);
 };
 
@@ -238,10 +271,15 @@ void CGameObjectContainer::RemoveObject(CGameObject* pObject)
     GAMEOBJECTWORK* pWork = FindObjectWork(hObject);
     if (!pWork)
         return;
+
+    /* remove from type list */
+    GAMEOBJECTTYPE::VALUE type = pObject->GetType();
+    ASSERT(type >= 0);
+    ASSERT(type < COUNT_OF(m_aListWorkType));
     
-    //
-    //  Move all nodes to commond work list if exists
-    //
+    m_aListWorkType[type].erase(pWork);
+
+    /* move all nodes to common work list if exists */
     auto it = pWork->childs.begin();
     auto itEnd = pWork->childs.end();
     while (it != itEnd)
@@ -279,28 +317,18 @@ void CGameObjectContainer::DeleteObject(CGameObject* pObject)
 };
 
 
-CGameObject* CGameObjectContainer::GetNext(CGameObject* pObject)
+CGameObject* CGameObjectContainer::GetNext(CGameObject* pObject /*= nullptr*/)
 {
-    CList<GAMEOBJECTWORK>* pList = &m_listWorkAlloc;
+    return GetNextFromList(m_listWorkAlloc, pObject);
+};
 
-    if (!pObject)
-    {
-        if (pList->empty())
-            return nullptr;
-        else
-            return pList->front()->object;
-    };
 
-    uint32 hObject = pObject->GetHandle();
+CGameObject* CGameObjectContainer::GetNext(GAMEOBJECTTYPE::VALUE type, CGameObject* pObject /*= nullptr*/)
+{
+    ASSERT(type >= 0);
+    ASSERT(type < COUNT_OF(m_aListWorkType));
 
-    GAMEOBJECTWORK* pWork = FindObjectWork(hObject);
-    ASSERT(pWork);
-
-    auto it = ++CList<GAMEOBJECTWORK>::iterator(pList, pWork);
-    if (it)
-        return (*it).object;
-
-    return nullptr;
+    return GetNextFromList(m_aListWorkType[type], pObject);
 };
 
 
@@ -357,7 +385,12 @@ CGameObjectContainer::GAMEOBJECTWORK* CGameObjectContainer::FindObjectWork(uint3
 {
     OBJECTHANDLE handle(hObject);
 
-    GAMEOBJECTWORK* pWork = &m_aWorkPool[handle.parts.index];
+    int32 index = static_cast<int32>(handle.parts.index);
+    
+    ASSERT(index >= 0);
+    ASSERT(index < COUNT_OF(m_aWorkPool));
+
+    GAMEOBJECTWORK* pWork = &m_aWorkPool[index];
 
     if (pWork->counter != static_cast<int32>(handle.parts.counter))
         return nullptr;
@@ -410,7 +443,10 @@ void CGameObjectContainer::FreeObjectWork(GAMEOBJECTWORK* pWork)
     using CListNodeGarbage = CListNode<GAMEOBJECTWORK, TAG_GARBAGE>;
     ASSERT(static_cast<CListNodeGarbage*>(pWork)->is_linked() == false, "unlink node from garbage list before free");
 
-    m_listWorkFree.push_back(pWork);
+    using CListNodeType = CListNode<GAMEOBJECTWORK, TAG_TYPE>;
+    ASSERT(static_cast<CListNodeType*>(pWork)->is_linked() == false, "unlink node from type list before free");
+
+    m_listWorkFree.push_front(pWork);
 };
 
 
@@ -440,7 +476,7 @@ void CGameObjectContainer::InsertObjectWork(CList<GAMEOBJECTWORK>& rList, GAMEOB
         auto itEnd = rList.end();
         while (it != itEnd)
         {
-            if(pWork->object->GetType() < (*it).object->GetType())
+            if (pWork->object->GetType() < (*it).object->GetType())
                 break;
 
             ++it;
@@ -483,6 +519,32 @@ bool CGameObjectContainer::EnumerateWorkFromList(CList<GAMEOBJECTWORK>& rList, I
 };
 
 
+template<class TAG /*= CListNodeDefaultTag*/>
+inline CGameObject* CGameObjectContainer::GetNextFromList(CList<GAMEOBJECTWORK, TAG>& list,
+                                                          CGameObject* pObject /*= nullptr*/)
+{
+    if (!pObject)
+    {
+        if (list.empty())
+            return nullptr;
+        else
+            return list.front()->object;
+    };
+
+    uint32 hObject = pObject->GetHandle();
+
+    GAMEOBJECTWORK* pWork = FindObjectWork(hObject);
+    ASSERT(pWork);
+
+    auto it = ++CList<GAMEOBJECTWORK, TAG>::iterator(&list, pWork);
+    auto itEnd = list.end();
+    if (it != itEnd)
+        return (*it).object;
+
+    return nullptr;
+};
+
+
 static CGameObjectContainer* s_pGameObjectContainer = nullptr;
 
 
@@ -496,9 +558,7 @@ static inline CGameObjectContainer& GameObjectContainer(void)
 /*static*/ void CGameObjectManager::Initialize(void)
 {
     if (!s_pGameObjectContainer)
-    {
         s_pGameObjectContainer = new CGameObjectContainer;
-    };
 };
 
 
@@ -545,9 +605,15 @@ static inline CGameObjectContainer& GameObjectContainer(void)
 };
 
 
-/*static*/ CGameObject* CGameObjectManager::GetNext(CGameObject* pObject)
+/*static*/ CGameObject* CGameObjectManager::GetNext(CGameObject* pObject /*= nullptr*/)
 {
     return GameObjectContainer().GetNext(pObject);
+};
+
+
+/*static*/ CGameObject* CGameObjectManager::GetNext(GAMEOBJECTTYPE::VALUE type, CGameObject* pObject /*= nullptr*/)
+{
+    return GameObjectContainer().GetNext(type, pObject);
 };
 
 

@@ -30,7 +30,7 @@ public:
     virtual int32 GetDamage(void) const override;
     virtual int32 GetShurikenMax(void) const override;
     virtual int32 GetShurikenNum(void) const override;
-    virtual void Relocation(const RwV3d* pvPosition, float fDirection, bool bProtect) override;
+    virtual void Relocation(const RwV3d* pvPosition, float fDirection, bool bBlink) override;
     virtual int32 AddHP(int32 iHP) override;
     virtual void AddShurikenNum(int32 iShuriken) override;
     virtual void InvokeDeathFloor(void) override;

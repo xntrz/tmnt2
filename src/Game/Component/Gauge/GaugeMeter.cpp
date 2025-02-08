@@ -1,5 +1,6 @@
 #include "GaugeMeter.hpp"
 #include "GaugeManager.hpp"
+#include "GaugeAnim.hpp"
 
 #include "Game/Component/GameData/GameData.hpp"
 #include "Game/Component/GameMain/GamePlayer.hpp"
@@ -43,7 +44,7 @@ public:
     void Draw(void);
     void GaugeUpdate(void);
     void GaugeMeterDraw(void);
-    void GaugeMeterVertexSet(int32 nVertexNum, int32 aVertexList []);
+    void GaugeMeterVertexSet(int32 nVertexNum, int32 aVertexList[]);
     void AnimGaugeFont_Period(void);
     void AnimGaugeFont_Draw(void);
     void LifeRecover_Period(void);
@@ -53,54 +54,54 @@ public:
     void DekuDraw(void);
 
 private:
-    uint32 m_aGaugeCnt[4];
-    uint8 m_aGaugeStep[4];
-    bool m_bGaugeMeterSetting;
-    CSprite m_aSprite[7];
-    GAUGETYPE m_GaugeType;
-    RwTexture* m_apTexture[4];
-    ANIMREQ m_PlayerHpAnimReq;
-    int32 m_PlayerHp;
-    int32 m_PlayerHpOld;
-    int32 m_PlayerHpMove;
-    int32 m_PlayerHpKatsu;
-    int32 m_PlayerHpChu;
-    int32 m_PlayerHpKi;
-    float m_afWidth[2];
-    float m_afHeight[2];
-    uint8 m_aAlpha[4];
-    float m_fRecoverRot;
-    uint32 m_uLifeAnimCnt;
-    uint32 m_uLifeAnimCnt2;
-    bool m_bDekuDispFlag;
-    DEKUSTATE m_DekuState;
-    uint32 m_uDekuAnimCnt;
+    uint32      m_aGaugeCnt[4];
+    uint8       m_aGaugeStep[4];
+    bool        m_bGaugeMeterSetting;
+    CSprite     m_aSprite[7];
+    GAUGETYPE   m_GaugeType;
+    RwTexture*  m_apTexture[4];
+    ANIMREQ     m_PlayerHpAnimReq;
+    int32       m_PlayerHp;
+    int32       m_PlayerHpOld;
+    int32       m_PlayerHpMove;
+    int32       m_PlayerHpKatsu;
+    int32       m_PlayerHpChu;
+    int32       m_PlayerHpKi;
+    float       m_afWidth[2];
+    float       m_afHeight[2];
+    uint8       m_aAlpha[4];
+    float       m_fRecoverRot;
+    uint32      m_uLifeAnimCnt;
+    uint32      m_uLifeAnimCnt2;
+    bool        m_bDekuDispFlag;
+    DEKUSTATE   m_DekuState;
+    uint32      m_uDekuAnimCnt;
 };
 
 
 CGaugeMeter_Container::CGaugeMeter_Container(void)
-    : m_bGaugeMeterSetting(false)
-    , m_GaugeType(GAUGETYPE_KATSU)
-    , m_PlayerHpAnimReq(ANIMREQ_NONE)
-    , m_PlayerHp(0)
-    , m_PlayerHpOld(0)
-    , m_PlayerHpMove(0)
-    , m_PlayerHpKatsu(0)
-    , m_PlayerHpChu(0)
-    , m_PlayerHpKi(0)
-    , m_fRecoverRot(0.0f)
-    , m_uLifeAnimCnt(0)
-    , m_uLifeAnimCnt2(0)
-    , m_bDekuDispFlag(false)
-    , m_DekuState(DEKUSTATE_IDLE)
-    , m_uDekuAnimCnt(0)
+: m_bGaugeMeterSetting(false)
+, m_GaugeType(GAUGETYPE_KATSU)
+, m_PlayerHpAnimReq(ANIMREQ_NONE)
+, m_PlayerHp(0)
+, m_PlayerHpOld(0)
+, m_PlayerHpMove(0)
+, m_PlayerHpKatsu(0)
+, m_PlayerHpChu(0)
+, m_PlayerHpKi(0)
+, m_fRecoverRot(0.0f)
+, m_uLifeAnimCnt(0)
+, m_uLifeAnimCnt2(0)
+, m_bDekuDispFlag(false)
+, m_DekuState(DEKUSTATE_IDLE)
+, m_uDekuAnimCnt(0)
 {
-    std::memset(m_apTexture, 0x00, sizeof(m_apTexture));
-    std::memset(m_afWidth, 0x00, sizeof(m_afWidth));
-    std::memset(m_afHeight, 0x00, sizeof(m_afHeight));
+    std::memset(m_apTexture,  0x00, sizeof(m_apTexture));
+    std::memset(m_afWidth,    0x00, sizeof(m_afWidth));
+    std::memset(m_afHeight,   0x00, sizeof(m_afHeight));
     std::memset(m_aGaugeStep, 0x00, sizeof(m_aGaugeStep));
-    std::memset(m_aAlpha, 0x00, sizeof(m_aAlpha));
-    std::memset(m_aGaugeCnt, 0x00, sizeof(m_aGaugeCnt));
+    std::memset(m_aAlpha,     0x00, sizeof(m_aAlpha));
+    std::memset(m_aGaugeCnt,  0x00, sizeof(m_aGaugeCnt));
 
     m_bDekuDispFlag = CGameData::Record().Item().IsComebackProcessed();
 };
@@ -233,24 +234,29 @@ void CGaugeMeter_Container::Draw(void)
 
 void CGaugeMeter_Container::GaugeUpdate(void)
 {
+    IGamePlayer* pGameplayer = CGameProperty::Player(0);
+
     if (m_PlayerHpAnimReq)
     {
-        if (m_PlayerHpAnimReq == ANIMREQ_FONT || CGameProperty::Player(0)->GetHP() != m_PlayerHp)
+        if ((m_PlayerHpAnimReq == ANIMREQ_FONT) || (pGameplayer->GetHP() != m_PlayerHp))
         {
             m_PlayerHpOld = m_PlayerHp;
-            m_PlayerHp = CGameProperty::Player(0)->GetHP();
+            m_PlayerHp = pGameplayer->GetHP();
 
             if (m_PlayerHp > m_PlayerHpOld)
             {
                 m_PlayerHpAnimReq = ANIMREQ_RECVER;
+
                 m_aGaugeStep[0] = 0;
                 m_aGaugeStep[1] = 0;
                 m_aGaugeStep[2] = 0;
                 m_aGaugeStep[3] = 0;
+
                 m_aGaugeCnt[0] = 0;
                 m_aGaugeCnt[1] = 0;
                 m_aGaugeCnt[2] = 0;
                 m_aGaugeCnt[3] = 0;
+
                 m_fRecoverRot = 0.0f;
                 m_uLifeAnimCnt = 0;
             }
@@ -264,14 +270,14 @@ void CGaugeMeter_Container::GaugeUpdate(void)
     }
     else
     {
-        m_PlayerHp = CGameProperty::Player(0)->GetHP();
-        m_PlayerHpOld = CGameProperty::Player(0)->GetHP();
+        m_PlayerHp        = pGameplayer->GetHP();
+        m_PlayerHpOld     = pGameplayer->GetHP();
         m_PlayerHpAnimReq = ANIMREQ_FONT;
     };
 
-    m_PlayerHpKatsu = CGameProperty::Player(0)->GetHPMax();
-    m_PlayerHpKi = (m_PlayerHpKatsu / 3);
-    m_PlayerHpChu = (m_PlayerHpKi * 2);
+    m_PlayerHpKatsu = pGameplayer->GetHPMax();
+    m_PlayerHpKi    = (m_PlayerHpKatsu / 3);
+    m_PlayerHpChu   = (m_PlayerHpKi * 2);
 
     GAUGETYPE PrevGaugetype = m_GaugeType;
 
@@ -410,7 +416,7 @@ void CGaugeMeter_Container::AnimGaugeFont_Period(void)
             {
             case GAUGETYPE_KATSU:
                 {
-                    float fDuration = CScreen::Framerate() * 0.15f;
+                    float fDuration = GAUGE_ANIM_DURATION_FRAMES(9);
 
                     w = Math::LinearTween(64.0f, 32.0f, float(m_aGaugeCnt[0]), fDuration);
                     h = Math::LinearTween(64.0f, 32.0f, float(m_aGaugeCnt[0]), fDuration);
@@ -430,7 +436,7 @@ void CGaugeMeter_Container::AnimGaugeFont_Period(void)
 
             case GAUGETYPE_CHU:
                 {
-                    float fDuration = CScreen::Framerate() * 0.383f;
+                    float fDuration = GAUGE_ANIM_DURATION_FRAMES(23);
 
                     uAlpha = uint8(Math::LinearTween(0.0f, 255.0f, float(m_aGaugeCnt[0]), fDuration));
 
@@ -448,7 +454,7 @@ void CGaugeMeter_Container::AnimGaugeFont_Period(void)
 
             case GAUGETYPE_KI:
                 {
-                    float fDuration = CScreen::Framerate() * 0.166f;
+                    float fDuration = GAUGE_ANIM_DURATION_FRAMES(10);
 
                     w = Math::LinearTween(96.0f, -32.0f, float(m_aGaugeCnt[0]), fDuration);
                     h = Math::LinearTween(96.0f, -32.0f, float(m_aGaugeCnt[0]), fDuration);
@@ -477,7 +483,7 @@ void CGaugeMeter_Container::AnimGaugeFont_Period(void)
         {
             if (m_GaugeType == GAUGETYPE_CHU)
             {
-                float fDuration = CScreen::Framerate() * 0.383f;
+                float fDuration = GAUGE_ANIM_DURATION_FRAMES(23);
 
                 uAlpha = uint8(Math::LinearTween(255.0f, -255.0f, float(m_aGaugeCnt[0]), fDuration));
 
@@ -510,6 +516,9 @@ void CGaugeMeter_Container::AnimGaugeFont_Period(void)
                 ++m_aGaugeCnt[0];
             };
         }
+        break;
+
+    default:
         break;
     };
 
@@ -551,7 +560,7 @@ void CGaugeMeter_Container::LifeRecover_Period(void)
     {
     case 0:
         {
-            float fDuration = CScreen::Framerate() * 0.1f;
+            float fDuration = GAUGE_ANIM_DURATION_FRAMES(6);
 
             w0 = Math::LinearTween(140.8f, -76.8f, float(m_aGaugeCnt[0]), fDuration);
             h0 = Math::LinearTween(140.8f, -76.8f, float(m_aGaugeCnt[0]), fDuration);
@@ -567,7 +576,7 @@ void CGaugeMeter_Container::LifeRecover_Period(void)
     {
     case 0:
         {
-            float fDuration = CScreen::Framerate() * 0.05f;
+            float fDuration = GAUGE_ANIM_DURATION_FRAMES(3);
 
             w1 = 64.0f;
             h1 = 64.0f;
@@ -587,7 +596,7 @@ void CGaugeMeter_Container::LifeRecover_Period(void)
 
     case 1:
         {
-            float fDuration = CScreen::Framerate() * 0.1666666f;
+            float fDuration = GAUGE_ANIM_DURATION_FRAMES(10);
 
             w1 = Math::LinearTween(64.0f, 32.0f, float(m_aGaugeCnt[1]), fDuration);
             h1 = Math::LinearTween(64.0f, 32.0f, float(m_aGaugeCnt[1]), fDuration);
@@ -597,13 +606,16 @@ void CGaugeMeter_Container::LifeRecover_Period(void)
                 ++m_aGaugeCnt[1];
         }
         break;
+
+    default:
+        break;
     };
 
     switch (m_aGaugeStep[2])
     {
     case 0:
         {
-            float fDuration = CScreen::Framerate() * 0.066666f;
+            float fDuration = GAUGE_ANIM_DURATION_FRAMES(4);
 
             uAlpha2 = 255;
 
@@ -621,7 +633,7 @@ void CGaugeMeter_Container::LifeRecover_Period(void)
 
     case 1:
         {
-            float fDuration = CScreen::Framerate() * 0.366666f;
+            float fDuration = GAUGE_ANIM_DURATION_FRAMES(22);
 
             uAlpha2 = 255;
 
@@ -639,7 +651,7 @@ void CGaugeMeter_Container::LifeRecover_Period(void)
 
     case 2:
         {
-            float fDuration = CScreen::Framerate() * 0.283333f;
+            float fDuration = GAUGE_ANIM_DURATION_FRAMES(17);
 
             uAlpha2 = uint8(Math::LinearTween(255.0f, -255.0f, float(m_aGaugeCnt[2]), fDuration));
 
@@ -647,13 +659,16 @@ void CGaugeMeter_Container::LifeRecover_Period(void)
                 ++m_aGaugeCnt[2];
         }
         break;
+
+    default:
+        break;
     };
 
     switch (m_aGaugeStep[3])
     {
     case 0:
         {
-            float fDuration = CScreen::Framerate() * 0.1f;
+            float fDuration = GAUGE_ANIM_DURATION_FRAMES(6);
 
             uAlpha3 = uint8(Math::LinearTween(255.0f, -255.0f, float(m_aGaugeCnt[3]), fDuration));
 
@@ -661,9 +676,12 @@ void CGaugeMeter_Container::LifeRecover_Period(void)
                 ++m_aGaugeCnt[3];
         }
         break;
+
+    default:
+        break;
     };
 
-    float fAnimDur = CScreen::Framerate() * 0.666666f;
+    float fAnimDur = GAUGE_ANIM_DURATION_FRAMES(40);
 
     if (m_uLifeAnimCnt >= uint32(fAnimDur))
     {
@@ -680,12 +698,16 @@ void CGaugeMeter_Container::LifeRecover_Period(void)
     if (m_fRecoverRot >= 360.0f)
         m_fRecoverRot -= 360.0f;
 
-    /* TODO correcting warning C4244 brokes gauge animation */
-    m_PlayerHpMove = m_PlayerHpOld + ((m_PlayerHp - m_PlayerHpOld) * (float(m_uLifeAnimCnt) / fAnimDur));
+    float fHpRecover = static_cast<float>(m_PlayerHp - m_PlayerHpOld);
+    float fAnimRatio = (static_cast<float>(m_uLifeAnimCnt) / fAnimDur);
+
+    m_PlayerHpMove = m_PlayerHpOld + static_cast<int32>(fHpRecover * fAnimRatio);
+
     m_aAlpha[0] = uAlpha0;
     m_aAlpha[1] = uAlpha1;
     m_aAlpha[2] = uAlpha2;
     m_aAlpha[3] = uAlpha3;
+
     m_afWidth[0] = w0;
     m_afWidth[1] = w1;
     m_afHeight[0] = h0;
@@ -731,7 +753,7 @@ void CGaugeMeter_Container::LifeDamage_Period(void)
     {
     case 0:
         {
-            float fDuration = CScreen::Framerate() * 0.16f;
+            float fDuration = GAUGE_ANIM_DURATION_FRAMES(10);
 
             if (m_aGaugeCnt[1] >= uint32(fDuration))
             {
@@ -744,9 +766,16 @@ void CGaugeMeter_Container::LifeDamage_Period(void)
                 ++m_aGaugeCnt[1];
             };
 
-            m_PlayerHpMove = m_PlayerHpOld - (float(m_PlayerHpOld - m_PlayerHp) * (float(m_aGaugeCnt[1]) / fDuration));
+            float fHpDamaged = static_cast<float>(m_PlayerHpOld - m_PlayerHp);
+            float fAnimRatio = (static_cast<float>(m_aGaugeCnt[1]) / fDuration);
+
+            m_PlayerHpMove = m_PlayerHpOld - static_cast<int32>(fHpDamaged * fAnimRatio);
+            
             m_aAlpha[0] = uint8(Math::LinearTween(255.0f, -255.0f, float(m_aGaugeCnt[1]), fDuration));
         }
+        break;
+
+    default:
         break;
     };
 };
@@ -769,6 +798,8 @@ void CGaugeMeter_Container::LifeDamage_Draw(void)
 
 void CGaugeMeter_Container::DekuDraw(void)
 {
+    m_bDekuDispFlag = CGameData::Record().Item().IsComebackProcessed();
+    
     if (!m_bDekuDispFlag)
         return;
 
@@ -790,7 +821,7 @@ void CGaugeMeter_Container::DekuDraw(void)
 
     case DEKUSTATE_CONSUME:
         {
-            float fDuration = CScreen::Framerate() * 0.66f;
+            float fDuration = GAUGE_ANIM_DURATION_FRAMES(40);
 
             w = Math::LinearTween(64.0f, 32.0f, float(m_uDekuAnimCnt), fDuration);
             h = Math::LinearTween(64.0f, 32.0f, float(m_uDekuAnimCnt), fDuration);
@@ -828,9 +859,7 @@ static inline CGaugeMeter_Container& GaugeMeterContainer(void)
 /*static*/ void CGaugeMeter::Initialize(void)
 {
     if (!s_pGaugeMeterContainer)
-    {
         s_pGaugeMeterContainer = new CGaugeMeter_Container;
-    };
 };
 
 

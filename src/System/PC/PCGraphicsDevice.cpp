@@ -72,10 +72,10 @@ struct CPCGraphicsDevice::DEVICEINFO : public RwSubSystemInfo
     if (pVideomode->depth < iMinDepth || pVideomode->depth > iMaxDepth)
         return false;
 
-    if (!FLAG_TEST(pVideomode->flags, rwVIDEOMODEEXCLUSIVE))
+    if (!(pVideomode->flags & rwVIDEOMODEEXCLUSIVE))
         return true;
 
-	if (!FLAG_TEST(pVideomode->format, rwRASTERFORMAT8888))
+	if (!(pVideomode->format & rwRASTERFORMAT8888))
 		return false;
 
     static const RwV2d s_aAspectRatio[] =
@@ -308,7 +308,7 @@ bool CPCGraphicsDevice::EnumerateVideomodes(void)
 			if (!VIDEOMODE::Eval(pVideomode))
 				continue;
            
-            if (FLAG_TEST(pVideomode->flags, rwVIDEOMODEEXCLUSIVE))
+            if (pVideomode->flags & rwVIDEOMODEEXCLUSIVE)
             {
                 pVideomode->m_index = j;
                 std::sprintf(

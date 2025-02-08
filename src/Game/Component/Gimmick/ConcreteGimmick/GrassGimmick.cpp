@@ -59,7 +59,7 @@ void CGrassGimmick::Draw(void) const
 
 GIMMICKTYPES::FEATURE CGrassGimmick::GetFeatures(void) const
 {
-    return GIMMICKTYPES::FEATURE_SLEEP;
+    return GIMMICKTYPES::FEATURE_ABLE_SLEEP;
 };
 
 

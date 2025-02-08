@@ -42,6 +42,7 @@ static_assert(SCROLL_START      == 300.0f, "update me or delete me");
 static_assert(SCROLL_STEP_S     == 60.0f, "update me or delete me");
 static_assert(SCROLL_STEP       == 20.0f, "update me or delete me");
 
+
 enum OPTIONMODE
 {
     OPTIONMODE_OPTIONS = 0,
@@ -145,7 +146,7 @@ static const FontData_t s_aGameFont[] =
 {
     { true, GAMETEXT(0x2B5), { -108.0f, -126.0f  }, 2.0f, s_ColorOrange },
     { true, GAMETEXT(0x2B6), { -108.0f, -97.0f   }, 2.0f, s_ColorOrange },
-    { true, GAMETEXT(0x0),   { -108.0f, -68.0f   }, 2.0f, s_ColorOrange, "Classic pad" },
+    //{ true, GAMETEXT(0x0),   { -108.0f, -68.0f   }, 2.0f, s_ColorOrange, "Classic pad" },
     { true, GAMETEXT(0x2B4), { -223.0f, 26.0f    }, 2.0f, s_ColorOrange },
     { 0 },
 };
@@ -284,7 +285,7 @@ static OPTIONMODE s_aNextModeGame[] =
 {
     OPTIONMODE_DIFFICULTY,
     OPTIONMODE_SAVE,
-    OPTIONMODE_CLASSICPAD,
+    //OPTIONMODE_CLASSICPAD,
     OPTIONMODE_GAME_OK
 };
 
@@ -378,7 +379,7 @@ static inline GAMETEXT GetPadButtonName(uint32 Digital)
 {
     for (int32 i = 0; i < COUNT_OF(s_aPadButtonName); ++i)
     {
-        if (FLAG_TEST_ANY(s_aPadButtonName[i].Digital, Digital))
+        if (s_aPadButtonName[i].Digital & Digital)
             return s_aPadButtonName[i].IdText;
     };
 
@@ -1048,7 +1049,7 @@ bool COptions::SettingProc(void)
             m_bSwitchMode = false;
             SwitchDifficuly(0);
             SwitchDisp(1, CGameData::Option().Play().IsAutosaveEnabled());
-            SwitchDisp(2, CGameData::Option().Play().IsClassicInput());
+            //SwitchDisp(2, CGameData::Option().Play().IsClassicInput());
         }
         break;
 
@@ -1071,11 +1072,13 @@ bool COptions::SettingProc(void)
 
     case OPTIONMODE_CLASSICPAD:
         {
+            /*
             m_bSwitchMode = true;
             SwitchDisp(2, CGameData::Option().Play().IsClassicInput());
 
             bool SwitchState = SwitchOnOff(CGameData::Option().Play().IsClassicInput());
             CGameData::Option().Play().SetClassicInput(SwitchState);
+            */
         }
         break;
 
@@ -1643,6 +1646,9 @@ bool COptions::SettingProc(void)
                 case CFGSTATE_TO_OPT:
                     CfgToOption();
                     break;
+
+				default:
+					break;						
                 };
 
                 --m_EffectTime;
@@ -1831,19 +1837,20 @@ bool COptions::MsgDecidePad(void)
 
     m_Cursor.Flag = false;
 
-    uint32 DigitalTrigger = CController::GetDigitalTrigger(CGameData::Attribute().GetVirtualPad());
+    int32 virtualPad = CGameData::Attribute().GetVirtualPad();
+    uint32 DigitalTrigger = CController::GetDigitalTrigger(virtualPad);
     if (DigitalTrigger)
     {        
-        if (FLAG_TEST_ANY(DigitalTrigger, CController::DIGITAL_OK))
+        if (DigitalTrigger & CController::DIGITAL_OK)
         {
-            if (CGameData::Attribute().GetVirtualPad() == CController::CONTROLLER_LOCKED_ON_VIRTUAL)
+            if (virtualPad == CController::CONTROLLER_LOCKED_ON_VIRTUAL)
                 m_ConfigPad = FindTriggeredController(CController::DIGITAL_OK, false);
             else
                 m_ConfigPad = FindTriggeredController(CController::DIGITAL_OK, true);
         };
 
         if (m_ConfigPad == -1)
-			m_ConfigPad = CGameData::Attribute().GetVirtualPad();
+            m_ConfigPad = virtualPad;
 
         return true;
     };

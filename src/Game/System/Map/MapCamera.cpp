@@ -58,6 +58,11 @@ private:
 };
 
 
+//
+// *********************************************************************************
+//
+
+
 /*static*/ const float CMapCamera::CIntroduction::DEMODURATION = 2.0f;
 
 
@@ -253,20 +258,23 @@ CMapCamera::~CMapCamera(void)
 
 bool CMapCamera::BeginScene(void)
 {
-    ASSERT(m_pCamera);
+#ifdef _DEBUG
+    /* TODO renderware assertion failed at AREA32 - matrix is not orhonormal */
+    CDebug::SupressRwDebugAssert(true);
+#endif /* _DEBUG */    
 
-    //RwCamera* pCamera = m_pCamera->GetRwCamera();
-    //RwMatrix* pMatrix = RwFrameGetMatrixMacro(RwCameraGetFrameMacro(pCamera));
-    //ASSERT(rwMatrixIsOrthonormal(pMatrix, Math::EPSILON));
+    bool bResult = m_pCamera->BeginScene();
 
-    return m_pCamera->BeginScene();
+#ifdef _DEBUG
+    CDebug::SupressRwDebugAssert(false);
+#endif /* _DEBUG */    
+
+    return bResult;
 };
 
 
 void CMapCamera::EndScene(void)
 {
-    ASSERT(m_pCamera);
-    
     m_pCamera->EndScene();
 };
 
@@ -309,7 +317,7 @@ void CMapCamera::Update(const RwV3d* pvAt, float fZoom)
         Digital |= IPad::GetDigitalTrigger(IPad::CONTROLLER_LOCKED_ON_VIRTUAL);
 
         if (IPad::CheckFunction(Digital, IPad::FUNCTION_SWITCH_CAM))
-            m_pathmode = PATHMODE( (int32(m_pathmode) + 1) % PATHMODEMAX );
+            m_pathmode = static_cast<PATHMODE>((m_pathmode + 1) % PATHMODEMAX);
     };
 
     m_fRequestZoom = fZoom;
@@ -359,6 +367,9 @@ void CMapCamera::Update(const RwV3d* pvAt, float fZoom)
         case CWorldMap::WEATHER_SNOW:
             CSnowManager::SetCameraPosition(this);        
             break;
+
+        default:
+            break;
         };
     };
 };
@@ -367,15 +378,17 @@ void CMapCamera::Update(const RwV3d* pvAt, float fZoom)
 void CMapCamera::PostUpdate(void)
 {
     RwV3d vec = Math::VECTOR3_ZERO;
-
     Math::Vec3_Sub(&vec, &m_vAt, &m_vEye);
 
     float fLen = Math::Vec3_Length(&vec);
-    fLen = Math::FAbs(fLen);
+    fLen = std::fabs(fLen);
 
     m_fLookatViewAreaRadius = fLen * m_fViewSize;
 
-    if (!std::strcmp(m_szCameraAreaName, "f"))
+    // TODO: retail game both checks has lower case 'f' here, so probably mistake there should be 'F' and 'f'
+    //       return to both 'f' if it brokes game camera
+    if (!std::strcmp(m_szCameraAreaName, "F") ||
+        !std::strcmp(m_szCameraAreaName, "f"))
         m_fLookatViewAreaRadius = 1000.0f;
 
     m_bChangeMoment = false;
@@ -410,17 +423,17 @@ void CMapCamera::UpdateAutoChangeCamera(const RwV3d* pvAt)
             UpdatePathCamera(pvAt, false);
         }
         else if (!std::strncmp(m_szCameraAreaName, "e", 1) ||
-                !std::strncmp(m_szCameraAreaName, "E", 1))
+                 !std::strncmp(m_szCameraAreaName, "E", 1))
         {
             UpdatePathCamera(pvAt, true);
         }
         else if (!std::strncmp(m_szCameraAreaName, "t", 1) ||
-                !std::strncmp(m_szCameraAreaName, "T", 1))
+                 !std::strncmp(m_szCameraAreaName, "T", 1))
         {
             UpdateSetCamera(pvAt);
         }
         else if (!std::strncmp(m_szCameraAreaName, "f", 1) ||
-                !std::strncmp(m_szCameraAreaName, "F", 1))
+                 !std::strncmp(m_szCameraAreaName, "F", 1))
         {
             UpdateFixedCamera(pvAt);
         };
@@ -436,8 +449,8 @@ void CMapCamera::ResetCameraForCameraAreaChange(const RwV3d* pvAt)
         !std::strncmp(m_szCameraAreaName, "E", 1))
     {
         char szAtCameraName[32];
-
         szAtCameraName[0] = '\0';
+
         MakePathAtCameraName(szAtCameraName, m_szCameraAreaName);
         
         int32 nPathID = CCameraDataManager::GetPathIDFromName(szAtCameraName);
@@ -537,10 +550,11 @@ void CMapCamera::UpdateManualCamera(const RwV3d* pvAt)
 {
     float fMovSpeed = 20.0f * CGameProperty::GetElapsedTime();
     float fRotSpeed = 100.0f * CGameProperty::GetElapsedTime();
-    
+   
     int32 iPad = CGameData::Attribute().GetVirtualPad();
-    float rx = (float)IPad::GetAnalog(iPad, IPad::ANALOG_RSTICK_X);
-    float ry = (float)IPad::GetAnalog(iPad, IPad::ANALOG_RSTICK_Y);
+
+    float rx = static_cast<float>(IPad::GetAnalog(IPad::CONTROLLER_UNLOCKED_ON_VIRTUAL, IPad::ANALOG_RSTICK_X));
+    float ry = static_cast<float>(IPad::GetAnalog(IPad::CONTROLLER_UNLOCKED_ON_VIRTUAL, IPad::ANALOG_RSTICK_Y));
 
     rx = (rx >= 0.0f ? (rx / float(TYPEDEF::SINT16_MAX)) : -(rx / float(TYPEDEF::SINT16_MIN)));
     ry = (ry >= 0.0f ? (ry / float(TYPEDEF::SINT16_MAX)) : -(ry / float(TYPEDEF::SINT16_MIN)));
@@ -615,19 +629,7 @@ void CMapCamera::UpdateManualCamera(const RwV3d* pvAt)
 
 void CMapCamera::UpdatePathCamera(const RwV3d* pvAt, bool bExPath)
 {
-    RwV3d vEye = Math::VECTOR3_ZERO;
     RwV3d vAt = Math::VECTOR3_ZERO;
-    RwV3d vPathLookatPos = Math::VECTOR3_ZERO;
-    RwV3d vFrontEyePos = Math::VECTOR3_ZERO;
-    RwV3d vLineV = Math::VECTOR3_ZERO;
-    RwV3d vNewEye = Math::VECTOR3_ZERO;
-    int32 nAtPathID = -1;
-    int32 nEyePathID = -1;
-    float fFOV = 0.0f;
-    char szPathName[32];
-
-    szPathName[0] = '\0';
-
     vAt = *pvAt;
     vAt.y += m_fLookatOffsetY;
 
@@ -636,22 +638,36 @@ void CMapCamera::UpdatePathCamera(const RwV3d* pvAt, bool bExPath)
     else
         Math::Vec3_Lerp(&m_vAt, &m_vAt, &vAt, 0.2f);
 
+    int32 nAtPathID = -1;
+    int32 nEyePathID = -1;
+
     if (std::strcmp(m_szCameraAreaName, ""))
     {
+        char szPathName[32];
+        szPathName[0] = '\0';
+
         MakePathEyeCameraName(szPathName, m_szCameraAreaName);
         nEyePathID = CCameraDataManager::GetPathIDFromName(szPathName);
 
         MakePathAtCameraName(szPathName, m_szCameraAreaName);
         nAtPathID = CCameraDataManager::GetPathIDFromName(szPathName);
+    }
+    else
+    {
+        // TODO
+        nAtPathID = 0;
+        nEyePathID = 0;
     };
 
-    if (nEyePathID >= 0 && nAtPathID >= 0)
+    if ((nEyePathID >= 0) &&
+        (nAtPathID  >= 0))
     {
         m_fPathTime = CCameraDataManager::FindNearestPosValueLight(&m_vAt, nAtPathID, m_fPathTime);
 
 		if (CCameraDataManager::GetPathType(nAtPathID) == 1)
 			m_fPathTime = InvClamp(m_fPathTime, Math::EPSILON, 1.0f - Math::EPSILON);
 
+        RwV3d vEye = Math::VECTOR3_ZERO;
         CCameraDataManager::GetSplinePos(&vEye, nEyePathID, m_fPathTime);
 
         if (bExPath)
@@ -660,19 +676,23 @@ void CMapCamera::UpdatePathCamera(const RwV3d* pvAt, bool bExPath)
             if (fFrontPathT > 1.0f)
                 fFrontPathT = m_fPathTime - 0.01f;
 
+            RwV3d vFrontEyePos = Math::VECTOR3_ZERO;
             CCameraDataManager::GetSplinePos(&vFrontEyePos, nEyePathID, fFrontPathT);
 
+            RwV3d vLineV = Math::VECTOR3_ZERO;
             Math::Vec3_Sub(&vLineV, &vFrontEyePos, &vEye);
             vLineV.y = 0.0f;
+
             Math::Vec3_Normalize(&vLineV, &vLineV);
 
             float fDist = (((pvAt->x - vEye.x) * -vLineV.z) + ((pvAt->z - vEye.z) * vLineV.x)) /
-                (-vLineV.z * -vLineV.z + vLineV.y * vLineV.y + vLineV.x * vLineV.x);
+                           (-vLineV.z * -vLineV.z + vLineV.y * vLineV.y + vLineV.x * vLineV.x);
 
             vEye.x += (-vLineV.z * fDist);
             vEye.z += (vLineV.x * fDist);
         };
 
+        RwV3d vPathLookatPos = Math::VECTOR3_ZERO;
         CCameraDataManager::GetSplinePos(&vPathLookatPos, nAtPathID, m_fPathTime);
 
         float fTmp = vPathLookatPos.y - 5.0f;
@@ -681,12 +701,12 @@ void CMapCamera::UpdatePathCamera(const RwV3d* pvAt, bool bExPath)
 
         m_fPrePathTime = m_fPathTime;
 
-        vNewEye = Math::VECTOR3_ZERO;
+        RwV3d vNewEye = Math::VECTOR3_ZERO;
         vNewEye.x = m_vAt.x + ((vEye.x - m_vAt.x) * m_fRequestZoom);
         vNewEye.y = m_vAt.y + ((vEye.y - m_vAt.y) * m_fRequestZoom);
         vNewEye.z = m_vAt.z + ((vEye.z - m_vAt.z) * m_fRequestZoom);
 
-        if (m_fRequestZoom > 1.0f && CWorldMap::CheckCollisionLine(&vEye, &vNewEye))
+        if ((m_fRequestZoom > 1.0f) && CWorldMap::CheckCollisionLine(&vEye, &vNewEye))
             vNewEye = *CWorldMap::GetCollisionResultClosestPoint();
 
         vEye = vNewEye;
@@ -701,6 +721,7 @@ void CMapCamera::UpdatePathCamera(const RwV3d* pvAt, bool bExPath)
             m_vEye = vEye;
 
         UpdateLookat();
+
         m_fViewSize += (TYPEDEF::DEFAULT_VIEWWINDOW - m_fViewSize) * 0.1f;
         SetViewWindow(m_fViewSize);
     };
@@ -717,11 +738,11 @@ void CMapCamera::UpdateSetCamera(const RwV3d* pvAt)
     else
         Math::Vec3_Lerp(&m_vAt, &m_vAt, &vAt, 0.4f);
 
-	int32 nCamID = -1;
+	int32 cameraId = -1;
 
     if (!std::strcmp(m_szCameraAreaName, ""))
     {
-        nCamID = CCameraDataManager::GetSetCamIDNearestPos(&m_vAt);
+        cameraId = CCameraDataManager::GetSetCamIDNearestPos(&m_vAt);
     }
     else
     {
@@ -729,14 +750,12 @@ void CMapCamera::UpdateSetCamera(const RwV3d* pvAt)
 		szSetCamera[0] = '\0';
 
         MakeSetCameraName(szSetCamera, m_szCameraAreaName);
-        nCamID = CCameraDataManager::GetSetCamIDNearestPosFromName(&m_vAt, szSetCamera);
+        cameraId = CCameraDataManager::GetSetCamIDNearestPosFromName(&m_vAt, szSetCamera);
     };
 
-	ASSERT(nCamID >= 0);
-
-    if (nCamID >= 0)
+    if (cameraId >= 0)
     {
-		RwV3d vEye = *CCameraDataManager::GetSetCamPosEye(nCamID);
+		RwV3d vEye = *CCameraDataManager::GetSetCamPosEye(cameraId);
 
         if (m_bChangeMoment)
             m_vEye = vEye;
@@ -745,8 +764,9 @@ void CMapCamera::UpdateSetCamera(const RwV3d* pvAt)
 
 		UpdateLookat();
 
-        float fFOV = CCameraDataManager::GetSetCamFov(nCamID);
-		m_fViewSize += 0.1f * (Math::Tan(fFOV * TYPEDEF::DEFAULT_VIEWWINDOW) - m_fViewSize);
+        float fFov = CCameraDataManager::GetSetCamFov(cameraId);
+        m_fViewSize += 0.1f * (Math::Tan(fFov * TYPEDEF::DEFAULT_VIEWWINDOW) - m_fViewSize);
+        
         SetViewWindow(m_fViewSize);
     };
 };
@@ -754,36 +774,37 @@ void CMapCamera::UpdateSetCamera(const RwV3d* pvAt)
 
 void CMapCamera::UpdateFixedCamera(const RwV3d* pvAt)
 {
-    int32 nCamID = -1;
+    int32 cameraId = -1;
 
     if (std::strcmp(m_szCameraAreaName, ""))
-        nCamID = CCameraDataManager::GetSetCamIDNearestPosFromName(&m_vAt, m_szCameraAreaName);
+        cameraId = CCameraDataManager::GetSetCamIDNearestPosFromName(&m_vAt, m_szCameraAreaName);
 
-    if (nCamID >= 0)
+    if (cameraId >= 0)
     {
-        float fFov = 0.0f;
-        RwV3d vAt = Math::VECTOR3_ZERO;
-        RwV3d vEye = Math::VECTOR3_ZERO;
-        
-        vEye = *CCameraDataManager::GetSetCamPosEye(nCamID);
-        vAt = *CCameraDataManager::GetSetCamPosLookat(nCamID);
-        fFov = CCameraDataManager::GetSetCamFov(nCamID);
+        /* update eye */
+        RwV3d vEye = *CCameraDataManager::GetSetCamPosEye(cameraId);
 
         if (m_bChangeMoment)
-        {
             m_vEye = vEye;
-            m_vAt = vAt;
-        }
         else
-        {
-            Math::Vec3_Lerp(&m_vAt, &m_vAt, &vAt, 0.04f);
             Math::Vec3_Lerp(&m_vEye, &m_vEye, &vEye, 0.025f);
-        };
-        
+
+        /* update at */
+        RwV3d vAt = *CCameraDataManager::GetSetCamPosLookat(cameraId);
+
+        if (m_bChangeMoment)
+            m_vAt = vAt;
+        else
+            Math::Vec3_Lerp(&m_vAt, &m_vAt, &vAt, 0.04f);
+
         UpdateLookat();
 
-        m_fViewSize = Math::Tan(fFov * 0.5f);        
+        /* update fov */
+        float fFov = CCameraDataManager::GetSetCamFov(cameraId);
+
+        m_fViewSize = Math::Tan(fFov * TYPEDEF::DEFAULT_VIEWWINDOW);
         m_fChangeTimer -= CGameProperty::GetElapsedTime();
+
         SetViewWindow(m_fViewSize);
     };
 };
@@ -803,12 +824,13 @@ void CMapCamera::LookAt(const RwV3d* pvEye, const RwV3d* pvAt, const RwV3d* pvUp
     RwMatrix matrix;
     Math::Matrix_LookAt(&matrix, pvEye, pvAt, pvUp);
 	
-	//
-    //	TODO renderware assertion failed at AREA32 - matrix is not orhonormal
-    //
     rwMatrixSetFlags(&matrix, rwMATRIXTYPEORTHONORMAL);
 
-    RwFrameTransform(RwCameraGetFrameMacro(m_pCamera->GetRwCamera()), &matrix, rwCOMBINEREPLACE);
+    RwCamera* pCamera = m_pCamera->GetRwCamera();
+    RwFrame* pFrame = RwCameraGetFrameMacro(pCamera);
+    
+    if (pFrame)
+        RwFrameTransform(pFrame, &matrix, rwCOMBINEREPLACE);
 };
 
 
@@ -829,7 +851,7 @@ void CMapCamera::SetLookat(const RwV3d* pvEye, const RwV3d* pvAt)
     RwV3d vDir = Math::VECTOR3_ZERO;
     Math::Vec3_Sub(&vDir, &m_vAt, &m_vEye);
 
-    m_fHeight = Math::FAbs(vDir.y);
+    m_fHeight = std::fabs(vDir.y);
     m_fRotY = Math::ATan2(vDir.x, vDir.z);
     
     vDir.y = 0.0f;
@@ -912,8 +934,10 @@ void CMapCamera::SetCameraMode(MODE mode)
         break;
 
 	case MODE_AUTOCHANGE:
+        break;
 
-		break;
+    default:
+        break;
     };
 };
 
@@ -934,22 +958,26 @@ bool CMapCamera::IsPosVisible(const RwV3d* pvPos)
 {
     ASSERT(m_pCamera);
     
-    RwV3d vec = Math::VECTOR3_ZERO;
-    RwMatrix* pViewMatrix = RwCameraGetViewMatrix(m_pCamera->GetRwCamera());
+    RwCamera* pCamera = m_pCamera->GetRwCamera();
+    RwMatrix* pViewMatrix = RwCameraGetViewMatrixMacro(pCamera);
     
-    RwV3dTransformPoints(&vec, pvPos, 1, pViewMatrix);
+    RwV3d vScreenPos = Math::VECTOR3_ZERO;
+    RwV3dTransformPoints(&vScreenPos, pvPos, 1, pViewMatrix);
 
-    if (vec.z > 0.0f)
+    if (vScreenPos.z > 0.0f)
     {
-        vec.x *= (1.0f / vec.z);
-        vec.y *= (1.0f / vec.z);
+        vScreenPos.x *= (1.0f / vScreenPos.z);
+        vScreenPos.y *= (1.0f / vScreenPos.z);
 
-        if (vec.x >= 0.0f &&
-            vec.x <= 1.0f &&
-            vec.y >= 0.0f &&
-            vec.y <= 1.0f &&
-            vec.z >= RwCameraGetNearClipPlane(m_pCamera->GetRwCamera()) &&
-            vec.z <= RwCameraGetFarClipPlane(m_pCamera->GetRwCamera()))
+        float fClipNear = RwCameraGetNearClipPlaneMacro(pCamera);
+        float fClipFar  = RwCameraGetFarClipPlaneMacro(pCamera);
+
+        if ((vScreenPos.x >= 0.0f) &&
+            (vScreenPos.x <= 1.0f) &&
+            (vScreenPos.y >= 0.0f) &&
+            (vScreenPos.y <= 1.0f) &&
+            (vScreenPos.z >= fClipNear) &&
+            (vScreenPos.z <= fClipFar))
         {
             return true;
         };
@@ -959,7 +987,7 @@ bool CMapCamera::IsPosVisible(const RwV3d* pvPos)
 };
 
 
-float CMapCamera::CalcNiceZoon(RwV3d* avPos, int32 nNumPos)
+float CMapCamera::CalcNiceZoom(RwV3d* avPos, int32 nNumPos)
 {
     if (nNumPos <= 0)
         return 1.0f;
@@ -976,10 +1004,10 @@ float CMapCamera::CalcNiceZoon(RwV3d* avPos, int32 nNumPos)
 
         if (vScrnPos.z > 0.0f)
         {
-            float fTmp = 1.0f / vScrnPos.z;
+            float fTmp = (1.0f / vScrnPos.z);
 
-            vScrnPos.x = Math::FAbs(((vScrnPos.x * fTmp) * 2.0f) - 1.0f);
-            vScrnPos.y = Math::FAbs(((vScrnPos.y * fTmp) * 2.0f) - 1.0f);
+            vScrnPos.x = std::fabs(((vScrnPos.x * fTmp) * 2.0f) - 1.0f);
+            vScrnPos.y = std::fabs(((vScrnPos.y * fTmp) * 2.0f) - 1.0f);
 
             if (fMaxScrnX < vScrnPos.x)
                 fMaxScrnX = vScrnPos.x;
@@ -989,7 +1017,15 @@ float CMapCamera::CalcNiceZoon(RwV3d* avPos, int32 nNumPos)
         };
     };
 
-    return Clamp(Max(fMaxScrnX, fMaxScrnY), 1.0f, 3.0f);
+    if ((fMaxScrnX <= 1.0f) &&
+        (fMaxScrnY <= 1.0f))
+        return 1.0f;    
+
+    float fZoom = ((fMaxScrnX >= fMaxScrnY) ? fMaxScrnX : fMaxScrnY);
+    if (fZoom > 3.0f)
+        fZoom = 3.0f;
+
+    return fZoom;
 };
 
 

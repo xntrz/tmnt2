@@ -38,12 +38,12 @@ void CAmbientLightModule::Run(void)
 	RwRGBAReal colorModelReal;
 	RwRGBARealFromRwRGBAMacro(&colorModelReal, &colorModel);
 
-	if (!Math::FEqual(colorGroundReal.red, m_ColorTo.red) 		&&
-		!Math::FEqual(colorGroundReal.green, m_ColorTo.green) 	&&
-		!Math::FEqual(colorGroundReal.blue, m_ColorTo.blue))
+	if ((colorGroundReal.red   != m_ColorTo.red)    &&
+		(colorGroundReal.green != m_ColorTo.green) 	&&
+		(colorGroundReal.blue  != m_ColorTo.blue))
 	{
 		m_ColorFrom = colorModelReal;
-		m_ColorTo = colorGroundReal;
+		m_ColorTo   = colorGroundReal;
 		m_fElapsedTime = 0.0f;
 	};
 
@@ -52,16 +52,16 @@ void CAmbientLightModule::Run(void)
 		RwRGBA colorModelNew = { 0 };
 		float t = m_fElapsedTime;
 
-		if (Math::FEqual(t, 0.0f))
+		if (t == 0.0f)
 		{
 			RwRGBAFromRwRGBARealMacro(&colorModelNew, &m_ColorFrom);
 		}
 		else if (t < 0.5)
 		{
 			RwRGBAReal color;
-			color.red = ((m_ColorTo.red - m_ColorFrom.red) * (t / 0.5f)) + m_ColorFrom.red;
+			color.red   = ((m_ColorTo.red   - m_ColorFrom.red)   * (t / 0.5f)) + m_ColorFrom.red;
 			color.green = ((m_ColorTo.green - m_ColorFrom.green) * (t / 0.5f)) + m_ColorFrom.green;
-			color.blue = ((m_ColorTo.blue - m_ColorFrom.blue) * (t / 0.5f)) + m_ColorFrom.blue;
+			color.blue  = ((m_ColorTo.blue  - m_ColorFrom.blue)  * (t / 0.5f)) + m_ColorFrom.blue;
 			color.alpha = 0;
 
 			RwRGBAFromRwRGBARealMacro(&colorModelNew, &color);

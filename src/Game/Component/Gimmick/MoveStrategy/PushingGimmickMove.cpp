@@ -175,10 +175,10 @@ CPushingGimmickMove::RESULT CPushingGimmickMove::OnMove(float dt)
             m_vPosition.y += (m_vVelocity.y * dt);
             m_vPosition.z += (m_vVelocity.z * dt);
 
-            if (( (m_fallaxis == FALL_ROT_AXIS_X_P) && (m_vVelocity.x >  Math::ToRadian(60.0f)) ) ||
-                ( (m_fallaxis == FALL_ROT_AXIS_X_N) && (m_vVelocity.x < -Math::ToRadian(60.0f)) ) ||
-                ( (m_fallaxis == FALL_ROT_AXIS_Z_P) && (m_vVelocity.z <  Math::ToRadian(60.0f)) ) ||
-                ( (m_fallaxis == FALL_ROT_AXIS_Z_N) && (m_vVelocity.z < -Math::ToRadian(60.0f)) ))
+            if (( (m_fallaxis == FALL_ROT_AXIS_X_P) && (m_vVelocity.x >  MATH_DEG2RAD(60.0f)) ) ||
+                ( (m_fallaxis == FALL_ROT_AXIS_X_N) && (m_vVelocity.x < -MATH_DEG2RAD(60.0f)) ) ||
+                ( (m_fallaxis == FALL_ROT_AXIS_Z_P) && (m_vVelocity.z <  MATH_DEG2RAD(60.0f)) ) ||
+                ( (m_fallaxis == FALL_ROT_AXIS_Z_N) && (m_vVelocity.z < -MATH_DEG2RAD(60.0f)) ))
             {
                 m_vVelocity.x = 0.0f;
                 m_vVelocity.z = 0.0f;

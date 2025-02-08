@@ -94,8 +94,8 @@ public:
     virtual void IncludeBasicModule(void);
     virtual void UpdateParameter(void);
     virtual void CalcVelocityPerFrame(RwV3d& rvVelocityPerFrame);
-    virtual void CheckCollisionForBody(RwV3d& rvVelocityPerFrame);
-    virtual void CheckCollisionForWall(RwV3d& rvVelocityPerFrame);
+    virtual void CheckCollisionForBody(RwV3d& rvVelocityPerFrame, bool bPeriod);
+    virtual void CheckCollisionForWall(RwV3d& rvVelocityPerFrame, bool bPeriod);
     virtual void CheckCollisionForGround(void);
     virtual void UpdateModel(void);
     virtual void UpdateCollisionParameterForBody(void);
@@ -119,7 +119,6 @@ public:
     virtual void OnChangeMotion(void);
     virtual void OnSteppedDeathFloor(void);
     void RequestDamage(int32 iDmgReq);
-    bool IsDamageRequested(void) const;
     int32 GetRequestedDamage(void) const;
     void GetBonePosition(RwV3d* pvPosition, int32 nBoneID, const RwV3d* pvOffset) const;
     void GetBonePositionOfPositionCheck(RwV3d* pvPosition) const;
@@ -161,9 +160,6 @@ public:
     void GetVelocity(RwV3d* pvVelocity) const;
     void GetAcceleration(RwV3d* pvAcceleration) const;
     float GetDirection(void) const;
-    void SetCharacterFlag(CHARACTERTYPES::FLAG flag, bool bSet);
-    CHARACTERTYPES::FLAG GetCharacterFlag(void) const;
-    bool IsCharacterFlagSet(CHARACTERTYPES::FLAG flag) const;
     CModel* GetModel(void) const;
     const COLLISIONWALLINFO* GetCollisionWall(void) const;
     const COLLISIONGROUNDINFO* GetCollisionGround(void) const;
@@ -173,6 +169,10 @@ public:
     IModule* GetModule(MODULETYPE::VALUE type) const;
     bool IsModuleIncluded(MODULETYPE::VALUE type) const;
     LIFT_INFO& LiftInfo(void);
+    void SetCharacterFlag(CHARACTERTYPES::FLAG flag);
+    void ClearCharacterFlag(CHARACTERTYPES::FLAG flag);
+    bool TestCharacterFlag(CHARACTERTYPES::FLAG flag) const;
+    bool CheckCharacterFlag(CHARACTERTYPES::FLAG flag) const;
     
 protected:
     CModuleManager* m_pModuleMan;
@@ -186,7 +186,7 @@ protected:
     float m_fMaxVelocity;
     float m_fMotionSpeed;
     TYPE m_chrtype;
-    uint32 m_characterflag;
+    CHARACTERTYPES::FLAG m_cflag;
     CModel* m_pModel;
     CMotionController* m_pMotionController;
     CBodyHitData** m_apBodyHitData;

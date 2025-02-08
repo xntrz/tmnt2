@@ -20,10 +20,10 @@ public:
     public:
         CClump(void);
         virtual ~CClump(void);
-        void Read(const char* pszName, CModelManager::MODELTYPE modeltype, int32 pattern, const void* pBuffer, uint32 uBufferSize, int32 iGeneration);
+        void Read(const char* pszName, CModelManager::MODELTYPE modeltype, int32 pattern, void* pBuffer, uint32 uBufferSize, int32 iGeneration);
         void Cleanup(void);
         RpClump* Clone(void);
-        RpClump* ReadRpClump(const void* pBuffer, uint32 uBufferSize);
+        RpClump* ReadRpClump(void* pBuffer, uint32 uBufferSize);
         const char* GetName(void) const;
         CModelManager::MODELTYPE GetType(void) const;
         CToonManager::PATTERN GetPattern(void) const;
@@ -39,7 +39,7 @@ public:
 public:
     CClumpContainer(void);
     virtual ~CClumpContainer(void);
-    void ReadClump(const char* pszName, CModelManager::MODELTYPE modeltype, int32 pattern, const void* pBuffer, uint32 uBufferSize);
+    void ReadClump(const char* pszName, CModelManager::MODELTYPE modeltype, int32 pattern, void* pBuffer, uint32 uBufferSize);
     CClump* GetClump(const char* pszName);
     CClump* AllocClump(void);
     CClump* FindClump(const char* pszName);
@@ -50,6 +50,11 @@ private:
     CList<CClump> m_listUse;
     int32 m_iGeneration;
 };
+
+
+//
+// *********************************************************************************
+//
 
 
 CClumpContainer::CClump::CClump(void)
@@ -68,19 +73,28 @@ CClumpContainer::CClump::~CClump(void)
 };
 
 
-void CClumpContainer::CClump::Read(const char* pszName, CModelManager::MODELTYPE modeltype, int32 pattern, const void* pBuffer, uint32 uBufferSize, int32 iGeneration)
+void CClumpContainer::CClump::Read(const char* pszName,
+                                   CModelManager::MODELTYPE modeltype,
+                                   int32 pattern,
+                                   void* pBuffer,
+                                   uint32 uBufferSize,
+                                   int32 iGeneration)
 {
     ASSERT(!m_pClump);
-    ASSERT(modeltype == CModelManager::MODELTYPE_TOON || modeltype == CModelManager::MODELTYPE_NORMAL);
-    ASSERT(std::strlen(pszName) < COUNT_OF(m_szName));
+    ASSERT((modeltype == CModelManager::MODELTYPE_TOON) ||
+           (modeltype == CModelManager::MODELTYPE_NORMAL));
 
+    ASSERT(std::strlen(pszName) < COUNT_OF(m_szName));
     std::strcpy(m_szName, pszName);
-    m_type = modeltype;
+
+    m_type        = modeltype;
     m_iGeneration = iGeneration;
     
     if (modeltype == CModelManager::MODELTYPE_TOON)
     {
-        ASSERT(pattern >= CToonManager::PATTERN_START && pattern < CToonManager::PATTERN_MAX);
+        ASSERT(pattern >= CToonManager::PATTERN_START);
+        ASSERT(pattern <  CToonManager::PATTERN_MAX);
+
         m_toonpattern = CToonManager::PATTERN(pattern);
     }
     else
@@ -114,18 +128,20 @@ RpClump* CClumpContainer::CClump::Clone(void)
 };
 
 
-RpClump* CClumpContainer::CClump::ReadRpClump(const void* pBuffer, uint32 uBufferSize)
+RpClump* CClumpContainer::CClump::ReadRpClump(void* pBuffer, uint32 uBufferSize)
 {
     ASSERT(pBuffer);
     ASSERT(uBufferSize > 0);
 
     RpClump* pResult = nullptr;
+
     RwMemory MemoryStream;
-    MemoryStream.start = (RwUInt8*)pBuffer;
+    MemoryStream.start  = static_cast<RwUInt8*>(pBuffer);
     MemoryStream.length = uBufferSize;
 
     RwStream* pRwStream = RwStreamOpen(rwSTREAMMEMORY, rwSTREAMREAD, &MemoryStream);
     ASSERT(pRwStream);
+
     if (pRwStream)
     {
         if (RwStreamFindChunk(pRwStream, rwID_CLUMP, nullptr, nullptr))
@@ -167,6 +183,11 @@ CToonManager::PATTERN CClumpContainer::CClump::GetPattern(void) const
 };
 
 
+//
+// *********************************************************************************
+//
+
+
 CClumpContainer::CClumpContainer(void)
 : m_iGeneration(0)
 {
@@ -182,10 +203,13 @@ CClumpContainer::~CClumpContainer(void)
 };
 
 
-void CClumpContainer::ReadClump(const char* pszName, CModelManager::MODELTYPE modeltype, int32 pattern, const void* pBuffer, uint32 uBufferSize)
+void CClumpContainer::ReadClump(const char* pszName,
+                                CModelManager::MODELTYPE modeltype,
+                                int32 pattern,
+                                void* pBuffer,
+                                uint32 uBufferSize)
 {
     CClump* pClump = AllocClump();
-    
     ASSERT(pClump);
     
     pClump->Read(pszName, modeltype, pattern, pBuffer, uBufferSize, m_iGeneration);    
@@ -236,18 +260,16 @@ static inline CClumpContainer& ClumpContainer(void)
 /*static*/ void CModelManager::Initialize(void)
 {
     if (!s_pClumpContainer)
-    {
-        s_pClumpContainer = new CClumpContainer;        
-    };
+        s_pClumpContainer = new CClumpContainer;
 };
 
 
 /*static*/ void CModelManager::Terminate(void)
 {
+    ASSERT(s_nNumAllocatedModels == 0);
+
     if (s_pClumpContainer)
-    {
-        ASSERT(s_nNumAllocatedModels == 0);
-        
+    {        
         delete s_pClumpContainer;
         s_pClumpContainer = nullptr;
     };
@@ -285,7 +307,9 @@ static inline CClumpContainer& ClumpContainer(void)
     {
         CModelToon* pModel = new CModelToon(pClump->GetName(), pClump->Clone(), pClump->GetPattern());
         ASSERT(pModel);
+
         ++s_nNumAllocatedModels;
+
         return pModel;
     };
 
@@ -303,7 +327,12 @@ static inline CClumpContainer& ClumpContainer(void)
 };
 
 
-/*static*/ void CModelManager::Read(const char* pszName, MODELTYPE modeltype, void* pBuffer, uint32 uBufferSize, const char* pszTextureSetName, int32 pattern)
+/*static*/ void CModelManager::Read(const char* pszName,
+                                    MODELTYPE modeltype,
+                                    void* pBuffer,
+                                    uint32 uBufferSize,
+                                    const char* pszTextureSetName,
+                                    int32 pattern)
 {
     ASSERT(pszTextureSetName);
     ASSERT(pszName);
@@ -315,7 +344,10 @@ static inline CClumpContainer& ClumpContainer(void)
 };
 
 
-/*static*/ void CModelManager::ReadNormal(const char* pszName, void* pBuffer, uint32 uBufferSize, const char* pszTextureSetName)
+/*static*/ void CModelManager::ReadNormal(const char* pszName,
+                                          void* pBuffer,
+                                          uint32 uBufferSize,
+                                          const char* pszTextureSetName)
 {
     ASSERT(pszTextureSetName);
     ASSERT(pszName);
@@ -326,7 +358,11 @@ static inline CClumpContainer& ClumpContainer(void)
 };
 
 
-/*static*/ void CModelManager::ReadToon(const char* pszName, void* pBuffer, uint32 uBufferSize, const char* pszTextureSetName, int32 pattern)
+/*static*/ void CModelManager::ReadToon(const char* pszName,
+                                        void* pBuffer,
+                                        uint32 uBufferSize,
+                                        const char* pszTextureSetName,
+                                        int32 pattern)
 {
     ASSERT(pszTextureSetName);
     ASSERT(pszName);

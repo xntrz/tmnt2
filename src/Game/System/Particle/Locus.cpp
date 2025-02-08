@@ -163,8 +163,8 @@ void CLocus::Draw(void)
         RenderStateSet();
 
         uint32 uFlags = rwIM3D_VERTEXXYZ | rwIM3D_VERTEXRGBA;
-		if (m_pTexture)
-			FLAG_SET(uFlags, rwIM3D_VERTEXUV);
+        if (m_pTexture)
+            uFlags |= rwIM3D_VERTEXUV;
 
         if (RwIm3DTransform(s_aVertex, nNumVertices, nullptr, uFlags))
         {
@@ -250,7 +250,7 @@ void CLocus::RenderStateSet(void)
     if (m_pTexture)
         RENDERSTATE_PUSH(rwRENDERSTATETEXTURERASTER, RwTextureGetRaster(m_pTexture));
     else
-        RENDERSTATE_PUSH(rwRENDERSTATETEXTURERASTER, nullptr);
+        RENDERSTATE_PUSH(rwRENDERSTATETEXTURERASTER, 0);
 
     RENDERSTATE_PUSH(rwRENDERSTATECULLMODE, rwCULLMODECULLNONE);
     RENDERSTATE_PUSH(rwRENDERSTATEVERTEXALPHAENABLE, true);

@@ -16,12 +16,13 @@ CMapEffectLightGimmick::CMapEffectLightGimmick(const char* pszName, void* pParam
 {
     ASSERT(pParam);
 
-    GIMMICKPARAM::GIMMICK_BASIC* pBasic = (GIMMICKPARAM::GIMMICK_BASIC*)pParam;
+    GIMMICKPARAM::GIMMICK_BASIC* pBasic = static_cast<GIMMICKPARAM::GIMMICK_BASIC*>(pParam);
     m_vPosition = pBasic->m_vPosition;
 
     float afScale[3] = { 1.0f, 1.5f, 2.0f };
-    ASSERT(pBasic->m_subid >= 0 && pBasic->m_subid < COUNT_OF(afScale));
-    
+    ASSERT(pBasic->m_subid >= 0);
+    ASSERT(pBasic->m_subid < COUNT_OF(afScale));
+
     m_hLight = CEffectLightManager::Regist(&m_vPosition, afScale[pBasic->m_subid], m_Color);
     ASSERT(m_hLight);
 };
@@ -60,6 +61,9 @@ void CMapEffectLightGimmick::OnReceiveEvent(const char* pszSender, GIMMICKTYPES:
     case GIMMICKTYPES::EVENTTYPE_INACTIVATE:
         setLightEnable(false);
         break;
+
+    default:
+        break;
     };
 };
 
@@ -74,6 +78,11 @@ void CMapEffectLightGimmick::setLightEnable(bool bEnable)
     if (m_hLight)
         CEffectLightManager::SetColor(m_hLight, m_Color);
 };
+
+
+//
+// *********************************************************************************
+//
 
 
 /*static*/ const CMapEffectGimmick::EFFECTINFO CMapEffectGimmick::m_aSmokeEffectKindInfo[] =
@@ -92,32 +101,32 @@ void CMapEffectLightGimmick::setLightEnable(bool bEnable)
     { "fire_torch", false, true, 1.0f, 2.0f, 0.0f },
     { "fire_torch", false, true, 1.0f, 3.0f, 0.0f },
     { "fire_torch", false, true, 1.0f, 5.0f, 0.0f },
-    { "fire_torch", true, true, 1.0f, 2.0f, 0.0f },
-    { "fire_torch", true, true, 1.0f, 3.0f, 0.0f },
-    { "fire_torch", true, true, 1.0f, 5.0f, 0.0f },
-    { "flame_map", false, true, 1.0f, 1.0f, 0.0f },
-    { "flame_map", false, true, 1.0f, 2.0f, 0.0f },
-    { "flame_map", false, true, 1.0f, 3.0f, 0.0f },
-    { "flame_map", false, true, 1.0f, 4.0f, 0.0f },
-    { "flame_map", true, true, 1.0f, 1.0f, 0.0f },
-    { "flame_map", true, true, 1.0f, 2.0f, 0.0f },
-    { "flame_map", true, true, 1.0f, 3.0f, 0.0f },
-    { "flame_map", true, true, 1.0f, 4.0f, 0.0f },
+    { "fire_torch", true,  true, 1.0f, 2.0f, 0.0f },
+    { "fire_torch", true,  true, 1.0f, 3.0f, 0.0f },
+    { "fire_torch", true,  true, 1.0f, 5.0f, 0.0f },
+    { "flame_map",  false, true, 1.0f, 1.0f, 0.0f },
+    { "flame_map",  false, true, 1.0f, 2.0f, 0.0f },
+    { "flame_map",  false, true, 1.0f, 3.0f, 0.0f },
+    { "flame_map",  false, true, 1.0f, 4.0f, 0.0f },
+    { "flame_map",  true,  true, 1.0f, 1.0f, 0.0f },
+    { "flame_map",  true,  true, 1.0f, 2.0f, 0.0f },
+    { "flame_map",  true,  true, 1.0f, 3.0f, 0.0f },
+    { "flame_map",  true,  true, 1.0f, 4.0f, 0.0f },
 };
 
 
 /*static*/ const CMapEffectGimmick::EFFECTINFO CMapEffectGimmick::m_aSteamEffectKindInfo[] =
 {
     { "pipe_steam", false, false, 6.0f, 1.0f, 0.0f },
-    { "pipe_steam", true, false, 6.0f, 1.0f, 0.0f },
+    { "pipe_steam", true,  false, 6.0f, 1.0f, 0.0f },
 };
 
 
 /*static*/ const CMapEffectGimmick::EFFECTINFO CMapEffectGimmick::m_aSparkEffectKindInfo[] =
 {
-    { "sparks", false, false, 1.0f, 1.0f, 0.0f },
-    { "spark_slow", false, true, 1.0f, 1.0f, 0.0f },
-    { "enginespark", false, true, 1.0f, 1.0f, 0.0f },
+    { "sparks",      false, false, 1.0f, 1.0f, 0.0f },
+    { "spark_slow",  false, true,  1.0f, 1.0f, 0.0f },
+    { "enginespark", false, true,  1.0f, 1.0f, 0.0f },
 };
 
 
@@ -166,7 +175,7 @@ CMapEffectGimmick::CMapEffectGimmick(const char* pszName, void* pParam)
 {
     ASSERT(pParam);
 
-    GIMMICKPARAM::GIMMICK_BASIC* pBasic = (GIMMICKPARAM::GIMMICK_BASIC*)pParam;
+    GIMMICKPARAM::GIMMICK_BASIC* pBasic = static_cast<GIMMICKPARAM::GIMMICK_BASIC*>(pParam);
     m_vPosition = pBasic->m_vPosition;
     
     RwMatrix matrix;
@@ -175,6 +184,7 @@ CMapEffectGimmick::CMapEffectGimmick(const char* pszName, void* pParam)
     RwV3dTransformPoint(&m_vDirection, &Math::VECTOR3_AXIS_Z, &matrix);
     
     setEffectInfo(pBasic->m_id, pBasic->m_subid);
+    
     if (m_pEffectInfo && !m_pEffectInfo->m_bLoop)
         m_fTime = Math::RandFloatRange(0.0f, m_pEffectInfo->m_fIntervalTime);
 };
@@ -192,7 +202,7 @@ void CMapEffectGimmick::PostMove(void)
     {
         if (m_pEffectInfo->m_bLoop)
         {
-            if (!CGimmickUtils::IsPositionVisible(&m_vPosition))
+            if (!CGimmickUtils::IsPositionVisible(&m_vPosition, 2.0f, true))
             {
                 if (m_bLoopActive)
                 {
@@ -245,6 +255,9 @@ void CMapEffectGimmick::OnReceiveEvent(const char* pszSender, GIMMICKTYPES::EVEN
             };
         }
         break;
+
+    default:
+        break;
     };
 };
 
@@ -294,6 +307,9 @@ void CMapEffectGimmick::setEffectInfo(int32 id, int32 subid)
         ASSERT(subid < COUNT_OF(m_aExploEffectKindInfo));
         pEffectInfo = &m_aExploEffectKindInfo[subid];
         break;
+
+    default:
+        break;
     };
 
     m_pEffectInfo = pEffectInfo;
@@ -329,7 +345,7 @@ bool CMapEffectGimmick::playEffect(void)
         vPosition.x += Math::RandFloatRange(0.0f, m_pEffectInfo->m_fRandAreaRadius);
         vPosition.z += Math::RandFloatRange(0.0f, m_pEffectInfo->m_fRandAreaRadius);
 
-        if (GetID() == GIMMICKID::ID_N_BUBBLE)
+        if (GetID() != GIMMICKID::ID_N_BUBBLE)
             vPosition.y += Math::RandFloatRange(0.0f, m_pEffectInfo->m_fRandAreaRadius);
     };
 
@@ -346,6 +362,7 @@ bool CMapEffectGimmick::playEffect(void)
 
         uint32 hMagic = CMagicManager::Play(m_pEffectInfo->m_pszName, &param);
         ASSERT(hMagic);
+
         if (hMagic)
         {
             CMagicManager::SetScale(hMagic, fScale);
@@ -359,6 +376,7 @@ bool CMapEffectGimmick::playEffect(void)
     {
         uint32 hEffect = CEffectManager::Play(m_pEffectInfo->m_pszName, &m_vPosition);
         ASSERT(hEffect);
+
         if (hEffect)
         {
             CEffectManager::SetDirection(hEffect, &m_vDirection);

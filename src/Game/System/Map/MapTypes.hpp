@@ -22,6 +22,7 @@ namespace MAPTYPES
         GIMMICKTYPE_BELTCONVEYOR,
     };
 
+    /* TODO: in some places it test/check like flag and some not */
     enum ATTRIBUTE : uint32
     {
         ATTRIBUTE_UNKNOWN   = 0x0,

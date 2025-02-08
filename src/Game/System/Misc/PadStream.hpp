@@ -3,6 +3,7 @@
 #include "Game/Component/GameMain/StageID.hpp"
 
 
+// TODO: review pad stream, in demo mode reading input stream incorrect probably
 class CPadStream
 {
 public:
@@ -23,7 +24,7 @@ public:
     ~CPadStream(void);
     bool Open(MODE mode, STAGEID::VALUE idStage, int32 iController);
     void Close(void);
-    void GetPad(int32 iController);
+    void GetPadData(int32 iController);
     int16 GetAnalogX(int32 iController);
     int16 GetAnalogY(int32 iController);
     uint32 GetDigital(int32 iController);

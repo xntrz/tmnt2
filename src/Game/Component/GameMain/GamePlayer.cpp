@@ -79,6 +79,11 @@ int32 CGamePlayerSharedProperty::GetHPMax(void) const
 };
 
 
+//
+// *********************************************************************************
+//
+
+
 /*static*/ CGamePlayerSharedProperty CGamePlayerProperty::m_SharedProperty;
 
 
@@ -195,6 +200,11 @@ int32 CGamePlayerProperty::GetShurikenMax(void) const
 {
     return m_nShurikenMax;
 };
+
+
+//
+// *********************************************************************************
+//
 
 
 /*static*/ CGamePlayer CGamePlayer::m_dummy;
@@ -395,10 +405,10 @@ int32 CGamePlayer::GetShurikenNum(void) const
 };
 
 
-void CGamePlayer::Relocation(const RwV3d* pvPosition, float fDirection, bool bProtect)
+void CGamePlayer::Relocation(const RwV3d* pvPosition, float fDirection, bool bBlink)
 {
     if (IsAlive())
-        Player().Relocation(pvPosition, fDirection, bProtect);
+        Player().Relocation(pvPosition, fDirection, bBlink);
 };
 
 
@@ -407,7 +417,7 @@ int32 CGamePlayer::AddHP(int32 iHP)
     if (!IsAlive())
         return 0;
 
-    if (!isInvincible() || iHP > 0)
+    if (!isInvincible() || (iHP > 0))
     {
         if (m_property.AddHP(iHP) <= 0)
         {
@@ -423,11 +433,9 @@ int32 CGamePlayer::AddHP(int32 iHP)
         };
 
         return m_property.GetHP();
-    }
-    else
-    {
-        return 0;
     };
+
+    return 0;
 };
 
 
@@ -447,10 +455,10 @@ void CGamePlayer::InvokeDeathFloor(void)
 
 void CGamePlayer::SaveContext(CGamePlayParam::PLAYERCONTEXT& rContext) const
 {
-    rContext.m_iHP = m_property.GetHP();
-    rContext.m_iHPMax = m_property.GetHPMax();
-    rContext.m_iDamage = m_property.GetDamage();
-    rContext.m_CharacterID = GetCurrentCharacterID();
+    rContext.m_iHP          = m_property.GetHP();
+    rContext.m_iHPMax       = m_property.GetHPMax();
+    rContext.m_iDamage      = m_property.GetDamage();
+    rContext.m_CharacterID  = GetCurrentCharacterID();
     rContext.m_iShurikenMax = m_property.GetShurikenMax();
     rContext.m_iShurikenNum = m_property.GetShurikenNum();
 };
@@ -477,17 +485,19 @@ void CGamePlayer::CreatePlayer(int32 no)
 
 void CGamePlayer::CreatePlayerEx(int32 no, int32 gamepadNo)
 {
-    ASSERT(!m_pPlayer);
-    ASSERT(no >= 0 && no < GAMETYPES::PLAYERS_MAX);
+    ASSERT(no >= 0);
+    ASSERT(no < GAMETYPES::PLAYERS_MAX);
+    ASSERT(m_pPlayer == nullptr);
 
     CPlayer* pPlayer = CPlayer::New(no, gamepadNo);
     if (pPlayer)
     {
         m_pPlayer = pPlayer;
-        m_hObj = pPlayer->GetHandle();
-        m_nNo = no;
+        m_hObj    = pPlayer->GetHandle();
+        m_nNo     = no;
+
         m_property.Setup(m_nNo == 0);
-        
+
         AddRef();
     };
 };

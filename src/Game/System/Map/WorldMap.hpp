@@ -6,6 +6,8 @@
 class CWorldMap
 {
 public:
+    static const float INVALID_MAP_HEIGHT;
+
     enum DRAWTYPE
     {
         DRAWTYPE_NORMAL = 0,
@@ -22,11 +24,13 @@ public:
 
     enum CHECKFLAG : uint32
     {
-        CHECKFLAG_NONE      = 0x0,
-        CHECKFLAG_WALLJUMP  = 0x1,
-        CHECKFLAG_ONEWAY    = 0x2,
-        CHECKFLAG_MAPONLY   = 0x4,
+        CHECKFLAG_NONE      = 0,
+        CHECKFLAG_WALLJUMP  = (1 << 0),
+        CHECKFLAG_ONEWAY    = (1 << 1),
+        CHECKFLAG_MAPONLY   = (1 << 2),
     };
+
+    DEFINE_ENUM_FLAG_OPS(CHECKFLAG, friend);
 
     enum COLLISIONTYPE
     {
@@ -37,76 +41,73 @@ public:
 
     struct FOGINFO
     {
-        uint32 m_bEnable;
-        RwRGBA m_Color;
-        float m_fDist;
-        uint32 m_dummy;
+        uint32  m_bEnable;
+        RwRGBA  m_Color;
+        float   m_fDist;
+        uint32  m_dummy;
     };
 
     struct WATERINFO
     {
-        uint32 m_bOffset;
-        float m_fWaterSurfaceHeight;
-        uint32 m_dummy0;
-        uint32 m_dummy1;
+        uint32  m_bOffset;
+        float   m_fWaterSurfaceHeight;
+        uint32  m_dummy0;
+        uint32  m_dummy1;
     };
 
     struct MAPINFO
     {
-        char m_szName[16];
-        float m_fFarClipDist;
-        float m_fNearClipDist;
-        float m_fDeathHeight;
-        RwV3d m_vLightDirection;
-        WATERINFO m_waterinfo;
-        WEATHER m_weather;
-        FOGINFO m_foginfo;
-        uint32 m_bBackFaceCulling;
+        char        m_szName[16];
+        float       m_fFarClipDist;
+        float       m_fNearClipDist;
+        float       m_fDeathHeight;
+        RwV3d       m_vLightDirection;
+        WATERINFO   m_waterinfo;
+        WEATHER     m_weather;
+        FOGINFO     m_foginfo;
+        uint32      m_bBackFaceCulling;
     };
 
     CHECK_SIZE(MAPINFO, 80);
 
     struct COLLISIONPARAM_MAPGIMMICK
     {
-        RwV3d m_vVelocity;
-        RwV3d m_vRotate;
-        RwMatrix* m_pLTM;
-        char m_szGimmickObjName[16];
+        RwV3d                 m_vVelocity;
+        RwV3d                 m_vRotate;
+        RwMatrix*             m_pLTM;
+        char                  m_szGimmickObjName[16];
         MAPTYPES::GIMMICKTYPE m_type;
     };
 
     struct COLLISIONPARAM_MAPWALL
     {
-        RwV3d m_vClosestPt;
-        RwV3d m_vNormal;
-        float m_fDistance;
-        bool m_bHit;
+        RwV3d   m_vClosestPt;
+        RwV3d   m_vNormal;
+        float   m_fDistance;
+        bool    m_bHit;
     };
 
     struct COLLISIONPARAM_BASE
     {
-        RwV3d m_vClosestPt;
-        RwV3d m_vNormal;
-        MAPTYPES::ATTRIBUTE m_attribute;
-        RwRGBA m_Color;
-        MAPTYPES::HITTYPE m_type;
+        RwV3d                     m_vClosestPt;
+        RwV3d                     m_vNormal;
+        MAPTYPES::ATTRIBUTE       m_attribute;
+        RwRGBA                    m_Color;
+        MAPTYPES::HITTYPE         m_type;
         COLLISIONPARAM_MAPGIMMICK m_mapobj;
-        COLLISIONPARAM_MAPWALL m_mapwall;
+        COLLISIONPARAM_MAPWALL    m_mapwall;
     };
 
     struct COLLISIONPARAM_MODEL : public COLLISIONPARAM_BASE
     {
-        float m_fDistance;
-        char m_szAttributeName[32];
-        RwV3d* m_pPrimitiveVelocity;
+        float       m_fDistance;
+        char        m_szAttributeName[32];
+        RwV3d*      m_pPrimitiveVelocity;
         RpGeometry* m_pGeometry;
-        bool m_bUpdate;
+        bool        m_bUpdate;
     };
 
-    struct COLLISIONRESULT : public COLLISIONPARAM_BASE
-    {
-        ;
-    };
+    struct COLLISIONRESULT : public COLLISIONPARAM_BASE {};
     
 public:
     static void Initialize(void);
@@ -114,8 +115,8 @@ public:
     static void Period(void);
     static void Draw(DRAWTYPE drawtype);
     static void OnLoaded(void);
-    static void ReadBsp(const char* pszName, const void* pBuffer, uint32 uBufferSize);
-    static void ReadMapInfo(const void* pBuffer, uint32 uBufferSize);
+    static void ReadBsp(const char* pszName, void* pBuffer, uint32 uBufferSize);
+    static void ReadMapInfo(void* pBuffer, uint32 uBufferSize);
     static const MAPINFO* GetMapInfo(void);
     static void GetWaterSurfacePosition(RwV3d* pPos);
     static float GetCharacterDeathHeight(void);

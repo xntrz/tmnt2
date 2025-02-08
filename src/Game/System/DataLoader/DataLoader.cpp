@@ -5,7 +5,15 @@
 #include "System/Common/File/File.hpp"
 #include "System/Common/File/FileTypes.hpp"
 
+#ifdef _DEBUG
+#ifdef TARGET_PC
+#include "System/PC/File/PCFile.hpp"
+#endif /* TARGET_PC */
+#endif /* _DEBUG */
+
 #include <queue>
+#include <vector>
+#include <utility> // std::pair
 
 
 extern IDataLoaderImpl* CreateDataLoaderImplement(void);
@@ -45,11 +53,18 @@ public:
     void CreateFile(const char* pszFilename);
     void DestroyFile(void);
     bool IsLoadEnd(void) const;
+#ifdef _DEBUG
+    void RegistIntercept(CDataLoader::COMPLETE_CB cb, void* pParam);
+    void RemoveIntercept(CDataLoader::COMPLETE_CB cb);
+#endif /* _DEBUG */
 
 private:
     std::queue<REQUEST> m_queueRequest;
     CFile* m_pCurrentFile;
     IDataLoaderImpl* m_pDataLoaderImpl;
+#ifdef _DEBUG
+    std::pair<CDataLoader::COMPLETE_CB, void*> m_cbIntercept;
+#endif /* _DEBUG */
 };
 
 
@@ -62,7 +77,7 @@ CDataLoaderContainer::CDataLoaderContainer(void)
 
     // preallocate space for queue
     std::deque<REQUEST> container;
-    container.resize(32);
+    container.resize(64);
     container.resize(0);
 
     m_queueRequest = std::queue<REQUEST>(std::move(container));
@@ -92,8 +107,16 @@ void CDataLoaderContainer::Period(void)
             uint32 uFileSize = m_pCurrentFile->Size();
 
             ASSERT(m_pDataLoaderImpl);
+#ifdef _DEBUG
+            if (m_cbIntercept.first)
+                m_cbIntercept.first(pFileData, uFileSize, m_cbIntercept.second);
+            else
+                m_pDataLoaderImpl->Eval(pFileData, uFileSize);
+#else /* _DEBUG */
             m_pDataLoaderImpl->Eval(pFileData, uFileSize);
-            
+#endif /* _DEBUG */
+    
+
             DestroyFile();
 			m_queueRequest.pop();
         };
@@ -148,12 +171,23 @@ void CDataLoaderContainer::CreateFile(int32 iFileID)
 
 void CDataLoaderContainer::CreateFile(const char* pszFilename)
 {
+#ifdef _DEBUG
+#ifdef TARGET_PC
+    CPCFile* pFile = new CPCFile;
+    if (pFile)
+    {
+        pFile->Open(pszFilename);
+        m_pCurrentFile = pFile;
+    };
+#endif /* TARGET_PC */
+#else /* _DEBUG */
     CAdxFileISO* pFile = new CAdxFileISO;
     if (pFile)
     {
         pFile->Open(pszFilename);
         m_pCurrentFile = pFile;
     };
+#endif /* _DEBUG */
 };
 
 
@@ -170,6 +204,22 @@ bool CDataLoaderContainer::IsLoadEnd(void) const
 {
     return m_queueRequest.empty();
 };
+
+#ifdef _DEBUG
+
+void CDataLoaderContainer::RegistIntercept(CDataLoader::COMPLETE_CB cb, void* pParam)
+{
+    m_cbIntercept = { cb, pParam };
+};
+
+
+void CDataLoaderContainer::RemoveIntercept(CDataLoader::COMPLETE_CB cb)
+{
+    ASSERT(m_cbIntercept.first == cb);
+    m_cbIntercept = {};
+};
+
+#endif /* _DEBUG */
 
 
 static CDataLoaderContainer* s_pDataLoaderContainer = nullptr;
@@ -221,3 +271,18 @@ static inline CDataLoaderContainer& DataLoaderContainer(void)
 {
     DataLoaderContainer().Regist(pszFilename);
 };
+
+#ifdef _DEBUG
+
+/*static*/ void CDataLoader::RegistIntercept(COMPLETE_CB cb, void* pParam /*= nullptr*/)
+{
+    DataLoaderContainer().RegistIntercept(cb, pParam);
+};
+
+
+/*static*/ void CDataLoader::RemoveIntercept(COMPLETE_CB cb)
+{
+    DataLoaderContainer().RemoveIntercept(cb);
+};
+
+#endif /* _DEBUG */

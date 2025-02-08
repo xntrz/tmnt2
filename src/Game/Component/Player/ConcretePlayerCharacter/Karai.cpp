@@ -14,19 +14,11 @@
 
 namespace Karai
 {
-    bool CAttackJump::IsEnableChangeStatus(PLAYERTYPES::STATUS status)
-    {
-        PLAYERTYPES::STATUS aStatusArray[] =
-        {
-            PLAYERTYPES::STATUS_JUMP,
-            PLAYERTYPES::STATUS_JUMP_2ND,
-            PLAYERTYPES::STATUS_JUMP_WALL,
-            PLAYERTYPES::STATUS_AERIAL,
-            PLAYERTYPES::STATUS_AERIAL_MOVE,
-        };
-
-        return IsWithinStatusFromArray(status, aStatusArray, COUNT_OF(aStatusArray));
-    };
+    DEFINE_ENABLED_STATUS_FOR(CAttackJump, { PLAYERTYPES::STATUS_JUMP,
+                                             PLAYERTYPES::STATUS_JUMP_2ND,
+                                             PLAYERTYPES::STATUS_JUMP_WALL,
+                                             PLAYERTYPES::STATUS_AERIAL,
+                                             PLAYERTYPES::STATUS_AERIAL_MOVE });
 
 
     void CAttackJump::OnAttach(void)
@@ -62,9 +54,9 @@ namespace Karai
     void CAttackAABBC::OnDischargeWave(void)
     {
         RwV3d vPosition = Math::VECTOR3_ZERO;
-        RwV3d vPositionLocal = Math::VECTOR3_ZERO;
-        
         Character().GetBodyPosition(&vPosition);
+
+        RwV3d vPositionLocal = Math::VECTOR3_ZERO;        
         Character().RotateVectorByDirection(&vPositionLocal, &Karai::CHARGE_ATTACK_LOCAL_POSITION);
 
         Math::Vec3_Add(&vPosition, &vPosition, &vPositionLocal);
@@ -81,20 +73,20 @@ namespace Karai
     void CAttackB::OnDischargeWave(MAGIC_GENERIC::STEP step)
     {
         RwV3d vPosition = Math::VECTOR3_ZERO;
-        RwV3d vPositionLocal = Math::VECTOR3_ZERO;
-
         Character().GetBodyPosition(&vPosition);
+
+        RwV3d vPositionLocal = Math::VECTOR3_ZERO;
         Character().RotateVectorByDirection(&vPositionLocal, &Karai::CHARGE_ATTACK_LOCAL_POSITION);
 
         Math::Vec3_Add(&vPosition, &vPosition, &vPositionLocal);
 
         MAGIC_GENERIC::ChargeAttackKarai(&vPosition, Character().GetDirection(), m_pPlayerChr, step);
     };
-};
+}; /* namespace Karai */
 
 
 CKarai::CKarai(GAMETYPES::COSTUME costume)
-: CPlayerCharacter("Karai", PLAYERID::ID_KAR, costume)
+: CPlayerCharacter("karai", PLAYERID::ID_KAR, costume)
 {
     //
 	//	Model parts:
@@ -119,7 +111,6 @@ CKarai::CKarai(GAMETYPES::COSTUME costume)
     parameter.m_feature.m_nKnifeAttachBoneID    = CHARACTERTYPES::BONEID_RIGHT_WRIST;
 
     parameter.m_pStateMachine = new CPlayerStateMachine(this, PLAYERTYPES::STATUS::NORMALMAX);
-    ASSERT(parameter.m_pStateMachine);
 
     CStatus::RegistDefaultForStateMachine(*parameter.m_pStateMachine);
 
@@ -129,7 +120,7 @@ CKarai::CKarai(GAMETYPES::COSTUME costume)
 
     Initialize(&parameter);
 
-    m_pModuleMan->Include(CCircleShadowModule::New(this, 1.5f, 1.5f, true));
+    m_pModuleMan->Include(CCircleShadowModule::New(this, 1.5f, 1.5f, false));
 };
 
 
@@ -151,15 +142,15 @@ void CKarai::ShootingKnife(void)
     float fLen = Math::Vec3_Length(&vLocalPos);
     if (fLen > 0.6f)
     {
-        vLocalPos.x *= 0.5f / fLen;
-        vLocalPos.z *= 0.5f / fLen;
+        vLocalPos.x *= (0.5f / fLen);
+        vLocalPos.z *= (0.5f / fLen);
         vLocalPos.y = fBuffY;
 
         Math::Vec3_Add(&vPosition, &vLocalPos, &m_vPosition);
     };
 
-    CShotManager::Shot(SHOTID::ID_KUNAI_PLAYER, &vPosition, m_fDirection, this, 0.26f, 5.0f);
+    CShotManager::Shot(SHOTID::ID_KUNAI_PLAYER, &vPosition, m_fDirection, this, MATH_DEG2RAD(15.0f), 5.0f);
 
-    if (!IsAttributeFlagSet(PLAYERTYPES::ATTRIBUTE_INNUMERABLE_KNIFE))
+    if (!TestAttribute(PLAYERTYPES::ATTRIBUTE_INNUMERABLE_KNIFE))
         CGameProperty::Player(GetPlayerNo())->AddShurikenNum(-1);
 };

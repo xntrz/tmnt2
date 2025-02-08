@@ -35,7 +35,7 @@ namespace Karai
     public:
         virtual void OnDischargeWave(MAGIC_GENERIC::STEP step) override;
     };
-};
+}; /* namespace Karai */
 
 
 class CKarai : public CPlayerCharacter

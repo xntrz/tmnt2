@@ -177,9 +177,10 @@ namespace PlayerStatus
         virtual void OnAttach(void);
         virtual void OnDetach(void);
         virtual void OnRun(void);
+        bool IsEnd(void) const;
 
     protected:
-        float m_fTime;
+        float m_fRecoverWait;
         float m_fEndTime;
     };
 

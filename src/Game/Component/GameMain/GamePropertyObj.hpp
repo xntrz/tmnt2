@@ -4,7 +4,7 @@
 
 
 class CMapCamera;
-class CGamePlayerContainer;
+class IGamePlayerContainer;
 class CGameEnemyContainer;
 class CGameGimmickContainer;
 
@@ -31,7 +31,7 @@ public:
     /*inline*/ CMapCamera* GetMapCamera(void) const;
     /*inline*/ void GetCameraViewMatrix(RwMatrix* pMatrix) const;
     /*inline*/ void GetCameraFrameMatrix(RwMatrix* pMatrix) const;
-    /*inline*/ CGamePlayerContainer& PlayerContainer(void) const;
+    /*inline*/ IGamePlayerContainer& PlayerContainer(void) const;
     /*inline*/ CGameEnemyContainer& EnemyContainer(void) const;
     /*inline*/ CGameGimmickContainer& GimmickContainer(void) const;
 
@@ -48,7 +48,7 @@ protected:
     float m_fGravity;
     RwCamera* m_pRwCamera;
     CMapCamera* m_pMapCamera;
-    CGamePlayerContainer* m_pPlayerContainer;
+    IGamePlayerContainer* m_pPlayerContainer;
     CGameEnemyContainer* m_pEnemyContainer;
     CGameGimmickContainer* m_pGimmickContainer;
 };

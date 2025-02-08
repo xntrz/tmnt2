@@ -10,6 +10,11 @@ namespace Donatello
 {
     const RwV3d BANDANA_OFFSET = { 0.0f, 0.15f, 0.05f };
 
+    enum MODELPART
+    {
+        MODELPART_LASER = 0,
+    };
+
     namespace MOTIONNAMES
     {
         static const char* CONSOLE1        = "Panel1";
@@ -100,7 +105,7 @@ namespace Donatello
         float m_fStartTimer;
         int32 m_iMotionStep;
     };
-};
+}; /* namespace Donatello */
 
 
 class CDonatello : public CPlayerCharacter

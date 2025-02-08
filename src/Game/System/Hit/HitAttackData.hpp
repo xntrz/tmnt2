@@ -16,20 +16,38 @@ public:
 
     enum TARGET
     {
-        TARGET_NONE                 = 0x0,
-        TARGET_PLAYER               = 0x1,
-        TARGET_ENEMY                = 0x2,
-        TARGET_GIMMICK              = 0x4,
-        TARGET_SHOT                 = 0x8,
-        TARGET_SELF                 = 0x10,
+        TARGET_NONE             = 0,
+        TARGET_PLAYER           = (1 << 0),
+        TARGET_ENEMY            = (1 << 1),
+        TARGET_GIMMICK          = (1 << 2),
+        TARGET_SHOT             = (1 << 3),
+        TARGET_SELF             = (1 << 4),    
 
-        TARGET_PLAYER_GIMMICK       = TARGET_PLAYER | TARGET_GIMMICK,
-        TARGET_ENEMY_GIMMICK        = TARGET_ENEMY | TARGET_GIMMICK,
-        TARGET_CHARACTER            = TARGET_PLAYER | TARGET_ENEMY,
-        TARGET_CHARACTER_GIMMICK    = TARGET_CHARACTER | TARGET_GIMMICK,
-        TARGET_ALL                  = TARGET_PLAYER | TARGET_ENEMY | TARGET_GIMMICK | TARGET_SHOT | TARGET_SELF,
-        TARGET_ALL_EXCEPT_SELF      = TARGET_PLAYER | TARGET_ENEMY | TARGET_GIMMICK | TARGET_SHOT,
+        TARGET_PLAYER_GIMMICK   = TARGET_PLAYER
+                                | TARGET_GIMMICK,
+        
+        TARGET_ENEMY_GIMMICK    = TARGET_ENEMY
+                                | TARGET_GIMMICK,
+
+        TARGET_CHARACTER        = TARGET_PLAYER
+                                | TARGET_ENEMY,
+
+        TARGET_CHARACTER_GIMMICK= TARGET_CHARACTER
+                                | TARGET_GIMMICK,
+
+        TARGET_ALL              = TARGET_PLAYER
+                                | TARGET_ENEMY
+                                | TARGET_GIMMICK
+                                | TARGET_SHOT 
+                                | TARGET_SELF,
+
+        TARGET_ALL_EXCEPT_SELF  = TARGET_PLAYER
+                                | TARGET_ENEMY
+                                | TARGET_GIMMICK
+                                | TARGET_SHOT,
     };
+
+    DEFINE_ENUM_FLAG_OPS(TARGET, friend);
 
     enum EFFECT
     {

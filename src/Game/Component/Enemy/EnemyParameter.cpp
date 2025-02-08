@@ -5,30 +5,29 @@
 
 
 static const char* ENEMYPARAM_FILEHEADER = "EPB_Ver1.0     ";
-static const int32 ENEMYPARAM_MAX = 594;
-static const int32 FREQUENCY_MAX = 27;
+static const int32 ENEMYPARAM_MAX = 594; // (enemy max - 2) * pattern max
 
 
 struct ENEMYPARAMCONTAINER
 {
-    int32 m_iHeader;
-    ENEMYID::VALUE m_eID;
-    int32 m_iPattern;
-    GAMETYPES::DIFFICULTY m_eDifficulty;
-    int32 m_iHP;
-    int32 m_iAttack;
-    int32 m_iGuard;
-    ENEMYTYPES::CHARACTERISTIC m_AICharacteristic;
-    uint8 m_auFrequency[FREQUENCY_MAX];
-    uint8 m_Padding1;
-    RwV3d m_vOrigin;
-    float m_fRadius;
+    int32                       m_iHeader;
+    ENEMYID::VALUE              m_eID;
+    int32                       m_iPattern;
+    GAMETYPES::DIFFICULTY       m_eDifficulty;
+    int32                       m_iHP;
+    int32                       m_iAttack;
+    int32                       m_iGuard;
+    ENEMYTYPES::CHARACTERISTIC  m_AICharacteristic;
+    uint8                       m_auFrequency[CEnemyParameter::FREQUENCY_MAX];
+    uint8                       m_Padding1;
+    RwV3d                       m_vOrigin;
+    float                       m_fRadius;
 };
 
 
 struct ENEMYPARAM
 {
-    bool m_bExist;
+    bool                m_bExist;
     ENEMYPARAMCONTAINER m_container;
 };
 
@@ -39,7 +38,7 @@ static ENEMYPARAM s_aEnemyParam[ENEMYPARAM_MAX] = { 0 };
 static inline void Rate(uint8* pFreqParam, float fRate)
 {
     uint8 uFreqParam = *pFreqParam;
-	uint8 uResult = uint8(float(uFreqParam) * fRate);
+    uint8 uResult = static_cast<uint8>(static_cast<float>(uFreqParam) * fRate);
     
     if (uResult >= 100)
         uResult = 99;
@@ -55,37 +54,41 @@ static void CompensationParameter(ENEMYPARAMCONTAINER* pEnemyParam)
     {
     case GAMETYPES::DIFFICULTY_EASY:
         {
-            pEnemyParam->m_iHP = int32(float(pEnemyParam->m_iHP) * 0.8f);
-            Rate(&pEnemyParam->m_auFrequency[6], 0.0f);
-            Rate(&pEnemyParam->m_auFrequency[7], 0.0f);
-            Rate(&pEnemyParam->m_auFrequency[8], 0.0f);
-            Rate(&pEnemyParam->m_auFrequency[9], 0.0f);
-            Rate(&pEnemyParam->m_auFrequency[10], 0.0f);
-            Rate(&pEnemyParam->m_auFrequency[11], 0.0f);
+            Rate(&pEnemyParam->m_auFrequency[CEnemyParameter::FREQUENCY_GUARD_A],           0.0f);
+            Rate(&pEnemyParam->m_auFrequency[CEnemyParameter::FREQUENCY_GUARD_B],           0.0f);
+            Rate(&pEnemyParam->m_auFrequency[CEnemyParameter::FREQUENCY_GUARD_SHOT],        0.0f);
+            Rate(&pEnemyParam->m_auFrequency[CEnemyParameter::FREQUENCY_GUARD_JUMP_ATTACK], 0.0f);
+            Rate(&pEnemyParam->m_auFrequency[CEnemyParameter::FREQUENCY_GUARD_RUN_ATTACK],  0.0f);
+            Rate(&pEnemyParam->m_auFrequency[CEnemyParameter::FREQUENCY_GUARD_THROW],       0.0f);
+
+            pEnemyParam->m_iHP = static_cast<int32>(static_cast<float>(pEnemyParam->m_iHP) * 0.8f);
         }
         break;
 
     case GAMETYPES::DIFFICULTY_HARD:
         {
-            Rate(&pEnemyParam->m_auFrequency[0], 1.05f);
-            Rate(&pEnemyParam->m_auFrequency[1], 1.05f);
-            Rate(&pEnemyParam->m_auFrequency[2], 1.05f);
-            Rate(&pEnemyParam->m_auFrequency[3], 1.05f);
-            Rate(&pEnemyParam->m_auFrequency[4], 1.05f);
-            Rate(&pEnemyParam->m_auFrequency[5], 1.05f);
-            Rate(&pEnemyParam->m_auFrequency[6], 1.05f);
-            Rate(&pEnemyParam->m_auFrequency[7], 1.05f);
-            Rate(&pEnemyParam->m_auFrequency[8], 1.05f);
-            Rate(&pEnemyParam->m_auFrequency[9], 1.05f);
-            Rate(&pEnemyParam->m_auFrequency[10], 1.05f);
-            Rate(&pEnemyParam->m_auFrequency[11], 1.05f);
-            Rate(&pEnemyParam->m_auFrequency[18], 1.05f);
-            Rate(&pEnemyParam->m_auFrequency[20], 1.05f);
-            Rate(&pEnemyParam->m_auFrequency[21], 1.05f);
-            pEnemyParam->m_AICharacteristic.m_fThinkingFrequency*= 1.05f;
-            pEnemyParam->m_AICharacteristic.m_fRatioOfActivity  *= 1.05f;
-            pEnemyParam->m_AICharacteristic.m_fRatioOfFrontView *= 1.05f;
-            pEnemyParam->m_AICharacteristic.m_fRatioOfRearView  *= 1.05f;
+            Rate(&pEnemyParam->m_auFrequency[CEnemyParameter::FREQUENCY_ATTACK_A],          1.05f);
+            Rate(&pEnemyParam->m_auFrequency[CEnemyParameter::FREQUENCY_ATTACK_AA],         1.05f);
+            Rate(&pEnemyParam->m_auFrequency[CEnemyParameter::FREQUENCY_ATTACK_AAA],        1.05f);
+            Rate(&pEnemyParam->m_auFrequency[CEnemyParameter::FREQUENCY_ATTACK_B],          1.05f);
+            Rate(&pEnemyParam->m_auFrequency[CEnemyParameter::FREQUENCY_ATTACK_C],          1.05f);
+            Rate(&pEnemyParam->m_auFrequency[CEnemyParameter::FREQUENCY_ATTACK_RUN],        1.05f);
+
+            Rate(&pEnemyParam->m_auFrequency[CEnemyParameter::FREQUENCY_GUARD_A],           1.05f);
+            Rate(&pEnemyParam->m_auFrequency[CEnemyParameter::FREQUENCY_GUARD_B],           1.05f);
+            Rate(&pEnemyParam->m_auFrequency[CEnemyParameter::FREQUENCY_GUARD_SHOT],        1.05f);
+            Rate(&pEnemyParam->m_auFrequency[CEnemyParameter::FREQUENCY_GUARD_JUMP_ATTACK], 1.05f);
+            Rate(&pEnemyParam->m_auFrequency[CEnemyParameter::FREQUENCY_GUARD_RUN_ATTACK],  1.05f);
+            Rate(&pEnemyParam->m_auFrequency[CEnemyParameter::FREQUENCY_GUARD_THROW],       1.05f);
+
+            Rate(&pEnemyParam->m_auFrequency[CEnemyParameter::FREQUENCY_FIRE_CONVERGENCE],  1.05f);
+            Rate(&pEnemyParam->m_auFrequency[CEnemyParameter::FREQUENCY_FIRE_RANGE_RATE],   1.05f);
+            Rate(&pEnemyParam->m_auFrequency[CEnemyParameter::FREQUENCY_FIRE_REPEATABLE],   1.05f);
+
+            pEnemyParam->m_AICharacteristic.m_fThinkingFrequency *= 1.05f;
+            pEnemyParam->m_AICharacteristic.m_fRatioOfActivity   *= 1.05f;
+            pEnemyParam->m_AICharacteristic.m_fRatioOfFrontView  *= 1.05f;
+            pEnemyParam->m_AICharacteristic.m_fRatioOfRearView   *= 1.05f;
         }
         break;
 
@@ -124,19 +127,22 @@ static void CompensationParameter(ENEMYPARAMCONTAINER* pEnemyParam)
 
     int32 ParamNo = 0;
     uint32 ReadPos = 0;
-    ENEMYPARAMCONTAINER TmpContainer;
+    ENEMYPARAMCONTAINER tempContainer;
     while (ReadPos < BufferSize)
     {
-        std::memcpy(&TmpContainer, &ptr[ReadPos], sizeof(TmpContainer));
-        
-        if ((TmpContainer.m_iHeader == int32('IBPE')) &&
-            (TmpContainer.m_eDifficulty == GAMETYPES::DIFFICULTY_NORMAL))
+        std::memcpy(&tempContainer, &ptr[ReadPos], sizeof(tempContainer));
+
+        static char signature[] = { 'E', 'P', 'B', 'I' };
+        static_assert(sizeof(signature) == sizeof(tempContainer.m_iHeader), "sizeof should match");
+
+        if ((tempContainer.m_iHeader == *reinterpret_cast<int32*>(signature)) &&
+            (tempContainer.m_eDifficulty == GAMETYPES::DIFFICULTY_NORMAL))
         {
-            ASSERT(TmpContainer.m_eID >= ENEMYID::ID_START);
-            ASSERT(TmpContainer.m_eID <  ENEMYID::ID_MAX);
+            ASSERT(tempContainer.m_eID >= ENEMYID::ID_START);
+            ASSERT(tempContainer.m_eID <  ENEMYID::ID_MAX);
 
             s_aEnemyParam[ParamNo].m_bExist = true;
-            std::memcpy(&s_aEnemyParam[ParamNo], &TmpContainer, sizeof(TmpContainer));
+            std::memcpy(&s_aEnemyParam[ParamNo].m_container, &tempContainer, sizeof(tempContainer));
 
 			CompensationParameter(&s_aEnemyParam[ParamNo].m_container);
 

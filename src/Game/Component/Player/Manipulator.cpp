@@ -13,11 +13,31 @@
 #include "Game/Component/GameData/GameData.hpp"
 #include "Game/Component/GameMain/GameProperty.hpp"
 #include "Game/System/Misc/Gamepad.hpp"
-#include "System/Common/Controller.hpp"
+
+//#define PLAYER_AI_MANIPULATOR
+
+#ifdef PLAYER_AI_MANIPULATOR
+#include "ManipulatorAI/PlayerGrapplerAI.hpp"
+#endif /* PLAYER_AI_MANIPULATOR */
 
 
 /*static*/ CManipulator* CManipulator::New(CPlayerCharacter* pPlayerChr, int32 nControllerNo)
 {
+#ifdef PLAYER_AI_MANIPULATOR    
+    /* TODO: custom code for tests - remove it later*/
+    if ((nControllerNo >= CController::Max()) &&
+        (CGameData::Attribute().GetGamemode() != GAMETYPES::GAMEMODE_DEMO))
+    {
+        char szName[GAMEOBJECTTYPES::NAME_MAX];
+        szName[0] = '\0';
+	
+        std::strcpy(szName, pPlayerChr->GetName());
+        std::strcat(szName, "_ai");
+	
+        return new CPlayerGrapplerAI(szName, pPlayerChr);
+    };
+#endif /* PLAYER_AI_MANIPULATOR */
+    
     switch (pPlayerChr->GetID())
     {
     case PLAYERID::ID_LEO:
@@ -61,17 +81,16 @@
 CManipulator::CManipulator(const char* pszName, CPlayerCharacter* pPlayerChr, int32 nControllerNo)
 : CGameObject(pszName, GAMEOBJECTTYPE::MANIPULATOR)
 , m_pPlayerChr(pPlayerChr)
-, m_input({ 0 })
+, m_input()
 , m_nControllerNo(nControllerNo)
 {
+	ClearInput();
+
     if (CPadStreamSwitch::m_mode)
     {
-        bool bResult = m_padstream.Open(
-            CPadStreamSwitch::m_mode,
-            CGameData::PlayParam().GetStage(),
-            m_nControllerNo
-        );
+        STAGEID::VALUE stageId = CGameData::PlayParam().GetStage();
 
+        bool bResult = m_padstream.Open(CPadStreamSwitch::m_mode, stageId, m_nControllerNo);
         ASSERT(bResult);
     };
 };
@@ -208,6 +227,9 @@ void CManipulator::BranchForStatus(PLAYERTYPES::STATUS status)
     case PLAYERTYPES::STATUS_PUSH:
         RunPush();
         break;
+
+    default:
+        break;
     };
 };
 
@@ -235,38 +257,39 @@ void CManipulator::RunGrounding(void)
     PLAYERTYPES::STATUS status = PLAYERTYPES::STATUS_IDLE;
 	bool bChangeStatus = true;
 
-    if (m_input.m_uAttack == 1)
+    if (m_input.m_attack == ATTACK_A)
     {
         status = PLAYERTYPES::STATUS_ATTACK_A;
     }
-    else if (m_input.m_uAttack == 2)
+    else if (m_input.m_attack == ATTACK_B)
     {
         status = PLAYERTYPES::STATUS_ATTACK_B;
     }
-    else if (m_input.m_uKnife == 1 && m_pPlayerChr->IsEnableAttackKnife())
+    else if ((m_input.m_knife == KNIFE_ON) &&
+              m_pPlayerChr->IsEnableAttackKnife())
     {
         status = PLAYERTYPES::STATUS_ATTACK_KNIFE;
     }
-    else if (m_input.m_uGuard == 1)
+    else if (m_input.m_guard == GUARD_ON)
     {
         status = PLAYERTYPES::STATUS_GUARD_READY;
     }
-    else if (m_input.m_uDash == 1)
+    else if (m_input.m_dash == DASH_ON)
     {
         status = PLAYERTYPES::STATUS_DASH;
     }
-    else if (m_input.m_uJump == 1)
+    else if (m_input.m_jump == JUMP_ON)
     {
         status = PLAYERTYPES::STATUS_JUMP;
     }
-    else if (m_input.m_uMove == 1)
+    else if (m_input.m_move == MOVE_WALK)
     {
 		if (m_pPlayerChr->GetStatus() == PLAYERTYPES::STATUS_WALK)
 			bChangeStatus = false;
 
 		status = PLAYERTYPES::STATUS_WALK;
     }
-    else if (m_input.m_uMove == 2)
+    else if (m_input.m_move == MOVE_RUN)
     {
 		if (m_pPlayerChr->GetStatus() == PLAYERTYPES::STATUS_RUN)
 			bChangeStatus = false;
@@ -275,28 +298,30 @@ void CManipulator::RunGrounding(void)
     }
 	else
 	{
-		if (m_pPlayerChr->GetStatus() == PLAYERTYPES::STATUS_IDLE)
-			bChangeStatus = false;
-	};
+        if (m_pPlayerChr->GetStatus() == PLAYERTYPES::STATUS_IDLE)
+            bChangeStatus = false;
+
+        status = PLAYERTYPES::STATUS_IDLE;
+    };
 
     if (bChangeStatus)
 		m_pPlayerChr->ChangeStatus(status);
 
-    if (m_input.m_uMove)
+    if (m_input.m_move)
         m_pPlayerChr->SetDirection(m_input.m_fDirection);
 };
 
 
 void CManipulator::RunJump(void)
 {
-    if (!RunAerialCommon() && m_input.m_uMove)
+    if (!RunAerialCommon() && m_input.m_move)
         m_pPlayerChr->ChangeStatus(PLAYERTYPES::STATUS_AERIAL_MOVE);
 };
 
 
 void CManipulator::RunJump2nd(void)
 {
-    if (!RunAerialCommon() && m_input.m_uMove)
+    if (!RunAerialCommon() && m_input.m_move)
         m_pPlayerChr->ChangeStatus(PLAYERTYPES::STATUS_AERIAL_MOVE);
 };
 
@@ -309,7 +334,7 @@ void CManipulator::RunJumpWall(void)
 
 void CManipulator::RunAerial(void)
 {
-    if (!RunAerialCommon() && m_input.m_uMove)
+    if (!RunAerialCommon() && m_input.m_move)
         m_pPlayerChr->ChangeStatus(PLAYERTYPES::STATUS_AERIAL_MOVE);
 };
 
@@ -318,7 +343,7 @@ void CManipulator::RunAerialMove(void)
 {
     if (!RunAerialCommon())
     {
-        if (m_input.m_uMove)
+        if (m_input.m_move)
             m_pPlayerChr->SetDirection(m_input.m_fDirection);
         else
             m_pPlayerChr->ChangeStatus(PLAYERTYPES::STATUS_AERIAL);
@@ -330,19 +355,23 @@ bool CManipulator::RunAerialCommon(void)
 {
     bool bResult = true;
 
-    if (m_input.m_uAttack && m_pPlayerChr->IsEnableAttackJump())
+    if (m_input.m_attack &&
+        m_pPlayerChr->IsEnableAttackJump())
     {
         m_pPlayerChr->ChangeStatus(PLAYERTYPES::STATUS_ATTACK_JUMP);
     }
-    else if ((m_input.m_uKnife == 1) && m_pPlayerChr->IsEnableAttackKnife())
+    else if ((m_input.m_knife == KNIFE_ON) &&
+              m_pPlayerChr->IsEnableAttackKnife())
     {
         m_pPlayerChr->ChangeStatus(PLAYERTYPES::STATUS_ATTACK_KNIFE_JUMP);
     }
-    else if ((m_input.m_uJump == 1) && m_pPlayerChr->IsEnableJumpWall())
+    else if ((m_input.m_jump == JUMP_ON) &&
+              m_pPlayerChr->IsEnableJumpWall())
     {
         m_pPlayerChr->ChangeStatus(PLAYERTYPES::STATUS_JUMP_WALL);
     }
-    else if ((m_input.m_uJump == 1) && m_pPlayerChr->IsEnableJump2nd())
+    else if ((m_input.m_jump == JUMP_ON) &&
+              m_pPlayerChr->IsEnableJump2nd())
     {
         m_pPlayerChr->ChangeStatus(PLAYERTYPES::STATUS_JUMP_2ND);
     }
@@ -363,7 +392,7 @@ void CManipulator::RunGuardReady(void)
 
 void CManipulator::RunGuard(void)
 {
-    if (m_input.m_uGuard)
+    if (m_input.m_guard)
         RunGuardCommon();
     else
         m_pPlayerChr->ChangeStatus(PLAYERTYPES::STATUS_IDLE);
@@ -372,7 +401,7 @@ void CManipulator::RunGuard(void)
 
 void CManipulator::RunGuardCommon(void)
 {
-    if (m_input.m_uLift == 1)
+    if (m_input.m_lift == LIFT_ON)
         m_pPlayerChr->ChangeStatus(PLAYERTYPES::STATUS_LIFT);
 };
 
@@ -427,28 +456,31 @@ void CManipulator::RunAttackAABBC(void)
 
 void CManipulator::RunAttackCommon(void)
 {
-    if (m_input.m_uDash == 1)
+    if (m_input.m_dash == DASH_ON)
     {
         m_pPlayerChr->ChangeStatus(PLAYERTYPES::STATUS_DASH_CANCEL);        
     }
     else
     {
-        switch (m_input.m_uAttack)
+        switch (m_input.m_attack)
         {
-        case 1:
+        case ATTACK_A:
             m_pPlayerChr->RequestAttackA();
             break;
 
-        case 2:
+        case ATTACK_B:
             m_pPlayerChr->RequestAttackB();
             break;
 
-        case 3:
+        case ATTACK_C:
             m_pPlayerChr->RequestAttackC();
+            break;
+
+        default:
             break;
         };
 
-        if (m_input.m_uMove)
+        if (m_input.m_move)
             m_pPlayerChr->RotateDirection(m_input.m_fDirection);
     };
 };
@@ -456,21 +488,21 @@ void CManipulator::RunAttackCommon(void)
 
 void CManipulator::RunAttackBCharge(void)
 {
-    if (!m_input.m_uAttackCharge)
+    if (m_input.m_attackCharge == ATTACK_CHARGE_OFF)
         m_pPlayerChr->ChangeStatus(PLAYERTYPES::STATUS_ATTACK_B);
 };
 
 
 void CManipulator::RunAttackKnife(void)
 {
-    if ((m_input.m_uKnife == 1) && m_pPlayerChr->IsEnableAttackKnife())
+    if ((m_input.m_knife == KNIFE_ON) && m_pPlayerChr->IsEnableAttackKnife())
         m_pPlayerChr->ChangeStatus(PLAYERTYPES::STATUS_ATTACK_KNIFE);
 };
 
 
 void CManipulator::RunAttackKnifeJump(void)
 {
-    if ((m_input.m_uKnife == 1) && m_pPlayerChr->IsEnableAttackKnifeJump())
+    if ((m_input.m_knife == KNIFE_ON) && m_pPlayerChr->IsEnableAttackKnifeJump())
         m_pPlayerChr->ChangeStatus(PLAYERTYPES::STATUS_ATTACK_KNIFE_JUMP);
     else
         m_pPlayerChr->SetDirection(m_input.m_fDirection);
@@ -493,20 +525,21 @@ void CManipulator::RunLiftCommon(void)
 {
     m_pPlayerChr->LiftInfo().m_bMissThrow = true;
     
-    if (m_input.m_uAttack == 2)
+    if (m_input.m_attack == ATTACK_B)
     {
         m_pPlayerChr->LiftInfo().m_bMissThrow = false;
         m_pPlayerChr->ChangeStatus(PLAYERTYPES::STATUS_THROW);
     }
     else
     {
-		if (m_input.m_uMove)
+		if (m_input.m_move)
 		{
-			if ((m_input.m_uMove > 0 && m_input.m_uMove <= 2) && (m_pPlayerChr->GetStatus() != PLAYERTYPES::STATUS_LIFT_WALK))
-			{
-				m_pPlayerChr->LiftInfo().m_bMissThrow = false;
-				m_pPlayerChr->ChangeStatus(PLAYERTYPES::STATUS_LIFT_WALK);
-			}
+            if (((m_input.m_move > MOVE_IDLE) && (m_input.m_move <= MOVE_RUN)) &&
+                (m_pPlayerChr->GetStatus() != PLAYERTYPES::STATUS_LIFT_WALK))
+            {
+                m_pPlayerChr->LiftInfo().m_bMissThrow = false;
+                m_pPlayerChr->ChangeStatus(PLAYERTYPES::STATUS_LIFT_WALK);
+            };
 		}
         else if (m_pPlayerChr->GetStatus() != PLAYERTYPES::STATUS_LIFT)
         {
@@ -515,29 +548,29 @@ void CManipulator::RunLiftCommon(void)
         };
     };
 
-    if (m_input.m_uMove)
+    if (m_input.m_move)
         m_pPlayerChr->SetDirection(m_input.m_fDirection);
 };
 
 
 void CManipulator::RunThrownCombination(void)
 {
-    if (m_input.m_uMove)
+    if (m_input.m_move)
         m_pPlayerChr->SetDirection(m_input.m_fDirection);
 };
 
 
 void CManipulator::RunFlyawayBound(void)
 {
-    if (m_input.m_uPassive == 1)
-        m_pPlayerChr->SetPlayerFlag(PLAYERTYPES::FLAG_REQUEST_PASSIVE, true);
+    if (m_input.m_passive == PASSIVE_ON)
+        m_pPlayerChr->SetPlayerFlag(PLAYERTYPES::FLAG_REQUEST_PASSIVE);
 };
 
 
 void CManipulator::RunStatusDamage(void)
 {
-    if (m_input.m_uRecover == 1)
-        m_pPlayerChr->SetPlayerFlag(PLAYERTYPES::FLAG_REQUEST_RECOVER, true);
+    if (m_input.m_recover == RECOVER_ON)
+        m_pPlayerChr->SetPlayerFlag(PLAYERTYPES::FLAG_REQUEST_RECOVER);
 };
 
 
@@ -549,115 +582,122 @@ void CManipulator::RunPush(void)
 
 void CManipulator::AnalyzeInputDevice(void)
 {
-    m_padstream.GetPad(m_nControllerNo);
+    ClearInput();
+
+    m_padstream.GetPadData(m_nControllerNo);
 
     RwV3d vInputVector = Math::VECTOR3_ZERO;
     float fInputVectorLen = 0.0f;
-    
+
     AnalyzeInputVector(vInputVector, fInputVectorLen);
 
     if (fInputVectorLen <= 0.4f)
     {
-        m_input.m_uMove = 0;
+        m_input.m_move = MOVE_IDLE;
         m_input.m_fDirection = 0.0f;
     }
     else
     {
-        if (fInputVectorLen >= 0.9f)
-            m_input.m_uMove = 2;
-        else
-            m_input.m_uMove = 1;
+        m_input.m_move = (fInputVectorLen >= 0.9f ? MOVE_RUN : MOVE_WALK);
 
         RwMatrix modeling;
-        RwV3d right = Math::VECTOR3_ZERO;
-        RwV3d at = Math::VECTOR3_ZERO;
-        RwV3d target = Math::VECTOR3_ZERO;
-
         CGameProperty::GetCameraFrameMatrix(&modeling);
 
-        Math::Vec3_Normalize(&right, &modeling.right);
-        Math::Vec3_Multiply(&right, &right, vInputVector.x);
+        RwV3d vecRight = Math::VECTOR3_ZERO;
+        Math::Vec3_Normalize(&vecRight, &modeling.right);
+        Math::Vec3_Scale(&vecRight, &vecRight, vInputVector.x);
 
-        Math::Vec3_Normalize(&at, &modeling.at);
-        Math::Vec3_Multiply(&at, &at, vInputVector.z);
+        RwV3d vecAt = Math::VECTOR3_ZERO;
+        Math::Vec3_Normalize(&vecAt, &modeling.at);
+        Math::Vec3_Scale(&vecAt, &vecAt, vInputVector.z);
 
-        Math::Vec3_Add(&target, &at, &right);
-        target.y = 0.0f;
-        Math::Vec3_Normalize(&target, &target);
+        RwV3d vecTarget = Math::VECTOR3_ZERO;
+        Math::Vec3_Add(&vecTarget, &vecAt, &vecRight);
+        vecTarget.y = 0.0f;
+        
+        Math::Vec3_Normalize(&vecTarget, &vecTarget);
 
-        m_input.m_fDirection = Math::ATan2(-target.x, -target.z);
+        m_input.m_fDirection = Math::ATan2(-vecTarget.x, -vecTarget.z);
     };
 
     uint32 uDigital = m_padstream.GetDigital(m_nControllerNo);
     uint32 uDigitalTrigger = m_padstream.GetDigitalTrigger(m_nControllerNo);
 
-    m_input.m_uDash = IGamepad::CheckFunction(uDigitalTrigger, IGamepad::FUNCTION_DASH);
-    m_input.m_uJump = IGamepad::CheckFunction(uDigitalTrigger, IGamepad::FUNCTION_JUMP);
+    if (IGamepad::CheckFunction(uDigitalTrigger, IGamepad::FUNCTION_DASH))
+        m_input.m_dash = DASH_ON;
+
+    if (IGamepad::CheckFunction(uDigitalTrigger, IGamepad::FUNCTION_JUMP))
+        m_input.m_jump = JUMP_ON;
 
     if (IGamepad::CheckFunction(uDigitalTrigger, IGamepad::FUNCTION_ATTACK_A) &&
         IGamepad::CheckFunction(uDigitalTrigger, IGamepad::FUNCTION_ATTACK_B))
     {
-        m_input.m_uAttack = 3;
+        m_input.m_attack = ATTACK_C;
     }
     else if (IGamepad::CheckFunction(uDigitalTrigger, IGamepad::FUNCTION_ATTACK_B))
     {
-        m_input.m_uAttack = 2;
+        m_input.m_attack = ATTACK_B;
     }
     else if (IGamepad::CheckFunction(uDigitalTrigger, IGamepad::FUNCTION_ATTACK_A))
     {
-        m_input.m_uAttack = 1;
+        m_input.m_attack = ATTACK_A;
     }
-	else
-	{
-		m_input.m_uAttack = 0;
-	};
+    else
+    {
+        m_input.m_attack = ATTACK_OFF;
+    };
 
-    m_input.m_uAttackCharge = IGamepad::CheckFunction(uDigital, IGamepad::FUNCTION_ATTACK_B);
-    m_input.m_uKnife = IGamepad::CheckFunction(uDigitalTrigger, IGamepad::FUNCTION_SHOT);
-    m_input.m_uGuard = IGamepad::CheckFunction(uDigital, IGamepad::FUNCTION_GUARD);
+    if (IGamepad::CheckFunction(uDigital, IGamepad::FUNCTION_ATTACK_B))
+        m_input.m_attackCharge = ATTACK_CHARGE_ON;
     
-	m_input.m_uLift =
-		IGamepad::CheckFunction(uDigitalTrigger, IGamepad::FUNCTION_ATTACK_B) &&
-		IGamepad::CheckFunction(uDigital, IGamepad::FUNCTION_GUARD);
+    if (IGamepad::CheckFunction(uDigitalTrigger, IGamepad::FUNCTION_SHOT))
+        m_input.m_knife = KNIFE_ON;
 
-    m_input.m_uRecover = FLAG_TEST_ANY(
-        uDigitalTrigger,
-        CController::DIGITAL_RUP    |
-        CController::DIGITAL_RDOWN  |
-        CController::DIGITAL_RLEFT  |
-        CController::DIGITAL_RRIGHT
-    );
+    if (IGamepad::CheckFunction(uDigital, IGamepad::FUNCTION_GUARD))
+        m_input.m_guard = GUARD_ON;
 
-    m_input.m_uPassive =
-        IGamepad::CheckFunction(uDigitalTrigger, IGamepad::FUNCTION_ATTACK_A) ||
+    if (IGamepad::CheckFunction(uDigitalTrigger, IGamepad::FUNCTION_ATTACK_B) &&
+        IGamepad::CheckFunction(uDigital, IGamepad::FUNCTION_GUARD))
+        m_input.m_lift = LIFT_ON;
+
+    uint32 uRecorverMask = CController::DIGITAL_RUP
+                         | CController::DIGITAL_RDOWN
+                         | CController::DIGITAL_RLEFT
+                         | CController::DIGITAL_RRIGHT;
+    if (uDigitalTrigger & uRecorverMask)
+        m_input.m_recover = RECOVER_ON;
+
+    if (IGamepad::CheckFunction(uDigitalTrigger, IGamepad::FUNCTION_ATTACK_A) ||
         IGamepad::CheckFunction(uDigitalTrigger, IGamepad::FUNCTION_ATTACK_B) ||
-        IGamepad::CheckFunction(uDigitalTrigger, IGamepad::FUNCTION_JUMP);
+        IGamepad::CheckFunction(uDigitalTrigger, IGamepad::FUNCTION_JUMP))
+        m_input.m_passive = PASSIVE_ON;
 
-	m_padstream.GetInput(&m_input, sizeof(m_input));
+    m_padstream.GetInput(&m_input, sizeof(m_input));
 };
 
 
 void CManipulator::AnalyzeInputVector(RwV3d& rvInputVector, float& rfInputVectorLength)
 {
-    float x = float(m_padstream.GetAnalogX(m_nControllerNo));
-    float y = float(m_padstream.GetAnalogY(m_nControllerNo));
+    float x =  static_cast<float>(m_padstream.GetAnalogX(m_nControllerNo));
+    float y = -static_cast<float>(m_padstream.GetAnalogY(m_nControllerNo));
 
-    x = (x >= 0.0f ? (x / float(TYPEDEF::SINT16_MAX)) : -(x / float(TYPEDEF::SINT16_MIN)));
-    y = (y >= 0.0f ? -(y / float(TYPEDEF::SINT16_MAX)) : (y / float(TYPEDEF::SINT16_MIN)));
+    x = (x >= 0.0f ?  (x / static_cast<float>(TYPEDEF::SINT16_MAX)) : -(x / static_cast<float>(TYPEDEF::SINT16_MIN)));
+    y = (y >= 0.0f ? -(y / static_cast<float>(TYPEDEF::SINT16_MAX)) :  (y / static_cast<float>(TYPEDEF::SINT16_MIN)));
 
     rvInputVector.x = x;
     rvInputVector.y = 0.0f;
     rvInputVector.z = y;
+    
     rfInputVectorLength = Math::Vec3_Length(&rvInputVector);
 
 #ifdef TARGET_PC
-    uint32 uDigitalMovementMask =   (CController::DIGITAL_LUP |
-                                    CController::DIGITAL_LDOWN |
-                                    CController::DIGITAL_LLEFT |
-                                    CController::DIGITAL_LRIGHT);
+    uint32 uDigitalMovementMask = CController::DIGITAL_LUP
+                                | CController::DIGITAL_LDOWN
+                                | CController::DIGITAL_LLEFT
+                                | CController::DIGITAL_LRIGHT;
 
     uint32 uDigital = m_padstream.GetDigital(m_nControllerNo);
-    if (!FLAG_TEST_ANY(uDigital, uDigitalMovementMask))
+    if (!(uDigital & uDigitalMovementMask))
         return;
     
     float xDigital, yDigital;
@@ -665,11 +705,11 @@ void CManipulator::AnalyzeInputVector(RwV3d& rvInputVector, float& rfInputVector
     //
     //  Check X axis
     //
-    if (FLAG_TEST(uDigital, CController::DIGITAL_LLEFT))
+    if (uDigital & CController::DIGITAL_LLEFT)
     {
         xDigital = -1.0f;
     }
-    else if (FLAG_TEST(uDigital, CController::DIGITAL_LRIGHT))
+    else if (uDigital & CController::DIGITAL_LRIGHT)
     {
         xDigital = 1.0f;
     }
@@ -681,11 +721,11 @@ void CManipulator::AnalyzeInputVector(RwV3d& rvInputVector, float& rfInputVector
     //
     //  Check Y axis
     //
-    if (FLAG_TEST(uDigital, CController::DIGITAL_LUP))
+    if (uDigital & CController::DIGITAL_LUP)
     {
         yDigital = -1.0f;
     }
-    else if (FLAG_TEST(uDigital, CController::DIGITAL_LDOWN))
+    else if (uDigital & CController::DIGITAL_LDOWN)
     {
         yDigital = 1.0f;
     }
@@ -704,14 +744,42 @@ void CManipulator::AnalyzeInputVector(RwV3d& rvInputVector, float& rfInputVector
 
 void CManipulator::SetSpecificAbilityFlag(void)
 {
-    m_pPlayerChr->SetPlayerFlag(PLAYERTYPES::FLAG_PUSH,     bool(m_input.m_uMove != 0));
-    m_pPlayerChr->SetPlayerFlag(PLAYERTYPES::FLAG_CONSOLE,  bool(m_input.m_uAttack != 0));
+    /* push flag ctrl */
+    if (m_input.m_move == MOVE_RUN)
+        m_pPlayerChr->SetPlayerFlag(PLAYERTYPES::FLAG_PUSH);
+    else
+        m_pPlayerChr->ClearPlayerFlag(PLAYERTYPES::FLAG_PUSH);
+
+    /* console flag ctrl */
+    if (m_input.m_attack)
+        m_pPlayerChr->SetPlayerFlag(PLAYERTYPES::FLAG_CONSOLE);
+    else
+        m_pPlayerChr->ClearPlayerFlag(PLAYERTYPES::FLAG_CONSOLE);
 };
 
 
 void CManipulator::SetConfusionInput(void)
 {
-    if (m_pPlayerChr->IsAttributeFlagSet(PLAYERTYPES::ATTRIBUTE_CONFUSION))
-        m_pPlayerChr->SetDirection(m_pPlayerChr->GetDirection() + Math::PI);
+	if (m_pPlayerChr->TestAttribute(PLAYERTYPES::ATTRIBUTE_CONFUSION))
+	{
+		m_input.m_fDirection += MATH_PI;
+		if (m_input.m_fDirection > MATH_PI)
+			m_input.m_fDirection -= MATH_PI2;
+	};
 };
 
+
+void CManipulator::ClearInput(void)
+{
+    m_input.m_move          = MOVE_IDLE;
+    m_input.m_dash          = DASH_OFF;
+    m_input.m_jump          = JUMP_OFF;
+    m_input.m_attack        = ATTACK_OFF;
+    m_input.m_attackCharge  = ATTACK_CHARGE_OFF;
+    m_input.m_knife         = KNIFE_OFF;
+    m_input.m_guard         = GUARD_OFF;
+    m_input.m_lift          = LIFT_OFF;
+    m_input.m_recover       = RECOVER_OFF;
+    m_input.m_passive       = PASSIVE_OFF;
+    m_input.m_fDirection    = 0.0f;
+};

@@ -15,19 +15,11 @@
 
 namespace Slashuur
 {
-    bool CAttackJump::IsEnableChangeStatus(PLAYERTYPES::STATUS status)
-    {
-        PLAYERTYPES::STATUS aStatusArray[] =
-        {
-            PLAYERTYPES::STATUS_JUMP,
-            PLAYERTYPES::STATUS_JUMP_2ND,
-            PLAYERTYPES::STATUS_JUMP_WALL,
-            PLAYERTYPES::STATUS_AERIAL,
-            PLAYERTYPES::STATUS_AERIAL_MOVE,
-        };
-
-        return IsWithinStatusFromArray(status, aStatusArray, COUNT_OF(aStatusArray));
-    };
+    DEFINE_ENABLED_STATUS_FOR(CAttackJump, { PLAYERTYPES::STATUS_JUMP,
+                                             PLAYERTYPES::STATUS_JUMP_2ND,
+                                             PLAYERTYPES::STATUS_JUMP_WALL,
+                                             PLAYERTYPES::STATUS_AERIAL,
+                                             PLAYERTYPES::STATUS_AERIAL_MOVE });
 
 
     void CAttackJump::OnAttach(void)
@@ -63,9 +55,9 @@ namespace Slashuur
     void CAttackAABBC::OnDischargeWave(void)
     {
         RwV3d vPosition = Math::VECTOR3_ZERO;
-        RwV3d vPositionLocal = Math::VECTOR3_ZERO;
-
         Character().GetBodyPosition(&vPosition);
+
+        RwV3d vPositionLocal = Math::VECTOR3_ZERO;
         Character().RotateVectorByDirection(&vPositionLocal, &Slashuur::CHARGE_ATTACK_LOCAL_POSITION);
 
         Math::Vec3_Add(&vPosition, &vPosition, &vPositionLocal);
@@ -82,20 +74,20 @@ namespace Slashuur
     void CAttackB::OnDischargeWave(MAGIC_GENERIC::STEP step)
     {
         RwV3d vPosition = Math::VECTOR3_ZERO;
-        RwV3d vPositionLocal = Math::VECTOR3_ZERO;
-
         Character().GetBodyPosition(&vPosition);
+
+        RwV3d vPositionLocal = Math::VECTOR3_ZERO;
         Character().RotateVectorByDirection(&vPositionLocal, &Slashuur::CHARGE_ATTACK_LOCAL_POSITION);
 
         Math::Vec3_Add(&vPosition, &vPosition, &vPositionLocal);
 
         MAGIC_GENERIC::ChargeAttackSlashuur(&vPosition, Character().GetDirection(), m_pPlayerChr, step);
     };
-};
+}; /* namespace Slashuur */
 
 
 CSlashuur::CSlashuur(GAMETYPES::COSTUME costume)
-: CPlayerCharacter("Slashuur", PLAYERID::ID_SLA, costume)
+: CPlayerCharacter("slashuur", PLAYERID::ID_SLA, costume)
 {
 	//
 	//	Model parts:
@@ -119,8 +111,7 @@ CSlashuur::CSlashuur(GAMETYPES::COSTUME costume)
     parameter.m_feature.m_fAerialAcceleration   = 12.0f;
     parameter.m_feature.m_nKnifeAttachBoneID    = CHARACTERTYPES::BONEID_RIGHT_WRIST;
     
-    parameter.m_pStateMachine = new CPlayerStateMachine(this, PLAYERTYPES::NORMALMAX);
-    ASSERT(parameter.m_pStateMachine);
+    parameter.m_pStateMachine = new CPlayerStateMachine(this, PLAYERTYPES::STATUS::NORMALMAX);
 
     CStatus::RegistDefaultForStateMachine(*parameter.m_pStateMachine);
 
@@ -130,15 +121,13 @@ CSlashuur::CSlashuur(GAMETYPES::COSTUME costume)
 
     Initialize(&parameter);
 
-    m_pModuleMan->Include(CCircleShadowModule::New(this, 1.5f, 1.5f, true));
+    m_pModuleMan->Include(CCircleShadowModule::New(this, 1.5f, 1.5f, false));
 
-    m_pModuleMan->Include(new CBandanaModule(
-        this,
-        m_pModel,
-        CHARACTERTYPES::BONEID_HEAD,
-        &Slashuur::BANDANA_OFFSET,
-        CBandanaModule::BANDANACOLOR_SLASHUURGREY
-    ));
+    m_pModuleMan->Include(new CBandanaModule(this,
+                                             m_pModel,
+                                             CHARACTERTYPES::BONEID_HEAD,
+                                             &Slashuur::BANDANA_OFFSET,
+                                             CBandanaModule::BANDANACOLOR_SLASHUURGREY));
 };
 
 

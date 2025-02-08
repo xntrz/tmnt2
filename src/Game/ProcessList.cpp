@@ -35,14 +35,18 @@
 #include "Game/System/Misc/SoftwareReset.hpp"
 
 #ifdef _DEBUG
-#include "Game/Sequence/Test/DebugMenuSequence.hpp"
+#include "Game/Sequence/Test/DebugMainSequence.hpp"
 #include "Game/Sequence/Test/TestMovieSequence.hpp"
 #include "Game/Sequence/Test/TestSoundSequence.hpp"
 #include "Game/Sequence/Test/TestPadSequence.hpp"
 #include "Game/Sequence/Test/PrintTextSequence.hpp"
-#include "Game/Sequence/Test/DbgFrameCtrlProcess.hpp"
-#include "Game/Sequence/Test/DbgParamCtrlProcess.hpp"
+#include "Game/Sequence/Test/DebugMenuProcess.hpp"
 #include "Game/Sequence/Test/DbgUnlockProcess.hpp"
+#include "Game/Sequence/Test/MakeFileSequence.hpp"
+#include "Game/Sequence/Test/Enemy/EnemyTestSelectSequence.hpp"
+#include "Game/Sequence/Test/Enemy/EnemyTestStageSequence.hpp"
+#include "Game/Sequence/Test/Enemy/EnemyTestMakeFileSequence.hpp"
+#include "Game/Sequence/Test/Enemy/EnemyTestPlayerAI.hpp"
 #endif
 
 
@@ -50,14 +54,18 @@ extern const PROCESSTYPES::PROCESS g_aProcessList[] =
 {
     { PROCLABEL_SEQ_GAMEMAIN,           PROCESSTYPES::PRIORITY_NORMAL,      CGameMainSequence::Instance         },
 #ifdef _DEBUG
-    { PROCLABEL_SEQ_DBGMENU,            PROCESSTYPES::PRIORITY_NORMAL,      CDebugMenuSequence::Instance        },
+    { PROCLABEL_SEQ_DBGMAIN,            PROCESSTYPES::PRIORITY_NORMAL,      CDebugMainSequence::Instance        },
     { PROCLABEL_SEQ_TESTMV,             PROCESSTYPES::PRIORITY_NORMAL,      CTestMovieSequence::Instance        },
     { PROCLABEL_SEQ_TESTSD,             PROCESSTYPES::PRIORITY_NORMAL,      TestSoundSequenceInstance        	},
     { PROCLABEL_SEQ_TESTPAD,            PROCESSTYPES::PRIORITY_NORMAL,      CTestPadSequence::Instance          },
     { PROCLABEL_SEQ_MAKETEXT,           PROCESSTYPES::PRIORITY_NORMAL,      CPrintTextSequence::Instance      	},
-    { PROCLABEL_DBGFRAMECTRL,           PROCESSTYPES::PRIORITY_LOW,         CDbgFrameCtrlProcess::Instance      },
-    { PROCLABEL_DBGPARAMCTRL,           PROCESSTYPES::PRIORITY_LOW,         CDbgParamCtrlProcess::Instance      },
-    { PROCLABEL_DBGUNLOCK,              PROCESSTYPES::PRIORITY_LOW,         CDbgUnlockProcess::Instance         },
+    { PROCLABEL_SEQ_MAKEFILE,           PROCESSTYPES::PRIORITY_NORMAL,      MakeFileSequenceInstance            },
+    { PROCLABEL_SEQ_ENEMYTESTSEL,       PROCESSTYPES::PRIORITY_NORMAL,      EnemyTestSelectSequenceInstance     },
+    { PROCLABEL_SEQ_ENEMYTESTSTAGE,     PROCESSTYPES::PRIORITY_NORMAL,      EnemyTestStageSequenceInstance      },
+    { PROCLABEL_SEQ_ENEMYMAKEFILE,      PROCESSTYPES::PRIORITY_NORMAL,      EnemyTestMakeFileSequenceInstance   },
+    { PROCLABEL_DBGMENU,                PROCESSTYPES::PRIORITY_NORMAL + 1,  CDebugMenuProcess::Instance         },
+    { PROCLABEL_DBGUNLOCK,              PROCESSTYPES::PRIORITY_HIGH,        CDbgUnlockProcess::Instance         },
+    { PROCLABEL_ENEMYTESTPAI,           PROCESSTYPES::PRIORITY_HIGH,        EnemyTestPlayerAIInstance           },
 #endif
     { PROCLABEL_SEQ_MOVIE,              PROCESSTYPES::PRIORITY_NORMAL,      CMovieSequence::Instance            },
     { PROCLABEL_SEQ_LOGODISP,           PROCESSTYPES::PRIORITY_NORMAL,      CLogoDisplaySequence::Instance		},

@@ -19,29 +19,29 @@ CHitCatchData::~CHitCatchData(void)
 
 void CHitCatchData::Cleanup(void)
 {
-    m_uObjectHandle = 0;
-    m_ObjectType = GAMEOBJECTTYPE::CHARACTER;
-    m_nCatchNo = 0;
-    m_shapeType = SHAPE_SPHERE;
-    m_shape.m_sphere = { { Math::VECTOR3_ZERO }, 0.0f };
-    m_result = RESULT_INVALID;
-    m_bCounter = false;
-    m_bIsHitPosCalculated =false;
-    m_bAlive = true;
-    m_vHitPos = Math::VECTOR3_ZERO;
-    m_pHitAttackData = nullptr;
+    m_uObjectHandle         = 0;
+    m_ObjectType            = GAMEOBJECTTYPE::CHARACTER;
+    m_nCatchNo              = 0;
+    m_shapeType             = SHAPE_SPHERE;
+    m_shape.m_sphere        = { { Math::VECTOR3_ZERO }, 0.0f };
+    m_result                = RESULT_INVALID;
+    m_bCounter              = false;
+    m_bIsHitPosCalculated   = false;
+    m_bAlive                = true;
+    m_vHitPos               = Math::VECTOR3_ZERO;
+    m_pHitAttackData        = nullptr;
 };
 
 
 void CHitCatchData::CopyData(CHitCatchData* pHitCatchData) const
 {
-    pHitCatchData->m_uObjectHandle = m_uObjectHandle;
-    pHitCatchData->m_ObjectType = m_ObjectType;
-    pHitCatchData->m_nCatchNo = m_nCatchNo;
-    pHitCatchData->m_shapeType = m_shapeType;
+    pHitCatchData->m_uObjectHandle  = m_uObjectHandle;
+    pHitCatchData->m_ObjectType     = m_ObjectType;
+    pHitCatchData->m_nCatchNo       = m_nCatchNo;
+    pHitCatchData->m_shapeType      = m_shapeType;
     std::memcpy(&pHitCatchData->m_shape, &m_shape, sizeof(m_shape));    
-    pHitCatchData->m_result = m_result;
-    pHitCatchData->m_bCounter = m_bCounter;
+    pHitCatchData->m_result         = m_result;
+    pHitCatchData->m_bCounter       = m_bCounter;
     pHitCatchData->m_pHitAttackData = m_pHitAttackData;
 };
 

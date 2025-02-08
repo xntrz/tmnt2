@@ -44,14 +44,14 @@ void CMagicParameter::SetFeature(MAGICTYPES::FEATURE feature)
 
 void CMagicParameter::AddFeature(MAGICTYPES::FEATURE feature)
 {
-    uint32 uFlagField = m_feature;
-    FLAG_SET(uFlagField, feature);
-    m_feature = MAGICTYPES::FEATURE(uFlagField);
+    m_feature |= feature;
 };
 
 
 void CMagicParameter::SetCollisionBody(const RwV3d* pvPosition, float fRadius)
 {
+    //ASSERT(m_feature & MAGICTYPES::FEATURE_BODY, "setting data of unused feature");
+
     if (pvPosition)
         m_collisionBody.m_vPosition = *pvPosition;
 
@@ -59,17 +59,23 @@ void CMagicParameter::SetCollisionBody(const RwV3d* pvPosition, float fRadius)
 };
 
 
-void CMagicParameter::SetCollisionAttack(
-    const RwV3d* pvPosition,
-    float fRadius,
-    int32 nPower,
-    int32 nAntiguard,
-    int32 nStatus,
-    float fTime,
-    float fFlyX,
-    float fFlyY
-)
+void CMagicParameter::SetCollisionBody(float fRadius)
 {
+    SetCollisionBody(nullptr, fRadius);
+};
+
+
+void CMagicParameter::SetCollisionAttack(const RwV3d* pvPosition,
+                                         float fRadius,
+                                         int32 nPower,
+                                         int32 nAntiguard,
+                                         int32 nStatus,
+                                         float fTime /*= 0.0f*/,
+                                         float fFlyX /*= 0.0f*/,
+                                         float fFlyY /*= 0.0f*/)
+{
+    //ASSERT(m_feature & MAGICTYPES::FEATURE_ATTACK, "setting data of unused feature");
+
     if (pvPosition)
         m_collisionAttack.m_vPosition = *pvPosition;
 
@@ -83,36 +89,65 @@ void CMagicParameter::SetCollisionAttack(
 };
 
 
+void CMagicParameter::SetCollisionAttack(float fRadius,
+                                         int32 nPower,
+                                         int32 nAntiguard,
+                                         int32 nStatus,
+                                         float fTime /*= 0.0f*/,
+                                         float fFlyX /*= 0.0f*/,
+                                         float fFlyY /*= 0.0f*/)
+{
+    SetCollisionAttack(nullptr, fRadius, nPower, nAntiguard, nStatus, fTime, fFlyX, fFlyY);
+};
+
+
 void CMagicParameter::SetConfusionFlag(bool bSet)
 {
     m_collisionAttack.m_bConfusion = bSet;
 };
 
 
-void CMagicParameter::SetMovement(const RwV3d* pvVelocity, const RwV3d* pvAcceleration)
+void CMagicParameter::SetMovement(const RwV3d* pvVelocity,
+                                  const RwV3d* pvAcceleration /*= nullptr*/)
 {
+    //ASSERT(m_feature & (MAGICTYPES::FEATURE_STRAIGHT   |
+    //                    MAGICTYPES::FEATURE_ACCELERATE |
+    //                    MAGICTYPES::FEATURE_HOMING), "setting data of unused feature");
+
     if (pvVelocity)
+    {
+        //ASSERT(m_feature & MAGICTYPES::FEATURE_STRAIGHT, "setting data of unused feature");
         m_movement.m_vVelocity = *pvVelocity;
+    };
 
     if (pvAcceleration)
+    {
+        //ASSERT(m_feature & MAGICTYPES::FEATURE_ACCELERATE, "setting data of unused feature");
         m_movement.m_vAcceleration = *pvAcceleration;
+    };
 };
 
 
 void CMagicParameter::SetLocusInfo(MAGICTYPES::LOCUSINFO& rLocusInfo)
 {
+    //ASSERT(m_feature & (MAGICTYPES::FEATURE_LOCUS_VER | MAGICTYPES::FEATURE_LOCUS_HOR), "setting data of unused feature");
+
     m_locusinfo = rLocusInfo;
 };
 
 
 void CMagicParameter::SetReflectNum(int32 nReflectNum)
 {
+    //ASSERT(m_feature & MAGICTYPES::FEATURE_COLLISION_REFLECTION, "setting data of unused feature");
+
     m_nReflectNumMax = nReflectNum;
 };
 
 
 void CMagicParameter::SetLive(float fLivetime)
 {
+    //ASSERT(m_feature & MAGICTYPES::FEATURE_LIVETIME, "setting data of unused feature");
+
     m_fLivetime = fLivetime;
     m_fHitTimingStart = 0.0f;
     m_fHitTimingEnd = m_fLivetime;
@@ -121,6 +156,8 @@ void CMagicParameter::SetLive(float fLivetime)
 
 void CMagicParameter::SetChangeSize(float fChangeSize)
 {
+    //ASSERT(m_feature & MAGICTYPES::FEATURE_COLLISION_CHANGE_SIZE, "setting data of unused feature");
+    
     m_fChangeSize = fChangeSize;
 };
 

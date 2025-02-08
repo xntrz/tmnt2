@@ -6,15 +6,15 @@
 
 bool CAdxFileID::Open(int32 fid)
 {
-	return CFile::Open(CAdxFileManager::FILETYPE_ID, (void*)fid);
+	return CFile::Open(CAdxFileManager::FILETYPE_ID, reinterpret_cast<void*>(fid));
 };
 
 
 bool CAdxFileISO::Open(const char* fname)
 {
 	int32 fid = CFilename::ID(fname);
-	if (fid != FILEID::ID_INVALID)
-		return CFile::Open(CAdxFileManager::FILETYPE_ID, (void*)fid);
+    if (fid != FILEID::ID_INVALID)
+        return CFile::Open(CAdxFileManager::FILETYPE_ID, reinterpret_cast<void*>(fid));
 	
 	return false;
 };

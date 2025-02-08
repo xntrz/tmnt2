@@ -26,7 +26,7 @@ CHomeStageSequence::CHomeStageSequence(void)
 
 CHomeStageSequence::~CHomeStageSequence(void)
 {
-    ASSERT(!m_pHomeCamera);
+    ;
 };
 
 
@@ -36,7 +36,6 @@ bool CHomeStageSequence::OnAttach(const void* pParam)
     CStageBaseSequence::OnAttach(pParam);
 
     m_pHomeCamera = new CHomeCamera;
-    ASSERT(m_pHomeCamera);
     Stage().SetCameraUpdater(m_pHomeCamera);
 
     CHome2D::Initialize(m_pHomeCamera);
@@ -52,10 +51,10 @@ bool CHomeStageSequence::OnAttach(const void* pParam)
 void CHomeStageSequence::OnDetach(void)
 {
     m_eDoorKind = m_pHomeCamera->GetDoorKind(HOMETYPES::DOORPOSITION_FRONT);
-    Stage().SetCameraUpdater(nullptr);
 
     CHome2D::Terminate();
 
+    Stage().SetCameraUpdater(nullptr);
     if (m_pHomeCamera)
     {
         delete m_pHomeCamera;
@@ -75,6 +74,7 @@ void CHomeStageSequence::OnMove(bool bRet, const void* pReturnValue)
 void CHomeStageSequence::OnDraw(void) const
 {
     CStageBaseSequence::OnDraw();
+
     if (GetState() == STATE_PLAY)
         CHome2D::Draw();
 };
@@ -85,22 +85,23 @@ void CHomeStageSequence::OnStateDetached(STATE state)
     switch (state)
     {
     case STATE_NONE:
-        {
-            ChangeState(STATE_LOAD);
-        }
+        ChangeState(STATE_LOAD);
         break;
 
     case STATE_LOAD:
         {
-            CGameSound::PlayBGM(CStageInfo::GetBgmNo(STAGEID::ID_ST03S));
+            int32 bgmCode = CStageInfo::GetBgmNo(STAGEID::ID_ST03S);
+
+            CGameSound::PlayBGM(bgmCode);
             ChangeState(STATE_PLAY);
         }
         break;
 
     case STATE_PLAY:
-        {
-            ChangeState(STATE_END);
-        }
+        ChangeState(STATE_END);
+        break;
+
+    default:
         break;
     };
 };

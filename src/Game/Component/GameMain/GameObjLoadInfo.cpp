@@ -23,8 +23,8 @@ int32 CGameObjLoadInfo::GetFileID(void) const
     const char* pszFilename = GetFileName();
     if (pszFilename)
         return CFilename::ID(pszFilename);
-    else
-        return FILEID::ID_INVALID;
+
+    return FILEID::ID_INVALID;
 };
 
 
@@ -44,8 +44,9 @@ int32 CGameObjLoadInfo::GetDependObjInfoNum(void) const
 
 CGameObjLoadInfo& CGameObjLoadInfo::GetDependObjInfo(int32 nIndex)
 {
-    ASSERT(nIndex >= 0 && nIndex < m_nDependObjLoadNum);
-    
+    ASSERT(nIndex >= 0);
+    ASSERT(nIndex < m_nDependObjLoadNum);
+
     return *m_apDependObjInfo[nIndex];
 };
 

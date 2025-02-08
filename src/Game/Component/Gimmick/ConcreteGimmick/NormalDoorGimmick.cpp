@@ -64,7 +64,7 @@ CNormalDoorGimmick::CNormalDoorGimmick(const char* pszName, void* pParam)
 
     for (int32 i = 0; i < COUNT_OF(m_apModel); ++i)
     {
-        RwV3d vRotation = Math::VECTOR3_ZERO;
+		RwV3d vRotation = Math::VECTOR3_ZERO;
         RwV3d vPosition = pInitParam->m_vPosition;
         
         RwMatrix matrix;

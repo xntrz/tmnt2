@@ -192,7 +192,7 @@ void CMadCarGimmick::PostMove(void)
         CHitAttackData Attack;
         Attack.SetObject(GetHandle());
         Attack.SetPower(s_aMadCarSubinfo[m_subid].m_nAttackPower);
-        Attack.SetTarget(CHitAttackData::TARGET(CHitAttackData::TARGET_ENEMY | CHitAttackData::TARGET_PLAYER));
+        Attack.SetTarget(CHitAttackData::TARGET_ENEMY | CHitAttackData::TARGET_PLAYER);
         Attack.SetAntiguard(CHitAttackData::ANTIGUARD_INVALID);
         Attack.SetStatus(CHitAttackData::STATUS_FLYAWAY);
         Attack.SetFlyawayParameter(0.0f, 12.0f);

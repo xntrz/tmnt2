@@ -115,7 +115,9 @@ static void SdIODispatchMessage(void)
             break;
 
         case SDIO_MESSAGE_TYPE_ADDR:
-            SdSeqPcSetAddress(SdIOPack.Message[i].Channel, SdIOPack.Message[i].Code, (SdWaveDataHdr_t*)SdIOPack.Message[i].Value);
+            SdSeqPcSetAddress(SdIOPack.Message[i].Channel,
+                              SdIOPack.Message[i].Code,
+                              (SdWaveDataHdr_t*)SdIOPack.Message[i].Value);
             break;
 
         case SDIO_MESSAGE_TYPE_LVOL:
@@ -194,11 +196,18 @@ void SdIOSetKeyOn(int32 _ch)
 
 void SdIOSetAds(int32 _ch, int32 _ar, int32 _dr, int32 _sl)
 {
+    ASSERT(_ar >= 0);
+    ASSERT(_ar <= 0xFF);
+    ASSERT(_dr >= 0);
+    ASSERT(_dr <= 0xF);
+    ASSERT(_sl >= 0);
+    ASSERT(_sl <= 0xF);
+
     if (SdIORangeCheck(_ch))
     {
-        SdIOPack.Adsr[_ch].Ar = (uint8)((0xFF - _ar) | 0x80);
-        SdIOPack.Adsr[_ch].Dr = (uint8)((0xF  - _dr) | 0x80);
-        SdIOPack.Adsr[_ch].Sl = (uint8)((0xF  - _sl) | 0x80);
+        SdIOPack.Adsr[_ch].Ar = ((0xFF - ((uint8)_ar)) | 0x80);
+        SdIOPack.Adsr[_ch].Dr = ((0xF  - ((uint8)_dr)) | 0x80);
+        SdIOPack.Adsr[_ch].Sl = ((0xF  - ((uint8)_sl)) | 0x80);
     };
 };
 
@@ -207,23 +216,29 @@ void SdIOSetSrRr(int32 _ch, int32 _sr, int32 _rr)
 {
     if (SdIORangeCheck(_ch))
     {
-        SdIOPack.Adsr[_ch].Sr = (uint8)(_sr | 0x80);
-        SdIOPack.Adsr[_ch].Rr = (uint8)((0x1F - _rr) | 0x80);
+        SdIOSetSr(_ch, _sr);
+        SdIOSetRr(_ch, _rr);
     };
 };
 
 
 void SdIOSetSr(int32 _ch, int32 _sr)
 {
+    ASSERT(_sr >= 0);
+    ASSERT(_sr <= 0xFF);
+
     if (SdIORangeCheck(_ch))
-        SdIOPack.Adsr[_ch].Sr = (uint8)(_sr | 0x80);
+        SdIOPack.Adsr[_ch].Sr = (((uint8)_sr) | 0x80);
 };
 
 
 void SdIOSetRr(int32 _ch, int32 _rr)
 {
+    ASSERT(_rr >= 0);
+    ASSERT(_rr <= 0x1F);
+
     if (SdIORangeCheck(_ch))
-        SdIOPack.Adsr[_ch].Rr = (uint8)((0x1F - _rr) | 0x80);
+        SdIOPack.Adsr[_ch].Rr = ((0x1F - ((uint8)_rr)) | 0x80);
 };
 
 

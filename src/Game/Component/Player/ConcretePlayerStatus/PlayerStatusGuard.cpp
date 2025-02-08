@@ -9,17 +9,9 @@
 
 namespace PlayerStatus
 {
-    bool CGuardReady::IsEnableChangeStatus(PLAYERTYPES::STATUS status)
-    {
-        PLAYERTYPES::STATUS aStatusArray[] =
-        {
-            PLAYERTYPES::STATUS_IDLE,
-            PLAYERTYPES::STATUS_WALK,
-            PLAYERTYPES::STATUS_RUN,
-        };
-
-        return IsWithinStatusFromArray(status, aStatusArray, COUNT_OF(aStatusArray));
-    };
+    DEFINE_ENABLED_STATUS_FOR(CGuardReady, { PLAYERTYPES::STATUS_IDLE,
+                                             PLAYERTYPES::STATUS_WALK,
+                                             PLAYERTYPES::STATUS_RUN });
 
 
     void CGuardReady::OnAttach(void)
@@ -27,7 +19,7 @@ namespace PlayerStatus
         Character().ChangeMotion(PLAYERTYPES::MOTIONNAMES::GUARD_READY);
         Character().ResetAcceleration();
         Character().ResetVelocity();
-        Character().SetCharacterFlag(CHARACTERTYPES::FLAG_FIXED_DIRECTION, true);
+        Character().SetCharacterFlag(CHARACTERTYPES::FLAG_FIXED_DIRECTION);
     };
 
 
@@ -48,18 +40,9 @@ namespace PlayerStatus
     // *********************************************************************************
     //
 
-    
-    bool CGuard::IsEnableChangeStatus(PLAYERTYPES::STATUS status)
-    {
-        PLAYERTYPES::STATUS aStatusArray[] =
-        {
-            PLAYERTYPES::STATUS_GUARD_READY,
-            PLAYERTYPES::STATUS_GUARD_BACK,
-        };
 
-        return IsWithinStatusFromArray(status, aStatusArray, COUNT_OF(aStatusArray));
-    };
-
+    DEFINE_ENABLED_STATUS_FOR(CGuard, { PLAYERTYPES::STATUS_GUARD_READY,
+                                        PLAYERTYPES::STATUS_GUARD_BACK });
 
 
     void CGuard::OnAttach(void)
@@ -84,30 +67,22 @@ namespace PlayerStatus
     // *********************************************************************************
     //
 
-    
-    bool CGuardBack::IsEnableChangeStatus(PLAYERTYPES::STATUS status)
-    {
-        PLAYERTYPES::STATUS aStatusArray[] =
-        {
-            PLAYERTYPES::STATUS_GUARD_READY,
-            PLAYERTYPES::STATUS_GUARD,
-            PLAYERTYPES::STATUS_GUARD_BACK,
-        };
 
-        return IsWithinStatusFromArray(status, aStatusArray, COUNT_OF(aStatusArray));
-    };
+    DEFINE_ENABLED_STATUS_FOR(CGuardBack, { PLAYERTYPES::STATUS_GUARD_READY,
+                                            PLAYERTYPES::STATUS_GUARD,
+                                            PLAYERTYPES::STATUS_GUARD_BACK });
 
 
     void CGuardBack::OnAttach(void)
     {
-        Character().SetCharacterFlag(CHARACTERTYPES::FLAG_FIXED_DIRECTION, false);
+        Character().ClearCharacterFlag(CHARACTERTYPES::FLAG_FIXED_DIRECTION);
         Character().ChangeMotion(PLAYERTYPES::MOTIONNAMES::GUARD);
-        Character().SetDirectionFromVector(
-            &Character().AttackParameter().m_vDirection
-        );
-        Character().SetVelocity(
-            &Character().AttackParameter().m_vVelocity
-        );
+
+        RwV3d vAttackDir = Character().AttackParameter().m_vDirection;
+        Character().SetDirectionFromVector(&vAttackDir);
+
+        RwV3d vAttackVel = Character().AttackParameter().m_vVelocity;
+        Character().SetVelocity(&vAttackVel);
 
         RwV3d vAcceleration = Math::VECTOR3_ZERO;
         vAcceleration.x = Character().AttackParameter().m_vVelocity.x * -2.5f;
@@ -116,7 +91,7 @@ namespace PlayerStatus
 
         Character().SetAcceleration(&vAcceleration);
 
-        Character().SetCharacterFlag(CHARACTERTYPES::FLAG_FIXED_DIRECTION, true);
+        Character().SetCharacterFlag(CHARACTERTYPES::FLAG_FIXED_DIRECTION);
     };
 
 
@@ -142,10 +117,7 @@ namespace PlayerStatus
     //
 
 
-    bool CGuardImpact::IsEnableChangeStatus(PLAYERTYPES::STATUS status)
-    {
-        return (status == PLAYERTYPES::STATUS_GUARD_READY);
-    };
+    DEFINE_ENABLED_STATUS_FOR(CGuardImpact, { PLAYERTYPES::STATUS_GUARD_READY });
 
 
     void CGuardImpact::OnAttach(void)
@@ -171,10 +143,7 @@ namespace PlayerStatus
     //
 
 
-    bool CGuardFinish::IsEnableChangeStatus(PLAYERTYPES::STATUS status)
-    {
-        return (status == PLAYERTYPES::STATUS_GUARD);
-    };
+    DEFINE_ENABLED_STATUS_FOR(CGuardFinish, { PLAYERTYPES::STATUS_GUARD });    
 
 
     void CGuardFinish::OnAttach(void)

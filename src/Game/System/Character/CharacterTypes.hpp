@@ -21,21 +21,21 @@ namespace CHARACTERTYPES
 
     enum BONEID
     {
-        BONEID_POSITION = 0,
-        BONEID_GROUND,
-        BONEID_BODY,
-        BONEID_RIGHT_WRIST,
-        BONEID_LEFT_WRIST,
-        BONEID_RIGHT_LEG,
-        BONEID_LEFT_LEG,
-        BONEID_RIGHT_HAND,
-        BONEID_LEFT_HAND,
+        // TODO naming and move this to PLAYERTYPES because they are are different for enemy and player
+        BONEID_POSITION     = 0,
+        BONEID_GROUND       = 1,
+        BONEID_BODY         = 2,
+        BONEID_RIGHT_WRIST  = 3,
 
-        BONEID_HEAD = 10,
+        BONEID_RIGHT_HAND   = 7,
+        BONEID_LEFT_HAND    = 8,
+
+        BONEID_HEAD         = 10,
+
         BONEID_RIGHT_HAND_S = 12,
-        BONEID_LEFT_HAND_S = 13,
+        BONEID_LEFT_HAND_S  = 13,
 
-        BONEID_RIDE_WING = 20,
+        BONEID_RIDE_WING    = 20,
 
         BONEIDNUM,
     };
@@ -48,12 +48,12 @@ namespace CHARACTERTYPES
 
     struct ATTACKPARAMETER
     {
-        RwV3d m_vPosition;
-        RwV3d m_vDirection;
-        RwV3d m_vVelocity;
+        RwV3d               m_vPosition;
+        RwV3d               m_vDirection;
+        RwV3d               m_vVelocity;
         ATTACKDIRECTIONTYPE m_direction;
-        float m_fTroubleTime;
-        CHitAttackData* m_pHitAttackData;
+        float               m_fTroubleTime;
+        CHitAttackData*     m_pHitAttackData;
     };
 
     enum ATTACKRESULTTYPE
@@ -103,8 +103,12 @@ namespace CHARACTERTYPES
         FLAG_OCCURED_INVINCIBILITY_TIMING   = 0x100,
         FLAG_CANCEL_COLLISION_WALL          = 0x200,
 
-        FLAG_DEFAULT = FLAG_FIXED_DIRECTION | FLAG_FIXED_MODEL_ROTATION | FLAG_INVALID_HIT_CATCH,
+        FLAG_DEFAULT                        = FLAG_FIXED_DIRECTION
+                                            | FLAG_FIXED_MODEL_ROTATION
+                                            | FLAG_INVALID_HIT_CATCH,
     };
+
+    DEFINE_ENUM_FLAG_OPS(FLAG);
 
     enum DEFENCERSTATUSFLAG : uint32
     {
@@ -117,7 +121,7 @@ namespace CHARACTERTYPES
         DEFENCERSTATUSFLAG_DEFENCEPOWER_GROWUP  = 0x20,
         DEFENCERSTATUSFLAG_DISABLE_THROW        = 0x40,
         DEFENCERSTATUSFLAG_STAGGER              = 0x80,
-        DEFENCERSTATUSFLAG_CHEATCODE_HEALTH     = 0x100,
+        DEFENCERSTATUSFLAG_CHEATCODE_HEALTH     = 0x100,    // NOTE: 'health' cheatcode also morph all trouble attacks to knock attacks
 
         DEFENCERSTATUSFLAG_STUN                 = 0x200,
         DEFENCERSTATUSFLAG_BIND                 = 0x400,
@@ -126,7 +130,16 @@ namespace CHARACTERTYPES
         DEFENCERSTATUSFLAG_UNKN0                = 0x1000,   // TODO unknown character defence flag
         
         DEFENCERSTATUSFLAG_FREEZE               = DEFENCERSTATUSFLAG_DINDLE | DEFENCERSTATUSFLAG_STUN,
+        
         DEFENCERSTATUSFLAG_STATUS_SHIFT         = DEFENCERSTATUSFLAG_GUARD_IMPACT,
-        DEFENCERSTATUSFLAG_STATUS_MASK          = DEFENCERSTATUSFLAG_STUN | DEFENCERSTATUSFLAG_BIND | DEFENCERSTATUSFLAG_SLEEP | DEFENCERSTATUSFLAG_DINDLE | DEFENCERSTATUSFLAG_FREEZE | DEFENCERSTATUSFLAG_UNKN0,
+        
+        DEFENCERSTATUSFLAG_STATUS_MASK          = DEFENCERSTATUSFLAG_STUN
+                                                | DEFENCERSTATUSFLAG_BIND
+                                                | DEFENCERSTATUSFLAG_SLEEP
+                                                | DEFENCERSTATUSFLAG_DINDLE
+                                                | DEFENCERSTATUSFLAG_FREEZE
+                                                | DEFENCERSTATUSFLAG_UNKN0,
     };
+
+    DEFINE_ENUM_FLAG_OPS(DEFENCERSTATUSFLAG);
 };

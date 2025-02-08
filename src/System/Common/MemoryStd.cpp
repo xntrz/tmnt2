@@ -25,46 +25,53 @@ static int s_lastAllocFline = ALLOC_FLINE_INIT;
 
 struct LAST_ALLOC_CLEANUP
 {
-	inline LAST_ALLOC_CLEANUP() {};
-	inline ~LAST_ALLOC_CLEANUP() { s_lastAllocFname = ALLOC_FNAME_INIT; s_lastAllocFline = ALLOC_FLINE_INIT; };
+	inline LAST_ALLOC_CLEANUP() {
+		if (s_lastAllocFname == nullptr)
+			s_lastAllocFname = "UNKNOWN EXTERNAL";
+	};
+
+	inline ~LAST_ALLOC_CLEANUP() { 
+		s_lastAllocFname = ALLOC_FNAME_INIT; 
+		s_lastAllocFline = ALLOC_FLINE_INIT; 
+	};
 };
 
 
 void* operator new(std::size_t size)
 {
 	LAST_ALLOC_CLEANUP obj;
-	return CMemory::_new(size, s_lastAllocFname, s_lastAllocFline);
+	return CMemory::malloc(size, s_lastAllocFname, s_lastAllocFline);
 };
 
 
 void* operator new[](std::size_t size)
 {
 	LAST_ALLOC_CLEANUP obj;
-	return CMemory::_new(size, s_lastAllocFname, s_lastAllocFline);
+    return CMemory::malloc(size, s_lastAllocFname, s_lastAllocFline);
 };
 
 
 void operator delete(void* ptr)
 {
-    CMemory::_delete(ptr);
+    CMemory::free(ptr);
 };
 
 
 void operator delete[](void* ptr)
 {
-    CMemory::_delete(ptr);
+    CMemory::free(ptr);
 };
 
 
 void* operator new(std::size_t size, const std::nothrow_t& nth) noexcept
 {
 	LAST_ALLOC_CLEANUP obj;
-	return CMemory::_new(size, s_lastAllocFname, s_lastAllocFline);
+	return CMemory::malloc(size, s_lastAllocFname, s_lastAllocFline);
 };
 
 
 void* operator new[](std::size_t size, const std::nothrow_t& nth) noexcept
 {
 	LAST_ALLOC_CLEANUP obj;
-	return CMemory::_new(size, s_lastAllocFname, s_lastAllocFline);
+	return CMemory::malloc(size, s_lastAllocFname, s_lastAllocFline);
 };

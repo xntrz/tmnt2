@@ -180,7 +180,7 @@ void CSoftwareResetProcess::clear(MODE mode)
     m_bEnable = false;
     m_fKeyTimer = 0.0f;
 #ifdef _DEBUG    
-    m_iRootSeqLabel = (m_mode == MODE_DEBUGMENU ? PROCLABEL_SEQ_DBGMENU : PROCLABEL_SEQ_GAMEMAIN);
+    m_iRootSeqLabel = (m_mode == MODE_DEBUGMENU ? PROCLABEL_SEQ_DBGMAIN : PROCLABEL_SEQ_GAMEMAIN);
 #else
     m_iRootSeqLabel = PROCLABEL_SEQ_GAMEMAIN;
 #endif    

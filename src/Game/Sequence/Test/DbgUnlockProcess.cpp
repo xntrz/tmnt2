@@ -28,8 +28,8 @@ bool CDbgUnlockProcess::Attach(void)
     m_unlockFlag = 0;
 
     PROCESSTYPES::MAIL mail;
-	while (Mail().Recv(mail))
-		m_unlockFlag = uint32(mail.m_param);
+    while (Mail().Recv(mail))
+        m_unlockFlag = reinterpret_cast<uint32>(mail.m_param);
 
     return true;
 };
@@ -42,6 +42,8 @@ void CDbgUnlockProcess::Move(void)
     //
     static CDebugSequenceCheckObj s_seqViewObj;
 
+    s_seqViewObj.Update();
+
     if (!s_seqViewObj.Check(PROCLABEL_SEQ_SAVELOADCHECK).IsEnded())
         return;
 
@@ -52,12 +54,18 @@ void CDbgUnlockProcess::Move(void)
     {
         OUTPUT("UNLOCKING AREA\n");
 
+		CGameData::ClearNewGameFlag();
+
         CGameData::Record().Area().SetCurrentSelectedArea(AREAID::HOME);
         for (int32 i = AREAID::SELECTABLESTART; i < AREAID::SELECTABLEMAX; ++i)
         {
+            CGameData::Record().Area().SetAreaOpened(AREAID::VALUE(i));
             CGameData::Record().Area().SetAreaCleared(AREAID::VALUE(i), CAreaRecord::CLEAR_ROOT_A);
             CGameData::Record().Area().SetAreaCleared(AREAID::VALUE(i), CAreaRecord::CLEAR_ROOT_B);
             CGameData::Record().Area().SetAreaRank(AREAID::VALUE(i), GAMETYPES::CLEARRANK_SS);
+
+            CGameTime cleartime(60 * 5); // 5 min
+            CGameData::Record().Area().UpdateAreaClearTime(AREAID::VALUE(i), cleartime);
         };
     };
 
@@ -107,7 +115,16 @@ void CDbgUnlockProcess::Move(void)
 
         CGameData::Record().Nexus().SetNexusState(CNexusRecord::NEXUSSTATE_OPEN);
         for (int32 i = 0; i < GAMETYPES::NEXUSID_NUM; ++i)
-            CGameData::Record().Nexus().SetTournamentState(GAMETYPES::NEXUSID(i), CNexusRecord::STATE_OPEN);
+        {
+            CGameData::Record().Nexus().SetTournamentState(GAMETYPES::NEXUSID(i), CNexusRecord::STATE_CLEAR);
+            for (int32 j = 0; j < GAMETYPES::STAGE_MAX; ++j)
+            {
+                CGameData::Record().Nexus().SetStagePlayed(GAMETYPES::NEXUSID(i), j);
+
+                CGameTime cleartime(60 * 5); // 5 min
+                CGameData::Record().Nexus().UpdateStageClearTime(GAMETYPES::NEXUSID(i), j, cleartime);
+            };
+        };
     };
 
     //

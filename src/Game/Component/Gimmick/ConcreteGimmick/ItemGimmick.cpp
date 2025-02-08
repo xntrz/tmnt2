@@ -116,7 +116,9 @@ void CItemGimmick::PostMove(void)
     case STATE_INIT:
         {
             m_fDeathHeight = CWorldMap::GetMapHeight(&m_vPosition) + 1.0f;
-            if (FLAG_TEST(CWorldMap::GetCollisionResultAttribute(), MAPTYPES::ATTRIBUTE_DEATH))
+
+            MAPTYPES::ATTRIBUTE attribute = CWorldMap::GetCollisionResultAttribute();
+            if (attribute == MAPTYPES::ATTRIBUTE_DEATH)
                 m_fDeathHeight = CWorldMap::GetCharacterDeathHeight();
             
             m_state = STATE_FALL;

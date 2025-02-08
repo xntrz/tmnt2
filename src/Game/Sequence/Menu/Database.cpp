@@ -798,7 +798,7 @@ void CDatabase::OnMove(bool bRet, const void* pReturnValue)
     case ANIMSTEP_END:
         {
             if (m_bGotoViewerFlag)
-                Ret((const void*)PROCLABEL_SEQ_DATABASEVIEWER);
+                Ret(reinterpret_cast<const void*>(PROCLABEL_SEQ_DATABASEVIEWER));
             else
                 Ret();
         }

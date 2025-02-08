@@ -41,4 +41,4 @@ namespace MODULETYPE
 
         NUMMAX,
     };
-};
+}; /* namespace MODULETYPE */;

@@ -33,14 +33,14 @@ bool CStageBaseSequence::OnAttach(const void* pParam)
 {
     m_GameStage.Initialize();
     setupState();
+
     CScreenFade::BlackOut(0.0f);
     
-    CGameData::OnBeginStage(CGameData::PlayParam().GetStage());
+    STAGEID::VALUE stageId = CGameData::PlayParam().GetStage();
+    CGameData::OnBeginStage(stageId);
 
-    STAGEID::VALUE idStage = CGameData::PlayParam().GetStage();
-    m_GameStage.SetCameraUpdater(
-        CStageInfo::GetCameraUpdateType(idStage)
-    );
+    CStageInfo::CAMERAUPDATE cameraUpdateType = CStageInfo::GetCameraUpdateType(stageId);
+    m_GameStage.SetCameraUpdater(cameraUpdateType);
     
 	EnableStickToDirButton(false);
 
@@ -53,15 +53,19 @@ void CStageBaseSequence::OnDetach(void)
 	EnableStickToDirButton(true);
 
     CLoadingDisplay::Stop(this);
+
     CGameData::Attribute().SetInteractive(false);
+
     m_GameStage.Stop();
     cleanupState();
     m_GameStage.Terminate();
 
-	if (m_GameStage.GetResult() == CGameStage::RESULT_GAMECLEAR)
-		CGameData::OnEndStage(CGameData::PlayParam().GetStage());
+    STAGEID::VALUE stageId = CGameData::PlayParam().GetStage();
 
-    CGameSound::StageAfter(CGameData::PlayParam().GetStage());
+    if (m_GameStage.GetResult() == CGameStage::RESULT_GAMECLEAR)
+		CGameData::OnEndStage(stageId);
+
+    CGameSound::StageAfter(stageId);
 	CGameSound::Stop();
 };
 
@@ -71,15 +75,6 @@ void CStageBaseSequence::OnMove(bool bRet, const void* pReturnValue)
     if (runState())
         OnStateDetached(m_state);
 
-	//
-    //	TODO: something about camera bug here dont remember what exactly yet
-    //  
-    //  stage map camera required being update at least once before intro
-    //  for setting at/eye pos for correct view if no demo present
-    //  (comment/uncomment this and look at japan shredder fight(AREAID::ID_AREA38) intro camera pos)
-    //
-
-	//if(GetState() >= STATE_INTRO)
 	m_GameStage.Period();
     
     if (GetState() >= STATE_END)
@@ -89,10 +84,10 @@ void CStageBaseSequence::OnMove(bool bRet, const void* pReturnValue)
 
 void CStageBaseSequence::OnDraw(void) const
 {
+    m_GameStage.Draw();
+    
     if (m_pCurrentStateObj)
         m_pCurrentStateObj->OnDraw(this);
-
-    m_GameStage.Draw();
 };
 
 
@@ -105,25 +100,22 @@ void CStageBaseSequence::OnStateDetached(STATE state)
 void CStageBaseSequence::RegisterStateObject(STATE state, IStageSeqState* pStateObj, bool bAutoDelete)
 {
     ASSERT(pStateObj);
-    ASSERT(state >= STATE_NONE && state <= STATE_END);
+    ASSERT(state > STATE_NONE);
+    ASSERT(state < STATE_END);
 
     m_aStateNode[state].m_bAutoDelete = bAutoDelete;
-    m_aStateNode[state].m_pStateObj = pStateObj;
+    m_aStateNode[state].m_pStateObj   = pStateObj;
 };
 
 
-void CStageBaseSequence::ChangeState(STATE state, const void* pParam)
+void CStageBaseSequence::ChangeState(STATE state, const void* pParam /*= nullptr*/)
 {
     if (m_state != state)
     {
         if (state == STATE_LOAD)
-        {
             CLoadingDisplay::Start(this);
-        }
         else if (m_state == STATE_LOAD)
-        {
             CLoadingDisplay::Stop(this);
-        };
 
         if (state == STATE_PLAY)
         {
@@ -137,7 +129,7 @@ void CStageBaseSequence::ChangeState(STATE state, const void* pParam)
     };
     
     m_pAttachStateParam = pParam;
-    m_stateRequest = state;
+    m_stateRequest      = state;
 };
 
 
@@ -164,13 +156,13 @@ void CStageBaseSequence::setupState(void)
     for (int32 i = 0; i < COUNT_OF(m_aStateNode); ++i)
     {
         m_aStateNode[i].m_bAutoDelete = false;
-        m_aStateNode[i].m_pStateObj = CDummyStageState::Instance();
+        m_aStateNode[i].m_pStateObj   = CDummyStageState::Instance();
     };
 
-    m_state = STATE_NONE;
-    m_stateRequest = STATE_NONE;
+    m_state             = STATE_NONE;
+    m_stateRequest      = STATE_NONE;
     m_pAttachStateParam = nullptr;
-    m_pCurrentStateObj = getStateObj(STATE_NONE);
+    m_pCurrentStateObj  = getStateObj(STATE_NONE);
 };
 
 
@@ -197,7 +189,8 @@ void CStageBaseSequence::cleanupState(void)
 
 IStageSeqState* CStageBaseSequence::getStateObj(STATE state)
 {
-    ASSERT(state >= STATE_NONE && state <= STATE_END);
+    ASSERT(state >= STATE_NONE);
+    ASSERT(state <= STATE_END);
 
     return m_aStateNode[state].m_pStateObj;
 };

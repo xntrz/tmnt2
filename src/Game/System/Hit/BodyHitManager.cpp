@@ -1,6 +1,9 @@
 #include "BodyHitManager.hpp"
 #include "BodyHitData.hpp"
 #include "Intersection.hpp"
+#ifdef _DEBUG
+#include "HitDebug.hpp"
+#endif /* _DEBUG */
 
 #include "Game/System/Misc/DebugShape.hpp"
 
@@ -42,7 +45,7 @@ bool CBodyHitContainer::Check(CBodyHitData* pBodyHitData, const RwV3d* pMoveVelo
     ASSERT(pResult);
 
 #ifdef _DEBUG
-    if (CBodyHitManager::m_bDebugDrawSphere)
+    if (CHitDebug::SHOW_HIT_BODY)
     {
         RwSphere sphere;
         sphere.center = *pBodyHitData->GetCurrentPos();
@@ -50,14 +53,11 @@ bool CBodyHitContainer::Check(CBodyHitData* pBodyHitData, const RwV3d* pMoveVelo
         
         CDebugShape::ShowSphere(&sphere);
     };
-#endif
+#endif /* _DEBUG */
 
     if (!pBodyHitData->IsEnableState(CBodyHitData::STATE_ENABLE))
         return false;
     
-    if (m_listHitAlloc.empty())
-        return false;
-
     RwV3d vMoveBuff = *pMoveVelocity;
     RwV3d vMinVelocity = vMoveBuff;
     float fMoveLengthSQ = Math::Vec3_Dot(pMoveVelocity, pMoveVelocity);
@@ -65,48 +65,34 @@ bool CBodyHitContainer::Check(CBodyHitData* pBodyHitData, const RwV3d* pMoveVelo
     
     for (CBodyHitData& it : m_listHitAlloc)
     {
-        bool b1 = (&it == pBodyHitData);
+        bool b1 = (pBodyHitData->GetHitID() != CBodyHitData::INVALID_HIT_ID);
         bool b2 = (it.GetHitID() == pBodyHitData->GetHitID());
-        bool b3 = (pBodyHitData->GetHitID() != CBodyHitData::INVALID_HIT_ID);
-        bool b4 = it.IsEnableState(CBodyHitData::STATE_ENABLE);
-        bool b5 = (it.IsEnableState(CBodyHitData::STATE_SELF_TO_OTHER) && it.IsEnableState(CBodyHitData::STATE_SELF_TO_OTHER));
 
-        // IF not same hit data
-        // IF not same hit id OR invalid id
-        // IF enabled
-        // IF both hit data is set SELF TO OTHER
-        // TODO body hit state
+        // TODO
+
         if (
-            !b1 && (!b2 || !b3) && b4 && it.IsEnableState(4) &&
-            (!pBodyHitData->IsEnableState(1u) && !it.IsEnableState(1u)
-            || !pBodyHitData->IsEnableState(2u) && !it.IsEnableState(2u)
-            || pBodyHitData->IsEnableState(1u) && it.IsEnableState(2u))
+            (&it != pBodyHitData) &&
+            (!b1 || !b2) &&
+            it.IsEnableState(CBodyHitData::STATE_ENABLE) &&
+            (!pBodyHitData->IsEnableState(CBodyHitData::STATE_SELF_TO_OTHER) && !it.IsEnableState(CBodyHitData::STATE_SELF_TO_OTHER)
+            || !pBodyHitData->IsEnableState(CBodyHitData::STATE_TODO_0x2) && !it.IsEnableState(CBodyHitData::STATE_TODO_0x2)
+            || pBodyHitData->IsEnableState(CBodyHitData::STATE_SELF_TO_OTHER) && it.IsEnableState(CBodyHitData::STATE_TODO_0x2))
             )
         {
             RwV3d vHit = Math::VECTOR3_ZERO;
-            RwV3d vZero = Math::VECTOR3_ZERO;
-
-            bool bIntersect = Intersection::SphereAndSphereGetAwayVelocity(
-                pBodyHitData->GetCurrentPos(),
-                pBodyHitData->GetHitRadius(),
-                it.GetCurrentPos(),
-                it.GetHitRadius(),
-                &vHit,
-                nullptr
-            );
-
+            bool bIntersect = Intersection::SphereAndSphereGetAwayVelocity(pBodyHitData->GetCurrentPos(),
+                                                                           pBodyHitData->GetHitRadius(),
+                                                                           it.GetCurrentPos(),
+                                                                           it.GetHitRadius(),
+                                                                           &vHit);
             if (bIntersect)
             {
                 Math::Vec3_Scale(&vHit, &vHit, 1.5f);
 
-                if (fMinMoveLengthSQ > 0.0f)
-                {
+                if (fMinMoveLengthSQ > FLT_EPSILON)
                     vMinVelocity = vHit;
-                }
                 else
-                {
                     Math::Vec3_Add(&vMinVelocity, &vMinVelocity, &vHit);
-                };
 
                 Math::Vec3_Scale(&vHit, &vHit, -1.0f);
                 ScratchVector(&vMoveBuff, &vMoveBuff, &vHit);
@@ -114,17 +100,14 @@ bool CBodyHitContainer::Check(CBodyHitData* pBodyHitData, const RwV3d* pMoveVelo
             }
             else if (fMinMoveLengthSQ > 0.0f)
             {
-                bIntersect = Intersection::MoveSphereAndMoveSphereVelocity(
-                    pBodyHitData->GetCurrentPos(),
-                    &vMinVelocity,
-                    pBodyHitData->GetHitRadius(),
-                    it.GetCurrentPos(),
-                    &vZero,
-                    it.GetHitRadius(),
-                    &vHit,
-                    nullptr
-                );
-
+                RwV3d vZero = Math::VECTOR3_ZERO;
+                bIntersect = Intersection::MoveSphereAndMoveSphereVelocity(pBodyHitData->GetCurrentPos(),
+                                                                           &vMinVelocity,
+                                                                           pBodyHitData->GetHitRadius(),
+                                                                           it.GetCurrentPos(),
+                                                                           &vZero,
+                                                                           it.GetHitRadius(),
+                                                                           &vHit);
                 if (bIntersect)
                 {
                     float fHitMoveLengthSQ = Math::Vec3_Dot(&vHit, &vHit);
@@ -141,7 +124,7 @@ bool CBodyHitContainer::Check(CBodyHitData* pBodyHitData, const RwV3d* pMoveVelo
     if (fMinMoveLengthSQ >= fMoveLengthSQ)
         return false;
 
-    if (fMinMoveLengthSQ <= 0.0f)
+    if (fMinMoveLengthSQ <= FLT_EPSILON)
         Math::Vec3_Add(&vMinVelocity, &vMinVelocity, &vMoveBuff);
 
     *pResult = vMinVelocity;
@@ -155,8 +138,6 @@ CBodyHitData* CBodyHitContainer::Alloc(void)
     ASSERT(!m_listHitFree.empty());
 
     CBodyHitData* pNode = m_listHitFree.front();
-    ASSERT(pNode);
-    
     m_listHitFree.erase(pNode);
     m_listHitAlloc.push_back(pNode);
 
@@ -168,10 +149,9 @@ void CBodyHitContainer::Free(CBodyHitData* pBodyHitData)
 {
     ASSERT(pBodyHitData);
     ASSERT(!m_listHitAlloc.empty());
-    ASSERT(m_listHitAlloc.contains(pBodyHitData));
 
     m_listHitAlloc.erase(pBodyHitData);
-    m_listHitFree.push_back(pBodyHitData);
+    m_listHitFree.push_front(pBodyHitData);
 };
 
 
@@ -203,17 +183,10 @@ static inline CBodyHitContainer& BodyHitContainer(void)
 };
 
 
-#ifdef _DEBUG    
-/*static*/ bool CBodyHitManager::m_bDebugDrawSphere = false;
-#endif
-
-
 /*static*/ void CBodyHitManager::Initialize(void)
 {
     if (!s_pBodyHitContainer)
-    {
         s_pBodyHitContainer = new CBodyHitContainer;
-    };
 };
 
 

@@ -21,11 +21,6 @@
 #include "System/Common/Configure.hpp"
 #include "System/Common/SystemText.hpp"
 
-#ifdef _DEBUG
-#include "Game/Sequence/Test/DbgFrameCtrlProcess.hpp"
-#include "Game/Sequence/Test/DbgParamCtrlProcess.hpp"
-#endif
-
 
 /*static*/ CProcess* CGameMainSequence::Instance(void)
 {
@@ -54,9 +49,6 @@ CGameMainSequence::~CGameMainSequence(void)
 
 bool CGameMainSequence::OnAttach(const void* pParam)
 {
-#ifdef _DEBUG
-    //CDebug::SupressRwDebugAssert(true);
-#endif
     Math::SRand(123456);
     CScreen::SetFlipInterval(1);
     CDataLoader::Initialize();
@@ -74,11 +66,6 @@ bool CGameMainSequence::OnAttach(const void* pParam)
 
     if (!CLoadingDisplay::Initialize(this))
         return false;
-
-#ifdef _DEBUG
-    CDbgFrameCtrlProcess::Initialize(this);
-    CDbgParamCtrlProcess::Initialize(this);
-#endif    
 
     CDataLoader::Regist(FILEID::ID_STRINGS);
     CDataLoader::Regist(FILEID::ID_FONT);
@@ -100,10 +87,6 @@ void CGameMainSequence::OnDetach(void)
 #endif
 
     CGameData::Terminate();
-#ifdef _DEBUG
-    CDbgParamCtrlProcess::Terminate(this);
-    CDbgFrameCtrlProcess::Terminate(this);
-#endif    
     CLoadingDisplay::Terminate(this);
     CScreenFadeProcess::Terminate(this);
     
@@ -115,9 +98,6 @@ void CGameMainSequence::OnDetach(void)
     CMovieManager::Terminate();
     CTextureManager::Terminate();
     CDataLoader::Terminate();
-#ifdef _DEBUG
-    //CDebug::SupressRwDebugAssert(false);
-#endif
 };
 
 
@@ -130,7 +110,7 @@ void CGameMainSequence::OnMove(bool bRet, const void* pReturnValue)
 #endif
         if (pReturnValue)
         {
-            m_iLabelNext = int32(pReturnValue);
+            m_iLabelNext = reinterpret_cast<int32>(pReturnValue);
             if (m_iLabelNext == PROCESSTYPES::LABEL_EOL)
             {
                 Kill(PROCESSTYPES::LABEL_EOL);
@@ -187,7 +167,7 @@ void CGameMainSequence::OnMove(bool bRet, const void* pReturnValue)
 
                 CScreen::SetFlipEnable(true);
 #ifdef _DEBUG
-                Call(PROCLABEL_SEQ_DBGMENU);
+                Call(PROCLABEL_SEQ_DBGMAIN);
 #else
                 Call(PROCLABEL_SEQ_SAVELOADCHECK);
 #endif                

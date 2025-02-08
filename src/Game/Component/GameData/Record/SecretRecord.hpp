@@ -12,8 +12,8 @@ public:
     {
         uint32 m_auUnlockedFlag[FLAGNUM];
         uint32 m_auUnnotifiedFlag[FLAGNUM];
-        float m_fAttackEnchanceValue;
-        float m_fDefenceEnchanceValue;
+        float  m_fAttackEnchanceValue;
+        float  m_fDefenceEnchanceValue;
     };
 
     enum FLAGTYPE

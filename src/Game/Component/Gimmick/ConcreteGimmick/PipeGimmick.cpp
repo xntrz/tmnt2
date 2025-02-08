@@ -45,7 +45,7 @@ void CPipeGimmick::GetPosition(RwV3d* pvPosition) const
 
 GIMMICKTYPES::FEATURE CPipeGimmick::GetFeatures(void) const
 {
-    return GIMMICKTYPES::FEATURE_SLEEP;
+    return GIMMICKTYPES::FEATURE_ABLE_SLEEP;
 };
 
 

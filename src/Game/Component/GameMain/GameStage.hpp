@@ -52,8 +52,12 @@ public:
     };
 
 public:
+#ifdef _DEBUG    
+    static int32 Tick;
+#endif /* _DEBUG */    
+    
     static CGameStage* GetCurrent(void);
-
+    
     CGameStage(void);
     ~CGameStage(void);
     void Initialize(void);
@@ -64,10 +68,10 @@ public:
     void Draw(void) const;
     void AddGauge(void);
     void AddStageObjects(void);
-    void AddPlayers(bool bProtect = true);
+    void AddPlayers(bool bBlink = true);
     void StartPlay(void);
     bool CheckPauseMenu(void) const;
-    void StartPause(PAUSETYPE pausetype, void* param);
+    void StartPause(PAUSETYPE pausetype, void* param = nullptr);
     bool IsPaused(void) const;
     void BeginDemo(void);
     void EndDemo(void);

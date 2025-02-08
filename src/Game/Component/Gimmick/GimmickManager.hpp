@@ -22,8 +22,8 @@ public:
     static void NotifyPlayStarted(void);
     static void CreateSetGimmick(void);
     static bool IsPlayStarted(void);
-    static void SetPlayerStartPosition(int32 nPlayerNo, bool bProtect);
-    static void ReplacePlayer(int32 nPlayerNo, const RwV3d* pvPosition, bool bProtect);
+    static void SetPlayerStartPosition(int32 nPlayerNo, bool bBlink);
+    static void ReplacePlayer(int32 nPlayerNo, const RwV3d* pvPosition, bool bBlink);
     static void PostEvent(const char* pszReceiver, const char* pszSender, GIMMICKTYPES::EVENTTYPE eventtype, void* pParam = nullptr);
     static void CreateStageSpecialGimmick(STAGEID::VALUE idStage);
 };

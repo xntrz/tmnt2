@@ -43,9 +43,7 @@
 {
     CGameStage* pStage = CGameStage::GetCurrent();
     if (pStage)
-    {
         pStage->NotifyGameClear(clearsub);
-    };
 };
 
 
@@ -53,9 +51,7 @@
 {
     CGameStage* pStage = CGameStage::GetCurrent();
     if (pStage)
-    {
         pStage->NotifyGameOver();
-    };
 };
 
 
@@ -108,6 +104,9 @@
     case PLAYERID::ID_DON:
         CGameSound::PlayObjectSE(CGameProperty::Player(nPlayerNo)->GetPlayer(), 0);
         break;
+
+    default:
+        break;
     };
 };
 
@@ -142,6 +141,18 @@
                 CGameProperty::Player(i)->AddShurikenNum(10);
         }
         break;
+
+#ifdef _DEBUG
+    case ITEMID::ID_COMEBACK:
+        {
+            if (!CGameData::Record().Item().IsComebackProcessed())
+                CGameData::Record().Item().SetComebackTaken();
+        }
+        break;
+#endif /* _DEBUG */        
+
+    default:
+        break;
     };
 
     CGameData::PlayResult().AddTakenItemCount(idItem);
@@ -170,43 +181,55 @@
 /*static*/ void CGameEvent::SetEnemyCreated(CEnemy* pEnemy)
 {
     ASSERT(pEnemy);
-    Property().EnemyContainer().Regist(pEnemy);
+
+    if (m_pProperty)
+        Property().EnemyContainer().Regist(pEnemy);
 };
 
 
 /*static*/ void CGameEvent::SetEnemyDestroyed(CEnemy* pEnemy)
 {
     ASSERT(pEnemy);
-    
-    CGameStage* pStage = CGameStage::GetCurrent();
-    if (pStage)
-        pStage->NotifyEnemyDead(pEnemy);
-    
-    Property().EnemyContainer().Remove(pEnemy);
+
+    if (m_pProperty)
+    {
+        CGameStage* pStage = CGameStage::GetCurrent();
+        if (pStage)
+            pStage->NotifyEnemyDead(pEnemy);
+
+        Property().EnemyContainer().Remove(pEnemy);
+    };    
 };
 
 
 /*static*/ void CGameEvent::SetEnemyDamaged(CEnemy* pEnemy, int32 nRemainHP)
 {
     ASSERT(pEnemy);
-    
-    CGameStage* pStage = CGameStage::GetCurrent();
-    if (pStage)
-        pStage->NotifyEnemyDamaged(pEnemy, nRemainHP);
+
+    if (m_pProperty)
+    {
+        CGameStage* pStage = CGameStage::GetCurrent();
+        if (pStage)
+            pStage->NotifyEnemyDamaged(pEnemy, nRemainHP);
+    };    
 };
 
 
 /*static*/ void CGameEvent::SetGimmickCreated(CGimmick* pGimmick)
 {
     ASSERT(pGimmick);
-    Property().GimmickContainer().Regist(pGimmick);
+
+    if (m_pProperty)
+        Property().GimmickContainer().Regist(pGimmick);
 };
 
 
 /*static*/ void CGameEvent::SetGimmickDestroyed(CGimmick* pGimmick)
 {
     ASSERT(pGimmick);
-    Property().GimmickContainer().Remove(pGimmick);
+
+    if (m_pProperty)
+        Property().GimmickContainer().Remove(pGimmick);
 };
 
 
@@ -220,6 +243,6 @@
 {
     CGameStage* pStage = CGameStage::GetCurrent();
     if (pStage)
-        pStage->StartPause(CGameStage::PAUSETYPE_TUTORIAL, (void*)nTutorialNo);
+        pStage->StartPause(CGameStage::PAUSETYPE_TUTORIAL, reinterpret_cast<void*>(nTutorialNo));
 };
 

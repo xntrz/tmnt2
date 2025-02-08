@@ -800,9 +800,9 @@ void CStaffRoll::StaffRollUpdate(void)
     uint32 Digital = 0;
     Digital |= CController::GetDigital(CController::CONTROLLER_LOCKED_ON_VIRTUAL);
     Digital |= CController::GetDigital(CController::CONTROLLER_UNLOCKED_ON_VIRTUAL);
-    if (FLAG_TEST(Digital, CController::DIGITAL_LDOWN))
+    if (Digital & CController::DIGITAL_LDOWN)
         fRollSpeed = 10.0f;
-#endif    
+#endif /* _DEBUG */
 
     for (int32 i = 0; i < COUNT_OF(m_aCreditDrawList); ++i)
     {

@@ -163,19 +163,41 @@
 
 /*static*/ float CGameFont::GetScreenHeightEx(float fScreenH)
 {
-    return (Rt2dFontGetHeight(m_pFont->GetFontObj()) * float(CScreen::Height())) / fScreenH;
+    return (Rt2dFontGetHeight(m_pFont->GetFontObj()) * static_cast<float>(CScreen::Height())) / fScreenH;
 };
 
 
 /*static*/ float CGameFont::GetStringWidth(const wchar* pwszString)
 {
-    return Rt2dFontGetStringWidth(m_pFont->GetFontObj(), (const RwChar*)pwszString, m_fHeight);
+    return Rt2dFontGetStringWidth(m_pFont->GetFontObj(), reinterpret_cast<const RwChar*>(pwszString), m_fHeight);
 };
 
 
 /*static*/ float CGameFont::GetStringWidth(const wchar* pwszString, float fHeight)
 {
-    return Rt2dFontGetStringWidth(m_pFont->GetFontObj(), (const RwChar*)pwszString, fHeight);
+    return Rt2dFontGetStringWidth(m_pFont->GetFontObj(), reinterpret_cast<const RwChar*>(pwszString), fHeight);
+};
+
+
+/*static*/ float CGameFont::GetStringWidth(const char* pszString)
+{
+    static wchar s_awszBuff[1024];
+    s_awszBuff[0] = UTEXT('\0');
+
+    CUnicodeFont::ConvertToUnicode(s_awszBuff, pszString);
+
+    return GetStringWidth(s_awszBuff);
+};
+
+
+/*static*/ float CGameFont::GetStringWidth(const char* pszString, float fHeight)
+{
+    static wchar s_awszBuff[1024];
+    s_awszBuff[0] = UTEXT('\0');
+
+    CUnicodeFont::ConvertToUnicode(s_awszBuff, pszString);
+
+    return GetStringWidth(s_awszBuff, fHeight);
 };
 
 

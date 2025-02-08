@@ -151,10 +151,10 @@ void CBarrierModule::Run(void)
 
     if (m_bDisplay)
     {
-        RwV3d vScale = { m_fScale, m_fScale, m_fScale };
         RwV3d vPosition = Math::VECTOR3_ZERO;
         m_pTracer->GetPosition(&vPosition);
         
+        RwV3d vScale = { m_fScale, m_fScale, m_fScale };
         m_pBarrierSphere->SetScale(&vScale);
         m_pBarrierSphere->SetPosition(&vPosition);
 
@@ -178,10 +178,12 @@ void CBarrierModule::Run(void)
 
             if (m_pObject->GetType() == GAMEOBJECTTYPE::CHARACTER)
             {
-                CCharacter* pCharacter = (CCharacter*)m_pObject;
+                CCharacter* pCharacter = static_cast<CCharacter*>(m_pObject);
+
                 if (pCharacter->GetCharacterType() == CCharacter::TYPE_PLAYER)
                 {
-                    CPlayerCharacter* pPlayerCharacter = (CPlayerCharacter*)pCharacter;
+                    CPlayerCharacter* pPlayerCharacter = static_cast<CPlayerCharacter*>(pCharacter);
+                    
                     if (pPlayerCharacter->GetID() == PLAYERID::ID_SPL)
                         Attack.SetFlyawayParameter(0.0f, 8.0f);
                 };

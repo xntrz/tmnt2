@@ -33,23 +33,23 @@ void CMichelangeroManipulator::BranchForStatus(PLAYERTYPES::STATUS status)
 
 void CMichelangeroManipulator::RunAttackJump(void)
 {
-    if (m_input.m_uMove)
+    if (m_input.m_move)
         m_pPlayerChr->SetDirection(m_input.m_fDirection);
 
-    switch (m_input.m_uAttack)
+    switch (m_input.m_attack)
     {
-	case 0:
+	case ATTACK_OFF:
 		break;
 
-    case 1:
+    case ATTACK_A:
         m_pPlayerChr->RequestAttackA();
         break;
         
-    case 2:
+    case ATTACK_B:
         m_pPlayerChr->RequestAttackB();
         break;
 
-    case 3:
+    case ATTACK_C:
         m_pPlayerChr->RequestAttackC();
         break;
 

@@ -95,6 +95,8 @@ CBreakableCarGimmick::CBreakableCarGimmick(const char* pszName, void* pParam)
     
     m_model.SetDrawType(CNormalGimmickModel::MODELTYPE_DRAW_NORMAL);
     m_model.SetAtariType(CNormalGimmickModel::MODELTYPE_ATARI_NORMAL);
+	
+	SetModelStrategy(&m_model);
     
     //
     //  init map collision
@@ -398,7 +400,7 @@ void CBreakableCarGimmick::setHitAttack(void)
     {
         float fRadius = 1.5f;
         RwV3d vPosition = vBasePos;
-        vPosition.z += (i * 3.0f);
+        vPosition.z += (static_cast<float>(i) * 3.0f);
 
         CModel* pModel = m_model.GetModel(CNormalGimmickModel::MODELTYPE_DRAW_NORMAL);
         RpClump* pClump = pModel->GetClump();

@@ -19,21 +19,13 @@
 
 namespace Donatello
 {
-    bool CAttackJump::IsEnableChangeStatus(PLAYERTYPES::STATUS status)
-    {
-        PLAYERTYPES::STATUS aStatusArray[] =
-        {
-            PLAYERTYPES::STATUS_JUMP,
-            PLAYERTYPES::STATUS_JUMP_2ND,
-            PLAYERTYPES::STATUS_JUMP_WALL,
-            PLAYERTYPES::STATUS_AERIAL,
-            PLAYERTYPES::STATUS_AERIAL_MOVE,
-        };
+    DEFINE_ENABLED_STATUS_FOR(CAttackJump, { PLAYERTYPES::STATUS_JUMP,
+                                             PLAYERTYPES::STATUS_JUMP_2ND,
+                                             PLAYERTYPES::STATUS_JUMP_WALL,
+                                             PLAYERTYPES::STATUS_AERIAL,
+                                             PLAYERTYPES::STATUS_AERIAL_MOVE });
 
-        return IsWithinStatusFromArray(status, aStatusArray, COUNT_OF(aStatusArray));
-    };
-
-
+    
     void CAttackJump::OnAttach(void)
     {
         Character().ChangeMotion(Donatello::MOTIONNAMES::ATTACK_JUMP1);
@@ -42,6 +34,8 @@ namespace Donatello
         Character().GetVelocity(&vVelocity);
         vVelocity.y = 0.0f;
         Character().SetVelocity(&vVelocity);
+
+        CGameSound::PlayAttackSE(&Character());
     };
 
 
@@ -67,13 +61,13 @@ namespace Donatello
         Character().ChangeMotion(Donatello::MOTIONNAMES::ATTACK_LASER);
         Character().ResetAcceleration();
         Character().ResetVelocity();
-        Character().SetPlayerFlag(PLAYERTYPES::FLAG_DISABLE_THROW_KNIFE, true);
+        Character().SetPlayerFlag(PLAYERTYPES::FLAG_DISABLE_THROW_KNIFE);
     };
     
 
     void CAttackLaser::OnRun(void)
     {
-        if (Character().IsCharacterFlagSet(CHARACTERTYPES::FLAG_OCCURED_TIMING))
+        if (Character().TestCharacterFlag(CHARACTERTYPES::FLAG_OCCURED_TIMING))
         {
             CGameEvent::SetPlayerTechnicalAction(Character().GetPlayerNo(), GAMETYPES::TECACT_KNIFE);
             ShootingLaser();
@@ -115,7 +109,7 @@ namespace Donatello
         if (hMagic)
             CMagicManager::SetStatusTime(hMagic, 4.0f);
 
-        if (!Character().IsAttributeFlagSet(PLAYERTYPES::ATTRIBUTE_INNUMERABLE_KNIFE))
+        if (!Character().TestAttribute(PLAYERTYPES::ATTRIBUTE_INNUMERABLE_KNIFE))
             CGameProperty::Player(Character().GetPlayerNo())->AddShurikenNum(-1);
     };
 
@@ -150,7 +144,7 @@ namespace Donatello
     {
         PlayerStatus::CAttackAABBC::OnDetach();
 
-        CBarrierModule* pBarrierMod = (CBarrierModule*)Character().GetModule(MODULETYPE::BARRIER);
+        CBarrierModule* pBarrierMod = static_cast<CBarrierModule*>(Character().GetModule(MODULETYPE::BARRIER));
         ASSERT(pBarrierMod);
 
         pBarrierMod->Disappear();        
@@ -174,15 +168,12 @@ namespace Donatello
 
         case PHASE_INVOKE_BARRIER:
             {
-                CBarrierModule* pBarrierMod = (CBarrierModule*)Character().GetModule(MODULETYPE::BARRIER);
+                CBarrierModule* pBarrierMod = static_cast<CBarrierModule*>(Character().GetModule(MODULETYPE::BARRIER));
                 ASSERT(pBarrierMod);
 
                 switch (pBarrierMod->GetState())
                 {
                 case CBarrierModule::STATE_DISAPPEAR:
-                    {
-                        ;
-                    }
                     break;
 
                 case CBarrierModule::STATE_SLEEP:
@@ -190,10 +181,14 @@ namespace Donatello
                         m_phase = PHASE_FINISH;
                         Character().PlayMotion();
 
-                        CAccumulateModule* pAccumMod = (CAccumulateModule*)Character().GetModule(MODULETYPE::ACCUMULATE);
+                        CAccumulateModule* pAccumMod = static_cast<CAccumulateModule*>(Character().GetModule(MODULETYPE::ACCUMULATE));
                         ASSERT(pAccumMod);
+
                         pAccumMod->SetDrawOff();
                     }
+                    break;
+
+                default:
                     break;
                 };
             }
@@ -215,7 +210,7 @@ namespace Donatello
 
     void CAttackAABBC::OnDischargeWave(void)
     {
-        CBarrierModule* pBarrierMod = (CBarrierModule*)Character().GetModule(MODULETYPE::BARRIER);
+        CBarrierModule* pBarrierMod = static_cast<CBarrierModule*>(Character().GetModule(MODULETYPE::BARRIER));
         ASSERT(pBarrierMod);
 
         pBarrierMod->Appear();
@@ -239,7 +234,7 @@ namespace Donatello
     {
         PlayerStatus::CAttackB::OnDetach();
         
-        CBarrierModule* pBarrierMod = (CBarrierModule*)Character().GetModule(MODULETYPE::BARRIER);
+        CBarrierModule* pBarrierMod = static_cast<CBarrierModule*>(Character().GetModule(MODULETYPE::BARRIER));
         ASSERT(pBarrierMod);
         
         pBarrierMod->Disappear();
@@ -263,15 +258,12 @@ namespace Donatello
 
         case PHASE_INVOKE_BARRIER:
             {
-                CBarrierModule* pBarrierMod = (CBarrierModule*)Character().GetModule(MODULETYPE::BARRIER);
+                CBarrierModule* pBarrierMod = static_cast<CBarrierModule*>(Character().GetModule(MODULETYPE::BARRIER));
                 ASSERT(pBarrierMod);
 
                 switch (pBarrierMod->GetState())
                 {
                 case CBarrierModule::STATE_DISAPPEAR:
-                    {
-						;
-                    }
                     break;
 
                 case CBarrierModule::STATE_SLEEP:
@@ -279,10 +271,14 @@ namespace Donatello
                         m_phase = PHASE_FINISH;
 						Character().PlayMotion();
 
-						CAccumulateModule* pAccumMod = (CAccumulateModule*)Character().GetModule(MODULETYPE::ACCUMULATE);
-						ASSERT(pAccumMod);
-						pAccumMod->SetDrawOff();
+                        CAccumulateModule* pAccumMod = static_cast<CAccumulateModule*>(Character().GetModule(MODULETYPE::ACCUMULATE));
+                        ASSERT(pAccumMod);
+                        
+                        pAccumMod->SetDrawOff();
                     }
+                    break;
+
+                default:
                     break;
                 };
             }
@@ -304,7 +300,7 @@ namespace Donatello
 
     void CAttackB::OnDischargeWave(MAGIC_GENERIC::STEP step)
     {
-        CBarrierModule* pBarrierMod = (CBarrierModule*)Character().GetModule(MODULETYPE::BARRIER);
+        CBarrierModule* pBarrierMod = static_cast<CBarrierModule*>(Character().GetModule(MODULETYPE::BARRIER));
         ASSERT(pBarrierMod);
 
         pBarrierMod->Appear();
@@ -333,22 +329,14 @@ namespace Donatello
     // *********************************************************************************
     //
 
-    
-    bool CConsole::IsEnableChangeStatus(PLAYERTYPES::STATUS status)
-    {
-        PLAYERTYPES::STATUS aStatusArray[] =
-        {
-            PLAYERTYPES::STATUS_IDLE,
-            PLAYERTYPES::STATUS_WALK,
-            PLAYERTYPES::STATUS_RUN,
-            PLAYERTYPES::STATUS_ATTACK_A,
-            PLAYERTYPES::STATUS_ATTACK_B,
-        };
 
-        return IsWithinStatusFromArray(status, aStatusArray, COUNT_OF(aStatusArray));
-    };
+    DEFINE_ENABLED_STATUS_FOR(CConsole, { PLAYERTYPES::STATUS_IDLE,
+                                          PLAYERTYPES::STATUS_WALK,
+                                          PLAYERTYPES::STATUS_RUN,
+                                          PLAYERTYPES::STATUS_ATTACK_A,
+                                          PLAYERTYPES::STATUS_ATTACK_B });
 
-    
+
     void CConsole::OnAttach(void)
     {
         Character().ChangeMotion(Donatello::MOTIONNAMES::CONSOLE1);
@@ -356,11 +344,9 @@ namespace Donatello
         const CPlayerCharacter::COLLISIONWALLINFO* pWallInfo = Character().GetCollisionWall();
         ASSERT(pWallInfo);
 
-        CGimmickManager::PostEvent(
-            pWallInfo->m_gimmickinfo.m_szGimmickObjName,
-            Character().GetName(),
-            GIMMICKTYPES::EVENTTYPE_ACTIVATE
-        );
+        CGimmickManager::PostEvent(pWallInfo->m_gimmickinfo.m_szGimmickObjName,
+                                   Character().GetName(),
+                                   GIMMICKTYPES::EVENTTYPE_ACTIVATE);
 
         Character().SetEnableBodyHitSelfToOther(false);
         
@@ -376,11 +362,9 @@ namespace Donatello
         const CPlayerCharacter::COLLISIONWALLINFO* pWallInfo = Character().GetCollisionWall();
         ASSERT(pWallInfo);
 
-        CGimmickManager::PostEvent(
-            pWallInfo->m_gimmickinfo.m_szGimmickObjName,
-            Character().GetName(),
-            GIMMICKTYPES::EVENTTYPE_ACTIVATE
-        );
+        CGimmickManager::PostEvent(pWallInfo->m_gimmickinfo.m_szGimmickObjName,
+                                   Character().GetName(),
+                                   GIMMICKTYPES::EVENTTYPE_ACTIVATE);
     };
     
 
@@ -400,7 +384,7 @@ namespace Donatello
 
         case 1:
             {
-                if (CGameProperty::GetTotalElapsedTime() - m_fStartTimer > 1.0f)
+                if ((CGameProperty::GetTotalElapsedTime() - m_fStartTimer) > 1.0f)
                 {
                     Character().ChangeMotion(Donatello::MOTIONNAMES::CONSOLE3);
                     m_iMotionStep = 2;
@@ -420,9 +404,7 @@ namespace Donatello
             break;
         };
     };
-};
-
-
+}; /* namespace Donatello */
 
 
 CDonatello::CDonatello(GAMETYPES::COSTUME costume)
@@ -450,7 +432,6 @@ CDonatello::CDonatello(GAMETYPES::COSTUME costume)
     parameter.m_feature.m_nKnifeAttachBoneID    = CHARACTERTYPES::BONEID_RIGHT_WRIST;
 
     parameter.m_pStateMachine = new CPlayerStateMachine(this, PLAYERTYPES::STATUS::NORMALMAX);
-    ASSERT(parameter.m_pStateMachine);
 
     CStatus::RegistDefaultForStateMachine(*parameter.m_pStateMachine);
 
@@ -463,17 +444,15 @@ CDonatello::CDonatello(GAMETYPES::COSTUME costume)
 
     Initialize(&parameter);
 
-    m_pModuleMan->Include(CCircleShadowModule::New(this, 1.5f, 1.5f, true));
+    m_pModuleMan->Include(CCircleShadowModule::New(this, 1.5f, 1.5f, false));
 
     if (costume != GAMETYPES::COSTUME_SAMURAI)
     {
-        m_pModuleMan->Include(new CBandanaModule(
-            this,
-            m_pModel,
-            CHARACTERTYPES::BONEID_HEAD,
-            &Donatello::BANDANA_OFFSET,
-            CBandanaModule::BANDANACOLOR_PURPLE
-        ));
+        m_pModuleMan->Include(new CBandanaModule(this,
+                                                 m_pModel,
+                                                 CHARACTERTYPES::BONEID_HEAD,
+                                                 &Donatello::BANDANA_OFFSET,
+                                                 CBandanaModule::BANDANACOLOR_PURPLE));
     };
 
     m_pModuleMan->Include(new CBarrierModule(new CPlayerTracer(this), this, 2.0f));
@@ -490,5 +469,5 @@ void CDonatello::OnChangeMotion(void)
 {
     CPlayerCharacter::OnChangeMotion();
 
-    m_pModel->SetPartsDrawEnable(0, CGameData::Record().Secret().IsDonLazerEnabled());
+    m_pModel->SetPartsDrawEnable(Donatello::MODELPART_LASER, CGameData::Record().Secret().IsDonLazerEnabled());
 };

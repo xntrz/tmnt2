@@ -19,20 +19,12 @@
 
 namespace Splinter
 {
-    bool CAttackJump::IsEnableChangeStatus(PLAYERTYPES::STATUS status)
-    {
-        PLAYERTYPES::STATUS aStatusArray[] =
-        {
-            PLAYERTYPES::STATUS_JUMP,
-            PLAYERTYPES::STATUS_JUMP_2ND,
-            PLAYERTYPES::STATUS_JUMP_WALL,
-            PLAYERTYPES::STATUS_AERIAL,
-            PLAYERTYPES::STATUS_AERIAL_MOVE,
-        };
-
-        return IsWithinStatusFromArray(status, aStatusArray, COUNT_OF(aStatusArray));
-    };
-
+    DEFINE_ENABLED_STATUS_FOR(CAttackJump, { PLAYERTYPES::STATUS_JUMP,
+                                             PLAYERTYPES::STATUS_JUMP_2ND,
+                                             PLAYERTYPES::STATUS_JUMP_WALL,
+                                             PLAYERTYPES::STATUS_AERIAL,
+                                             PLAYERTYPES::STATUS_AERIAL_MOVE });
+        
 
     void CAttackJump::OnAttach(void)
     {
@@ -69,7 +61,7 @@ namespace Splinter
     {
         PlayerStatus::CAttackAABBC::OnDetach();
 
-        CBarrierModule* pBarrierMod = (CBarrierModule*)Character().GetModule(MODULETYPE::BARRIER);
+        CBarrierModule* pBarrierMod = static_cast<CBarrierModule*>(Character().GetModule(MODULETYPE::BARRIER));
         ASSERT(pBarrierMod);
 
         pBarrierMod->Disappear();
@@ -93,15 +85,12 @@ namespace Splinter
 
         case PHASE_INVOKE_BARRIER:
             {
-                CBarrierModule* pBarrierMod = (CBarrierModule*)Character().GetModule(MODULETYPE::BARRIER);
+                CBarrierModule* pBarrierMod = static_cast<CBarrierModule*>(Character().GetModule(MODULETYPE::BARRIER));
                 ASSERT(pBarrierMod);
 
                 switch (pBarrierMod->GetState())
                 {
                 case CBarrierModule::STATE_DISAPPEAR:
-                    {
-                        ;
-                    }
                     break;
 
                 case CBarrierModule::STATE_SLEEP:
@@ -109,10 +98,14 @@ namespace Splinter
                         m_phase = PHASE_FINISH;
                         Character().PlayMotion();
 
-                        CAccumulateModule* pAccumMod = (CAccumulateModule*)Character().GetModule(MODULETYPE::ACCUMULATE);
+                        CAccumulateModule* pAccumMod = static_cast<CAccumulateModule*>(Character().GetModule(MODULETYPE::ACCUMULATE));
                         ASSERT(pAccumMod);
+
                         pAccumMod->SetDrawOff();
                     }
+                    break;
+
+                default:
                     break;
                 };
             }
@@ -134,7 +127,7 @@ namespace Splinter
 
     void CAttackAABBC::OnDischargeWave(void)
     {
-        CBarrierModule* pBarrierMod = (CBarrierModule*)Character().GetModule(MODULETYPE::BARRIER);
+        CBarrierModule* pBarrierMod = static_cast<CBarrierModule*>(Character().GetModule(MODULETYPE::BARRIER));
         ASSERT(pBarrierMod);
 
         pBarrierMod->Appear();
@@ -158,7 +151,7 @@ namespace Splinter
     {
         PlayerStatus::CAttackB::OnDetach();
 
-        CBarrierModule* pBarrierMod = (CBarrierModule*)Character().GetModule(MODULETYPE::BARRIER);
+        CBarrierModule* pBarrierMod = static_cast<CBarrierModule*>(Character().GetModule(MODULETYPE::BARRIER));
         ASSERT(pBarrierMod);
 
         pBarrierMod->Disappear();
@@ -182,15 +175,12 @@ namespace Splinter
 
         case PHASE_INVOKE_BARRIER:
             {
-                CBarrierModule* pBarrierMod = (CBarrierModule*)Character().GetModule(MODULETYPE::BARRIER);
+                CBarrierModule* pBarrierMod = static_cast<CBarrierModule*>(Character().GetModule(MODULETYPE::BARRIER));
                 ASSERT(pBarrierMod);
 
                 switch (pBarrierMod->GetState())
                 {
                 case CBarrierModule::STATE_DISAPPEAR:
-                    {
-                        ;
-                    }
                     break;
 
                 case CBarrierModule::STATE_SLEEP:
@@ -198,10 +188,14 @@ namespace Splinter
                         m_phase = PHASE_FINISH;
                         Character().PlayMotion();
 
-                        CAccumulateModule* pAccumMod = (CAccumulateModule*)Character().GetModule(MODULETYPE::ACCUMULATE);
+                        CAccumulateModule* pAccumMod = static_cast<CAccumulateModule*>(Character().GetModule(MODULETYPE::ACCUMULATE));
                         ASSERT(pAccumMod);
+                        
                         pAccumMod->SetDrawOff();
                     }
+                    break;
+
+                default:
                     break;
                 };
             }
@@ -223,7 +217,7 @@ namespace Splinter
 
     void CAttackB::OnDischargeWave(MAGIC_GENERIC::STEP step)
     {
-        CBarrierModule* pBarrierMod = (CBarrierModule*)Character().GetModule(MODULETYPE::BARRIER);
+        CBarrierModule* pBarrierMod = static_cast<CBarrierModule*>(Character().GetModule(MODULETYPE::BARRIER));
         ASSERT(pBarrierMod);
 
         pBarrierMod->Appear();
@@ -246,11 +240,11 @@ namespace Splinter
             break;
         };
     };
-};
+}; /* namespace Splinter */
 
 
 CSplinter::CSplinter(GAMETYPES::COSTUME costume)
-: CPlayerCharacter("Splinter", PLAYERID::ID_SPL, costume)
+: CPlayerCharacter("splinter", PLAYERID::ID_SPL, costume)
 {
     //
 	//	Model parts:
@@ -273,8 +267,7 @@ CSplinter::CSplinter(GAMETYPES::COSTUME costume)
     parameter.m_feature.m_fAerialAcceleration   = 12.0f;
     parameter.m_feature.m_nKnifeAttachBoneID    = CHARACTERTYPES::BONEID_RIGHT_WRIST;
 
-    parameter.m_pStateMachine = new CPlayerStateMachine(this, PLAYERTYPES::NORMALMAX);
-    ASSERT(parameter.m_pStateMachine);
+    parameter.m_pStateMachine = new CPlayerStateMachine(this, PLAYERTYPES::STATUS::NORMALMAX);
 
     CStatus::RegistDefaultForStateMachine(*parameter.m_pStateMachine);
 
@@ -284,7 +277,7 @@ CSplinter::CSplinter(GAMETYPES::COSTUME costume)
 
     Initialize(&parameter);
 
-    m_pModuleMan->Include(CCircleShadowModule::New(this, 1.5f, 1.5f, true));
+    m_pModuleMan->Include(CCircleShadowModule::New(this, 1.5f, 1.5f, false));
 
     m_pModuleMan->Include(new CBarrierModule(new CPlayerTracer(this), this, 2.0f));
 };

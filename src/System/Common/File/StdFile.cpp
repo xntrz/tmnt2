@@ -57,7 +57,7 @@ uint32 CStdFile::Read(void* buffer, uint32 size)
     if (m_uPosition + size > uSize)
         uBytesToRead = uSize - m_uPosition;
 
-    std::memcpy(buffer, &((const char*)pBuff)[m_uPosition], uBytesToRead);
+    std::memcpy(buffer, &static_cast<const char*>(pBuff)[m_uPosition], uBytesToRead);
 
     m_uPosition += uBytesToRead;
     uReaded = uBytesToRead;

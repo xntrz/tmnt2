@@ -123,8 +123,8 @@ void CCharaResult::NODE::Clear(void)
     m_nAerialEval       = 0;
     m_nPersonalPoint    = 0;
     m_nPersonalEval     = 0;
-    //m_nDefenseCount     = 0;
-    //m_nJumpPoint        = 0;
+    m_nDefenseCount     = 0;
+    m_nJumpPoint        = 0;
 };
 
 
@@ -157,13 +157,15 @@ void CCharaResult::NODE::AddTechnicalAction(PLAYERID::VALUE idPlayer, GAMETYPES:
         break;
     };
 
-    if (tecact && tecact < GAMETYPES::TECACT_JUMP_WALL)
+    if ((tecact > GAMETYPES::TECACT_NONE) &&
+        (tecact < GAMETYPES::TECACT_JUMP_WALL))
+    {
         ++m_nDefensePoint;
-    //    ++m_nDefenseCount;
-    //};
+        ++m_nDefenseCount;
+    };
 
-    //if (tecact == GAMETYPES::TECACT_JUMP)
-    //    m_nJumpPoint += pTechInfo->m_nPoints;
+    if (tecact == GAMETYPES::TECACT_JUMP)
+        m_nJumpPoint += pTechInfo->m_nPoints;
 };
 
 
@@ -171,7 +173,7 @@ void CCharaResult::NODE::Evaluate(void)
 {
     m_nOffenseEval = EvaluateOffenseTech();
     m_nDefenseEval = EvaluateDefenseTech();
-    m_nAerialEval = EvaluateAerialTech();
+    m_nAerialEval  = EvaluateAerialTech();
 
     m_nPersonalPoint = (m_nOffenseEval + m_nDefenseEval + m_nAerialEval);
     m_nPersonalEval = CGamePlayResult::EvaluateInt(m_nPersonalPoint, m_anPersonalEvalTable, COUNT_OF(m_anPersonalEvalTable));
@@ -192,7 +194,11 @@ int32 CCharaResult::NODE::EvaluateDefenseTech(void)
 
 int32 CCharaResult::NODE::EvaluateOffenseTech(void)
 {
-    m_fOffenseRatio = (m_nOffenseCount ? (float(m_nOffensePoint) / float(m_nOffenseCount)) : 0.0f);    
+    m_fOffenseRatio = 0.0f;
+    
+    if (m_nOffenseCount)
+        m_fOffenseRatio = (static_cast<float>(m_nOffensePoint) / static_cast<float>(m_nOffenseCount));
+    
     return CGamePlayResult::EvaluateFloat(m_fOffenseRatio, m_afOffenseEvalTable, COUNT_OF(m_afOffenseEvalTable));
 };
 
@@ -220,7 +226,8 @@ void CCharaResult::Clear(void)
 
 void CCharaResult::AddTechnicalAction(int32 nIndex, PLAYERID::VALUE idPlayer, GAMETYPES::TECACT tecact)
 {
-    ASSERT(nIndex >= 0 && nIndex < COUNT_OF(m_aNode));
+    ASSERT(nIndex >= 0);
+    ASSERT(nIndex < COUNT_OF(m_aNode));
 
     m_aNode[nIndex].AddTechnicalAction(idPlayer, tecact);
 };
@@ -249,7 +256,11 @@ int32 CCharaResult::GetMVP(void) const
 
 const CCharaResult::NODE& CCharaResult::Chara(int32 nIndex) const
 {
-    ASSERT(nIndex >= 0 && nIndex < COUNT_OF(m_aNode));
+    ASSERT(nIndex >= 0);
+    ASSERT(nIndex < COUNT_OF(m_aNode));
 
-    return (nIndex >= 0 && nIndex < COUNT_OF(m_aNode)) ? m_aNode[nIndex] : m_aNode[0];
+    if ((nIndex >= 0) && (nIndex < COUNT_OF(m_aNode)))
+        return m_aNode[nIndex];
+
+    return m_aNode[0];
 };

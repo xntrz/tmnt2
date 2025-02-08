@@ -18,18 +18,24 @@ public:
     void SetFeature(MAGICTYPES::FEATURE feature);
     void AddFeature(MAGICTYPES::FEATURE feature);
     void SetCollisionBody(const RwV3d* pvPosition, float fRadius);
-    void SetCollisionAttack(
-        const RwV3d* pvPosition,
-        float fRadius,
-        int32 nPower,
-        int32 nAntiguard,
-        int32 nStatus,
-        float fTime = 0.0f,
-        float fFlyX = 0.0f,
-        float fFlyY = 0.0f
-    );
+    void SetCollisionBody(float fRadius);
+    void SetCollisionAttack(const RwV3d* pvPosition,
+                            float fRadius,
+                            int32 nPower,
+                            int32 nAntiguard,
+                            int32 nStatus,
+                            float fTime = 0.0f, // of status effect
+                            float fFlyX = 0.0f,
+                            float fFlyY = 0.0f);
+    void SetCollisionAttack(float fRadius,
+                            int32 nPower,
+                            int32 nAntiguard,
+                            int32 nStatus,
+                            float fTime = 0.0f, // of status effect
+                            float fFlyX = 0.0f,
+                            float fFlyY = 0.0f);
     void SetConfusionFlag(bool bSet);
-    void SetMovement(const RwV3d* pvVelocity, const RwV3d* pvAcceleration);
+    void SetMovement(const RwV3d* pvVelocity, const RwV3d* pvAcceleration = nullptr);
     void SetLocusInfo(MAGICTYPES::LOCUSINFO& rLocusInfo);
     void SetReflectNum(int32 nReflectNum);
     void SetLive(float fLivetime);

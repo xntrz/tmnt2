@@ -99,7 +99,7 @@ void CRideGimmick::PostMove(void)
 
     if (m_pModuleManager && IsProcess(PROCESSTYPE_DRAW_SHADOW))
     {
-        CCircleShadowModule* pCircleShadowMod = (CCircleShadowModule*)m_pModuleManager->GetModule(MODULETYPE::CIRCLE_SHADOW);
+        CCircleShadowModule* pCircleShadowMod = static_cast<CCircleShadowModule*>(m_pModuleManager->GetModule(MODULETYPE::CIRCLE_SHADOW));
         if (pCircleShadowMod)
             pCircleShadowMod->SetEnable(true);
 

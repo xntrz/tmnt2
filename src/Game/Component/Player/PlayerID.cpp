@@ -8,8 +8,8 @@ namespace
     struct PLAYERINFO
     {
         const char* m_pszName;
-        bool m_bImplemented;
-        RwRGBA m_Color;
+        bool        m_bImplemented;
+        RwRGBA      m_Color;
     };
 
 
@@ -31,7 +31,9 @@ namespace
     
     const PLAYERINFO& PlayerInfo(PLAYERID::VALUE idPlayer)
     {
-        ASSERT(idPlayer >= 0 && idPlayer < COUNT_OF(s_aPlayerInfoList));
+        ASSERT(idPlayer >= 0);
+        ASSERT(idPlayer < COUNT_OF(s_aPlayerInfoList));
+        
         return s_aPlayerInfoList[idPlayer];
     };
 };
@@ -85,9 +87,11 @@ namespace PLAYERID
             break;
         };
 
+#ifdef _DEBUG        
         if (bResult)
             bResult = IsImplemented(idPlayer);
-
+#endif /* _DEBUG */
+        
         return bResult;
     };
 

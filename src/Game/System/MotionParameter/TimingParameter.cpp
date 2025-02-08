@@ -19,18 +19,20 @@ CTimingParameter::~CTimingParameter(void)
 void CTimingParameter::Initialize(INIT_PARAMETER* pParam)
 {
     ASSERT(pParam);
-    ASSERT(pParam->m_kind >= 0 && pParam->m_kind < TIMING_KIND_MAX);
-    
-    m_kind = pParam->m_kind;
-    m_fTime = pParam->m_fTime;
+    ASSERT(pParam->m_kind >= 0);
+    ASSERT(pParam->m_kind < TIMING_KIND_MAX);
+
+    m_kind   = pParam->m_kind;
+    m_fTime  = pParam->m_fTime;
     m_nParam = pParam->m_nParam;
 };
 
 
 CTimingParameter::TIMING_KIND CTimingParameter::GetKind(void) const
 {
-    ASSERT(m_kind >= 0 && m_kind < TIMING_KIND_MAX);
-    
+    ASSERT(m_kind >= 0);
+    ASSERT(m_kind < TIMING_KIND_MAX);
+
     return m_kind;
 };
 
@@ -51,31 +53,39 @@ int32 CTimingParameter::GetParam(void) const
 
 bool CTimingParameter::IsLocus(void) const
 {
-    ASSERT(m_kind >= 0 && m_kind < TIMING_KIND_MAX);
-    
-    return (m_kind == TIMING_LOCUS_ON || m_kind == TIMING_LOCUS_OFF);
+    ASSERT(m_kind >= 0);
+    ASSERT(m_kind < TIMING_KIND_MAX);
+
+    return (m_kind == TIMING_LOCUS_ON) ||
+           (m_kind == TIMING_LOCUS_OFF);
 };
 
 
 bool CTimingParameter::IsAtomic(void) const
 {
-    ASSERT(m_kind >= 0 && m_kind < TIMING_KIND_MAX);
+    ASSERT(m_kind >= 0);
+    ASSERT(m_kind < TIMING_KIND_MAX);
 
-    return (m_kind == TIMING_ATOMIC_ON || m_kind == TIMING_ATOMIC_OFF);
+    return (m_kind == TIMING_ATOMIC_ON) ||
+           (m_kind == TIMING_ATOMIC_OFF);
 };
 
 
 bool CTimingParameter::IsAttack(void) const
 {
-    ASSERT(m_kind >= 0 && m_kind < TIMING_KIND_MAX);
+    ASSERT(m_kind >= 0);
+    ASSERT(m_kind < TIMING_KIND_MAX);
 
-    return (m_kind == TIMING_ATTACK || m_kind == TIMING_ATTACK_2);
+    return (m_kind == TIMING_ATTACK) ||
+           (m_kind == TIMING_ATTACK_2);
 };
 
 
 bool CTimingParameter::IsInvincible(void) const
 {
-    ASSERT(m_kind >= 0 && m_kind < TIMING_KIND_MAX);
+    ASSERT(m_kind >= 0);
+    ASSERT(m_kind < TIMING_KIND_MAX);
 
-    return (m_kind == TIMING_INVINCIBLE_ON || m_kind == TIMING_INVINCIBLE_OFF);
+    return (m_kind == TIMING_INVINCIBLE_ON) ||
+           (m_kind == TIMING_INVINCIBLE_OFF);
 };

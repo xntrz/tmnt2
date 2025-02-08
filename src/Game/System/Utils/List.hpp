@@ -1,11 +1,7 @@
 #pragma once
 
 
-class CListNodeDefaultTag
-{
-public:
-    
-};
+class CListNodeDefaultTag { };
 
 
 template<class T, class tag = CListNodeDefaultTag>
@@ -356,8 +352,8 @@ public:
 
     inline iterator erase(iterator it)
     {
-        if (empty() || !it)
-            return it;
+        ASSERT(!empty());
+        ASSERT(!!it);
 
         CListNode<T, tag>* node = it.node();
         iterator result = ++it;
@@ -405,14 +401,21 @@ public:
 
     inline bool contains(const CListNode<T, tag>* node) const
     {
-		return std::any_of(begin(), end(), [&](CListNode<T, tag>& n) { return (node == &n); });    
+        return std::any_of(begin(), end(), [&](CListNode<T, tag>& n) {
+            return (node == &n);
+        });
     };
 
 
     inline pointer search(int32 no)
     {
-        ASSERT(no >= 0 && no < std::distance(begin(), end()));
-        
+#ifdef _DEBUG
+        int32 numNodes = static_cast<int32>(std::distance(begin(), end()));
+
+        ASSERT(no >= 0);
+        ASSERT(no < numNodes);
+#endif /* _DEBUG */
+
         iterator it = begin();
         std::advance(it, no);
 		return &(*it);

@@ -19,7 +19,6 @@
 
 
 #define CHUNK_ALIGNMENT_SIZE    (64)
-#define LPAC_MAGIC              ('CAPL')
 
 
 namespace READERTYPE
@@ -522,7 +521,7 @@ void CDataLoaderFromBinary::Eval(void* pBufferOrg, uint32 sizeBuffer)
             if (!m_apItemReader[j])
                 continue;
 
-            if (m_apItemReader[j]->GetType() != READERTYPE::VALUE(chunkHeader.m_pHeader->m_uType))
+            if (m_apItemReader[j]->GetType() != static_cast<READERTYPE::VALUE>(chunkHeader.m_pHeader->m_uType))
                 continue;
 
             //OUTPUT(

@@ -7,10 +7,6 @@ class CBodyHitData;
 class CBodyHitManager
 {
 public:
-#ifdef _DEBUG    
-    static bool m_bDebugDrawSphere;
-#endif
-    
     static void Initialize(void);
     static void Terminate(void);
     static CBodyHitData* AllocData(void);

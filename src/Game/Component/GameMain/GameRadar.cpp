@@ -10,25 +10,22 @@
 #include "System/Common/Sprite.hpp"
 
 
-#define DEG_TO_RAD(deg) ((deg) / 180 * Math::PI)
-
-
 static const float SCREEN_AREA_ANGLE[] = { 22.5f, 67.5f, 112.5f, 157.5f, 180.0f };
 
-static const float SCREEN_AREA_0_START = DEG_TO_RAD(0.0f);
-static const float SCREEN_AREA_0_END = DEG_TO_RAD(SCREEN_AREA_ANGLE[0]);
+static const float SCREEN_AREA_0_START = MATH_DEG2RAD(0.0f);
+static const float SCREEN_AREA_0_END = MATH_DEG2RAD(SCREEN_AREA_ANGLE[0]);
 
 static const float SCREEN_AREA_1_START = SCREEN_AREA_0_END;
-static const float SCREEN_AREA_1_END = DEG_TO_RAD(SCREEN_AREA_ANGLE[1]);
+static const float SCREEN_AREA_1_END = MATH_DEG2RAD(SCREEN_AREA_ANGLE[1]);
 
 static const float SCREEN_AREA_2_START = SCREEN_AREA_1_END;
-static const float SCREEN_AREA_2_END = DEG_TO_RAD(SCREEN_AREA_ANGLE[2]);
+static const float SCREEN_AREA_2_END = MATH_DEG2RAD(SCREEN_AREA_ANGLE[2]);
 
 static const float SCREEN_AREA_3_START = SCREEN_AREA_2_END;
-static const float SCREEN_AREA_3_END = DEG_TO_RAD(SCREEN_AREA_ANGLE[3]);
+static const float SCREEN_AREA_3_END = MATH_DEG2RAD(SCREEN_AREA_ANGLE[3]);
 
 static const float SCREEN_AREA_4_START = SCREEN_AREA_3_END;
-static const float SCREEN_AREA_4_END = DEG_TO_RAD(SCREEN_AREA_ANGLE[4]);
+static const float SCREEN_AREA_4_END = MATH_DEG2RAD(SCREEN_AREA_ANGLE[4]);
 
 
 class CGameRadarImpl
@@ -39,13 +36,13 @@ private:
     struct PART
     {
         CSprite Sprite;
-        float Distance;
-        bool DispFlag;
+        float   Distance;
+        bool    DispFlag;
     };
 
     struct TEXTUREINFO
     {
-        RwTexture* Texture;
+        RwTexture*  Texture;
         const char* TextureName;
     };
 
@@ -103,15 +100,15 @@ CGameRadarImpl::CGameRadarImpl(float fDistance)
 
     const PARTINFO aPartInfo[] =
     {
-        { { 0.0f,       -108.0f }, { 32.0f, 128.0f },   -DEG_TO_RAD(90.0f),    0 },
-        { { 0.0f,       148.0f  }, { 32.0f, 128.0f },   DEG_TO_RAD(90.0f),     0 },
-        { { -259.0f,    27.0f   }, { 32.0f, 128.0f },   DEG_TO_RAD(180.0f),    0 },        
-        { { 259.0f,     27.0f   }, { 32.0f, 128.0f },   DEG_TO_RAD(0.0f),      0 },
+        { {  0.0f,      -108.0f  }, { 32.0f, 128.0f },  -MATH_DEG2RAD(90.0f),     0 },
+        { {  0.0f,       148.0f  }, { 32.0f, 128.0f },   MATH_DEG2RAD(90.0f),     0 },
+        { { -259.0f,     27.0f   }, { 32.0f, 128.0f },   MATH_DEG2RAD(180.0f),    0 },        
+        { {  259.0f,     27.0f   }, { 32.0f, 128.0f },   MATH_DEG2RAD(0.0f),      0 },
 
-        { { -235.0f,    -77.0f  }, { 64.0f, 64.0f },    DEG_TO_RAD(180.0f),    1 },
-        { { 235.0f,     -77.0f  }, { 64.0f, 64.0f },    -DEG_TO_RAD(90.0f),    1 },
-        { { -235.0f,    129.0f  }, { 64.0f, 64.0f },    DEG_TO_RAD(90.0f),     1 },
-        { { 235.0f,     129.0f  }, { 64.0f ,64.0f },    DEG_TO_RAD(0.0f),      1 },
+        { { -235.0f,    -77.0f   }, { 64.0f, 64.0f },    MATH_DEG2RAD(180.0f),    1 },
+        { {  235.0f,    -77.0f   }, { 64.0f, 64.0f },   -MATH_DEG2RAD(90.0f),     1 },
+        { { -235.0f,     129.0f  }, { 64.0f, 64.0f },    MATH_DEG2RAD(90.0f),     1 },
+        { {  235.0f,     129.0f  }, { 64.0f, 64.0f },    MATH_DEG2RAD(0.0f),      1 },
     };
 
     static_assert(COUNT_OF(aPartInfo) == COUNT_OF(m_aPart), "update me");

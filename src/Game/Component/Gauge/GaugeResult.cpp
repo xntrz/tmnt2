@@ -1,4 +1,5 @@
 #include "GaugeResult.hpp"
+#include "GaugeAnim.hpp"
 
 #include "Game/Component/GameData/GameData.hpp"
 #include "Game/Component/GameMain/GameProperty.hpp"
@@ -12,13 +13,16 @@
 
 class CGaugeResult_Container
 {
+private:
+    using RESULTREQ = CGaugeResult::RESULTREQ;
+
 public:
     CGaugeResult_Container(void);
     ~CGaugeResult_Container(void);
     void Period(void);
     void Draw(void);
-    void SetMissionResult(CGaugeResult::RESULTREQ req);
-    void SetMissionResult(CGaugeResult::RESULTREQ req, int32 nPlayerNo);
+    void SetMissionResult(RESULTREQ req);
+    void SetMissionResult(RESULTREQ req, int32 nPlayerNo);
     bool IsMissionResultEnd(void) const;
     void DrawNormal(void);
     void DrawNexus(void);
@@ -26,14 +30,14 @@ public:
     RwTexture* GetFailTexture(void) const;
 
 protected:
-    uint32 m_uAnimCnt;
-    uint32 m_uAnimStep;
-    CGaugeResult::RESULTREQ m_ReqMissionResult;
-    int32 m_nReqFailedPlayer;
-    bool m_bSettingFlag;
-    float m_fSpriteRot;
-    CSprite m_sprite;
-    RwTexture* m_apTexture[10];
+    uint32      m_uAnimCnt;
+    uint32      m_uAnimStep;
+    RESULTREQ   m_ReqMissionResult;
+    int32       m_nReqFailedPlayer;
+    bool        m_bSettingFlag;
+    float       m_fSpriteRot;
+    CSprite     m_sprite;
+    RwTexture*  m_apTexture[10];
 };
 
 
@@ -124,7 +128,7 @@ void CGaugeResult_Container::Draw(void)
 };
 
 
-void CGaugeResult_Container::SetMissionResult(CGaugeResult::RESULTREQ req)
+void CGaugeResult_Container::SetMissionResult(RESULTREQ req)
 {
     m_uAnimCnt = 0;
     m_uAnimStep = 0;
@@ -133,7 +137,7 @@ void CGaugeResult_Container::SetMissionResult(CGaugeResult::RESULTREQ req)
 };
 
 
-void CGaugeResult_Container::SetMissionResult(CGaugeResult::RESULTREQ req, int32 nPlayerNo)
+void CGaugeResult_Container::SetMissionResult(RESULTREQ req, int32 nPlayerNo)
 {
     m_uAnimCnt = 0;
     m_uAnimStep = 0;
@@ -248,6 +252,9 @@ void CGaugeResult_Container::DrawNormal(void)
                         ++m_uAnimCnt;
                     };
                 }
+                break;
+
+            default:
                 break;
             };
         }
@@ -403,6 +410,9 @@ void CGaugeResult_Container::DrawNormal(void)
                     };
                 }
                 break;
+                
+            default:
+                break;
             };
         }        
         break;
@@ -494,6 +504,9 @@ void CGaugeResult_Container::DrawNexus(void)
                 ++m_uAnimCnt;
         }
         break;
+
+    default:
+        break;
     };
 
     if (req == CGaugeResult::RESULTREQ_SUCCESS)
@@ -515,35 +528,35 @@ void CGaugeResult_Container::CallFailMessage(void) const
     switch (CGameProperty::Player(m_nReqFailedPlayer)->GetCurrentCharacterID())
     {
     case PLAYERID::ID_LEO:
-        CMessageManager::Request(SEGROUPID::VALUE(47), PLAYERID::VALUE(-1));
+        CMessageManager::Request(SEGROUPID::VALUE(47));
         break;
 
     case PLAYERID::ID_RAP:
-        CMessageManager::Request(SEGROUPID::VALUE(48), PLAYERID::VALUE(-1));
+        CMessageManager::Request(SEGROUPID::VALUE(48));
         break;
 
     case PLAYERID::ID_MIC:
-        CMessageManager::Request(SEGROUPID::VALUE(49), PLAYERID::VALUE(-1));
+        CMessageManager::Request(SEGROUPID::VALUE(49));
         break;
 
     case PLAYERID::ID_DON:
-        CMessageManager::Request(SEGROUPID::VALUE(50), PLAYERID::VALUE(-1));
+        CMessageManager::Request(SEGROUPID::VALUE(50));
         break;
 
     case PLAYERID::ID_SLA:
-        CMessageManager::Request(SEGROUPID::VALUE(54), PLAYERID::VALUE(-1));
+        CMessageManager::Request(SEGROUPID::VALUE(54));
         break;
 
     case PLAYERID::ID_CAS:
-        CMessageManager::Request(SEGROUPID::VALUE(51), PLAYERID::VALUE(-1));
+        CMessageManager::Request(SEGROUPID::VALUE(51));
         break;
 
     case PLAYERID::ID_KAR:
-        CMessageManager::Request(SEGROUPID::VALUE(52), PLAYERID::VALUE(-1));
+        CMessageManager::Request(SEGROUPID::VALUE(52));
         break;
 
     case PLAYERID::ID_SPL:
-        CMessageManager::Request(SEGROUPID::VALUE(53), PLAYERID::VALUE(-1));
+        CMessageManager::Request(SEGROUPID::VALUE(53));
         break;
 
     default:
@@ -556,8 +569,9 @@ void CGaugeResult_Container::CallFailMessage(void) const
 RwTexture* CGaugeResult_Container::GetFailTexture(void) const
 {
     int32 nIndex = CGameProperty::Player(m_nReqFailedPlayer)->GetCurrentCharacterID() + 2;
-    ASSERT(nIndex >= 0 && nIndex < COUNT_OF(m_apTexture));
-    
+    ASSERT(nIndex >= 0);
+    ASSERT(nIndex < COUNT_OF(m_apTexture));
+
     return m_apTexture[nIndex];
 };
 
@@ -575,9 +589,7 @@ static CGaugeResult_Container& GaugeResultContainer(void)
 /*static*/ void CGaugeResult::Initialize(void)
 {
     if (!s_pGaugeResultContainer)
-    {
         s_pGaugeResultContainer = new CGaugeResult_Container;
-    };
 };
 
 

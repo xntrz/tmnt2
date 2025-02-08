@@ -85,5 +85,20 @@ namespace MAGICTYPES
                                         | FEATURE_ATTACK_TO_ENEMY
                                         | FEATURE_ATTACK_TO_MAPOBJ
                                         | FEATURE_COLLISION_CHANGE_SIZE,
+
+        FEATURE_MASK_ATTACK_TO          = FEATURE_ATTACK_TO_PLAYER
+                                        | FEATURE_ATTACK_TO_ENEMY
+                                        | FEATURE_ATTACK_TO_MAPOBJ,
+
+        FEATURE_ATTACK_TO_PLAYER_MAPOBJ = FEATURE_ATTACK_TO_PLAYER
+                                        | FEATURE_ATTACK_TO_MAPOBJ,
+
+        FEATURE_ATTACK_TO_ENEMY_MAPOBJ  = FEATURE_ATTACK_TO_ENEMY
+                                        | FEATURE_ATTACK_TO_MAPOBJ,
+
+        FEATURE_ATTACK_TO_PLAYER_ENEMY  = FEATURE_ATTACK_TO_PLAYER
+                                        | FEATURE_ATTACK_TO_ENEMY,
     };
+
+    DEFINE_ENUM_FLAG_OPS(FEATURE);
 };

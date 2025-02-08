@@ -80,12 +80,12 @@ CThrowingGimmick::CThrowingGimmick(const char* pszName, void* pParam)
     m_pModuleManager = new CModuleManager;
     ASSERT(m_pModuleManager);
 
-	m_pModuleManager->Include(CCircleShadowModule::New(
-		this,
-		m_pKindinfo->m_fShadowRadius,
-		m_pKindinfo->m_fShadowRadius,
-		true
-	));
+    float fShadowRadius = m_pKindinfo->m_fShadowRadius;
+
+    CCircleShadowModule* pShadowMod = CCircleShadowModule::New(this, fShadowRadius, fShadowRadius, true);
+    ASSERT(pShadowMod != nullptr);
+
+    m_pModuleManager->Include(pShadowMod);
 };
 
 
@@ -151,6 +151,8 @@ void CThrowingGimmick::MessageProc(int32 nMessageID, void* pParam)
 void CThrowingGimmick::Draw(void) const
 {
     CGimmick::Draw();
+
+    m_pModuleManager->Draw();
 };
 
 
@@ -172,7 +174,7 @@ void CThrowingGimmick::GetCenterPosition(RwV3d* pvPosition) const
 
 GIMMICKTYPES::FEATURE CThrowingGimmick::GetFeatures(void) const
 {
-    return GIMMICKTYPES::FEATURE(GIMMICKTYPES::FEATURE_HOMING | GIMMICKTYPES::FEATURE_SLEEP);
+    return (GIMMICKTYPES::FEATURE_HOMING | GIMMICKTYPES::FEATURE_ABLE_SLEEP);
 };
 
 
@@ -278,7 +280,7 @@ void CThrowingGimmick::OnCatchAttack(CHitAttackData* pAttack)
                     && (pAttacker->GetType() == GAMEOBJECTTYPE::CHARACTER)
                     && (static_cast<CCharacter*>(pAttacker)->GetCharacterType() == CCharacter::TYPE_PLAYER))
                 {
-                    CMessageManager::Request(SEGROUPID::VALUE(9), PLAYERID::VALUE(-1));
+                    CMessageManager::Request(SEGROUPID::VALUE(9));
                 };                
             };
         };

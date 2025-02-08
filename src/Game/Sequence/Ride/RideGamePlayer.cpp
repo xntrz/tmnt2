@@ -146,11 +146,11 @@ int32 CRideGamePlayer::GetShurikenNum(void) const
 };
 
 
-void CRideGamePlayer::Relocation(const RwV3d* pvPosition, float fDirection, bool bProtect)
+void CRideGamePlayer::Relocation(const RwV3d* pvPosition, float fDirection, bool bBlink)
 {
     (void)pvPosition;
     (void)fDirection;
-    (void)bProtect;
+    (void)bBlink;
 
     ASSERT(false);
 };
@@ -204,8 +204,9 @@ void CRideGamePlayer::CreatePlayer(int32 no)
 
 void CRideGamePlayer::CreatePlayerEx(int32 no, int32 gamepadNo)
 {
-    ASSERT(!m_pPlayer);
-    ASSERT(no >= 0 && no < GAMETYPES::PLAYERS_MAX);
+    ASSERT(no >= 0);
+    ASSERT(no < GAMETYPES::PLAYERS_MAX);
+    ASSERT(m_pPlayer == nullptr);
 
     CRidePlayer* pPlayer = CRidePlayer::New(no, gamepadNo);
     if (pPlayer)

@@ -50,7 +50,7 @@ void CAutoHpCtrlObj::Run(void)
     {
 		int32 nPlayerNum = CGameProperty::GetPlayerNum();
 		for (int32 i = 0; i < nPlayerNum; ++i)
-			CGameProperty::Player(i)->AddHP(int32(m_fValue));
+			CGameProperty::Player(i)->AddHP(static_cast<int32>(m_fValue));
     };
 
     m_fValue -= m_fValue;

@@ -33,11 +33,11 @@ void CAttackParameter::Initialize(INIT_PARAMETER* pParam)
 {
     ASSERT(pParam);
 
-    m_no = pParam->m_no;
-    m_nBoneID = pParam->m_nBoneID;
-    m_fStart = pParam->m_fStart;
-    m_fEnd = pParam->m_fEnd;
-    m_sphere = pParam->m_sphere;
+    m_no        = pParam->m_no;
+    m_nBoneID   = pParam->m_nBoneID;
+    m_fStart    = pParam->m_fStart;
+    m_fEnd      = pParam->m_fEnd;
+    m_sphere    = pParam->m_sphere;
 };
 
 
@@ -45,17 +45,17 @@ void CAttackParameter::Attach(ATTACH_PARAMETER* pParam)
 {
     ASSERT(pParam);
 
-    m_no = pParam->m_nNo;
-    m_nPower = pParam->m_nPower;
-    m_nStatus = pParam->m_nStatus;
-    m_fStatusVal1 = pParam->m_fStatusVal1;
-    m_fStatusVal2 = pParam->m_fStatusVal2;
-    m_bConfusion = pParam->m_bConfusion;
-    m_bGuardImpact = pParam->m_bGuardImpact;
-    m_bSlice = pParam->m_bSlice;
-    m_bReflectShot = pParam->m_bReflectShot;
-    m_nAntiguard = pParam->m_nAntiguard;
-    m_uTarget = pParam->m_uTarget;
+    m_no            = pParam->m_nNo;
+    m_nPower        = pParam->m_nPower;
+    m_nStatus       = pParam->m_nStatus;
+    m_fStatusVal1   = pParam->m_fStatusVal1;
+    m_fStatusVal2   = pParam->m_fStatusVal2;
+    m_bConfusion    = pParam->m_bConfusion;
+    m_bGuardImpact  = pParam->m_bGuardImpact;
+    m_bSlice        = pParam->m_bSlice;
+    m_bReflectShot  = pParam->m_bReflectShot;
+    m_nAntiguard    = pParam->m_nAntiguard;
+    m_uTarget       = pParam->m_uTarget;
 };
 
 
@@ -63,7 +63,8 @@ bool CAttackParameter::IsAttackEnableTime(float fNow) const
 {
     const float PRECISION = 1.0f / 8192.0f;
     
-    return (fNow >= (m_fStart - PRECISION)) && (fNow <= (m_fEnd + PRECISION));
+    return (fNow >= (m_fStart - PRECISION)) &&
+           (fNow <= (m_fEnd   + PRECISION));
 };
 
 
@@ -88,13 +89,13 @@ void CAttackParameter::GetParameter(CHitAttackData* pHitAttackData) const
     {
         pHitAttackData->SetEffect(CHitAttackData::EFFECT_STUN);
     }
-    else if (pHitAttackData->GetStatus())
+    else if (pHitAttackData->GetStatus() == CHitAttackData::STATUS_FLYAWAY)
     {
-        pHitAttackData->SetEffect(CHitAttackData::EFFECT_SMALL);
+        pHitAttackData->SetEffect(CHitAttackData::EFFECT_LARGE);
     }
     else
     {
-        pHitAttackData->SetEffect(CHitAttackData::EFFECT_LARGE);
+        pHitAttackData->SetEffect(CHitAttackData::EFFECT_SMALL);
     };
 };
 

@@ -16,5 +16,4 @@ public:
 
 private:
     CRideCharacter* m_pRideChr;
-    RwV3d m_vPosition;
 };

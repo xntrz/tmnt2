@@ -35,6 +35,7 @@ public:
     virtual void OnAttackResult(CHitCatchData* pCatch);
     void Release(void);
     bool IsSleep(void) const;
+    bool CheckFeature(GIMMICKTYPES::FEATURE feature) const;
 
     inline void Init(GIMMICKID::VALUE idGimmick)        { m_id = idGimmick; };
     inline GIMMICKID::VALUE GetID(void) const           { return m_id; };

@@ -227,7 +227,7 @@ void CFallRubbleGimmickManager::createRubbleGimmick(RUBBLEINFO* pInfo, int32 nCo
         //  init rotation
         //
         RwV3d vAxis = { 1.0f, 1.0f, 1.0f };
-        float fAngle = Math::ToRadian(Math::RandFloat());
+        float fAngle = MATH_DEG2RAD(Math::RandFloat() * 180.0f);
         CGimmickUtils::QuaternionFromAxisAngle(&param.m_quat, &vAxis, fAngle);
 
         //

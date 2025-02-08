@@ -27,15 +27,15 @@ public:
 
     struct NODEANTIQUE
     {
-        STATE m_state;
+        STATE  m_state;
         uint32 m_takenDate;
     };
 
     struct RAWDATA
     {
         SHOPSTATE m_shopstate;
-        STATE m_abAntiqueState[ANTIQUEID::ID_MAX];
-        uint32 m_auAntiqueTakenDate[ANTIQUEID::ID_MAX];
+        STATE     m_abAntiqueState[ANTIQUEID::ID_MAX];
+        uint32    m_auAntiqueTakenDate[ANTIQUEID::ID_MAX];
     };
 
 public:

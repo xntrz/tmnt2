@@ -53,9 +53,10 @@ float CMotionParameterController::GetBlendTime(void) const
 
 CMotionParameterController::PLAYMODE CMotionParameterController::GetPlaymode(void) const
 {
-    PLAYMODE playmode = PLAYMODE(CurrentMotionParam().GetPlaymode());
+    PLAYMODE playmode = static_cast<PLAYMODE>(CurrentMotionParam().GetPlaymode());
     
-    ASSERT(playmode >= 0 && playmode < PLAYMODEMAX);
+    ASSERT(playmode >= 0);
+    ASSERT(playmode < PLAYMODEMAX);
 
     return playmode;
 };
@@ -199,9 +200,7 @@ bool CMotionParameterController::IsInvincibleTime(float fNowTime)
 bool CMotionParameterController::IsDrawAtomic(int32 nAtomicNo)
 {
     if (CharacterParam().IsReverseAtomicNo())
-    {
-        nAtomicNo = CharacterParam().GetAtomicNum() - nAtomicNo - 1;
-    };
+        nAtomicNo = ((CharacterParam().GetAtomicNum() - nAtomicNo) - 1);
 
     return CharacterParam().IsDrawAtomic(nAtomicNo);
 };

@@ -64,10 +64,12 @@ static bool SdSeqCtrlTpmSet(SdSeqWork_t* Work, uint8** Data)
     Work->Tempo.MoveCount = (int32)*(*Data)++;
     Work->Tempo.MoveDelta = (int32)*(*Data)++ << 8;
 
-    int32 TpmData = Work->Tempo.MoveDelta - Work->Tempo.Data;
-    TpmData = Clamp(TpmData, -0x7F00, 0x7F00);
-    TpmData /= Work->Tempo.MoveCount;
-    TpmData = Clamp(TpmData, -0x7F0, 0x7F0);
+    int32 TmpData = Work->Tempo.MoveDelta - Work->Tempo.Data;
+    TmpData = Clamp(TmpData, -0x7F00, 0x7F00);
+    TmpData /= Work->Tempo.MoveCount;
+    TmpData = Clamp(TmpData, -0x7F0, 0x7F0);
+    
+    Work->Tempo.MoveData = TmpData;
 
     return false;
 };
@@ -117,7 +119,7 @@ static bool SdSeqCtrlVolSet(SdSeqWork_t* Work, uint8** Data)
     int32 VolData = (int32)*(*Data)++;
 
     if (Work->CtrlVol)
-        VolData *= Work->CtrlVol;
+        VolData *= (int32)Work->CtrlVol;
     else
         VolData <<= 8;
 
@@ -130,16 +132,15 @@ static bool SdSeqCtrlVolSet(SdSeqWork_t* Work, uint8** Data)
 
 static bool SdSeqCtrlVomSet(SdSeqWork_t* Work, uint8** Data)
 {
-    Work->Volume.MoveCount = (int32)*(*Data)++;
-    Work->Volume.MoveData = (int32)*(*Data)++ << 8;
+    Work->Volume.MoveCount  = (int32)*(*Data)++;
+    Work->Volume.MoveData   = (int32)*(*Data)++ << 8;
 
     int32 MoveCount = Work->Volume.MoveCount;
     if (!MoveCount)
         MoveCount = 1;
 
-    int32 VolData = (Work->Volume.MoveData - Work->Volume.Track) / MoveCount;
+    int32 VolData = ((Work->Volume.MoveData - Work->Volume.Track) / MoveCount);
     VolData = Clamp(VolData, -0x7F0, 0x7F0);
-
     Work->Volume.MoveDelta = VolData;
     
     return false;
@@ -148,18 +149,21 @@ static bool SdSeqCtrlVomSet(SdSeqWork_t* Work, uint8** Data)
 
 static bool SdSeqCtrlAdsSet(SdSeqWork_t* Work, uint8** Data)
 {
-    uint8 ar = *(*Data)++;
+    uint8 ar   = *(*Data)++;
     uint8 drsl = *(*Data)++;
 
-    SdIOSetAds(Work->ChNo, ar, (drsl >> 4) & 0xF, drsl & 0xF);
-    
+    SdIOSetAds(Work->ChNo,
+               ar,
+               (int32)((drsl >> 4) & 0xF),
+               (int32)(drsl & 0xF));
+
     return false;
 };
 
 
 static bool SdSeqCtrlSrsSet(SdSeqWork_t* Work, uint8** Data)
 {
-    SdIOSetSr(Work->ChNo, *(*Data)++);
+    SdIOSetSr(Work->ChNo, (int32)*(*Data)++);
     
     return false;
 };
@@ -167,8 +171,8 @@ static bool SdSeqCtrlSrsSet(SdSeqWork_t* Work, uint8** Data)
 
 static bool SdSeqCtrlRrsSet(SdSeqWork_t* Work, uint8** Data)
 {
-    Work->RrRate = (uint16)*(*Data) & 0x1F;
-    SdIOSetRr(Work->ChNo, *(*Data)++ & 0x1F);
+	Work->RrRate = (uint16)( *(*Data)++ & 0x1F );
+    SdIOSetRr(Work->ChNo, (int32)Work->RrRate);
 
     return false;
 };
@@ -177,16 +181,16 @@ static bool SdSeqCtrlRrsSet(SdSeqWork_t* Work, uint8** Data)
 static bool SdSeqCtrlSpnSet(SdSeqWork_t* Work, uint8** Data)
 {
     Work->SPan.MoveCount = (int32)*(*Data)++;
-    Work->SPan.MoveDelta = (int32)((*(*Data)++ & 0x7F) << 8);
+    Work->SPan.MoveDelta = (int32)(( ((int8)*(*Data)++) & 0x7F) << 8);
 
     int32 MoveCount = Work->SPan.MoveCount;
     if (!MoveCount)
         MoveCount = 1;
 
-    int32 PanData = (Work->SPan.MoveData - Work->SPan.Data) / MoveCount;
+    int32 PanData = ((Work->SPan.MoveData - Work->SPan.Data) / MoveCount);
     PanData = Clamp(PanData, -0x7F0, 0x7F0);
-
     Work->SPan.MoveDelta = PanData;
+
     if (!Work->SPan.MoveCount)
         Work->SPan.Data = Work->SPan.MoveData;
 
@@ -219,8 +223,8 @@ static bool SdSeqCtrlUsxSet(SdSeqWork_t* Work, uint8** Data)
 
 static bool SdSeqCtrlPanSet(SdSeqWork_t* Work, uint8** Data)
 {
-    Work->Pan.Mode = (int32)(*(*Data) >> 7);
-    Work->Pan.Data = (int32)((*(*Data)++ & 0x7F) << 8);
+    Work->Pan.Mode      = (int32)(*(*Data) >> 7);
+    Work->Pan.Data      = (int32)(( ((int8)*(*Data)++) & 0x7F) << 8);
     Work->Pan.MoveCount = 0;
 
     return false;
@@ -230,11 +234,10 @@ static bool SdSeqCtrlPanSet(SdSeqWork_t* Work, uint8** Data)
 static bool SdSeqCtrlPamSet(SdSeqWork_t* Work, uint8** Data)
 {
     Work->Pan.MoveCount = (int32)*(*Data)++;
-    Work->Pan.MoveData = (int32)((*(*Data)++ & 0x7F) << 8);
+    Work->Pan.MoveData  = (int32)(( ((int8)*(*Data)++) & 0x7F) << 8);
 
     int32 PanData = (Work->Pan.MoveData - Work->Pan.Data) / Work->Pan.MoveCount;
     PanData = Clamp(PanData, -0x7F0, 0x7F0);
-
     Work->Pan.MoveDelta = PanData;
 
     return false;
@@ -251,7 +254,7 @@ static bool SdSeqCtrlTrnSet(SdSeqWork_t* Work, uint8** Data)
 
 static bool SdSeqCtrlDtsSet(SdSeqWork_t* Work, uint8** Data)
 {
-    Work->Frequency.Den = 4 * (int32)*(*Data)++;
+    Work->Frequency.Den = (4 * (int32)*(*Data)++);
 
     return false;
 };
@@ -262,19 +265,19 @@ static bool SdSeqCtrlVibSet(SdSeqWork_t* Work, uint8** Data)
     Work->Vibrato.HoldStep = (int16)*(*Data)++;
 
     int32 VibData = (int32)*(*Data)++;
-    int32 Speed = 0x2000;
+    int32 Speed   = 0x2000;
 
     if (VibData != 255)
         Speed = 32 * VibData;
 
     Work->Vibrato.OffsetDelta = Speed;
-    Work->Vibrato.Deep = (int32)(*(*Data)++ << 8);
+    Work->Vibrato.Deep        = (int32)(*(*Data)++ << 8);
 
     if (Work->Vibrato.HoldStep > 512)
     {
-        Work->Vibrato.ChangStep = Work->Vibrato.HoldStep - 512;
-        Work->Vibrato.ChangDelta = Work->Vibrato.Deep / Work->Vibrato.ChangStep;
-        Work->Vibrato.HoldStep = 0;
+        Work->Vibrato.ChangStep  = (Work->Vibrato.HoldStep - 512);
+        Work->Vibrato.ChangDelta = (Work->Vibrato.Deep / Work->Vibrato.ChangStep);
+        Work->Vibrato.HoldStep   = 0;
     };
 
     return false;
@@ -293,10 +296,10 @@ static bool SdSeqCtrlVchSet(SdSeqWork_t* Work, uint8** Data)
 
 static bool SdSeqCtrlRdmSet(SdSeqWork_t* Work, uint8** Data)
 {
-    Work->Random.Speed = (int32)*(*Data)++;
-    Work->Random.Data = (int32)(*(*Data)++ << 8);
-    Work->Random.Data += (int32)*(*Data)++;
-    Work->Random.Count = 0;
+    Work->Random.Speed  = (int32)*(*Data)++;
+    Work->Random.Data   = (int32)(*(*Data)++ << 8);
+    Work->Random.Data  += (int32)*(*Data)++;
+    Work->Random.Count  = 0;
     Work->Random.Offset = 0;
     
     return false;
@@ -305,10 +308,10 @@ static bool SdSeqCtrlRdmSet(SdSeqWork_t* Work, uint8** Data)
 
 static bool SdSeqCtrlSwsSet(SdSeqWork_t* Work, uint8** Data)
 {
-    Work->Sweep.PosFlag = 0;
-    Work->Sweep.HoldStep = (int16)*(*Data)++;
-    Work->Sweep.Step = (int16)*(*Data)++;
-    Work->Sweep.OffsetDeep = (int32)(*(*Data)++ << 8);
+    Work->Sweep.PosFlag    = 0;
+    Work->Sweep.HoldStep   = *(*Data)++;
+    Work->Sweep.Step       = *(*Data)++;
+    Work->Sweep.OffsetDeep = ((int8)*(*Data)++ << 8);
 
     return false;
 };
@@ -317,8 +320,8 @@ static bool SdSeqCtrlSwsSet(SdSeqWork_t* Work, uint8** Data)
 static bool SdSeqCtrlPorSet(SdSeqWork_t* Work, uint8** Data)
 {
     Work->Sweep.HoldStep = 0;
-    Work->Sweep.Step = (int16)*(*Data)++;
-    Work->Sweep.PosFlag = Work->Sweep.Step != 0;
+    Work->Sweep.Step     = *(*Data)++;
+    Work->Sweep.PosFlag  = (Work->Sweep.Step != 0);
 
     return false;
 };
@@ -327,9 +330,9 @@ static bool SdSeqCtrlPorSet(SdSeqWork_t* Work, uint8** Data)
 static bool SdSeqCtrlL1SSet(SdSeqWork_t* Work, uint8** Data)
 {
     Work->L1.Address = (uint32)*Data;
-    Work->L1.Count = 0;
-    Work->L1.Volume = 0;
-    Work->L1.Freq = 0;
+    Work->L1.Count   = 0;
+    Work->L1.Volume  = 0;
+    Work->L1.Freq    = 0;
 
     return false;
 };
@@ -343,15 +346,15 @@ static bool SdSeqCtrlL1ESet(SdSeqWork_t* Work, uint8** Data)
 
     if ((Work->L1.Count == Count) && Count)
     {
-        Work->L1.Freq = 0;
+        Work->L1.Freq   = 0;
         Work->L1.Volume = 0;
         ++*Data;
         ++*Data;
     }
     else
     {
-        Work->L1.Volume += (int32)*(*Data)++;
-        Work->L1.Freq += (int32)(*(*Data)++) * 8;
+        Work->L1.Volume += (int8)*(*Data)++;
+        Work->L1.Freq   += (int8)(*(*Data)++) * 8;
         *Data = (uint8*)Work->L1.Address;
     };
 
@@ -362,9 +365,9 @@ static bool SdSeqCtrlL1ESet(SdSeqWork_t* Work, uint8** Data)
 static bool SdSeqCtrlL2SSet(SdSeqWork_t* Work, uint8** Data)
 {
     Work->L2.Address = (uint32)*Data;
-    Work->L2.Count = 0;
-    Work->L2.Volume = 0;
-    Work->L2.Freq = 0;
+    Work->L2.Count   = 0;
+    Work->L2.Volume  = 0;
+    Work->L2.Freq    = 0;
 
     return false;
 };
@@ -378,15 +381,15 @@ static bool SdSeqCtrlL2ESet(SdSeqWork_t* Work, uint8** Data)
 
     if ((Work->L2.Count == Count) && Count)
     {
-        Work->L2.Freq = 0;
+        Work->L2.Freq   = 0;
         Work->L2.Volume = 0;
         ++*Data;
         ++*Data;
     }
     else
     {
-        Work->L2.Volume += (int32)*(*Data)++;
-        Work->L2.Freq += (int32)*(*Data)++ * 8;
+        Work->L2.Volume += (int8)*(*Data)++;
+        Work->L2.Freq   += (int8)(*(*Data)++ * 8);
         *Data = (uint8*)Work->L2.Address;
     };
 
@@ -465,9 +468,9 @@ static bool SdSeqCtrlKyuSet(SdSeqWork_t* Work, uint8** Data)
 {
     SdIOSetVolume(Work->ChNo, 0, 0);
 
-    Work->KeyOffWait = 1;
+    Work->KeyOffWait     = 1;
     Work->Step.StepCount = (int16)*(*Data)++;
-    Work->Step.GateTime = 1;
+    Work->Step.GateTime  = 1;
 
     return true;
 };
@@ -476,7 +479,7 @@ static bool SdSeqCtrlKyuSet(SdSeqWork_t* Work, uint8** Data)
 static bool SdSeqCtrlTieSet(SdSeqWork_t* Work, uint8** Data)
 {
     Work->Step.StepCount = (int16)*(*Data)++;
-    Work->Step.GateTime = (int16)*(*Data)++;
+    Work->Step.GateTime  = (int16)*(*Data)++;
 
     if (!Work->Step.GateTime)
     {
@@ -682,6 +685,6 @@ bool SdSeqCtrlFunc(uint8 _code, struct SdSeqWork_t* Work, uint8** Data)
     uint8 idx = _code + 48;
     if (_code >= 208)
         return SdSeqCtrlTbl[idx](Work, Data);
-    else
-        return SdSeqCtrlEndSet(Work, Data);
+    
+    return SdSeqCtrlEndSet(Work, Data);
 };

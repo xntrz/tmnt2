@@ -17,7 +17,7 @@
 struct SdSeqWorkPC_t
 {
     IDirectSoundBuffer* Buff;
-    SdWaveDataHdr_t* Header;
+    SdWaveDataHdr_t* Header; // TODO possible another header
     int32 State;
     int32 KeyOnRq;
     int32 KeyOffRq;
@@ -31,6 +31,11 @@ struct SdSeqWorkPC_t
     int32 Code;
     int32 VolumeL;
     int32 VolumeR;
+#ifdef _DEBUG
+    int32 FreqSetCount;
+    int32 LastFreq;
+    int32 LastFreqDS;
+#endif /* _DEBUG */    
 };
 
 
@@ -51,7 +56,7 @@ static inline bool SdSeqPcIsBuffValid(int32 _port)
 {
     ASSERT(_port >= 0);
     ASSERT(_port < COUNT_OF(SdSeqWorkPC));
-    ASSERT(SdSeqWorkPC[_port].Buff != nullptr);
+    //ASSERT(SdSeqWorkPC[_port].Buff != nullptr);
 
     return (SdSeqWorkPC[_port].Buff != nullptr);
 };
@@ -148,7 +153,7 @@ void SdSeqPcTask(void)
         {
             Work->Value = -10000;
             Work->State = SD_SEQ_ADSR_STATE_OFF;
-        };
+        };		
 
         switch (Work->State)
         {
@@ -295,8 +300,13 @@ void SdSeqPcSetFreq(int32 _port, int32 _value)
 
     int32 freq = (int32)((double)_value * reso);
     freq = Clamp(freq, 0x64, 0x30D40);
-
     HRRET(IDirectSoundBuffer8_SetFrequency(SdSeqWorkPC[_port].Buff, freq));
+
+#ifdef _DEBUG    
+    ++SdSeqWorkPC[_port].FreqSetCount;
+    SdSeqWorkPC[_port].LastFreq = _value;
+    SdSeqWorkPC[_port].LastFreqDS = freq;
+#endif /* _DEBUG */    
 };
 
 
@@ -312,7 +322,7 @@ void SdSeqPcSetAR(int32 _port, uint8 _value)
     if (ar == -1)
         SdSeqWorkPC[_port].AttackRate = 1;
     else
-        SdSeqWorkPC[_port].AttackRate = (0x400000 / (ar ? ar : 1) - 1);
+        SdSeqWorkPC[_port].AttackRate = ((0x400000 / (ar ? ar : 1)) - 1);
 };
 
 
@@ -381,10 +391,15 @@ void SdSeqPcSetAddress(int32 _port, int32 _code, SdWaveDataHdr_t* Header)
 
     SdSeqWorkPC_t* Work = &SdSeqWorkPC[_port];
 
-    Work->Code = _code;
-    Work->VolumeL = 0;
-    Work->VolumeR = 0;
-    Work->Header = Header;
+    Work->Code      = _code;
+    Work->VolumeL   = 0;
+    Work->VolumeR   = 0;
+    Work->Header    = Header;
+#ifdef _DEBUG
+    Work->FreqSetCount  = 0;
+    Work->LastFreq      = 0;
+    Work->LastFreqDS    = 0;
+#endif /* _DEBUG */
 
     DSBUFFERDESC SdBuffDesc;
     std::memset(&SdBuffDesc, 0, sizeof(SdBuffDesc));

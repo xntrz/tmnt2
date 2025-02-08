@@ -87,7 +87,7 @@ namespace PLAYERTYPES
         static const char* THROWN_BACK         = "Nage3";
         static const char* THROWN_COMBINATION1 = "NagerareTag1";
         static const char* THROWN_COMBINATION2 = "NagerareTag2";
-    };
+    }; /* namespace MOTIONNAMES */
 
     namespace EFFECTNAMES
     {
@@ -97,7 +97,7 @@ namespace PLAYERTYPES
         static const char* CRASH_WALL          = "all_pitan";
         static const char* JUMP_WALL           = "all_jump";
         static const char* THROW_COMBINATION   = "all_tag";
-    };
+    }; /* namespace EFFECTNAMES */
 
     enum STATUS
     {
@@ -225,6 +225,8 @@ namespace PLAYERTYPES
         FLAG_DEFAULT = FLAG_NONE,
     };
 
+    DEFINE_ENUM_FLAG_OPS(FLAG);
+
     struct FEATURE
     {
         float m_fWalkMoveSpeed;
@@ -259,4 +261,6 @@ namespace PLAYERTYPES
         ATTRIBUTE_INNUMERABLE_KNIFE = 0x10,
         ATTRIBUTE_CONFUSION         = 0x20,
     };
-};
+
+    DEFINE_ENUM_FLAG_OPS(ATTRIBUTE);
+}; /* namespace PLAYERTYPES */

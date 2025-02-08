@@ -36,7 +36,7 @@ namespace Slashuur
     public:
         virtual void OnDischargeWave(MAGIC_GENERIC::STEP step) override;
     };
-};
+}; /* namespace Slashuur */
 
 
 class CSlashuur : public CPlayerCharacter

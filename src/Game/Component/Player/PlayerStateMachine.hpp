@@ -21,11 +21,11 @@ public:
     float GetStatusDuration(void) const;
     
 private:
-    CStatus** m_apStatus;
-    CStatus* m_pCurrentStatus;
-    float m_fElapsedTimeOfStatus;
-    int32 m_iStatusMax;
+    CStatus**           m_apStatus;
+    CStatus*            m_pCurrentStatus;
+    float               m_fElapsedTimeOfStatus;
+    int32               m_iStatusMax;
     PLAYERTYPES::STATUS m_statusBefore;
     PLAYERTYPES::STATUS m_statusNow;
-    CPlayerCharacter* m_pPlayerChr;
+    CPlayerCharacter*   m_pPlayerChr;
 };

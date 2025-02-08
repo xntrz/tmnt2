@@ -5,8 +5,11 @@ class CDebugShape
 {
 public:
     static float m_fLabelHeight;
+    static float m_fLabelOffsetY;
     static float m_fDuration;
-    
+    static float m_fLineThickness;
+    static float m_fSphereScaleY;
+
 public:
     static void Initialize(void);
     static void Terminate(void);

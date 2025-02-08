@@ -124,3 +124,10 @@ static uint32 s_uReferenceCount = 0;
     
     return Rt2dDeviceSetCamera(s_pDefaultCamera->GetRwCamera()) != 0;
 };
+
+
+/*static*/ CCamera& CSystem2D::Camera(void)
+{
+    ASSERT(s_pCurrentCamera);
+    return *s_pCurrentCamera;
+};

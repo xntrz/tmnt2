@@ -96,7 +96,7 @@ bool CGamepadOptionData::IsValid(void) const
 {
     for (int32 i = 0; i < COUNT_OF(m_auButtonAssign); ++i)
     {
-        if (FLAG_TEST_ANY(m_auButtonAssign[i], ~IGamepad::DIGITAL_MASK))
+        if (m_auButtonAssign[i] & ~IGamepad::DIGITAL_MASK)
             return false;
     };
 
@@ -126,7 +126,8 @@ void CGamepadOptionData::SetEnableVibration(bool bSet)
 
 void CGamepadOptionData::AssignButton(OPTIONTYPES::BTNFUNC func, uint32 uButton)
 {
-    ASSERT(func >= 0 && func < OPTIONTYPES::BTNFUNCMAX);
+    ASSERT(func >= 0);
+    ASSERT(func < OPTIONTYPES::BTNFUNCMAX);
 
     uint32 uSingleButton = extractSingleButton(uButton);
     OPTIONTYPES::BTNFUNC funcOld = findFunction(uSingleButton);
@@ -146,7 +147,8 @@ bool CGamepadOptionData::IsEnabledVibration(void) const
 
 uint32 CGamepadOptionData::GetAssignedButton(OPTIONTYPES::BTNFUNC func) const
 {
-    ASSERT(func >= 0 && func < OPTIONTYPES::BTNFUNCMAX);
+    ASSERT(func >= 0);
+    ASSERT(func < OPTIONTYPES::BTNFUNCMAX);
 
     return m_auButtonAssign[func];
 };
@@ -157,7 +159,7 @@ uint32 CGamepadOptionData::extractSingleButton(uint32 button) const
     for (int32 i = 0; i < IGamepad::DIGITAL_NUM / 2; ++i)
     {
 		uint32 uButton = (1 << i);
-        if (FLAG_TEST_ANY(uButton, button))
+        if (uButton & button)
             return uButton;
     };
 

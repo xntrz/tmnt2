@@ -29,7 +29,7 @@ void CRideCamera::Update(CMapCamera* pMapCamera)
     CRideStage::GetBasisPoint(&vBasisPoint);
 
     CWorldMap::GetCameraAreaName(&vBasisPoint, s_szName);
-    if(s_szName[0] == '\0')
+    if (s_szName[0] == '\0')
         std::strcpy(s_szName, "p0");
 
     if (std::strcmp(m_szCameraAreaName, s_szName))

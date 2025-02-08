@@ -16,4 +16,4 @@ int32 SdDrvSeqPanProcSelectionCB(void);
 int32 SdDrvSetChannelBGMCB(SdSetDriverCode_t* CodeBuff, SdKdtTableData_t* TableData, int32 _option, int32 _priority);
 int32 SdDrvSetChannelSECB(SdSetDriverCode_t* CodeBuff, SdKdtTableData_t* TableData, int32 _option);
 void SdDrvSetToneBeforeCB(struct SdSeqWork_t* Work, int32 _status, struct SdSetEnvelope_t* Env);
-void SdDrvSeqCorrectionCB(void);
+void SdDrvUserThreadCB(void);

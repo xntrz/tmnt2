@@ -38,10 +38,13 @@
 #ifdef TARGET_PC
 #include "System/PC/PCSpecific.hpp"
 #include "System/PC/PCPhysicalControllerKey.hpp"
-#endif
+#endif /* TARGET_PC */
 
 
 /*static*/ CGameStage* CGameStage::m_pCurrent = nullptr;
+#ifdef _DEBUG
+/*static*/ int32 CGameStage::Tick = 0;
+#endif /* _DEBUG */    
 
 
 /*static*/ CGameStage* CGameStage::GetCurrent(void)
@@ -69,6 +72,10 @@ CGameStage::CGameStage(void)
 , m_pPauseHandler(nullptr)
 {
     std::memset(m_apExGauge, 0x00, sizeof(m_apExGauge));
+
+#ifdef _DEBUG    
+    Tick = 0;
+#endif /* _DEBUG */    
 };
 
 
@@ -120,7 +127,7 @@ void CGameStage::Initialize(void)
 
 #ifdef _DEBUG
     CDebugShape::Initialize();
-#endif
+#endif /* _DEBUG */
 };
 
 
@@ -128,7 +135,7 @@ void CGameStage::Terminate(void)
 {
 #ifdef _DEBUG
     CDebugShape::Terminate();
-#endif
+#endif /* _DEBUG */
     
     m_pCurrent = nullptr;
 
@@ -147,20 +154,23 @@ void CGameStage::Terminate(void)
     CToonManager::Terminate();
     CMotionManager::Terminate();
     CModelManager::Terminate();
+    CTextureManager::GenerationDec();
     CMessageManager::Terminate();
     CVoiceManager::Terminate();
-    CTextureManager::GenerationDec();
 };
 
 
 void CGameStage::Start(void)
 {
     CWorldMap::OnLoaded();
+
     RpWorld* pWorld = CWorldMap::GetWorld();
     createCamera(pWorld);
+
+    CGaugeInformation::Initialize();
+    CGameRadar::Initialize(20.0f);
     GameToon::SetTextureSetOfStage(m_idStage);
     CGimmickManager::CreateStageSpecialGimmick(m_idStage);
-    CGaugeInformation::Initialize();
     
     changeSystemState(SYSTEMSTATE_NORMAL);
 };
@@ -207,7 +217,7 @@ void CGameStage::Period(void)
 	{
 		m_pCameraUpdater->Update(m_pMapCamera);
 
-		if (m_bPlayStarted && m_systemstate == SYSTEMSTATE_NORMAL)
+		if (m_bPlayStarted && (m_systemstate == SYSTEMSTATE_NORMAL))
             m_fTimer += dt;
 
         CGameProperty::Period();
@@ -220,18 +230,22 @@ void CGameStage::Period(void)
 		CGimmickManager::DispatchEvent();
 #ifdef _DEBUG
         CDebugShape::Period(dt);  
-#endif
+#endif /* _DEBUG */
 		CEffectManager::Period();
 		CGaugeInformation::MissionInfoPeriod();
         CMessageManager::Period();
         CVoiceManager::Period();
 
-		if (m_bCreatedGauge)
+        if (m_bCreatedGauge)
 		{
 			CGaugeManager::Period();
 			updateExGauge();
 		};
-	};
+    };
+
+#ifdef _DEBUG
+    ++Tick;
+#endif /* _DEBUG */
 };
 
 
@@ -244,7 +258,7 @@ void CGameStage::Draw(void) const
 
 #ifdef _DEBUG
     CDebugShape::FrameBegin();
-#endif
+#endif /* _DEBUG */
 
     if (m_pMapCamera->BeginScene())
     {
@@ -259,7 +273,7 @@ void CGameStage::Draw(void) const
 
 #ifdef _DEBUG
         CDebugShape::Draw3D();
-#endif
+#endif /* _DEBUG */
         
         CEffectManager::Draw(CCamera::CameraCurrent());        
         
@@ -275,7 +289,7 @@ void CGameStage::Draw(void) const
 #ifdef _DEBUG
 	CDebugShape::Draw2D();
     CDebugShape::FrameEnd();
-#endif
+#endif /* _DEBUG */
 
     CGaugeInformation::BossGaugeDraw(0);
     if (m_bMultipleBoss)
@@ -300,7 +314,7 @@ void CGameStage::AddGauge(void)
         return;
 
     CGaugeManager::Initialize();
-    CGameRadar::Initialize(20.0f);
+
     createExGauge();
     startExGauge();
 
@@ -319,24 +333,29 @@ void CGameStage::AddStageObjects(void)
 };
 
 
-void CGameStage::AddPlayers(bool bProtect)
+void CGameStage::AddPlayers(bool bBlink)
 {
-    for (int32 i = 0; i < CGameData::PlayParam().GetCharaInfoNum(); ++i)
+    int32 charainfoNum = CGameData::PlayParam().GetCharaInfoNum();
+    for (int32 i = 0; i < charainfoNum; ++i)
     {
         const CGamePlayParam::CHARAINFO& rCharaInfo = CGameData::PlayParam().CharaInfo(i);
 
-        CGameProperty::AddPlayerCharacter(
-            rCharaInfo.m_iPlayerNo,
-            rCharaInfo.m_CharacterID,
-            rCharaInfo.m_Costume
-        );
+       CGameProperty::AddPlayerCharacter(rCharaInfo.m_iPlayerNo,
+                                         rCharaInfo.m_CharacterID,
+                                         rCharaInfo.m_Costume);
 
 		if (CGameData::PlayParam().GetStageMode() != GAMETYPES::STAGEMODE_RIDE)
-			CGimmickManager::SetPlayerStartPosition(rCharaInfo.m_iPlayerNo, bProtect);
+			CGimmickManager::SetPlayerStartPosition(rCharaInfo.m_iPlayerNo, bBlink);
     };
 
-    for (int32 i = 0; i < CGameData::PlayParam().GetPlayerNum(); ++i)
-        CGameProperty::Player(i)->LoadContext(CGameData::PlayParam().PlayerContext(i));
+    int32 playerNum = CGameData::PlayParam().GetPlayerNum();
+    for (int32 i = 0; i < playerNum; ++i)
+    {
+        IGamePlayer* pGameplayer = CGameProperty::Player(i);
+        CGamePlayParam::PLAYERCONTEXT& playerCtx = CGameData::PlayParam().PlayerContext(i);
+
+        pGameplayer->LoadContext(playerCtx);
+    };
 
     if (CGameData::Record().Secret().IsUnlockedSecret(SECRETID::ID_CHEATCODE_SELFRECOVERY))
     {
@@ -366,7 +385,7 @@ bool CGameStage::CheckPauseMenu(void) const
 };
 
 
-void CGameStage::StartPause(PAUSETYPE pausetype, void* param)
+void CGameStage::StartPause(PAUSETYPE pausetype, void* param /*= nullptr*/)
 {
     if (CScreenFade::IsDrawing())
         return;
@@ -432,36 +451,28 @@ void CGameStage::EndPlayerNegateDamager(void)
 bool CGameStage::SetResult(RESULT result)
 {
     if (m_result)
-    {
         return false;
-    }
-    else
-    {
-        if (result)
-            changeSystemState(SYSTEMSTATE_DEMO);
 
-        m_result = result;
-        
-        return true;
-    };
+    if (result)
+        changeSystemState(SYSTEMSTATE_DEMO);
+
+    m_result = result;
+
+    return true;
 };
 
 
 void CGameStage::NotifyGameClear(CGamePlayResult::CLEARSUB clearsub)
 {
     if (SetResult(RESULT_GAMECLEAR))
-    {
         CGameData::PlayResult().SetClearSub(clearsub);
-    };
 };
 
 
 void CGameStage::NotifyGameOver(void)
 {
     if (SetResult(RESULT_GAMEOVER))
-    {
         CGameData::PlayResult().SetAreaResult(CGamePlayResult::AREARESULT_GAMEOVER);
-    };
 };
 
 
@@ -484,14 +495,14 @@ int32 CGameStage::GetDeadPlayer(void) const
 void CGameStage::NotifyEnemyDead(CEnemy* pEnemy)
 {
     if (m_apExGauge[EXGAUGE_THREERACE])
-        ((CThreeRaceExGauge*)m_apExGauge[EXGAUGE_THREERACE])->HandleEnemyDestroyed(pEnemy);
+        static_cast<CThreeRaceExGauge*>(m_apExGauge[EXGAUGE_THREERACE])->HandleEnemyDestroyed(pEnemy);
 };
 
 
 void CGameStage::NotifyEnemyDamaged(CEnemy* pEnemy, int32 nRemainHP)
 {
     if (m_apExGauge[EXGAUGE_BOSS])
-        ((CBossExGauge*)m_apExGauge[EXGAUGE_BOSS])->HandleEnemyDamaged(pEnemy, nRemainHP);
+        static_cast<CBossExGauge*>(m_apExGauge[EXGAUGE_BOSS])->HandleEnemyDamaged(pEnemy, nRemainHP);
 };
 
 
@@ -573,12 +584,12 @@ void CGameStage::createCamera(RpWorld* pWorld)
 {
     ASSERT(!m_pMapCamera);
     
-    m_pMapCamera = new CMapCamera;
-    ASSERT(m_pMapCamera);
-
     m_pWorld = pWorld;
+
+    m_pMapCamera = new CMapCamera;
     m_pMapCamera->WorldAddCamera(pWorld);
     m_pMapCamera->SetCameraMode(CMapCamera::MODE_AUTOCHANGE);
+
     CGameProperty::SetMapCamera(m_pMapCamera);
     CGameProperty::SetCurrentRwCamera(m_pMapCamera->GetRwCamera());
     CGameSound::AttachCamera(m_pMapCamera->GetRwCamera());
@@ -587,11 +598,16 @@ void CGameStage::createCamera(RpWorld* pWorld)
 
 void CGameStage::destroyCamera(void)
 {
-    ASSERT(m_pMapCamera);
-    
-    CGameSound::DetachCamera();
-    m_pMapCamera->WorldRemoveCamera(m_pWorld);
-    m_pWorld;
+    if (!m_pMapCamera)
+        return;
+
+    if (m_pWorld)
+    {
+        CGameSound::DetachCamera();
+
+        m_pMapCamera->WorldRemoveCamera(m_pWorld);
+        m_pWorld = nullptr;
+    };
 
     delete m_pMapCamera;
     m_pMapCamera = nullptr;
@@ -600,26 +616,26 @@ void CGameStage::destroyCamera(void)
 
 void CGameStage::createExGauge(void)
 {
-    STAGEID::VALUE IdStage = CGameData::PlayParam().GetStage();
-    if (CStageInfo::IsBossGaugeNecessary(IdStage))
+    STAGEID::VALUE stageId = CGameData::PlayParam().GetStage();
+    if (CStageInfo::IsBossGaugeNecessary(stageId))
     {
-        if (CStageInfo::GetGaugeEnemyID(IdStage, 1))
+        if (CStageInfo::GetGaugeEnemyID(stageId, 1))
             m_bMultipleBoss = true;
 
         m_apExGauge[EXGAUGE_BOSS] = new CBossExGauge();
     };
 
-    if ((IdStage == STAGEID::ID_ST11J)
-        || (IdStage == STAGEID::ID_ST15N)
-        || (IdStage == STAGEID::ID_ST20F)
-        || (IdStage == STAGEID::ID_ST39N)
-        || (IdStage == STAGEID::ID_ST40OB)
-        || (IdStage == STAGEID::ID_ST45N))
+    if ((stageId == STAGEID::ID_ST11J)  ||
+        (stageId == STAGEID::ID_ST15N)  ||
+        (stageId == STAGEID::ID_ST20F)  ||
+        (stageId == STAGEID::ID_ST39N)  ||
+        (stageId == STAGEID::ID_ST40OB) ||
+        (stageId == STAGEID::ID_ST45N))
     {
         m_apExGauge[EXGAUGE_TIMER] = new CTimerExGauge();
     };
 
-    switch (IdStage)
+    switch (stageId)
     {
     case STAGEID::ID_ST40OB:
         m_apExGauge[EXGAUGE_COUNTER] = new CCounterExGauge();
@@ -631,6 +647,9 @@ void CGameStage::createExGauge(void)
         
     case STAGEID::ID_ST45N:
         m_apExGauge[EXGAUGE_THREERACE] = new CThreeRaceExGauge();
+        break;
+
+    default:
         break;
     };
 };
@@ -681,16 +700,17 @@ void CGameStage::updateExGauge(void)
 
 void CGameStage::changeSystemState(SYSTEMSTATE sysstate)
 {
-    SYSTEMSTATE SystemstatePrev = m_systemstate;
+    SYSTEMSTATE systemstatePrev = m_systemstate;
     m_systemstate = sysstate;
-    if (m_systemstate != SystemstatePrev)
+
+    if (m_systemstate != systemstatePrev)
     {
         if (m_systemstate == SYSTEMSTATE_DEMO)
         {
             CHitAttackManager::Pause();
             BeginPlayerNegateDamage();
         }
-        else if (SystemstatePrev == SYSTEMSTATE_DEMO)
+        else if (systemstatePrev == SYSTEMSTATE_DEMO)
         {
             EndPlayerNegateDamager();
             CHitAttackManager::Resume();

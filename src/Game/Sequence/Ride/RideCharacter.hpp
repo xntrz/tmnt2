@@ -31,13 +31,13 @@ public:
 
     struct PADINFO
     {
-        int32 m_nPadNo;
-        float m_fStickX;
-        float m_fStickY;
-        bool m_bJump;
-        bool m_bShot;
-        bool m_bRightTurn;
-        bool m_bLeftTurn;
+        int32 pad;
+        float fStickX;
+        float fStickY;
+        bool  bJump;
+        bool  bShot;
+        bool  bRightTurn;
+        bool  bLeftTurn;
     };
 
 public:
@@ -50,8 +50,8 @@ public:
     virtual void MessageProc(int32 nMessageID, void* pParam) override;
     virtual void Draw(void) const override;
     virtual void CalcVelocityPerFrame(RwV3d& rvVelocityPerFrame) override;
-    virtual void CheckCollisionForBody(RwV3d& rvVelocityPerFrame) override;
-    virtual void CheckCollisionForWall(RwV3d& rvVelocityPerFrame) override;
+    virtual void CheckCollisionForBody(RwV3d& rvVelocityPerFrame, bool bPeriod) override;
+    virtual void CheckCollisionForWall(RwV3d& rvVelocityPerFrame, bool bPeriod) override;
     virtual void OnMessageAerial(float fFieldHeight) override;
     virtual bool OnMessageCanChangingAerial(float fFieldHeight) override;
     virtual void OnMessageDoChangingAerial(void) override;
@@ -96,7 +96,7 @@ public:
     inline float GetControlRate(void) const { return m_fControlRate; };
     
     inline float GetPlaytime(void) const { return m_fPlaytime; };
-    inline bool IsShip(void) const{ return CRideStage::m_bSpace;};
+    inline bool IsShip(void) const{ return CRideStage::m_bSpace; };
     inline bool CheckDispShot(void) const { return (m_nNumDispShot < 4); };
     inline int32 GetScore(RIDETYPES::SCOREKIND scorekind) const { return m_aScore[scorekind]; };
     inline const PADINFO& PadInfo(void) const { return m_padinfo; };

@@ -42,15 +42,11 @@ void CPlayNexusStageSeqState::OnAttach(CStageBaseSequence* pSeq, const void* pPa
     ASSERT(pMapCamera);
 
     pMapCamera->SetCameraMode(CMapCamera::MODE_AUTOCHANGE);
-    if (CGameProperty::GetPlayerNum() > 1)
-        pMapCamera->SetPathMode(CMapCamera::PATHMODE_MULTIPLAYER);
-    else
-        pMapCamera->SetPathMode(CMapCamera::PATHMODE_SINGLEPLAYER);
+    pMapCamera->SetPathMode((CGameProperty::GetPlayerNum() > 1 ? CMapCamera::PATHMODE_MULTIPLAYER : CMapCamera::PATHMODE_SINGLEPLAYER));    
 
     CScreenFade::BlackIn();
 
     CNexusEnemyIntroductionCamera* pCameraUpdater = new CNexusEnemyIntroductionCamera;
-    ASSERT(pCameraUpdater);
     SetCameraUpdater(pSeq, pCameraUpdater);
 
     CGameData::Attribute().SetInteractive(false);
@@ -204,6 +200,9 @@ bool CPlayNexusStageSeqState::OnMove(CStageBaseSequence* pSeq)
             };
         }
         break;
+
+    default:
+        break;
     };
 
     return (m_step >= STEP_END);
@@ -213,9 +212,9 @@ bool CPlayNexusStageSeqState::OnMove(CStageBaseSequence* pSeq)
 void CPlayNexusStageSeqState::RecoverHP(void)
 {
     IGamePlayer* pGamePlayer = CGameProperty::Player(0);
-    
-    int32 nHP = int32(float(pGamePlayer->GetHPMax()) * 0.1f);    
-    pGamePlayer->AddHP(nHP);
+
+    int32 hp = static_cast<int32>(static_cast<float>(pGamePlayer->GetHPMax()) * 0.1f);
+    pGamePlayer->AddHP(hp);
 };
 
 
@@ -245,17 +244,16 @@ void CPlayNexusStageSeqState::SleepPlayers(void)
 
 void CPlayNexusStageSeqState::StartEnemyGenerator(void)
 {
-    CGameObject* pGameObject = CGameObjectManager::GetNext();
+    CGameObject* pGameObject = CGameObjectManager::GetNext(GAMEOBJECTTYPE::GIMMICK);
     while (pGameObject)
     {
-        if (pGameObject->GetType() == GAMEOBJECTTYPE::GIMMICK)
-        {
-            CGimmick* pGimmick = (CGimmick*)pGameObject;
-            if (pGimmick->GetID() == GIMMICKID::ID_G_SET)
-                CGimmickManager::PostEvent(pGimmick->GetName(), "nexus_stage", GIMMICKTYPES::EVENTTYPE_ACTIVATE);
-        };
+        ASSERT(pGameObject->GetType() == GAMEOBJECTTYPE::GIMMICK);
+        CGimmick* pGimmick = static_cast<CGimmick*>(pGameObject);
+        
+        if (pGimmick->GetID() == GIMMICKID::ID_G_SET)
+            CGimmickManager::PostEvent(pGimmick->GetName(), "nexus_stage", GIMMICKTYPES::EVENTTYPE_ACTIVATE);
 
-        pGameObject = CGameObjectManager::GetNext(pGameObject);
+        pGameObject = CGameObjectManager::GetNext(GAMEOBJECTTYPE::GIMMICK, pGameObject);
     };
 };
 
@@ -291,13 +289,13 @@ void CPlayNexusStageSeqState::SetItemBox(void)
 
     for (int32 i = 0; i < COUNT_OF(aItemBoxList); ++i)
     {                
-        const float fAngleDelta = Math::PI2 / float(COUNT_OF(aItemBoxList));
+        const float fAngleDelta = Math::PI2 / static_cast<float>(COUNT_OF(aItemBoxList));
         
         param.m_vPosition.x = Math::Cos(i * fAngleDelta) * 8.0f;
         param.m_vPosition.z = Math::Sin(i * fAngleDelta) * 8.0f;
         param.m_vPosition.y = CWorldMap::GetMapHeight(&param.m_vPosition);
-        param.m_id = GIMMICKID::ID_N_ITEMBX;
-        param.m_nItem = aItemBoxList[i];
+        param.m_id          = GIMMICKID::ID_N_ITEMBX;
+        param.m_nItem       = aItemBoxList[i];
         CGimmickInfo::MakeName(param.m_szName, GIMMICKID::ID_N_ITEMBX, 0, i + 20);
 
         CGimmick* pGimmick = CGimmickManager::Create(GIMMICKID::ID_N_ITEMBX, 0, &param);
@@ -309,7 +307,7 @@ void CPlayNexusStageSeqState::SetItemBox(void)
 void CPlayNexusStageSeqState::SetFailedMessage(void)
 {
     if (CGameData::PlayParam().GetStage() == STAGEID::ID_ST60X_D04)
-        CMessageManager::Request(SEGROUPID::VALUE(146), PLAYERID::VALUE(-1));
+        CMessageManager::Request(SEGROUPID::VALUE(146));
 };
 
 
@@ -328,8 +326,9 @@ void CPlayNexusStageSeqState::SetCameraUpdater(CStageBaseSequence* pSeq, IGameSt
     }
     else
     {
-        pSeq->Stage().SetCameraUpdater(
-            CStageInfo::GetCameraUpdateType( CGameData::PlayParam().GetStage() )
-        );
+        STAGEID::VALUE stageId = CGameData::PlayParam().GetStage();
+        CStageInfo::CAMERAUPDATE cameraUpdateType = CStageInfo::GetCameraUpdateType(stageId);
+
+        pSeq->Stage().SetCameraUpdater(cameraUpdateType);
     };
 };

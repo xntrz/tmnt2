@@ -21,6 +21,12 @@ CAIThinkOrder::ORDER CAIThinkOrder::GetOrder(void) const
 };
 
 
+CAIThinkOrder::RESULT CAIThinkOrder::GetAnswer(void) const
+{
+    return m_eResult;
+};
+
+
 void CAIThinkOrder::SetAnswer(RESULT eResult)
 {
     m_eResult = eResult;

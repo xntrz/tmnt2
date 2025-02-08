@@ -3,6 +3,9 @@
 #include "GimmickInfo.hpp"
 #include "Gimmick.hpp"
 #include "GimmickData.hpp"
+#ifdef _DEBUG
+#include "GimmickDebug.hpp"
+#endif /* _DEBUG */
 
 #include "ConcreteGimmick/SystemGimmick.hpp"
 
@@ -82,6 +85,11 @@ private:
     CList<GIMMICKWORK> m_listDraw[DRAWPRIMAX];
     bool m_bLock;
 };
+
+
+//
+// *********************************************************************************
+//
 
 
 void CGimmickEventDispatcher::EVENT_PARAM::Init(const char* pszTargetName, const char* pszSenderName, GIMMICKTYPES::EVENTTYPE type, void* pParam)
@@ -181,29 +189,36 @@ void CGimmickEventDispatcher::sendEnd(void)
 void CGimmickEventDispatcher::send(EVENT_PARAM* pEventParam)
 {
     ASSERT(pEventParam);
+
     if (sendBegin())
     {
         CGimmick* pGimmick = CGimmickManager::Find(pEventParam->m_szTargetName);
         if (pGimmick)
         {
-            OUTPUT(
-                "Sending event: %s to %s (param: %d depth %d)\n",
-                pEventParam->m_args.m_szSender,
-                pEventParam->m_szTargetName,
-                pEventParam->m_args.m_type,
-                m_nSendDepth
-            );
-
-            CGameObjectManager::SendMessage(
-                pGimmick,
-                GIMMICKTYPES::MESSAGEID_RECVEVENT,
-                &pEventParam->m_args
-            );
+#ifdef _DEBUG
+            if (CGimmickDebug::PRINT_EVENT_INFO)
+            {
+                OUTPUT(
+                    "Sending event: %s to %s (param: %d depth %d)\n",
+                    pEventParam->m_args.m_szSender,
+                    pEventParam->m_szTargetName,
+                    pEventParam->m_args.m_type,
+                    m_nSendDepth
+                );
+            };
+#endif /* _DEBUG */
+            
+            CGameObjectManager::SendMessage(pGimmick, GIMMICKTYPES::MESSAGEID_RECVEVENT, &pEventParam->m_args);
         };
 
         sendEnd();
     };
 };
+
+
+//
+// *********************************************************************************
+//
 
 
 CGimmickContainer::CGimmickContainer(void)
@@ -237,8 +252,9 @@ void CGimmickContainer::Destroy(void)
 
 void CGimmickContainer::Draw(int32 nPriority)
 {
-    ASSERT(nPriority >= 0 && nPriority < COUNT_OF(m_listDraw));
-    
+    ASSERT(nPriority >= 0);
+    ASSERT(nPriority < COUNT_OF(m_listDraw));
+
     Lock();
 
     CRenderStateManager::SetDefault();
@@ -260,15 +276,17 @@ void CGimmickContainer::Draw(int32 nPriority)
 void CGimmickContainer::Add(int32 nPriority, CGimmick* pGimmick)
 {
     ASSERT(pGimmick);
-    ASSERT(nPriority >= 0 && nPriority < COUNT_OF(m_listDraw));
     ASSERT(!IsLocked());
+
+    ASSERT(nPriority >= 0);
+    ASSERT(nPriority < COUNT_OF(m_listDraw));
 
     GIMMICKWORK* pWork = workAlloc();
     ASSERT(pWork);
-    if(pWork)
+    
+    if (pWork)
     {
         pWork->m_pGimmick = pGimmick;
-
         m_listDraw[nPriority].push_back(pWork);
     };
 };
@@ -280,14 +298,15 @@ void CGimmickContainer::Remove(CGimmick* pGimmick)
     ASSERT(!IsLocked());
 
     int32 nPriority = CGimmickInfo::GetDrawPriority(pGimmick->GetID());
-    ASSERT(nPriority >= 0 && nPriority < COUNT_OF(m_listDraw));
+    ASSERT(nPriority >= 0);
+    ASSERT(nPriority < COUNT_OF(m_listDraw));
 
     GIMMICKWORK* pWork = workFind(pGimmick, nPriority);
     ASSERT(pWork);
+
     if (pWork)
     {
         m_listDraw[nPriority].erase(pWork);
-
         workFree(pWork);
     };
 };
@@ -296,10 +315,13 @@ void CGimmickContainer::Remove(CGimmick* pGimmick)
 CGimmick* CGimmickContainer::Find(const char* pszName)
 {
     CGameObject* pGameObject = CGameObjectManager::GetObject(pszName);
-    if (pGameObject && pGameObject->GetType() == GAMEOBJECTTYPE::GIMMICK)
-        return (CGimmick*)pGameObject;
-    else
+    if (!pGameObject)
         return nullptr;
+
+    if (pGameObject->GetType() != GAMEOBJECTTYPE::GIMMICK)
+        return nullptr;
+
+    return static_cast<CGimmick*>(pGameObject);
 };
 
 
@@ -323,10 +345,10 @@ bool CGimmickContainer::IsLocked(void) const
 
 CGimmickContainer::GIMMICKWORK* CGimmickContainer::workAlloc(void)
 {
-    ASSERT(!m_listWorkPool.empty());
+    if (m_listWorkPool.empty())
+        return nullptr;
 
     GIMMICKWORK* pNode = m_listWorkPool.front();
-    ASSERT(pNode);
     m_listWorkPool.erase(pNode);
 
     return pNode;
@@ -335,9 +357,7 @@ CGimmickContainer::GIMMICKWORK* CGimmickContainer::workAlloc(void)
 
 void CGimmickContainer::workFree(GIMMICKWORK* pWork)
 {
-    ASSERT(pWork);
-    
-    m_listWorkPool.push_back(pWork);
+    m_listWorkPool.push_front(pWork);
 };
 
 
@@ -379,14 +399,10 @@ static inline CGimmickEventDispatcher& GimmickEventDispatcher(void)
 /*static*/ void CGimmickManager::Initialize(void)
 {
     if (!s_pGimmickContainer)
-    {
         s_pGimmickContainer = new CGimmickContainer;
-    };
-
+    
     if (!s_pGimmickEventDispatcher)
-    {
         s_pGimmickEventDispatcher = new CGimmickEventDispatcher;
-    };
 
     CGimmickDataManager::Initialize();
     s_bPlayStarted = false;
@@ -428,10 +444,8 @@ static inline CGimmickEventDispatcher& GimmickEventDispatcher(void)
     CGimmick* pGimmick = CGimmickFactory::Create(idGimmick, subid, pParam);
     if (pGimmick)
     {
-        GimmickContainer().Add(
-            CGimmickInfo::GetDrawPriority(idGimmick),
-            pGimmick
-        );
+		int32 drawPri = CGimmickInfo::GetDrawPriority(idGimmick);
+        GimmickContainer().Add(drawPri, pGimmick);
 
         CGameEvent::SetGimmickCreated(pGimmick);
     };
@@ -479,16 +493,16 @@ static inline CGimmickEventDispatcher& GimmickEventDispatcher(void)
 };
 
 
-/*static*/ void CGimmickManager::SetPlayerStartPosition(int32 nPlayerNo, bool bProtect)
+/*static*/ void CGimmickManager::SetPlayerStartPosition(int32 nPlayerNo, bool bBlink)
 {
     RwV3d vPosition = Math::VECTOR3_ZERO;
-    CReplaceGimmick::SetPlayerStartPosition(nPlayerNo, &vPosition, bProtect);
+    CReplaceGimmick::SetPlayerStartPosition(nPlayerNo, &vPosition, bBlink);
 };
 
 
-/*static*/ void CGimmickManager::ReplacePlayer(int32 nPlayerNo, const RwV3d* pvPosition, bool bProtect)
+/*static*/ void CGimmickManager::ReplacePlayer(int32 nPlayerNo, const RwV3d* pvPosition, bool bBlink)
 {
-    CReplaceGimmick::ReplacePlayer(nPlayerNo, pvPosition, bProtect);
+    CReplaceGimmick::ReplacePlayer(nPlayerNo, pvPosition, bBlink);
 };
 
 

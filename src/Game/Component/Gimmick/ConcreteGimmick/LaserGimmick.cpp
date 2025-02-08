@@ -241,7 +241,7 @@ void CLaserGimmick::PostMove(void)
         Attack.SetLine(&m_line);
         Attack.SetObjectPos(&m_vPosition);
         Attack.SetPower(20);
-        Attack.SetTarget(CHitAttackData::TARGET(CHitAttackData::TARGET_PLAYER | CHitAttackData::TARGET_ENEMY));
+        Attack.SetTarget(CHitAttackData::TARGET_PLAYER | CHitAttackData::TARGET_ENEMY);
         Attack.SetAntiguard(CHitAttackData::ANTIGUARD_INVALID);
         Attack.SetStatus(CHitAttackData::STATUS_FLYAWAY);
         Attack.SetFlyawayParameter(5.0f, 2.5f);

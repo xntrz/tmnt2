@@ -32,29 +32,25 @@ void CDamageFloorModule::Run(void)
 
     if (pGroundInfo->m_bHit)
     {
-		uint32 uAttributeMask = MAPTYPES::ATTRIBUTE_DAMAGE | MAPTYPES::ATTRIBUTE_MAGMA | MAPTYPES::ATTRIBUTE_POISON;
+        uint32 uAttributeMask = MAPTYPES::ATTRIBUTE_DAMAGE
+                              | MAPTYPES::ATTRIBUTE_MAGMA
+                              | MAPTYPES::ATTRIBUTE_POISON;
 
-		if (FLAG_TEST_ANY(pGroundInfo->m_attribute, uAttributeMask))
+		if (pGroundInfo->m_attribute & uAttributeMask)
 		{
 			if (CGameProperty::GetTotalElapsedTime() - m_fTimer > 0.5f)
 			{
 				m_fTimer = CGameProperty::GetTotalElapsedTime();
 
-				CGameObjectManager::SendMessage(
-					m_pCharacter,
-					CHARACTERTYPES::MESSAGEID_RECVDMG,
-					(void*)DAMAGEAMOUNT
-				);
+                CGameObjectManager::SendMessage(m_pCharacter,
+                                                CHARACTERTYPES::MESSAGEID_RECVDMG,
+                                                reinterpret_cast<void*>(DAMAGEAMOUNT));
 
 				if (m_pCharacter->GetCharacterType() == CCharacter::TYPE_PLAYER)
 				{
-					CPlayerCharacter* pPlayerChr = (CPlayerCharacter*)m_pCharacter;
+                    CPlayerCharacter* pPlayerChr = static_cast<CPlayerCharacter*>(m_pCharacter);
 
-					IGamepad::StartVibration(
-						pPlayerChr->GetPadID(),
-						IGamepad::VIBRATIONTYPE_LOW,
-						0.2f
-					);
+                    IGamepad::StartVibration(pPlayerChr->GetPadID(), IGamepad::VIBRATIONTYPE_LOW, 0.2f);
 				};
 			};
 		};

@@ -12,7 +12,7 @@ namespace GAMETYPES
         PLAYERS_MAX = 4,
         CHARACTER_MAX = 4,
         PRIZE_MAX = 4,
-        STAGE_MAX = 10,
+        STAGE_MAX = 10, // per area
         CRYSTAL_MAX = 30,
     };
 

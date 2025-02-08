@@ -3,6 +3,7 @@
 
 
 CModuleManager::CModuleManager(void)
+: m_listModule()
 {
     ;
 };
@@ -11,7 +12,8 @@ CModuleManager::CModuleManager(void)
 CModuleManager::~CModuleManager(void)
 {
     auto it = m_listModule.begin();
-    while (it)
+    auto itEnd = m_listModule.end();
+    while (it != itEnd)
     {
         IModule* pModule = &(*it);
         it = m_listModule.erase(it);
@@ -23,14 +25,14 @@ CModuleManager::~CModuleManager(void)
 
 void CModuleManager::Run(void)
 {
-	auto it = m_listModule.begin();
-
-	while (it)
+    auto it = m_listModule.begin();
+    auto itEnd = m_listModule.end();
+	while (it != itEnd)
 	{
 		IModule* pModule = &(*it);
 		++it;
 
-		pModule->Run();
+		pModule->Run(); // some modules may unlink and delete self, so increment it before run
 	};
 };
 
@@ -38,9 +40,7 @@ void CModuleManager::Run(void)
 void CModuleManager::Draw(void)
 {
     for (IModule& it : m_listModule)
-    {
         it.Draw();
-    };
 };
 
 
@@ -56,7 +56,8 @@ void CModuleManager::Include(IModule* pModule)
     else
     {
         auto it = m_listModule.begin();
-        while (it)
+        auto itEnd = m_listModule.end();
+        while (it != itEnd)
         {
             if (pModule->GetType() < (*it).GetType())
                 break;
@@ -65,20 +66,16 @@ void CModuleManager::Include(IModule* pModule)
         };
 
         if (it)
-        {
             m_listModule.insert(it, pModule);
-        }
         else
-        {
             m_listModule.push_back(pModule);
-        };
     };
 };
 
 
 bool CModuleManager::IsIncluded(MODULETYPE::VALUE moduletype)
 {
-    return (!!GetModule(moduletype));
+    return (GetModule(moduletype) != nullptr);
 };
 
 
@@ -87,9 +84,7 @@ IModule* CModuleManager::GetModule(MODULETYPE::VALUE moduletype)
     for (IModule& it : m_listModule)
     {
         if (it.GetType() == moduletype)
-        {
             return &it;
-        };
     };
 
     return nullptr;

@@ -133,6 +133,9 @@ struct CSecretInfo::PASSWORDINFO
     case STAGEID::ID_ST60X_D10:
         Unlock(SECRETID::ID_DATABASE_DRAKO);
         break;
+
+    default:
+        break;
     };
 };
 
@@ -238,7 +241,7 @@ struct CSecretInfo::PASSWORDINFO
         
     case STAGEID::ID_ST60X_C09:
         {
-            const CGameTime& cleartime = CGameData::Record().Nexus().GetStageClearTime(GAMETYPES::NEXUSID_FOOT_COMBAT, 8);
+            CGameTime cleartime = CGameData::Record().Nexus().GetStageClearTime(GAMETYPES::NEXUSID_FOOT_COMBAT, 8);
             if(cleartime <= CGameTime(GAMETIME_HMS(0, 2, 30)))
                 Unlock(SECRETID::ID_CHARACTER_KARAI);
         }
@@ -251,6 +254,9 @@ struct CSecretInfo::PASSWORDINFO
         
     case STAGEID::ID_ST60X_D10:
         Unlock(SECRETID::ID_CHARACTER_SLASHUUR);
+        break;
+
+    default:
         break;
     };
 };
@@ -306,6 +312,9 @@ struct CSecretInfo::PASSWORDINFO
     case AREAID::ID_AREA58:
         Unlock(SECRETID::ID_CHARACTER_SPLINTER);
         break;
+
+    default:
+        break;
     };
 };
 
@@ -317,6 +326,9 @@ struct CSecretInfo::PASSWORDINFO
     case AREAID::ID_AREA11:
         if (CGameData::Record().Area().IsAreaRootCleared(AREAID::ID_AREA11, CAreaRecord::CLEAR_ROOT_B))
             Unlock(SECRETID::ID_PASSWORD_CHEATCODE_SHURIKEN);        
+        break;
+
+    default:
         break;
     };
 };
@@ -346,6 +358,9 @@ struct CSecretInfo::PASSWORDINFO
         Unlock(SECRETID::ID_PASSWORD_CHALLENGE_FATALBLOW);
         Unlock(SECRETID::ID_PASSWORD_CHEATCODE_SUPERATTACK);
         break;
+
+    default:
+        break;
     };
     
     switch (clearrankTotalTime)
@@ -363,6 +378,9 @@ struct CSecretInfo::PASSWORDINFO
         Unlock(SECRETID::ID_PASSWORD_CHALLENGE_POISON);
         Unlock(SECRETID::ID_PASSWORD_CHALLENGE_ABYSS);
         Unlock(SECRETID::ID_PASSWORD_CHEATCODE_SUPERDEFENCE);
+        break;
+
+    default:
         break;
     };
 };
@@ -419,6 +437,9 @@ struct CSecretInfo::PASSWORDINFO
 
     case AREAID::ID_AREA46:
         Unlock(SECRETID::ID_DATABASE_SECONDARY_B);
+        break;
+
+    default:
         break;
     };
 };
@@ -479,9 +500,10 @@ struct CSecretInfo::PASSWORDINFO
 
 /*static*/ int32 CSecretInfo::GetGameText(SECRETID::VALUE idSecret)
 {
-    ASSERT(idSecret >= SECRETID::ID_FIRST && idSecret < SECRETID::ID_MAX);
+    ASSERT(idSecret >= SECRETID::ID_FIRST);
+    ASSERT(idSecret < SECRETID::ID_MAX);
 
-    return idSecret + 564;
+    return (idSecret + 564);
 };
 
 
@@ -494,10 +516,15 @@ struct CSecretInfo::PASSWORDINFO
 
     case SECRETID::ID_DATABASE_PROMOTION_ARTS:
         return DBITEMID::ID_ETC_GALLERY;
+
+    default:
+        break;
     };
 
     DBITEMID::VALUE idDbitem = DBITEMID::VALUE(idSecret - (SECRETID::DATABASESTART - 1));
-    ASSERT(idDbitem >= DBITEMID::ID_FIRST && idDbitem < DBITEMID::ID_MAX);
+    ASSERT(idDbitem >= DBITEMID::ID_FIRST);
+    ASSERT(idDbitem < DBITEMID::ID_MAX);
+    
     return idDbitem;
 };
 

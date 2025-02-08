@@ -69,6 +69,9 @@ bool CLoadStageSeqState::OnMove(CStageBaseSequence* pSeq)
                 m_step = STEP_END;
         }
         break;
+
+    default:
+        break;
     };
     
     return (m_step >= STEP_END);
@@ -114,7 +117,9 @@ void CLoadStageSeqState::LoadStage(void)
 void CIntroStageSeqState::OnAttach(CStageBaseSequence* pSeq, const void* pParam)
 {
     pSeq->Stage().GetMapCamera()->SetCameraMode(CMapCamera::MODE_INTRODUCTION);
+
     CScreenFade::BlackIn();
+
     m_step = STEP_INTRO;
     m_fTime = 0.0f;
 };

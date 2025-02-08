@@ -1,9 +1,13 @@
 #pragma once
 
 
-#define MATH_PI (3.1415927f)
-#define MATH_DEG2RAD(x) ((x) * (MATH_PI) / (180.0f))
-#define MATH_RAD2DEG(x) ((x) * (180.0f) / (MATH_PI))
+#define MATH_PI         (3.1415927f)
+#define MATH_PI2        (MATH_PI * 2.0f)
+
+#define MATH_INV_PI     (1.0f / MATH_PI)
+
+#define MATH_DEG2RAD(x) ((x) * ((MATH_PI) / (180.0f)))
+#define MATH_RAD2DEG(x) ((x) * ((180.0f) / (MATH_PI)))
 
 
 namespace Math
@@ -18,45 +22,40 @@ namespace Math
     static const RwV3d VECTOR3_ZERO = { 0.0f, 0.0f, 0.0f };
     static const RwV2d VECTOR2_ZERO = { 0.0f, 0.0f };
 
+    void   SRand(uint32 seed);
+    uint32 Rand(void);
+    float  RandFloat(void); // within [0.0f..1.0f] range
+    uint32 RandRange(uint32 nLow, uint32 nHigh);
+    float  RandFloatRange(float fLow, float fHigh);
+
     float RadianInvClamp(float x);
-    float FNegate(float x);
-    float Floor(float x);
-    float Round(float x);
     float RadianCorrect(float fRadian);
     float Sqrt(float x);
-    int32 Gcd(int32 x, int32 y);
-    float ToRadian(float fDegree);
-    float ToDegree(float fRadian);
-    float Fmod(float x, float y);
-    bool FEqual(float a, float b);
     float ACos(float x);
     float ASin(float x);
     float Sin(float x);
     float Cos(float x);
     float ATan2(float y, float x);
     float Tan(float x);
-    void SRand(uint32 seed);
-    uint32 Rand(void);
-    float RandFloat(void);
-    uint32 RandRange(uint32 nLow, uint32 nHigh);
-    float RandFloatRange(float fLow, float fHigh);
+    
     float Vec2_Length(const RwV2d* pvIn);
-    void Vec2_Normalize(RwV2d* pvOut, const RwV2d* pvIn);
-    void Vec3_Multiply(RwV3d* pvOut, const RwV3d* pvInA, const RwV3d* pvInB);
-    void Vec3_Multiply(RwV3d* pvOut, const RwV3d* pvInA, float s);
-    void Vec3_Add(RwV3d* pvOut, const RwV3d* pvInA, const RwV3d* pvInB);
-    void Vec3_Sub(RwV3d* pvOut, const RwV3d* pvInA, const RwV3d* pvInB);
-    void Vec3_Scale(RwV3d* pvOut, const RwV3d* pvIn, float s);
+    void  Vec2_Normalize(RwV2d* pvOut, const RwV2d* pvIn);
+
+    void  Vec3_Multiply(RwV3d* pvOut, const RwV3d* pvInA, const RwV3d* pvInB);
+    void  Vec3_Multiply(RwV3d* pvOut, const RwV3d* pvInA, float s);
+    void  Vec3_Add(RwV3d* pvOut, const RwV3d* pvInA, const RwV3d* pvInB);
+    void  Vec3_Sub(RwV3d* pvOut, const RwV3d* pvInA, const RwV3d* pvInB);
+    void  Vec3_Scale(RwV3d* pvOut, const RwV3d* pvIn, float s);
     float Vec3_Length(const RwV3d* pvIn);
-    float Vec3_LengthXZ(const RwV3d* pvIn);
-    void Vec3_Negate(RwV3d* pvOut, const RwV3d* pvIn);
-    void Vec3_Abs(RwV3d* pvOut, const RwV3d* pvIn);
-    void Vec3_Normalize(RwV3d* pvOut, const RwV3d* pvIn);
-    void Vec3_Cross(RwV3d* pvOut, const RwV3d* pvInA, const RwV3d* pvInB);
+    void  Vec3_Negate(RwV3d* pvOut, const RwV3d* pvIn);
+    void  Vec3_Abs(RwV3d* pvOut, const RwV3d* pvIn);
+    void  Vec3_Normalize(RwV3d* pvOut, const RwV3d* pvIn);
+    void  Vec3_Cross(RwV3d* pvOut, const RwV3d* pvInA, const RwV3d* pvInB);
     float Vec3_Dot(const RwV3d* pvA, const RwV3d* pvB);
-    void Vec3_Lerp(RwV3d* pvOut, const RwV3d* pvInA, const RwV3d* pvInB, float t);
-    void Vec3_Reflect(RwV3d* pvOut, const RwV3d* pvIn, const RwV3d* pvNormal);
-    bool Vec3_IsEqual(RwV3d const* vecA, RwV3d const* vecB);
+    void  Vec3_Lerp(RwV3d* pvOut, const RwV3d* pvInA, const RwV3d* pvInB, float t);
+    void  Vec3_Reflect(RwV3d* pvOut, const RwV3d* pvIn, const RwV3d* pvNormal);
+    bool  Vec3_IsEqual(RwV3d const* vecA, RwV3d const* vecB);
+
     void Matrix_Update(RwMatrix* matrix, const RwV3d* right, const RwV3d* up, const RwV3d* at, const RwV3d* pos = nullptr);
     void Matrix_Multiply(RwMatrix* matrix, const RwMatrix* m1, const RwMatrix* m2);
     void Matrix_RotateX(RwMatrix* matrix, float rad);
@@ -70,23 +69,13 @@ namespace Math
     void Matrix_Translate(RwMatrix* matrix, const RwV3d* pvTranslation);
     void Matrix_Invert(RwMatrix* out, RwMatrix* in);
 
-    
-    inline int32 Abs(int32 iValue)
+    inline bool FEqual(float a, float b)
     {
-        if (iValue < 0)
-            iValue = -iValue;
-
-        return iValue;
+        float c = (a - b);
+        if (c < 0.0f)
+            c = -c;
+        return (c <= EPSILON);
     };
-
-
-    inline float FAbs(float fValue)
-    {
-        if (fValue < 0.0f)
-            fValue = -fValue;
-        return fValue;
-    };
-
 
     template<class T>
     inline T Lerp(T start, T end, float t)

@@ -37,7 +37,7 @@ CUtromGimmickMove::RESULT CUtromGimmickMove::OnMove(float dt)
         const CWorldMap::COLLISIONRESULT* pResult = CWorldMap::GetCollisionResult();
         ASSERT(pResult);
 
-        if (!FLAG_TEST_ANY(pResult->m_attribute, MAPTYPES::ATTRIBUTE_ONEWAY))
+        if (!(pResult->m_attribute & MAPTYPES::ATTRIBUTE_ONEWAY))
         {
             Math::Vec3_Scale(&vDltPos, &pResult->m_vNormal, m_fRadius);
             Math::Vec3_Add(&vNewPos, &pResult->m_vClosestPt, &vDltPos);

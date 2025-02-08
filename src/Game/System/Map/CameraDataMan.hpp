@@ -6,7 +6,7 @@ class CCameraDataManager
 public:
     static void Initialize(void);
     static void Terminate(void);
-    static void Read(const void* pBuffer, uint32 uBufferSize);
+    static void Read(void* pBuffer, uint32 uBufferSize);
     static bool GetSplinePos(RwV3d* pPos, int32 nPathID, float fTime);
     static int32 GetPathIDFromName(const char* pszName);
     static int32 GetPathType(int32 nPathID);

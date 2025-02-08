@@ -158,9 +158,9 @@ static const int32 s_atKoeLow[] =
 
 
 static_assert((COUNT_OF(s_dmKoeHigh) / 3) == PLAYERID::ID_MAX, "update me");
-static_assert((COUNT_OF(s_dmKoeLow) / 3) == PLAYERID::ID_MAX, "update me");
+static_assert((COUNT_OF(s_dmKoeLow)  / 3) == PLAYERID::ID_MAX, "update me");
 static_assert((COUNT_OF(s_atKoeHigh) / 3) == PLAYERID::ID_MAX, "update me");
-static_assert((COUNT_OF(s_atKoeLow) / 3) == PLAYERID::ID_MAX, "update me");
+static_assert((COUNT_OF(s_atKoeLow)  / 3) == PLAYERID::ID_MAX, "update me");
 
 
 static int32 SdSetDamageGetKoeHigh(int32 DefenderId, int32 Rnd)
@@ -179,9 +179,12 @@ static int32 SdSetDamageGetKoeHigh(int32 DefenderId, int32 Rnd)
 
     static_assert(COUNT_OF(KoeHighCodeArray) == PLAYERID::ID_MAX, "update me");
     
-    ASSERT(DefenderId >= 0 && DefenderId < COUNT_OF(KoeHighCodeArray));
-    ASSERT(Rnd >= 0 && Rnd < 3);
-    
+    ASSERT(DefenderId >= 0);
+    ASSERT(DefenderId < COUNT_OF(KoeHighCodeArray));
+
+    ASSERT(Rnd >= 0);
+    ASSERT(Rnd <  3);
+
     return KoeHighCodeArray[DefenderId][Rnd];
 };
 
@@ -202,9 +205,12 @@ static inline int32 SdSetDamageGetKoeLow(int32 DefenderId, int32 Rnd)
 
     static_assert(COUNT_OF(KoeLowCodeArray) == PLAYERID::ID_MAX, "update me");
     
-    ASSERT(DefenderId >= 0 && DefenderId < COUNT_OF(KoeLowCodeArray));
-    ASSERT(Rnd >= 0 && Rnd < 3);
-    
+    ASSERT(DefenderId >= 0);
+    ASSERT(DefenderId < COUNT_OF(KoeLowCodeArray));
+
+    ASSERT(Rnd >= 0);
+    ASSERT(Rnd <  3);
+
     return KoeLowCodeArray[DefenderId][Rnd];
 };
 
@@ -227,7 +233,9 @@ static void SdSetDamage(const SE_DAMAGE_PARAM* pParam)
     case GAMEOBJECTTYPE::SHOT:
         {
             Code = SDCODE_SE(0x1024);
-            KoeCode = SdSetDamageGetKoeLow(pParam->DefenderId, Rnd);
+
+            if (pParam->DefenderType == CCharacter::TYPE_PLAYER)
+                KoeCode = SdSetDamageGetKoeLow(pParam->DefenderId, Rnd);
         }
         break;  // GAMEOBJECTTYPE::SHOT
 
@@ -270,9 +278,13 @@ static void SdSetDamage(const SE_DAMAGE_PARAM* pParam)
             case EFFECTID::ID_LASER_BEAM_ALL:
                 Code = SDCODE_SE(0x1030);
                 break;
+
+            default:
+                break;
             };
 
-            KoeCode = SdSetDamageGetKoeHigh(pParam->DefenderId, Rnd);
+            if (pParam->DefenderType == CCharacter::TYPE_PLAYER)
+                KoeCode = SdSetDamageGetKoeHigh(pParam->DefenderId, Rnd);
         }
         break;  // GAMEOBJECTTYPE::EFFECT
 
@@ -301,9 +313,13 @@ static void SdSetDamage(const SE_DAMAGE_PARAM* pParam)
             case GIMMICKID::ID_N_ROLOBJ:
                 Code = SDCODE_SE(0x1055);
                 break;
+
+            default:
+                break;
             };
 
-            KoeCode = SdSetDamageGetKoeHigh(pParam->DefenderId, Rnd);
+            if (pParam->DefenderType == CCharacter::TYPE_PLAYER)
+                KoeCode = SdSetDamageGetKoeHigh(pParam->DefenderId, Rnd);
         }
         break;  // GAMEOBJECTTYPE::GIMMICK
 
@@ -386,6 +402,9 @@ static void SdSetDamage(const SE_DAMAGE_PARAM* pParam)
                         case ENEMYID::ID_DORAKO:
                             Code = Rnd + SDCODE_SE(0x2116);
                             break;
+
+                        default:
+                            break;
                         };
 
                         if (Code)
@@ -437,6 +456,9 @@ static void SdSetDamage(const SE_DAMAGE_PARAM* pParam)
                         case ENEMYID::ID_FEUDAL_FOOT_NINJA_SWORD:
                         case ENEMYID::ID_FOOT_NINJA_SWORD:
                             Code = SDCODE_SE(0x10D0);
+                            break;
+
+                        default:
                             break;
                         };
                     };
@@ -520,6 +542,9 @@ static void SdSetDamage(const SE_DAMAGE_PARAM* pParam)
                             if (!strcmp(AttackerMotion, "RunAttack"))
                                 Code = DefenderArmorType + SDCODE_SE(0x10B2);
                             break;
+
+                        default:
+                            break;
                         };
                     };
                     
@@ -532,36 +557,104 @@ static void SdSetDamage(const SE_DAMAGE_PARAM* pParam)
                         switch (AttackerId)
                         {
                         case PLAYERID::ID_LEO:
-                            Code = DefenderArmorType + SDCODE_SE(0x10AA);
-                            if (!strcmp(AttackerMotion, "JAttack"))
-                                Code = SDCODE_SE(0x101D);
-                            if (!strcmp(AttackerMotion, "RunAttack"))
-                                Code = DefenderArmorType + SDCODE_SE(0x10AA);
+                            {
+                                Code = DefenderArmorType + SDCODE_SE(0x10AA);                                
+                                if (!std::strcmp(AttackerMotion, "JAttack"))
+                                    Code = SDCODE_SE(0x101D);
+                                if (!std::strcmp(AttackerMotion, "RunAttack"))
+                                    Code = DefenderArmorType + SDCODE_SE(0x10AA);
+                            }
                             break;
 
                         case PLAYERID::ID_RAP:
-                            Code = DefenderArmorType + SDCODE_SE(0x10B2);
-                            strcmp(AttackerMotion, "RunAttack");
+                            {
+                                Code = DefenderArmorType + SDCODE_SE(0x10B2);
+                                std::strcmp(AttackerMotion, "RunAttack");
+                            }
                             break;
 
                         case PLAYERID::ID_MIC:
-                            Code = DefenderArmorType + SDCODE_SE(0x10BA);
-                            if (!strcmp(AttackerMotion, "JAttack"))
-                                Code = SDCODE_SE(0x101D);
-                            if (!strcmp(AttackerMotion, "RunAttack"))
                             {
-                                Code = SDCODE_SE(0x101D);
-                                if (DefenderArmorType)
-                                    Code = SDCODE_SE(0x10A8);
+                                Code = DefenderArmorType + SDCODE_SE(0x10BA);
+                                if (!std::strcmp(AttackerMotion, "JAttack"))
+                                    Code = SDCODE_SE(0x101D);
+                                if (!std::strcmp(AttackerMotion, "RunAttack"))
+                                {
+                                    Code = SDCODE_SE(0x101D);
+                                    if (DefenderArmorType)
+                                        Code = SDCODE_SE(0x10A8);
+                                }
                             }
                             break;
 
                         case PLAYERID::ID_DON:
-                            Code = DefenderArmorType + SDCODE_SE(0x10C2);
-                            if (!strcmp(AttackerMotion, "AA"))
-                                Code = SDCODE_SE(0x101D);
-                            if (!strcmp(AttackerMotion, "RunAttack"))
+                            {
+                                Code = DefenderArmorType + SDCODE_SE(0x10C2);
+                                if (!std::strcmp(AttackerMotion, "AA"))
+                                    Code = SDCODE_SE(0x101D);
+                                if (!std::strcmp(AttackerMotion, "RunAttack"))
+                                    Code = DefenderArmorType + SDCODE_SE(0x10C3);
+                            }
+                            break;
+
+                        case PLAYERID::ID_SLA:
+                            {
+                                Code = SDCODE_SE(0x112E);
+                                if (DefenderArmorType)
+                                    Code = SDCODE_SE(0x10AC);
+                                
+                                if (!std::strcmp(AttackerMotion, "RunAttack"))
+                                {
+                                    Code = SDCODE_SE(0x112E);
+                                    if (DefenderArmorType)
+                                        Code = SDCODE_SE(0x10AC);
+                                };
+                            }
+                            break;
+
+                        case PLAYERID::ID_CAS:
+                            {
+                                Code = DefenderArmorType + SDCODE_SE(0x10B2);
+
+                                if (!std::strcmp(AttackerMotion, "JAttack"))
+                                    Code = SDCODE_SE(0x101D);
+
+                                if (!std::strcmp(AttackerMotion, "RunAttack"))
+                                    Code = DefenderArmorType + SDCODE_SE(0x10B2);
+                            }
+                            break;
+
+                        case PLAYERID::ID_KAR:
+                            {
+                                Code = SDCODE_SE(0x113A);
+                                if (DefenderArmorType)
+                                    Code = SDCODE_SE(0x10AC);
+
+                                if (!std::strcmp(AttackerMotion, "JAttack"))
+                                    Code = SDCODE_SE(0x1075);
+
+                                if (!std::strcmp(AttackerMotion, "RunAttack"))
+                                {
+                                    Code = SDCODE_SE(0x101D);
+                                    if (DefenderArmorType)
+                                        Code = SDCODE_SE(0x10A8);
+                                };
+                            }
+                            break;
+
+                        case PLAYERID::ID_SPL:
+                            {
                                 Code = DefenderArmorType + SDCODE_SE(0x10C3);
+
+                                if (!std::strcmp(AttackerMotion, "JAttack"))
+                                    Code = SDCODE_SE(0x101D);
+
+                                if (!std::strcmp(AttackerMotion, "RunAttack"))
+                                    Code = DefenderArmorType + SDCODE_SE(0x10B2);
+                            }
+                            break;
+
+                        default:
                             break;
                         };
                     };
@@ -678,6 +771,9 @@ static void SdSetDamage(const SE_DAMAGE_PARAM* pParam)
                         if (!std::strcmp(AttackerName, "enemy081_0000"))
                             Code = SDCODE_SE(0x10FA);
                         break;
+
+                    default:
+                        break;
                     };
 
                     if (pParam->AttackResult == CHARACTERTYPES::ATTACKRESULTTYPE_GUARD)
@@ -695,17 +791,20 @@ static void SdSetDamage(const SE_DAMAGE_PARAM* pParam)
                         };
 
                         static_assert(COUNT_OF(CodeArray) == PLAYERID::ID_MAX, "update me");
-                        ASSERT(pParam->DefenderId >= 0 && pParam->DefenderId < COUNT_OF(CodeArray));
+                        ASSERT(pParam->DefenderId >= 0);
+                        ASSERT(pParam->DefenderId < COUNT_OF(CodeArray));
 
                         Code = CodeArray[pParam->DefenderId];
                     }
                     else if (pParam->AttackResult == CHARACTERTYPES::ATTACKRESULTTYPE_DAMAGE_FLYAWAY)
                     {
-                        KoeCode = SdSetDamageGetKoeHigh(pParam->DefenderId, Rnd);
+                        if (pParam->DefenderType == CCharacter::TYPE_PLAYER)
+                            KoeCode = SdSetDamageGetKoeHigh(pParam->DefenderId, Rnd);
                     }
                     else
                     {
-                        KoeCode = SdSetDamageGetKoeLow(pParam->DefenderId, Rnd);
+                        if (pParam->DefenderType == CCharacter::TYPE_PLAYER)
+                            KoeCode = SdSetDamageGetKoeLow(pParam->DefenderId, Rnd);
                     };
                 }
                 break;  // CCharacter::TYPE_ENEMY
@@ -715,6 +814,7 @@ static void SdSetDamage(const SE_DAMAGE_PARAM* pParam)
     };
 
     CGameSound::PlayPositionSE(&pParam->Pos, Code, 0);
+
     if (pParam->DefenderType == CCharacter::TYPE_PLAYER)
     {
         if (!CGameSound::IsIDPlaying(PLAYERID::VALUE(pParam->DefenderId)))
@@ -818,7 +918,9 @@ static void SdSetAttackEnemy(const SE_ATTACK_PARAM* pParam)
     switch (pParam->Id)
     {
     case ENEMYID::ID_PURPLE_DRAGON_GANG:
-        Code = std::strcmp(Motion, "C") != 0 ? SDCODE_SE(0x10CF) : SDCODE_SE(0x10E2);
+		Code = SDCODE_SE(0x10E2);
+		if (std::strcmp(Motion, "C"))
+			Code = SDCODE_SE(0x10CF);
         break;
 
     case ENEMYID::ID_FOOT_NINJA_SWORD:
@@ -982,6 +1084,9 @@ static void SdSetAttackEnemy(const SE_ATTACK_PARAM* pParam)
     case ENEMYID::ID_ULTIMATE_SHREDDER:
         Code = SDCODE_SE(0x1105);
         break;
+
+    default:
+        break;
     };
     
     CGameSound::PlayPositionSE(&pParam->Pos, Code, 0);    
@@ -1115,7 +1220,7 @@ static void SdSetAttackEnemy(const SE_ATTACK_PARAM* pParam)
 
     m_aVoiceHist[m_nVoiceHistSide++ % COUNT_OF(m_aVoiceHist)] = { nVoice, idPlayer };
 
-    if (idPlayer == PLAYERID::VALUE(-1))
+    if (idPlayer == PLAYERID::ID_INVALID)
     {
         SoundSetEx(nVoice, 0, 0, uint32(idPlayer));
     }
@@ -1606,8 +1711,11 @@ static void SdSetAttackEnemy(const SE_ATTACK_PARAM* pParam)
 
 	case ENEMYID::ID_SPASMOSAUR:
 		PlayPositionSE(&vPos, SDCODE_SE(0x2006));
-		break;
-	};
+        break;
+
+    default:
+        break;
+    };
 };
 
 
@@ -2225,12 +2333,12 @@ static void SdSetAttackEnemy(const SE_ATTACK_PARAM* pParam)
 
 /*static*/ int32 CGameSound::convertToVolume(int32 nConfig)
 {
-    return VOLUME_MAX - nConfig;
+    return (VOLUME_MAX - nConfig);
 };
 
 
 /*static*/ int32 CGameSound::convertToRawConfig(int32 nVolume)
 {
-    return VOLUME_MAX - Clamp(nVolume, 0, 10);
+    return (VOLUME_MAX - Clamp(nVolume, 0, VOLUME_MAX));
 };
 

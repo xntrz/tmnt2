@@ -23,18 +23,14 @@ static COptionData::RAWDATA s_OptionBackup;
 /*static*/ void CGameData::Initialize(void)
 {
     m_pOption = new COptionData;
-    ASSERT(m_pOption);
-    
-    m_pRecord = new CGameRecord;
-    ASSERT(m_pRecord);
-    
     m_pOption->Initialize();
+    m_pOption->Snapshot(s_OptionBackup);
+
+    m_pRecord = new CGameRecord;
     m_pRecord->Initialize();
+    m_pRecord->Snapshot(s_RecordBackup);
 
     m_attribute.Clear();
-
-    m_pRecord->Snapshot(s_RecordBackup);
-    m_pOption->Snapshot(s_OptionBackup);
     
     m_bNewGame = true;
 };
@@ -117,7 +113,9 @@ static COptionData::RAWDATA s_OptionBackup;
         if (PlayParam().GetStageMode() == GAMETYPES::STAGEMODE_NEXUS)
         {
             GAMETYPES::NEXUSID idNexus = CAreaInfo::GetNexusID(PlayParam().GetArea());
-            Record().Nexus().SetStagePlayed(idNexus, PlayParam().GetStageIndex());
+            int32 stageIndex = PlayParam().GetStageIndex();
+
+            Record().Nexus().SetStagePlayed(idNexus, stageIndex);
         };
     };
 };
@@ -134,11 +132,10 @@ static COptionData::RAWDATA s_OptionBackup;
         if (PlayParam().GetStageMode() == GAMETYPES::STAGEMODE_NEXUS)
         {
             GAMETYPES::NEXUSID idNexus = CAreaInfo::GetNexusID(PlayParam().GetArea());
-            Record().Nexus().UpdateStageClearTime(
-                idNexus,
-                PlayParam().GetStageIndex(),
-                PlayResult().GetStageCleartime(PlayParam().GetStageIndex())
-            );
+            int32 stageIndex = PlayParam().GetStageIndex();
+            CGameTime stageCleartime = PlayResult().GetStageCleartime(stageIndex);
+
+            Record().Nexus().UpdateStageClearTime(idNexus, stageIndex, stageCleartime);
         };
     };
 };
@@ -171,8 +168,9 @@ static COptionData::RAWDATA s_OptionBackup;
 /*static*/ void CGameData::OnPreResult(void)
 {
     PlayResult().Evaluate();
-    
-    if (PlayResult().GetAreaResult() == CGamePlayResult::AREARESULT_GAMECLEAR)
+
+    CGamePlayResult::AREARESULT areaResult = PlayResult().GetAreaResult();
+    if (areaResult == CGamePlayResult::AREARESULT_GAMECLEAR)
         PlayResult().TakePrize(PlayParam().GetArea());    
 };
 

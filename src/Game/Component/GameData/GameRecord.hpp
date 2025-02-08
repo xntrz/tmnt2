@@ -13,14 +13,16 @@ class CGameRecord
 public:
     struct RAWDATA
     {
-        uint32 m_uTimestampInit;
-        CItemRecord::RAWDATA m_item;
-        CAntiqueRecord::RAWDATA m_antique;
+        uint32                   m_uTimestampInit;
+        CItemRecord::RAWDATA     m_item;
+        CAntiqueRecord::RAWDATA  m_antique;
         CDatabaseRecord::RAWDATA m_database;
-        CNexusRecord::RAWDATA m_nexus;
-        CAreaRecord::RAWDATA m_area;
-        CSecretRecord::RAWDATA m_secret;
+        CNexusRecord::RAWDATA    m_nexus;
+        CAreaRecord::RAWDATA     m_area;
+        CSecretRecord::RAWDATA   m_secret;
     };
+
+    static_assert(std::is_pod<RAWDATA>::value, "game RAWDATA should be POD type");
     
 public:
     CGameRecord(void);

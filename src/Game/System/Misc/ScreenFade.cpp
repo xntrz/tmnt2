@@ -71,7 +71,7 @@ void CScreenFade::CScreenFadeController::Period(void)
     m_bIsFading = (m_fTime < m_fFadeTime);
     m_fTime     = Clamp(m_fTime, 0.0f, m_fFadeTime);
 
-	if (Math::FEqual(m_fFadeTime, 0.0f))
+	if (m_fFadeTime == 0.0f)
 		m_color = m_colorEnd;
     else
         Color4B_Lerp(m_color, m_colorStart, m_colorEnd, m_fTime / m_fFadeTime);    

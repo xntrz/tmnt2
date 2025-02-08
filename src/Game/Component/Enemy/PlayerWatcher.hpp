@@ -9,6 +9,8 @@
 class CEnemyCharacter;
 class CCharacterCompositor;
 
+
+/* TODO: this functional relate to 6045 group, test it later */
 class CPlayerStateWatcher
 {
 public:
@@ -45,6 +47,8 @@ public:
                                         | PLAYER_WATCH_STATE_STUN,
     };
 
+    DEFINE_ENUM_FLAG_OPS(PLAYER_WATCH_FLAG, friend);
+    
 public:
     CPlayerStateWatcher(void);
     ~CPlayerStateWatcher(void);
@@ -76,6 +80,7 @@ private:
 };
 
 
+/* TODO: this functional relate to 6045 group, test it later */
 class CPlayerWatcher : public CPlayerStateWatcher
 {
 public:

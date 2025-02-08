@@ -346,7 +346,7 @@ void CBridgePillarGimmick::setBreakdownHitAttack(int32 Step)
         Attack.SetObjectPos(&vPosition);
         Attack.SetPower(50);
         Attack.SetAttackNo(i);
-        Attack.SetTarget(CHitAttackData::TARGET(CHitAttackData::TARGET_PLAYER | CHitAttackData::TARGET_ENEMY));
+        Attack.SetTarget(CHitAttackData::TARGET_PLAYER | CHitAttackData::TARGET_ENEMY);
         Attack.SetStatus(CHitAttackData::STATUS_FLYAWAY);
         Attack.SetAntiguard(CHitAttackData::ANTIGUARD_INVALID);
         
@@ -388,7 +388,8 @@ void CBridgePillarGimmick::setBreakdownSmokeEffect(int32 Step)
         
         const CWorldMap::COLLISIONRESULT* pCollisonResult = CWorldMap::GetCollisionResult();
         ASSERT(pCollisonResult);
-        if (!FLAG_TEST(pCollisonResult->m_attribute, MAPTYPES::ATTRIBUTE_DEATH))
+
+        if (pCollisonResult->m_attribute != MAPTYPES::ATTRIBUTE_DEATH)
         {
             uint32 hFx = CEffectManager::Play(EFFECTID::ID_ALL_DOWNSMOKE, &vPosition);
             if (hFx)

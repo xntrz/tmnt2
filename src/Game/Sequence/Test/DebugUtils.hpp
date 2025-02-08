@@ -48,7 +48,7 @@ public:
 	using trig_cb = void(*)(void*);
 	
 private:
-	struct ITEM : public CListNode<ITEM>
+	struct ITEM
     {
 		struct INT
 		{
@@ -60,7 +60,12 @@ private:
 			const char** ValueStrList;
 		};
 
-		struct FLOAT
+        struct INT_DISP
+        {
+            int32* piValue;
+        };
+
+        struct FLOAT
 		{
 			float Value;
 			float ValueStep;
@@ -94,19 +99,26 @@ private:
 		struct TEXT
 		{
 			;
-		};
+        };
+
+        struct TEXT_DISP
+        {
+            const char* pszText;
+        };
 
         enum TYPE
         {
             TYPE_NONE = 0,
             TYPE_INT,
-			TYPE_FLOAT,
+            TYPE_INT_DISP,
+            TYPE_FLOAT,
 			TYPE_FLOAT_DISP,
 			TYPE_BOOLEAN,
             TYPE_TRIGGER,
 			TYPE_SEPARATOR,
-			TYPE_TEXT,
-		};
+            TYPE_TEXT,
+            TYPE_TEXT_DISP,
+        };
 
         TYPE Type;
         const char* Name;
@@ -114,13 +126,15 @@ private:
         bool Hex;
         union
         {
-			INT Int;
-			FLOAT Float;
-			FLOAT_DISP FloatDisp;
-			BOOLEAN Boolean;
-            TRIGGER Trigger;
-			SEPARATOR Separator;
-			TEXT text;
+            INT         Int;
+            INT_DISP    IntDisp;
+            FLOAT       Float;
+			FLOAT_DISP  FloatDisp;
+			BOOLEAN     Boolean;
+            TRIGGER     Trigger;
+			SEPARATOR   Separator;
+			TEXT        Text;
+            TEXT_DISP   TextDisp;
 		};
     };
     
@@ -146,16 +160,25 @@ public:
     void Draw(void) const;
 	void AddInt(const char* pszName, int32 nValueMin, int32 nValueMax, int32 nValueStep, int32 nValueInit, int_cb cb);
 	void AddInt(const char* pszName, int32 nValueMin, int32 nValueMax, int32 nValueStep, int32 nValueInit, const char** apszValueList, int_cb cb);
-	void AddInt(const char* pszName, int32 nValueMin, int32 nValueMax, int32 nValueStep, int32 nValueInit, std::initializer_list<const char*> InitList, int_cb cb);
+    void AddInt(const char* pszName, int32 nValueMin, int32 nValueMax, int32 nValueStep, int32 nValueInit, std::initializer_list<const char*> InitList, int_cb cb);
+    void AddIntDisp(const char* pszName, int32* piValue);
     void AddBool(const char* pszName, bool_cb cb);
-	void AddFloat(const char* pszName, float fValueMin, float fValueMax, float fValueStep, float fValueInit, float_cb cb);
+    void AddBool(const char* pszName, bool bInitState, bool_cb cb);
+    void AddFloat(const char* pszName, float fValueMin, float fValueMax, float fValueStep, float fValueInit, float_cb cb);
 	void AddFloatDisp(const char* pszName, float* pfValue);
-	void AddTrigger(const char* pszName, trig_cb cb);
-    void AddTrigger(const char* pszName, trig_cb cb, void* param);
+    void AddTrigger(const char* pszName, trig_cb cb = nullptr, void* param = nullptr);
 	void AddSeparator(bool bEmpty = false);
-	void AddText(const char* pszText, bool bSelectable = false);
-	void AddItem(const char* pszText, void* param = 0);
-	void* GetItemParam(void) const;
+    void AddText(const char* pszText, bool bSelectable = false);
+    void AddTextDisp(const char* pszText, bool bSelectable = false);
+    void AddItem(const char* pszText, void* param = 0);
+    void* GetItemParam(void) const;
+    void SetSelectAtTop(int32 select); // makes attempt to set current selection at display TOP if there is space to move menu
+    void SetSelectAtBottom(int32 select); // makes attempt to set current selection at display BOTTOM if there is space to move menu
+    void SetSelect(int32 select); // moves selection to specified select, display position depends where is selection cursor was
+    int32 GetSelect(void) const;
+    int32 GetSelectMax(void) const;
+    void SetItemEnable(int32 select, bool bState);
+    void SetLastItemEnable(bool bState);
 
 	template<class T>
 	inline void AddTrigger(const char* name, trig_cb cb, T param) { AddTrigger(name, cb, reinterpret_cast<void*>(param)); };
@@ -166,14 +189,13 @@ public:
     inline void SetColorSelect(const RwRGBA& color)     { m_ColorSelect = color; };
     inline void SetColorUnselect(const RwRGBA& color)   { m_ColorUnselect = color; };
     inline void SetColorBackground(const RwRGBA& color) { m_font.Background(color); };
-    inline int32 GetSelect(void) const                  { return m_iSelect; };
     inline RESULT GetResult(void) const                 { return m_Result; };
     inline void HexDispBegin(void)                      { m_uOptFlag |= (OPTFLAG_DISP_HEX); };
     inline void HexDispEnd(void)                        { m_uOptFlag &= (~OPTFLAG_DISP_HEX); };
     inline void DigitalOK(uint32 DigitalMask)           { m_uDigitalOK = DigitalMask; };
     inline void DigitalCANCEL(uint32 DigitalMask)       { m_uDigitalCANCEL = DigitalMask; };
 
-protected:
+protected:    
     void checkInput(void);
     void handleMove(MOVEDIR MoveDir);
     void handleOk(void);
@@ -184,9 +206,8 @@ protected:
     const char** itemCopyStringArray(const char** str, int32 cnt) const;
 
 protected:
-    ITEM m_aItem[256];
-    CList<ITEM> m_listItemAlloc;
-    CList<ITEM> m_listItemFree;
+    mutable ITEM m_aItem[256];
+    int32 m_nItemAllocCnt;
     mutable CDebugFontCtrl m_font;
     RwRGBA m_ColorUnselect;
     RwRGBA m_ColorSelect;
@@ -210,11 +231,13 @@ class CDebugSequenceCheckObj
 public:
     CDebugSequenceCheckObj(void);
     CDebugSequenceCheckObj& Check(int32 iTargetSeqLbl);
-
+    void Update(void);
+    
     inline bool IsStarted(void) const { return (m_iPrevSeqLbl != m_iTargSeqLbl) && (m_iCurrSeqLbl == m_iTargSeqLbl); };
     inline bool IsRunning(void) const { return (m_iPrevSeqLbl == m_iTargSeqLbl) && (m_iCurrSeqLbl == m_iTargSeqLbl); };
     inline bool IsEnded(void) const   { return (m_iPrevSeqLbl == m_iTargSeqLbl) && (m_iCurrSeqLbl != m_iTargSeqLbl); };
-
+    inline int32 Current(void) const { return m_iCurrSeqLbl; };
+    
 private:
     int32 m_iTargSeqLbl;
     int32 m_iPrevSeqLbl;

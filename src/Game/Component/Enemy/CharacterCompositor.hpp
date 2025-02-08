@@ -30,12 +30,14 @@ public:
     virtual void OnMessageThrow(void* pParam) override;
     virtual void OnMessageMissThrow(void* pParam) override;
     virtual void OnSteppedDeathFloor(void) override;
+    void IncludeModule(IModule* pModule);
     void ModuleRipple(float fRadius);
     void ModuleShadow(float fRadius);
     ENEMYTYPES::STATUS GetStatus(void) const;
     void RotateDirection(float fDirection, float fRotateRate);
 	ENEMYID::VALUE GetID(void) const;
     CHARACTERTYPES::ATTACKPARAMETER& AttackParameter(void);
+    CEnemyCharacter& EnemyChr(void);
 
 private:
     CEnemyCharacter& m_rEnemyChr;

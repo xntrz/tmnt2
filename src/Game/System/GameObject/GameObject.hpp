@@ -12,17 +12,19 @@ public:
     virtual void Run(void);
     virtual void MessageProc(int32 nMessageID, void* pParam);
     void Period(void);
-    void SetObjectFlag(GAMEOBJECTTYPES::FLAG flag, bool bSet);
-    bool IsObjectFlagSet(GAMEOBJECTTYPES::FLAG flag) const;
     const char* GetName(void) const;
     GAMEOBJECTTYPE::VALUE GetType(void) const;
-    GAMEOBJECTTYPES::FLAG GetObjectFlag(void) const;
+    uint32 GetObjectFlag(void) const;
     uint32 GetHandle(void) const;    
+    void SetObjectFlag(GAMEOBJECTTYPES::FLAG flag);
+    void ClearObjectFlag(GAMEOBJECTTYPES::FLAG flag);
+    bool TestObjectFlag(GAMEOBJECTTYPES::FLAG flag) const;
+    bool CheckObjectFlag(GAMEOBJECTTYPES::FLAG flag) const;
 
 private:
-    static CGameObject* m_pRunningObject;
-    char m_szObjName[GAMEOBJECTTYPES::NAME_MAX];
+    static CGameObject*   m_pRunningObject;
+    char                  m_szObjName[GAMEOBJECTTYPES::NAME_MAX];
     GAMEOBJECTTYPE::VALUE m_objtype;
-    uint32 m_objflag;
-    uint32 m_hObject;
+    GAMEOBJECTTYPES::FLAG m_oflag;
+    uint32                m_hObject;
 };

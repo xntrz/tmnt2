@@ -48,19 +48,19 @@ uint32 CGameTime::GetTotalSecond(void) const
 
 uint32 CGameTime::GetHour(void) const
 {
-    return m_uTotalTime / 3600u;
+    return (m_uTotalTime / 3600u);
 };
 
 
 uint32 CGameTime::GetMinute(void) const
 {
-    return (m_uTotalTime / 60u) % 60u;
+    return ((m_uTotalTime / 60u) % 60u);
 };
 
 
 uint32 CGameTime::GetSecond(void) const
 {
-    return m_uTotalTime % 60u;
+    return (m_uTotalTime % 60u);
 };
 
 
@@ -102,9 +102,12 @@ bool CGameTime::operator==(const CGameTime& Gametime) const
 
 void CGameTime::clamp(void)
 {
-    static const uint32 HMS_MAX = GAMETIME_HMS(99, 59, 59);
-    
+    static const uint32 HMS_MAX = GAMETIME_HMS(100, 0, 0);
+
+    static_assert(HMS_MAX == 360000, "idb --> CGameTime::ClampTime_4896F0");
+    static_assert((HMS_MAX - 1) == 359999, "idb --> CGameTime::ClampTime_4896F0");
+
     if (m_uTotalTime >= HMS_MAX)
-        m_uTotalTime = HMS_MAX;
+        m_uTotalTime = (HMS_MAX - 1);
 };
 

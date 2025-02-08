@@ -18,16 +18,8 @@
 
 namespace PlayerStatus
 {
-    bool CLiftChallenge::IsEnableChangeStatus(PLAYERTYPES::STATUS status)
-    {
-        PLAYERTYPES::STATUS aStatusArray[] =
-        {
-            PLAYERTYPES::STATUS_GUARD_READY,
-            PLAYERTYPES::STATUS_GUARD,
-        };
-
-        return IsWithinStatusFromArray(status, aStatusArray, COUNT_OF(aStatusArray));
-    };
+    DEFINE_ENABLED_STATUS_FOR(CLiftChallenge, { PLAYERTYPES::STATUS_GUARD_READY,
+                                                PLAYERTYPES::STATUS_GUARD });
 
 
     void CLiftChallenge::OnAttach(void)
@@ -53,11 +45,11 @@ namespace PlayerStatus
                 {
                 case GAMEOBJECTTYPE::CHARACTER:
                     {
-                        CCharacter* pCharacter = (CCharacter*)pLiftObj;
+                        CCharacter* pCharacter = static_cast<CCharacter*>(pLiftObj);
                         if (pCharacter->GetCharacterType() == CCharacter::TYPE_PLAYER)
                         {
-                            CPlayerCharacter* pPlayerCharacter = (CPlayerCharacter*)pCharacter;
-                            if (IsCombinationPossible(m_pPlayerChr, pPlayerCharacter))
+                            CPlayerCharacter* pPlayerCharacter = static_cast<CPlayerCharacter*>(pCharacter);
+                            if (IsCombinationPossible(m_pPlayerChr, pPlayerCharacter) && (pPlayerCharacter->GetID() != -1))
                                 ChangeCombinationStep(pLiftObj);
                         }
                         else
@@ -77,6 +69,9 @@ namespace PlayerStatus
                         ChangeCatchStep(pLiftObj);
                     }
                     break;
+
+                default:
+                    break;
                 };
             };
         };
@@ -89,17 +84,15 @@ namespace PlayerStatus
     void CLiftChallenge::ChangeCatchStep(CGameObject* pObject)
     {
         StateMachine().ChangeStatus(PLAYERTYPES::STATUS_LIFT_SUCCESS);
-        CGameObjectManager::SendMessage(
-            pObject,
-            CHARACTERTYPES::MESSAGEID_CATCH,
-            &Character().LiftInfo().m_iStatus
-        );
+
+        CGameObjectManager::SendMessage(pObject, CHARACTERTYPES::MESSAGEID_CATCH, &Character().LiftInfo().m_iStatus);
     };
 
 
     void CLiftChallenge::ChangeCombinationStep(CGameObject* pObject)
     {
         StateMachine().ChangeStatus(PLAYERTYPES::STATUS_THROW_COMBINATION);
+
         CGameObjectManager::SendMessage(pObject, CHARACTERTYPES::MESSAGEID_COMBINATION);
     };
 
@@ -107,21 +100,21 @@ namespace PlayerStatus
     void CLiftChallenge::ChangeBackThrowStep(CGameObject* pObject)
     {
         StateMachine().ChangeStatus(PLAYERTYPES::STATUS_THROW_BACK);
-        CGameObjectManager::SendMessage(
-            pObject,
-            CHARACTERTYPES::MESSAGEID_CATCH,
-            &Character().LiftInfo().m_iStatus
-        );
+
+        CGameObjectManager::SendMessage(pObject, CHARACTERTYPES::MESSAGEID_CATCH, &Character().LiftInfo().m_iStatus);
     };
 
 
     bool CLiftChallenge::IsCombinationPossible(CPlayerCharacter* pPlayerChrLifting, CPlayerCharacter* pPlayerChrLifted)
-    {        
-        if ((pPlayerChrLifting->GetID() >= PLAYERID::ID_LEO && pPlayerChrLifting->GetID() <= PLAYERID::ID_DON) &&
-            (pPlayerChrLifted->GetID() >= PLAYERID::ID_LEO && pPlayerChrLifted->GetID() <= PLAYERID::ID_DON))
-        {
+    {
+        PLAYERID::VALUE playerIdA = pPlayerChrLifting->GetID();
+        PLAYERID::VALUE playerIdB = pPlayerChrLifted->GetID();
+
+        bool bIsTurtleA = (playerIdA >= PLAYERID::ID_LEO) && (playerIdA <= PLAYERID::ID_DON);
+        bool bIsTurtleB = (playerIdB >= PLAYERID::ID_LEO) && (playerIdB <= PLAYERID::ID_DON);
+
+        if (bIsTurtleA && bIsTurtleB)
             return true;
-        };
 
         return false;
     };
@@ -132,16 +125,8 @@ namespace PlayerStatus
     //
 
     
-    bool CLiftSuccess::IsEnableChangeStatus(PLAYERTYPES::STATUS status)
-    {
-        PLAYERTYPES::STATUS aStatusArray[] =
-        {
-            PLAYERTYPES::STATUS_LIFT_CHALLENGE,
-            PLAYERTYPES::STATUS_ATTACK_AAC,
-        };
-
-        return IsWithinStatusFromArray(status, aStatusArray, COUNT_OF(aStatusArray));
-    };
+    DEFINE_ENABLED_STATUS_FOR(CLiftSuccess, { PLAYERTYPES::STATUS_LIFT_CHALLENGE,
+                                              PLAYERTYPES::STATUS_ATTACK_AAC });
 
 
     void CLiftSuccess::OnAttach(void)
@@ -156,6 +141,7 @@ namespace PlayerStatus
     void CLiftSuccess::OnDetach(void)
     {
         Character().SetEnableBodyHit(true);
+
         if (Character().LiftInfo().m_bMissThrow)
             Throw::SendMissThrowCommon(Character());
     };
@@ -180,17 +166,9 @@ namespace PlayerStatus
     // *********************************************************************************
     //
 
-
-    bool CLift::IsEnableChangeStatus(PLAYERTYPES::STATUS status)
-    {
-        PLAYERTYPES::STATUS aStatusArray[] =
-        {
-            PLAYERTYPES::STATUS_LIFT_SUCCESS,
-            PLAYERTYPES::STATUS_LIFT_WALK,
-        };
-
-        return IsWithinStatusFromArray(status, aStatusArray, COUNT_OF(aStatusArray));
-    };
+    
+    DEFINE_ENABLED_STATUS_FOR(CLift, { PLAYERTYPES::STATUS_LIFT_SUCCESS,
+                                       PLAYERTYPES::STATUS_LIFT_WALK });
 
 
     void CLift::OnAttach(void)
@@ -220,20 +198,12 @@ namespace PlayerStatus
     //
 
 
-    bool CLiftWalk::IsEnableChangeStatus(PLAYERTYPES::STATUS status)
-    {
-        PLAYERTYPES::STATUS aStatusArray[] =
-        {
-            PLAYERTYPES::STATUS_LIFT,
-        };
-
-        return IsWithinStatusFromArray(status, aStatusArray, COUNT_OF(aStatusArray));
-    };
+    DEFINE_ENABLED_STATUS_FOR(CLiftWalk, { PLAYERTYPES::STATUS_LIFT });
 
 
     void CLiftWalk::OnAttach(void)
     {
-        Character().SetCharacterFlag(CHARACTERTYPES::FLAG_FIXED_DIRECTION, false);
+        Character().ClearCharacterFlag(CHARACTERTYPES::FLAG_FIXED_DIRECTION);
         Character().ChangeMotion(PLAYERTYPES::MOTIONNAMES::LIFT_WALK);
         Character().LiftInfo().m_bMissThrow = true;
     };
@@ -260,17 +230,9 @@ namespace PlayerStatus
     // *********************************************************************************
     //
 
-    
-    bool CThrow::IsEnableChangeStatus(PLAYERTYPES::STATUS status)
-    {
-        PLAYERTYPES::STATUS aStatusArray[] =
-        {
-            PLAYERTYPES::STATUS_LIFT,
-            PLAYERTYPES::STATUS_LIFT_WALK,
-        };
 
-        return IsWithinStatusFromArray(status, aStatusArray, COUNT_OF(aStatusArray));
-    };
+    DEFINE_ENABLED_STATUS_FOR(CThrow, { PLAYERTYPES::STATUS_LIFT,
+                                        PLAYERTYPES::STATUS_LIFT_WALK });
 
 
     void CThrow::OnAttach(void)
@@ -308,17 +270,9 @@ namespace PlayerStatus
     // *********************************************************************************
     //
 
-    
-    bool CThrowBack::IsEnableChangeStatus(PLAYERTYPES::STATUS status)
-    {
-        PLAYERTYPES::STATUS aStatusArray[] =
-        {
-            PLAYERTYPES::STATUS_LIFT_CHALLENGE,
-            PLAYERTYPES::STATUS_ATTACK_AAC,
-        };
 
-        return IsWithinStatusFromArray(status, aStatusArray, COUNT_OF(aStatusArray));
-    };
+    DEFINE_ENABLED_STATUS_FOR(CThrowBack, { PLAYERTYPES::STATUS_LIFT_CHALLENGE,
+                                            PLAYERTYPES::STATUS_ATTACK_AAC });
 
 
     void CThrowBack::OnAttach(void)
@@ -348,11 +302,8 @@ namespace PlayerStatus
     // *********************************************************************************
     //
 
-    
-    bool CThrowCombination::IsEnableChangeStatus(PLAYERTYPES::STATUS status)
-    {
-        return true;
-    };
+
+    DEFINE_EMPTY_ENABLED_STATUS_FOR(CThrowCombination, true);
 
 
     void CThrowCombination::OnAttach(void)
@@ -393,6 +344,9 @@ namespace PlayerStatus
                     StateMachine().ChangeStatus(PLAYERTYPES::STATUS_IDLE);
             }
             break;
+
+        default:
+            break;
         };
     };
 
@@ -401,11 +355,8 @@ namespace PlayerStatus
     // *********************************************************************************
     //
 
-    
-    bool CCaught::IsEnableChangeStatus(PLAYERTYPES::STATUS status)
-    {
-        return true;
-    };
+
+    DEFINE_EMPTY_ENABLED_STATUS_FOR(CCaught, true);
 
 
     void CCaught::OnAttach(void)
@@ -413,7 +364,7 @@ namespace PlayerStatus
         Character().ChangeMotion(PLAYERTYPES::MOTIONNAMES::CAUGHT);
         Character().SetEnableCatchHit(false);
         Character().SetEnableBodyHit(false);
-        Character().SetPlayerFlag(PLAYERTYPES::FLAG_AERIAL_STATUS, false);
+        Character().ClearPlayerFlag(PLAYERTYPES::FLAG_AERIAL_STATUS);
         Character().ResetVelocity();
         Character().ResetAcceleration();
 
@@ -438,17 +389,9 @@ namespace PlayerStatus
     // *********************************************************************************
     //
 
-    
-    bool CLifted::IsEnableChangeStatus(PLAYERTYPES::STATUS status)
-    {
-        PLAYERTYPES::STATUS aStatusArray[] =
-        {
-            PLAYERTYPES::STATUS_CAUGHT,
-            PLAYERTYPES::STATUS_LIFTED_WALK,
-        };
 
-        return IsWithinStatusFromArray(status, aStatusArray, COUNT_OF(aStatusArray));
-    };
+    DEFINE_ENABLED_STATUS_FOR(CLifted, { PLAYERTYPES::STATUS_CAUGHT,
+                                         PLAYERTYPES::STATUS_LIFTED_WALK });
 
 
     void CLifted::OnAttach(void)
@@ -473,16 +416,8 @@ namespace PlayerStatus
     // *********************************************************************************
     //
 
-    
-    bool CLiftedWalk::IsEnableChangeStatus(PLAYERTYPES::STATUS status)
-    {
-        PLAYERTYPES::STATUS aStatusArray[] =
-        {
-            PLAYERTYPES::STATUS_LIFTED,
-        };
 
-        return IsWithinStatusFromArray(status, aStatusArray, COUNT_OF(aStatusArray));
-    };
+    DEFINE_ENABLED_STATUS_FOR(CLiftedWalk, { PLAYERTYPES::STATUS_LIFTED });
     
 
     void CLiftedWalk::OnAttach(void)
@@ -499,7 +434,7 @@ namespace PlayerStatus
 
     void CLiftedWalk::OnRun(void)
     {
-        Character().SetPlayerFlag(PLAYERTYPES::FLAG_AERIAL_STATUS, false);
+        Character().ClearPlayerFlag(PLAYERTYPES::FLAG_AERIAL_STATUS);
     };
     
     
@@ -507,18 +442,10 @@ namespace PlayerStatus
     // *********************************************************************************
     //
 
-    
-    bool CThrown::IsEnableChangeStatus(PLAYERTYPES::STATUS status)
-    {
-        PLAYERTYPES::STATUS aStatusArray[] =
-        {
-            PLAYERTYPES::STATUS_LIFTED,
-            PLAYERTYPES::STATUS_LIFTED_WALK,
-            PLAYERTYPES::STATUS_CAUGHT,
-        };
 
-        return IsWithinStatusFromArray(status, aStatusArray, COUNT_OF(aStatusArray));
-    };
+    DEFINE_ENABLED_STATUS_FOR(CThrown, { PLAYERTYPES::STATUS_LIFTED,
+                                         PLAYERTYPES::STATUS_LIFTED_WALK,
+                                         PLAYERTYPES::STATUS_CAUGHT });
 
 
     void CThrown::OnAttach(void)
@@ -526,20 +453,25 @@ namespace PlayerStatus
         Character().SetEnableBodyHit(false);
         Character().SetEnableCatchHit(false);
 
+        /* init direction */
         RwV3d vDirection = Math::VECTOR3_ZERO;
-        RwV3d vVelocity = Math::VECTOR3_ZERO;
         Character().GetVelocity(&vDirection);
-        Character().GetVelocity(&vVelocity);
-
         vDirection.y = 0.0f;
 
         Math::Vec3_Normalize(&vDirection, &vDirection);
         Math::Vec3_Negate(&vDirection, &vDirection);
 
         Character().AttackParameter().m_vDirection = vDirection;
-        Character().AttackParameter().m_vVelocity = vVelocity;
         Character().AttackParameter().m_direction = CHARACTERTYPES::ATTACKDIRECTIONTYPE_FRONT;
 
+        /* init velocity */
+        RwV3d vVelocity = Math::VECTOR3_ZERO;
+        Character().GetVelocity(&vVelocity);
+        vVelocity.y = 0.0f;        
+
+        Character().AttackParameter().m_vVelocity = vVelocity;        
+
+        /* init other */
         StateMachine().ChangeStatus(PLAYERTYPES::STATUS_FLYAWAY_FRONT);
 
         CGameEvent::SetPlayerDamaged(Character().GetPlayerNo());
@@ -548,10 +480,10 @@ namespace PlayerStatus
 
     void CThrown::OnDetach(void)
     {
-        Character().SetPlayerFlag(PLAYERTYPES::FLAG_AERIAL_STATUS, false);
+        Character().ClearPlayerFlag(PLAYERTYPES::FLAG_AERIAL_STATUS);
         Character().SetEnableBodyHit(true);
         Character().SetEnableCatchHit(true);
-        Character().SetPlayerFlag(PLAYERTYPES::FLAG_AERIAL_STATUS, true);
+        Character().SetPlayerFlag(PLAYERTYPES::FLAG_AERIAL_STATUS);
     };
 
 
@@ -565,11 +497,8 @@ namespace PlayerStatus
     // *********************************************************************************
     //
 
-    
-    bool CThrownBack::IsEnableChangeStatus(PLAYERTYPES::STATUS status)
-    {
-        return true;
-    };
+
+    DEFINE_EMPTY_ENABLED_STATUS_FOR(CThrownBack, true);
 
 
     void CThrownBack::OnAttach(void)
@@ -595,18 +524,15 @@ namespace PlayerStatus
     // *********************************************************************************
     //
 
-    
-    bool CThrownCombination::IsEnableChangeStatus(PLAYERTYPES::STATUS status)
-    {
-        return true;
-    };
+
+    DEFINE_EMPTY_ENABLED_STATUS_FOR(CThrownCombination, true);
 
 
     void CThrownCombination::OnAttach(void)
     {
         Character().ChangeMotion(PLAYERTYPES::MOTIONNAMES::THROWN_COMBINATION1);
-        Character().SetCharacterFlag(CHARACTERTYPES::FLAG_CANCEL_GRAVITY, true);
-        Character().SetPlayerFlag(PLAYERTYPES::FLAG_AERIAL_STATUS, false);
+        Character().SetCharacterFlag(CHARACTERTYPES::FLAG_CANCEL_GRAVITY);
+        Character().ClearPlayerFlag(PLAYERTYPES::FLAG_AERIAL_STATUS);
         Character().SetEnableCatchHit(false);
 
         CGameEvent::SetPlayerTechnicalAction(Character().GetPlayerNo(), GAMETYPES::TECACT_COMBINATION);
@@ -625,10 +551,10 @@ namespace PlayerStatus
         {
             CEffectManager::Finish(m_hEffect);
             m_hEffect = 0;
-        }
+        };
 
         Character().SetEnableCatchHit(true);
-        Character().SetCharacterFlag(CHARACTERTYPES::FLAG_CANCEL_GRAVITY, false);
+        Character().ClearCharacterFlag(CHARACTERTYPES::FLAG_CANCEL_GRAVITY);
     };
 
 
@@ -642,13 +568,15 @@ namespace PlayerStatus
                 if (Character().IsMotionEnd())
                 {
                     Character().ResetVelocity();
-                    Character().SetCharacterFlag(CHARACTERTYPES::FLAG_FIXED_DIRECTION, false);
+                    Character().ClearCharacterFlag(CHARACTERTYPES::FLAG_FIXED_DIRECTION);
                     Character().ChangeMotion(PLAYERTYPES::MOTIONNAMES::THROWN_COMBINATION2);
 
                     RwV3d vPosition = Math::VECTOR3_ZERO;
                     Character().GetPosition(&vPosition);
 
                     m_hEffect = CEffectManager::Play(PLAYERTYPES::EFFECTNAMES::THROW_COMBINATION, &vPosition);
+                    ASSERT(m_hEffect);
+
                     m_iMotionStep = 1;
                     m_fStartTimer = CGameProperty::GetTotalElapsedTime();
                 }
@@ -658,13 +586,9 @@ namespace PlayerStatus
         case 1:
             {
                 ASSERT(m_hEffect);
-                
-                RwV3d vVelocity =
-                {
-                    0.0f,
-                    0.0f,
-                    Character().Feature().m_fRunMoveSpeed
-                };
+
+                float fMoveSpeed = Character().Feature().m_fRunMoveSpeed;
+                RwV3d vVelocity = { 0.0f, 0.0f, fMoveSpeed };
 
                 Character().RotateVectorByDirection(&vVelocity, &vVelocity);
                 Character().SetVelocity(&vVelocity);
@@ -682,6 +606,9 @@ namespace PlayerStatus
                 };
             }
             break;
+
+        default:
+            break;
         };
     };
 
@@ -691,7 +618,7 @@ namespace PlayerStatus
         CGameObject* pLiftObj = CGameObjectManager::GetObject(Character().LiftInfo().m_szLiftObjectName);
         if (pLiftObj && pLiftObj->GetType() == GAMEOBJECTTYPE::CHARACTER)
         {
-            CPlayerCharacter* pCharacter = (CPlayerCharacter*)pLiftObj;
+            CPlayerCharacter* pCharacter = static_cast<CPlayerCharacter*>(pLiftObj);
             ASSERT(pCharacter->GetCharacterType() == CPlayerCharacter::TYPE_PLAYER);
 
             RwV3d vVelocity = Math::VECTOR3_AXIS_Z;
@@ -707,10 +634,10 @@ namespace PlayerStatus
             Math::Vec3_Sub(&vVelocity, &vVelocity, &vPositionMe);
             Math::Vec3_Scale(&vVelocity, &vVelocity, (1.0f / CGameProperty::GetElapsedTime()));
 
-            Character().SetCharacterFlag(CHARACTERTYPES::FLAG_FIXED_DIRECTION, false);
+            Character().ClearCharacterFlag(CHARACTERTYPES::FLAG_FIXED_DIRECTION);
             Character().SetDirection(pCharacter->GetDirection());
             Character().SetVelocity(&vVelocity);
-            Character().SetCharacterFlag(CHARACTERTYPES::FLAG_FIXED_DIRECTION, true);
+            Character().SetCharacterFlag(CHARACTERTYPES::FLAG_FIXED_DIRECTION);
         };
     };
 
@@ -719,16 +646,8 @@ namespace PlayerStatus
     // *********************************************************************************
     //
 
-    
-    bool CThrownCombinationEnd::IsEnableChangeStatus(PLAYERTYPES::STATUS status)
-    {
-        PLAYERTYPES::STATUS aStatusArray[] =
-        {
-            PLAYERTYPES::STATUS_THROWN_COMBINATION
-        };
 
-        return IsWithinStatusFromArray(status, aStatusArray, COUNT_OF(aStatusArray));
-    };
+    DEFINE_ENABLED_STATUS_FOR(CThrownCombinationEnd, { PLAYERTYPES::STATUS_THROWN_COMBINATION });
 
 
     void CThrownCombinationEnd::OnAttach(void)
@@ -754,17 +673,9 @@ namespace PlayerStatus
     //
 
 
-    bool CThrownMiss::IsEnableChangeStatus(PLAYERTYPES::STATUS status)
-    {
-        PLAYERTYPES::STATUS aStatusArray[] =
-        {
-            PLAYERTYPES::STATUS_CAUGHT,
-            PLAYERTYPES::STATUS_LIFTED,
-            PLAYERTYPES::STATUS_LIFTED_WALK,
-        };
-
-        return IsWithinStatusFromArray(status, aStatusArray, COUNT_OF(aStatusArray));
-    };
+    DEFINE_ENABLED_STATUS_FOR(CThrownMiss, { PLAYERTYPES::STATUS_CAUGHT,
+                                             PLAYERTYPES::STATUS_LIFTED,
+                                             PLAYERTYPES::STATUS_LIFTED_WALK });
 
 
     void CThrownMiss::OnAttach(void)
@@ -801,18 +712,15 @@ namespace PlayerStatus
             {
                 RwMatrix matrix;
                 RwMatrixSetIdentityMacro(&matrix);
-
                 Math::Matrix_RotateY(&matrix, rPlayerChr.GetDirection());
+
                 RwV3d vVelocity = { 0.0f, -1.0f, 1.0f };
                 RwV3dTransformVector(&vVelocity, &vVelocity, &matrix);
+
                 Math::Vec3_Normalize(&vVelocity, &vVelocity);
                 Math::Vec3_Scale(&vVelocity, &vVelocity, -0.2f);
                 
-                CGameObjectManager::SendMessage(
-                    pLiftObj,
-                    CHARACTERTYPES::MESSAGEID_MISSTHROW,
-                    &vVelocity
-                );
+                CGameObjectManager::SendMessage(pLiftObj, CHARACTERTYPES::MESSAGEID_MISSTHROW, &vVelocity);
             };
         };
 
@@ -859,14 +767,12 @@ namespace PlayerStatus
 			float fDist = Math::Vec3_Length(&vDltPos);
             if (fDist <= 0.8f)
             {
-                CGameObjectManager::SendMessage(pLiftObj, CHARACTERTYPES::MESSAGEID_LIFT, &liftinfo);                
+                CGameObjectManager::SendMessage(pLiftObj, CHARACTERTYPES::MESSAGEID_LIFT, &liftinfo);
                 return true;
-            }
-            else
-            {
-                rPlayerChr.ChangeStatus(PLAYERTYPES::STATUS_IDLE);
-                return false;
             };
+
+            rPlayerChr.ChangeStatus(PLAYERTYPES::STATUS_IDLE);
+            return false;
         }; 
     };
 };

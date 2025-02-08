@@ -7,8 +7,6 @@ private:
 	static CMemory& Instance(void);
     
 public:
-    static void* _new(size_t size, const char* fname, int fline);
-    static void _delete(void* mem);
 	static void* malloc(size_t size, const char* fname, int fline);
     static void free(void* mem);
 	static void* rwmalloc(size_t size, uint32 hint);

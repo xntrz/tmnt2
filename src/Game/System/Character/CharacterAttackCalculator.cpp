@@ -51,21 +51,21 @@ CHARACTERTYPES::ATTACKRESULTTYPE CCharacterAttackCalculator::CalcAtackParameter(
 {
     CHARACTERTYPES::ATTACKTYPE attacktype = MorphinAttackType(m_attacktype, defenceflag);
 
-    rAttackParameter.m_vPosition = m_vAttackerPosition;
-    rAttackParameter.m_vDirection = m_vDirection;
-    rAttackParameter.m_vVelocity = Math::VECTOR3_ZERO;
-    rAttackParameter.m_direction = m_directiontype;
+    rAttackParameter.m_vPosition      = m_vAttackerPosition;
+    rAttackParameter.m_vDirection     = m_vDirection;
+    rAttackParameter.m_vVelocity      = Math::VECTOR3_ZERO;
+    rAttackParameter.m_direction      = m_directiontype;
     rAttackParameter.m_pHitAttackData = &m_rAttack;
 
-    if (!FLAG_TEST(defenceflag, CHARACTERTYPES::DEFENCERSTATUSFLAG_DISABLE_THROW))
+    if (!(defenceflag & CHARACTERTYPES::DEFENCERSTATUSFLAG_DISABLE_THROW))
     {
         CGameObject* pAttacker = m_rAttack.GetObject();
         if (pAttacker->GetType() == GAMEOBJECTTYPE::CHARACTER)
         {
-            CCharacter* pAttackerChr = (CCharacter*)pAttacker;
+			CCharacter* pAttackerChr = static_cast<CCharacter*>(pAttacker);
             if (pAttackerChr->GetAttackCharacterType() == CCharacter::TYPE_PLAYER)
             {
-                CPlayerCharacter* pAttackerPlr = (CPlayerCharacter*)pAttackerChr;
+				CPlayerCharacter* pAttackerPlr = static_cast<CPlayerCharacter*>(pAttackerChr);
                 if (pAttackerPlr->GetStatus() == PLAYERTYPES::STATUS_THROW_BACK)
                     rAttackParameter.m_direction = CHARACTERTYPES::ATTACKDIRECTIONTYPE_FRONT;
             };
@@ -110,30 +110,30 @@ CHARACTERTYPES::ATTACKRESULTTYPE CCharacterAttackCalculator::CalcAtackParameter(
 
 float CCharacterAttackCalculator::CalcDamage(CHARACTERTYPES::ATTACKRESULTTYPE attackresult)
 {
-    float fResult = 0.0f;
+    float fDamage = 0.0f;
 
     if (m_rAttack.GetPower() <= 0)
-        return fResult;
+        return fDamage;
 
-    if (attackresult == CHARACTERTYPES::ATTACKRESULTTYPE_GUARD_IMPACT ||
-        attackresult == CHARACTERTYPES::ATTACKRESULTTYPE_PARTY_ATTACK ||
-        attackresult == CHARACTERTYPES::ATTACKRESULTTYPE_THROW ||
-		attackresult == CHARACTERTYPES::ATTACKRESULTTYPE_INEFFECTIVE)
-        return fResult;
+    if ((attackresult == CHARACTERTYPES::ATTACKRESULTTYPE_GUARD_IMPACT) ||
+        (attackresult == CHARACTERTYPES::ATTACKRESULTTYPE_PARTY_ATTACK) ||
+        (attackresult == CHARACTERTYPES::ATTACKRESULTTYPE_THROW)        ||
+		(attackresult == CHARACTERTYPES::ATTACKRESULTTYPE_INEFFECTIVE))
+        return fDamage;
 
     float fPowerRatio = 1.0f;
 
-    if (attackresult == CHARACTERTYPES::ATTACKRESULTTYPE_GUARD ||
-        attackresult == CHARACTERTYPES::ATTACKRESULTTYPE_GUARD_BREAK)
+    if ((attackresult == CHARACTERTYPES::ATTACKRESULTTYPE_GUARD) ||
+        (attackresult == CHARACTERTYPES::ATTACKRESULTTYPE_GUARD_BREAK))
     {
         fPowerRatio = 0.2f;
     }
-    else if (FLAG_TEST(m_defenceflag, CHARACTERTYPES::DEFENCERSTATUSFLAG_DEFENCEPOWER_ITEMUP))
+    else if (m_defenceflag & CHARACTERTYPES::DEFENCERSTATUSFLAG_DEFENCEPOWER_ITEMUP)
     {
         fPowerRatio = 0.5f;
     };
 
-    if (FLAG_TEST(m_defenceflag, CHARACTERTYPES::DEFENCERSTATUSFLAG_DEFENCEPOWER_GROWUP))
+    if (m_defenceflag & CHARACTERTYPES::DEFENCERSTATUSFLAG_DEFENCEPOWER_GROWUP)
         fPowerRatio *= 0.5f;
 
     if (m_rCharacter.GetAttackCharacterType() == CCharacter::TYPE_PLAYER)
@@ -144,29 +144,26 @@ float CCharacterAttackCalculator::CalcDamage(CHARACTERTYPES::ATTACKRESULTTYPE at
             fPowerRatio += fPowerRatio;
     };
 
-    fResult = float(m_rAttack.GetPower()) * fPowerRatio;
+    fDamage = static_cast<float>(m_rAttack.GetPower()) * fPowerRatio;
 
     if (m_bCountered)
     {
         CGameObject* pAttacker = m_rAttack.GetObject();
         if (pAttacker->GetType() == GAMEOBJECTTYPE::CHARACTER)
         {
-            CCharacter* pAttackerChr = (CCharacter*)pAttacker;
+            CCharacter* pAttackerChr = static_cast<CCharacter*>(pAttacker);
             if (pAttackerChr->GetAttackCharacterType() == CCharacter::TYPE_PLAYER)
             {
-                CPlayerCharacter* pAttackerPlayer = (CPlayerCharacter*)pAttacker;
-                CGameEvent::SetPlayerTechnicalAction(
-                    pAttackerPlayer->GetPlayerNo(),
-                    GAMETYPES::TECACT_GUARD_IMPACT
-                );
+                CPlayerCharacter* pAttackerPlayer = static_cast<CPlayerCharacter*>(pAttacker);
+                CGameEvent::SetPlayerTechnicalAction(pAttackerPlayer->GetPlayerNo(), GAMETYPES::TECACT_GUARD_IMPACT);
             };
         };
     };
 
-    if (fResult < 1.0f)
-        fResult = 1.0f;
+    if (fDamage < 1.0f)
+        fDamage = 1.0f;
 
-    return fResult;
+    return fDamage;
 };
 
 
@@ -202,8 +199,14 @@ void CCharacterAttackCalculator::PlayEffect(CHARACTERTYPES::ATTACKRESULTTYPE att
         case CHARACTERTYPES::ATTACKRESULTTYPE_SLEEP:
         case CHARACTERTYPES::ATTACKRESULTTYPE_FREEZE:
             {
-                CEffectManager::Play(EFFECTNAMES::COUNTER, &vPosition);
+                RwV3d vBodyPos = Math::VECTOR3_ZERO;
+                m_rCharacter.GetBodyPosition(&vBodyPos);
+
+                CEffectManager::Play(EFFECTNAMES::COUNTER, &vBodyPos);
             }
+            break;
+
+        default:
             break;
         };
     }
@@ -222,19 +225,22 @@ void CCharacterAttackCalculator::PlayEffect(CHARACTERTYPES::ATTACKRESULTTYPE att
 
         case CHARACTERTYPES::ATTACKRESULTTYPE_STUN:
             {
-                CEffectManager::Play(EFFECTNAMES::STUN_HIT, &vPosition);
+                RwV3d vBodyPos = Math::VECTOR3_ZERO;
+                m_rCharacter.GetBodyPosition(&vBodyPos);
+
+                CEffectManager::Play(EFFECTNAMES::STUN_HIT, &vBodyPos);
             }
             break;
             
         case CHARACTERTYPES::ATTACKRESULTTYPE_GUARD:
             {
-                CEffectManager::Play(EFFECTNAMES::GUARD, &vPosition);
+                CEffectManager::Play(EFFECTNAMES::GUARD, &vPosition, m_rCharacter.GetDirection());
             }
             break;
             
         case CHARACTERTYPES::ATTACKRESULTTYPE_GUARD_IMPACT:
             {
-                CEffectManager::Play(EFFECTNAMES::GUARD_IMPACT, &vPosition);
+                CEffectManager::Play(EFFECTNAMES::GUARD_IMPACT, &vPosition, m_rCharacter.GetDirection());
             }
             break;
 
@@ -243,6 +249,9 @@ void CCharacterAttackCalculator::PlayEffect(CHARACTERTYPES::ATTACKRESULTTYPE att
                 CEffectManager::Play(EFFECTNAMES::GUARD_BREAK, &vPosition);
             }
             break;
+
+		default:
+			break;
         };
     };
 };
@@ -250,9 +259,9 @@ void CCharacterAttackCalculator::PlayEffect(CHARACTERTYPES::ATTACKRESULTTYPE att
 
 void CCharacterAttackCalculator::PlaySE(CHARACTERTYPES::ATTACKRESULTTYPE attackresult)
 {
-	if (attackresult == CHARACTERTYPES::ATTACKRESULTTYPE_INEFFECTIVE ||
-		attackresult == CHARACTERTYPES::ATTACKRESULTTYPE_THROW ||
-		attackresult == CHARACTERTYPES::ATTACKRESULTTYPE_PARTY_ATTACK)
+	if ((attackresult == CHARACTERTYPES::ATTACKRESULTTYPE_INEFFECTIVE) ||
+		(attackresult == CHARACTERTYPES::ATTACKRESULTTYPE_THROW)       ||
+		(attackresult == CHARACTERTYPES::ATTACKRESULTTYPE_PARTY_ATTACK))
 		return;
 
 	CGameObject* pObjAttacker = GetAttacker();
@@ -272,8 +281,8 @@ void CCharacterAttackCalculator::PlaySE(CHARACTERTYPES::ATTACKRESULTTYPE attackr
 
 	case GAMEOBJECTTYPE::CHARACTER:
 		param.AttackerSubType = static_cast<CCharacter*>(pObjAttacker)->GetCharacterType();
-		param.AttackerMotion = static_cast<CCharacter*>(pObjAttacker)->GetMotionName();
-		param.AttackerId = GetCharacterID(static_cast<CCharacter*>(pObjAttacker));
+		param.AttackerMotion  = static_cast<CCharacter*>(pObjAttacker)->GetMotionName();
+		param.AttackerId      = GetCharacterID(static_cast<CCharacter*>(pObjAttacker));
 		break;
 
 	case GAMEOBJECTTYPE::EFFECT:
@@ -288,10 +297,10 @@ void CCharacterAttackCalculator::PlaySE(CHARACTERTYPES::ATTACKRESULTTYPE attackr
 		break;
 	};
 
-	param.DefenderType = m_rCharacter.GetCharacterType();
-	param.DefenderId = GetCharacterID(&m_rCharacter);
+	param.DefenderType  = m_rCharacter.GetCharacterType();
+	param.DefenderId    = GetCharacterID(&m_rCharacter);
 	m_rCharacter.GetBodyPosition(&param.Pos);
-	param.AttackResult = attackresult;
+	param.AttackResult  = attackresult;
 
 	CGameSound::PlayDamageSE(&param);
 };
@@ -312,7 +321,7 @@ void CCharacterAttackCalculator::CheckAttackType(void)
         
     case GAMEOBJECTTYPE::CHARACTER:
         {
-            CCharacter* pAttackerChr = (CCharacter*)pAttacker;
+            CCharacter* pAttackerChr = static_cast<CCharacter*>(pAttacker);
             
             if (pAttackerChr->GetAttackCharacterType() != m_rCharacter.GetAttackCharacterType() ||
                 pAttackerChr->GetAttackCharacterType() == CCharacter::TYPE_ENEMY)
@@ -334,6 +343,9 @@ void CCharacterAttackCalculator::CheckAttackType(void)
             };
         };
         break;
+
+	default:
+		break;
     };
 };
 
@@ -342,11 +354,11 @@ CHARACTERTYPES::ATTACKTYPE CCharacterAttackCalculator::CheckDamageAttackType(voi
 {
     struct ATTACKTYPEINFO
     {
-        CHitAttackData::STATUS m_status;
-        CHARACTERTYPES::ATTACKTYPE m_attacktype;
+        CHitAttackData::STATUS      m_status;
+        CHARACTERTYPES::ATTACKTYPE  m_attacktype;
     };
 
-    static const ATTACKTYPEINFO s_aAttackTypeInfo [] =
+    static const ATTACKTYPEINFO s_aAttackTypeInfo[] =
     {
         { CHitAttackData::STATUS_KNOCK,     CHARACTERTYPES::ATTACKTYPE_DAMAGE_KNOCK,    },
         { CHitAttackData::STATUS_FLYAWAY,   CHARACTERTYPES::ATTACKTYPE_DAMAGE_FLYAWAY,  },
@@ -401,8 +413,10 @@ void CCharacterAttackCalculator::CalcDirection(void)
 {
     RwV3d vPos = Math::VECTOR3_ZERO;
     m_rCharacter.GetBodyPosition(&vPos);
+
     Math::Vec3_Sub(&m_vDirection, &m_vAttackerPosition, &vPos);
     m_vDirection.y = 0.0f;
+
     Math::Vec3_Normalize(&m_vDirection, &m_vDirection);
     
     RwMatrix matrix;
@@ -421,87 +435,72 @@ void CCharacterAttackCalculator::CalcDirection(void)
 };
 
 
-CHARACTERTYPES::ATTACKTYPE CCharacterAttackCalculator::MorphinAttackType(CHARACTERTYPES::ATTACKTYPE attacktype, CHARACTERTYPES::DEFENCERSTATUSFLAG defenceflag)
+CHARACTERTYPES::ATTACKTYPE
+CCharacterAttackCalculator::MorphinAttackType(CHARACTERTYPES::ATTACKTYPE attacktype,
+                                              CHARACTERTYPES::DEFENCERSTATUSFLAG defenceflag)
 {
-    CHARACTERTYPES::ATTACKTYPE Result = attacktype;
+    CHARACTERTYPES::ATTACKTYPE result = attacktype;
 
-    if (FLAG_TEST(defenceflag, CHARACTERTYPES::DEFENCERSTATUSFLAG_AERIAL) &&
-        (IsTroubleAttack(attacktype) || attacktype == CHARACTERTYPES::ATTACKTYPE_DAMAGE_KNOCK))
+    if ((defenceflag & CHARACTERTYPES::DEFENCERSTATUSFLAG_AERIAL) &&
+        (IsTroubleAttack(attacktype) || IsDamageAttack(attacktype)))
     {
-        Result = CHARACTERTYPES::ATTACKTYPE_DAMAGE_FLYAWAY;
+        result = CHARACTERTYPES::ATTACKTYPE_DAMAGE_FLYAWAY;
     };
 
-    if (FLAG_TEST_ANY(defenceflag, CHARACTERTYPES::DEFENCERSTATUSFLAG_STATUS_MASK))
+    uint32 defenceStatusFlag = (defenceflag & CHARACTERTYPES::DEFENCERSTATUSFLAG_STATUS_MASK);
+    if (defenceStatusFlag == CHARACTERTYPES::DEFENCERSTATUSFLAG_BIND)
     {
-        switch (attacktype)
-        {
-        case CHARACTERTYPES::ATTACKTYPE_DAMAGE_KNOCK:
-        case CHARACTERTYPES::ATTACKTYPE_DAMAGE_FLYAWAY:
-            Result = CHARACTERTYPES::ATTACKTYPE_DAMAGE_NOREACTION;
-            break;
-
-        case CHARACTERTYPES::ATTACKTYPE_DINDLE:
-        case CHARACTERTYPES::ATTACKTYPE_STUN:
-        case CHARACTERTYPES::ATTACKTYPE_SLEEP:
-        case CHARACTERTYPES::ATTACKTYPE_FREEZE:
-            Result = CHARACTERTYPES::ATTACKTYPE_DAMAGE_FLYAWAY;
-            break;
-
-        case CHARACTERTYPES::ATTACKTYPE_BIND:
-            Result = CHARACTERTYPES::ATTACKTYPE_UNKNOWN;
-            break;
-        };
+        if (IsDamageAttack(attacktype))
+            result = CHARACTERTYPES::ATTACKTYPE_DAMAGE_NOREACTION;
     }
-    else if (
-        (FLAG_TEST(defenceflag, CHARACTERTYPES::DEFENCERSTATUSFLAG_STUN)  ||
-        FLAG_TEST(defenceflag, CHARACTERTYPES::DEFENCERSTATUSFLAG_DINDLE) ||
-        FLAG_TEST(defenceflag, CHARACTERTYPES::DEFENCERSTATUSFLAG_FREEZE) ||
-        FLAG_TEST(defenceflag, CHARACTERTYPES::DEFENCERSTATUSFLAG_SLEEP))
-        &&
-        (IsDamageAttack(attacktype) || IsTroubleAttack(attacktype)))        
+    else if ((defenceStatusFlag == CHARACTERTYPES::DEFENCERSTATUSFLAG_FREEZE) ||
+             (defenceStatusFlag == CHARACTERTYPES::DEFENCERSTATUSFLAG_SLEEP)  ||
+             (defenceStatusFlag == CHARACTERTYPES::DEFENCERSTATUSFLAG_STUN)   ||
+             (defenceStatusFlag == CHARACTERTYPES::DEFENCERSTATUSFLAG_DINDLE))
     {
-        Result = CHARACTERTYPES::ATTACKTYPE_DAMAGE_FLYAWAY;
+        if (IsTroubleAttack(attacktype))
+            result = CHARACTERTYPES::ATTACKTYPE_DAMAGE_FLYAWAY;
     };
 
-    if(IsThrowAttack(attacktype) && FLAG_TEST(defenceflag, CHARACTERTYPES::DEFENCERSTATUSFLAG_DISABLE_THROW))
-    {
-        Result = CHARACTERTYPES::ATTACKTYPE_UNKNOWN;
-    };
+    if (IsThrowAttack(attacktype) && (defenceflag & CHARACTERTYPES::DEFENCERSTATUSFLAG_DISABLE_THROW))
+        result = CHARACTERTYPES::ATTACKTYPE_UNKNOWN;
 
-    if (IsTroubleAttack(attacktype) && FLAG_TEST(defenceflag, CHARACTERTYPES::DEFENCERSTATUSFLAG_CHEATCODE_HEALTH))
-    {
-        Result = CHARACTERTYPES::ATTACKTYPE_DAMAGE_KNOCK;
-    };
+    if (IsTroubleAttack(attacktype) && (defenceflag & CHARACTERTYPES::DEFENCERSTATUSFLAG_CHEATCODE_HEALTH))
+        result = CHARACTERTYPES::ATTACKTYPE_DAMAGE_KNOCK;
 
-    return Result;
+    return result;
 };
 
 
-CHARACTERTYPES::ATTACKRESULTTYPE CCharacterAttackCalculator::CheckAttackResult(CHARACTERTYPES::ATTACKTYPE attacktype, CHARACTERTYPES::DEFENCERSTATUSFLAG defenceflag)
+CHARACTERTYPES::ATTACKRESULTTYPE
+CCharacterAttackCalculator::CheckAttackResult(CHARACTERTYPES::ATTACKTYPE attacktype,
+                                              CHARACTERTYPES::DEFENCERSTATUSFLAG defenceflag)
 {
-    CHARACTERTYPES::ATTACKRESULTTYPE Result = CHARACTERTYPES::ATTACKRESULTTYPE(attacktype);
+    CHARACTERTYPES::ATTACKRESULTTYPE result = static_cast<CHARACTERTYPES::ATTACKRESULTTYPE>(attacktype);
 
-    if (!IsGuardableAttack(attacktype) &&
-        (FLAG_TEST(defenceflag, CHARACTERTYPES::DEFENCERSTATUSFLAG_GUARD_ALLRANGE) ||
-        FLAG_TEST(defenceflag, CHARACTERTYPES::DEFENCERSTATUSFLAG_GUARD)) &&
-        (!FLAG_TEST(defenceflag, CHARACTERTYPES::DEFENCERSTATUSFLAG_GUARD) || m_directiontype == CHARACTERTYPES::ATTACKDIRECTIONTYPE_FRONT))
+    if (IsGuardableAttack(attacktype)
+        && ((defenceflag & CHARACTERTYPES::DEFENCERSTATUSFLAG_GUARD_ALLRANGE) || (defenceflag & CHARACTERTYPES::DEFENCERSTATUSFLAG_GUARD))
+        && (!(defenceflag & CHARACTERTYPES::DEFENCERSTATUSFLAG_GUARD) || (m_directiontype == CHARACTERTYPES::ATTACKDIRECTIONTYPE_FRONT)))
     {
         switch (m_rAttack.GetAntiguard())
         {
+		case CHitAttackData::ANTIGUARD_ENABLE:
+			result = CHARACTERTYPES::ATTACKRESULTTYPE_GUARD;
+			break;
+
         case CHitAttackData::ANTIGUARD_BREAK:
-            Result = CHARACTERTYPES::ATTACKRESULTTYPE_GUARD_BREAK;
+            result = CHARACTERTYPES::ATTACKRESULTTYPE_GUARD_BREAK;
             break;
 
         default:
-            Result = CHARACTERTYPES::ATTACKRESULTTYPE_GUARD;
             break;
         };
 
-        if (FLAG_TEST(defenceflag, CHARACTERTYPES::DEFENCERSTATUSFLAG_GUARD_IMPACT))
-            Result = CHARACTERTYPES::ATTACKRESULTTYPE_GUARD_IMPACT;
+        if (defenceflag & CHARACTERTYPES::DEFENCERSTATUSFLAG_GUARD_IMPACT)
+            result = CHARACTERTYPES::ATTACKRESULTTYPE_GUARD_IMPACT;
     };
 
-    switch (Result)
+    switch (result)
     {
     case CHARACTERTYPES::ATTACKRESULTTYPE_INEFFECTIVE:
     case CHARACTERTYPES::ATTACKRESULTTYPE_THROW:
@@ -511,12 +510,12 @@ CHARACTERTYPES::ATTACKRESULTTYPE CCharacterAttackCalculator::CheckAttackResult(C
         break;
         
     default:
-        if (FLAG_TEST(defenceflag, CHARACTERTYPES::DEFENCERSTATUSFLAG_STAGGER))
+        if (defenceflag & CHARACTERTYPES::DEFENCERSTATUSFLAG_STAGGER)
             m_bCountered = true;
         break;
     };
 
-    return Result;
+    return result;
 };
 
 
@@ -533,23 +532,24 @@ void CCharacterAttackCalculator::CalcKnockParameter(CHARACTERTYPES::ATTACKPARAME
 
 
 void CCharacterAttackCalculator::CalcFlyawayParameter(CHARACTERTYPES::ATTACKPARAMETER& rAttackParameter)
-{
-    float fRatio = 0.0f;
+{   
+    bool bIsStatusMissing = (m_rAttack.GetStatus() != CHitAttackData::STATUS_FLYAWAY);
+    bool bIsStatusParameterMissing = ((m_rAttack.GetFlyawayVelXZ() == 0.0f) &&
+                                      (m_rAttack.GetFlyawayVelY() == 0.0f));
+
     float fVelXZ = 0.0f;
     float fVelY = 0.0f;
-    
-    bool bIsStatusMissing = (m_rAttack.GetStatus() != CHitAttackData::STATUS_FLYAWAY);
-    bool bIsStatusParameterMissing = (Math::FEqual(m_rAttack.GetFlyawayVelXZ(), 0.0f) && Math::FEqual(m_rAttack.GetFlyawayVelY(), 0.0f));
 
     if (bIsStatusMissing || bIsStatusParameterMissing)
     {
-        fRatio = CalcAttackPowerRatio(5, 20);
-        fVelY = fRatio * 2.0f + 2.0f;
+        float fRatio = CalcAttackPowerRatio(5, 20);
+        
+        fVelY  =   fRatio * 2.0f  + 2.0f;
         fVelXZ = -(fRatio * 10.0f + 10.0f);
     }
     else
     {
-        fVelY = m_rAttack.GetFlyawayVelY();
+        fVelY  = m_rAttack.GetFlyawayVelY();
         fVelXZ = m_rAttack.GetFlyawayVelXZ();
     };
 
@@ -564,7 +564,7 @@ void CCharacterAttackCalculator::CalcFlyawayParameter(CHARACTERTYPES::ATTACKPARA
 void CCharacterAttackCalculator::CalcGuardParameter(CHARACTERTYPES::ATTACKPARAMETER& rAttackParameter)
 {
     float fRatio = CalcAttackPowerRatio(5, 20);
-    float fVelocity = (fRatio * 4.0f + 4.0f);
+    float fVelocity = -(fRatio * 4.0f + 4.0f);
 
     Math::Vec3_Scale(&rAttackParameter.m_vVelocity, &rAttackParameter.m_vDirection, fVelocity);
 };
@@ -580,11 +580,10 @@ float CCharacterAttackCalculator::CalcAttackPowerRatio(int32 iMinPower, int32 iM
 {
     ASSERT(iMinPower < iMaxPower);
 
-    return Clamp(
-        float((m_rAttack.GetPower() - iMinPower) / (iMaxPower - iMinPower)),
-        0.0f,
-        1.0f
-    );
+    float fRatio =  static_cast<float>(m_rAttack.GetPower() - iMinPower) /
+                    static_cast<float>(iMaxPower - iMinPower);
+
+    return Clamp(fRatio, 0.0f, 1.0f);
 };
 
 
@@ -602,11 +601,11 @@ bool CCharacterAttackCalculator::IsGuardableAttack(CHARACTERTYPES::ATTACKTYPE at
 
 bool CCharacterAttackCalculator::IsTroubleAttack(CHARACTERTYPES::ATTACKTYPE attacktype) const
 {
-    return (attacktype == CHARACTERTYPES::ATTACKTYPE_DINDLE   ||
-            attacktype == CHARACTERTYPES::ATTACKTYPE_STUN     ||
-            attacktype == CHARACTERTYPES::ATTACKTYPE_SLEEP    ||
-            attacktype == CHARACTERTYPES::ATTACKTYPE_FREEZE   ||
-            attacktype == CHARACTERTYPES::ATTACKTYPE_BIND);
+    return ((attacktype == CHARACTERTYPES::ATTACKTYPE_DINDLE) ||
+            (attacktype == CHARACTERTYPES::ATTACKTYPE_STUN)   ||
+            (attacktype == CHARACTERTYPES::ATTACKTYPE_SLEEP)  ||
+            (attacktype == CHARACTERTYPES::ATTACKTYPE_FREEZE) ||
+            (attacktype == CHARACTERTYPES::ATTACKTYPE_BIND));
 };
 
 
@@ -630,8 +629,8 @@ bool CCharacterAttackCalculator::IsConfusionAttack(void) const
 
 bool CCharacterAttackCalculator::IsDamageAttack(CHARACTERTYPES::ATTACKTYPE attacktype) const
 {
-    return (attacktype == CHARACTERTYPES::ATTACKTYPE_DAMAGE_KNOCK ||
-            attacktype == CHARACTERTYPES::ATTACKTYPE_DAMAGE_FLYAWAY);
+    return ((attacktype == CHARACTERTYPES::ATTACKTYPE_DAMAGE_KNOCK) ||
+            (attacktype == CHARACTERTYPES::ATTACKTYPE_DAMAGE_FLYAWAY));
 };
 
 
@@ -673,4 +672,10 @@ int32 CCharacterAttackCalculator::GetCharacterID(CCharacter* pCharacter) const
 		return static_cast<CPlayerCharacter*>(pCharacter)->GetID();
 	else
 		return static_cast<CCharacterCompositor*>(pCharacter)->GetID();
+};
+
+
+CHARACTERTYPES::ATTACKTYPE CCharacterAttackCalculator::GetAttackType(void) const
+{
+    return m_attacktype;
 };

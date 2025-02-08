@@ -8,7 +8,6 @@ CGameEnemyContainer::CGameEnemyContainer(void)
 , m_nEnemyNum(0)
 {
     m_pGameEnemyTable = new CGameEnemy[GAMETYPES::ENEMY_MAX];
-    ASSERT(m_pGameEnemyTable);
 };
 
 
@@ -26,7 +25,10 @@ CGameEnemyContainer::~CGameEnemyContainer(void)
 
 CGameEnemy& CGameEnemyContainer::GameEnemy(int32 nIndex) const
 {
-	return ((nIndex >= 0 && nIndex < GAMETYPES::ENEMY_MAX) ? m_pGameEnemyTable[nIndex] : *CGameEnemy::Dummy());
+    if ((nIndex >= 0) && (nIndex < GAMETYPES::ENEMY_MAX))
+        return m_pGameEnemyTable[nIndex];
+
+    return *CGameEnemy::Dummy();
 };
 
 
@@ -34,6 +36,7 @@ void CGameEnemyContainer::Regist(CEnemy* pEnemy)
 {
     CGameEnemy* pNode = findFreeNode();
     ASSERT(pNode);
+    
     if (pNode)
     {
         pNode->Attach(pEnemy);
@@ -46,10 +49,12 @@ void CGameEnemyContainer::Remove(CEnemy* pEnemy)
 {
     CGameEnemy* pNode = findNode(pEnemy);
     ASSERT(pNode);
+
     if (pNode)
     {
         ASSERT(m_nEnemyNum > 0);
         --m_nEnemyNum;
+        
         pNode->Detach();
     };
 };

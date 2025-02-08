@@ -54,6 +54,11 @@ bool CFootfallModule::TimingCheck(void)
 };
 
 
+//
+// *********************************************************************************
+//
+
+
 CPlayerFootfallModule::CPlayerFootfallModule(CPlayerCharacter* pPlayerChr)
 : CFootfallModule(pPlayerChr)
 , m_pPlayerChr(pPlayerChr)
@@ -70,6 +75,6 @@ CPlayerFootfallModule::~CPlayerFootfallModule(void)
 
 bool CPlayerFootfallModule::TimingCheck(void)
 {
-    return (m_pPlayerChr->GetStatus() == PLAYERTYPES::STATUS_RUN &&
-            m_pPlayerChr->IsCharacterFlagSet(CHARACTERTYPES::FLAG_OCCURED_TIMING));
+    return ((m_pPlayerChr->GetStatus() == PLAYERTYPES::STATUS_RUN) &&
+             m_pPlayerChr->TestCharacterFlag(CHARACTERTYPES::FLAG_OCCURED_TIMING));
 };
