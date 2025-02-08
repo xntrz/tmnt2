@@ -62,8 +62,8 @@ project "TMNT2"
    removefiles { 
       "src/System/Common/MemPool.*", -- unused in PC version
       "src/System/Common/Debug/**.*", -- TODO
-      "src/Game/Component/Enemy/ConcreteEnemyCharacter/**.*", -- TODO
-      "src/Game/Component/Enemy/ConcreteAIModerator/**.*", -- TODO
+      --"src/Game/Component/Enemy/ConcreteEnemyCharacter/**.*", -- TODO
+      --"src/Game/Component/Enemy/ConcreteAIModerator/**.*", -- TODO
    }
    includedirs  
    {  
