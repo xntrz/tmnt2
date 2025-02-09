@@ -1,10 +1,13 @@
 #pragma once
 
 
+class CPCGraphicsDevice;
+
+
 class CPCFrameTimer
 {
 public:
-    CPCFrameTimer(void);
+    CPCFrameTimer(CPCGraphicsDevice& device);
     virtual ~CPCFrameTimer(void);
     void Update(void);
     void Sync(void);

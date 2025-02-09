@@ -9,7 +9,8 @@ private:
 public:    
     static const wchar* EMPTYTEXT;
     
-public:    
+public:
+    static int32 StrCmp(const wchar* pString1, const wchar* pString2);
     static int32 StrLen(const wchar* pString);
     static void StrCpy(wchar* pDestString, const wchar* pSrcString);
     static void StrCat(wchar* pDestString, const wchar* pSrcString);
@@ -24,6 +25,6 @@ public:
     const wchar* GetText(int32 id) const;
 
 private:
-    void* m_pRaw;
+    uint8*  m_pRaw;
     HEADER* m_pHeader;
 };

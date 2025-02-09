@@ -23,6 +23,9 @@ public:
     virtual ~CSprite(void);
     void SetScreenSize(void);
     void SetZ(float fZ);
+#ifdef TMNT2_BUILD_EU
+    void SetRGBA(int32 pt, uint8 r, uint8 g, uint8 b, uint8 a);
+#endif /* TMNT2_BUILD_EU */
     void SetRGBA(const RwRGBA& rgba);
     void SetRGBA(uint8 r, uint8 g, uint8 b, uint8 a);
     void SetRGB(uint8 r, uint8 g, uint8 b);
@@ -44,19 +47,23 @@ public:
     void DrawRotate(void) const;
 
 private:    
-    float m_fX;
-    float m_fY;
-    float m_fZ;
-    float m_fW;
-    float m_fH;
-    float m_fOffsetX;
-    float m_fOffsetY;
-    RwRGBA m_Color;
-    float m_fU0;
-    float m_fV0;
-    float m_fU1;
-    float m_fV1;
-    float m_fRotate;
-    RwTexture* m_pTexture;
-    bool m_bCameraCheckFlag;
+    float       m_fX;
+    float       m_fY;
+    float       m_fZ;
+    float       m_fW;
+    float       m_fH;
+    float       m_fOffsetX;
+    float       m_fOffsetY;
+#ifdef TMNT2_BUILD_EU
+    RwRGBA      m_aColor[4];
+#else /* TMNT2_BUILD_EU */
+    RwRGBA      m_Color;
+#endif /* TMNT2_BUILD_EU */
+    float       m_fU0;
+    float       m_fV0;
+    float       m_fU1;
+    float       m_fV1;
+    float       m_fRotate;
+    RwTexture*  m_pTexture;
+    bool        m_bCameraCheckFlag;
 };

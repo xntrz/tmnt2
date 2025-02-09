@@ -32,12 +32,19 @@ public:
     void SetClearColor(const RwRGBA* pColor);
     void ResetClearColor(void);
     int32 GetFlipInternval(void) const;
-
+#ifdef TMNT2_BUILD_EU
+    void SetPalMode(bool bEnable);
+    bool IsPalMode(void) const;
+#endif /* TMNT2_BUILD_EU */
+    
 protected:
-    RwRaster* m_pFrameBuffer;
-    RwRaster* m_pZBuffer;
-    RwCamera* m_pCamera;
-    RwRGBA m_ClearColor;
-    bool m_bFlipEnable;
-    int32 m_iFlipInterval;
+    RwRaster*           m_pFrameBuffer;
+    RwRaster*           m_pZBuffer;
+    RwCamera*           m_pCamera;
+    RwRGBA              m_ClearColor;
+    bool                m_bFlipEnable;
+    int32               m_iFlipInterval;
+#ifdef TMNT2_BUILD_EU
+    bool                m_bPalMode;
+#endif /* TMNT2_BUILD_EU */
 };

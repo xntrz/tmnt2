@@ -3,14 +3,24 @@
 
 struct CTextData::HEADER
 {
-    uint32 m_uSize;
-    char m_szLanguage[8];
-    int32 m_numStrings;
-    uint32 m_aOffsets[];
+    uint32  m_uSize;
+    char    m_szLanguage[8];
+    int32   m_numStrings;
+    uint32  m_aOffsets[];
 };
 
 
 /*static*/ const wchar* CTextData::EMPTYTEXT = UTEXT("");
+
+
+/*static*/ int32 CTextData::StrCmp(const wchar* pString1, const wchar* pString2)
+{
+#ifdef TARGET_PC
+    return std::wcscmp(pString1, pString2);
+#else
+#error Not implemented for current target
+#endif
+};
 
 
 /*static*/ int32 CTextData::StrLen(const wchar* pString)
@@ -88,8 +98,9 @@ void CTextData::Read(const void* pBuffer, uint32 uBufferSize)
     ASSERT(uBufferSize);
 
     m_pRaw = new uint8[uBufferSize];
+
     memcpy(m_pRaw, pBuffer, uBufferSize);
-    m_pHeader = (HEADER*)m_pRaw;
+    m_pHeader = reinterpret_cast<HEADER*>(m_pRaw);
     
     ASSERT(m_pHeader->m_uSize);
     ASSERT(m_pHeader->m_uSize <= uBufferSize);
@@ -116,8 +127,8 @@ const wchar* CTextData::GetText(int32 id) const
 {
     const wchar* pwszResult = EMPTYTEXT;
 
-    if ( (id >= 0) && (id <= m_pHeader->m_numStrings) )
-        pwszResult = (const wchar*)((uint8*)m_pRaw + m_pHeader->m_aOffsets[id]);
+    if ((id >= 0) && (id <= m_pHeader->m_numStrings))
+        pwszResult = reinterpret_cast<const wchar*>(m_pRaw + m_pHeader->m_aOffsets[id]);
 
     return pwszResult;
 };

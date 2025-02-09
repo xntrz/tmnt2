@@ -4,7 +4,7 @@
 
 CMovie::CMovie(int32 iWidth, int32 iHeight, int32 iMaxBps, bool bUsePalMode)
 : m_mwply(0)
-, m_paWorkArea(nullptr)
+, m_pWorkArea(nullptr)
 , m_sprite()
 , m_pRenderSprite(&m_sprite)
 , m_fSpritePosX(0.0f)
@@ -16,20 +16,33 @@ CMovie::CMovie(int32 iWidth, int32 iHeight, int32 iMaxBps, bool bUsePalMode)
 , m_bIsCprmHandleOK(false)
 {
     m_sprite.SetRGBA(255, 255, 255, 255);
-    m_sprite.SetPositionAndSize(m_fSpritePosX, m_fSpritePosY, m_fSpriteW, m_fSpriteH);
-    m_sprite.SetUV(0.0f, 0.0f, 0.625f, 0.875f);
+    m_sprite.SetPositionAndSize(m_fSpritePosX,
+                                m_fSpritePosY,
+                                m_fSpriteW,
+                                m_fSpriteH);
 
-    m_mwply = CreateHandle(&m_paWorkArea, m_iMovieW, m_iMovieH, iMaxBps, bUsePalMode);
+#ifdef TMNT2_BUILD_EU
+    m_sprite.SetUV(0.0f,
+                   0.0f,
+                   static_cast<float>(iWidth)  * (1.0f / 1024.0f),
+                   static_cast<float>(iHeight) * (1.0f / 512.0f));
+#else
+    m_sprite.SetUV(0.0f, 0.0f, 0.625f, 0.875f);
+#endif    
+
+    m_mwply = CreateHandle(&m_pWorkArea, m_iMovieW, m_iMovieH, iMaxBps, bUsePalMode);
     if (m_mwply)
     {
         m_bIsCprmHandleOK = true;
     }
     else
     {
-        if (m_paWorkArea)
+        m_bIsCprmHandleOK = false;
+
+        if (m_pWorkArea)
         {
-            delete[] m_paWorkArea;
-            m_bIsCprmHandleOK = false;
+            delete[] m_pWorkArea;
+            m_pWorkArea = nullptr;
         };
     };
 };
@@ -44,10 +57,10 @@ CMovie::~CMovie(void)
         mwPlyDestroy(m_mwply);
     };
 
-    if (m_paWorkArea)
+    if (m_pWorkArea)
     {
-        delete[] m_paWorkArea;
-        m_paWorkArea = nullptr;        
+        delete[] m_pWorkArea;
+        m_pWorkArea = nullptr;        
     };
 
     mwPlyFinishSfdFx();
@@ -79,18 +92,18 @@ bool CMovie::IsCreateSuccess(void)
 
 void CMovie::PushRenderState(void)
 {
-    RENDERSTATE_PUSH(rwRENDERSTATEBORDERCOLOR, 0);
+    RENDERSTATE_PUSH(rwRENDERSTATEBORDERCOLOR,        0);
     RENDERSTATE_PUSH(rwRENDERSTATETEXTUREPERSPECTIVE, true);
-    RENDERSTATE_PUSH(rwRENDERSTATETEXTUREFILTER, rwFILTERLINEAR);
-    RENDERSTATE_PUSH(rwRENDERSTATEVERTEXALPHAENABLE, true);
-    RENDERSTATE_PUSH(rwRENDERSTATESRCBLEND, rwBLENDSRCALPHA);
-    RENDERSTATE_PUSH(rwRENDERSTATEDESTBLEND, rwBLENDINVSRCALPHA);
-    RENDERSTATE_PUSH(rwRENDERSTATETEXTUREADDRESS, rwTEXTUREADDRESSCLAMP);
-    RENDERSTATE_PUSH(rwRENDERSTATEZTESTENABLE, false);
-    RENDERSTATE_PUSH(rwRENDERSTATEZWRITEENABLE, false);
-    RENDERSTATE_PUSH(rwRENDERSTATESHADEMODE, rwSHADEMODEFLAT);
-    RENDERSTATE_PUSH(rwRENDERSTATEFOGENABLE, 0);
-    RENDERSTATE_PUSH(rwRENDERSTATECULLMODE, rwCULLMODECULLNONE);
+    RENDERSTATE_PUSH(rwRENDERSTATETEXTUREFILTER,      rwFILTERLINEAR);
+    RENDERSTATE_PUSH(rwRENDERSTATEVERTEXALPHAENABLE,  true);
+    RENDERSTATE_PUSH(rwRENDERSTATESRCBLEND,           rwBLENDSRCALPHA);
+    RENDERSTATE_PUSH(rwRENDERSTATEDESTBLEND,          rwBLENDINVSRCALPHA);
+    RENDERSTATE_PUSH(rwRENDERSTATETEXTUREADDRESS,     rwTEXTUREADDRESSCLAMP);
+    RENDERSTATE_PUSH(rwRENDERSTATEZTESTENABLE,        false);
+    RENDERSTATE_PUSH(rwRENDERSTATEZWRITEENABLE,       false);
+    RENDERSTATE_PUSH(rwRENDERSTATESHADEMODE,          rwSHADEMODEFLAT);
+    RENDERSTATE_PUSH(rwRENDERSTATEFOGENABLE,          false);
+    RENDERSTATE_PUSH(rwRENDERSTATECULLMODE,           rwCULLMODECULLNONE);
 };
 
 
@@ -114,11 +127,14 @@ void CMovie::PopRenderState(void)
 RwRaster* CMovie::CreateRaster(int32 iWidth, int32 iHeight)
 {
 	RwRaster* pRaster = RwRasterCreate(iWidth, iHeight, 32, rwRASTERTYPETEXTURE | rwRASTERFORMAT8888);
-    if (pRaster)
+    if (!pRaster)
+        return nullptr;
+
+    void* pData = RwRasterLock(pRaster, 0, GetRwRasterLockFlag());
+    if (pData)
     {
-        void* pData = RwRasterLock(pRaster, 0, GetRwRasterLockFlag());
         std::memset(pData, 0x00, 4 * iHeight * iWidth);
-        RwRasterUnlock(pRaster);        
+        RwRasterUnlock(pRaster);
     };
 
     return pRaster;
@@ -129,24 +145,25 @@ MWPLY CMovie::CreateHandle(char** ppWorkArea, int32 iWidth, int32 iHeight, int32
 {
     MwsfdInitPrm iprm;
     std::memset(&iprm, 0x00, sizeof(iprm));    
-    iprm.vhz = (bUsePalMode ? MWSFD_VHZ_50_00 : MWSFD_VHZ_59_94);
-    iprm.disp_cycle = 1;
+    iprm.vhz          = (bUsePalMode ? MWSFD_VHZ_50_00 : MWSFD_VHZ_59_94);
+    iprm.disp_cycle   = 1;
 	iprm.disp_latency = 1;
     mwPlyInitSfdFx(&iprm);
 
     MwsfdCrePrm cprm;
     std::memset(&cprm, 0x00, sizeof(cprm));
-    cprm.max_bps = iMaxBps;
-    cprm.ftype = MWSFD_FTYPE_SFD;
-    cprm.compo_mode = 0;
-    cprm.nfrm_pool_wk = 3;
-    cprm.max_stm = 1;
-    cprm.max_width = iWidth;
-    cprm.max_height = iHeight;
-    cprm.wksize = mwPlyCalcWorkCprmSfd(&cprm);
-    cprm.work = new CriSint8[cprm.wksize];
-    ASSERT(cprm.work);
-    *ppWorkArea = (char*)cprm.work;    
+    cprm.max_bps      = iMaxBps;
+    cprm.ftype        = MWSFD_FTYPE_SFD;
+    cprm.compo_mode   = 0;
+    cprm.nfrm_pool_wk = 1;
+    cprm.max_stm      = 1;
+    cprm.max_width    = iWidth;
+    cprm.max_height   = iHeight;
+    cprm.wksize       = mwPlyCalcWorkCprmSfd(&cprm);
+    cprm.work         = new CriSint8[cprm.wksize];
+
+    *ppWorkArea = reinterpret_cast<char*>(cprm.work);
+
     return mwPlyCreateSofdec(&cprm);
 };
 
@@ -171,7 +188,7 @@ bool CMovie::LoadMovieFrame(void)
 };
 
 
-void CMovie::StartAfs(int32 PtId, int32 FileId)
+void CMovie::StartAfs(int32 partitionId, int32 fileId)
 {
-    mwPlyStartAfs(m_mwply, PtId, FileId);
+    mwPlyStartAfs(m_mwply, partitionId, fileId);
 };

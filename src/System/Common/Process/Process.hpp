@@ -42,6 +42,7 @@ public:
 	CProcessMemory& Memory(void);
 	CProcessMail& Mail(void);
 	CResources& Resources(void);
+    const char* ClassName(void) const;
 
 private:
 	CResources m_resources;

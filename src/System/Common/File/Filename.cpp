@@ -2,6 +2,8 @@
 #include "FileID.hpp"
 #include "FileTypes.hpp"
 
+#include "System/Common/Configure.hpp"
+
 
 static const char* s_pszCommonDataPath = "common/";
 
@@ -9,11 +11,21 @@ static const char* s_pszCommonDataPath = "common/";
 static const char* s_apszLanguageDataPath[] =
 {
     "language/english/",
-    //"language/german/",
-    //"language/french/",
-    //"language/spanish/",
-    //"language/italian/",
+#ifdef TMNT2_BUILD_EU
+    "language/german/",
+    "language/french/",
+    "language/spanish/",
+    "language/italian/",
+#endif /* TMNT2_BUILD_EU */
 };
+
+
+/* checkouts with idb */
+#ifdef TMNT2_BUILD_EU
+static_assert(COUNT_OF(s_apszLanguageDataPath) == TYPEDEF::CONFIG_LANG_NUM, "lang data path table incorrect");
+#else
+static_assert(COUNT_OF(s_apszLanguageDataPath) == 1, "lang data path table incorrect");
+#endif
 
 
 static const char* s_apszFilename[] =
@@ -257,91 +269,180 @@ static const char* s_apszFilename[] =
     "enbu/rap/enbu_rapexb.lpac",
     "enbu/mic/enbu_micexb.lpac",
     "enbu/don/enbu_donexb.lpac",
+
+#ifdef TMNT2_BUILD_EU
+    "movietext/m01t01.lpac",
+    "movietext/m02n01.lpac",
+    "movietext/m02n02.lpac",
+    "movietext/m04n01.lpac",
+    "movietext/m05n01.lpac",
+    "movietext/m06r01.lpac",
+    "movietext/m09n01.lpac",
+    "movietext/m10n01.lpac",
+    "movietext/m11j01.lpac",
+    "movietext/m12n01.lpac",
+    "movietext/m14n01.lpac",
+    "movietext/m15n01.lpac",
+    "movietext/m17n01.lpac",
+    "movietext/m18fb01.lpac",
+    "movietext/m18fb02.lpac",
+    "movietext/m20fb01.lpac",
+    "movietext/m20fb02.lpac",
+    "movietext/m21n01.lpac",
+    "movietext/m21n02.lpac",
+    "movietext/m24n01.lpac",
+    "movietext/m24n02.lpac",
+    "movietext/m25j01.lpac",
+    "movietext/m27n01.lpac",
+    "movietext/m29n01.lpac",
+    "movietext/m29n02.lpac",
+    "movietext/m30nb01.lpac",
+    "movietext/m31nb01.lpac",
+    "movietext/m32r01.lpac",
+    "movietext/m33j01.lpac",
+    "movietext/m38nb01.lpac",
+    "movietext/m38nb02.lpac",
+    "movietext/m39n01.lpac",
+    "movietext/m40ob01.lpac",
+    "movietext/m40ob02.lpac",
+    "movietext/m41nb01.lpac",
+    "movietext/m42nb01.lpac",
+    "movietext/m43n01.lpac",
+    "movietext/m44nb01.lpac",
+    "movietext/m45n01.lpac",
+    "movietext/m45n02.lpac",
+    "movietext/m46r01.lpac",
+    "movietext/m47ob01.lpac",
+    "movietext/m47ob02.lpac",
+    "movietext/m48n01.lpac",
+    "movietext/m50nb01.lpac",
+    "movietext/m50nb02.lpac",
+    "movietext/m56nb01.lpac",
+    "movietext/m57nb01.lpac",
+    "movietext/m57nb02.lpac",
+    "movietext/m58ob01.lpac",
+    "movietext/m58ob02.lpac",
+    "movietext/m59s01.lpac",
+    "movietext/m59s02.lpac",
+    "movietext/m59s03.lpac",
+    "movietext/m60x03.lpac",
+    "movietext/m62x01.lpac",
+#endif /* TMNT2_BUILD_EU */
     
     "text/text.lpac",
+
+#ifdef TMNT2_BUILD_EU
+    "charselect/charselect.lpac",
+    "nexusmenu/nexusmenu.lpac",
+    "res/res.lpac",
+    "enbu_rank/enbu_rank.lpac",
+    "areaselect/areaselect.lpac",
+    "gauge_eu/gauge_eu.lpac",
+    "home_eu/home_eu.lpac",
+    "ride_eu/ride_eu.lpac",
+#endif /* TMNT2_BUILD_EU */
 };
 
 
+/* checkouts with idb */
+#ifdef TMNT2_BUILD_EU
+static_assert(COUNT_OF(s_apszFilename) == 302, "multilang eu build has 302 max files");
+#else
+static_assert(COUNT_OF(s_apszFilename) == 238, "en build has 238 max files");
+#endif
+
+
+/* common checkout */
 static_assert(COUNT_OF(s_apszFilename) == FILEID::ID_MAX, "update me");
 
 
-/*static*/ int32 CFilename::ID(const char* Filename)
+/*static*/ int32 CFilename::ID(const char* pszFilename)
 {
-    ASSERT(std::strlen(Filename) < FILETYPES::FILE_NAME_MAX);
+    ASSERT(std::strlen(pszFilename) < static_cast<size_t>(FILETYPES::FILE_NAME_MAX));
 
     char szFilename[FILETYPES::FILE_NAME_MAX];
     szFilename[0] = '\0';
-    int32 PathLen = 0;
     
-    std::strcpy(szFilename, Filename);
+    /* converting path to the table format */
+    std::strcpy(szFilename, pszFilename);
     ConvPathTable(szFilename);
-    
-    PathLen = std::strlen(s_pszCommonDataPath);
-    if (!std::strncmp(szFilename, s_pszCommonDataPath, PathLen))
+
+    /* search in common container first */
+    size_t len = std::strlen(s_pszCommonDataPath);
+    if (!std::strncmp(szFilename, s_pszCommonDataPath, len))
     {
-        for (int32 i = 0; i < 237; i++)
+        for (int32 i = FILEID::COMMONBEGIN; i < FILEID::COMMONEND; ++i)
         {
-            if (!std::strcmp(&szFilename[PathLen], s_apszFilename[i]))
+            if (!std::strcmp(&szFilename[len], s_apszFilename[i]))
                 return i;
         };
     };
 
-    PathLen = std::strlen(s_apszLanguageDataPath[0]);
-    if (!std::strncmp(szFilename, s_apszLanguageDataPath[0], PathLen))
+    /* now search in lang container */
+    len = std::strlen(s_apszLanguageDataPath[0]);
+    if (!std::strncmp(szFilename, s_apszLanguageDataPath[0], len))
     {
-        for (int32 i = 237; i < 238; i++)
+        for (int32 i = FILEID::LANGBEGIN; i < FILEID::LANGEND; ++i)
         {
-            if (!strcmp(&szFilename[PathLen], s_apszFilename[i]))
+            if (!strcmp(&szFilename[len], s_apszFilename[i]))
                 return i;
         };
     };
 
+    /* file not found */
     return FILEID::ID_INVALID;
 };
 
 
-/*static*/ void CFilename::ConvPathTable(char* Path)
+/*static*/ void CFilename::ConvPathTable(char* pszPath)
 {
-    while (*Path)
+    while (*pszPath)
     {
-        if (*Path == '\\')
+        if (*pszPath == '\\')
         {
-            *Path = '/';
+            *pszPath = '/';
         }
-        else if ((*Path >= 'A') && (*Path <= 'Z'))
+        else if ((*pszPath >= 'A') &&
+                 (*pszPath <= 'Z'))
         {
-            *Path = *Path + 0x20;
+            *pszPath = (*pszPath + 0x20); // to lower case
         };
 
-        ++Path;
+        ++pszPath;
     };
 };
 
 
-/*static*/ void CFilename::ConvPathPlatform(char* Path)
+/*static*/ void CFilename::ConvPathPlatform(char* pszPath)
 {
-    while (*Path)
+    while (*pszPath)
     {
 #ifdef TARGET_PC
-        if (*Path == '/')
-            *Path = '\\';
+        if (*pszPath == '/')
+            *pszPath = '\\';
 #else
         if (*Path == '\\')
             *Path = '/';
-#endif        
-        ++Path;
+#endif
+        ++pszPath;
     };
 };
 
 
 /*static*/ void CFilename::Filename(char* Buff, int32 FileId)
 {
-    ASSERT((FileId >= 0) && (FileId < FILEID::ID_MAX));
+    ASSERT(FileId >= 0);
+    ASSERT(FileId < FILEID::ID_MAX);
 
-    if (FileId < 237)
+    if (FileId < FILEID::COMMONMAX)
+    {
         std::strcpy(Buff, s_pszCommonDataPath);
-    else if (FileId < 238)
-        std::strcpy(Buff, s_apszLanguageDataPath[0]);
+    }
+    else if (FileId < FILEID::LANGMAX)
+    {
+        TYPEDEF::CONFIG_LANG lang = CConfigure::GetLanguage();
+        std::strcpy(Buff, s_apszLanguageDataPath[lang]);
+    };
 
     std::strcat(Buff, s_apszFilename[FileId]);
 };

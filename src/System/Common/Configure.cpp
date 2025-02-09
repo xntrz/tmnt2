@@ -7,27 +7,15 @@ static char s_argvvdelim = '=';
 static char s_argkey = '-';
 
 
-/*static*/ TYPEDEF::CONFIG_LAUNCH CConfigure::m_launchmode = TYPEDEF::CONFIG_LAUNCH_NORMAL;
-/*static*/ TYPEDEF::CONFIG_LANG CConfigure::m_language;
-/*static*/ TYPEDEF::CONFIG_TV CConfigure::m_tvmode;
+/*static*/ TYPEDEF::CONFIG_LAUNCH CConfigure::m_launchMode  = TYPEDEF::CONFIG_LAUNCH_NORMAL;
+/*static*/ TYPEDEF::CONFIG_LANG CConfigure::m_language      = TYPEDEF::CONFIG_LANG_ENGLISH;
+/*static*/ TYPEDEF::CONFIG_TV CConfigure::m_tvMode          = TYPEDEF::CONFIG_TV_NTSC;
 
 
 /*static*/ void CConfigure::InitArgs(int32 argc, char* argv[])
 {
     s_argv = argv;
     s_argc = argc;
-};
-
-
-/*static*/ void CConfigure::InitLanguange(void)
-{
-    ;
-};
-
-
-/*static*/ void CConfigure::InitTVMode(void)
-{
-    ;
 };
 
 
@@ -88,30 +76,49 @@ static char s_argkey = '-';
 
 /*static*/ void CConfigure::SetLaunchMode(TYPEDEF::CONFIG_LAUNCH launch)
 {
-    ASSERT(
-        (launch == TYPEDEF::CONFIG_LAUNCH_NORMAL)   ||
-        (launch == TYPEDEF::CONFIG_LAUNCH_ARCADE)   ||
-        (launch == TYPEDEF::CONFIG_LAUNCH_TVCHANGE) ||
-        (launch == TYPEDEF::CONFIG_LAUNCH_DASHBOARD)
-    );
+    ASSERT((launch == TYPEDEF::CONFIG_LAUNCH_NORMAL)   ||
+           (launch == TYPEDEF::CONFIG_LAUNCH_ARCADE)   ||
+           (launch == TYPEDEF::CONFIG_LAUNCH_TVCHANGE) ||
+           (launch == TYPEDEF::CONFIG_LAUNCH_DASHBOARD));
     
-    m_launchmode = launch;
+    m_launchMode = launch;
 };
 
 
 /*static*/ TYPEDEF::CONFIG_LAUNCH CConfigure::GetLaunchMode(void)
 {
-    return m_launchmode;
+    return m_launchMode;
+};
+
+
+/*static*/ void CConfigure::SetLanguage(TYPEDEF::CONFIG_LANG lang)
+{
+    ASSERT((lang == TYPEDEF::CONFIG_LANG_ENGLISH) ||
+           (lang == TYPEDEF::CONFIG_LANG_GERMAN)  ||
+           (lang == TYPEDEF::CONFIG_LANG_FRENCH)  ||
+           (lang == TYPEDEF::CONFIG_LANG_SPANISH) ||
+           (lang == TYPEDEF::CONFIG_LANG_ITALIAN));
+
+    m_language = lang;
 };
 
 
 /*static*/ TYPEDEF::CONFIG_LANG CConfigure::GetLanguage(void)
-{
+{    
     return m_language;
+};
+
+
+/*static*/ void CConfigure::SetTVMode(TYPEDEF::CONFIG_TV tvMode)
+{
+    ASSERT((tvMode == TYPEDEF::CONFIG_TV_NTSC) ||
+           (tvMode == TYPEDEF::CONFIG_TV_PAL));
+
+    m_tvMode = tvMode;
 };
 
 
 /*static*/ TYPEDEF::CONFIG_TV CConfigure::GetTVMode(void)
 {
-    return m_tvmode;
+    return m_tvMode;
 };

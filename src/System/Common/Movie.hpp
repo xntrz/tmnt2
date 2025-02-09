@@ -21,19 +21,19 @@ public:
     MWPLY CreateHandle(char** ppWorkArea, int32 iWidth, int32 iHeight, int32 iMaxBps, bool bUsePalMode);
     void ReleaseMovieFrame(void);
     bool LoadMovieFrame(void);
-    void StartAfs(int32 PtId, int32 FileId);
+    void StartAfs(int32 partitionId, int32 fileId);
 
 protected:
-    MWPLY m_mwply;
-    char* m_paWorkArea;
+    MWPLY       m_mwply;
+    char*       m_pWorkArea;
     MwsfdFrmObj m_frameobj;
-    CSprite m_sprite;
-    CSprite* m_pRenderSprite;
-    float m_fSpritePosX;
-    float m_fSpritePosY;
-    float m_fSpriteW;
-    float m_fSpriteH;
-    int32 m_iMovieW;
-    int32 m_iMovieH;
-    bool m_bIsCprmHandleOK;
+    CSprite     m_sprite;
+    CSprite*    m_pRenderSprite;
+    float       m_fSpritePosX;
+    float       m_fSpritePosY;
+    float       m_fSpriteW;
+    float       m_fSpriteH;
+    int32       m_iMovieW;
+    int32       m_iMovieH;
+    bool        m_bIsCprmHandleOK;
 };

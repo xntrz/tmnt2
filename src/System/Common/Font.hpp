@@ -40,6 +40,7 @@ public:
     virtual ~CUnicodeFont(void);
     int32 GetDisplayLineString(wchar* dst, const wchar* src, float fHeight, float fWidth, int32 count) const;
     int32 CountFlowLine(const wchar* pwszString, float fHeight, float fWidth);
+    void SetIntergapSpacing(float fSpacing);
     void Show(const char* pszString, float fHeight, float x, float y);
     void Show(const char* pszString, float fHeight, const RwV2d* pvPos);
     void Show(const wchar* pwszString, float fHeight, RwV2d* pPosition);

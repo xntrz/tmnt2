@@ -58,31 +58,31 @@ bool CAdxFileAccess::Open(const char* name)
 
 bool CAdxFileAccess::Open(int32 id)
 {
-    ASSERT(id >= 0 && id < FILEID::ID_MAX);
-
-    bool bResult = true;
+    ASSERT(id >= 0);
+    ASSERT(id < FILEID::ID_MAX);
 
     if (!m_uReferenceCount++)
     {
-        int32 PtId = 0;
-        int32 FileId = 0;
+        int32 ptId   = -1;
+        int32 fileNo = -1;
 
-        if (id >= 237)
+        if (id < FILEID::COMMONMAX)
         {
-            PtId = 1;
-            FileId = id - 237;
+            ptId   = 0;
+            fileNo = id;
         }
         else
         {
-            PtId = 0;
-            FileId = id;
+            ptId   = 1;
+            fileNo = (id - FILEID::LANGBEGIN);
         };
 
-        m_adxf = ADXF_OpenAfs(PtId, FileId);
-        bResult = (m_adxf ? ReadNoWait() : false);        
+        m_adxf = ADXF_OpenAfs(ptId, fileNo);
+        if (m_adxf)
+            return ReadNoWait();        
     };
 
-    return bResult;
+    return false;
 };
 
 

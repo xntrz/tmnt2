@@ -31,13 +31,16 @@ public:
     virtual bool SetupThreadSystem(void);
     virtual void ShutdownThreadSystem(void);
     virtual bool LoadPartitionCommon(void);
-    virtual bool LoadPartitionLang(void);
+    virtual bool LoadPartitionLang(TYPEDEF::CONFIG_LANG lang);
     virtual bool LoadPartition(int32 PrId, const char* FName, void* PtInfo);
     virtual bool SetupFileSystem(void) = 0;
     virtual void ShutdownFileSystem(void) = 0;
 
 private:
-    CAdxFileAccess m_aAdxFileAccess[FILEID::ID_MAX];  
-    char m_ptinfoCommon[ADXF_CALC_PTINFO_REAL_SIZE(237)];
-    char m_ptinfoLang[ADXF_CALC_PTINFO_REAL_SIZE(1)];
+    static const char* m_apszPartitionCommonDataFilename[];
+    static const char* m_apszPartitionLangDataFilename[];
+
+    CAdxFileAccess m_aAdxFileAccess[FILEID::ID_MAX];
+    char m_ptinfoCommon[ADXF_CALC_PTINFO_REAL_SIZE(FILEID::COMMONMAX)];
+    char m_ptinfoLang[ADXF_CALC_PTINFO_REAL_SIZE(FILEID::LANGMAX)];
 };

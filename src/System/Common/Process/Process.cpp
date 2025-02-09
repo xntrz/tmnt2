@@ -86,3 +86,9 @@ CProcess::CResources& CProcess::Resources(void)
 {
 	return m_resources;
 };
+
+
+const char* CProcess::ClassName(void) const
+{
+    return "";
+};

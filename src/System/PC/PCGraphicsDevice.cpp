@@ -4,6 +4,7 @@
 #include "PCSetting.hpp"
 #include "PCError.hpp"
 
+#include "System/Common/Configure.hpp"
 #include "System/Common/Screen.hpp"
 
 
@@ -122,23 +123,27 @@ bool CPCGraphicsDevice::Initialize(void)
         return false;
     };
 
-    m_pFrameTimer = new CPCFrameTimer;
+    m_pFrameTimer = new CPCFrameTimer(*this);
     if (!m_pFrameTimer)
         return false;
 
     if (m_bFullscreen)
     {
-        RwD3D9EngineSetMultiSamplingLevels(            
-            m_pDeviceInfo[m_curDevice].m_numMultisamplingLvls ? m_pDeviceInfo[m_curDevice].m_numMultisamplingLvls * 2 : 1
-        );
-        
-        RwD3D9EngineSetRefreshRate(60);
+        int32 numMsLevels = m_pDeviceInfo[m_curDevice].m_numMultisamplingLvls;
+
+        RwD3D9EngineSetMultiSamplingLevels(numMsLevels ?  numMsLevels * 2 : 1);
+
+        uint32 refreshRate = 60;
+#ifdef TMNT2_BUILD_EU
+        if ((CConfigure::GetTVMode() == TYPEDEF::CONFIG_TV_PAL) && IsPalMode())
+            refreshRate = 50;
+#endif /* TMNT2_BUILD_EU */
+
+        RwD3D9EngineSetRefreshRate(refreshRate);
     };
 
-    SetWindowRect(
-        m_pDeviceInfo[m_curDevice].m_pModes[m_pDeviceInfo[m_curDevice].m_curMode].width,
-        m_pDeviceInfo[m_curDevice].m_pModes[m_pDeviceInfo[m_curDevice].m_curMode].height
-    );
+    SetWindowRect(m_pDeviceInfo[m_curDevice].m_pModes[m_pDeviceInfo[m_curDevice].m_curMode].width,
+                  m_pDeviceInfo[m_curDevice].m_pModes[m_pDeviceInfo[m_curDevice].m_curMode].height);
     
     return true;
 };
@@ -184,8 +189,9 @@ int32 CPCGraphicsDevice::ScreenWidth(void)
 {
     ASSERT(m_pDeviceInfo);
     ASSERT(m_numDevices > 0);
-    ASSERT(m_curDevice >= 0 && m_curDevice < m_numDevices);
-    
+    ASSERT(m_curDevice >= 0);
+    ASSERT(m_curDevice < m_numDevices);
+
     int32 curMode = m_pDeviceInfo[m_curDevice].m_curMode;
 
     ASSERT(curMode >= 0);
@@ -199,7 +205,8 @@ int32 CPCGraphicsDevice::ScreenHeight(void)
 {
     ASSERT(m_pDeviceInfo);
     ASSERT(m_numDevices > 0);
-    ASSERT(m_curDevice >= 0 && m_curDevice < m_numDevices);
+    ASSERT(m_curDevice >= 0);
+    ASSERT(m_curDevice < m_numDevices);
 
     int32 curMode = m_pDeviceInfo[m_curDevice].m_curMode;
 
@@ -214,7 +221,8 @@ int32 CPCGraphicsDevice::ScreenDepth(void)
 {
     ASSERT(m_pDeviceInfo);
     ASSERT(m_numDevices > 0);
-    ASSERT(m_curDevice >= 0 && m_curDevice < m_numDevices);
+    ASSERT(m_curDevice >= 0);
+    ASSERT(m_curDevice < m_numDevices);
 
     int32 curMode = m_pDeviceInfo[m_curDevice].m_curMode;
 
@@ -255,7 +263,8 @@ int32 CPCGraphicsDevice::Subsystem(void)
 		m_curDevice = SearchAndSetVideomode(CPCSetting::VIDEOMODE_DEFAULT, false);
 	};
 
-    ASSERT((m_curDevice >= 0) && (m_curDevice < m_numDevices));
+    ASSERT(m_curDevice >= 0);
+    ASSERT(m_curDevice < m_numDevices);
 
     return m_curDevice;
 };
@@ -265,8 +274,8 @@ int32 CPCGraphicsDevice::Videomode(void)
 {
     if (m_bFullscreen)
         return m_pDeviceInfo[m_curDevice].m_pModes[m_pDeviceInfo->m_curMode].m_index;
-    else
-        return m_pDeviceInfo[m_curDevice].m_idxModeWnd;
+    
+    return m_pDeviceInfo[m_curDevice].m_idxModeWnd;
 };
 
 
@@ -565,8 +574,10 @@ bool CPCGraphicsDevice::SetVideomode(int32 No)
 bool CPCGraphicsDevice::GetVideomode(int32 No, PC::VIDEOMODE& vm) const
 {
     ASSERT(m_pDeviceInfo);
-    ASSERT(m_curDevice >= 0 && m_curDevice < m_numDevices);
-    ASSERT(No >= 0 && No < m_pDeviceInfo[m_curDevice].m_numModes);
+    ASSERT(m_curDevice >= 0);
+    ASSERT(m_curDevice < m_numDevices);
+    ASSERT(No >= 0);
+    ASSERT(No < m_pDeviceInfo[m_curDevice].m_numModes);
 
     if (No < 0 && No >= m_pDeviceInfo[m_curDevice].m_numModes)
         return false;
@@ -582,7 +593,8 @@ bool CPCGraphicsDevice::GetVideomode(int32 No, PC::VIDEOMODE& vm) const
 int32 CPCGraphicsDevice::GetVideomodeCur(void) const
 {
     ASSERT(m_pDeviceInfo);
-    ASSERT(m_curDevice >= 0 && m_curDevice < m_numDevices);
+    ASSERT(m_curDevice >= 0);
+    ASSERT(m_curDevice < m_numDevices);
 
     return m_pDeviceInfo[m_curDevice].m_curMode;
 };
@@ -591,7 +603,8 @@ int32 CPCGraphicsDevice::GetVideomodeCur(void) const
 int32 CPCGraphicsDevice::GetVideomodeNum(void) const
 {
     ASSERT(m_pDeviceInfo);
-    ASSERT(m_curDevice >= 0 && m_curDevice < m_numDevices);
+    ASSERT(m_curDevice >= 0);
+    ASSERT(m_curDevice < m_numDevices);
 
     return m_pDeviceInfo[m_curDevice].m_numModes;
 };

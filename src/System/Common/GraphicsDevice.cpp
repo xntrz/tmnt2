@@ -31,6 +31,9 @@ CGraphicsDevice::CGraphicsDevice(void)
 , m_ClearColor(DEFAULT_CLEAR_COLOR)
 , m_bFlipEnable(true)
 , m_iFlipInterval(0)
+#ifdef TMNT2_BUILD_EU
+, m_bPalMode(false)
+#endif /* TMNT2_BUILD_EU */
 {
 	;
 };
@@ -395,3 +398,19 @@ int32 CGraphicsDevice::GetFlipInternval(void) const
 {
     return m_iFlipInterval;
 };
+
+
+#ifdef TMNT2_BUILD_EU
+
+void CGraphicsDevice::SetPalMode(bool bEnable)
+{
+    m_bPalMode = bEnable;
+};
+
+
+bool CGraphicsDevice::IsPalMode(void) const
+{
+    return m_bPalMode;
+};
+
+#endif /* TMNT2_BUILD_EU */

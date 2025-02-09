@@ -20,6 +20,9 @@ public:
     virtual void Terminate(void);
     virtual bool Run(void);
     virtual bool CheckOS(void);
+#ifdef TMNT2_BUILD_EU
+    virtual void SetLanguage(void);
+#endif /* TMNT2_BUILD_EU */
     virtual bool WindowCreate(void);
     virtual void WindowDestroy(void);
 

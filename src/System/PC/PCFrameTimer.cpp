@@ -1,17 +1,29 @@
 #include "PCFrameTimer.hpp"
 #include "PCTimer.hpp"
 #include "PCTypedefs.hpp"
+#include "PCGraphicsDevice.hpp"
 
+#include "System/Common/Configure.hpp"
 #include "System/Common/Screen.hpp"
 
 
-CPCFrameTimer::CPCFrameTimer(void)
+CPCFrameTimer::CPCFrameTimer(CPCGraphicsDevice& device)
 : m_uFrametime(0)
 , m_uSyncTime(0)
 {
-	m_uFrametime = uint32(float(CPCTimer::Instance().GranularityMillisecond()) * CScreen::TimerStride());
-	m_uFrametime -= (m_uFrametime % CPCTimer::Instance().GranularitySecond());
-    Sync();    
+    float fRefreshRate = 60.0f;
+#ifdef TMNT2_BUILD_EU
+    if ((CConfigure::GetTVMode() == TYPEDEF::CONFIG_TV_PAL) && device.IsPalMode())
+        fRefreshRate = 50.0f;
+#endif /* TMNT2_BUILD_EU */
+
+    uint32 ms = CPCTimer::Instance().GranularityMillisecond();
+    uint32 sec = CPCTimer::Instance().GranularitySecond();
+    
+    m_uFrametime  = static_cast<uint32>(static_cast<float>(ms) / fRefreshRate);
+	m_uFrametime -= (m_uFrametime % sec);
+
+    Sync();
 };
 
 

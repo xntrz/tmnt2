@@ -98,6 +98,11 @@
 };
 
 
+//
+// *********************************************************************************
+//
+
+
 CFont::CFont(Rt2dFont* pFont)
 : m_pFont(pFont)
 , m_pBrush(nullptr)
@@ -111,14 +116,12 @@ CFont::CFont(Rt2dFont* pFont)
 
     if (m_pBrush)
     {
-        RwRGBA ColorDefault = { 0xFF,0xFF,0xFF,0xFF };
-        Rt2dBrushSetRGBA(
-            m_pBrush,
-            &ColorDefault,
-            &ColorDefault,
-            &ColorDefault,
-            &ColorDefault
-        );
+        RwRGBA defaultColor = { 0xFF, 0xFF, 0xFF, 0xFF };
+        Rt2dBrushSetRGBA(m_pBrush,
+                         &defaultColor,
+                         &defaultColor,
+                         &defaultColor,
+                         &defaultColor);
         Rt2dBrushSetTexture(m_pBrush, nullptr);
     };
 };
@@ -161,6 +164,11 @@ Rt2dFont* CFont::GetFontObj(void) const
 };
 
 
+//
+// *********************************************************************************
+//
+
+
 /*static*/ int32 CUnicodeFont::ConvertToUnicode(wchar* dst, const char* src)
 {
     int32 nConvertedChars = 0;
@@ -190,50 +198,56 @@ CUnicodeFont::~CUnicodeFont(void)
 };
 
 
-int32 CUnicodeFont::GetDisplayLineString(wchar* dst, const wchar* src, float fHeight, float fWidth, int32 count) const
+int32 CUnicodeFont::GetDisplayLineString(wchar* dst,
+                                         const wchar* src,
+                                         float fHeight,
+                                         float fWidth,
+                                         int32 count) const
 {
-    wchar TmpBuff[128];
-    TmpBuff[0] = UTEXT('\0');
-
-    wchar TextBuffer[128];
-    TextBuffer[0] = UTEXT('\0');
-
     dst[0] = UTEXT('\0');
+
+    wchar wszTmpBuff[128];
+    wszTmpBuff[0] = UTEXT('\0');
     
-    float fStringWidthCache = 0.0f;
-    const wchar* ptr = &src[CStringParser::ExtractSeparator(TmpBuff, src, COUNT_OF(TmpBuff))];
+    float fStringWidthBuff = 0.0f;
+    const wchar* ptr = &src[CStringParser::ExtractSeparator(wszTmpBuff, src, COUNT_OF(wszTmpBuff))];
     
-    for (int32 DstCnt = (count - 1); DstCnt > 0; )
+    for (int32 dstCnt = (count - 1); dstCnt > 0; )
     {
-        int32 CntSep = CStringParser::ExtractSeparator(TmpBuff, ptr, COUNT_OF(TmpBuff));
-        CTextData::StrCpy(TextBuffer, TmpBuff);
+        wchar wszTextBuffer[128];
+        wszTextBuffer[0] = UTEXT('\0');
 
-        int32 CntTok = CStringParser::ExtractToken(TmpBuff, &ptr[CntSep], COUNT_OF(TmpBuff));
-        CTextData::StrCat(TextBuffer, TmpBuff);
+        int32 cntSep = CStringParser::ExtractSeparator(wszTmpBuff, ptr, COUNT_OF(wszTmpBuff));
+        CTextData::StrCpy(wszTextBuffer, wszTmpBuff);
 
-        if (CntTok > 0)
+        int32 cntTok = CStringParser::ExtractToken(wszTmpBuff, &ptr[cntSep], COUNT_OF(wszTmpBuff));
+        CTextData::StrCat(wszTextBuffer, wszTmpBuff);
+
+        if (cntTok > 0)
         {
-			float fStringWidth = Rt2dFontGetStringWidth(m_pFont, (const RwChar*)TextBuffer, fHeight) + fStringWidthCache;
+            float fStringWidth = Rt2dFontGetStringWidth(m_pFont,
+                                                        reinterpret_cast<const RwChar*>(wszTextBuffer),
+                                                        fHeight);
+            fStringWidth += fStringWidthBuff;
+
             if (fStringWidth >= fWidth)
                 break;
             
-            fStringWidthCache = fStringWidth;
+            fStringWidthBuff = fStringWidth;
 
-            //
-            //  FIXME implementation is identically retail game version but dst buffer overflow is possible here
-            //
-            CTextData::StrCat(dst, TextBuffer);
-            DstCnt -= (CntTok + CntSep);
-            ptr += (CntTok + CntSep);
+            CTextData::StrCat(dst, wszTextBuffer);
+            
+            dstCnt  -= (cntTok + cntSep);
+            ptr     += (cntTok + cntSep);
         }
         else
         {
-            ptr += CntSep;
+            ptr += cntSep;
         };
 
         if (CStringParser::IsNewLine(ptr))
         {
-			ptr += CStringParser::ExtractNewLine(TmpBuff, ptr);
+			ptr += CStringParser::ExtractNewLine(wszTmpBuff, ptr);
             break;
         };
 
@@ -247,26 +261,35 @@ int32 CUnicodeFont::GetDisplayLineString(wchar* dst, const wchar* src, float fHe
 
 int32 CUnicodeFont::CountFlowLine(const wchar* pwszString, float fHeight, float fWidth)
 {
-    int32 LineNum = 0;
-    wchar Buff[128];
-    Buff[0] = UTEXT('\0');
+    wchar wszBuff[128];
+    wszBuff[0] = UTEXT('\0');
 
-    for (int32 Cnt = GetDisplayLineString(Buff, pwszString, fHeight, fWidth, COUNT_OF(Buff));
-        Cnt;
-        Cnt = GetDisplayLineString(Buff, pwszString, fHeight, fWidth, COUNT_OF(Buff)))
+    int32 lineNum = 0;
+
+    int32 len = GetDisplayLineString(wszBuff, pwszString, fHeight, fWidth, COUNT_OF(wszBuff));
+    while (len)
     {
-        pwszString += Cnt;
-        ++LineNum;
+        pwszString += len;
+        ++lineNum;
+
+        len = GetDisplayLineString(wszBuff, pwszString, fHeight, fWidth, COUNT_OF(wszBuff));
     };
 
-    return LineNum;
+    return lineNum;
+};
+
+
+void CUnicodeFont::SetIntergapSpacing(float fSpacing)
+{
+    ASSERT(m_pFont);
+
+    Rt2dFontSetIntergapSpacing(m_pFont, fSpacing);
 };
 
 
 void CUnicodeFont::Show(const char* pszString, float fHeight, float x, float y)
 {
     static wchar s_wszTempBuffer[256 * 256];
-
     s_wszTempBuffer[0] = UTEXT('\0');
 
     ASSERT(std::strlen(pszString) < COUNT_OF(s_wszTempBuffer));
@@ -296,8 +319,10 @@ void CUnicodeFont::Show(const wchar* pwszString, float fHeight, RwV2d* pPosition
     Rt2dDeviceGetMetric(&x, &y, &w, &h);
 
     pPosition->y = y + y + h - pPosition->y;
-    if (!Rt2dFontShow(m_pFont, (RwChar*)pwszString, fHeight, pPosition, m_pBrush))
+
+    if (!Rt2dFontShow(m_pFont, reinterpret_cast<const RwChar*>(pwszString), fHeight, pPosition, m_pBrush))
         ASSERT(false);
+    
     pPosition->y = y + y + h - pPosition->y;
 };
 
@@ -318,7 +343,7 @@ void CUnicodeFont::Show(const wchar* pwszString, float fHeight, float fPosX, flo
     Anchor.x = fPosX;
     Anchor.y = y + y + h - fPosY;
 
-    if (!Rt2dFontShow(m_pFont, (const RwChar*)pwszString, fHeight, &Anchor, m_pBrush))
+    if (!Rt2dFontShow(m_pFont, reinterpret_cast<const RwChar*>(pwszString), fHeight, &Anchor, m_pBrush))
         ASSERT(false);
 };
 
@@ -335,12 +360,16 @@ void CUnicodeFont::Flow(const wchar* pwszString, float fHeight, Rt2dBBox* pBBox,
 
     CTextData::StrCpy(s_wszTempBuffer, pwszString);
 
-    Rt2dFont* pResult = Rt2dFontFlow(m_pFont, (RwChar*)pwszString, fHeight, pBBox, format, m_pBrush);
+    Rt2dFont* pResult = Rt2dFontFlow(m_pFont, reinterpret_cast<RwChar*>(s_wszTempBuffer), fHeight, pBBox, format, m_pBrush);
     ASSERT(pResult);
 };
 
 
-void CUnicodeFont::FlowEx(const wchar* pwszString, float fHeight, int32 numLinePad, const Rt2dBBox* pBBox, Rt2dJustificationType format)
+void CUnicodeFont::FlowEx(const wchar* pwszString,
+                          float fHeight,
+                          int32 numLinePad,
+                          const Rt2dBBox* pBBox,
+                          Rt2dJustificationType format)
 {
     wchar wszBuff[CStringParser::BUFF_SIZE] = { UTEXT('\0') };
     Rt2dBBox BBox = { 0.0f };
@@ -352,10 +381,12 @@ void CUnicodeFont::FlowEx(const wchar* pwszString, float fHeight, int32 numLineP
 
     while (BBox.h >= fHeight)
     {
-        int32 iLen = GetDisplayLineString(wszBuff, pwszString, fHeight, BBox.w, sizeof(wszBuff));
-        if (!iLen)
+        int32 len = GetDisplayLineString(wszBuff, pwszString, fHeight, BBox.w, COUNT_OF(wszBuff));
+        if (!len)
             break;
-		pwszString += iLen;
+        
+        pwszString += len;
+
         if (numLinePad-- <= 0)
         {
             if (!CStringParser::IsNewLine(wszBuff))

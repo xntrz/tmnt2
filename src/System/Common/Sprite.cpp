@@ -16,7 +16,7 @@ static inline float CosFloat(float x)
 };
 
 
-/*static*/ float CSprite::VIRTUALSCREEN_DEFAULT_X = -(TYPEDEF::DEFAULT_SCREEN_WIDTH * 0.5f);
+/*static*/ float CSprite::VIRTUALSCREEN_DEFAULT_X = -(TYPEDEF::DEFAULT_SCREEN_WIDTH  * 0.5f);
 /*static*/ float CSprite::VIRTUALSCREEN_DEFAULT_Y = -(TYPEDEF::DEFAULT_SCREEN_HEIGHT * 0.5f);
 /*static*/ float CSprite::VIRTUALSCREEN_DEFAULT_W = TYPEDEF::DEFAULT_SCREEN_WIDTH;
 /*static*/ float CSprite::VIRTUALSCREEN_DEFAULT_H = TYPEDEF::DEFAULT_SCREEN_HEIGHT;
@@ -37,17 +37,17 @@ static inline float CosFloat(float x)
 
 /*static*/ void CSprite::GetRealScreenPos(float* x, float* y)
 {
-	*x = ((*x - m_fVirtualScreenX) / m_fVirtualScreenW) * float(CScreen::Width());
-	*y = ((*y - m_fVirtualScreenY) / m_fVirtualScreenH) * float(CScreen::Height());
+	*x = ((*x - m_fVirtualScreenX) / m_fVirtualScreenW) * static_cast<float>(CScreen::Width());
+	*y = ((*y - m_fVirtualScreenY) / m_fVirtualScreenH) * static_cast<float>(CScreen::Height());
 };
 
 
 /*static*/ void CSprite::PushRenderStates(void)
 {
-    RENDERSTATE_PUSH(rwRENDERSTATEZTESTENABLE, false);
+    RENDERSTATE_PUSH(rwRENDERSTATEZTESTENABLE,  false);
     RENDERSTATE_PUSH(rwRENDERSTATEZWRITEENABLE, false);
-    RENDERSTATE_PUSH(rwRENDERSTATEFOGENABLE, false);
-    RENDERSTATE_PUSH(rwRENDERSTATECULLMODE, rwCULLMODECULLNONE);
+    RENDERSTATE_PUSH(rwRENDERSTATEFOGENABLE,    false);
+    RENDERSTATE_PUSH(rwRENDERSTATECULLMODE,     rwCULLMODECULLNONE);
 };
 
 
@@ -68,7 +68,11 @@ CSprite::CSprite(void)
 , m_fH(0.0f)
 , m_fOffsetX(0.5f)
 , m_fOffsetY(0.5f)
-, m_Color({0xFF, 0xFF, 0xFF, 0xFF})
+#ifdef TMNT2_BUILD_EU
+, m_aColor()
+#else
+, m_Color({ 0xFF, 0xFF, 0xFF, 0xFF })
+#endif
 , m_fU0(0.0f)
 , m_fV0(0.0f)
 , m_fU1(1.0f)
@@ -78,6 +82,10 @@ CSprite::CSprite(void)
 , m_bCameraCheckFlag(false)
 {
     SetScreenSize();
+#ifdef TMNT2_BUILD_EU
+    for (int32 i = 0; i < COUNT_OF(m_aColor); ++i)
+        m_aColor[i] = { 0xFF, 0xFF, 0xFF, 0xFF };
+#endif /* TMNT2_BUILD_EU */
 };
 
 
@@ -89,8 +97,8 @@ CSprite::~CSprite(void)
 
 void CSprite::SetScreenSize(void)
 {
-    m_fW = float(CScreen::Width());
-    m_fH = float(CScreen::Height());
+    m_fW = static_cast<float>(CScreen::Width());
+    m_fH = static_cast<float>(CScreen::Height());
 };
 
 
@@ -100,27 +108,54 @@ void CSprite::SetZ(float fZ)
 };
 
 
+#ifdef TMNT2_BUILD_EU
+
+void CSprite::SetRGBA(int32 pt, uint8 r, uint8 g, uint8 b, uint8 a)
+{
+    ASSERT(pt < COUNT_OF(m_aColor));
+
+    m_aColor[pt] = { r, g, b, a };
+};
+
+#endif /* TMNT2_BUILD_EU */
+
+
 void CSprite::SetRGBA(const RwRGBA& rgba)
 {
+#ifdef TMNT2_BUILD_EU
+    for (int32 i = 0; i < COUNT_OF(m_aColor); ++i)
+        SetRGBA(i, rgba.red, rgba.green, rgba.blue, rgba.alpha);
+#else
     m_Color = rgba;
+#endif
 };
 
 
 void CSprite::SetRGBA(uint8 r, uint8 g, uint8 b, uint8 a)
 {
-    m_Color = { r, g, b, a };
+    SetRGBA({ r, g, b, a });
 };
 
 
 void CSprite::SetRGB(uint8 r, uint8 g, uint8 b)
 {
+#ifdef TMNT2_BUILD_EU
+    for (int32 i = 0; i < COUNT_OF(m_aColor); ++i)
+        m_aColor[i] = { r, g, b };
+#else
     m_Color = { r, g, b };
+#endif
 };
 
 
 void CSprite::SetAlpha(uint8 a)
 {
+#ifdef TMNT2_BUILD_EU
+    for (int32 i = 0; i < COUNT_OF(m_aColor); ++i)
+        m_aColor[i].alpha = a;
+#else
     m_Color.alpha = a;
+#endif
 };
 
 
@@ -151,8 +186,8 @@ void CSprite::SetTextureAndResize(RwTexture* pTexture)
     RwRaster* pRwRaster = RwTextureGetRasterMacro(m_pTexture);
     ASSERT(pRwRaster);
     
-	m_fW = float(RwRasterGetWidthMacro(pRwRaster));
-	m_fH = float(RwRasterGetHeightMacro(pRwRaster));
+	m_fW = static_cast<float>(RwRasterGetWidthMacro(pRwRaster));
+	m_fH = static_cast<float>(RwRasterGetHeightMacro(pRwRaster));
 };
 
 
@@ -183,11 +218,11 @@ void CSprite::SetPositionAndSize(float x, float y, float w, float h)
     ASSERT(m_fVirtualScreenW != 0.0f);
     ASSERT(m_fVirtualScreenH != 0.0f);
 
-    m_fX = (x - m_fVirtualScreenX) / m_fVirtualScreenW * float(CScreen::Width());
-    m_fY = (y - m_fVirtualScreenY) / m_fVirtualScreenH * float(CScreen::Height());
+    m_fX = (x - m_fVirtualScreenX) / m_fVirtualScreenW * static_cast<float>(CScreen::Width());
+    m_fY = (y - m_fVirtualScreenY) / m_fVirtualScreenH * static_cast<float>(CScreen::Height());
 
-    m_fW = float(CScreen::Width()) / m_fVirtualScreenW * w;
-    m_fH = float(CScreen::Height()) / m_fVirtualScreenH * h;
+    m_fW = static_cast<float>(CScreen::Width()) / m_fVirtualScreenW * w;
+    m_fH = static_cast<float>(CScreen::Height()) / m_fVirtualScreenH * h;
 };
 
 
@@ -206,8 +241,8 @@ void CSprite::Resize(float w, float h)
     ASSERT(m_fVirtualScreenW != 0.0f);
     ASSERT(m_fVirtualScreenH != 0.0f);
 
-    float scaleW = float(CScreen::Width()) / VIRTUALSCREEN_DEFAULT_W;
-    float scaleH = float(CScreen::Height()) / VIRTUALSCREEN_DEFAULT_H;
+    float scaleW = static_cast<float>(CScreen::Width()) / VIRTUALSCREEN_DEFAULT_W;
+    float scaleH = static_cast<float>(CScreen::Height()) / VIRTUALSCREEN_DEFAULT_H;
 
 	m_fW = (w * scaleW);
 	m_fH = (h * scaleH);
@@ -219,8 +254,8 @@ void CSprite::ResizeStrict(float w, float h)
     ASSERT(m_fVirtualScreenW != 0.0f);
     ASSERT(m_fVirtualScreenH != 0.0f);
 
-    float scaleW = float(CScreen::Width()) / VIRTUALSCREEN_DEFAULT_W;
-    float scaleH = float(CScreen::Height()) / VIRTUALSCREEN_DEFAULT_H;
+    float scaleW = static_cast<float>(CScreen::Width()) / VIRTUALSCREEN_DEFAULT_W;
+    float scaleH = static_cast<float>(CScreen::Height()) / VIRTUALSCREEN_DEFAULT_H;
 
     float scale = Min(scaleW, scaleH);
 
@@ -241,8 +276,8 @@ void CSprite::Move(float x, float y)
     ASSERT(m_fVirtualScreenW != 0.0f);
     ASSERT(m_fVirtualScreenH != 0.0f);
 
-	m_fX = (x - m_fVirtualScreenX) / m_fVirtualScreenW * float(CScreen::Width());
-    m_fY = (y - m_fVirtualScreenY) / m_fVirtualScreenH * float(CScreen::Height());
+	m_fX = (x - m_fVirtualScreenX) / m_fVirtualScreenW * static_cast<float>(CScreen::Width());
+    m_fY = (y - m_fVirtualScreenY) / m_fVirtualScreenH * static_cast<float>(CScreen::Height());
 };
 
 
@@ -276,7 +311,6 @@ void CSprite::Draw(void) const
 
     float z = RwIm2DGetNearScreenZMacro();
     float rhw = 1.0f / RwCameraGetNearClipPlaneMacro(CCamera::CameraCurrent());
-    uint32 color = RWRGBALONG(m_Color.red, m_Color.green, m_Color.blue, m_Color.alpha);
 
     for (int32 i = 0; i < COUNT_OF(aVertices); ++i)
     {
@@ -286,7 +320,19 @@ void CSprite::Draw(void) const
         aVertices[i].u = uv_vertex[i].x;
         aVertices[i].v = uv_vertex[i].y;
         aVertices[i].rhw = rhw;
-        aVertices[i].emissiveColor = color;
+
+#ifdef TMNT2_BUILD_EU
+
+        static_assert(COUNT_OF(aVertices) == COUNT_OF(m_aColor),
+                      "count of colors should equals to count of vertices");
+
+        aVertices[i].emissiveColor = RWRGBALONGEX(m_aColor[i]);
+
+#else /* TMNT2_BUILD_EU */
+
+        aVertices[i].emissiveColor = RWRGBALONGEX(m_Color);
+
+#endif
     };
 
     if (m_pTexture)
@@ -326,7 +372,6 @@ void CSprite::DrawRotate(void) const
 
     float z = RwIm2DGetNearScreenZMacro();
     float rhw = 1.0f / RwCameraGetNearClipPlaneMacro(CCamera::CameraCurrent());
-    uint32 color = RWRGBALONG(m_Color.red, m_Color.green, m_Color.blue, m_Color.alpha);
 
     for (int32 i = 0; i < COUNT_OF(aVertices); ++i)
     {
@@ -342,7 +387,19 @@ void CSprite::DrawRotate(void) const
         aVertices[i].u = uv_vertex[i].x;
         aVertices[i].v = uv_vertex[i].y;
         aVertices[i].rhw = rhw;
-        aVertices[i].emissiveColor = color;
+
+#ifdef TMNT2_BUILD_EU
+
+        static_assert(COUNT_OF(aVertices) == COUNT_OF(m_aColor),
+                      "count of colors should equals to count of vertices");
+                      
+        aVertices[i].emissiveColor = RWRGBALONGEX(m_aColor[i]);
+
+#else /* TMNT2_BUILD_EU */
+        
+        aVertices[i].emissiveColor = RWRGBALONGEX(m_Color);
+
+#endif
     };
 
     if (m_pTexture)

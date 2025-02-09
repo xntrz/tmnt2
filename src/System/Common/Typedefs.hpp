@@ -46,15 +46,21 @@ using uint32= uint32_t;
 using uint64= uint64_t;
 
 
-#ifdef TARGET_PC
+#if (defined(TARGET_PC))
+
 typedef wchar_t wchar;
+
 #define UTEXT(text)	L##text
-#elif defined TARGET_PS2
+
+#elif (defined(TARGET_PS2))
 typedef unsigned int wchar;
 #define UTEXT(text)	text
+
 #else
+
 #error Current target is not set
-#endif
+
+#endif /* defined(TARGET_PC) */
 
 
 #include "MemoryStd.hpp"
@@ -139,8 +145,10 @@ namespace TYPEDEF
 		CONFIG_LANG_GERMAN,
 		CONFIG_LANG_FRENCH,
 		CONFIG_LANG_SPANISH,
-		CONFIG_LANG_ITALIAN,
-	};
+        CONFIG_LANG_ITALIAN,
+
+        CONFIG_LANG_NUM,
+    };
 
 	enum CONFIG_LAUNCH
 	{

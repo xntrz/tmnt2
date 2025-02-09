@@ -3,6 +3,8 @@
 #include "PCSpecific.hpp"
 #include "resources.hpp"
 
+#include "System/Common/Configure.hpp"
+
 
 static LRESULT CALLBACK WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
@@ -138,6 +140,10 @@ bool CPCSystem::Initialize(void)
         return false;
     };
 
+#ifdef TMNT2_BUILD_EU
+    SetLanguage();
+#endif /* TMNT2_BUILD_EU */
+
     if (!WindowCreate())
     {
         OUTPUT("Create window failed\n");
@@ -248,6 +254,39 @@ bool CPCSystem::CheckOS(void)
 };
 
 
+#ifdef TMNT2_BUILD_EU
+
+void CPCSystem::SetLanguage(void)
+{
+	LANGID langId = GetUserDefaultLangID();
+
+    switch (PRIMARYLANGID(langId))
+    {
+    case LANG_FRENCH:
+        CConfigure::SetLanguage(TYPEDEF::CONFIG_LANG_FRENCH);
+        break;
+
+    case LANG_GERMAN:
+        CConfigure::SetLanguage(TYPEDEF::CONFIG_LANG_GERMAN);
+        break;
+
+    case LANG_ITALIAN:
+        CConfigure::SetLanguage(TYPEDEF::CONFIG_LANG_ITALIAN);
+        break;
+
+    case LANG_SPANISH:
+        CConfigure::SetLanguage(TYPEDEF::CONFIG_LANG_SPANISH);
+        break;
+
+    default:
+        CConfigure::SetLanguage(TYPEDEF::CONFIG_LANG_ENGLISH);
+        break;
+    };
+};
+
+#endif /* TMNT2_BUILD_EU */
+
+
 bool CPCSystem::WindowCreate(void)
 {
     WNDCLASSEXA WndClass = { 0 };
@@ -270,20 +309,18 @@ bool CPCSystem::WindowCreate(void)
     
     static_assert(Styles == 0xCF0000, "checkout");
 
-    HWND hWndResult = CreateWindowExA(
-        NULL,
-        WNDNAME,
-        WNDNAME,
-        Styles,
-        CW_USEDEFAULT,
-        0,
-        CW_USEDEFAULT,
-        0,
-        NULL,
-        NULL,
-        CPCSpecific::m_hInstance,
-        NULL
-    );
+    HWND hWndResult = CreateWindowExA(NULL,
+                                      WNDNAME,
+                                      WNDNAME,
+                                      Styles,
+                                      CW_USEDEFAULT,
+                                      0,
+                                      CW_USEDEFAULT,
+                                      0,
+                                      NULL,
+                                      NULL,
+                                      CPCSpecific::m_hInstance,
+                                      NULL);
 
 	if (!hWndResult)
         return false;
