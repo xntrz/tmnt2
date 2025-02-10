@@ -2,10 +2,11 @@
 
 #include "AreaID.hpp"
 #include "WorldID.hpp"
-#include "MovieID.hpp"
 #include "StageID.hpp"
 #include "AntiqueID.hpp"
 #include "GameTypes.hpp"
+
+#include "Game/System/Movie/MovieID.hpp"
 
 
 class CAreaInfo

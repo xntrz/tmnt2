@@ -205,3 +205,9 @@
 {
     return m_pFont->GetFontObj();
 };
+
+
+/*static*/ void CGameFont::SetIntergapSpacing(float fSpacing)
+{
+    m_pFont->SetIntergapSpacing(fSpacing);
+};

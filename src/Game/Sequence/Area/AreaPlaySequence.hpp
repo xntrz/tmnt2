@@ -2,8 +2,8 @@
 
 #include "System/Common/Process/Sequence.hpp"
 
-#include "Game/Component/GameMain/MovieID.hpp"
 #include "Game/Component/GameMain/StageID.hpp"
+#include "Game/System/Movie/MovieID.hpp"
 
 
 class CAreaPlaySequence final : public CSequence

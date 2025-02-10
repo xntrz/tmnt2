@@ -2,7 +2,6 @@
 
 #include "Game/Component/Menu/MessageWindow.hpp"
 #include "Game/Component/GameData/GameData.hpp"
-#include "Game/Component/GameMain/MovieID.hpp"
 #include "Game/System/2d/GameFont.hpp"
 #include "Game/System/DataLoader/DataLoader.hpp"
 #include "Game/System/Misc/ControllerMisc.hpp"
@@ -11,6 +10,7 @@
 #include "Game/System/Misc/SoftwareReset.hpp"
 #include "Game/System/Misc/Timeout.hpp"
 #include "Game/System/Misc/PadConnectCheck.hpp"
+#include "Game/System/Movie/MovieID.hpp"
 #include "Game/System/Movie/MovieManager.hpp"
 #include "Game/System/Sound/GameSound.hpp"
 #include "Game/System/Texture/TextureManager.hpp"
@@ -35,7 +35,7 @@ CGameMainSequence::CGameMainSequence(void)
 , m_iLabelCurrent(PROCESSTYPES::LABEL_EOL)
 , m_param(nullptr)
 , m_fTime(0.0f)
-, m_iMovieID(0)
+, m_movieId(MOVIEID::ID_OP_TMNT1)
 {
     ;
 };
@@ -73,7 +73,7 @@ bool CGameMainSequence::OnAttach(const void* pParam)
     EnableStickToDirButton(true);
 
     m_fTime = 0.0f;
-    m_iMovieID = MOVIEID::ID_OP_TMNT2;
+    m_movieId = MOVIEID::ID_OP_TMNT2;
     m_step = STEP_LOAD_TEXTURE;
 
     return true;
@@ -292,9 +292,13 @@ int32 CGameMainSequence::Branch(int32 iLabel)
 
 void CGameMainSequence::PreMovie(void)
 {
-    CMovieManager::PreCreateMovieInstance(m_iMovieID);
+    CMovieManager::PreCreateMovieInstance(m_movieId);
     CScreenFade::BlackIn(0.0f);
-    m_iMovieID = (++m_iMovieID % MOVIEID::ID_OP_TMNT2);
+
+    if (m_movieId == MOVIEID::ID_OP_TMNT1)
+        m_movieId = MOVIEID::ID_OP_TMNT2;
+    else
+        m_movieId = MOVIEID::ID_OP_TMNT1;
 };
 
 

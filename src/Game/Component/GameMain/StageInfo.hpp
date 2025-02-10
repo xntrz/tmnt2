@@ -3,10 +3,10 @@
 #include "StageID.hpp"
 #include "AreaID.hpp"
 #include "MapID.hpp"
-#include "MovieID.hpp"
 #include "GameTypes.hpp"
 
 #include "Game/Component/Enemy/EnemyID.hpp"
+#include "Game/System/Movie/MovieID.hpp"
 
 
 class CStageInfo

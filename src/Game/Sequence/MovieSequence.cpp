@@ -1,9 +1,8 @@
 #include "MovieSequence.hpp"
 
 #include "Game/Component/GameData/GameData.hpp"
-#include "Game/Component/GameMain/MovieID.hpp"
 #include "Game/System/Movie/MovieManager.hpp"
-#include "Game/System/Movie/MovieDataManager.hpp"
+#include "Game/System/Movie/MovieID.hpp"
 #include "System/Common/Movie.hpp"
 #include "System/Common/Controller.hpp"
 
@@ -17,6 +16,7 @@
 CMovieSequence::CMovieSequence(void)
 : m_pMovie(nullptr)
 , m_bOwner(false)
+, m_bLoadEndFlag(false)
 {
     ;
 };
@@ -30,9 +30,10 @@ CMovieSequence::~CMovieSequence(void)
 
 bool CMovieSequence::OnAttach(const void* pParam)
 {
-    OUTPUT("%s. MovieID: %d\n", __FUNCTION__, pParam);
+    OUTPUT("%s. MovieID: %d\n", __FUNCTION__, reinterpret_cast<int32>(pParam));
     
     m_bOwner = false;
+    m_bLoadEndFlag = false;
     m_pMovie = CMovieManager::GetMovieInstance();
 
     if (!m_pMovie)
@@ -43,19 +44,6 @@ bool CMovieSequence::OnAttach(const void* pParam)
         CMovieManager::PreCreateMovieInstance(movieId);
         
         m_pMovie = CMovieManager::GetMovieInstance();
-    };
-
-    if (CMovieManager::IsCreateSuccess())
-    {
-        int32 iMovieID = CMovieManager::GetMovieID();
-        int32 iFileID = CMovieDataManager::GetFileID(iMovieID);
-        int32 iPartitionID = CMovieDataManager::GetPartitionID(iMovieID);
-        m_pMovie->StartAfs(iPartitionID, iFileID);
-    }
-	else
-	{
-        OUTPUT("Movie create failed");
-        ASSERT(false);
     };
 
     return true;
@@ -74,26 +62,29 @@ void CMovieSequence::OnDetach(void)
 
 void CMovieSequence::OnMove(bool bRet, const void* pReturnValue)
 {
-    if (m_pMovie)
+    if (!m_bLoadEndFlag)
     {
-        int32 iController = CGameData::Attribute().GetVirtualPad();
-        if (CController::GetDigitalTrigger(iController, CController::DIGITAL_OK))
-            Ret();
-
-        if (m_pMovie->IsEnded())
-            Ret();
-
-        m_pMovie->Update();
-    }
-    else
-    {
-        Ret();
+        if (!CMovieManager::IsCreateSuccess())
+            return;
+        
+        CMovieManager::OnCreateSuccess();
+        m_bLoadEndFlag = true;
     };
+
+    int32 virtualPad = CGameData::Attribute().GetVirtualPad();
+    if (CController::GetDigitalTrigger(virtualPad, CController::DIGITAL_OK) ||
+        CController::GetDigitalTrigger(virtualPad, CController::DIGITAL_START))
+        Ret();
+
+    if (CMovieManager::IsEnded())
+        Ret();
+
+    CMovieManager::Update();
 };
 
 
 void CMovieSequence::OnDraw(void) const
 {
-    m_pMovie->Draw();
+    CMovieManager::Draw();
 };
 

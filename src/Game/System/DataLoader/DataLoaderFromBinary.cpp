@@ -7,13 +7,14 @@
 #include "Game/System/2d/GameFont.hpp"
 #include "Game/System/Text/GameText.hpp"
 #include "Game/System/2d/Animation2D.hpp"
-#include "Game/System/Motion/MotionManager.hpp"
-#include "Game/System/MotionParameter/MotionParameterManager.hpp"
-#include "Game/System/Model/ModelManager.hpp"
-#include "Game/System/Misc/UVAnim.hpp"
 #include "Game/System/Map/CameraDataMan.hpp"
 #include "Game/System/Map/MapClumpModelMan.hpp"
 #include "Game/System/Map/WorldMap.hpp"
+#include "Game/System/Motion/MotionManager.hpp"
+#include "Game/System/MotionParameter/MotionParameterManager.hpp"
+#include "Game/System/Model/ModelManager.hpp"
+#include "Game/System/Movie/MovieText.hpp"
+#include "Game/System/Misc/UVAnim.hpp"
 #include "System/Common/SystemText.hpp"
 #include "System/Common/Font.hpp"
 
@@ -46,6 +47,7 @@ namespace READERTYPE
         ENEMY_PARAMETER,
         ICONS_PS2,
         ICONS_NGC,
+        MOVIETEXT,
 
         TYPE_MAX,
     };
@@ -128,6 +130,10 @@ DECLARE_READER(CItemEnemyParameterReader,       "ENEMY_PARAMETER",          READ
 DECLARE_READER(CItemIconsPS2Reader,             "ICONS_PS2",                READERTYPE::ICONS_PS2);
 DECLARE_READER(CItemIconsNGCReader,             "ICONS_NGC",                READERTYPE::ICONS_NGC);
 
+#ifdef TMNT2_BUILD_EU
+DECLARE_READER(CItemMovieTextReader,            "MOVIETEXT",                READERTYPE::MOVIETEXT);
+#endif /* TMNT2_BUILD_EU */
+
 
 /**
  ********************************************************************************
@@ -161,19 +167,17 @@ void CItemModelToonReader::Eval(CDataLoaderFromBinary::CChunkHeader* pChunkHeade
 {
     struct MDLTOONHEADER
     {
-        char m_szTextureSetName[16];
-        int32 m_pattern;
+        char    szTextureSetName[16];
+        int32   pattern;
     };
 
     MDLTOONHEADER* pMdlToonHeader = static_cast<MDLTOONHEADER*>(pChunkHeader->m_pExtraHeader);
 
-    CModelManager::ReadToon(
-        pChunkHeader->m_pHeader->m_szName,
-        pData,
-        pChunkHeader->m_pHeader->m_uSize,
-        pMdlToonHeader->m_szTextureSetName,
-        pMdlToonHeader->m_pattern
-    );
+    CModelManager::ReadToon(pChunkHeader->m_pHeader->m_szName,
+                            pData,
+                            pChunkHeader->m_pHeader->m_uSize,
+                            pMdlToonHeader->szTextureSetName,
+                            pMdlToonHeader->pattern);
 };
 
 
@@ -186,16 +190,14 @@ void CItemMotionSetReader::Eval(CDataLoaderFromBinary::CChunkHeader* pChunkHeade
 {
     struct MOTIONSETHEADER
     {
-        uint32 m_bSetName;
-        char m_szSetName[16];
+        uint32  bSetName;
+        char    szSetName[16];
     };
 
     MOTIONSETHEADER* pMotionSetHeader = static_cast<MOTIONSETHEADER*>(pChunkHeader->m_pExtraHeader);
+    const char* pszParentSetName = (pMotionSetHeader->bSetName ? pMotionSetHeader->szSetName : CMotionManager::GLOBAL_SET);
 
-    CMotionManager::CreateMotionSet(
-        pChunkHeader->m_pHeader->m_szName,
-        (pMotionSetHeader->m_bSetName ? pMotionSetHeader->m_szSetName : CMotionManager::GLOBAL_SET)
-    );
+    CMotionManager::CreateMotionSet(pChunkHeader->m_pHeader->m_szName, pszParentSetName);
 };
 
 
@@ -206,11 +208,9 @@ void CItemMotionSetReader::Eval(CDataLoaderFromBinary::CChunkHeader* pChunkHeade
 
 void CItemMotionReader::Eval(CDataLoaderFromBinary::CChunkHeader* pChunkHeader, void* pData)
 {
-    CMotionManager::Read(
-        pChunkHeader->m_pHeader->m_szName,
-        pData,
-        pChunkHeader->m_pHeader->m_uSize
-    );
+    CMotionManager::Read(pChunkHeader->m_pHeader->m_szName,
+                         pData,
+                         pChunkHeader->m_pHeader->m_uSize);
 };
 
 
@@ -221,11 +221,9 @@ void CItemMotionReader::Eval(CDataLoaderFromBinary::CChunkHeader* pChunkHeader, 
 
 void CItemMotionParameterReader::Eval(CDataLoaderFromBinary::CChunkHeader* pChunkHeader, void* pData)
 {
-    CMotionParameterManager::Read(
-        pChunkHeader->m_pHeader->m_szName,
-        pData,
-        pChunkHeader->m_pHeader->m_uSize
-    );
+    CMotionParameterManager::Read(pChunkHeader->m_pHeader->m_szName,
+                                  pData,
+                                  pChunkHeader->m_pHeader->m_uSize);
 };
 
 
@@ -236,11 +234,9 @@ void CItemMotionParameterReader::Eval(CDataLoaderFromBinary::CChunkHeader* pChun
 
 void CItemTextureDictionaryReader::Eval(CDataLoaderFromBinary::CChunkHeader* pChunkHeader, void* pData)
 {
-    CTextureManager::ReadSet(
-        pChunkHeader->m_pHeader->m_szName,
-        pData,
-        pChunkHeader->m_pHeader->m_uSize
-    );
+    CTextureManager::ReadSet(pChunkHeader->m_pHeader->m_szName,
+                             pData,
+                             pChunkHeader->m_pHeader->m_uSize);
 };
 
 
@@ -251,11 +247,9 @@ void CItemTextureDictionaryReader::Eval(CDataLoaderFromBinary::CChunkHeader* pCh
 
 void CItemAddTextureDictionaryReader::Eval(CDataLoaderFromBinary::CChunkHeader* pChunkHeader, void* pData)
 {
-    CTextureManager::AddSet(
-        pChunkHeader->m_pHeader->m_szName,
-        pData,
-        pChunkHeader->m_pHeader->m_uSize
-    );
+    CTextureManager::AddSet(pChunkHeader->m_pHeader->m_szName,
+                            pData,
+                            pChunkHeader->m_pHeader->m_uSize);
 };
 
 
@@ -266,11 +260,9 @@ void CItemAddTextureDictionaryReader::Eval(CDataLoaderFromBinary::CChunkHeader* 
 
 void CItemModelBspReader::Eval(CDataLoaderFromBinary::CChunkHeader* pChunkHeader, void* pData)
 {
-    CWorldMap::ReadBsp(
-        pChunkHeader->m_pHeader->m_szName,
-        pData,
-        pChunkHeader->m_pHeader->m_uSize
-    );
+    CWorldMap::ReadBsp(pChunkHeader->m_pHeader->m_szName,
+                       pData,
+                       pChunkHeader->m_pHeader->m_uSize);
 };
 
 
@@ -281,10 +273,7 @@ void CItemModelBspReader::Eval(CDataLoaderFromBinary::CChunkHeader* pChunkHeader
 
 void CItemCameraReader::Eval(CDataLoaderFromBinary::CChunkHeader* pChunkHeader, void* pData)
 {
-    CCameraDataManager::Read(
-        pData,
-        pChunkHeader->m_pHeader->m_uSize
-    );
+    CCameraDataManager::Read(pData, pChunkHeader->m_pHeader->m_uSize);
 };
 
 
@@ -295,11 +284,9 @@ void CItemCameraReader::Eval(CDataLoaderFromBinary::CChunkHeader* pChunkHeader, 
 
 void CItemEffectReader::Eval(CDataLoaderFromBinary::CChunkHeader* pChunkHeader, void* pData)
 {
-    CEffectManager::Read(
-        pChunkHeader->m_pHeader->m_szName,
-        pData,
-        pChunkHeader->m_pHeader->m_uSize
-    );
+    CEffectManager::Read(pChunkHeader->m_pHeader->m_szName,
+                         pData,
+                         pChunkHeader->m_pHeader->m_uSize);
 };
 
 
@@ -310,11 +297,9 @@ void CItemEffectReader::Eval(CDataLoaderFromBinary::CChunkHeader* pChunkHeader, 
 
 void CItemAnimation2DReader::Eval(CDataLoaderFromBinary::CChunkHeader* pChunkHeader, void* pData)
 {
-    CAnimation2DLoader::Open(
-        pChunkHeader->m_pHeader->m_szName,
-        pData,
-        pChunkHeader->m_pHeader->m_uSize
-    );
+    CAnimation2DLoader::Open(pChunkHeader->m_pHeader->m_szName,
+                             pData,
+                             pChunkHeader->m_pHeader->m_uSize);
 };
 
 
@@ -325,11 +310,9 @@ void CItemAnimation2DReader::Eval(CDataLoaderFromBinary::CChunkHeader* pChunkHea
 
 void CItemUVAnimReader::Eval(CDataLoaderFromBinary::CChunkHeader* pChunkHeader, void* pData)
 {
-    CUVAnim::ReadUVAnim(
-        pChunkHeader->m_pHeader->m_szName,
-        pData,
-        pChunkHeader->m_pHeader->m_uSize
-    );
+    CUVAnim::ReadUVAnim(pChunkHeader->m_pHeader->m_szName,
+                        pData,
+                        pChunkHeader->m_pHeader->m_uSize);
 };
 
 
@@ -340,11 +323,9 @@ void CItemUVAnimReader::Eval(CDataLoaderFromBinary::CChunkHeader* pChunkHeader, 
 
 void CItemFontReader::Eval(CDataLoaderFromBinary::CChunkHeader* pChunkHeader, void* pData)
 {
-	CGameFont::Open(
-        pChunkHeader->m_pHeader->m_szName,
-        reinterpret_cast<const char*>(pData),
-		pChunkHeader->m_pHeader->m_szName
-	);
+    CGameFont::Open(pChunkHeader->m_pHeader->m_szName,
+                    reinterpret_cast<const char*>(pData),
+                    pChunkHeader->m_pHeader->m_szName);
 };
 
 
@@ -357,8 +338,8 @@ void CItemMapModelReader::Eval(CDataLoaderFromBinary::CChunkHeader* pChunkHeader
 {
     struct MAPMDLHEADER
     {
-        char m_szTextureSetName[16];
-        int32 m_mode;
+        char    szTextureSetName[16];
+        int32   mode;
     };
 
     MAPMDLHEADER* pMapMdlHeader = static_cast<MAPMDLHEADER*>(pChunkHeader->m_pExtraHeader);
@@ -366,17 +347,12 @@ void CItemMapModelReader::Eval(CDataLoaderFromBinary::CChunkHeader* pChunkHeader
     if (CUVAnim::IsExistsUVAnimDict(pChunkHeader->m_pHeader->m_szName))        
         CUVAnim::SetUVAnimDict(pChunkHeader->m_pHeader->m_szName);
     
-    CModelManager::ReadNormal(
-        pChunkHeader->m_pHeader->m_szName,
-        pData,
-        pChunkHeader->m_pHeader->m_uSize,
-        pMapMdlHeader->m_szTextureSetName
-    );
+    CModelManager::ReadNormal(pChunkHeader->m_pHeader->m_szName,
+                              pData,
+                              pChunkHeader->m_pHeader->m_uSize,
+                              pMapMdlHeader->szTextureSetName);
     
-    CMapClumpModelManager::Read(
-        pChunkHeader->m_pHeader->m_szName,
-        pMapMdlHeader->m_mode
-    );
+    CMapClumpModelManager::Read(pChunkHeader->m_pHeader->m_szName, pMapMdlHeader->mode);
 };
 
 
@@ -387,10 +363,7 @@ void CItemMapModelReader::Eval(CDataLoaderFromBinary::CChunkHeader* pChunkHeader
 
 void CItemMapInfoReader::Eval(CDataLoaderFromBinary::CChunkHeader* pChunkHeader, void* pData)
 {
-    CWorldMap::ReadMapInfo(
-        pData,
-        pChunkHeader->m_pHeader->m_uSize
-    );
+    CWorldMap::ReadMapInfo(pData, pChunkHeader->m_pHeader->m_uSize);
 };
 
 
@@ -401,11 +374,9 @@ void CItemMapInfoReader::Eval(CDataLoaderFromBinary::CChunkHeader* pChunkHeader,
 
 void CItemGimmickReader::Eval(CDataLoaderFromBinary::CChunkHeader* pChunkHeader, void* pData)
 {
-    CGimmickDataManager::Read(
-        pChunkHeader->m_pHeader->m_szName,
-        pData,
-        pChunkHeader->m_pHeader->m_uSize
-    );
+    CGimmickDataManager::Read(pChunkHeader->m_pHeader->m_szName,
+                              pData,
+                              pChunkHeader->m_pHeader->m_uSize);
 };
 
 
@@ -461,30 +432,48 @@ void CItemIconsNGCReader::Eval(CDataLoaderFromBinary::CChunkHeader* pChunkHeader
  */
 
 
+#ifdef TMNT2_BUILD_EU
+
+void CItemMovieTextReader::Eval(CDataLoaderFromBinary::CChunkHeader* pChunkHeader, void* pData)
+{
+    CMovieText::Read(pData, pChunkHeader->m_pHeader->m_uSize);
+};
+
+#endif /* TMNT2_BUILD_EU */
+
+
+/**
+ ********************************************************************************
+ */
+
+
 CDataLoaderFromBinary::CDataLoaderFromBinary(void)
 {
     std::memset(&m_apItemReader[0], 0x00, sizeof(m_apItemReader));
 
-    m_apItemReader[READERTYPE::MODEL]                 = new CItemModelReader;
-    m_apItemReader[READERTYPE::MODEL_TOON]            = new CItemModelToonReader;
-    m_apItemReader[READERTYPE::MOTION_SET]            = new CItemMotionSetReader;
-    m_apItemReader[READERTYPE::MOTION]                = new CItemMotionReader;
-    m_apItemReader[READERTYPE::MOTION_PARAMETER]      = new CItemMotionParameterReader;
-    m_apItemReader[READERTYPE::TEXTURE_DICTIONARY]    = new CItemTextureDictionaryReader;
-    m_apItemReader[READERTYPE::MODEL_BSP]             = new CItemModelBspReader;
-    m_apItemReader[READERTYPE::CAMERA]                = new CItemCameraReader;
-    m_apItemReader[READERTYPE::EFFECT]                = new CItemEffectReader;
-    m_apItemReader[READERTYPE::ANIM2D]                = new CItemAnimation2DReader;
-    m_apItemReader[READERTYPE::UVANIM]                = new CItemUVAnimReader;
-    m_apItemReader[READERTYPE::FONT]                  = new CItemFontReader;
-    m_apItemReader[READERTYPE::MAP_MODEL]             = new CItemMapModelReader;
-    m_apItemReader[READERTYPE::MAP_INFO]              = new CItemMapInfoReader;
-    m_apItemReader[READERTYPE::ADD_TEXTURE_DICTIONARY]= new CItemAddTextureDictionaryReader;
-    m_apItemReader[READERTYPE::GIMMICK]               = new CItemGimmickReader;
-    m_apItemReader[READERTYPE::STRINGS]               = new CItemStringsReader;
-    m_apItemReader[READERTYPE::ENEMY_PARAMETER]       = new CItemEnemyParameterReader;
-    m_apItemReader[READERTYPE::ICONS_PS2]             = new CItemIconsPS2Reader;
-    m_apItemReader[READERTYPE::ICONS_NGC]             = new CItemIconsNGCReader;
+    m_apItemReader[READERTYPE::MODEL]                   = new CItemModelReader;
+    m_apItemReader[READERTYPE::MODEL_TOON]              = new CItemModelToonReader;
+    m_apItemReader[READERTYPE::MOTION_SET]              = new CItemMotionSetReader;
+    m_apItemReader[READERTYPE::MOTION]                  = new CItemMotionReader;
+    m_apItemReader[READERTYPE::MOTION_PARAMETER]        = new CItemMotionParameterReader;
+    m_apItemReader[READERTYPE::TEXTURE_DICTIONARY]      = new CItemTextureDictionaryReader;
+    m_apItemReader[READERTYPE::MODEL_BSP]               = new CItemModelBspReader;
+    m_apItemReader[READERTYPE::CAMERA]                  = new CItemCameraReader;
+    m_apItemReader[READERTYPE::EFFECT]                  = new CItemEffectReader;
+    m_apItemReader[READERTYPE::ANIM2D]                  = new CItemAnimation2DReader;
+    m_apItemReader[READERTYPE::UVANIM]                  = new CItemUVAnimReader;
+    m_apItemReader[READERTYPE::FONT]                    = new CItemFontReader;
+    m_apItemReader[READERTYPE::MAP_MODEL]               = new CItemMapModelReader;
+    m_apItemReader[READERTYPE::MAP_INFO]                = new CItemMapInfoReader;
+    m_apItemReader[READERTYPE::ADD_TEXTURE_DICTIONARY]  = new CItemAddTextureDictionaryReader;
+    m_apItemReader[READERTYPE::GIMMICK]                 = new CItemGimmickReader;
+    m_apItemReader[READERTYPE::STRINGS]                 = new CItemStringsReader;
+    m_apItemReader[READERTYPE::ENEMY_PARAMETER]         = new CItemEnemyParameterReader;
+    m_apItemReader[READERTYPE::ICONS_PS2]               = new CItemIconsPS2Reader;
+    m_apItemReader[READERTYPE::ICONS_NGC]               = new CItemIconsNGCReader;
+#ifdef TMNT2_BUILD_EU
+    m_apItemReader[READERTYPE::MOVIETEXT]               = new CItemMovieTextReader;
+#endif /* TMNT2_BUILD_EU */
 };
 
 

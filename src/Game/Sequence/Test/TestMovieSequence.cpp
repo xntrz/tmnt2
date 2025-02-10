@@ -4,10 +4,10 @@
 
 #include "DebugUtils.hpp"
 
-#include "Game/Component/GameMain/MovieID.hpp"
 #include "Game/System/Misc/Gamepad.hpp"
 #include "Game/System/Misc/ScreenFade.hpp"
 #include "Game/System/Movie/MovieDataManager.hpp"
+#include "Game/System/Movie/MovieID.hpp"
 #include "Game/ProcessList.hpp"
 
 
@@ -39,7 +39,7 @@ bool CTestMovieSequence::OnAttach(const void* pParam)
     m_menu.DigitalCANCEL(IPad::DIGITAL_SELECT);
 
     for (int32 i = MOVIEID::ID_START; i < MOVIEID::ID_MAX; ++i)
-        m_menu.AddTrigger(CMovieDataManager::GetLabel(i));
+        m_menu.AddTrigger(CMovieDataManager::GetLabel(MOVIEID::VALUE(i)));
 
     return true;
 };

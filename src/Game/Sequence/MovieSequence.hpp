@@ -20,5 +20,6 @@ public:
 
 private:
     CMovie* m_pMovie;
-    bool m_bOwner;
+    bool    m_bOwner;
+    bool    m_bLoadEndFlag;
 };

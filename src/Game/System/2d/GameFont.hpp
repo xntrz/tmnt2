@@ -33,7 +33,8 @@ public:
     static float GetStringWidth(const char* pszString);
     static float GetStringWidth(const char* pszString, float fHeight);
     static Rt2dFont* GetFontObj(void);
-    
+    static void SetIntergapSpacing(float fSpacing);
+
 private:
     static CUnicodeFont* m_pFont;
     static float m_fHeight;

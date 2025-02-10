@@ -111,8 +111,9 @@ namespace MOVIEID
         ID_M62X01E,
 
         ID_MAX,
-    };
 
+        ID_INVALID = -1,
+    };
     
     static_assert(ID_MAX == 79, "correct me");
 };

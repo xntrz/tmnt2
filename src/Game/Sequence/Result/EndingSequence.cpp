@@ -2,8 +2,8 @@
 
 #include "Game/Component/GameMain/GameTypes.hpp"
 #include "Game/Component/GameData/GameData.hpp"
-#include "Game/Component/GameMain/MovieID.hpp"
 #include "Game/System/Misc/ScreenFade.hpp"
+#include "Game/System/Movie/MovieID.hpp"
 #include "Game/ProcessList.hpp"
 
 
