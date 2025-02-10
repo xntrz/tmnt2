@@ -5,6 +5,7 @@
 CMovie::CMovie(int32 iWidth, int32 iHeight, int32 iMaxBps, bool bUsePalMode)
 : m_mwply(0)
 , m_pWorkArea(nullptr)
+, m_frameObj()
 , m_sprite()
 , m_pRenderSprite(&m_sprite)
 , m_fSpritePosX(0.0f)
@@ -15,6 +16,8 @@ CMovie::CMovie(int32 iWidth, int32 iHeight, int32 iMaxBps, bool bUsePalMode)
 , m_iMovieH(iHeight)
 , m_bIsCprmHandleOK(false)
 {
+    std::memset(&m_frameObj, 0, sizeof(m_frameObj));
+
     m_sprite.SetRGBA(255, 255, 255, 255);
     m_sprite.SetPositionAndSize(m_fSpritePosX,
                                 m_fSpritePosY,
@@ -183,12 +186,18 @@ bool CMovie::LoadMovieFrame(void)
     if (Stat != MWSFD_STAT_PLAYING)
         return false;
 
-    mwPlyGetCurFrm(m_mwply, &m_frameobj);
-    return (m_frameobj.bufadr != nullptr);
+    mwPlyGetCurFrm(m_mwply, &m_frameObj);
+    return (m_frameObj.bufadr != nullptr);
 };
 
 
 void CMovie::StartAfs(int32 partitionId, int32 fileId)
 {
     mwPlyStartAfs(m_mwply, partitionId, fileId);
+};
+
+
+const MwsfdFrmObj& CMovie::FrameObj(void) const
+{
+    return m_frameObj;
 };

@@ -208,18 +208,18 @@ bool CPCSystem::CheckOS(void)
 
     struct WINVERSION_INFO
     {
-        const char* m_pszLabel;
-        bool m_bCompatibility;
+        const char* osName;
+        bool        compatibility;
     };
 
     static const WINVERSION_INFO s_aWinVersionInfo[] =
     {
-        { "Unknown",                true,   },
-        { "Windows 2000",           true,   },
-        { "Windows XP",             true,   },
-        { "Windows Vista",          true,   },
-        { "Windows 7",              true,   },
-        { "Windows 8",              true,   },
+        { "Unknown",                true    },
+        { "Windows 2000",           true    },
+        { "Windows XP",             true    },
+        { "Windows Vista",          true    },
+        { "Windows 7",              true    },
+        { "Windows 8",              true    },
         { "Windows 10 or above",    true    },
     };
 
@@ -248,9 +248,9 @@ bool CPCSystem::CheckOS(void)
     else
         WinVersion = WINVERSION_UNKNOWN;
 
-    std::strcpy(m_szOsName, s_aWinVersionInfo[WinVersion].m_pszLabel);
+    std::strcpy(m_szOsName, s_aWinVersionInfo[WinVersion].osName);
     
-    return s_aWinVersionInfo[WinVersion].m_bCompatibility;
+    return s_aWinVersionInfo[WinVersion].compatibility;
 };
 
 
@@ -258,7 +258,43 @@ bool CPCSystem::CheckOS(void)
 
 void CPCSystem::SetLanguage(void)
 {
-	LANGID langId = GetUserDefaultLangID();
+#ifdef _DEBUG
+    /* force set lang with arg for debug tests */    
+    const char* pszArgValue = nullptr;
+    bool bSpecified = CConfigure::CheckArgValue("lang", &pszArgValue);
+    if (bSpecified)
+    {
+        struct ARG_TO_LANG
+        {
+            const char*             name;
+            const char*             arg;
+            TYPEDEF::CONFIG_LANG    lang;
+        };
+
+        static const ARG_TO_LANG s_aArgToLang[] =
+        {
+            { "english",    "en",   TYPEDEF::CONFIG_LANG_ENGLISH },
+            { "german",     "de",   TYPEDEF::CONFIG_LANG_GERMAN  },
+            { "french",     "fr",   TYPEDEF::CONFIG_LANG_FRENCH  },
+            { "spanish",    "es",   TYPEDEF::CONFIG_LANG_SPANISH },
+            { "italian",    "it",   TYPEDEF::CONFIG_LANG_ITALIAN },
+        };
+
+        static_assert(COUNT_OF(s_aArgToLang) == TYPEDEF::CONFIG_LANG_NUM, "update table");
+
+        for (int32 i = 0; i < COUNT_OF(s_aArgToLang); ++i)
+        {
+            if (!std::strcmp(s_aArgToLang[i].arg, pszArgValue))
+            {
+                OUTPUT("WARNING! Language was forcefully set to \"%s\" by command line argument.\n", s_aArgToLang[i].name);
+                CConfigure::SetLanguage(s_aArgToLang[i].lang);
+                return;
+            };
+        };
+    };
+#endif /* _DEBUG */    
+
+    LANGID langId = GetUserDefaultLangID();
 
     switch (PRIMARYLANGID(langId))
     {

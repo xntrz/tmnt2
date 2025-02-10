@@ -22,11 +22,12 @@ public:
     void ReleaseMovieFrame(void);
     bool LoadMovieFrame(void);
     void StartAfs(int32 partitionId, int32 fileId);
+    const MwsfdFrmObj& FrameObj(void) const;
 
 protected:
     MWPLY       m_mwply;
     char*       m_pWorkArea;
-    MwsfdFrmObj m_frameobj;
+    MwsfdFrmObj m_frameObj;
     CSprite     m_sprite;
     CSprite*    m_pRenderSprite;
     float       m_fSpritePosX;

@@ -38,7 +38,7 @@ void CPCMovie::Update(void)
         if (pData)
         {
             mwPlyFxSetOutBufSize(m_mwply, 4096, 512);
-            mwPlyFxCnvFrmARGB8888(m_mwply, &m_frameobj, reinterpret_cast<CriUint8*>(pData));
+            mwPlyFxCnvFrmARGB8888(m_mwply, &m_frameObj, reinterpret_cast<CriUint8*>(pData));
             RwRasterUnlock(m_pRaster);
         };
         
@@ -54,6 +54,8 @@ void CPCMovie::Draw(void)
     RENDERSTATE_PUSH(rwRENDERSTATETEXTURERASTER, m_pRaster);
     
     m_pRenderSprite->Draw();
+
+    RENDERSTATE_POP(rwRENDERSTATETEXTURERASTER);
 
     PopRenderState();
 };

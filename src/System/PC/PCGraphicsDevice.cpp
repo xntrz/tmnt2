@@ -10,9 +10,9 @@
 
 struct CPCGraphicsDevice::VIDEOMODE : public RwVideoMode
 {
-    int32 m_index;
-    int32 m_maxMultiSamplingLevels;
-    char m_szName[64];
+    int32   m_index;
+    int32   m_maxMultiSamplingLevels;
+    char    m_szName[64];
 
     static int32 SortCallback(const void* a, const void* b);
     static bool Eval(const VIDEOMODE* pVideomode);
@@ -21,21 +21,21 @@ struct CPCGraphicsDevice::VIDEOMODE : public RwVideoMode
 
 struct CPCGraphicsDevice::DEVICEINFO : public RwSubSystemInfo
 {
-    VIDEOMODE* m_pModes;
-    int32 m_numModes;
-    int32 m_curMode;
-    int32 m_numMultisamplingLvls;
-    int32 m_idxModeWnd;
-    bool m_bModeWndExist;
+    VIDEOMODE*  m_pModes;
+    int32       m_numModes;
+    int32       m_curMode;
+    int32       m_numMultisamplingLvls;
+    int32       m_idxModeWnd;
+    bool        m_bModeWndExist;
 };
 
 
 /*static*/ int32 CPCGraphicsDevice::VIDEOMODE::SortCallback(const void* a, const void* b)
 {
-    const VIDEOMODE* pVideomodeA = (const VIDEOMODE*)a;
-    const VIDEOMODE* pVideomodeB = (const VIDEOMODE*)b;
-
+    const VIDEOMODE* pVideomodeA = static_cast<const VIDEOMODE*>(a);
     ASSERT(pVideomodeA);
+
+    const VIDEOMODE* pVideomodeB = static_cast<const VIDEOMODE*>(b);
     ASSERT(pVideomodeB);
 
     if (pVideomodeA->depth > pVideomodeB->depth)
@@ -62,8 +62,8 @@ struct CPCGraphicsDevice::DEVICEINFO : public RwSubSystemInfo
 
 /*static*/ bool CPCGraphicsDevice::VIDEOMODE::Eval(const VIDEOMODE* pVideomode)
 {
-    const int32 iMinWidth = int32(TYPEDEF::DEFAULT_SCREEN_WIDTH);
-    const int32 iMinHeight = int32(TYPEDEF::DEFAULT_SCREEN_HEIGHT);
+    const int32 iMinWidth  = static_cast<int32>(TYPEDEF::DEFAULT_SCREEN_WIDTH);
+    const int32 iMinHeight = static_cast<int32>(TYPEDEF::DEFAULT_SCREEN_HEIGHT);
     const int32 iMinDepth = 16;
     const int32 iMaxDepth = 32;
     
@@ -320,13 +320,11 @@ bool CPCGraphicsDevice::EnumerateVideomodes(void)
             if (pVideomode->flags & rwVIDEOMODEEXCLUSIVE)
             {
                 pVideomode->m_index = j;
-                std::sprintf(
-                    pVideomode->m_szName,
-                    "%d x %d x %d",
-                    pVideomode->width,
-                    pVideomode->height,
-                    pVideomode->depth
-                );
+                std::sprintf(pVideomode->m_szName,
+                             "%d x %d x %d",
+                             pVideomode->width,
+                             pVideomode->height,
+                             pVideomode->depth);
 
                 RwEngineSetVideoMode(j);
                 pVideomode->m_maxMultiSamplingLevels = RwD3D9EngineGetMaxMultiSamplingLevels();
@@ -527,10 +525,17 @@ bool CPCGraphicsDevice::SetVideomode(const PC::VIDEOMODE& vm)
 
         if (m_bFullscreen)
         {
-            RwD3D9EngineSetMultiSamplingLevels(
-                m_pDeviceInfo[m_curDevice].m_numMultisamplingLvls ? (m_pDeviceInfo[m_curDevice].m_numMultisamplingLvls * 2) : (1)
-            );
-            RwD3D9EngineSetRefreshRate(60);
+            int32 numMsLevels = m_pDeviceInfo[m_curDevice].m_numMultisamplingLvls;
+
+            RwD3D9EngineSetMultiSamplingLevels(numMsLevels ? numMsLevels * 2 : 1);
+
+            uint32 refreshRate = 60;
+#ifdef TMNT2_BUILD_EU
+            if ((CConfigure::GetTVMode() == TYPEDEF::CONFIG_TV_PAL) && IsPalMode())
+                refreshRate = 50;
+#endif /* TMNT2_BUILD_EU */
+
+            RwD3D9EngineSetRefreshRate(refreshRate);
         };
 
         if (m_bFullscreen || CreateFrameBuffer())
@@ -634,7 +639,7 @@ void CPCGraphicsDevice::OutputInfo(void)
             VIDEOMODE* pVideomode = &pDeviceInfo->m_pModes[j];
 
             OUTPUT(
-                "\t\t%d) Videomode: %4d x %4d x %4d - %d (FLAGS: 0x%x, FORMAT: 0x%x)\n",
+                "\t%d) Videomode: %4d x %4d x %4d - %d (FLAGS: 0x%x, FORMAT: 0x%x)\n",
                 j + 1,
                 pVideomode->width,
                 pVideomode->height,
