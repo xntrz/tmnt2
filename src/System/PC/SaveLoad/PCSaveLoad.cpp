@@ -33,10 +33,9 @@ CPCSaveLoadBaseFlow::~CPCSaveLoadBaseFlow(void)
 CPCStartCheckFlow::CPCStartCheckFlow(void)
 {
     m_step = STEP_INIT;
-    CPCSaveLoadManager::InitializeFrame(
-        CPCSaveLoadManager::MESSAGEID_LOAD_CHECK,
-        CPCSaveLoadManager::TITLEID_CHECK
-    );
+
+    CPCSaveLoadManager::InitializeFrame(CPCSaveLoadManager::MESSAGEID_LOAD_CHECK,
+                                        CPCSaveLoadManager::TITLEID_CHECK);
 };
 
 
@@ -53,41 +52,50 @@ bool CPCStartCheckFlow::Proc(void)
     switch (m_step)
     {
     case STEP_INIT:
-        m_pLoad = new CPCLoadManager;
-        ASSERT(m_pLoad);
-        m_step = STEP_RUN;
+        {
+            m_pLoad = new CPCLoadManager;
+            m_step = STEP_RUN;
+        }
         break;
 
     case STEP_RUN:
-        if (m_pLoad->Proc())
         {
-            delete m_pLoad;
-            m_pLoad = nullptr;
+            if (m_pLoad->Proc())
+            {
+                delete m_pLoad;
+                m_pLoad = nullptr;
 
-            m_step = STEP_EOL;
-        };
+                m_step = STEP_EOL;
+            };
+        }
         break;
 
     case STEP_EOL:
-        bResult = true;
+        {
+            bResult = true;
+        }        
         break;
 
-	default:
-		ASSERT(false);
-		break;
+    default:
+        ASSERT(false);
+        break;
     };
 
     return bResult;
 };
 
 
+//
+// *********************************************************************************
+//
+
+
 CPCMenuSaveFlow::CPCMenuSaveFlow(void)
 {
     m_step = STEP_QUEST_INIT;
-    CPCSaveLoadManager::InitializeFrame(
-        CPCSaveLoadManager::MESSAGEID_SAVE_SURE,
-        CPCSaveLoadManager::TITLEID_SAVE
-    );
+
+    CPCSaveLoadManager::InitializeFrame(CPCSaveLoadManager::MESSAGEID_SAVE_SURE,
+                                        CPCSaveLoadManager::TITLEID_SAVE);
 };
 
 
@@ -104,9 +112,10 @@ bool CPCMenuSaveFlow::Proc(void)
     switch (m_step)
     {
     case STEP_QUEST_INIT:
-        m_pQuest = new CPCQuestManager(CPCSaveLoadManager::MESSAGEID_SAVE_SURE);
-        ASSERT(m_pQuest);
-        m_step = STEP_QUEST;
+        {
+            m_pQuest = new CPCQuestManager(CPCSaveLoadManager::MESSAGEID_SAVE_SURE);
+            m_step = STEP_QUEST;
+        }
         break;
 
     case STEP_QUEST:
@@ -121,6 +130,9 @@ bool CPCMenuSaveFlow::Proc(void)
             case CPCQuestManager::RESULT_YES:
                 m_step = STEP_RUN_INIT;
                 break;
+
+            default:
+                break;
             };
 
             if (result != CPCQuestManager::RESULT_NONE)
@@ -132,23 +144,28 @@ bool CPCMenuSaveFlow::Proc(void)
         break;
 
     case STEP_RUN_INIT:
-        m_pSave = new CPCSaveManager;
-        ASSERT(m_pSave);
-        m_step = STEP_RUN;
+        {
+            m_pSave = new CPCSaveManager;
+            m_step = STEP_RUN;
+        }
         break;
 
     case STEP_RUN:
-        if (m_pSave->Proc())
         {
-            delete m_pSave;
-            m_pSave = nullptr;
+            if (m_pSave->Proc())
+            {
+                delete m_pSave;
+                m_pSave = nullptr;
 
-            m_step = STEP_EOL;
-        };
+                m_step = STEP_EOL;
+            };
+        }
         break;
 
-    case STEP_EOL:        
-        bResult = true;
+    case STEP_EOL:
+        {
+            bResult = true;
+        }
         break;
 
     default:
@@ -160,13 +177,17 @@ bool CPCMenuSaveFlow::Proc(void)
 };
 
 
+//
+// *********************************************************************************
+//
+
+
 CPCMenuLoadFlow::CPCMenuLoadFlow(void)
 {
     m_step = STEP_QUEST_INIT;
-    CPCSaveLoadManager::InitializeFrame(
-        CPCSaveLoadManager::MESSAGEID_LOAD_SURE,
-        CPCSaveLoadManager::TITLEID_LOAD
-    );
+
+    CPCSaveLoadManager::InitializeFrame(CPCSaveLoadManager::MESSAGEID_LOAD_SURE,
+                                        CPCSaveLoadManager::TITLEID_LOAD);
 };
 
 
@@ -183,9 +204,10 @@ bool CPCMenuLoadFlow::Proc(void)
     switch (m_step)
     {
     case STEP_QUEST_INIT:
-        m_pQuest = new CPCQuestManager(CPCSaveLoadManager::MESSAGEID_LOAD_SURE);
-        ASSERT(m_pQuest);
-        m_step = STEP_QUEST;
+        {
+            m_pQuest = new CPCQuestManager(CPCSaveLoadManager::MESSAGEID_LOAD_SURE);
+            m_step = STEP_QUEST;
+        }
         break;
 
     case STEP_QUEST:
@@ -200,6 +222,9 @@ bool CPCMenuLoadFlow::Proc(void)
             case CPCQuestManager::RESULT_YES:
                 m_step = STEP_RUN_INIT;
                 break;
+
+            default:
+                break;
             };
 
             if (result != CPCQuestManager::RESULT_NONE)
@@ -211,23 +236,28 @@ bool CPCMenuLoadFlow::Proc(void)
         break;
 
     case STEP_RUN_INIT:
-        m_pLoad = new CPCLoadManager;
-        ASSERT(m_pLoad);
-        m_step = STEP_RUN;
+        {
+            m_pLoad = new CPCLoadManager;
+            m_step = STEP_RUN;
+        }
         break;
 
     case STEP_RUN:
-        if (m_pLoad->Proc())
         {
-            delete m_pLoad;
-            m_pLoad = nullptr;
+            if (m_pLoad->Proc())
+            {
+                delete m_pLoad;
+                m_pLoad = nullptr;
 
-            m_step = STEP_EOL;
-        };
+                m_step = STEP_EOL;
+            };
+        }
         break;
 
     case STEP_EOL:
-        bResult = true;
+        {
+            bResult = true;
+        }        
         break;
 
     default:
@@ -239,13 +269,17 @@ bool CPCMenuLoadFlow::Proc(void)
 };
 
 
+//
+// *********************************************************************************
+//
+
+
 CPCAutosaveFlow::CPCAutosaveFlow(void)
 {
     m_step = STEP_INIT;
-    CPCSaveLoadManager::InitializeFrame(
-        CPCSaveLoadManager::MESSAGEID_SAVE_NOW,
-        CPCSaveLoadManager::TITLEID_SAVE
-    );
+
+    CPCSaveLoadManager::InitializeFrame(CPCSaveLoadManager::MESSAGEID_SAVE_NOW,
+                                        CPCSaveLoadManager::TITLEID_SAVE);
 };
 
 
@@ -262,23 +296,28 @@ bool CPCAutosaveFlow::Proc(void)
     switch (m_step)
     {
     case STEP_INIT:
-        m_pSave = new CPCSaveManager;
-        ASSERT(m_pSave);
-        m_step = STEP_RUN;
+        {
+            m_pSave = new CPCSaveManager;
+            m_step = STEP_RUN;
+        }
         break;
 
     case STEP_RUN:
-        if (m_pSave->Proc())
         {
-            delete m_pSave;
-            m_pSave = nullptr;
+            if (m_pSave->Proc())
+            {
+                delete m_pSave;
+                m_pSave = nullptr;
 
-            m_step = STEP_EOL;
-        };
+                m_step = STEP_EOL;
+            };
+        }
         break;
 
     case STEP_EOL:
-        bResult = true;
+        {
+            bResult = true;
+        }        
         break;
 
     default:

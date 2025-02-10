@@ -6,7 +6,7 @@ class CSaveLoadDataBase
 protected:
     struct HEADER
     {
-        int32 m_iVersion;
+        int32  m_iVersion;
         uint32 m_uSize;
         uint32 m_uChecksum;
     };
@@ -31,7 +31,7 @@ protected:
     HEADER& Header(void) const;
 
 protected:
-    void* m_pData;
+    uint8* m_pData;
     uint32 m_uSize;
-    int32 m_iVersion;
+    int32  m_iVersion;
 };

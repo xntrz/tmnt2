@@ -50,8 +50,9 @@ void CSaveLoadFrameBase::SetModeMessage(void)
 
 void CSaveLoadFrameBase::SetModeSelect(SELECTITEM defselect)
 {
-    ASSERT(defselect >= 0 && defselect < SELECTITEMMAX);
-    
+    ASSERT(defselect >= 0);
+    ASSERT(defselect < SELECTITEMMAX);
+
     m_mode = MODE_SELECT;
     m_defaultSelect = defselect;
 };
@@ -74,8 +75,7 @@ void CSaveLoadFrameBase::SetTitle(const wchar* pwszTitle)
     ASSERT(!m_pwszTitle);
 
     m_pwszTitle = new wchar[CTextData::StrLen(pwszTitle) + 1];
-    ASSERT(m_pwszTitle);
-
+  
     CTextData::StrCpy(m_pwszTitle, pwszTitle);
 };
 
@@ -98,7 +98,6 @@ void CSaveLoadFrameBase::SetMessage(const wchar* pwszMsg)
     ASSERT(!m_pwszMessage);
 
     m_pwszMessage = new wchar[CTextData::StrLen(pwszMsg) + 1];
-    ASSERT(m_pwszMessage);
 
     CTextData::StrCpy(m_pwszMessage, pwszMsg);
 };

@@ -6,6 +6,7 @@
 #include "System/Common/SaveLoad/SaveLoadData.hpp"
 #include "System/Common/SaveLoad/SaveLoadFrame.hpp"
 #include "System/Common/SystemText.hpp"
+#include "System/Common/TextData.hpp"
 #include "System/Common/Screen.hpp"
 
 
@@ -50,47 +51,90 @@ static CSaveLoadDataBase* s_pSaveloadData = nullptr;
 
 /*static*/ const wchar* CPCSaveLoadManager::GetMsg(MESSAGEID id)
 {
-    static const int32 s_aSystemMessageTable[] =
+    static const int32 s_aSystemMessageIdTable[] =
     {
-        13,
-        24,
-        12,
-        14,
-        15,
-        16,
-        17,
-        18,
-        19,
-        20,
-        21,
-        22,
-        23,
+#ifdef TMNT2_BUILD_EU
+        15, //  MESSAGEID_OVERWRITE_SURE
+        26, //  MESSAGEID_WAIT
+        14, //  MESSAGEID_SAVE_SURE
+        16, //  MESSAGEID_SAVE_NOW
+        17, //  MESSAGEID_SAVE_OK
+        18, //  MESSAGEID_SAVE_FAIL
+        19, //  MESSAGEID_LOAD_SURE
+        20, //  MESSAGEID_LOAD_CHECK
+        21, //  MESSAGEID_LOAD_EMPTY
+        22, //  MESSAGEID_LOAD_NOW
+        23, //  MESSAGEID_LOAD_OK
+        24, //  MESSAGEID_LOAD_FAIL
+        25, //  MESSAGEID_LOAD_INVALID
+#else /* TMNT2_BUILD_EU */
+        13, //  MESSAGEID_OVERWRITE_SURE
+        24, //  MESSAGEID_WAIT
+        12, //  MESSAGEID_SAVE_SURE
+        14, //  MESSAGEID_SAVE_NOW
+        15, //  MESSAGEID_SAVE_OK
+        16, //  MESSAGEID_SAVE_FAIL
+        17, //  MESSAGEID_LOAD_SURE
+        18, //  MESSAGEID_LOAD_CHECK
+        19, //  MESSAGEID_LOAD_EMPTY
+        20, //  MESSAGEID_LOAD_NOW
+        21, //  MESSAGEID_LOAD_OK
+        22, //  MESSAGEID_LOAD_FAIL
+        23, //  MESSAGEID_LOAD_INVALID
+#endif /* TMNT2_BUILD_EU */
     };
 
-    static_assert(COUNT_OF(s_aSystemMessageTable) == MESSAGEIDMAX, "update me");
+    static_assert(COUNT_OF(s_aSystemMessageIdTable) == MESSAGEIDMAX, "update id table");
 
-    ASSERT(id >= 0 && id < MESSAGEIDMAX);
-    ASSERT(id >= 0 && id < COUNT_OF(s_aSystemMessageTable));
+    ASSERT(id >= 0);
+    ASSERT(id < MESSAGEIDMAX);
 
-    return CSystemText::GetText(SYSTEXT(s_aSystemMessageTable[id]));
+    ASSERT(id >= 0);
+    ASSERT(id < COUNT_OF(s_aSystemMessageIdTable));
+
+    /*  all text that obtained via GetMsg() or GetTitle()
+        is copied into caller buffer so its fine to it here */
+    static wchar s_wszTextBuff[1024];
+    s_wszTextBuff[0] = UTEXT('\0');
+
+    const wchar* pwszString = CSystemText::GetText(SYSTEXT(s_aSystemMessageIdTable[id]));
+    CTextData::StrCpy(s_wszTextBuff, pwszString);
+
+    if ((id == MESSAGEID_SAVE_NOW) ||
+        (id == MESSAGEID_LOAD_NOW))
+    {
+        const wchar* pwszPleaseWait = CSystemText::GetText(SYSTEXT(s_aSystemMessageIdTable[MESSAGEID_WAIT]));
+        CTextData::StrCat(s_wszTextBuff, pwszPleaseWait);
+    };
+
+    return s_wszTextBuff;
 };
 
 
 /*static*/ const wchar* CPCSaveLoadManager::GetTitle(TITLEID id)
 {
-    static const int32 s_aSystemTitleTable[] =
+    static const int32 s_aSystemTitleIdTable[] =
     {
-        9,
-        10,
-        11,
+#ifdef TMNT2_BUILD_EU
+        11, //  TITLEID_CHECK
+        12, //  TITLEID_SAVE
+        13, //  TITLEID_LOAD
+#else /* TMNT2_BUILD_EU */
+        9,  //  TITLEID_CHECK
+        10, //  TITLEID_SAVE
+        11, //  TITLEID_LOAD
+#endif /* TMNT2_BUILD_EU */
     };
 
-    static_assert(COUNT_OF(s_aSystemTitleTable) == TITLEIDMAX, "update me");
+    static_assert(COUNT_OF(s_aSystemTitleIdTable) == TITLEIDMAX, "update id table");
 
-    ASSERT(id >= 0 && id < TITLEIDMAX);
-    ASSERT(id >= 0 && id < COUNT_OF(s_aSystemTitleTable));
+    ASSERT(id >= 0);
+    ASSERT(id < TITLEIDMAX);
+    
+    ASSERT(id >= 0);
+    ASSERT(id < COUNT_OF(s_aSystemTitleIdTable));
 
-    return CSystemText::GetText(SYSTEXT(s_aSystemTitleTable[id]));
+    return CSystemText::GetText(SYSTEXT(s_aSystemTitleIdTable[id]));
 };
 
 
@@ -121,6 +165,11 @@ static CSaveLoadDataBase* s_pSaveloadData = nullptr;
     
     return *s_pSaveloadFrame;
 };
+
+
+//
+// *********************************************************************************
+//
 
 
 CPCQuestManager::CPCQuestManager(CPCSaveLoadManager::MESSAGEID msgid)
@@ -156,6 +205,11 @@ CPCQuestManager::RESULT CPCQuestManager::Proc(void)
 };
 
 
+//
+// *********************************************************************************
+//
+
+
 CPCWarningManager::CPCWarningManager(CPCSaveLoadManager::MESSAGEID msgid)
 {
     CPCSaveLoadManager::SetMsg(msgid);
@@ -173,6 +227,11 @@ bool CPCWarningManager::Proc(void)
 {
     return CPCSaveLoadManager::Frame().IsErrorConfirmed();
 };
+
+
+//
+// *********************************************************************************
+//
 
 
 /*static*/ const char* CPCSaveLoadManagerBase::FILENAME = "tmntsave.dat";
@@ -255,6 +314,11 @@ bool CPCSaveLoadManagerBase::CheckFileExist(void) const
 };
 
 
+//
+// *********************************************************************************
+//
+
+
 CPCLoadManager::CPCLoadManager(void)
 : m_status(STATUS_OK)
 {
@@ -270,103 +334,115 @@ bool CPCLoadManager::Proc(void)
     switch (m_step)
     {
     case STEP_INTRO:
-        if (CScreen::TimeElapsed() - m_fTimer <= 1.0f)
-            return false;
-        
-        m_step = STEP_READ;
-        SyncTime();
+        {
+            if (CScreen::TimeElapsed() - m_fTimer <= 1.0f)
+                return false;
+
+            m_step = STEP_READ;
+            SyncTime();
+        }
         break;
         
     case STEP_READ:
-        m_step = STEP_DISP_CHECK;        
-        if (CheckFileExist())
         {
-            CSaveLoadFlow::m_bNewSave = false;
-            if (FileLoad())
+            m_step = STEP_DISP_CHECK;
+            if (CheckFileExist())
             {
-                if (CPCSaveLoadManager::Data().IsValid())
-                    m_status = STATUS_OK;
+                CSaveLoadFlow::m_bNewSave = false;
+                if (FileLoad())
+                {
+                    if (CPCSaveLoadManager::Data().IsValid())
+                        m_status = STATUS_OK;
+                    else
+                        m_status = STATUS_DATA_INVALID;
+                }
                 else
-                    m_status = STATUS_DATA_INVALID;
+                {
+                    m_status = STATUS_READ_FAIL;
+                };
             }
             else
             {
-                m_status = STATUS_READ_FAIL;
+                m_status = STATUS_OPEN_FAIL;
+                CSaveLoadFlow::m_bNewSave = true;
             };
         }
-        else
-        {
-            m_status = STATUS_OPEN_FAIL;
-            CSaveLoadFlow::m_bNewSave = true;
-        };
         break;
         
     case STEP_DISP_CHECK:
-        if (CScreen::TimeElapsed() - m_fTimer <= 1.0f)
-            return false;
-        
-        SyncTime();
+        {
+            if (CScreen::TimeElapsed() - m_fTimer <= 1.0f)
+                return false;
 
-        if (m_status == STATUS_OPEN_FAIL)
-        {
-            m_step = STEP_DISP_WARN;
-            SetMessage(CPCSaveLoadManager::MESSAGEID_LOAD_EMPTY);
-			m_pWarning = new CPCWarningManager(m_msgid);
-			ASSERT(m_pWarning);
+            SyncTime();
+
+            if (m_status == STATUS_OPEN_FAIL)
+            {
+                m_step = STEP_DISP_WARN;
+
+                SetMessage(CPCSaveLoadManager::MESSAGEID_LOAD_EMPTY);
+
+                m_pWarning = new CPCWarningManager(m_msgid);
+            }
+            else
+            {
+                m_step = STEP_DISP_LOAD;
+                CPCSaveLoadManager::SetTitle(CPCSaveLoadManager::TITLEID_LOAD);
+                CPCSaveLoadManager::SetMsg(CPCSaveLoadManager::MESSAGEID_LOAD_NOW);
+            };
         }
-        else
-        {
-            m_step = STEP_DISP_LOAD;
-            CPCSaveLoadManager::SetTitle(CPCSaveLoadManager::TITLEID_LOAD);
-            CPCSaveLoadManager::SetMsg(CPCSaveLoadManager::MESSAGEID_LOAD_NOW);
-        };
         break;
         
     case STEP_DISP_LOAD:
-        if (CScreen::TimeElapsed() - m_fTimer <= 1.0f)
-            return false;
-
-        SyncTime();
-        m_step = STEP_DISP_WARN;
-
-        switch (m_status)
         {
-        case STATUS_OK:
-            CPCSaveLoadManager::Data().Update();            
-            m_msgid = CPCSaveLoadManager::MESSAGEID_LOAD_OK;
-            break;
-            
-        case STATUS_READ_FAIL:
-            m_msgid = CPCSaveLoadManager::MESSAGEID_LOAD_FAIL;
-            break;
+            if (CScreen::TimeElapsed() - m_fTimer <= 1.0f)
+                return false;
 
-        case STATUS_DATA_INVALID:
-            m_msgid = CPCSaveLoadManager::MESSAGEID_LOAD_INVALID;
-            break;
+            SyncTime();
+            m_step = STEP_DISP_WARN;
 
-        default:
-            ASSERT(false);
-            break;
-        };
+            switch (m_status)
+            {
+            case STATUS_OK:
+                CPCSaveLoadManager::Data().Update();
+                m_msgid = CPCSaveLoadManager::MESSAGEID_LOAD_OK;
+                break;
 
-        m_pWarning = new CPCWarningManager(m_msgid);
-        ASSERT(m_pWarning);
+            case STATUS_READ_FAIL:
+                m_msgid = CPCSaveLoadManager::MESSAGEID_LOAD_FAIL;
+                break;
+
+            case STATUS_DATA_INVALID:
+                m_msgid = CPCSaveLoadManager::MESSAGEID_LOAD_INVALID;
+                break;
+
+            default:
+                ASSERT(false);
+                break;
+            };
+
+            m_pWarning = new CPCWarningManager(m_msgid);
+        }
         break;
         
     case STEP_DISP_WARN:
-        ASSERT(m_pWarning);
-        if (m_pWarning->Proc())
         {
-            m_step = STEP_EOL;
-            
-            delete m_pWarning;
-            m_pWarning = nullptr;
-        };        
+            ASSERT(m_pWarning);
+            if (m_pWarning->Proc())
+            {
+                m_step = STEP_EOL;
+
+                delete m_pWarning;
+                m_pWarning = nullptr;
+            };
+        }
         break;
 
     case STEP_EOL:
-		CPCSaveLoadManager::Data().Terminate();
-        bResult = true;
+        {
+            CPCSaveLoadManager::Data().Terminate();
+            bResult = true;
+        }
         break;
 
     default:
@@ -380,7 +456,7 @@ bool CPCLoadManager::Proc(void)
 
 bool CPCLoadManager::FileLoad(void) const
 {
-	bool bResult = false;
+    bool bResult = false;
 
     char szFilepath[MAX_PATH];
     szFilepath[0] = '\0';
@@ -388,28 +464,24 @@ bool CPCLoadManager::FileLoad(void) const
     MakeFilePath(szFilepath);
 
     void* hFile = RwFopen(szFilepath, "rb");
-	if (!hFile)
-		return bResult;
-
-    uint32 uReaded = 0;
-    uint32 uFileSize = 0;
-    void* pFileData = nullptr;
+    if (!hFile)
+        return bResult;
 
     RwFseek(hFile, 0, SEEK_END);
-	uFileSize = uint32(RwFtell(hFile));
+    uint32 uFileSize = static_cast<uint32>(RwFtell(hFile));
     RwFseek(hFile, 0, SEEK_SET);
 
     if (uFileSize)
     {
-        pFileData = new char[uFileSize];    
+        void* pFileData = new char[uFileSize];    
         if (pFileData)
         {
-            uReaded = RwFread(pFileData, sizeof(uint8), uFileSize, hFile);
-			if (uReaded == uFileSize)
-			{
+            uint32 uReaded = static_cast<uint32>(RwFread(pFileData, sizeof(uint8), static_cast<size_t>(uFileSize), hFile));
+            if (uReaded == uFileSize)
+            {
                 CPCSaveLoadManager::Data().Initialize(pFileData, uFileSize);
-				bResult = true;
-			};
+                bResult = true;
+            };
         };
 
         delete[] pFileData;
@@ -419,8 +491,13 @@ bool CPCLoadManager::FileLoad(void) const
     RwFclose(hFile);
     hFile = nullptr;
 
-	return bResult;
+    return bResult;
 };
+
+
+//
+// *********************************************************************************
+//
 
 
 CPCSaveManager::CPCSaveManager(void)
@@ -437,46 +514,56 @@ bool CPCSaveManager::Proc(void)
     switch (m_step)
     {
     case STEP_INTRO:
-        if (CScreen::TimeElapsed() - m_fTimer <= 1.0f)
-            return false;
+        {
+            if (CScreen::TimeElapsed() - m_fTimer <= 1.0f)
+                return false;
 
-        m_step = STEP_WRITE;
-        SyncTime();
+            m_step = STEP_WRITE;
+            SyncTime();
+        }
         break;
         
     case STEP_WRITE:
-        m_step = STEP_DISP_WRITE;
-        if (FileSave())
-            m_msgid = CPCSaveLoadManager::MESSAGEID_SAVE_OK;
-        else
-            m_msgid = CPCSaveLoadManager::MESSAGEID_SAVE_FAIL;      
+        {
+            m_step = STEP_DISP_WRITE;
+            if (FileSave())
+                m_msgid = CPCSaveLoadManager::MESSAGEID_SAVE_OK;
+            else
+                m_msgid = CPCSaveLoadManager::MESSAGEID_SAVE_FAIL;
+        }
         break;
         
     case STEP_DISP_WRITE:
-        if (CScreen::TimeElapsed() - m_fTimer <= 1.0f)
-            return false;
+        {
+            if (CScreen::TimeElapsed() - m_fTimer <= 1.0f)
+                return false;
 
-        SyncTime();
-        m_step = STEP_DISP_WARN;
-        ASSERT(!m_pWarning);
-        m_pWarning = new CPCWarningManager(m_msgid);
-        ASSERT(m_pWarning);
+            SyncTime();
+            m_step = STEP_DISP_WARN;
+            
+            ASSERT(!m_pWarning);
+            m_pWarning = new CPCWarningManager(m_msgid);
+        }
         break;
         
     case STEP_DISP_WARN:
-        ASSERT(m_pWarning);
-        if (m_pWarning->Proc())
         {
-            m_step = STEP_EOL;
-            
-            delete m_pWarning;
-            m_pWarning = nullptr;
-        };
+            ASSERT(m_pWarning);
+            if (m_pWarning->Proc())
+            {
+                m_step = STEP_EOL;
+
+                delete m_pWarning;
+                m_pWarning = nullptr;
+            };
+        }
         break;
         
     case STEP_EOL:
-        CPCSaveLoadManager::Data().Terminate();
-        bResult = true;
+        {
+            CPCSaveLoadManager::Data().Terminate();
+            bResult = true;
+        }
         break;
         
     default:
@@ -501,12 +588,10 @@ bool CPCSaveManager::FileSave(void) const
 
     CPCSaveLoadManager::Data().Initialize();
 
-    uint32 uWritten = RwFwrite(
-        CPCSaveLoadManager::Data().GetData(),
-        CPCSaveLoadManager::Data().GetSize(),
-        sizeof(uint8),
-        hFile
-    );
+    void* pData = CPCSaveLoadManager::Data().GetData();
+    uint32 uDataSize = CPCSaveLoadManager::Data().GetSize();
+
+    size_t uWritten = RwFwrite(pData, static_cast<size_t>(uDataSize), sizeof(uint8), hFile);
 
     RwFclose(hFile);
     hFile = nullptr;

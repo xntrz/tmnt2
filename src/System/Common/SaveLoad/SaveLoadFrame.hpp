@@ -47,11 +47,11 @@ public:
     virtual void RemoveMessage(void);
 
 protected:
-    MODE m_mode;
-    SELECTITEM m_defaultSelect;
-    wchar* m_pwszTitle;
-    wchar* m_pwszMessage;
-    float m_fConfirmtimeStart;
-    float m_fConfirmtimeLimit;
-    PADBTN m_ConfirmPadbtn;
+    MODE        m_mode;
+    SELECTITEM  m_defaultSelect;
+    wchar*      m_pwszTitle;
+    wchar*      m_pwszMessage;
+    float       m_fConfirmtimeStart;
+    float       m_fConfirmtimeLimit;
+    PADBTN      m_ConfirmPadbtn;
 };
