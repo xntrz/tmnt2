@@ -33,8 +33,20 @@ static char s_argkey = '-';
 
         if ((arg[0] == s_argkey) && arg[1])
         {
-            if (!std::strcmp(&arg[1], pszArg))
-                return true;
+            const char* end = std::strchr(&arg[1], s_argvvdelim);
+            
+            if (end)
+            {
+                size_t lenArg = std::strlen(pszArg);
+                size_t lenArgV = static_cast<size_t>(end - &arg[1]);
+                if (!std::strncmp(&arg[1], pszArg, std::min(lenArg, lenArgV)))
+                    return true;
+            }
+            else
+            {
+                if (!std::strcmp(&arg[1], pszArg))
+                    return true;
+            };            
         };
     };
 
