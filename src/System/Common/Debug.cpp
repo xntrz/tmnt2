@@ -9,10 +9,10 @@ static void RwDebugMsgEndpoint(RwDebugType type, const RwChar* string)
     switch (type)
 	{
     case RwDebugType::rwDEBUGASSERT:
-        if (!s_bRwDebugAssertSupressFlag)
-            ASSERT(false, string);
-        else
-            OUTPUT("[rwDEBUGASSERT] %s\n", string);
+        //if (!s_bRwDebugAssertSupressFlag)
+        //    ASSERT(false, string);
+        //else
+        //    OUTPUT("[rwDEBUGASSERT] %s\n", string);
         break;
 
     case RwDebugType::rwDEBUGTRACE:
