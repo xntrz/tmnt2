@@ -48,13 +48,13 @@ uint32 CStdFile::Read(void* buffer, uint32 size)
     uint32 uReaded = 0;
 
     const void* pBuff = Data();
-    uint32 uSize = Size();
-
     ASSERT(pBuff);
-    ASSERT(uSize);
+
+    uint32 uSize = Size();
+    ASSERT(uSize, "%" PRIu32, uSize);
 
     uint32 uBytesToRead = size;
-    if (m_uPosition + size > uSize)
+    if ((m_uPosition + size) > uSize)
         uBytesToRead = uSize - m_uPosition;
 
     std::memcpy(buffer, &static_cast<const char*>(pBuff)[m_uPosition], uBytesToRead);
@@ -85,7 +85,7 @@ uint32 CStdFile::Seek(uint32 offset, int32 type)
         break;
 
     case SEEK_END:
-        m_uPosition = Size() + offset;
+        m_uPosition = static_cast<uint32>(static_cast<int32>(Size()) + offset);
         break;
 
     default:

@@ -23,9 +23,9 @@ static const char* s_apszLanguageDataPath[] =
 /* checkouts with idb */
 #ifdef TMNT2_BUILD_EU
 static_assert(COUNT_OF(s_apszLanguageDataPath) == TYPEDEF::CONFIG_LANG_NUM, "lang data path table incorrect");
-#else
+#else /* TMNT2_BUILD_EU */
 static_assert(COUNT_OF(s_apszLanguageDataPath) == 1, "lang data path table incorrect");
-#endif
+#endif /* TMNT2_BUILD_EU */
 
 
 static const char* s_apszFilename[] =
@@ -347,7 +347,7 @@ static const char* s_apszFilename[] =
 /* checkouts with idb */
 #ifdef TMNT2_BUILD_EU
 static_assert(COUNT_OF(s_apszFilename) == 302, "multilang eu build has 302 max files");
-#else
+#else /* TMNT2_BUILD_EU */
 static_assert(COUNT_OF(s_apszFilename) == 238, "en build has 238 max files");
 #endif
 
@@ -420,10 +420,10 @@ static_assert(COUNT_OF(s_apszFilename) == FILEID::ID_MAX, "update me");
 #ifdef TARGET_PC
         if (*pszPath == '/')
             *pszPath = '\\';
-#else
+#else /* TARGET_PC */
         if (*Path == '\\')
             *Path = '/';
-#endif
+#endif /* TARGET_PC */
         ++pszPath;
     };
 };
@@ -434,11 +434,11 @@ static_assert(COUNT_OF(s_apszFilename) == FILEID::ID_MAX, "update me");
     ASSERT(FileId >= 0);
     ASSERT(FileId < FILEID::ID_MAX);
 
-    if (FileId < FILEID::COMMONMAX)
+    if (FileId < FILEID::COMMONEND)
     {
         std::strcpy(Buff, s_pszCommonDataPath);
     }
-    else if (FileId < FILEID::LANGMAX)
+    else if (FileId < FILEID::LANGEND)
     {
         TYPEDEF::CONFIG_LANG lang = CConfigure::GetLanguage();
         std::strcpy(Buff, s_apszLanguageDataPath[lang]);

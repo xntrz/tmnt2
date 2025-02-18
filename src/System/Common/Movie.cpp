@@ -75,15 +75,15 @@ bool CMovie::IsEnded(void)
     if (!m_mwply)
         return false;
 
-	MwsfdStat Stat = mwPlyGetStat(m_mwply);
-	switch (Stat)
-	{
-	case MWSFD_STAT_PLAYEND:
-		return true;
+    MwsfdStat Stat = mwPlyGetStat(m_mwply);
+    switch (Stat)
+    {
+    case MWSFD_STAT_PLAYEND:
+        return true;
 
-	default:
-		return false;
-	};    
+    default:
+        return false;
+    };    
 };
 
 
@@ -129,7 +129,7 @@ void CMovie::PopRenderState(void)
 
 RwRaster* CMovie::CreateRaster(int32 iWidth, int32 iHeight)
 {
-	RwRaster* pRaster = RwRasterCreate(iWidth, iHeight, 32, rwRASTERTYPETEXTURE | rwRASTERFORMAT8888);
+    RwRaster* pRaster = RwRasterCreate(iWidth, iHeight, 32, rwRASTERTYPETEXTURE | rwRASTERFORMAT8888);
     if (!pRaster)
         return nullptr;
 
@@ -150,7 +150,7 @@ MWPLY CMovie::CreateHandle(char** ppWorkArea, int32 iWidth, int32 iHeight, int32
     std::memset(&iprm, 0x00, sizeof(iprm));    
     iprm.vhz          = (bUsePalMode ? MWSFD_VHZ_50_00 : MWSFD_VHZ_59_94);
     iprm.disp_cycle   = 1;
-	iprm.disp_latency = 1;
+    iprm.disp_latency = 1;
     mwPlyInitSfdFx(&iprm);
 
     MwsfdCrePrm cprm;
@@ -182,7 +182,7 @@ bool CMovie::LoadMovieFrame(void)
     if (!m_mwply)
         return false;
 
-	MwsfdStat Stat = mwPlyGetStat(m_mwply);
+    MwsfdStat Stat = mwPlyGetStat(m_mwply);
     if (Stat != MWSFD_STAT_PLAYING)
         return false;
 

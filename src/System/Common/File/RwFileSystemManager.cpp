@@ -18,7 +18,7 @@ bool CRwFileSystemManager::Initialize(void)
     if (!RtFSManagerRegister(m_pFileSystem))
         return false;
 
-	RtFSManagerSetDefaultFileSystem(m_pFileSystem);
+    RtFSManagerSetDefaultFileSystem(m_pFileSystem);
 
     return true;
 };
@@ -29,7 +29,7 @@ void CRwFileSystemManager::Terminate(void)
     if (m_pFileSystem)
     {
         m_pFileSystem->Terminate();
-		RtFSManagerUnregister(m_pFileSystem);
+        RtFSManagerUnregister(m_pFileSystem);
         //RwFree(m_pFileSystem);
         m_pFileSystem = nullptr;
     };

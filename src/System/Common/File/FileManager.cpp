@@ -127,7 +127,7 @@ void CFileManager::Sync(void)
             if (pAccess->Stat() == CFileAccess::STAT_ERROR)
             {
                 char szBuffer[256];
-				szBuffer[0] = '\0';
+                szBuffer[0] = '\0';
 
                 if (m_pReqCurrent->type() == CRequest::TYPE_ID)
                     std::sprintf(szBuffer, "file id %d read error!", m_pReqCurrent->id());

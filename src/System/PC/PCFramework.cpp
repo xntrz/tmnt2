@@ -58,9 +58,9 @@ void CPCFramework::CFrameSkipController::Sync(void)
     uint32 uTimeSkipped = (m_uTime + (m_nNumSkip * m_uFrametime));    
     uint32 uTimeElapsed = (uTimeSkipped >= uTimeNow) ? (uTimeNow + TYPEDEF::UINT32_MAX - uTimeSkipped) : (uTimeNow - uTimeSkipped);
 
-	bool bEnable        = (m_bEnable);
-	bool bMaySkip       = (m_nNumSkip < 5);
-	bool bFrameTimeout  = (uTimeElapsed > m_uFrametimeTimeout);
+    bool bEnable        = (m_bEnable);
+    bool bMaySkip       = (m_nNumSkip < 5);
+    bool bFrameTimeout  = (uTimeElapsed > m_uFrametimeTimeout);
 
     if (bEnable && bMaySkip && bFrameTimeout)
     {

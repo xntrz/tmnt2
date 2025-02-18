@@ -21,7 +21,7 @@ CPCFrameTimer::CPCFrameTimer(CPCGraphicsDevice& device)
     uint32 sec = CPCTimer::Instance().GranularitySecond();
     
     m_uFrametime  = static_cast<uint32>(static_cast<float>(ms) / fRefreshRate);
-	m_uFrametime -= (m_uFrametime % sec);
+    m_uFrametime -= (m_uFrametime % sec);
 
     Sync();
 };

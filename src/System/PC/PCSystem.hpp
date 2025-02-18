@@ -32,11 +32,11 @@ public:
 
 private:
     static CPCSystem* m_pInstance;
-    CPCFramework* m_pFramework;
-    char m_szOsName[64];
-    STICKYKEYS m_StickyKeys;
-    TOGGLEKEYS m_ToggleKeys;
-    FILTERKEYS m_FilterKeys;
-    BOOL m_bScreenSavingEnabled;
-    bool m_bFocused;
+    CPCFramework*     m_pFramework;
+    char              m_szOsName[64];
+    STICKYKEYS        m_stickyKeys;
+    TOGGLEKEYS        m_toggleKeys;
+    FILTERKEYS        m_filterKeys;
+    BOOL              m_bScreenSavingEnabled;
+    bool              m_bFocused;
 };

@@ -25,10 +25,10 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lPar
         {
             PAINTSTRUCT Ps;
 
-			BeginPaint(hWnd, &Ps);
-			CPCSystem::Instance().Framework().Render();
-			CPCSystem::Instance().Framework().FlipNoSync();
-			EndPaint(hWnd, &Ps);
+            BeginPaint(hWnd, &Ps);
+            CPCSystem::Instance().Framework().Render();
+            CPCSystem::Instance().Framework().FlipNoSync();
+            EndPaint(hWnd, &Ps);
         }
         break;
 
@@ -70,6 +70,10 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lPar
 
 CPCSystem::CPCSystem(CPCFramework* pFramework)
 : m_pFramework(pFramework)
+, m_szOsName()
+, m_stickyKeys()
+, m_toggleKeys()
+, m_filterKeys()
 , m_bScreenSavingEnabled(false)
 , m_bFocused(true)
 {
@@ -90,41 +94,41 @@ bool CPCSystem::Initialize(void)
     //
     //  Set sticky keys
     //
-    m_StickyKeys        = { 0 };
-    m_StickyKeys.cbSize = sizeof(m_StickyKeys);
-    SystemParametersInfo(SPI_GETSTICKYKEYS, sizeof(m_StickyKeys), &m_StickyKeys, 0);
+    m_stickyKeys        = { 0 };
+    m_stickyKeys.cbSize = sizeof(m_stickyKeys);
+    SystemParametersInfo(SPI_GETSTICKYKEYS, sizeof(m_stickyKeys), &m_stickyKeys, 0);
 
     STICKYKEYS StickyKeys = { 0 };
     StickyKeys.cbSize   = sizeof(StickyKeys);
-    StickyKeys.dwFlags  = (m_StickyKeys.dwFlags & (~SKF_HOTKEYACTIVE));
+    StickyKeys.dwFlags  = (m_stickyKeys.dwFlags & (~SKF_HOTKEYACTIVE));
     SystemParametersInfo(SPI_SETSTICKYKEYS, sizeof(StickyKeys), &StickyKeys, 0);
 
     //
     //  Set toggle keys
     //
-    m_ToggleKeys        = { 0 };
-    m_ToggleKeys.cbSize = sizeof(m_ToggleKeys);
-    SystemParametersInfo(SPI_GETTOGGLEKEYS, sizeof(m_ToggleKeys), &m_ToggleKeys, 0);
+    m_toggleKeys        = { 0 };
+    m_toggleKeys.cbSize = sizeof(m_toggleKeys);
+    SystemParametersInfo(SPI_GETTOGGLEKEYS, sizeof(m_toggleKeys), &m_toggleKeys, 0);
 
     TOGGLEKEYS ToggleKeys = { 0 };
     ToggleKeys.cbSize   = sizeof(ToggleKeys);
-    ToggleKeys.dwFlags  = (m_ToggleKeys.dwFlags & (~(TKF_HOTKEYACTIVE | TKF_TOGGLEKEYSON)));
+    ToggleKeys.dwFlags  = (m_toggleKeys.dwFlags & (~(TKF_HOTKEYACTIVE | TKF_TOGGLEKEYSON)));
     SystemParametersInfo(SPI_SETTOGGLEKEYS, sizeof(ToggleKeys), &ToggleKeys, 0);
 
     //
     //  Set filter keys
     //
-    m_FilterKeys        = { 0 };
-    m_FilterKeys.cbSize = sizeof(m_FilterKeys);
-    SystemParametersInfo(SPI_GETFILTERKEYS, sizeof(m_FilterKeys), &m_FilterKeys, 0);
+    m_filterKeys        = { 0 };
+    m_filterKeys.cbSize = sizeof(m_filterKeys);
+    SystemParametersInfo(SPI_GETFILTERKEYS, sizeof(m_filterKeys), &m_filterKeys, 0);
 
     FILTERKEYS FilterKeys   = { 0 };
     FilterKeys.cbSize       = sizeof(FilterKeys);
-    FilterKeys.iWaitMSec    = m_FilterKeys.iWaitMSec;
-    FilterKeys.iRepeatMSec  = m_FilterKeys.iRepeatMSec;
-    FilterKeys.iDelayMSec   = m_FilterKeys.iDelayMSec;
-    FilterKeys.iBounceMSec  = m_FilterKeys.iBounceMSec;
-    FilterKeys.dwFlags      = (m_FilterKeys.dwFlags & (~FKF_HOTKEYACTIVE));
+    FilterKeys.iWaitMSec    = m_filterKeys.iWaitMSec;
+    FilterKeys.iRepeatMSec  = m_filterKeys.iRepeatMSec;
+    FilterKeys.iDelayMSec   = m_filterKeys.iDelayMSec;
+    FilterKeys.iBounceMSec  = m_filterKeys.iBounceMSec;
+    FilterKeys.dwFlags      = (m_filterKeys.dwFlags & (~FKF_HOTKEYACTIVE));
     SystemParametersInfo(SPI_SETFILTERKEYS, sizeof(FilterKeys), &FilterKeys, 0);
 
     //
@@ -159,9 +163,9 @@ void CPCSystem::Terminate(void)
     WindowDestroy();
 
     SystemParametersInfo(SPI_SETSCREENSAVEACTIVE, m_bScreenSavingEnabled, NULL, 0);
-    SystemParametersInfo(SPI_SETSTICKYKEYS, sizeof(m_StickyKeys), &m_StickyKeys, 0);
-    SystemParametersInfo(SPI_SETTOGGLEKEYS, sizeof(m_ToggleKeys), &m_ToggleKeys, 0);
-    SystemParametersInfo(SPI_SETFILTERKEYS, sizeof(m_FilterKeys), &m_FilterKeys, 0);
+    SystemParametersInfo(SPI_SETSTICKYKEYS, sizeof(m_stickyKeys), &m_stickyKeys, 0);
+    SystemParametersInfo(SPI_SETTOGGLEKEYS, sizeof(m_toggleKeys), &m_toggleKeys, 0);
+    SystemParametersInfo(SPI_SETFILTERKEYS, sizeof(m_filterKeys), &m_filterKeys, 0);
 };
 
 
@@ -189,7 +193,7 @@ bool CPCSystem::Run(void)
         Framework().Flip();
     };
 
-	return bResult;
+    return bResult;
 };
 
 
@@ -258,8 +262,6 @@ bool CPCSystem::CheckOS(void)
 
 void CPCSystem::SetLanguage(void)
 {
-#ifdef _DEBUG
-    /* force set lang with arg for debug tests */    
     const char* pszArgValue = nullptr;
     bool bSpecified = CConfigure::CheckArgValue("lang", &pszArgValue);
     if (bSpecified)
@@ -286,13 +288,12 @@ void CPCSystem::SetLanguage(void)
         {
             if (!std::strcmp(s_aArgToLang[i].arg, pszArgValue))
             {
-                OUTPUT("WARNING! Language was forcefully set to \"%s\" by command line argument.\n", s_aArgToLang[i].name);
+                OUTPUT("WARNING! Language was forcefully set to \"%s\" by command line arg.\n", s_aArgToLang[i].name);
                 CConfigure::SetLanguage(s_aArgToLang[i].lang);
                 return;
             };
         };
     };
-#endif /* _DEBUG */    
 
     LANGID langId = GetUserDefaultLangID();
 
@@ -336,7 +337,7 @@ bool CPCSystem::WindowCreate(void)
     WndClass.hCursor        = LoadCursor(NULL, IDC_ARROW);
     WndClass.hbrBackground  = HBRUSH(GetStockObject(BLACK_BRUSH));
     WndClass.lpszMenuName   = NULL;
-	WndClass.lpszClassName  = WNDNAME;
+    WndClass.lpszClassName  = WNDNAME;
 
     if (!RegisterClassExA(&WndClass))
         return false;
@@ -358,7 +359,7 @@ bool CPCSystem::WindowCreate(void)
                                       CPCSpecific::m_hInstance,
                                       NULL);
 
-	if (!hWndResult)
+    if (!hWndResult)
         return false;
 
     SetForegroundWindow(hWndResult);
@@ -377,9 +378,9 @@ void CPCSystem::WindowDestroy(void)
         CPCSpecific::m_hWnd = NULL;
     };
 
-	MSG msg;
-	while (PeekMessageA(&msg, 0, 0, 0, PM_REMOVE))
-		;
+    MSG msg;
+    while (PeekMessageA(&msg, 0, 0, 0, PM_REMOVE))
+        ;
 
-	UnregisterClassA(WNDNAME, NULL);
+    UnregisterClassA(WNDNAME, NULL);
 };

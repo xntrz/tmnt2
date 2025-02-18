@@ -100,7 +100,7 @@ uint32 CTimeSpanObj::GetTimevalue(void) const
 };
 
 
-/*static*/ const int32 CTimeObj::m_nBaseYear = 2000;
+/*static*/ const int32 CTimeObj::BASEYEAR = 2000;
 
 
 CTimeObj::CTimeObj(void)
@@ -157,12 +157,12 @@ void CTimeObj::Init(uint32 timevalue)
     
     CTimeSpanObj span(m_timevalue);    
     m_nTotalDays= span.GetDays();
-    m_nYear     = m_nBaseYear;
+    m_nYear     = BASEYEAR;
     m_nMonth    = 1;
     m_bDay      = 1;
-	m_bHour		= int8(span.GetHours());
-	m_bMinutes	= int8(span.GetMinutes());
-	m_bSeconds	= int8(span.GetSeconds());
+    m_bHour		= static_cast<int8>(span.GetHours());
+    m_bMinutes	= static_cast<int8>(span.GetMinutes());
+    m_bSeconds	= static_cast<int8>(span.GetSeconds());
 
     int32 nTotalDays = m_nTotalDays;
     ASSERT(nTotalDays);
@@ -173,26 +173,26 @@ void CTimeObj::Init(uint32 timevalue)
     while (getDaysAtMonth(m_nYear, m_nMonth) <= nTotalDays)
         nTotalDays -= getDaysAtMonth(m_nYear, m_nMonth++);
 
-	m_bDay = int8(nTotalDays + 1);
+    m_bDay = static_cast<int8>(nTotalDays + 1);
 };
 
 
 void CTimeObj::Init(int32 year, int32 month, int32 day, int32 hour, int32 minute, int32 seconds)
 {
-    ASSERT(year >= m_nBaseYear);
+    ASSERT(year >= BASEYEAR);
     
-	m_nYear			= int16(year);
-	m_nMonth		= int16(month);
-	m_bDay			= int8(day);
-	m_bHour			= int8(hour);
-	m_bMinutes		= int8(minute);
-	m_bSeconds		= int8(seconds);
-	m_nTotalDays	= int32(m_bDay - 1);
+    m_nYear			= static_cast<int16>(year);
+    m_nMonth		= static_cast<int16>(month);
+    m_bDay			= static_cast<int8>(day);
+    m_bHour			= static_cast<int8>(hour);
+    m_bMinutes		= static_cast<int8>(minute);
+    m_bSeconds		= static_cast<int8>(seconds);
+    m_nTotalDays	= static_cast<int32>(m_bDay - 1);
 
     for (int32 nMonth = 1; nMonth < m_nMonth; ++nMonth)
         m_nTotalDays += getDaysAtMonth(m_nYear, nMonth);
     
-    for (int32 nYear = m_nBaseYear; nYear < m_nYear; ++nYear)
+    for (int32 nYear = BASEYEAR; nYear < m_nYear; ++nYear)
         m_nTotalDays += getDaysAtYear(nYear);
 
     m_timevalue = CTimeSpanObj(m_nTotalDays, m_bHour, m_bMinutes, m_bSeconds).GetTimevalue();

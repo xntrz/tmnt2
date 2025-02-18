@@ -147,7 +147,7 @@ bool CAdxFileAccess::ReadNoWait(void)
     int32 FSizeByte = ADXF_GetFsizeByte(m_adxf);
 
     m_pBuffer = new char[FSizeByte];
-    m_uBufferSize = FSizeByte;
+    m_uBufferSize = static_cast<uint32>(FSizeByte);
     
     if (ADXF_ReadNw(m_adxf, FSizeSct, m_pBuffer))
         m_stat = STAT_READING;

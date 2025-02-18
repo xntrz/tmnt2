@@ -6,15 +6,13 @@
 
 void CPCClockDevice::GetDateTime(CTimeObj& timeobj)
 {
-    SYSTEMTIME SystemTime = { 0 };
-    GetLocalTime(&SystemTime);
+    SYSTEMTIME sysTime = { 0 };
+    GetLocalTime(&sysTime);
     
-    timeobj.Init(
-        int32(SystemTime.wYear),
-        int32(SystemTime.wMonth),
-        int32(SystemTime.wDay),
-        int32(SystemTime.wHour),
-        int32(SystemTime.wMinute),
-        int32(SystemTime.wSecond)
-    );
+    timeobj.Init(static_cast<int32>(sysTime.wYear),
+                 static_cast<int32>(sysTime.wMonth),
+                 static_cast<int32>(sysTime.wDay),
+                 static_cast<int32>(sysTime.wHour),
+                 static_cast<int32>(sysTime.wMinute),
+                 static_cast<int32>(sysTime.wSecond));
 };

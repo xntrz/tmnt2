@@ -28,6 +28,9 @@ private:
 class CTimeObj
 {
 public:
+    static const int32 BASEYEAR;
+
+public:
     CTimeObj(void);
     CTimeObj(uint32 timevalue);
     CTimeObj(int32 year, int32 month, int32 day, int32 hour, int32 minute, int32 seconds);
@@ -49,7 +52,6 @@ private:
     int32 getDaysAtYear(int32 year) const;
 
 private:
-    static const int32 m_nBaseYear;
     uint32 m_timevalue;
     int32 m_nTotalDays;
     int16 m_nYear;

@@ -62,8 +62,8 @@ struct CPCGraphicsDevice::DEVICEINFO : public RwSubSystemInfo
 
 /*static*/ bool CPCGraphicsDevice::VIDEOMODE::Eval(const VIDEOMODE* pVideomode)
 {
-    const int32 iMinWidth  = static_cast<int32>(TYPEDEF::DEFAULT_SCREEN_WIDTH);
-    const int32 iMinHeight = static_cast<int32>(TYPEDEF::DEFAULT_SCREEN_HEIGHT);
+    const int32 iMinWidth  = CPCSetting::VIDEOMODE_DEFAULT.w;
+    const int32 iMinHeight = CPCSetting::VIDEOMODE_DEFAULT.h;
     const int32 iMinDepth = 16;
     const int32 iMaxDepth = 32;
     
@@ -76,8 +76,8 @@ struct CPCGraphicsDevice::DEVICEINFO : public RwSubSystemInfo
     if (!(pVideomode->flags & rwVIDEOMODEEXCLUSIVE))
         return true;
 
-	if (!(pVideomode->format & rwRASTERFORMAT8888))
-		return false;
+    if (!(pVideomode->format & rwRASTERFORMAT8888))
+        return false;
 
     static const RwV2d s_aAspectRatio[] =
     {
@@ -252,7 +252,7 @@ int32 CPCGraphicsDevice::Subsystem(void)
     m_curDevice = SearchAndSetVideomode(CPCSetting::m_videomode, false);
     
     if (m_curDevice == -1)
-	{
+    {
         OUTPUT(
             "Settings videomode \"%d x %d x %d\" not found. Set to default.\n",
             CPCSetting::m_videomode.w,
@@ -260,8 +260,8 @@ int32 CPCGraphicsDevice::Subsystem(void)
             CPCSetting::m_videomode.d
         );
         
-		m_curDevice = SearchAndSetVideomode(CPCSetting::VIDEOMODE_DEFAULT, false);
-	};
+        m_curDevice = SearchAndSetVideomode(CPCSetting::VIDEOMODE_DEFAULT, false);
+    };
 
     ASSERT(m_curDevice >= 0);
     ASSERT(m_curDevice < m_numDevices);
@@ -314,8 +314,8 @@ bool CPCGraphicsDevice::EnumerateVideomodes(void)
         {
             RwEngineGetVideoModeInfo(pVideomode, j);
 
-			if (!VIDEOMODE::Eval(pVideomode))
-				continue;
+            if (!VIDEOMODE::Eval(pVideomode))
+                continue;
            
             if (pVideomode->flags & rwVIDEOMODEEXCLUSIVE)
             {
@@ -645,8 +645,8 @@ void CPCGraphicsDevice::OutputInfo(void)
                 pVideomode->height,
                 pVideomode->depth,
                 pVideomode->refRate,
-				pVideomode->flags,
-				pVideomode->format
+                pVideomode->flags,
+                pVideomode->format
             );
         };
     };    

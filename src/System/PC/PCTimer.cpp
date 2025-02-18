@@ -8,7 +8,7 @@
 class CPCTimer::IGetTimeFunctor
 {
 public:
-    virtual ~IGetTimeFunctor(void) {};
+    inline virtual ~IGetTimeFunctor(void) {};
     virtual uint32 operator()(void) const = 0;
 };
 
@@ -16,9 +16,9 @@ public:
 class CPCTimer::CGetTimeFunctorOS final : public CPCTimer::IGetTimeFunctor
 {
 public:
-    inline CGetTimeFunctorOS(void) { timeBeginPeriod(1); };
-    virtual ~CGetTimeFunctorOS(void) { timeEndPeriod(1); };
-    virtual uint32 operator()(void) const override { return timeGetTime(); };
+    CGetTimeFunctorOS(void);
+    virtual ~CGetTimeFunctorOS(void);
+    virtual uint32 operator()(void) const override;
 };
 
 
@@ -26,9 +26,48 @@ class CPCTimer::CGetTimeFunctorCPU final : public CPCTimer::IGetTimeFunctor
 {
 public:
     inline CGetTimeFunctorCPU(void) {};
-    virtual ~CGetTimeFunctorCPU(void) {};
-    virtual uint32 operator()(void) const override { return uint32(__rdtsc()); };
+    inline virtual ~CGetTimeFunctorCPU(void) {};
+    virtual uint32 operator()(void) const override;
 };
+
+
+//
+// *********************************************************************************
+//
+
+
+CPCTimer::CGetTimeFunctorOS::CGetTimeFunctorOS(void)
+{
+    timeBeginPeriod(1);
+};
+
+
+CPCTimer::CGetTimeFunctorOS::~CGetTimeFunctorOS(void)
+{
+    timeEndPeriod(1);
+};
+
+
+uint32 CPCTimer::CGetTimeFunctorOS::operator()(void) const
+{
+    return static_cast<uint32>(timeGetTime());
+};
+
+
+//
+// *********************************************************************************
+//
+
+
+uint32  CPCTimer::CGetTimeFunctorCPU::operator()(void) const
+{
+    return static_cast<uint32>(__rdtsc());
+};
+
+
+//
+// *********************************************************************************
+//
 
 
 /*static*/ CPCTimer* CPCTimer::m_pInstance = nullptr;
@@ -75,9 +114,10 @@ CPCTimer::CPCTimer(void)
     
     uint32 end = (*m_pGetTimerFunctor)();
 
-    m_uTimeStart = end;
-    m_uGranularityMillisecond = end - begin;
-    m_uGranularitySecond = (end - begin) / 1000;
+    m_uTimeStart              = end;
+    m_uGranularityMillisecond = (end - begin);
+    m_uGranularitySecond      = ((end - begin) / 1000);
+
     SetThreadPriority(hCurrentThread, dwCurrentThreadPriority);
 };
 

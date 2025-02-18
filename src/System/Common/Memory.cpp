@@ -16,7 +16,7 @@
 #ifdef _DEBUG
     if (mem == nullptr)
     {
-        FATAL("Memory allocation request failed!\n\n"
+        FATAL("Memory alloc request failed!\n\n"
               "bytes: %" PRIuPTR "\n"
               "file: %s\n"
               "line: %" PRIi32 "\n",
@@ -24,7 +24,7 @@
               fname,
               fline);
     };
-#endif
+#endif /* _DEBUG */
     return mem;
 };
 
@@ -37,23 +37,56 @@
 
 /*static*/ void* CMemory::rwmalloc(size_t size, uint32 hint)
 {
-    return Instance().RepRwAlloc(size, hint);
+    void* mem = Instance().RepRwAlloc(size, hint);
+#ifdef _DEBUG
+    if (mem == nullptr)
+    {
+        FATAL("Memory RW alloc request failed!\n\n"
+              "bytes: %" PRIuPTR "\n"
+              "hint: 0x%" PRIx32 "\n",
+              size,
+              hint);
+    };
+#endif /* _DEBUG */
+    return mem;
 };
 
 
 /*static*/ void CMemory::rwfree(void* mem)
 {
-	Instance().RepRwFree(mem);
+    Instance().RepRwFree(mem);
 };
 
 
 /*static*/ void* CMemory::rwrealloc(void* mem, size_t size, uint32 hint)
 {
-    return Instance().RepRwRealloc(mem, size, hint);
+    mem = Instance().RepRwRealloc(mem, size, hint);
+#ifdef _DEBUG
+    if (mem == nullptr)
+    {
+        FATAL("Memory RW realloc request failed!\n\n"
+              "bytes: %" PRIuPTR "\n"
+              "hint: 0x%" PRIx32 "\n",
+              size,
+              hint);
+    };
+#endif /* _DEBUG */
+    return mem;
 };
 
 
 /*static*/ void* CMemory::rwcalloc(size_t objSize, size_t size, uint32 hint)
 {
-    return Instance().RepRwCalloc(objSize, size, hint);
+    void* mem = Instance().RepRwCalloc(objSize, size, hint);
+#ifdef _DEBUG
+    if (mem == nullptr)
+    {
+        FATAL("Memory RW calloc request failed!\n\n"
+              "bytes: %" PRIuPTR "\n"
+              "hint: 0x%" PRIx32 "\n",
+              size,
+              hint);
+    };
+#endif /* _DEBUG */
+    return mem;
 };

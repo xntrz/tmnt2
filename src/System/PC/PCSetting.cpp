@@ -16,7 +16,7 @@
 #ifdef _DEBUG    
     m_bWindowMode = true;
 #else
-	m_bWindowMode = CConfigure::CheckArg("wnd");
+    m_bWindowMode = CConfigure::CheckArg("wnd");
 #endif    
 
     Load();

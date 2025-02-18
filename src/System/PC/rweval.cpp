@@ -21,9 +21,9 @@ static void rwevalMemIo(void* addr, void* bytes, uint32 size, bool write)
 
 bool rwevalInitialize(void)
 {
-	uint32 ver = RwEngineGetVersion();
-	if (ver != 0x37002)
-		return false;
+    uint32 ver = RwEngineGetVersion();
+    if (ver != 0x37002)
+        return false;
 
     enum
     {
@@ -35,7 +35,7 @@ bool rwevalInitialize(void)
 
     bool bResult = false;
     uint32 StepFlag = 0;
-	RwCamera* pCamera = nullptr;
+    RwCamera* pCamera = nullptr;
     
     HWND hWnd = CreateWindowA("STATIC", NULL, NULL, 0, 0, 64, 64, NULL, NULL, NULL, NULL);
     if (hWnd == NULL)

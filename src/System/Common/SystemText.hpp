@@ -1,7 +1,6 @@
 #pragma once
 
-
-enum SYSTEXT {};
+#include "SystemTextID.hpp"
 
 
 class CSystemText

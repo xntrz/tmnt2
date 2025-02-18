@@ -18,6 +18,7 @@
 
     char szFilepath[256];
     szFilepath[0] = '\0';
+
     std::strcpy(szFilepath, filemanager.m_szAfsPath);
     std::strcat(szFilepath, "/");
     std::strcat(szFilepath, pszFilename);
@@ -94,6 +95,7 @@ CFileAccess* CPCFileManager::AllocRequest(int32 nType, void* pTypeData)
 
         char szFilepath[256];
         szFilepath[0] = '\0';
+
         std::strcpy(szFilepath, m_szAfsPath);
         std::strcat(szFilepath, "/");
         std::strcat(szFilepath, fname);
@@ -110,12 +112,14 @@ CFileAccess* CPCFileManager::AllocRequest(int32 nType, void* pTypeData)
 
         char szFilename[256];
         szFilename[0] = '\0';
+
         CFilename::Filename(szFilename, id);
 
         char szFilepath[256];
         szFilepath[0] = '\0';
+
         std::strcpy(szFilepath, m_szAfsPath);
-		std::strcat(szFilepath, "/");
+        std::strcat(szFilepath, "/");
         std::strcat(szFilepath, szFilename);
 
         if (CPCPhyFileAccess::IsExists(szFilepath))
@@ -129,9 +133,12 @@ CFileAccess* CPCFileManager::AllocRequest(int32 nType, void* pTypeData)
 bool CPCFileManager::SetupFileSystem(void)
 {
     AdxpcSprmFs sprmfs;
+    std::memset(&sprmfs, 0, sizeof(sprmfs));
+
     sprmfs.rtdir = m_szAfsPath;
+
     ADXPC_SetupFileSystem(&sprmfs);
-    
+
     m_adxfic = ADXFIC_Create(m_szAfsPath, 0, 0, 0);
     
     return (m_adxfic != 0);
@@ -157,7 +164,7 @@ void CPCFileManager::SetAfsPath(void)
     if (CConfigure::CheckArgValue("afspath", &pszArgValue))
     {
         std::strcpy(m_szAfsPath, pszArgValue);
-        //CFilename::ConvPathPlatform(m_szAfsPath);
+        CFilename::ConvPathPlatform(m_szAfsPath);
     }
     else
     {
@@ -182,7 +189,11 @@ void CPCFileManager::SetCwd(void)
     char szMyPath[MAX_PATH];
     szMyPath[0] = '\0';
 
-    GetModulePath(szMyPath);
+    const char* pszAfsPath = nullptr;
+    if (CConfigure::CheckArgValue("afspath", &pszAfsPath))
+        std::strcpy(szMyPath, pszAfsPath);
+    else
+        GetModulePath(szMyPath);
 
     SetCurrentDirectoryA(szMyPath);
 };
@@ -207,7 +218,8 @@ void CPCFileManager::PhyAccessTerm(void)
 void CPCFileManager::PhyAccessSync(void)
 {
     auto it = m_listPhyFAccessAlloc.begin();
-    while (it != m_listPhyFAccessAlloc.end())
+    auto itEnd = m_listPhyFAccessAlloc.end();
+    while (it != itEnd)
     {
         CPCPhyFileAccess* pAccess = (*it);
 
@@ -235,8 +247,8 @@ CPCPhyFileAccess* CPCFileManager::PhyAccessAlloc(const char* pszFilename)
     m_listPhyFAccessFree.pop_front();
     m_listPhyFAccessAlloc.push_back(pAccess);
     
-	CRequest req(pszFilename, pAccess);
-	RegistRequest(req);
+    CRequest req(pszFilename, pAccess);
+    RegistRequest(req);
 
     return pAccess;
 };

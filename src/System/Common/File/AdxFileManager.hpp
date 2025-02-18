@@ -35,7 +35,9 @@ public:
     virtual bool LoadPartition(int32 PrId, const char* FName, void* PtInfo);
     virtual bool SetupFileSystem(void) = 0;
     virtual void ShutdownFileSystem(void) = 0;
-
+    void CheckForProperBuild(void);
+    int32 GetAFSFileCountFromFilename(const char* pszFilename) const;
+    
 private:
     static const char* m_apszPartitionCommonDataFilename[];
     static const char* m_apszPartitionLangDataFilename[];

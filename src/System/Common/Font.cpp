@@ -175,7 +175,7 @@ Rt2dFont* CFont::GetFontObj(void) const
 
     while (*src)
     {
-        *dst++ = *src++;
+        *dst++ = *src++;   
         ++nConvertedChars;
     };
 

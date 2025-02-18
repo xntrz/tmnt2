@@ -37,13 +37,13 @@ CAdxFileManager::CAdxFileManager(void)
     /* checkouts with idb */
 #ifdef TMNT2_BUILD_EU
     static_assert(COUNT_OF(m_apszPartitionLangDataFilename) == TYPEDEF::CONFIG_LANG_NUM, "name table incorrect");    
-    static_assert(sizeof(m_ptinfoCommon) == 868, "multilang eu build COMMON partition should be 868 bytes size");
-    static_assert(sizeof(m_ptinfoLang)   == 300, "multilang eu build LANG partition should be 300 bytes size");
-#else
+    static_assert(sizeof(m_ptinfoCommon) == 868, "EU build COMMON partition should be 868 bytes size");
+    static_assert(sizeof(m_ptinfoLang)   == 300, "EU build LANG partition should be 300 bytes size");
+#else /* TMNT2_BUILD_EU */
     static_assert(COUNT_OF(m_apszPartitionLangDataFilename) == 1, "name table incorrect");    
-    static_assert(sizeof(m_ptinfoCommon) == 756, "en build COMMON partition should be 756 bytes size");
-    static_assert(sizeof(m_ptinfoLang)   == 284, "en build LANG partition should be 284 bytes size");
-#endif
+    static_assert(sizeof(m_ptinfoCommon) == 756, "NA build COMMON partition should be 756 bytes size");
+    static_assert(sizeof(m_ptinfoLang)   == 284, "NA build LANG partition should be 284 bytes size");
+#endif /* TMNT2_BUILD_EU */
 };
 
 
@@ -65,6 +65,8 @@ bool CAdxFileManager::Start(void)
         return false;
 
     ADXT_Init();
+
+    CheckForProperBuild();
 
     if (!LoadPartitionCommon())
         return false;
@@ -116,8 +118,8 @@ CFileAccess* CAdxFileManager::AllocRequest(int32 nType, void* pTypeData)
     ASSERT(fileId >= 0);
     ASSERT(fileId < FILEID::ID_MAX);
 
-	CRequest req(fileId, &m_aAdxFileAccess[fileId]);
-	RegistRequest(req);
+    CRequest req(fileId, &m_aAdxFileAccess[fileId]);
+    RegistRequest(req);
     
     return &m_aAdxFileAccess[fileId];
 };
@@ -153,28 +155,28 @@ bool CAdxFileManager::LoadPartitionLang(TYPEDEF::CONFIG_LANG lang)
 
 bool CAdxFileManager::LoadPartition(int32 PtId, const char* FName, void* PtInfo)
 {
-	if (!ADXF_LoadPartitionNw(PtId, FName, NULL, PtInfo))
-	{
-		bool bLoopFlag = true;
+    if (!ADXF_LoadPartitionNw(PtId, FName, NULL, PtInfo))
+    {
+        bool bLoopFlag = true;
 
-		do
-		{
-			int32 stat = ADXF_GetPtStat(PtId);
-			switch (stat)
-			{
-			case ADXF_STAT_READEND:
-				return true;
+        do
+        {
+            int32 stat = ADXF_GetPtStat(PtId);
+            switch (stat)
+            {
+            case ADXF_STAT_READEND:
+                return true;
 
-			case ADXF_STAT_READING:
-				Sync();
-				break;
+            case ADXF_STAT_READING:
+                Sync();
+                break;
 
-			default:
-				bLoopFlag = false;
-				break;
-			};
-		} while (bLoopFlag);
-	};
+            default:
+                bLoopFlag = false;
+                break;
+            };
+        } while (bLoopFlag);
+    };
 
     char buff[1024];
     buff[0] = '\0';
@@ -184,4 +186,62 @@ bool CAdxFileManager::LoadPartition(int32 PtId, const char* FName, void* PtInfo)
     Error(buff);
 
     return false;
+};
+
+
+void CAdxFileManager::CheckForProperBuild(void)
+{
+    const char* pszPartitionName = nullptr;
+
+    /* check common partition */
+    int32 fileCountCommon = GetAFSFileCountFromFilename(m_apszPartitionCommonDataFilename[0]);
+    if (fileCountCommon != FILEID::COMMONMAX)
+        pszPartitionName = m_apszPartitionCommonDataFilename[0];
+
+    /* check lang partition */
+    if (!pszPartitionName)
+    {
+        TYPEDEF::CONFIG_LANG lang = CConfigure::GetLanguage();
+        int32 fileCountLang = GetAFSFileCountFromFilename(m_apszPartitionLangDataFilename[lang]);        
+        if (fileCountLang != FILEID::LANGMAX)
+            pszPartitionName = m_apszPartitionLangDataFilename[lang];
+    };
+
+    /* disp fatal err if mismatch */
+    if (pszPartitionName)
+    {
+        char szFatalErrorBuff[1024];
+        szFatalErrorBuff[0] = '\0';
+
+        std::sprintf(szFatalErrorBuff,
+                     "%s partition file count mismatch!\n\n"
+                     "This may happens if you are using wrong assets files for this build "
+                     "or wrong specified assets game files path, or damaged assets!",
+                     pszPartitionName);
+
+        Error(szFatalErrorBuff);
+    };
+};
+
+
+int32 CAdxFileManager::GetAFSFileCountFromFilename(const char* pszFilename) const
+{
+    int32 fileCount = 0;
+
+    FILE* hFile = fopen(pszFilename, "rb");
+    if (hFile)
+    {
+        uint8 AFSHeaderBuff[8];
+        std::memset(AFSHeaderBuff, 0, sizeof(AFSHeaderBuff));
+
+        size_t cbReaded = fread(AFSHeaderBuff, sizeof(uint8), sizeof(AFSHeaderBuff), hFile);
+
+        if (cbReaded == sizeof(AFSHeaderBuff))
+            fileCount = ADXF_GetNumFilesFromAfs(AFSHeaderBuff);
+
+        fclose(hFile);
+        hFile = nullptr;
+    };
+    
+    return fileCount;
 };

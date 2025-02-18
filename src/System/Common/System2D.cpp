@@ -33,17 +33,15 @@ static uint32 s_uReferenceCount = 0;
         Rt2dOpen(s_pDefaultCamera->GetRwCamera());
     };
 
-	CSprite::SetDefaultVirtualScreen();
-	Rt2dDeviceSetMetric(
-		CSprite::m_fVirtualScreenX,
-		CSprite::m_fVirtualScreenY,
-		CSprite::m_fVirtualScreenW,
-		CSprite::m_fVirtualScreenH
-	);
+    CSprite::SetDefaultVirtualScreen();
+    Rt2dDeviceSetMetric(CSprite::m_fVirtualScreenX,
+                        CSprite::m_fVirtualScreenY,
+                        CSprite::m_fVirtualScreenW,
+                        CSprite::m_fVirtualScreenH);
 
-	Rt2dDeviceSetLayerDepth(1.0f);
+    Rt2dDeviceSetLayerDepth(1.0f);
 
-	return true;
+    return true;
 };
 
 

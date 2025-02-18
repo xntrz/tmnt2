@@ -39,7 +39,7 @@ _tWinMain(
         rwevalInitialize();
 
     CPCSetting::Initialize();
-	CPCSpecific::m_hInstance = hInstance;
+    CPCSpecific::m_hInstance = hInstance;
     
     bool bResult = CPCFramework::StartAndRun();
 

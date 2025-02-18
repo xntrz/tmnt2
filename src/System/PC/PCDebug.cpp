@@ -118,10 +118,10 @@ static void OutputCommon(bool ln, const char* fname, int32 fline, const char* fo
     static char szFatalBuffer[4096];    
     szFatalBuffer[0] = '\0';
 
-	va_list vl;
-	va_start(vl, reason);
-	std::vsprintf(szFatalBuffer, reason, vl);
-	va_end(vl);
+    va_list vl;
+    va_start(vl, reason);
+    std::vsprintf(szFatalBuffer, reason, vl);
+    va_end(vl);
 
     uint32 Flags = (MB_ICONERROR);
 #ifdef _DEBUG    
@@ -137,7 +137,7 @@ static void OutputCommon(bool ln, const char* fname, int32 fline, const char* fo
     int32 iResult = MessageBoxA(NULL, szFatalBuffer, CPCSystem::WNDNAME, Flags);
 #ifdef _DEBUG    
     if (iResult == IDOK)
-		__debugbreak();
+        __debugbreak();
 #else
     (void)iResult;
 #endif    

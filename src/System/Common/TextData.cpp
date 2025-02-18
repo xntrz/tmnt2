@@ -69,7 +69,7 @@ struct CTextData::HEADER
 /*static*/ void CTextData::ToMultibyte(char* dst, size_t dstlen, const wchar* src)
 {
 #ifdef TARGET_PC
-	std::wcstombs(dst, src, dstlen);
+    std::wcstombs(dst, src, dstlen);
 #else
 #error Not implemented for current target
 #endif

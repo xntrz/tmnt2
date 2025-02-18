@@ -7,7 +7,7 @@ static bool s_bRwDebugAssertSupressFlag = false;
 static void RwDebugMsgEndpoint(RwDebugType type, const RwChar* string)
 {
     switch (type)
-	{
+    {
     case RwDebugType::rwDEBUGASSERT:
         //if (!s_bRwDebugAssertSupressFlag)
         //    ASSERT(false, string);
@@ -24,12 +24,12 @@ static void RwDebugMsgEndpoint(RwDebugType type, const RwChar* string)
         
     case RwDebugType::rwDEBUGERROR:
         OUTPUT("[rwDEBUGERROR] %s\n", string);
-		break;
+        break;
 
-	default:
-		ASSERT(false);
-		break;
-	};
+    default:
+        ASSERT(false);
+        break;
+    };
 };
 #endif /* RWDEBUG */
 
@@ -109,6 +109,6 @@ static void RwDebugMsgEndpoint(RwDebugType type, const RwChar* string)
         va_end(vl);
     };
 
-	Output(fname, fline, buff);
+    Output(fname, fline, buff);
     Fatal(buff);
 };

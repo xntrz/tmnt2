@@ -21,7 +21,6 @@ public:
 
     CSprite(void);
     virtual ~CSprite(void);
-    void SetScreenSize(void);
     void SetZ(float fZ);
 #ifdef TMNT2_BUILD_EU
     void SetRGBA(int32 pt, uint8 r, uint8 g, uint8 b, uint8 a);

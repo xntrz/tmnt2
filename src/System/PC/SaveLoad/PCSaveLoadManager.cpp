@@ -5,9 +5,10 @@
 
 #include "System/Common/SaveLoad/SaveLoadData.hpp"
 #include "System/Common/SaveLoad/SaveLoadFrame.hpp"
+#include "System/Common/Configure.hpp"
+#include "System/Common/Screen.hpp"
 #include "System/Common/SystemText.hpp"
 #include "System/Common/TextData.hpp"
-#include "System/Common/Screen.hpp"
 
 
 static CSaveLoadFrameBase* s_pSaveloadFrame = nullptr;
@@ -51,59 +52,43 @@ static CSaveLoadDataBase* s_pSaveloadData = nullptr;
 
 /*static*/ const wchar* CPCSaveLoadManager::GetMsg(MESSAGEID id)
 {
-    static const int32 s_aSystemMessageIdTable[] =
+    static const SYSTEXT s_aSystextMsgTable[] =
     {
-#ifdef TMNT2_BUILD_EU
-        15, //  MESSAGEID_OVERWRITE_SURE
-        26, //  MESSAGEID_WAIT
-        14, //  MESSAGEID_SAVE_SURE
-        16, //  MESSAGEID_SAVE_NOW
-        17, //  MESSAGEID_SAVE_OK
-        18, //  MESSAGEID_SAVE_FAIL
-        19, //  MESSAGEID_LOAD_SURE
-        20, //  MESSAGEID_LOAD_CHECK
-        21, //  MESSAGEID_LOAD_EMPTY
-        22, //  MESSAGEID_LOAD_NOW
-        23, //  MESSAGEID_LOAD_OK
-        24, //  MESSAGEID_LOAD_FAIL
-        25, //  MESSAGEID_LOAD_INVALID
-#else /* TMNT2_BUILD_EU */
-        13, //  MESSAGEID_OVERWRITE_SURE
-        24, //  MESSAGEID_WAIT
-        12, //  MESSAGEID_SAVE_SURE
-        14, //  MESSAGEID_SAVE_NOW
-        15, //  MESSAGEID_SAVE_OK
-        16, //  MESSAGEID_SAVE_FAIL
-        17, //  MESSAGEID_LOAD_SURE
-        18, //  MESSAGEID_LOAD_CHECK
-        19, //  MESSAGEID_LOAD_EMPTY
-        20, //  MESSAGEID_LOAD_NOW
-        21, //  MESSAGEID_LOAD_OK
-        22, //  MESSAGEID_LOAD_FAIL
-        23, //  MESSAGEID_LOAD_INVALID
-#endif /* TMNT2_BUILD_EU */
+        SYSTEXT_SAVE_SURE_OVERW,    //  MESSAGEID_OVERWRITE_SURE
+        SYSTEXT_WAIT,               //  MESSAGEID_WAIT
+        SYSTEXT_SAVE_SURE,          //  MESSAGEID_SAVE_SURE
+        SYSTEXT_SAVE_NOW,           //  MESSAGEID_SAVE_NOW
+        SYSTEXT_SAVE_OK,            //  MESSAGEID_SAVE_OK
+        SYSTEXT_SAVE_FAIL,          //  MESSAGEID_SAVE_FAIL
+        SYSTEXT_LOAD_SURE,          //  MESSAGEID_LOAD_SURE
+        SYSTEXT_LOAD_CHECK,         //  MESSAGEID_LOAD_CHECK
+        SYSTEXT_LOAD_EMPTY,         //  MESSAGEID_LOAD_EMPTY
+        SYSTEXT_LOAD_NOW,           //  MESSAGEID_LOAD_NOW
+        SYSTEXT_LOAD_OK,            //  MESSAGEID_LOAD_OK
+        SYSTEXT_LOAD_FAIL,          //  MESSAGEID_LOAD_FAIL
+        SYSTEXT_LOAD_INVALID,       //  MESSAGEID_LOAD_INVALID
     };
 
-    static_assert(COUNT_OF(s_aSystemMessageIdTable) == MESSAGEIDMAX, "update id table");
+    static_assert(COUNT_OF(s_aSystextMsgTable) == MESSAGEIDMAX, "update id table");
 
     ASSERT(id >= 0);
     ASSERT(id < MESSAGEIDMAX);
 
     ASSERT(id >= 0);
-    ASSERT(id < COUNT_OF(s_aSystemMessageIdTable));
+    ASSERT(id < COUNT_OF(s_aSystextMsgTable));
 
     /*  all text that obtained via GetMsg() or GetTitle()
         is copied into caller buffer so its fine to it here */
     static wchar s_wszTextBuff[1024];
     s_wszTextBuff[0] = UTEXT('\0');
 
-    const wchar* pwszString = CSystemText::GetText(SYSTEXT(s_aSystemMessageIdTable[id]));
+    const wchar* pwszString = CSystemText::GetText(s_aSystextMsgTable[id]);
     CTextData::StrCpy(s_wszTextBuff, pwszString);
 
     if ((id == MESSAGEID_SAVE_NOW) ||
         (id == MESSAGEID_LOAD_NOW))
     {
-        const wchar* pwszPleaseWait = CSystemText::GetText(SYSTEXT(s_aSystemMessageIdTable[MESSAGEID_WAIT]));
+        const wchar* pwszPleaseWait = CSystemText::GetText(s_aSystextMsgTable[MESSAGEID_WAIT]);
         CTextData::StrCat(s_wszTextBuff, pwszPleaseWait);
     };
 
@@ -113,28 +98,22 @@ static CSaveLoadDataBase* s_pSaveloadData = nullptr;
 
 /*static*/ const wchar* CPCSaveLoadManager::GetTitle(TITLEID id)
 {
-    static const int32 s_aSystemTitleIdTable[] =
+    static const SYSTEXT s_aSystextTitleTable[] =
     {
-#ifdef TMNT2_BUILD_EU
-        11, //  TITLEID_CHECK
-        12, //  TITLEID_SAVE
-        13, //  TITLEID_LOAD
-#else /* TMNT2_BUILD_EU */
-        9,  //  TITLEID_CHECK
-        10, //  TITLEID_SAVE
-        11, //  TITLEID_LOAD
-#endif /* TMNT2_BUILD_EU */
+        SYSTEXT_TIT_CHECK,  //  TITLEID_CHECK
+        SYSTEXT_TIT_SAVE,   //  TITLEID_SAVE
+        SYSTEXT_TIT_LOAD,   //  TITLEID_LOAD
     };
 
-    static_assert(COUNT_OF(s_aSystemTitleIdTable) == TITLEIDMAX, "update id table");
+    static_assert(COUNT_OF(s_aSystextTitleTable) == TITLEIDMAX, "update id table");
 
     ASSERT(id >= 0);
     ASSERT(id < TITLEIDMAX);
     
     ASSERT(id >= 0);
-    ASSERT(id < COUNT_OF(s_aSystemTitleIdTable));
+    ASSERT(id < COUNT_OF(s_aSystextTitleTable));
 
-    return CSystemText::GetText(SYSTEXT(s_aSystemTitleIdTable[id]));
+    return CSystemText::GetText(s_aSystextTitleTable[id]);
 };
 
 
@@ -297,7 +276,21 @@ void CPCSaveLoadManagerBase::MakeFilePath(char* pszFilepathBuff) const
     char szMyPath[MAX_PATH];
     szMyPath[0] = '\0';
 
-    GetModulePath(szMyPath);
+    const char* pszAfsPath = nullptr;
+    if (CConfigure::CheckArgValue("afspath", &pszAfsPath))
+    {
+        std::strcpy(szMyPath, pszAfsPath);
+        
+        size_t len = std::strlen(szMyPath);
+        size_t remain = (sizeof(szMyPath) - len);
+
+        if ((szMyPath[len - 1] != '/') && (remain >= 2))
+            std::strcat(szMyPath, "/");
+    }
+    else
+    {
+        GetModulePath(szMyPath);
+    };
 
     std::sprintf(pszFilepathBuff, "%s%s", szMyPath, FILENAME);
 };
@@ -305,12 +298,21 @@ void CPCSaveLoadManagerBase::MakeFilePath(char* pszFilepathBuff) const
 
 bool CPCSaveLoadManagerBase::CheckFileExist(void) const
 {
+    bool bResult = false;
+
     char szFilepath[MAX_PATH];
     szFilepath[0] = '\0';
 
     MakeFilePath(szFilepath);
 
-    return (RwFexist(szFilepath) > 0);
+    void* hFile = RwFopen(szFilepath, "r");
+    if (hFile)
+    {
+        bResult = (hFile != nullptr);
+        RwFclose(hFile);
+    };
+
+    return bResult;
 };
 
 
@@ -463,7 +465,7 @@ bool CPCLoadManager::FileLoad(void) const
 
     MakeFilePath(szFilepath);
 
-    void* hFile = RwFopen(szFilepath, "rb");
+    void* hFile = RwFopen(szFilepath, "r");
     if (!hFile)
         return bResult;
 
@@ -582,7 +584,7 @@ bool CPCSaveManager::FileSave(void) const
 
     MakeFilePath(szFilepath);
 
-    void* hFile = RwFopen(szFilepath, "wb");
+    void* hFile = RwFopen(szFilepath, "w+");
     if (!hFile)
         return false;
 

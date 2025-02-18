@@ -18,35 +18,35 @@ static int s_lastAllocFline = ALLOC_FLINE_INIT;
 
 /*extern*/ void memory_std_set_alloc_source(const char* fname, int fline)
 {
-	s_lastAllocFname = fname;
-	s_lastAllocFline = fline;
+    s_lastAllocFname = fname;
+    s_lastAllocFline = fline;
 };
 
 
 struct LAST_ALLOC_CLEANUP
 {
-	inline LAST_ALLOC_CLEANUP() {
-		if (s_lastAllocFname == nullptr)
-			s_lastAllocFname = "UNKNOWN EXTERNAL";
-	};
+    inline LAST_ALLOC_CLEANUP() {
+        if (s_lastAllocFname == nullptr)
+            s_lastAllocFname = "UNKNOWN EXTERNAL";
+    };
 
-	inline ~LAST_ALLOC_CLEANUP() { 
-		s_lastAllocFname = ALLOC_FNAME_INIT; 
-		s_lastAllocFline = ALLOC_FLINE_INIT; 
-	};
+    inline ~LAST_ALLOC_CLEANUP() { 
+        s_lastAllocFname = ALLOC_FNAME_INIT; 
+        s_lastAllocFline = ALLOC_FLINE_INIT; 
+    };
 };
 
 
 void* operator new(std::size_t size)
 {
-	LAST_ALLOC_CLEANUP obj;
-	return CMemory::malloc(size, s_lastAllocFname, s_lastAllocFline);
+    LAST_ALLOC_CLEANUP obj;
+    return CMemory::malloc(size, s_lastAllocFname, s_lastAllocFline);
 };
 
 
 void* operator new[](std::size_t size)
 {
-	LAST_ALLOC_CLEANUP obj;
+    LAST_ALLOC_CLEANUP obj;
     return CMemory::malloc(size, s_lastAllocFname, s_lastAllocFline);
 };
 
@@ -65,13 +65,13 @@ void operator delete[](void* ptr)
 
 void* operator new(std::size_t size, const std::nothrow_t& nth) noexcept
 {
-	LAST_ALLOC_CLEANUP obj;
-	return CMemory::malloc(size, s_lastAllocFname, s_lastAllocFline);
+    LAST_ALLOC_CLEANUP obj;
+    return CMemory::malloc(size, s_lastAllocFname, s_lastAllocFline);
 };
 
 
 void* operator new[](std::size_t size, const std::nothrow_t& nth) noexcept
 {
-	LAST_ALLOC_CLEANUP obj;
-	return CMemory::malloc(size, s_lastAllocFname, s_lastAllocFline);
+    LAST_ALLOC_CLEANUP obj;
+    return CMemory::malloc(size, s_lastAllocFname, s_lastAllocFline);
 };
