@@ -3,7 +3,6 @@
 #include "Game/Component/GameMain/StageID.hpp"
 
 
-// TODO: review pad stream, in demo mode reading input stream incorrect probably
 class CPadStream
 {
 public:

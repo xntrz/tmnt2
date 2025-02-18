@@ -35,7 +35,7 @@ CFallGimmick::CFallGimmick(const char* pszName, void* pParam)
 , m_eSubid(SUBID_NUM)
 , m_eState(STATE_NUM)
 , m_fTimer(0.0f)
-, m_fInterval(0.0f)
+, m_fInterval(0.6f)
 , m_vPreMovePosition(Math::VECTOR3_ZERO)
 , m_nPower(0)
 , m_fFriction(0.0f)
@@ -45,7 +45,7 @@ CFallGimmick::CFallGimmick(const char* pszName, void* pParam)
 {
     static_assert(COUNT_OF(m_aSubInfo) == SUBID_NUM, "update me");
 
-    GIMMICKPARAM::GIMMICK_BASIC* pInitParam = (GIMMICKPARAM::GIMMICK_BASIC*)pParam;
+    GIMMICKPARAM::GIMMICK_BASIC* pInitParam = static_cast<GIMMICKPARAM::GIMMICK_BASIC*>(pParam);
     ASSERT(pInitParam);
 
     m_eSubid = SUBID(pInitParam->m_subid);
@@ -236,15 +236,18 @@ void CFallGimmick::move(void)
                 };
             }
             break;
+
+        default:
+            break;
         };
 
         RwV3d vRotation = Math::VECTOR3_ZERO;
+        m_pFallMove->GetRotation(&vRotation);
+        m_model.SetRotation(&vRotation);
+
         RwV3d vPosition = Math::VECTOR3_ZERO;
         m_pFallMove->GetPosition(&vPosition);
-        m_pFallMove->GetRotation(&vRotation);
-        
         m_model.SetPosition(&vPosition);
-        m_model.SetRotation(&vRotation);
     };
 };
 
@@ -278,6 +281,7 @@ void CFallGimmick::fallGimmickCtrl(void)
                 
                 CCircleShadowModule* pModule = static_cast<CCircleShadowModule*>(m_pModuleManager->GetModule(MODULETYPE::CIRCLE_SHADOW));
                 ASSERT(pModule);
+                
                 pModule->SetEnable(true);
             };
         }
@@ -389,7 +393,7 @@ void CFallGimmick::breakSign(void)
 
     CEffectManager::Play(EFFECTID::ID_BREAKSIGN, &vPosition);
 
-    CGameSound::PlayPositionSE(&vPosition, SDCODE_SE(0x104C), 0);
+    CGameSound::PlayPositionSE(&vPosition, SDCODE_SE(0x104C));
 };
 
 

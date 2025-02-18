@@ -19,16 +19,16 @@
 #include "Game/System/Sound/MessageManager.hpp"
 
 
-#define RIDE_RACE_FINISH_DISTANCE   (2500.0f)
-#define RIDE_RACE_FINISH_TIME_SEC   (170.0f)
+#define RIDE_RACE_FINISH_DISTANCE   (2650.0f)
+#define RIDE_RACE_FINISH_TIME_SEC   (180.0f)    // 3 min
 
 
-static float s_fMoveLimitZBack      = 0.0f;
-static float s_fMoveLimitZFront     = 0.0f;
-static float s_fMoveLimitXBack      = -6.0f;
-static float s_fMoveLimitXFront     = 6.0f;
+static float s_fMoveLimitZBack      =   0.0f;
+static float s_fMoveLimitZFront     =   0.0f;
+static float s_fMoveLimitXBack      =  -6.0f;
+static float s_fMoveLimitXFront     =   6.0f;
 static float s_fMoveLimitYBottom    = -15.0f;
-static float s_fMoveLimitYTop       = 4.5f;
+static float s_fMoveLimitYTop       =   4.5f;
 
 
 
@@ -200,7 +200,7 @@ bool CRideStageContainer::IsEnd(void) const
     if (stageId == STAGEID::ID_ST32R)
         fExtend = 20.0f;
 
-    float fRaceDistMax = (fExtend + RIDE_RACE_FINISH_DISTANCE);
+    float fRaceDistMax = (fExtend + (RIDE_RACE_FINISH_DISTANCE - 150.0f));
 
     return (CRideStage::GetMoveLimitZMin() > fRaceDistMax);
 };

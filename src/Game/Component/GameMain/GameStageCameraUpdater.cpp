@@ -2,6 +2,9 @@
 #include "GameTypes.hpp"
 #include "GameProperty.hpp"
 #include "GamePlayer.hpp"
+#ifdef _DEBUG
+#include "GameStageDebug.hpp"
+#endif /* _DEBUG */
 
 #include "Game/Component/Enemy/CharacterCompositor.hpp"
 #include "Game/System/Map/MapCamera.hpp"
@@ -44,6 +47,9 @@ void CDefaultCameraUpdater::Update(CMapCamera* pMapCamera)
     };
 
     float fZoom = pMapCamera->CalcNiceZoom(avPosition, playerNum);
+#ifdef _DEBUG
+    fZoom *= CGameStageDebug::CAMERA_ZOOM_SCALE;
+#endif /* _DEBUG */
     pMapCamera->Update(&vLookat, fZoom);
 };
 

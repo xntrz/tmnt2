@@ -74,7 +74,7 @@ C031FootSumoNinja::CRunAttackStatusObserver::Observing(void) /*override*/
         return RESULT_END;
 
     float fRadiusOfAction = EnemyChr().AICharacteristic().m_fRadiusOfAction;
-    float fDist = CEnemyUtils::GetDirection(&EnemyChr().Compositor(), &m_vStartPos);
+    float fDist = CEnemyUtils::GetDistance(&EnemyChr().Compositor(), &m_vStartPos);
 
     if (fDist > fRadiusOfAction)
         return RESULT_END;

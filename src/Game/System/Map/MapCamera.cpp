@@ -9,6 +9,10 @@
 #include "Game/System/Misc/Gamepad.hpp"
 #include "System/Common/Camera.hpp"
 
+#ifdef _DEBUG
+#include "Game/Component/GameMain/GameStageDebug.hpp"
+#endif /* _DEBUG */
+
 
 class CMapCamera::CIntroduction
 {
@@ -548,8 +552,14 @@ void CMapCamera::MakeSetCameraName(char* pszSetCameraName, const char* pszCamera
 
 void CMapCamera::UpdateManualCamera(const RwV3d* pvAt)
 {
-    float fMovSpeed = 20.0f * CGameProperty::GetElapsedTime();
-    float fRotSpeed = 100.0f * CGameProperty::GetElapsedTime();
+    float fRotSpeed = 100.0f;
+    float fMovSpeed = 20.0f;
+#ifdef _DEBUG
+    fMovSpeed = CGameStageDebug::CAMERA_MANUAL_SPEED;
+#endif /* _DEBUG */
+
+    fMovSpeed *= CGameProperty::GetElapsedTime();
+    fRotSpeed *= CGameProperty::GetElapsedTime();
    
     int32 iPad = CGameData::Attribute().GetVirtualPad();
 

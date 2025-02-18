@@ -67,10 +67,8 @@ void CGimmick::MessageProc(int32 nMessageID, void* pParam)
         break;
 
     case GIMMICKTYPES::MESSAGEID_RECVEVENT:
-        {
-		    GIMMICKTYPES::EVENT_ARGS* pEventArgs = static_cast<GIMMICKTYPES::EVENT_ARGS*>(pParam);
-            OnReceiveEvent(pEventArgs->m_szSender, pEventArgs->m_type);
-        }
+        OnReceiveEvent(static_cast<GIMMICKTYPES::EVENT_ARGS*>(pParam)->m_szSender,
+                       static_cast<GIMMICKTYPES::EVENT_ARGS*>(pParam)->m_type);        
         break;
 
     default:

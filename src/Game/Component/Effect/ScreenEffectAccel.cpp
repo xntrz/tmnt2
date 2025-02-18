@@ -127,7 +127,6 @@ void CScrEffectAccel::Draw(void)
         RwRGBA colorTail = colorHead;
 
         colorHead.alpha = 0x00;
-        colorTail.alpha = 0xFF;
 
         pVertex[0].x = pParticle->m_vPosition.x;
         pVertex[0].y = pParticle->m_vPosition.y;

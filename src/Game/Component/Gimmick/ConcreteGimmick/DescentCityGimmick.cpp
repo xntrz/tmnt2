@@ -9,7 +9,7 @@
 #include "System/Common/Screen.hpp"
 
 
-static const float s_fTotalRotation = 43.9823f;
+static const float s_fTotalRotation = 43.9823f; // 2pi * 7.0f
 
 
 CDescentCityGimmick::CDescentCityGimmick(const char* pszName, void* pParam)

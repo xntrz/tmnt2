@@ -357,7 +357,9 @@ CBaseGrapplerAI::CBaseGrapplerAI(CEnemyCharacter* pEnemyChr)
      *
      *  (Also required to change CBaseGrapplerEnemyChr::CMoveStatusObserver::Observing, and IsMoveEndForTargetPosition
      *   to check OrderRun() insted OrderMove())
-     */   
+     * 
+     *  (NOTE 2: Also this related to all flying AI because this is copy pasted to their AI too - see CBaseBatAI for example)
+     */
     CAIThinkOrder::ORDER order = ThinkOrder().GetOrder();
     if ((order == CAIThinkOrder::ORDER_MOVE) && IsOutsidePatrolArea())
         return UNDERACTIONS_THINKOVER;

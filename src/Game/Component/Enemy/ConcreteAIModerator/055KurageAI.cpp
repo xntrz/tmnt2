@@ -270,6 +270,10 @@ C055KurageAI::C055KurageAI(CEnemyCharacter* pEnemyChr)
         return UNDERACTIONS_THINKOVER;
     };
 
+#ifdef _DEBUG
+	DebugDrawMovePoint();
+#endif /* _DEBUG */
+
     int32 moveType = ThinkOrder().OrderMove().m_iMoveType;
     int32 moveTarget = AIOT::GetTarget(moveType);
 

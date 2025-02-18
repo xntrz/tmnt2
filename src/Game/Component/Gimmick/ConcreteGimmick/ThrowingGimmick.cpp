@@ -152,7 +152,7 @@ void CThrowingGimmick::Draw(void) const
 {
     CGimmick::Draw();
 
-    m_pModuleManager->Draw();
+    //m_pModuleManager->Draw(); TODO there is no shadows for throwing gimmicks in retail game (for some reason)
 };
 
 

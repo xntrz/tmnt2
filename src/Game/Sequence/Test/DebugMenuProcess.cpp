@@ -10,6 +10,7 @@
 #include "Game/Component/GameMain/GameStage.hpp"
 #include "Game/Component/GameMain/GameProperty.hpp"
 #include "Game/Component/GameMain/GamePlayer.hpp"
+#include "Game/Component/GameMain/GameStageDebug.hpp"
 #include "Game/Component/Gimmick/GimmickDebug.hpp"
 #include "Game/Component/Player/PlayerCharacter.hpp"
 #include "Game/Component/Module/ModuleDebug.hpp"
@@ -305,7 +306,15 @@ void CDebugMenu::InitMenu(void)
     m_menu.AddTrigger("Set Game over", [](void*) {
         CGameStage::GetCurrent()->NotifyGameOver();
     });
-    
+
+    m_menu.AddFloat("Stage camera zoom scale", 1.0f, 20.0f, 0.1f, 1.0f, [](float value, bool trigger) {
+        CGameStageDebug::CAMERA_ZOOM_SCALE = value;
+    });
+
+    m_menu.AddFloat("Manual camera move speed", 1.0f, 200.0f, 1.0f, CGameStageDebug::CAMERA_MANUAL_SPEED, [](float value, bool trigger) {
+        CGameStageDebug::CAMERA_MANUAL_SPEED = value;
+    });
+
     m_menu.AddIntDisp("Stage tick", &CGameStage::Tick);
     m_menu.SetLastItemEnable(false);
     m_menu.AddInt("Step stage for", 1, 61, 1, 1, [](int32 value, bool trigger) {
@@ -321,12 +330,15 @@ void CDebugMenu::InitMenu(void)
     });
 
     m_menu.AddBool("Godmode", [](bool bValue, bool bTrigger) {
-		if (!bTrigger)
-			return;
-        if (bValue)
-            CGameStage::GetCurrent()->BeginPlayerNegateDamage();
-        else
-            CGameStage::GetCurrent()->EndPlayerNegateDamager();
+
+        if (bValue != CGameStageDebug::GODMODE)
+        {
+            CGameStageDebug::GODMODE = bValue;
+            if (CGameStageDebug::GODMODE)
+                CGameStage::GetCurrent()->BeginPlayerNegateDamage();
+            else
+                CGameStage::GetCurrent()->EndPlayerNegateDamager();
+        };
     });
     
     m_menu.AddInt("Add HP", -300, 300, 1, 0, [](int32 nVal, bool bTrigger) {

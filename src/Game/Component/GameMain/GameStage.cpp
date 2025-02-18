@@ -168,7 +168,6 @@ void CGameStage::Start(void)
     createCamera(pWorld);
 
     CGaugeInformation::Initialize();
-    CGameRadar::Initialize(20.0f);
     GameToon::SetTextureSetOfStage(m_idStage);
     CGimmickManager::CreateStageSpecialGimmick(m_idStage);
     
@@ -314,6 +313,7 @@ void CGameStage::AddGauge(void)
         return;
 
     CGaugeManager::Initialize();
+    CGameRadar::Initialize(20.0f);
 
     createExGauge();
     startExGauge();
@@ -378,7 +378,7 @@ void CGameStage::StartPlay(void)
 bool CGameStage::CheckPauseMenu(void) const
 {
 #ifdef TARGET_PC    
-    return CPCSpecific::IsKeyDown(DIK_ESCAPE);
+    return CPCSpecific::IsKeyTrigger(DIK_ESCAPE);
 #else
     return CController::GetDigitalTrigger(CController::CONTROLLER_UNLOCKED_ON_VIRTUAL, CController::DIGITAL_START);
 #endif
