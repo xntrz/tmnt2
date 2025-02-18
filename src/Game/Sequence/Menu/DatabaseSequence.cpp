@@ -3,56 +3,18 @@
 #include "Game/ProcessList.hpp"
 
 
-class CDatabaseSequence_Container
+static int32 s_iDBViewerNo = 0;
+
+
+/*static*/ void CDatabaseSequence::SetDBViewerNo(int32 iDBViewerNo)
 {
-public:
-    CDatabaseSequence_Container(void);
-    ~CDatabaseSequence_Container(void);
-    void SetDBViewerNo(int32 iDbViewerNo);
-    int32 GetDBViewerNo(void) const;
-
-private:
-    int32 m_iDbViewerNo;
+    s_iDBViewerNo = iDBViewerNo;
 };
-
-
-CDatabaseSequence_Container::CDatabaseSequence_Container(void)
-: m_iDbViewerNo(0)
-{
-    ;
-};
-
-
-CDatabaseSequence_Container::~CDatabaseSequence_Container(void)
-{
-    ;
-};
-
-
-void CDatabaseSequence_Container::SetDBViewerNo(int32 iDbViewerNo)
-{
-    m_iDbViewerNo = iDbViewerNo;
-};
-
-
-int32 CDatabaseSequence_Container::GetDBViewerNo(void) const
-{
-    return m_iDbViewerNo;
-};
-
-
-static CDatabaseSequence_Container* s_pDatabaseSequence_Container = nullptr;
 
 
 /*static*/ int32 CDatabaseSequence::GetDBViewerNo(void)
 {
-    return s_pDatabaseSequence_Container->GetDBViewerNo();
-};
-
-
-/*static*/ void CDatabaseSequence::SetDBViewerNo(int32 iDbViewerNo)
-{
-    s_pDatabaseSequence_Container->SetDBViewerNo(iDbViewerNo);
+    return s_iDBViewerNo;
 };
 
 
@@ -77,20 +39,13 @@ CDatabaseSequence::~CDatabaseSequence(void)
 
 bool CDatabaseSequence::OnAttach(const void* pParam)
 {
-    if (!s_pDatabaseSequence_Container)
-        s_pDatabaseSequence_Container = new CDatabaseSequence_Container;
-
     return true;
 };
 
 
 void CDatabaseSequence::OnDetach(void)
 {
-    if (s_pDatabaseSequence_Container)
-    {
-        delete s_pDatabaseSequence_Container;
-        s_pDatabaseSequence_Container = nullptr;
-    };
+    ;
 };
 
 
@@ -113,6 +68,7 @@ void CDatabaseSequence::OnMove(bool bRet, const void* pReturnValue)
         bResult = Ret();
     else
         bResult = Call(m_iLabelCurrent);
+    
     ASSERT(bResult != false);
 };
 

@@ -1,5 +1,6 @@
 #include "GaugeStatus.hpp"
 #include "GaugeManager.hpp"
+#include "GaugeAnim.hpp"
 
 #include "Game/Component/GameData/GameData.hpp"
 #include "Game/Component/GameMain/GamePlayer.hpp"
@@ -74,7 +75,7 @@ public:
     void ExGaugeDispSet(int32 no, CGaugeStatus::EX_GAUGE_TYPE type, int32 value);
     void StatusWakuDisp(void);
     float StatusWakuDispSub(int32 nPlayerNo, float fX, float fY);
-    void StatusWakuDispSub_Parts(int32 nNo, int32 nPlace, float fX, float fY, float fW, float fH);
+    void StatusWakuDispSub_Parts(int32 index, int32 no, float fX, float fY, float fW, float fH);
     void CharacterIconDisp(int32 nPlayerNo, IGamePlayer* pGameplayer, float fX, float fY);
     void PlayerMarkerDisp(int32 nPlayerNo);
     float GetMarkerPosY(int32 nPlayerNo) const;
@@ -133,20 +134,22 @@ void CGaugeStatus_Container::Period(void)
 {
     if (m_bGaugeSetting)
     {
-        uint32 uDigitalTriggerUnlocked = CController::GetDigitalTrigger(CController::CONTROLLER_UNLOCKED_ON_VIRTUAL);
-        uint32 uDigitalTriggerLocked = CController::GetDigitalTrigger(CController::CONTROLLER_LOCKED_ON_VIRTUAL);
+        uint32 digitalTrigger = 0;
+        digitalTrigger |= CController::GetDigitalTrigger(CController::CONTROLLER_UNLOCKED_ON_VIRTUAL);
+        digitalTrigger |= CController::GetDigitalTrigger(CController::CONTROLLER_LOCKED_ON_VIRTUAL);
 		
-        if (IGamepad::CheckFunction(uDigitalTriggerUnlocked, IGamepad::FUNCTION_SWITCH_GAUGE)
-            || IGamepad::CheckFunction(uDigitalTriggerLocked, IGamepad::FUNCTION_SWITCH_GAUGE))
+        if (IGamepad::CheckFunction(digitalTrigger, IGamepad::FUNCTION_SWITCH_GAUGE) ||
+            IGamepad::CheckFunction(digitalTrigger, IGamepad::FUNCTION_SWITCH_GAUGE))
         {
             m_bWakuCheck = !m_bWakuCheck;
         };
     }
     else
     {
-        m_fCondStartX = -93.0f;
+        m_fCondStartX =  -93.0f;
         m_fCondStartY = -184.0f;
-        m_fWakuStartX = 270.0f;
+        
+        m_fWakuStartX =  270.0f;
         m_fWakuStartY = -200.0f;
 
         CTextureManager::SetCurrentTextureSet("gg_status");
@@ -259,7 +262,7 @@ void CGaugeStatus_Container::StatusWakuDisp(void)
 
     for (int32 i = 0; i < nPlayerNum; ++i)
     {
-        if (CGameData::PlayParam().GetStageMode() != GAMETYPES::STAGEMODE_RIDE && !m_bWakuCheck)
+        if ((CGameData::PlayParam().GetStageMode() != GAMETYPES::STAGEMODE_RIDE) && !m_bWakuCheck)
             x = StatusWakuDispSub(nPlayerNum - i - 1, x, y) - 3.0f;
 
         PlayerMarkerDisp(nPlayerNum - i - 1);
@@ -267,8 +270,8 @@ void CGaugeStatus_Container::StatusWakuDisp(void)
 
     m_bWakuSayonara = false;
 
-    float screenW = static_cast<float>(CScreen::Width());
-    float screenH = static_cast<float>(CScreen::Height());
+    float fScrW = static_cast<float>(CScreen::Width());
+    float fScrH = static_cast<float>(CScreen::Height());
 
     for (int32 i = 0; i < CGameProperty::GetPlayerNum(); ++i)
     {
@@ -276,13 +279,15 @@ void CGaugeStatus_Container::StatusWakuDisp(void)
         if (!pGamePlayer->IsAlive())
             continue;
 
-        RwV2d& scrPos = m_aScreenPosBuff[i];
+        RwV2d plScrPos = m_aScreenPosBuff[i];
+        RwV2d plScrSize = { 16.0f, 18.0f };
 
-		float w = (((screenW * 0.5f) + x) - (screenW * 0.5f));
-        float h = 80.0f;
-        // TODO incorrect intersection rect of top-right
-        if (rect_intersect(scrPos.x - 32.0f, scrPos.y, 32.0f, 18.0f,
-                     (screenW * 0.5f) + x, (screenH * 0.5f) + y, w, h))
+        RwV2d rcScrPos = { ((fScrW * 0.5f) + x), 0.0f };
+        RwV2d rcScrSize = { (fScrW - rcScrPos.x),
+                            ((fScrH * 0.5f) + y + 80.0f) };
+
+        if (rect_intersect(plScrPos.x, plScrPos.y, plScrSize.x, plScrSize.y,
+                           rcScrPos.x, rcScrPos.y, rcScrSize.x, rcScrSize.y))
         {
             m_bWakuSayonara = true;
         };
@@ -306,6 +311,7 @@ float CGaugeStatus_Container::StatusWakuDispSub(int32 nPlayerNo, float fX, float
 
     if (!m_bWakuSayonara)
         StatusWakuDispSub_Parts(0, 1, fX, fY, 20.0f, 80.0f);
+    
     float fBuffX = fX - 2.0f;
     float store_x = afStoreX[pGamePlayer->GetCharacterNum() - 1];
 
@@ -330,18 +336,16 @@ float CGaugeStatus_Container::StatusWakuDispSub(int32 nPlayerNo, float fX, float
         m_aSprite[4].Resize(32.0f, 16.0f);
         m_aSprite[4].Draw();
         
-
         x = fBuffX - 16.0f;
         y = fY + 11.0f;
+
         m_aSprite[5].Move(x, y);
         m_aSprite[5].Resize(64.0f, 32.0f);
         m_aSprite[5].SetRGBA(PLAYERID::GetColor(pGamePlayer->GetCurrentCharacterID()));
-        m_aSprite[5].SetUV(
-            0.0f,
-            (nPlayerNo * 32.0f) * (1.0f / 128.0f),
-            1.0f,
-            ((nPlayerNo * 32.0f) + 32.0f) * (1.0f / 128.0f)
-        );
+        m_aSprite[5].SetUV(0.0f,
+                           (nPlayerNo * 32.0f) * (1.0f / 128.0f),
+                           1.0f,
+                           ((nPlayerNo * 32.0f) + 32.0f) * (1.0f / 128.0f));
         m_aSprite[5].Draw();
 
         CharacterIconDisp(nPlayerNo, pGamePlayer, fBuffX, fY);
@@ -359,7 +363,7 @@ float CGaugeStatus_Container::StatusWakuDispSub(int32 nPlayerNo, float fX, float
 };
 
 
-void CGaugeStatus_Container::StatusWakuDispSub_Parts(int32 nNo, int32 nPlace, float fX, float fY, float fW, float fH)
+void CGaugeStatus_Container::StatusWakuDispSub_Parts(int32 index, int32 no, float fX, float fY, float fW, float fH)
 {
     static const float s_afStatusWakuUvTbl[][4] =
     {
@@ -368,19 +372,17 @@ void CGaugeStatus_Container::StatusWakuDispSub_Parts(int32 nNo, int32 nPlace, fl
         { 0.46875f, 0.0f, 0.625f,   0.625f   },
     };
 
-    ASSERT(nNo >= 0 && nNo < COUNT_OF(s_afStatusWakuUvTbl));
+    ASSERT(index >= 0);
+    ASSERT(index < COUNT_OF(s_afStatusWakuUvTbl));
 
-    m_aSprite[nPlace].SetUV(
-        s_afStatusWakuUvTbl[nNo][0],
-        s_afStatusWakuUvTbl[nNo][1],
-        s_afStatusWakuUvTbl[nNo][2],
-        s_afStatusWakuUvTbl[nNo][3]
-    );
-
-    m_aSprite[nPlace].Resize(fW, fH);
-    m_aSprite[nPlace].Move(fX, fY);
-    m_aSprite[nPlace].SetOffset(1.0f, 0.0f);
-    m_aSprite[nPlace].Draw();
+    m_aSprite[no].SetUV(s_afStatusWakuUvTbl[index][0],
+                        s_afStatusWakuUvTbl[index][1],
+                        s_afStatusWakuUvTbl[index][2],
+                        s_afStatusWakuUvTbl[index][3]);
+    m_aSprite[no].Resize(fW, fH);
+    m_aSprite[no].Move(fX, fY);
+    m_aSprite[no].SetOffset(1.0f, 0.0f);
+    m_aSprite[no].Draw();
 };
 
 
@@ -441,18 +443,14 @@ void CGaugeStatus_Container::CharacterIconDisp(int32 nPlayerNo, IGamePlayer* pGa
         if (nCharacterNum - i - 1)
         {
             m_aSprite[7].Resize(16.0f, 16.0f);
-            m_aSprite[7].Move(
-                fX - 40.0f - (nCharacterNum * 8.0f),
-                fY + 12.0f
-            );
+            m_aSprite[7].Move(fX - 40.0f - (nCharacterNum * 8.0f),
+                              fY + 12.0f);
         }
         else
         {
             m_aSprite[7].Resize(19.2f, 19.2f);
-            m_aSprite[7].Move(
-                fX - 40.0f - (nCharacterNum * 8.0f),
-                fY + 11.0f
-            );
+            m_aSprite[7].Move(fX - 40.0f - (nCharacterNum * 8.0f),
+                              fY + 11.0f);
         };
         
         m_aSprite[7].Draw();
@@ -575,12 +573,10 @@ void CGaugeStatus_Container::PlayerMarkerDisp(int32 nPlayerNo)
     m_SpriteMarker.SetOffset(0.5f, 0.0f);
 
     m_SpriteMarker.SetPositionAndSizeRealScreen(vScreenPos.x, vScreenPos.y - 18.0f, 32.0f, 18.0f);
-    m_SpriteMarker.SetUV(
-        0.0f,
-        (nPlayerNo * 22.0f) * (1.0f / 128.0f),
-        1.0f,
-        ((nPlayerNo * 22.0f) + 18.0f) * (1.0f / 128.0f)
-    );
+    m_SpriteMarker.SetUV(0.0f,
+                         (nPlayerNo * 22.0f) * (1.0f / 128.0f),
+                         1.0f,
+                         ((nPlayerNo * 22.0f) + 18.0f) * (1.0f / 128.0f));
     m_SpriteMarker.Draw();
 
     if (outflag)
@@ -595,7 +591,10 @@ void CGaugeStatus_Container::PlayerMarkerDisp(int32 nPlayerNo)
 
         m_SpriteMarkerArr.SetRGBA(playerColor);
         m_SpriteMarkerArr.SetRotate(fRotate);
-        m_SpriteMarkerArr.SetPositionAndSizeRealScreen(vScreenPos.x - 8.0f, vScreenPos.y - 18.0f + 24.0f, 16.0f, 16.0f);
+        m_SpriteMarkerArr.SetPositionAndSizeRealScreen(vScreenPos.x - 8.0f,
+                                                       vScreenPos.y - 18.0f + 24.0f,
+                                                       16.0f,
+                                                       16.0f);
         m_SpriteMarkerArr.SetUV(0.0f, 0.0f, 1.0f, 1.0f);
         m_SpriteMarkerArr.DrawRotate();
     };    
@@ -604,8 +603,8 @@ void CGaugeStatus_Container::PlayerMarkerDisp(int32 nPlayerNo)
 
 float CGaugeStatus_Container::GetMarkerPosY(int32 nPlayerNo) const
 {
-    if (CGameData::PlayParam().GetArea() == AREAID::ID_AREA22 ||
-        CGameData::PlayParam().GetArea() == AREAID::ID_AREA32)
+    if ((CGameData::PlayParam().GetArea() == AREAID::ID_AREA22) ||
+        (CGameData::PlayParam().GetArea() == AREAID::ID_AREA32))
         return 0.6f;
 
     if (CGameProperty::Player(nPlayerNo)->GetCurrentCharacterID() == PLAYERID::ID_SLA)
@@ -630,12 +629,14 @@ void CGaugeStatus_Container::TimerDispProc(void)
     x = -30.0f;
     y = (float(m_timer.m_nNo) * 42.0f) - 174.0f;
 
-    NumDraw(10, x, y, 128,
-        "%02d:%02d:%02d",
-        int32(m_timer.m_fValue) / 60,
-        int32(m_timer.m_fValue) % 60,
-        int32(m_timer.m_fValue * 100.0f) % 100
-    );
+    NumDraw(10,
+            x,
+            y,
+            128,
+            "%02d:%02d:%02d",
+            static_cast<int32>(m_timer.m_fValue) / 60,
+            static_cast<int32>(m_timer.m_fValue) % 60,
+            static_cast<int32>(m_timer.m_fValue * 100.0f) % 100);
 
     CGaugeManager::SetGaugeAlphaMode(CGaugeManager::ALPHAMODE_ALPHA);
 };
@@ -671,12 +672,11 @@ void CGaugeStatus_Container::ExGaugeDispProc(void)
 
         CGaugeManager::SetGaugeAlphaMode(CGaugeManager::ALPHAMODE_ADD);
 
-        m_aSprite[6].SetUV(
-            0.0f,
-            (float(i + 2) * 32.0f) * (1.0f / 256.0f),
-            1.0f,
-            ((float(i + 2) * 32.0f) + 32.0f) * (1.0f / 256.0f)
-        );
+        m_aSprite[6].Resize(128.0f, 32.0f);
+        m_aSprite[6].SetUV(0.0f,
+                           (float(i + 2) * 32.0f) * (1.0f / 256.0f),
+                           1.0f,
+                           ((float(i + 2) * 32.0f) + 32.0f) * (1.0f / 256.0f));
 
         if (i == CGaugeStatus::EX_GAUGE_ZAKO_FUGITOID_LIVE)
         {
@@ -735,22 +735,22 @@ void CGaugeStatus_Container::ZakoGaugeDisp(int32 nZakoNo, float fX, float fY)
         pZakoInfo->m_eState = ZAKOINFO::STATE_IDLE;
     };
 
-    float AnimDuration = (CScreen::Framerate() * 0.06f);
-    float AnimStep = (float(pZakoInfo->m_uAnimCnt) / AnimDuration);
-    float HpMove = float(pZakoInfo->m_nHpMove);
+    float fAnimDuration = GAUGE_ANIM_DURATION_FRAMES(4);
+    float fAnimStep = (float(pZakoInfo->m_uAnimCnt) / fAnimDuration);
+    float hpMove = float(pZakoInfo->m_nHpMove);
 
     if (pZakoInfo->m_eState == ZAKOINFO::STATE_RECOVER)
     {
-        HpMove = (HpMove - ((HpMove - float(pZakoInfo->m_nHpOld)) * AnimStep));
+        hpMove = (hpMove - ((hpMove - float(pZakoInfo->m_nHpOld)) * fAnimStep));
     }
     else if (pZakoInfo->m_eState == ZAKOINFO::STATE_DAMAGE)
     {
-        HpMove = (HpMove + ((float(pZakoInfo->m_nHpOld) - HpMove) * AnimStep));
+        hpMove = (hpMove + ((float(pZakoInfo->m_nHpOld) - hpMove) * fAnimStep));
     };
 
     if (pZakoInfo->m_eState > ZAKOINFO::STATE_IDLE)
     {
-        if (float(pZakoInfo->m_uAnimCnt) >= AnimDuration)
+        if (float(pZakoInfo->m_uAnimCnt) >= fAnimDuration)
             pZakoInfo->m_eState = ZAKOINFO::STATE_IDLE;
         else
             ++pZakoInfo->m_uAnimCnt;
@@ -773,16 +773,12 @@ void CGaugeStatus_Container::ZakoGaugeDisp(int32 nZakoNo, float fX, float fY)
     RENDERSTATE_PUSH(rwRENDERSTATETEXTURERASTER, 0);
     
     m_aSprite[0].SetOffset(1.0f, 0.0f);
-    m_aSprite[0].SetUV(
-        (140.0f - ((140.0f / float(pZakoInfo->m_nHpTotal)) * HpMove)) * (1.0f / 140.0f),
-        0.0f,
-        1.0f,
-        1.0f
-    );
-    m_aSprite[0].Resize(
-        (140.0f / float(pZakoInfo->m_nHpTotal)) * HpMove,
-        fHeight
-    );
+    m_aSprite[0].SetUV((140.0f - ((140.0f / float(pZakoInfo->m_nHpTotal)) * hpMove)) * (1.0f / 140.0f),
+                        0.0f,
+                        1.0f,
+                        1.0f);
+    m_aSprite[0].Resize((140.0f / float(pZakoInfo->m_nHpTotal)) * hpMove,
+                         fHeight);
     m_aSprite[0].Move(fX, fY);
     m_aSprite[0].SetRGBA(aZakoColor[nZakoNo]);
     m_aSprite[0].Draw();
@@ -800,7 +796,7 @@ void CGaugeStatus_Container::NumDraw(int32 nFontNo, float fOfsX, float fOfsY, ui
     va_end(vl);
 
     int32 numDelimiters = 0;
-    int32 len = std::strlen(szBuffer);
+    int32 len = static_cast<int32>(std::strlen(szBuffer));
 
     float rasterW = 0.0f;
     float digitW = 0.0f;
@@ -815,46 +811,52 @@ void CGaugeStatus_Container::NumDraw(int32 nFontNo, float fOfsX, float fOfsY, ui
     switch (nFontNo)
     {
     case 8:
-        m_aSprite[8].SetOffset(1.0f, 0.0f);        
-        digitW = 12.0f;
-        digitH = 14.0f;
-        spriteW = 12.0f;
-        spriteH = 16.0f;
-        rasterW = 256.0f;
-        stepX = 10.0f;
-        startPosY = fOfsY - 8.0f;
-        startPosX = fOfsX - 5.0f - (len - 1) * 10.0f;
+        {
+            m_aSprite[8].SetOffset(1.0f, 0.0f);
+            digitW = 12.0f;
+            digitH = 14.0f;
+            spriteW = 12.0f;
+            spriteH = 16.0f;
+            rasterW = 256.0f;
+            stepX = 10.0f;
+            startPosY = fOfsY - 8.0f;
+            startPosX = fOfsX - 5.0f - (len - 1) * 10.0f;
+        }
         break;
 
     case 9:
-        m_aSprite[9].SetOffset(1.0f, 0.0f); 
-        digitW = 16.0f;
-        digitH = 20.5f;
-        spriteW = 16.0f;
-        spriteH = 16.0f;
-        rasterW = 256.0f;
-        stepX = 13.0f;
-        startPosY = fOfsY - 8.0f;
-        startPosX = fOfsX - 6.0f - (len - 1) * 13.0f;
+        {
+            m_aSprite[9].SetOffset(1.0f, 0.0f);
+            digitW = 16.0f;
+            digitH = 20.5f;
+            spriteW = 16.0f;
+            spriteH = 16.0f;
+            rasterW = 256.0f;
+            stepX = 13.0f;
+            startPosY = fOfsY - 8.0f;
+            startPosX = fOfsX - 6.0f - (len - 1) * 13.0f;
+        }
         break;
 
     case 10:
-        m_aSprite[10].SetOffset(1.0f, 0.0f); 
-        digitW = 20.0f;
-        digitH = 24.0f;
-        spriteW = 20.0f;
-        spriteH = 32.0f;
-        rasterW = 512.0f;
-        stepX = 20.0f;
-        startPosY = fOfsY - 6.0f;
-		
-        for (int32 i = 0; i < len; ++i)
         {
-            if (szBuffer[i] == ':')
-                ++numDelimiters;
-        };
+            m_aSprite[10].SetOffset(1.0f, 0.0f);
+            digitW = 20.0f;
+            digitH = 24.0f;
+            spriteW = 20.0f;
+            spriteH = 32.0f;
+            rasterW = 512.0f;
+            stepX = 20.0f;
+            startPosY = fOfsY - 6.0f;
 
-		startPosX = (fOfsX - (float(len - 1) * 20.0f)) + (numDelimiters * 8.0f);
+            for (int32 i = 0; i < len; ++i)
+            {
+                if (szBuffer[i] == ':')
+                    ++numDelimiters;
+            };
+
+            startPosX = (fOfsX - (float(len - 1) * 20.0f)) + (numDelimiters * 8.0f);
+        }
         break;
 
     default:
@@ -872,7 +874,9 @@ void CGaugeStatus_Container::NumDraw(int32 nFontNo, float fOfsX, float fOfsY, ui
     while (szBuffer[i])
     {
         char ch = szBuffer[i];
-        if (ch == '\n' || ch == '\r')
+
+        if ((ch == '\n') ||
+            (ch == '\r'))
         {
             posX = 0.0f;
             ++i;
@@ -890,7 +894,7 @@ void CGaugeStatus_Container::NumDraw(int32 nFontNo, float fOfsX, float fOfsY, ui
                 stepX = 20.0f;
             };
         }
-        else if (ch == '-' && nFontNo == 9)
+        else if ((ch == '-') && (nFontNo == 9))
         {
             szBuffer[i] = ':';
         };
@@ -954,10 +958,13 @@ void CGaugeStatus_Container::SetNumColor(int32 nFontNo, int32 nPlayerNo)
                     };
                 };
 
-                if (nWorstDamage && nPlayerNo == nWorstPlayer)
+                if (nWorstDamage && (nPlayerNo == nWorstPlayer))
                     nColorNo = 3;
             };
         }
+        break;
+
+    default:
         break;
     };
 
@@ -1042,7 +1049,7 @@ static CGaugeStatus_Container& GaugeStatusContainer(void)
 };
 
 
-/*static*/ void CGaugeStatus::ExGaugeDispInit( EX_GAUGE_TYPE type, int32 value)
+/*static*/ void CGaugeStatus::ExGaugeDispInit(EX_GAUGE_TYPE type, int32 value)
 {
     GaugeStatusContainer().ExGaugeDispInit(type, value);
 };

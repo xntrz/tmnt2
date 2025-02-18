@@ -4,8 +4,138 @@
 #include "Game/Component/Menu/MessageWindow.hpp"
 #include "Game/Component/Menu/Dialog.hpp"
 #include "Game/System/2d/MenuSound.hpp"
+#include "Game/System/2d/GameFont.hpp"
+#include "Game/System/Text/GameText.hpp"
 #include "System/Common/Screen.hpp"
 #include "System/Common/Controller.hpp"
+
+
+class CSaveLoadMessageWindow : public CMessageWindow
+{
+public:
+    inline CSaveLoadMessageWindow(void) : CMessageWindow(COLOR_NORMAL) {};
+    inline virtual ~CSaveLoadMessageWindow(void) {};
+
+    virtual void DrawInWindow(const Rt2dBBox& bbox) const override;
+};
+
+
+class CSaveLoadSelectWindow : public CDialog    
+{
+public:
+    inline CSaveLoadSelectWindow(void) : CDialog(COLOR_NORMAL, STATUS_NO, CGameData::Attribute().GetVirtualPad()) {};
+    inline virtual ~CSaveLoadSelectWindow(void) {};
+
+    virtual void DrawInWindow(const Rt2dBBox& bbox) const override;
+};
+
+
+//
+// *********************************************************************************
+//
+
+
+/*virtual*/ void CSaveLoadMessageWindow::DrawInWindow(const Rt2dBBox& bbox) const /*override*/
+{
+    if (m_textTitle.Text())
+    {
+        Rt2dBBox bboxTitle;
+        bboxTitle.x = bbox.x - bbox.w * 0.44f;
+        bboxTitle.y = (bbox.h * 0.2f) - bbox.y;
+        bboxTitle.w = bbox.w * 0.88f;
+        bboxTitle.h = bbox.h * 0.2f;
+
+        Rt2dBBox bboxMsg;
+        bboxMsg.x = bbox.x - bbox.w * 0.44f;
+        bboxMsg.y = bbox.h * -0.4f - bbox.y;
+        bboxMsg.w = bbox.w * 0.88f;
+        bboxMsg.h = bbox.h * 0.6f;
+
+        m_textTitle.Draw(bboxTitle);
+        m_textMsg.Draw(bboxMsg);
+    }
+    else if (m_textMsg.Text())
+    {
+        Rt2dBBox bboxMsg;
+        bboxMsg.x = bbox.x - bbox.w * 0.44f;
+        bboxMsg.y = bbox.h * -0.4f - bbox.y;
+        bboxMsg.w = bbox.w * 0.88f;
+        bboxMsg.h = bbox.h * 0.8f;
+
+        m_textMsg.Draw(bboxMsg);
+    };
+};
+
+
+//
+// *********************************************************************************
+//
+
+
+/*virtual*/ void CSaveLoadSelectWindow::DrawInWindow(const Rt2dBBox& bbox) const /*override*/
+{
+    if (m_textTitle.Text())
+    {
+        Rt2dBBox bboxTitle;
+        bboxTitle.x = bbox.x - bbox.w * 0.44f;
+        bboxTitle.y = (bbox.h * 0.2f) - bbox.y;
+        bboxTitle.w = bbox.w * 0.88f;
+        bboxTitle.h = bbox.h * 0.2f;
+
+        Rt2dBBox bboxText;
+        bboxText.x = bbox.x - bbox.w * 0.44f;
+        bboxText.y = bbox.h * -0.2f - bbox.y;
+        bboxText.w = bbox.w * 0.88f;
+        bboxText.h = bbox.h * 0.4f;
+
+        m_textTitle.Draw(bboxTitle);
+        m_textMsg.Draw(bboxText);
+    }
+    else if (m_textMsg.Text())
+    {
+        Rt2dBBox bboxText;
+        bboxText.x = bbox.x - bbox.w * 0.44f;
+        bboxText.y = bbox.h * -0.2f - bbox.y;
+        bboxText.w = bbox.w * 0.88f;
+        bboxText.h = bbox.h * 0.6f;
+
+        m_textMsg.Draw(bboxText);
+    };
+
+	CGameFont::SetHeight(20.0f);
+
+    /* yes btn */
+    const wchar* pwszYes = CGameText::GetText(GAMETEXT_YES);
+    if (m_status == STATUS_YES)
+        CGameFont::SetRGBA(0, 255, 0, 255);
+    else
+        CGameFont::SetRGBA(255, 180, 0, 255);
+
+    RwV2d vecPosYes = Math::VECTOR2_ZERO;
+    GetPositionYesNo(&vecPosYes, STATUS_YES);
+
+    CGameFont::Show(pwszYes, &vecPosYes);
+
+    /* no btn */
+    const wchar* pwszNo = CGameText::GetText(GAMETEXT_NO);
+    if (m_status == STATUS_NO)
+        CGameFont::SetRGBA(0, 255, 0, 255);
+    else
+        CGameFont::SetRGBA(255, 180, 0, 255);
+
+    RwV2d vecPosNo = Math::VECTOR2_ZERO;
+    GetPositionYesNo(&vecPosNo, STATUS_NO);
+
+    CGameFont::Show(pwszNo, &vecPosNo);
+
+    /* cursor */
+    m_aSprite[3].DrawRotate();
+};
+
+
+//
+// *********************************************************************************
+//
 
 
 CSaveLoadFrame::CSaveLoadFrame(void)
@@ -208,11 +338,11 @@ void CSaveLoadFrame::CreateMessageWindow(void)
     {
 	case MODE_ERROR:
     case MODE_MESSAGE:
-        m_pWindow = new CMessageWindow(CMessageWindow::COLOR_NORMAL);
+        m_pWindow = new CSaveLoadMessageWindow;
         break;
 
     case MODE_SELECT:
-        m_pWindow = new CDialog(CDialog::COLOR_NORMAL, CDialog::STATUS_YES, CGameData::Attribute().GetVirtualPad());
+        m_pWindow = new CSaveLoadSelectWindow;
         break;
 
     default:
@@ -228,12 +358,10 @@ void CSaveLoadFrame::CreateMessageWindow(void)
         m_pWindow->SetOpenAction(false);
         m_pWindow->SetTitle(m_pwszTitle, 16.0f, { 0xFF, 0xFF, 0xFF, 0xFF });
         m_pWindow->SetText(m_pwszMessage, 16.0f, { 0xFF, 0xFF, 0xFF, 0xFF });
-        m_pWindow->Set(
-            0.0f,
-            0.0f,
-            CSprite::m_fVirtualScreenW,
-            CSprite::m_fVirtualScreenH * 0.75f
-        );
+        m_pWindow->Set(0.0f,
+                       0.0f,
+                       CSprite::m_fVirtualScreenW,
+                       CSprite::m_fVirtualScreenH * 0.75f);
 
         m_pWindow->Open();
 

@@ -35,8 +35,6 @@ CUnlockSequence::~CUnlockSequence(void)
 bool CUnlockSequence::OnAttach(const void* pParam)
 {
     m_pUnlockMessage = new CUnlockMessage;
-    ASSERT(m_pUnlockMessage);
-
     m_notifyphase = NOTIFYPHASE_OPEN;
     m_UnnnotifiedSecretID = CGameData::Record().Secret().GetUnnotifiedSecret();
 

@@ -14,9 +14,10 @@ public:
     virtual void OnDetach(void) override;
     virtual void OnMove(bool bRet, const void* pReturnValue) override;
     virtual void OnDraw(void) const override;
-    virtual void BeginFadein(void) override;
+    virtual void BeginFadeIn(void) override;
+    void MessageProc(void);
 
 private:
     int32 m_iSelWindowType;
-    bool m_bGotoViewerFlag;
+    bool  m_bGotoViewerFlag;
 };

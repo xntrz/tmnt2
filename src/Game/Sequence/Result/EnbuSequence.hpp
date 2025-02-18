@@ -34,11 +34,11 @@ private:
     RpLight* m_pLight;
     RpWorld* m_pWorld;
     CCamera* m_pCamera;
-    STEP m_step;
-    float m_fCameraRotY;
-    float m_fDistEye;
-    float m_fEyeOfsY;
-    float m_fCameraOfsY;
-    uint32 m_auCnt[3];
-    int32 m_uAnimStep;
+    STEP     m_step;
+    float    m_fCameraRotY;
+    float    m_fDistEye;
+    float    m_fEyeOfsY;
+    float    m_fCameraOfsY;
+    uint32   m_aAnimFrameCnt[3];
+    int32    m_uAnimStep;
 };

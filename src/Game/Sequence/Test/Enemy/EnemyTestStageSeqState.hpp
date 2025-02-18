@@ -2,12 +2,10 @@
 
 #include "EnemyTestTypes.hpp"
 
-#include "Game/Component/Enemy/EnemyID.hpp"
-#include "Game/Sequence/Stage/StageSeqState.hpp"
-
 #ifdef _DEBUG
 
-class CEnemyTestCamera;
+#include "Game/Component/Enemy/EnemyID.hpp"
+#include "Game/Sequence/Stage/StageSeqState.hpp"
 
 
 class CLoadEnemyTestStageSeqState : public IStageSeqState
@@ -70,7 +68,6 @@ public:
 private:
     static CPlayEnemyTestStageSeqState* m_pPlaySeqState;
     int32                               m_step;
-    CEnemyTestCamera*                   m_pCameraUpdater;
     float                               m_fItemBoxRespawnWait;
     ENEMYTESTTYPES::TEST_CTX            m_testCtx;
     bool                                m_bAIState;

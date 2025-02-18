@@ -160,7 +160,10 @@ static void DrawSubtitleBorder(void)
                                     s_textAreaSize.y);
 
         for (int32 i = 0; i < colorPtMax; ++i)
-            spriteL.SetRGBA(i, 0, 0, 0, 16 - (80 * (i / 2)));
+        {
+            int32 alphaBasis = (16 - (80 * (i / 2)));
+            spriteL.SetRGBA(i, 0, 0, 0, static_cast<uint8>(alphaBasis));
+        };
 
         spriteL.Draw();
     }
@@ -175,7 +178,10 @@ static void DrawSubtitleBorder(void)
                                     s_textAreaSize.y);
 
         for (int32 i = 0; i < colorPtMax; ++i)
-            spriteR.SetRGBA((colorPtMax - 1) - i, 0, 0, 0, 16 - (80 * (i / 2)));
+        {
+            int32 alphaBasis = (16 - (80 * (i / 2)));
+            spriteR.SetRGBA((colorPtMax - 1) - i, 0, 0, 0, static_cast<uint8>(alphaBasis));
+        };
 
         spriteR.Draw();
     }
@@ -288,7 +294,7 @@ static void DrawSubtitleText(void)
         s_ppMovieTextElement[i] = nullptr;
 
     /* init language id from config language */
-    int32 languageId = LANGUAGE_ID_ENGLISH;
+    uint32 languageId = LANGUAGE_ID_ENGLISH;
     TYPEDEF::CONFIG_LANG language = CConfigure::GetLanguage();
     switch (language)
     {

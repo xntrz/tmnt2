@@ -32,8 +32,8 @@ public:
 
     struct ButtonByLabelPacket
     {
-        int32 m_iAnimButtonState;
-        int32 m_iButtonID;
+        int32 btnState;
+        int32 btnId;
     };
 
 public:
@@ -55,11 +55,10 @@ private:
     static Rt2dMaestro* AnimationsCallBack(Rt2dMaestro* maestro, Rt2dAnim* anim, Rt2dAnimProps* props, void* pData);
 
 private:
-    static const char* m_apszButtonLabel[];
-    static uint32 m_auDigitalDataTable[];
-    static bool m_abLockKeyData[];
-
-    int32 m_aButtonLabelID[CONTROLLER_ID_MAX][BUTTON_ID_MAX];
-    uint32 m_aControllerEnableBit[CONTROLLER_ID_MAX];
-    bool m_bUnlock;
+    static const char*  m_apszButtonLabel[];
+    static uint32       m_aDigitalDataTable[];
+    static bool         m_abLockKeyData[];
+    int32               m_aButtonLabelID[CONTROLLER_ID_MAX][BUTTON_ID_MAX];
+    uint32              m_aControllerEnableBit[CONTROLLER_ID_MAX];
+    bool                m_bUnlock;
 };

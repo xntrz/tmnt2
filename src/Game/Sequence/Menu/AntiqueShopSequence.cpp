@@ -13,6 +13,7 @@
 #include "Game/System/Texture/TextureManager.hpp"
 #include "Game/ProcessList.hpp"
 #include "System/Common/Controller.hpp"
+#include "System/Common/Configure.hpp"
 #include "System/Common/Sprite.hpp"
 #include "System/Common/Screen.hpp"
 #include "System/Common/System2D.hpp"
@@ -21,14 +22,30 @@
 #include "System/Common/TextData.hpp"
 
 
+static float s_fAntiqueFontScale = 2.0f;
+
+
 static int32 s_aAntiqueMap[7][10] =
 {
+    // FOOT
     { ANTIQUEID::ID_AT01, ANTIQUEID::ID_AT02, ANTIQUEID::ID_AT47, ANTIQUEID::ID_AT48, ANTIQUEID::ID_AT49, ANTIQUEID::ID_AT50, ANTIQUEID::ID_AT51, ANTIQUEID::ID_AT52, ANTIQUEID::ID_AT53, ANTIQUEID::ID_AT54 },
+
+    // OTHER
     { ANTIQUEID::ID_AT03, ANTIQUEID::ID_AT04, ANTIQUEID::ID_AT05, ANTIQUEID::ID_AT09, ANTIQUEID::ID_AT10, ANTIQUEID::ID_AT11, ANTIQUEID::ID_AT28, ANTIQUEID::ID_AT55, -1, -1 },
+
+    // UTROM
     { ANTIQUEID::ID_AT06, ANTIQUEID::ID_AT07, ANTIQUEID::ID_AT08, ANTIQUEID::ID_AT35, ANTIQUEID::ID_AT36, -1, -1, -1, -1, -1 },
+
+    // D'HOONNIB
     { ANTIQUEID::ID_AT12, ANTIQUEID::ID_AT13, ANTIQUEID::ID_AT14, ANTIQUEID::ID_AT15, ANTIQUEID::ID_AT16, ANTIQUEID::ID_AT17, ANTIQUEID::ID_AT18, ANTIQUEID::ID_AT19, ANTIQUEID::ID_AT20, ANTIQUEID::ID_AT21 },
+
+    // TRICERATOR
     { ANTIQUEID::ID_AT22, ANTIQUEID::ID_AT23, ANTIQUEID::ID_AT24, ANTIQUEID::ID_AT25, ANTIQUEID::ID_AT26, ANTIQUEID::ID_AT27, -1, -1, -1, -1 },
+
+    // JAPAN
     { ANTIQUEID::ID_AT29, ANTIQUEID::ID_AT30, ANTIQUEID::ID_AT31, ANTIQUEID::ID_AT32, ANTIQUEID::ID_AT33, ANTIQUEID::ID_AT34, -1, -1, -1, -1 },
+
+    // NY
     { ANTIQUEID::ID_AT37, ANTIQUEID::ID_AT38, ANTIQUEID::ID_AT39, ANTIQUEID::ID_AT40, ANTIQUEID::ID_AT41, ANTIQUEID::ID_AT42, ANTIQUEID::ID_AT43, ANTIQUEID::ID_AT44, ANTIQUEID::ID_AT45, ANTIQUEID::ID_AT46 },
 };
 
@@ -94,6 +111,9 @@ static int32 s_aAntiquePrice[ANTIQUEID::ID_MAX] =
 };
 
 
+static_assert(COUNT_OF(s_aAntiquePrice) == ANTIQUEID::ID_MAX, "update table");
+
+
 static const char* s_apszAprilFace[] =
 {
     "shop_aprilCPS",
@@ -107,6 +127,118 @@ static const char* s_apszAprilFace[] =
 
 static const char* s_apszAntiqueTexOrg[] =
 {
+#ifdef TMNT2_BUILD_EU
+    "Antique_019",
+    "Antique_021",
+    "Antique_023",
+    "Antique_025",
+    "Antique_060",
+    "Antique_062",
+    "Antique_064",
+    "Antique_066",
+    "Antique_068",
+    "Antique_070",
+    "Antique_095",
+    "Antique_097",
+    "Antique_099",
+    "Antique_101",
+    "Antique_103",
+    "Antique_105",
+    "Antique_072",
+    "Antique_074",
+    "Antique_076",
+    "Antique_078",
+    "Antique_080",
+    "Antique_082",
+    "Antique_116",
+    "Antique_118",
+    "Antique_120",
+    "Antique_122",
+    "Antique_124",
+    "Antique_126",
+    "Antique_128",
+    "Antique_130",
+    "Antique_132",
+    "Antique_134",
+    "Antique_144",
+    "Antique_146",
+    "Antique_148",
+    "Antique_150",
+    "Antique_152",
+    "Antique_154",
+    "Antique_136",
+    "Antique_138",
+    "Antique_140",
+    "Antique_142",
+    "Antique_157",
+    "Antique_159",
+    "Antique_161",
+    "Antique_163",
+    "Antique_165",
+    "Antique_167",
+    "Antique_169",
+    "Antique_171",
+    "Antique_173",
+    "Antique_175",
+    "Antique_177",
+    "Antique_179",
+    "Antique_084",
+    "Antique_086",
+    "Antique_182",
+    "Antique_184",
+    "Antique_186",
+    "Antique_188",
+    "Antique_190",
+    "Antique_192",
+    "Antique_194",
+    "Antique_196",
+    "Antique_198",
+    "Antique_200",
+    "Antique_202",
+    "Antique_204",
+    "Antique_107",
+    "Antique_109",
+    "Antique_111",
+    "Antique_113",
+    "Antique_207",
+    "Antique_209",
+    "Antique_211",
+    "Antique_213",
+    "Antique_215",
+    "Antique_217",
+    "Antique_219",
+    "Antique_221",
+    "Antique_223",
+    "Antique_225",
+    "Antique_227",
+    "Antique_229",
+    "Antique_231",
+    "Antique_233",
+    "Antique_235",
+    "Antique_237",
+    "Antique_239",
+    "Antique_241",
+    "Antique_243",
+    "Antique_245",
+    "Antique_027",
+    "Antique_029",
+    "Antique_031",
+    "Antique_033",
+    "Antique_035",
+    "Antique_037",
+    "Antique_039",
+    "Antique_041",
+    "Antique_043",
+    "Antique_045",
+    "Antique_047",
+    "Antique_049",
+    "Antique_051",
+    "Antique_053",
+    "Antique_055",
+    "Antique_057",
+    "Antique_088",
+    "Antique_090",
+#else /* TMNT2_BUILD_EU */    
     "Antique_017",
     "Antique_019",
     "Antique_021",
@@ -217,6 +349,7 @@ static const char* s_apszAntiqueTexOrg[] =
     "Antique_055",
     "Antique_086",
     "Antique_088",
+#endif /* TMNT2_BUILD_EU */
 };
 
 
@@ -281,167 +414,209 @@ static const char* s_apszAntiqueTex[] =
 };
 
 
+static_assert(COUNT_OF(s_apszAntiqueTex) == ANTIQUEID::ID_MAX, "update table");
+
+
 static GAMETEXT s_aAntiqueText[] =
 {
-    GAMETEXT(0x0),
-    GAMETEXT(0x3B9),
-    GAMETEXT(0x3BA),
-    GAMETEXT(0x3BB),
-    GAMETEXT(0x3BC),
-    GAMETEXT(0x3BD),
-    GAMETEXT(0x3BE),
-    GAMETEXT(0x3BF),
-    GAMETEXT(0x3C0),
-    GAMETEXT(0x3C1),
-    GAMETEXT(0x3C2),
-    GAMETEXT(0x3C3),
-    GAMETEXT(0x3C4),
-    GAMETEXT(0x3C5),
-    GAMETEXT(0x3C6),
-    GAMETEXT(0x3C7),
-    GAMETEXT(0x3C8),
-    GAMETEXT(0x3C9),
-    GAMETEXT(0x3CA),
-    GAMETEXT(0x3CB),
-    GAMETEXT(0x3CC),
-    GAMETEXT(0x3CD),
-    GAMETEXT(0x3CE),
-    GAMETEXT(0x3CF),
-    GAMETEXT(0x3D0),
-    GAMETEXT(0x3D1),
-    GAMETEXT(0x3D2),
-    GAMETEXT(0x3D3),
-    GAMETEXT(0x3D4),
-    GAMETEXT(0x3D5),
-    GAMETEXT(0x3D6),
-    GAMETEXT(0x3D7),
-    GAMETEXT(0x3D8),
-    GAMETEXT(0x3D9),
-    GAMETEXT(0x3DA),
-    GAMETEXT(0x3DB),
-    GAMETEXT(0x3DC),
-    GAMETEXT(0x3DD),
-    GAMETEXT(0x3DE),
-    GAMETEXT(0x3DF),
-    GAMETEXT(0x3E0),
-    GAMETEXT(0x3E1),
-    GAMETEXT(0x3E2),
-    GAMETEXT(0x3E3),
-    GAMETEXT(0x3E4),
-    GAMETEXT(0x3E5),
-    GAMETEXT(0x3E6),
-    GAMETEXT(0x3E7),
-    GAMETEXT(0x3E8),
-    GAMETEXT(0x3E9),
-    GAMETEXT(0x3EA),
-    GAMETEXT(0x3EB),
-    GAMETEXT(0x3EC),
-    GAMETEXT(0x3ED),
-    GAMETEXT(0x3EE),
-    GAMETEXT(0x3EF),
+    /* ANTIQUEID::ID_NONE */    GAMETEXT_EMPTY,
+    /* ANTIQUEID::ID_AT01 */    GAMETEXT_AT_01,
+    /* ANTIQUEID::ID_AT02 */    GAMETEXT_AT_02,
+    /* ANTIQUEID::ID_AT03 */    GAMETEXT_AT_03,
+    /* ANTIQUEID::ID_AT04 */    GAMETEXT_AT_04,
+    /* ANTIQUEID::ID_AT05 */    GAMETEXT_AT_05,
+    /* ANTIQUEID::ID_AT06 */    GAMETEXT_AT_06,
+    /* ANTIQUEID::ID_AT07 */    GAMETEXT_AT_07,
+    /* ANTIQUEID::ID_AT08 */    GAMETEXT_AT_08,
+    /* ANTIQUEID::ID_AT09 */    GAMETEXT_AT_09,
+    /* ANTIQUEID::ID_AT10 */    GAMETEXT_AT_10,
+    /* ANTIQUEID::ID_AT11 */    GAMETEXT_AT_11,
+    /* ANTIQUEID::ID_AT12 */    GAMETEXT_AT_12,
+    /* ANTIQUEID::ID_AT13 */    GAMETEXT_AT_13,
+    /* ANTIQUEID::ID_AT14 */    GAMETEXT_AT_14,
+    /* ANTIQUEID::ID_AT15 */    GAMETEXT_AT_15,
+    /* ANTIQUEID::ID_AT16 */    GAMETEXT_AT_16,
+    /* ANTIQUEID::ID_AT17 */    GAMETEXT_AT_17,
+    /* ANTIQUEID::ID_AT18 */    GAMETEXT_AT_18,
+    /* ANTIQUEID::ID_AT19 */    GAMETEXT_AT_19,
+    /* ANTIQUEID::ID_AT20 */    GAMETEXT_AT_20,
+    /* ANTIQUEID::ID_AT21 */    GAMETEXT_AT_21,
+    /* ANTIQUEID::ID_AT22 */    GAMETEXT_AT_22,
+    /* ANTIQUEID::ID_AT23 */    GAMETEXT_AT_23,
+    /* ANTIQUEID::ID_AT24 */    GAMETEXT_AT_24,
+    /* ANTIQUEID::ID_AT25 */    GAMETEXT_AT_25,
+    /* ANTIQUEID::ID_AT26 */    GAMETEXT_AT_26,
+    /* ANTIQUEID::ID_AT27 */    GAMETEXT_AT_27,
+    /* ANTIQUEID::ID_AT28 */    GAMETEXT_AT_28,
+    /* ANTIQUEID::ID_AT29 */    GAMETEXT_AT_29,
+    /* ANTIQUEID::ID_AT30 */    GAMETEXT_AT_30,
+    /* ANTIQUEID::ID_AT31 */    GAMETEXT_AT_31,
+    /* ANTIQUEID::ID_AT32 */    GAMETEXT_AT_32,
+    /* ANTIQUEID::ID_AT33 */    GAMETEXT_AT_33,
+    /* ANTIQUEID::ID_AT34 */    GAMETEXT_AT_34,
+    /* ANTIQUEID::ID_AT35 */    GAMETEXT_AT_35,
+    /* ANTIQUEID::ID_AT36 */    GAMETEXT_AT_36,
+    /* ANTIQUEID::ID_AT37 */    GAMETEXT_AT_37,
+    /* ANTIQUEID::ID_AT38 */    GAMETEXT_AT_38,
+    /* ANTIQUEID::ID_AT39 */    GAMETEXT_AT_39,
+    /* ANTIQUEID::ID_AT40 */    GAMETEXT_AT_40,
+    /* ANTIQUEID::ID_AT41 */    GAMETEXT_AT_41,
+    /* ANTIQUEID::ID_AT42 */    GAMETEXT_AT_42,
+    /* ANTIQUEID::ID_AT43 */    GAMETEXT_AT_43,
+    /* ANTIQUEID::ID_AT44 */    GAMETEXT_AT_44,
+    /* ANTIQUEID::ID_AT45 */    GAMETEXT_AT_45,
+    /* ANTIQUEID::ID_AT46 */    GAMETEXT_AT_46,
+    /* ANTIQUEID::ID_AT47 */    GAMETEXT_AT_47,
+    /* ANTIQUEID::ID_AT48 */    GAMETEXT_AT_48,
+    /* ANTIQUEID::ID_AT49 */    GAMETEXT_AT_49,
+    /* ANTIQUEID::ID_AT50 */    GAMETEXT_AT_50,
+    /* ANTIQUEID::ID_AT51 */    GAMETEXT_AT_51,
+    /* ANTIQUEID::ID_AT52 */    GAMETEXT_AT_52,
+    /* ANTIQUEID::ID_AT53 */    GAMETEXT_AT_53,
+    /* ANTIQUEID::ID_AT54 */    GAMETEXT_AT_54,
+    /* ANTIQUEID::ID_AT55 */    GAMETEXT_AT_55,
 };
+
+
+static_assert(COUNT_OF(s_aAntiqueText) == ANTIQUEID::ID_MAX, "update table");
 
 
 static GAMETEXT s_aAntiqueComment[] =
 {
-    GAMETEXT(0x0),
-    GAMETEXT(0x427),
-    GAMETEXT(0x428),
-    GAMETEXT(0x429),
-    GAMETEXT(0x42A),
-    GAMETEXT(0x42B),
-    GAMETEXT(0x42C),
-    GAMETEXT(0x42D),
-    GAMETEXT(0x42E),
-    GAMETEXT(0x42F),
-    GAMETEXT(0x430),
-    GAMETEXT(0x431),
-    GAMETEXT(0x432),
-    GAMETEXT(0x433),
-    GAMETEXT(0x434),
-    GAMETEXT(0x435),
-    GAMETEXT(0x436),
-    GAMETEXT(0x437),
-    GAMETEXT(0x438),
-    GAMETEXT(0x439),
-    GAMETEXT(0x43A),
-    GAMETEXT(0x43B),
-    GAMETEXT(0x43C),
-    GAMETEXT(0x43D),
-    GAMETEXT(0x43E),
-    GAMETEXT(0x43F),
-    GAMETEXT(0x440),
-    GAMETEXT(0x441),
-    GAMETEXT(0x442),
-    GAMETEXT(0x443),
-    GAMETEXT(0x444),
-    GAMETEXT(0x445),
-    GAMETEXT(0x446),
-    GAMETEXT(0x447),
-    GAMETEXT(0x448),
-    GAMETEXT(0x449),
-    GAMETEXT(0x44A),
-    GAMETEXT(0x44B),
-    GAMETEXT(0x44C),
-    GAMETEXT(0x44D),
-    GAMETEXT(0x44E),
-    GAMETEXT(0x44F),
-    GAMETEXT(0x450),
-    GAMETEXT(0x451),
-    GAMETEXT(0x452),
-    GAMETEXT(0x453),
-    GAMETEXT(0x454),
-    GAMETEXT(0x455),
-    GAMETEXT(0x456),
-    GAMETEXT(0x457),
-    GAMETEXT(0x458),
-    GAMETEXT(0x459),
-    GAMETEXT(0x45A),
-    GAMETEXT(0x45B),
-    GAMETEXT(0x45C),
-    GAMETEXT(0x45D),
-    GAMETEXT(0x3B3),
-    GAMETEXT(0x3B5),
-    GAMETEXT(0x3B6),
+    /* ANTIQUEID::ID_NONE */    GAMETEXT(0x0),
+    /* ANTIQUEID::ID_AT01 */    GAMETEXT(0x427),
+    /* ANTIQUEID::ID_AT02 */    GAMETEXT(0x428),
+    /* ANTIQUEID::ID_AT03 */    GAMETEXT(0x429),
+    /* ANTIQUEID::ID_AT04 */    GAMETEXT(0x42A),
+    /* ANTIQUEID::ID_AT05 */    GAMETEXT(0x42B),
+    /* ANTIQUEID::ID_AT06 */    GAMETEXT(0x42C),
+    /* ANTIQUEID::ID_AT07 */    GAMETEXT(0x42D),
+    /* ANTIQUEID::ID_AT08 */    GAMETEXT(0x42E),
+    /* ANTIQUEID::ID_AT09 */    GAMETEXT(0x42F),
+    /* ANTIQUEID::ID_AT10 */    GAMETEXT(0x430),
+    /* ANTIQUEID::ID_AT11 */    GAMETEXT(0x431),
+    /* ANTIQUEID::ID_AT12 */    GAMETEXT(0x432),
+    /* ANTIQUEID::ID_AT13 */    GAMETEXT(0x433),
+    /* ANTIQUEID::ID_AT14 */    GAMETEXT(0x434),
+    /* ANTIQUEID::ID_AT15 */    GAMETEXT(0x435),
+    /* ANTIQUEID::ID_AT16 */    GAMETEXT(0x436),
+    /* ANTIQUEID::ID_AT17 */    GAMETEXT(0x437),
+    /* ANTIQUEID::ID_AT18 */    GAMETEXT(0x438),
+    /* ANTIQUEID::ID_AT19 */    GAMETEXT(0x439),
+    /* ANTIQUEID::ID_AT20 */    GAMETEXT(0x43A),
+    /* ANTIQUEID::ID_AT21 */    GAMETEXT(0x43B),
+    /* ANTIQUEID::ID_AT22 */    GAMETEXT(0x43C),
+    /* ANTIQUEID::ID_AT23 */    GAMETEXT(0x43D),
+    /* ANTIQUEID::ID_AT24 */    GAMETEXT(0x43E),
+    /* ANTIQUEID::ID_AT25 */    GAMETEXT(0x43F),
+    /* ANTIQUEID::ID_AT26 */    GAMETEXT(0x440),
+    /* ANTIQUEID::ID_AT27 */    GAMETEXT(0x441),
+    /* ANTIQUEID::ID_AT28 */    GAMETEXT(0x442),
+    /* ANTIQUEID::ID_AT29 */    GAMETEXT(0x443),
+    /* ANTIQUEID::ID_AT30 */    GAMETEXT(0x444),
+    /* ANTIQUEID::ID_AT31 */    GAMETEXT(0x445),
+    /* ANTIQUEID::ID_AT32 */    GAMETEXT(0x446),
+    /* ANTIQUEID::ID_AT33 */    GAMETEXT(0x447),
+    /* ANTIQUEID::ID_AT34 */    GAMETEXT(0x448),
+    /* ANTIQUEID::ID_AT35 */    GAMETEXT(0x449),
+    /* ANTIQUEID::ID_AT36 */    GAMETEXT(0x44A),
+    /* ANTIQUEID::ID_AT37 */    GAMETEXT(0x44B),
+    /* ANTIQUEID::ID_AT38 */    GAMETEXT(0x44C),
+    /* ANTIQUEID::ID_AT39 */    GAMETEXT(0x44D),
+    /* ANTIQUEID::ID_AT40 */    GAMETEXT(0x44E),
+    /* ANTIQUEID::ID_AT41 */    GAMETEXT(0x44F),
+    /* ANTIQUEID::ID_AT42 */    GAMETEXT(0x450),
+    /* ANTIQUEID::ID_AT43 */    GAMETEXT(0x451),
+    /* ANTIQUEID::ID_AT44 */    GAMETEXT(0x452),
+    /* ANTIQUEID::ID_AT45 */    GAMETEXT(0x453),
+    /* ANTIQUEID::ID_AT46 */    GAMETEXT(0x454),
+    /* ANTIQUEID::ID_AT47 */    GAMETEXT(0x455),
+    /* ANTIQUEID::ID_AT48 */    GAMETEXT(0x456),
+    /* ANTIQUEID::ID_AT49 */    GAMETEXT(0x457),
+    /* ANTIQUEID::ID_AT50 */    GAMETEXT(0x458),
+    /* ANTIQUEID::ID_AT51 */    GAMETEXT(0x459),
+    /* ANTIQUEID::ID_AT52 */    GAMETEXT(0x45A),
+    /* ANTIQUEID::ID_AT53 */    GAMETEXT(0x45B),
+    /* ANTIQUEID::ID_AT54 */    GAMETEXT(0x45C),
+    /* ANTIQUEID::ID_AT55 */    GAMETEXT(0x45D),
 };
 
 
-static RwV2d s_vMarker = { 173.0f, -4.0f };
-static RwV2d s_vMarkerInc = { 10.0f, 11.0f };
-static RwV2d s_vMarkerSize = { 8.0f, 8.0f };
-static RwV2d s_vAboutPos = { 38.0f, 0.0f };
-static RwV2d s_vAboutItemPos = { 50.0f, -58.0f };
-static RwV2d s_vAboutStarPos = { -45.0f, 18.0f };
-static RwV2d s_avAboutTextPos[] =
+static_assert(COUNT_OF(s_aAntiqueComment) == ANTIQUEID::ID_MAX, "update table");
+
+
+#ifdef TMNT2_BUILD_EU
+
+#define ABOUT_WND_POS_X     (-30.0f)
+#define ABOUT_WND_POS_Y     (-25.0f)
+
+static RwV2d s_vMarker       = { 173.0f,  -4.0f };
+static RwV2d s_vMarkerInc    = {  10.0f,  11.0f };
+static RwV2d s_vMarkerSize   = {   8.0f,   8.0f };
+static RwV2d s_vAboutPos     = { ABOUT_WND_POS_X, ABOUT_WND_POS_Y };
+static RwV2d s_vAboutItemPos = {  70.0f, -65.0f };
+static RwV2d s_vAboutStarPos = { -20.0f,   8.0f };
+static RwV2d s_avAboutTextPos [] =
 {
-    { -226.0f, -136.0f },
-    { -226.0f, -68.0f },
-    { -226.0f, 0.0f },
+    { -235.0f, -150.0f },
+    { -235.0f,  -65.0f },
+    { -235.0f,    3.0f },
 };
 static Rt2dBBox s_aAboutBox[] =
 {
-    { -226.0f, 70.0f, 158.0f, 64.0f },
+    { -237.0f,   50.0f, 200.0f,  96.0f },
     { -226.0f, -137.0f, 380.0f, 100.0f },
-    { -226.0f, 2.0f, 158.0f, 64.0f },
+    { -237.0f,   -5.0f, 200.0f,  64.0f },
 };
-static RwV2d s_vGetDatePos = { -226.0f, 16.0f };
-static RwV2d s_vAboutArrowUPos = { 170.0f, 48.0f };
-static RwV2d s_vAboutArrowDPos = { 170.0f, 140.0f };
+static RwV2d s_vGetDatePos      = { -225.0f,  18.0f };
+static RwV2d s_vAboutArrowUPos  = {  171.0f,  40.0f };
+static RwV2d s_vAboutArrowDPos  = {  171.0f, 133.0f };
+
+#else /* TMNT2_BUILD_EU */
+
+#define ABOUT_WND_POS_X     (-38.0f)
+#define ABOUT_WND_POS_Y     (0.0f)
+
+static RwV2d s_vMarker       = { 173.0f,  -4.0f };
+static RwV2d s_vMarkerInc    = {  10.0f,  11.0f };
+static RwV2d s_vMarkerSize   = {   8.0f,   8.0f };
+static RwV2d s_vAboutPos     = { ABOUT_WND_POS_X, ABOUT_WND_POS_Y };
+static RwV2d s_vAboutItemPos = {  50.0f, -58.0f };
+static RwV2d s_vAboutStarPos = { -45.0f,  18.0f };
+static RwV2d s_avAboutTextPos[] =
+{
+    { -226.0f, -136.0f },
+    { -226.0f,  -68.0f },
+    { -226.0f,    0.0f },
+};
+static Rt2dBBox s_aAboutBox[] =
+{
+    { -226.0f,   70.0f, 158.0f,  64.0f },
+    { -226.0f, -137.0f, 380.0f, 100.0f },
+    { -226.0f,    2.0f, 158.0f,  64.0f },
+};
+static RwV2d s_vGetDatePos     = { -226.0f,  16.0f };
+static RwV2d s_vAboutArrowUPos = {  170.0f,  48.0f };
+static RwV2d s_vAboutArrowDPos = {  170.0f, 140.0f };
+
+#endif /* TMNT2_BUILD_EU */
+
+
+#define ABOUT_WND_MOV_TIME  (15) // frames
+#define ABOUT_WND_MOV_DIST  (640.0f)
+#define ABOUT_WND_MOV_STEP  ((ABOUT_WND_MOV_DIST + ABOUT_WND_POS_X) / static_cast<float>(ABOUT_WND_MOV_TIME))
 
 
 class CAntiqueShop
 {
 private:
-    static const uint32 ABOUT_ANIMDUR_FRAMES;
-    static const float ABOUT_MOVE_INC;
-    
     class CAntiqueSprite final : public CSprite
     {
     public:
-        CAntiqueSprite(void);
-        virtual ~CAntiqueSprite(void);
-        void SetDisplay(bool bState);
-        bool IsDisplaying(void) const;
+        inline CAntiqueSprite(void) : m_bDispState(false) {};
+        inline virtual ~CAntiqueSprite(void) {};
+        inline void SetDisplay(bool bState) { m_bDispState = bState; };
+        inline bool IsDisplaying(void) const { return m_bDispState; };
 
     private:
         bool m_bDispState;
@@ -449,8 +624,8 @@ private:
 
     struct CTRLINFO
     {
-        GAMETEXT IdText;
-        RwV2d Position;
+        GAMETEXT TextId;
+        RwV2d    Position;
     };
 
 public:
@@ -458,14 +633,13 @@ public:
     ~CAntiqueShop(void);
     void Attach(void);
     void Detach(void);
-    void Loaded(CAnimation2D* pAnimation2D);
     bool Move(void);
     void Draw(void);
     void DlgCreate(void);
     void DlgDestroy(void);
     void AntiqueInit(void);
     void AntiqueCheck(void);
-    void AntiqueDispChange(void);
+    void AntiqueDispChange(CAnimation2D* pAnimation2D);
     void AntiqueDispCtrl(void);
     void AntiqueOpen(void);
     void AntiqueClose(void);
@@ -474,64 +648,39 @@ public:
     void AprilFaceChange(bool bIdentify);
     
 private:
-    CAnimation2D* m_pAnim2D;
-    CAntiqueRecord::STATE m_aAntiqueState[ANTIQUEID::ID_MAX];
-    int32 m_iCursorV;
-    int32 m_iCursorH;
-    int32 m_idAntiqueSel;
-    CAntiqueSprite m_aAntiqueSprite[ANTIQUEID::ID_MAX];
-    CAntiqueSprite m_aAboutSprite[9];
-    bool m_bAntiqueOpenFlag;
-    bool m_bAnimFlag;
-    bool m_bDispAboutAntiqText;
-    bool m_bDispAboutCtrlText;
-    uint32 m_uAnimCnt;
-    float m_fWndOfsX;
-    char m_szTextAntiqueTakenDate[256];
-    RwV2d m_vTextAntiqueTakenDatePos;
-    GAMETEXT m_idTextAntiqueName;
-    Rt2dBBox m_bboxTextAntiqueName;
-    AREAID::VALUE m_idAntiqueTakenArea;
-    Rt2dBBox m_bboxTextAntiqueArea;
-    GAMETEXT m_idTextAntiqueComment;
-    Rt2dBBox m_bboxTextAntiqueComment;
-    int32 m_iTextAntiqueCommentLineNum;
-    int32 m_iTextAntiqueCommentLineCur;
-    CTimeObj m_takendate;
-    const char* m_pszAprilFace;
-    CDialog* m_pDlg;
-    CTRLINFO m_aCtrlInfo[3];
+    CAnimation2D*           m_pAnim2D;
+    CAntiqueRecord::STATE   m_aAntiqueState[ANTIQUEID::ID_MAX];
+    int32                   m_iCursorV;
+    int32                   m_iCursorH;
+    int32                   m_idAntiqueSel;
+    CAntiqueSprite          m_aAntiqueSprite[ANTIQUEID::ID_MAX];
+    CAntiqueSprite          m_aAboutSprite[9];
+    bool                    m_bAntiqueOpenFlag;
+    bool                    m_bAnimFlag;
+    bool                    m_bDispAboutAntiqText;
+    bool                    m_bDispAboutCtrlText;
+    uint32                  m_uAnimCnt;
+    float                   m_fWndOfsX;
+    char                    m_szTextAntiqueTakenDate[256];
+    RwV2d                   m_vTextAntiqueTakenDatePos;
+    GAMETEXT                m_idTextAntiqueName;
+    Rt2dBBox                m_bboxTextAntiqueName;
+    AREAID::VALUE           m_idAntiqueTakenArea;
+    Rt2dBBox                m_bboxTextAntiqueArea;
+    GAMETEXT                m_idTextAntiqueComment;
+    Rt2dBBox                m_bboxTextAntiqueComment;
+    int32                   m_iTextAntiqueCommentLineNum;
+    int32                   m_iTextAntiqueCommentLineCur;
+    CTimeObj                m_takendate;
+    const char*             m_pszAprilFace;
+    CDialog*                m_pDlg;
+    CTRLINFO                m_aCtrlInfo[3];
 };
 
 
-/*static*/ const uint32 CAntiqueShop::ABOUT_ANIMDUR_FRAMES = 15;
-/*static*/ const float CAntiqueShop::ABOUT_MOVE_INC = 40.133335f;
-
-
-CAntiqueShop::CAntiqueSprite::CAntiqueSprite(void)
-: CSprite()
-, m_bDispState(false)
-{
-    ;
-};
-
-
-CAntiqueShop::CAntiqueSprite::~CAntiqueSprite(void)
-{
-    ;
-};
-
-
-void CAntiqueShop::CAntiqueSprite::SetDisplay(bool bState)
-{
-    m_bDispState = bState;
-};
-
-
-bool CAntiqueShop::CAntiqueSprite::IsDisplaying(void) const
-{
-    return m_bDispState;
-};
+//
+// *********************************************************************************
+//
 
 
 CAntiqueShop::CAntiqueShop(void)
@@ -550,11 +699,11 @@ CAntiqueShop::CAntiqueShop(void)
 , m_fWndOfsX(0.0f)
 , m_szTextAntiqueTakenDate()
 , m_vTextAntiqueTakenDatePos(Math::VECTOR2_ZERO)
-, m_idTextAntiqueName(GAMETEXT(0))
+, m_idTextAntiqueName(GAMETEXT_EMPTY)
 , m_bboxTextAntiqueName()
 , m_idAntiqueTakenArea(AREAID::ID_NONE)
 , m_bboxTextAntiqueArea()
-, m_idTextAntiqueComment(GAMETEXT(0))
+, m_idTextAntiqueComment(GAMETEXT_EMPTY)
 , m_bboxTextAntiqueComment()
 , m_iTextAntiqueCommentLineNum(0)
 , m_iTextAntiqueCommentLineCur(0)
@@ -587,14 +736,6 @@ void CAntiqueShop::Detach(void)
 };
 
 
-void CAntiqueShop::Loaded(CAnimation2D* pAnimation2D)
-{
-    ASSERT(pAnimation2D);
-    
-    m_pAnim2D = pAnimation2D;
-};
-
-
 bool CAntiqueShop::Move(void)
 {
     bool bResult = false;
@@ -623,23 +764,19 @@ bool CAntiqueShop::Move(void)
 
     if (!m_pDlg->IsOpen())
     {
+        CMenuController::KeyUnlock(CController::DIGITAL_LUP);
+        CMenuController::KeyUnlock(CController::DIGITAL_LDOWN);
+        CMenuController::KeyUnlock(CController::DIGITAL_LLEFT);
+        CMenuController::KeyUnlock(CController::DIGITAL_LRIGHT);
+        CMenuController::KeyUnlock(CController::DIGITAL_OK);
+
         if (m_pDlg->GetStatus() == CDialog::STATUS_YES)
         {
             bResult = true;
-            CMenuController::KeyUnlock(CController::DIGITAL_LUP);
-            CMenuController::KeyUnlock(CController::DIGITAL_LDOWN);
-            CMenuController::KeyUnlock(CController::DIGITAL_LLEFT);
-            CMenuController::KeyUnlock(CController::DIGITAL_LRIGHT);
-            CMenuController::KeyUnlock(CController::DIGITAL_OK);
             AntiqueDispCtrl();
         }
         else
         {
-            CMenuController::KeyUnlock(CController::DIGITAL_LUP);
-            CMenuController::KeyUnlock(CController::DIGITAL_LDOWN);
-            CMenuController::KeyUnlock(CController::DIGITAL_LLEFT);
-            CMenuController::KeyUnlock(CController::DIGITAL_LRIGHT);
-            CMenuController::KeyUnlock(CController::DIGITAL_OK);
             AntiqueDispCtrl();
         };
     };
@@ -666,68 +803,117 @@ void CAntiqueShop::Draw(void)
     
     CSystem2D::PopRenderState();
 
-	CGameFont::SetHeight(15.0f);
+#if !defined(TMNT2_BUILD_EU)
+    CGameFont::SetHeight(15.0f);
+#endif /* !defined(TMNT2_BUILD_EU) */
+    
     if (m_bDispAboutAntiqText)
     {
         CGameFont::SetRGBA(255, 255, 255, 255);
-        CGameFont::Flow(
-            CGameText::GetText(m_idTextAntiqueName),
-            &m_bboxTextAntiqueName,
-            rt2dJUSTIFYCENTER
-        );
-        CGameFont::Flow(
-            CAreaInfo::GetDispName(m_idAntiqueTakenArea),
-            &m_bboxTextAntiqueArea
-        );        
-        CGameFont::Show(
-            m_szTextAntiqueTakenDate,
-            m_vTextAntiqueTakenDatePos.x,
-            m_vTextAntiqueTakenDatePos.y
-        );
-        CGameFont::FlowEx(
-            CGameText::GetText(m_idTextAntiqueComment),
-            m_iTextAntiqueCommentLineCur,
-            &m_bboxTextAntiqueComment
-        );
+
+#ifdef TMNT2_BUILD_EU
+        CGameFont::SetHeight(12.0f);
+        CGameFont::Flow(CGameText::GetText(m_idTextAntiqueName),
+                        &m_bboxTextAntiqueName);
+#else /* TMNT2_BUILD_EU */
+        CGameFont::Flow(CGameText::GetText(m_idTextAntiqueName),
+                        &m_bboxTextAntiqueName,
+                        rt2dJUSTIFYCENTER);
+#endif /* TMNT2_BUILD_EU */
+
+#ifdef TMNT2_BUILD_EU
+        if ((CConfigure::GetLanguage() == TYPEDEF::CONFIG_LANG_GERMAN) && (m_idAntiqueTakenArea == AREAID::ID_AREA18))
+            CGameFont::SetHeight(11.0f);
+#endif /* TMNT2_BUILD_EU */
+        CGameFont::Flow(CAreaInfo::GetDispName(m_idAntiqueTakenArea),
+                        &m_bboxTextAntiqueArea);        
+
+#ifdef TMNT2_BUILD_EU
+        CGameFont::SetHeight(12.0f);
+#endif /* TMNT2_BUILD_EU */    
+        CGameFont::Show(m_szTextAntiqueTakenDate,
+                        m_vTextAntiqueTakenDatePos.x,
+                        m_vTextAntiqueTakenDatePos.y);
+
+#ifdef TMNT2_BUILD_EU
+        CGameFont::SetHeight(15.0f);
+#endif /* TMNT2_BUILD_EU */    
+        CGameFont::FlowEx(CGameText::GetText(m_idTextAntiqueComment),
+                          m_iTextAntiqueCommentLineCur,
+                          &m_bboxTextAntiqueComment);
         
-        CGameFont::SetRGBA(255, 180, 0, 255);        
+        CGameFont::SetRGBA(255, 180, 0, 255);
+
+        RwV2d vecNoTextPos = Math::VECTOR2_ZERO;
+#ifdef TMNT2_BUILD_EU
+        vecNoTextPos.x =  -30.0f;
+        vecNoTextPos.y = -145.0f;
+#else /* TMNT2_BUILD_EU */
+        vecNoTextPos.x =  -55.0f;
+        vecNoTextPos.y = -140.0f;
+#endif /* TMNT2_BUILD_EU */
+
         wchar wszBuff[256];
         wszBuff[0] = UTEXT('\0');
-        CTextData::Sprintf(wszBuff, CGameText::GetText(GAMETEXT(951)), m_idAntiqueSel);
-        CGameFont::Show(wszBuff, m_fWndOfsX - 55.0f, -140.0f);
+
+        CTextData::Sprintf(wszBuff, CGameText::GetText(GAMETEXT_AT_NO), m_idAntiqueSel);
+
+        CGameFont::Show(wszBuff,
+                        (vecNoTextPos.x + m_fWndOfsX),
+                        vecNoTextPos.y);
     };
 
     if (m_bDispAboutCtrlText)
     {
         CGameFont::SetRGBA(255, 180, 0, 255);
+#ifdef TMNT2_BUILD_EU
+        CGameFont::SetHeight(15.0f);
+#endif /* TMNT2_BUILD_EU */
         for (int32 i = 0; i < COUNT_OF(m_aCtrlInfo); ++i)
         {
-            CGameFont::Show(
-                CGameText::GetText(m_aCtrlInfo[i].IdText),
-                m_aCtrlInfo[i].Position.x,
-                m_aCtrlInfo[i].Position.y
-            );
+            CGameFont::Show(CGameText::GetText(m_aCtrlInfo[i].TextId),
+                            m_aCtrlInfo[i].Position.x,
+                            m_aCtrlInfo[i].Position.y);
         };
     };
+
+#ifdef TMNT2_BUILD_EU
+    CSystem2D::PushRenderState();
+
+    CGameFont::SetHeightScaled(2.0f);
+    CGameFont::SetRGBA(255, 255, 255, 255);
+    const wchar* pwszText = CGameText::GetText(GAMETEXT_EU_HELP_11);
+
+    if (CGameFont::GetStringWidth(pwszText) >= 500.0f)
+    {
+        Rt2dBBox bbox;
+        bbox.x = -272.0f;
+        bbox.y = -230.0f;
+        bbox.w =  500.0f;
+        bbox.h =   60.0f;
+
+        CGameFont::Flow(pwszText, &bbox);
+    }
+    else
+    {
+        CGameFont::Show(pwszText, -272.0f, 190.0f);
+    };
+
+    CSystem2D::PopRenderState();
+#endif /* TMNT2_BUILD_EU */
 };
 
 
 void CAntiqueShop::DlgCreate(void)
 {
     m_pDlg = new CDialog();
-    ASSERT(m_pDlg);
-    if (m_pDlg)
-    {
-        m_pDlg->Set(0.0f, 33.0f, 640.0f, 192.0f);
-		m_pDlg->SetStatus(CDialog::STATUS_NO);
-        m_pDlg->SetOpenAction(true);
-        m_pDlg->SetController(CGameData::Attribute().GetVirtualPad());
-        m_pDlg->SetTitle(
-            CGameText::GetText(GAMETEXT(946)),
-			CGameFont::GetScreenHeight() * 2.0f,
-            { 0xFF, 0xFF, 0xFF, 0xFF }
-        );
-    };
+    m_pDlg->Set(0.0f, 33.0f, 640.0f, 192.0f);
+    m_pDlg->SetStatus(CDialog::STATUS_NO);
+    m_pDlg->SetOpenAction(true);
+    m_pDlg->SetController(CGameData::Attribute().GetVirtualPad());
+    m_pDlg->SetTitle(CGameText::GetText(GAMETEXT_AT_RET),
+                     CGameFont::GetHeightScaled() * s_fAntiqueFontScale,
+                     { 0xFF, 0xFF, 0xFF, 0xFF });
 };
 
 
@@ -759,7 +945,11 @@ void CAntiqueShop::AntiqueInit(void)
     m_bDispAboutAntiqText = false;
     m_bDispAboutCtrlText = false;
 
+#ifdef TMNT2_BUILD_EU
+    m_pszAprilFace = "Antique_258";
+#else /* TMNT2_BUILD_EU */
     m_pszAprilFace = "Antique_259";
+#endif /* TMNT2_BUILD_EU */
 };
 
 
@@ -783,8 +973,11 @@ void CAntiqueShop::AntiqueCheck(void)
 };
 
 
-void CAntiqueShop::AntiqueDispChange(void)
+void CAntiqueShop::AntiqueDispChange(CAnimation2D* pAnimation2D)
 {
+    m_pAnim2D = pAnimation2D;
+    ASSERT(m_pAnim2D != nullptr);
+
     const char** pszAntiqTexOrg = s_apszAntiqueTexOrg;
     const char** pszAntiqTex = &s_apszAntiqueTex[1];
     
@@ -829,41 +1022,40 @@ void CAntiqueShop::AntiqueDispChange(void)
             if (idAntiq <= 0)
                 break;
 
-            ASSERT((idAntiq >= 0) && (idAntiq < COUNT_OF(m_aAntiqueState)));
-            ASSERT((idAntiq >= 0) && (idAntiq < COUNT_OF(m_aAntiqueSprite)));
-            
-            CAntiqueSprite& Sprite = m_aAntiqueSprite[idAntiq];
+            ASSERT(idAntiq >= 0);
+            ASSERT(idAntiq < COUNT_OF(m_aAntiqueState));
+
+            ASSERT(idAntiq >= 0);
+            ASSERT(idAntiq < COUNT_OF(m_aAntiqueSprite));
+
+            CAntiqueSprite& sprite = m_aAntiqueSprite[idAntiq];
             switch (m_aAntiqueState[idAntiq])
             {
             case CAntiqueRecord::STATE_NONE:
                 {
-                    Sprite.SetDisplay(false);                    
+                    sprite.SetDisplay(false);                    
                 }
                 break;
 
             case CAntiqueRecord::STATE_UNIDENTIFIED:
                 {
-                    Sprite.SetDisplay(true);
-                    Sprite.SetTexture(CTextureManager::GetRwTexture("shop_MiconAPS"));
-                    Sprite.SetRGBA(255, 255, 255, 255);
-                    Sprite.Resize(s_vMarkerSize.x, s_vMarkerSize.y);
-                    Sprite.Move(
-                        s_vMarker.x + (s_vMarkerInc.x * float(j)),
-                        s_vMarker.y - (s_vMarkerInc.y * float(i))
-                    );
+                    sprite.SetDisplay(true);
+                    sprite.SetTexture(CTextureManager::GetRwTexture("shop_MiconAPS"));
+                    sprite.SetRGBA(255, 255, 255, 255);
+                    sprite.Resize(s_vMarkerSize.x, s_vMarkerSize.y);
+                    sprite.Move(s_vMarker.x + (s_vMarkerInc.x * float(j)),
+                                s_vMarker.y - (s_vMarkerInc.y * float(i)));
                 }
                 break;
 
             case CAntiqueRecord::STATE_IDENTIFIED:
                 {
-                    Sprite.SetDisplay(true);
-                    Sprite.SetTexture(CTextureManager::GetRwTexture("shop_MiconBPS"));
-                    Sprite.SetRGBA(255, 255, 255, 255);
-                    Sprite.Resize(s_vMarkerSize.x, s_vMarkerSize.y);
-                    Sprite.Move(
-                        s_vMarker.x + (s_vMarkerInc.x * float(j)),
-                        s_vMarker.y - (s_vMarkerInc.y * float(i))
-                    );
+                    sprite.SetDisplay(true);
+                    sprite.SetTexture(CTextureManager::GetRwTexture("shop_MiconBPS"));
+                    sprite.SetRGBA(255, 255, 255, 255);
+                    sprite.Resize(s_vMarkerSize.x, s_vMarkerSize.y);
+                    sprite.Move(s_vMarker.x + (s_vMarkerInc.x * float(j)),
+                                s_vMarker.y - (s_vMarkerInc.y * float(i)));
                 }
                 break;
 
@@ -956,9 +1148,10 @@ void CAntiqueShop::AntiqueOpen(void)
 
     if (m_bAnimFlag)
     {
-        m_fWndOfsX = float(m_uAnimCnt) * ABOUT_MOVE_INC - 640.0f;
-        if (++m_uAnimCnt >= ABOUT_ANIMDUR_FRAMES)
+        if (++m_uAnimCnt >= ABOUT_WND_MOV_TIME)
             m_bAnimFlag = false;
+
+        m_fWndOfsX = float(m_uAnimCnt) * ABOUT_WND_MOV_STEP - ABOUT_WND_MOV_DIST;
     };
 
     AntiqueItemSet();
@@ -977,7 +1170,7 @@ void CAntiqueShop::AntiqueClose(void)
             CMenuController::KeyUnlock(CController::DIGITAL_LDOWN);
         };
 
-        m_fWndOfsX = float(m_uAnimCnt) * ABOUT_MOVE_INC - 640.0f;
+        m_fWndOfsX = float(m_uAnimCnt) * ABOUT_WND_MOV_STEP - ABOUT_WND_MOV_DIST;
 
         AntiqueItemSet();
     }
@@ -996,13 +1189,14 @@ void CAntiqueShop::AntiqueItemSet(void)
 {
     m_aAboutSprite[0].SetDisplay(true);
     m_aAboutSprite[0].SetTexture(CTextureManager::GetRwTexture("shop_PageBgPS"));
-    m_aAboutSprite[0].Move(m_fWndOfsX - s_vAboutPos.x, s_vAboutPos.y);
+    m_aAboutSprite[0].Move(m_fWndOfsX + s_vAboutPos.x, s_vAboutPos.y);
     m_aAboutSprite[0].Resize(512.0f, 512.0f);
 
     m_bDispAboutCtrlText = true;
-    m_aCtrlInfo[0] = { GAMETEXT(947), { s_avAboutTextPos[0].x + m_fWndOfsX, s_avAboutTextPos[0].y } };
-    m_aCtrlInfo[1] = { GAMETEXT(949), { s_avAboutTextPos[1].x + m_fWndOfsX, s_avAboutTextPos[1].y } };
-    m_aCtrlInfo[2] = { GAMETEXT(950), { s_avAboutTextPos[2].x + m_fWndOfsX, s_avAboutTextPos[2].y } };
+
+    m_aCtrlInfo[0] = { GAMETEXT_AT_NAME, { s_avAboutTextPos[0].x + m_fWndOfsX, s_avAboutTextPos[0].y } };
+    m_aCtrlInfo[1] = { GAMETEXT_AT_AREA, { s_avAboutTextPos[1].x + m_fWndOfsX, s_avAboutTextPos[1].y } };
+    m_aCtrlInfo[2] = { GAMETEXT_AT_DATE, { s_avAboutTextPos[2].x + m_fWndOfsX, s_avAboutTextPos[2].y } };
 
     for (int32 i = 1; i < COUNT_OF(m_aAboutSprite); ++i)
         m_aAboutSprite[i].SetDisplay(false);
@@ -1016,7 +1210,7 @@ void CAntiqueShop::AntiqueItemSet(void)
             {
                 m_aAboutSprite[1].SetDisplay(true);
                 m_aAboutSprite[1].SetTexture(CTextureManager::GetRwTexture("shop_questAPS"));
-                m_aAboutSprite[1].Move(m_fWndOfsX + s_vAboutItemPos.x, s_vAboutItemPos.y);
+                m_aAboutSprite[1].Move(s_vAboutItemPos.x + m_fWndOfsX, s_vAboutItemPos.y);
                 m_aAboutSprite[1].Resize(256.0f, 256.0f);
             }
             break;
@@ -1038,10 +1232,8 @@ void CAntiqueShop::AntiqueItemSet(void)
                 {                    
                     m_aAboutSprite[i + 2].SetDisplay(true);
                     m_aAboutSprite[i + 2].SetTexture(CTextureManager::GetRwTexture("shop_star"));
-                    m_aAboutSprite[i + 2].Move(
-                        float(i) * 39.0f + m_fWndOfsX + s_vAboutStarPos.x,
-                        s_vAboutStarPos.y
-                    );
+                    m_aAboutSprite[i + 2].Move(float(i) * 39.0f + m_fWndOfsX + s_vAboutStarPos.x,
+                                               s_vAboutStarPos.y);
                     m_aAboutSprite[i + 2].Resize(32.0f, 32.0f);
                 };
 
@@ -1055,10 +1247,12 @@ void CAntiqueShop::AntiqueItemSet(void)
                 m_bboxTextAntiqueComment = s_aAboutBox[1];
                 m_bboxTextAntiqueComment.x += m_fWndOfsX;
 
-                m_iTextAntiqueCommentLineNum = CGameFont::CountFlowLine(
-                    CGameText::GetText(m_idTextAntiqueComment),
-                    m_bboxTextAntiqueComment.w
-                );
+#ifdef TMNT2_BUILD_EU
+                CGameFont::SetHeight(15.0f);
+#endif /* TMNT2_BUILD_EU */
+
+                m_iTextAntiqueCommentLineNum = CGameFont::CountFlowLine(CGameText::GetText(m_idTextAntiqueComment),
+                                                                        m_bboxTextAntiqueComment.w);
 
                 if ((m_iTextAntiqueCommentLineNum - m_iTextAntiqueCommentLineCur) > 6)
                 {
@@ -1089,15 +1283,13 @@ void CAntiqueShop::AntiqueItemSet(void)
                 };
 
                 CGameData::Record().Antique().GetAntiqueTakenDate(ANTIQUEID::VALUE(m_idAntiqueSel), m_takendate);
-                std::sprintf(
-                    m_szTextAntiqueTakenDate,
-                    "%02d-%02d-%02d %02d:%02d",
-                    m_takendate.GetYear() - 2000,
-                    m_takendate.GetMonth(),
-                    m_takendate.GetDay(),
-                    m_takendate.GetHour(),
-                    m_takendate.GetMinute()
-                );
+                std::sprintf(m_szTextAntiqueTakenDate,
+                             "%02d-%02d-%02d %02d:%02d",
+                             m_takendate.GetYear() - 2000,
+                             m_takendate.GetMonth(),
+                             m_takendate.GetDay(),
+                             m_takendate.GetHour(),
+                             m_takendate.GetMinute());
 
                 m_vTextAntiqueTakenDatePos = s_vGetDatePos;
                 m_vTextAntiqueTakenDatePos.x += m_fWndOfsX;
@@ -1119,8 +1311,9 @@ void CAntiqueShop::AntiqueItemSet(void)
 void CAntiqueShop::AntiqueIdentify(int32 idAntique)
 {
     CGameData::Record().Antique().SetAntiqueIdentified(ANTIQUEID::VALUE(idAntique));
+
     AntiqueCheck();
-    AntiqueDispChange();
+    AntiqueDispChange(m_pAnim2D);
 };
 
 
@@ -1128,12 +1321,14 @@ void CAntiqueShop::AprilFaceChange(bool bIdentify)
 {
     if (bIdentify)
     {
-        int32 AntiquePrice = s_aAntiquePrice[m_idAntiqueSel];
+        int32 price = s_aAntiquePrice[m_idAntiqueSel];
         
-        ASSERT((AntiquePrice >= 0) && (AntiquePrice < COUNT_OF(s_apszAprilFace)));
-        m_pAnim2D->SetTexture(m_pszAprilFace, s_apszAprilFace[AntiquePrice]);
+        ASSERT(price >= 0);
+        ASSERT(price < COUNT_OF(s_apszAprilFace));
+
+        m_pAnim2D->SetTexture(m_pszAprilFace, s_apszAprilFace[price]);
         
-        m_pszAprilFace = s_apszAprilFace[AntiquePrice];
+        m_pszAprilFace = s_apszAprilFace[price];
     }
     else
     {
@@ -1171,14 +1366,11 @@ bool CAntiqueShopSequence::OnAttach(const void* pParam)
     ASSERT(!s_pAntiqueShop);
     
     s_pAntiqueShop = new CAntiqueShop;
-    if (s_pAntiqueShop)
-    {
-        s_pAntiqueShop->Attach();
-        m_bUnlockCheckState = false;
-        return CAnim2DSequence::OnAttach(FILEID::ID_ANTIQUE_PS2);
-    };
-    
-    return false;
+    s_pAntiqueShop->Attach();
+
+    m_bUnlockCheckState = false;
+
+    return CAnim2DSequence::OnAttach(FILEID::ID_ANTIQUE_PS2);
 };
 
 
@@ -1198,7 +1390,7 @@ void CAntiqueShopSequence::OnDetach(void)
 
 void CAntiqueShopSequence::OnMove(bool bRet, const void* pReturnValue)
 {
-    switch (m_animstep)
+    switch (AnimStep())
     {
     case ANIMSTEP_FADEIN:
         {
@@ -1206,8 +1398,10 @@ void CAntiqueShopSequence::OnMove(bool bRet, const void* pReturnValue)
             {               
                 if (CGameData::Record().Antique().IsNewAntiqueExisted())
                 {
-                    // 26 voice group
-                    int32 VoxCode [] = { SDCODE_VOICE(0x6000), SDCODE_VOICE(0x6001), SDCODE_VOICE(0x6002) };
+                    // TODO replace it with 26 voice group
+                    int32 VoxCode [] = { SDCODE_VOICE(0x6000),
+                                         SDCODE_VOICE(0x6001),
+                                         SDCODE_VOICE(0x6002) };
                     int32 RndSel3 = Math::Rand() % 3;
                     CGameSound::PlayVoice(VoxCode[RndSel3]);
                 };
@@ -1218,7 +1412,7 @@ void CAntiqueShopSequence::OnMove(bool bRet, const void* pReturnValue)
     case ANIMSTEP_DRAW:
         {
             if (s_pAntiqueShop->Move())
-                BeginFadeout();
+                BeginFadeOut();
         }
         break;
 
@@ -1252,12 +1446,22 @@ void CAntiqueShopSequence::OnDraw(void) const
 };
 
 
-void CAntiqueShopSequence::BeginFadein(void)
+void CAntiqueShopSequence::BeginFadeIn(void)
 {
-	s_pAntiqueShop->Loaded(m_pAnimation2D);
-    s_pAntiqueShop->AntiqueDispChange();
+#ifdef TMNT2_BUILD_EU    
+    Animation2D().SetText("ANTIQUE_T_00", CGameText::GetText(GAMETEXT_MENU_HOME_SHOP));
+    Animation2D().SetText("ANTIQUE_C_00", CGameText::GetText(GAMETEXT_EU_FOOT));
+    Animation2D().SetText("ANTIQUE_C_06", CGameText::GetText(GAMETEXT_DB_OTHER));    
+    Animation2D().SetText("ANTIQUE_C_05", CGameText::GetText(GAMETEXT_EU_UTROM));
+    Animation2D().SetText("ANTIQUE_C_04", CGameText::GetText(GAMETEXT_STATION_DHO));
+    Animation2D().SetText("ANTIQUE_C_03", CGameText::GetText(GAMETEXT_STATION_TRI));
+    Animation2D().SetText("ANTIQUE_C_02", CGameText::GetText(GAMETEXT_STATION_JAP));
+    Animation2D().SetText("ANTIQUE_C_01", CGameText::GetText(GAMETEXT_DB_NY));
+#endif /* TMNT2_BUILD_EU */    
+
+    s_pAntiqueShop->AntiqueDispChange(&Animation2D());
 
     CGameSound::PlayBGM(SDCODE_BGM(0x3023));
     
-    CAnim2DSequence::BeginFadein();
+    CAnim2DSequence::BeginFadeIn();
 };

@@ -96,12 +96,12 @@ uint32 CGameRecord::GetInitDate(void) const
 };
 
 
-uint32 CGameRecord::GetAchievedPoint(void)
+int32 CGameRecord::GetAchievedPoint(void) const
 {
     //
     //  Total achieved points in percent
     //
-    uint32 uResult = 0;
+    int32 result = 0;
 
     //
     //  Calc unlocked character points
@@ -111,7 +111,7 @@ uint32 CGameRecord::GetAchievedPoint(void)
     {
         SECRETID::VALUE idSecret = SECRETID::VALUE(SECRETID::ID_CHARACTER_CASEY + i);
         if (Secret().IsUnlockedSecret(idSecret))
-            uResult += 2;
+            result += 2;
     };
 
     //
@@ -127,13 +127,13 @@ uint32 CGameRecord::GetAchievedPoint(void)
     };
 
     if (nNumTakenAntique >= 13)
-        ++uResult;
+        ++result;
     if (nNumTakenAntique >= 27)
-        ++uResult;
+        ++result;
     if (nNumTakenAntique >= 41)
-        ++uResult;
+        ++result;
     if (nNumTakenAntique >= 55)
-        uResult += 2;
+        result += 2;
 
     //
     //  Calc database points
@@ -145,13 +145,13 @@ uint32 CGameRecord::GetAchievedPoint(void)
     nDBCounter += Database().CountUnlockedItemInGroup(CDatabaseRecord::GROUP_ETC);
 
     if (nDBCounter >= 9)
-        ++uResult;
+        ++result;
     if (nDBCounter >= 19)
-        ++uResult;
+        ++result;
     if (nDBCounter >= 29)
-        ++uResult;
+        ++result;
     if (nDBCounter >= 39)
-        uResult += 2;
+        result += 2;
 
     //
     //  Calc area clear points
@@ -164,7 +164,7 @@ uint32 CGameRecord::GetAchievedPoint(void)
             continue;
 
         if (Area().GetAreaClearRank(AREAID::VALUE(i)) > GAMETYPES::CLEARRANK_NONE)
-            ++uResult;
+            ++result;
     };
 
     //
@@ -174,7 +174,7 @@ uint32 CGameRecord::GetAchievedPoint(void)
     for (int32 i = 1; i < GAMETYPES::CRYSTALTYPE_NUM; ++i)
     {
         int32 nCryNum = Item().GetCrystalNum(GAMETYPES::CRYSTALTYPE(i));
-        uResult += (2 * (nCryNum / 10));
+        result += (2 * (nCryNum / 10));
     };
 
     //
@@ -182,18 +182,19 @@ uint32 CGameRecord::GetAchievedPoint(void)
     //  Max points: 5
     //
     if (Nexus().GetTournamentState(GAMETYPES::NEXUSID_KITTY_OPEN) >= CNexusRecord::STATE_CLEAR)
-        ++uResult;
+        ++result;
 
     if (Nexus().GetTournamentState(GAMETYPES::NEXUSID_MONSTER_OPEN) >= CNexusRecord::STATE_CLEAR)
-        ++uResult;
+        ++result;
 
     if (Nexus().GetTournamentState(GAMETYPES::NEXUSID_FOOT_COMBAT) >= CNexusRecord::STATE_CLEAR)
-        ++uResult;
+        ++result;
 
     if (Nexus().GetTournamentState(GAMETYPES::NEXUSID_BATTLE_NEXUS) >= CNexusRecord::STATE_CLEAR)
-        uResult += 2;
+        result += 2;
 
-    ASSERT(uResult >= 0 && uResult <= 100);
+    ASSERT(result >= 0);
+    ASSERT(result <= 100);
 
-    return uResult;
+    return result;
 };

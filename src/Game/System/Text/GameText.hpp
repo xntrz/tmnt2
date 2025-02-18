@@ -1,7 +1,6 @@
 #pragma once
 
-
-enum GAMETEXT {};
+#include "GameTextID.hpp"
 
 
 class CGameText

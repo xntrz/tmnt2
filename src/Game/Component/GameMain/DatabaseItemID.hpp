@@ -7,7 +7,7 @@ namespace DBITEMID
     {
         ID_NONE = 0,
         ID_FIRST,
-        
+
         CHARACTERSTART = ID_FIRST,
         ID_CHARACTER_LEO_A = CHARACTERSTART,
         ID_CHARACTER_LEO_B,
@@ -60,5 +60,11 @@ namespace DBITEMID
         ETCMAX,
 
         ID_MAX = ETCMAX,
+
+        CHARACTERNUM = (CHARACTERMAX - CHARACTERSTART),
+        ENEMYNUM     = (ENEMYMAX - ENEMYSTART),
+        ARTNUM       = (ARTMAX - ARTSTART),
+        ETCNUM       = (ETCMAX - ETCSTART),
+        NUM          = (ID_MAX - ID_FIRST),
     };
 };

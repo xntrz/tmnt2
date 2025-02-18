@@ -3,15 +3,16 @@
 
 #include "Game/Component/GameData/GameData.hpp"
 #include "Game/System/2d/GameFont.hpp"
-#include "Game/System/Text/GameText.hpp"
 #include "Game/System/2d/Animation2D.hpp"
 #include "Game/System/2d/MenuController.hpp"
-#include "Game/System/Sound/GameSound.hpp"
+#include "Game/System/DataLoader/DataLoader.hpp"
 #include "Game/System/Misc/RenderStateManager.hpp"
 #include "Game/System/Misc/ScreenFade.hpp"
+#include "Game/System/Sound/GameSound.hpp"
+#include "Game/System/Text/GameText.hpp"
 #include "Game/System/Texture/TextureManager.hpp"
-#include "Game/System/DataLoader/DataLoader.hpp"
 #include "Game/ProcessList.hpp"
+#include "System/Common/Configure.hpp"
 #include "System/Common/Controller.hpp"
 #include "System/Common/Sprite.hpp"
 #include "System/Common/System2D.hpp"
@@ -20,16 +21,16 @@
 #include "System/Common/Screen.hpp"
 
 
-struct VIEWERINFO
+struct DBVIEWERINFO
 {
-    FILEID::VALUE idFile;
-    int32 TexNum;
-    const char* TxdName;
-    const char* TexPrefix;
+    FILEID::VALUE fileId;
+    int32         numTexture;
+    const char*   pszTxdName;
+    const char*   pszTexPrefix;
 };
 
 
-static const VIEWERINFO s_aViewerInfo[] =
+static const DBVIEWERINFO s_aDBViewerInfo[] =
 {
     { FILEID::ID_INVALID,       -1, nullptr,    nullptr },
 
@@ -65,7 +66,7 @@ static const VIEWERINFO s_aViewerInfo[] =
     { FILEID::ID_DB_ULTIMATE,   2,  "db_ultimate",  "db_en_ul_" },
     { FILEID::ID_DB_ZAKO_A,     10, "db_zako_A",    "db_en_za_" },
     { FILEID::ID_DB_ZAKO_B,     10, "db_zako_B",    "db_en_zb_" },
-    { FILEID::ID_DB_OTHERS,     10, "db_other",     "db_en_ot_" },
+    { FILEID::ID_DB_OTHERS,     10, "db_others",    "db_en_ot_" },
 
     //
     //  Background arts
@@ -90,10 +91,12 @@ static const VIEWERINFO s_aViewerInfo[] =
 };
 
 
-static inline const VIEWERINFO& GetDBViewerInfo(int32 iDbViewerNo)
+static inline const DBVIEWERINFO& DBViewerInfo(int32 iDbViewerNo)
 {
-    ASSERT((iDbViewerNo >= 1) && (iDbViewerNo < COUNT_OF(s_aViewerInfo)));
-    return s_aViewerInfo[iDbViewerNo];
+    ASSERT(iDbViewerNo >= 1);
+    ASSERT(iDbViewerNo < COUNT_OF(s_aDBViewerInfo));
+
+    return s_aDBViewerInfo[iDbViewerNo];
 };
 
 
@@ -115,33 +118,27 @@ public:
     bool Run(void);
     void Draw(void);
     void ArrowDraw(void);
+    void GuideDraw(void);
     int32 GetViewerCGPos(int32 Dir);
     
 private:
-    int32 m_iTexNum;
-    int32 m_iDbViewerNo;
-    bool m_bSettingFlag;
-    RwTexture* m_pTexBace;
-    RwTexture* m_pTexBtWinpc;
-    RwTexture* m_pTexBtn03ps;
-    RwTexture* m_pTexBtn04ps;
-    RwTexture* m_pTexBtn05ps;
-    RwTexture* m_pTexBtn06ps;
-    RwTexture* m_pTexBtn07ps;
-    RwTexture* m_apTexViewer[12];
-    CSprite m_Sprite;
-    MOVEDIR m_eMovedir;
-    int32 m_iImgCursor;
-    RwV2d m_vImgPos;    
-    bool m_bFlagImgZoom;
-    bool m_bFlagImgChange;
-    float m_fImageZoom;
-    bool m_bFlagCancelZoom;
-    uint32 m_uAppearAnimCnt;
-    uint32 m_uCancelAnimCnt;
-    RwV2d m_vCancelStartPos;    
-    uint32 m_uArrowAnimCnt;
-    bool m_bFlagArrowAnimReverse;
+    int32       m_iTexNum;
+    int32       m_iDbViewerNo;
+    bool        m_bSettingFlag;
+    RwTexture*  m_apTexture[20];
+    CSprite     m_sprite;
+    MOVEDIR     m_eMovedir;
+    int32       m_iImgCursor;
+    RwV2d       m_vImgPos;    
+    bool        m_bFlagImgZoom;
+    bool        m_bFlagImgChange;
+    float       m_fImageZoom;
+    bool        m_bFlagCancelZoom;
+    uint32      m_uAppearAnimCnt;
+    uint32      m_uCancelAnimCnt;
+    RwV2d       m_vCancelStartPos;    
+    uint32      m_uArrowAnimCnt;
+    bool        m_bFlagArrowAnimReverse;
 };
 
 
@@ -149,15 +146,8 @@ CDatabaseViewer_Container::CDatabaseViewer_Container(void)
 : m_iTexNum(0)
 , m_iDbViewerNo(0)
 , m_bSettingFlag(false)
-, m_pTexBace(nullptr)
-, m_pTexBtWinpc(nullptr)
-, m_pTexBtn03ps(nullptr)
-, m_pTexBtn04ps(nullptr)
-, m_pTexBtn05ps(nullptr)
-, m_pTexBtn06ps(nullptr)
-, m_pTexBtn07ps(nullptr)
-, m_apTexViewer()
-, m_Sprite()
+, m_apTexture()
+, m_sprite()
 , m_eMovedir(MOVEDIR_NONE)
 , m_vImgPos(Math::VECTOR2_ZERO)
 , m_bFlagImgZoom(false)
@@ -170,7 +160,8 @@ CDatabaseViewer_Container::CDatabaseViewer_Container(void)
 , m_uArrowAnimCnt(0)
 , m_bFlagArrowAnimReverse(false)
 {
-    ;
+    for (int32 i = 0; i < COUNT_OF(m_apTexture); ++i)
+        m_apTexture[i] = nullptr;
 };
 
 
@@ -183,21 +174,23 @@ CDatabaseViewer_Container::~CDatabaseViewer_Container(void)
 void CDatabaseViewer_Container::Initialize(void)
 {
     m_iDbViewerNo = CDatabaseSequence::GetDBViewerNo();
-    ASSERT( (m_iDbViewerNo >= 0) && (m_iDbViewerNo < COUNT_OF(s_aViewerInfo)) );
-    m_iTexNum = s_aViewerInfo[m_iDbViewerNo].TexNum;
-    CDataLoader::Regist(s_aViewerInfo[m_iDbViewerNo].idFile);
+    ASSERT(m_iDbViewerNo >= 0);
+    ASSERT(m_iDbViewerNo < COUNT_OF(s_aDBViewerInfo));
 
-    m_bSettingFlag = false;
-    m_eMovedir = MOVEDIR_NONE;
-    m_iImgCursor = 0;
-    m_bFlagImgChange = false;
-    m_bFlagImgZoom = false;
-    m_vImgPos = Math::VECTOR2_ZERO;
-    m_bFlagCancelZoom = false;
-    m_uAppearAnimCnt = 0;
-    m_uArrowAnimCnt = 0;
+    CDataLoader::Regist(s_aDBViewerInfo[m_iDbViewerNo].fileId);
+
+    m_iTexNum               = s_aDBViewerInfo[m_iDbViewerNo].numTexture;
+    m_bSettingFlag          = false;
+    m_eMovedir              = MOVEDIR_NONE;
+    m_iImgCursor            = 0;
+    m_bFlagImgChange        = false;
+    m_bFlagImgZoom          = false;
+    m_vImgPos               = Math::VECTOR2_ZERO;
+    m_bFlagCancelZoom       = false;
+    m_uAppearAnimCnt        = 0;
+    m_uArrowAnimCnt         = 0;
     m_bFlagArrowAnimReverse = false;
-    m_fImageZoom = 1.0f;
+    m_fImageZoom            = 1.0f;
 
     if (!CGameData::Record().Database().IsItemRead(DBITEMID::VALUE(m_iDbViewerNo)))
         CGameData::Record().Database().SetItemRead(DBITEMID::VALUE(m_iDbViewerNo));
@@ -212,27 +205,79 @@ void CDatabaseViewer_Container::Setting(void)
     m_bSettingFlag = true;
 
     CTextureManager::SetCurrentTextureSet("viewer_base");
-    m_pTexBace = CTextureManager::GetRwTexture("DB_VieBace01ps");
-    m_pTexBtWinpc = CTextureManager::GetRwTexture("DB_BtWinpc");
-    m_pTexBtn03ps = CTextureManager::GetRwTexture("DB_Button03ps");
-    m_pTexBtn04ps = CTextureManager::GetRwTexture("DB_Button04ps");
-    m_pTexBtn05ps = CTextureManager::GetRwTexture("DB_Button05ps");
-    m_pTexBtn06ps = CTextureManager::GetRwTexture("DB_Button06ps");
-    m_pTexBtn07ps = CTextureManager::GetRwTexture("DB_Button07ps");
 
-	CTextureManager::SetCurrentTextureSet(GetDBViewerInfo(m_iDbViewerNo).TxdName);
+#ifdef TMNT2_BUILD_EU
+    m_apTexture[0] = CTextureManager::GetRwTexture("DB_VieBace01ps");
+    m_apTexture[1] = CTextureManager::GetRwTexture("dbv_bg");
+    m_apTexture[2] = CTextureManager::GetRwTexture("dbv_light_zoom");
+    m_apTexture[4] = CTextureManager::GetRwTexture("dbv_light_next");
+    m_apTexture[3] = CTextureManager::GetRwTexture("dbv_light_prev");
+    m_apTexture[5] = CTextureManager::GetRwTexture("dbv_light_scroll");
 
-    char TexPrefix[256];
-    TexPrefix[0] = '\0';
-    std::sprintf(TexPrefix, GetDBViewerInfo(m_iDbViewerNo).TexPrefix);
-
-    int32 TexCnt = GetDBViewerInfo(m_iDbViewerNo).TexNum;
-    for (int32 i = 0; i < TexCnt; ++i)
+    switch (CConfigure::GetLanguage())
     {
-        char TexName[256];
-        TexName[0] = '\0';
-        std::sprintf(TexName, "%s%02d", TexPrefix, i + 1);
-        m_apTexViewer[i] = CTextureManager::GetRwTexture(TexName);
+    case TYPEDEF::CONFIG_LANG_ENGLISH:
+        m_apTexture[6] = CTextureManager::GetRwTexture("dbv_ok_pc");
+        m_apTexture[7] = CTextureManager::GetRwTexture("dbv_cancel_pc");
+        break;
+
+    case TYPEDEF::CONFIG_LANG_GERMAN:
+        m_apTexture[6] = CTextureManager::GetRwTexture("dbv_ok_pc_g");
+        m_apTexture[7] = CTextureManager::GetRwTexture("dbv_cancel_pc_g");        
+        break;
+
+    case TYPEDEF::CONFIG_LANG_FRENCH:
+        m_apTexture[6] = CTextureManager::GetRwTexture("dbv_ok_pc_f");
+        m_apTexture[7] = CTextureManager::GetRwTexture("dbv_cancel_pc_f");
+        break;
+
+    case TYPEDEF::CONFIG_LANG_SPANISH:
+        m_apTexture[6] = CTextureManager::GetRwTexture("dbv_ok_pc_s");
+        m_apTexture[7] = CTextureManager::GetRwTexture("dbv_cancel_pc_s");
+        break;
+
+    case TYPEDEF::CONFIG_LANG_ITALIAN:
+        m_apTexture[6] = CTextureManager::GetRwTexture("dbv_ok_pc_i");
+        m_apTexture[7] = CTextureManager::GetRwTexture("dbv_cancel_pc_i");
+        break;
+
+    default:
+        ASSERT(false);
+        break;
+    };
+#else /* TMNT2_BUILD_EU */
+    m_apTexture[0] = CTextureManager::GetRwTexture("DB_VieBace01ps");
+    m_apTexture[1] = CTextureManager::GetRwTexture("DB_BtWinpc");
+    m_apTexture[2] = CTextureManager::GetRwTexture("DB_Button03ps");
+    m_apTexture[3] = CTextureManager::GetRwTexture("DB_Button04ps");
+    m_apTexture[4] = CTextureManager::GetRwTexture("DB_Button06ps");
+    m_apTexture[5] = CTextureManager::GetRwTexture("DB_Button05ps");
+    m_apTexture[6] = CTextureManager::GetRwTexture("DB_Button07ps");
+#endif /* TMNT2_BUILD_EU */
+    
+    CTextureManager::SetCurrentTextureSet(DBViewerInfo(m_iDbViewerNo).pszTxdName);
+
+    char szTexPrefix[256];
+    szTexPrefix[0] = '\0';
+
+    std::sprintf(szTexPrefix, DBViewerInfo(m_iDbViewerNo).pszTexPrefix);
+
+#ifdef TMNT2_BUILD_EU
+    int32 indexStart = 8;
+#else /* TMNT2_BUILD_EU */
+    int32 indexStart = 7;
+#endif /* TMNT2_BUILD_EU */
+    
+    int32 numTexture = DBViewerInfo(m_iDbViewerNo).numTexture;
+    
+    for (int32 i = 0; i < numTexture; ++i)
+    {
+        char szTexName[256];
+        szTexName[0] = '\0';
+
+		std::sprintf(szTexName, "%s%02d", szTexPrefix, i + 1);
+
+        m_apTexture[indexStart + i] = CTextureManager::GetRwTexture(szTexName);
     };
 };
 
@@ -408,6 +453,9 @@ bool CDatabaseViewer_Container::Run(void)
             };
         }
         break;
+
+    default:
+        break;
     };
 
     return false;
@@ -434,46 +482,48 @@ void CDatabaseViewer_Container::Draw(void)
     float sw = float(CScreen::Width());
     float sh = float(CScreen::Height());
 
-    m_Sprite.SetOffset(0.5f, 0.5f);
-    m_Sprite.SetTexture(m_pTexBace);
-    m_Sprite.Move(0.0f, 0.0f);
-    m_Sprite.ResizeRealScreen(sw, sh);
-    m_Sprite.SetAlpha(255);
-    m_Sprite.Draw();
+    m_sprite.SetOffset(0.5f, 0.5f);
+    m_sprite.SetTexture(m_apTexture[0]);
+    m_sprite.Move(0.0f, 0.0f);
+    m_sprite.ResizeRealScreen(sw, sh);
+    m_sprite.SetAlpha(255);
+    m_sprite.Draw();
 
-    m_Sprite.SetOffset(0.5f, 0.5f);
-    m_Sprite.SetTexture(m_apTexViewer[GetViewerCGPos(2)]);
-    m_Sprite.Move(m_vImgPos.x - 640.0f, m_vImgPos.y - 50.0f);
-    m_Sprite.Resize(640.0, 524.0f);
-    m_Sprite.SetAlpha(255);
-    m_Sprite.Draw();
+#ifdef TMNT2_BUILD_EU
+    int32 indexStart = 8;
+#else /* TMNT2_BUILD_EU */
+    int32 indexStart = 7;
+#endif /* TMNT2_BUILD_EU */
     
-    m_Sprite.SetOffset(0.5f, 0.5f);
-    m_Sprite.SetTexture(m_apTexViewer[GetViewerCGPos(1)]);
-    m_Sprite.Move(m_vImgPos.x + 640.0f, m_vImgPos.y - 50.0f);
-    m_Sprite.Resize(640.0, 524.0f);
-    m_Sprite.SetAlpha(255);
-    m_Sprite.Draw();
+    m_sprite.SetOffset(0.5f, 0.5f);
+    m_sprite.SetTexture(m_apTexture[GetViewerCGPos(MOVEDIR_LEFT) + indexStart]);
+    m_sprite.Move(m_vImgPos.x - 640.0f, m_vImgPos.y - 50.0f);
+    m_sprite.Resize(640.0, 524.0f);
+    m_sprite.SetAlpha(255);
+    m_sprite.Draw();
+    
+    m_sprite.SetOffset(0.5f, 0.5f);
+    m_sprite.SetTexture(m_apTexture[GetViewerCGPos(MOVEDIR_RIGHT) + indexStart]);
+    m_sprite.Move(m_vImgPos.x + 640.0f, m_vImgPos.y - 50.0f);
+    m_sprite.Resize(640.0, 524.0f);
+    m_sprite.SetAlpha(255);
+    m_sprite.Draw();
 
-    m_Sprite.SetOffset(0.5f, 0.5f);
-    m_Sprite.SetTexture(m_apTexViewer[GetViewerCGPos(0)]);
-    m_Sprite.Move(m_vImgPos.x, m_vImgPos.y - 50.0f);
-    m_Sprite.Resize(
-        (fAnimStep * m_fImageZoom) * 640.0f,
-        (fAnimStep * m_fImageZoom) * 524.0f
-    );
-    m_Sprite.SetAlpha(uint8(fAnimStep * 255.0f));
-    m_Sprite.Draw();
+    m_sprite.SetOffset(0.5f, 0.5f);
+    m_sprite.SetTexture(m_apTexture[GetViewerCGPos(MOVEDIR_NONE) + indexStart]);
+    m_sprite.Move(m_vImgPos.x, m_vImgPos.y - 50.0f);
+    m_sprite.Resize((fAnimStep * m_fImageZoom) * 640.0f,
+                    (fAnimStep * m_fImageZoom) * 524.0f);
+    m_sprite.SetAlpha(uint8(fAnimStep * 255.0f));
+    m_sprite.Draw();
 
-    m_Sprite.SetOffset(0.0f, 0.5f);
-    m_Sprite.Resize(640.0f, 128.0f);
-    m_Sprite.SetAlpha(255);
-    m_Sprite.SetTexture(m_pTexBtWinpc);
-    m_Sprite.Move(
-        -320.0f,
-        316.0f - (fAnimStep * 128.0f)
-    );
-    m_Sprite.Draw();
+    m_sprite.SetOffset(0.0f, 0.5f);
+    m_sprite.Resize(640.0f, 128.0f);
+    m_sprite.SetAlpha(255);
+    m_sprite.SetTexture(m_apTexture[1]);
+    m_sprite.Move(-320.0f,
+                  316.0f - (fAnimStep * 128.0f));
+    m_sprite.Draw();
 
     if (ArrowDrawFlag)
     {
@@ -481,19 +531,24 @@ void CDatabaseViewer_Container::Draw(void)
         
         if (!m_bFlagImgZoom)
         {
-            char Buff[128];
-            Buff[0] = '\0';
-            std::sprintf(Buff, "%d/%d", m_iImgCursor + 1, m_iTexNum);
+            char szBuff[128];
+            szBuff[0] = '\0';
+
+            std::sprintf(szBuff, "%d/%d", m_iImgCursor + 1, m_iTexNum);
             
             CSystem2D::PushRenderState();
 
-			CGameFont::SetHeight(CGameFont::GetScreenHeight() * 3.0f);
+            CGameFont::SetHeightScaled(3.0f);
             CGameFont::SetRGBA(255, 180, 0, 255);
-            CGameFont::Show(Buff, -260.0f, -152.0f);
+            CGameFont::Show(szBuff, -260.0f, -152.0f);
 
             CSystem2D::PopRenderState();
         };
     };
+
+#ifdef TMNT2_BUILD_EU
+	GuideDraw();
+#endif /* TMNT2_BUILD_EU */
 };
 
 
@@ -503,50 +558,85 @@ void CDatabaseViewer_Container::ArrowDraw(void)
     if (m_bFlagArrowAnimReverse)
         AlphaBasis = (255 - AlphaBasis);
 
-    m_Sprite.SetOffset(0.5f, 0.5f);
-    m_Sprite.SetAlpha(AlphaBasis);
+    m_sprite.ResetUV();
+#ifdef TMNT2_BUILD_EU
+    m_sprite.SetOffset(0.0f, 0.0f);
+#else /* TMNT2_BUILD_EU */
+    m_sprite.SetOffset(0.5f, 0.5f);
+#endif /* TMNT2_BUILD_EU */
+    m_sprite.SetAlpha(AlphaBasis);
 
     if (!m_bFlagImgChange)
     {
+#ifdef TMNT2_BUILD_EU
+        m_sprite.SetTexture(m_apTexture[2]);
+        m_sprite.Resize(64.0f, 16.0f);
+        m_sprite.Move(-279.0f, 185.0f);
+        m_sprite.Draw();
+#else /* TMNT2_BUILD_EU */
         if (m_fImageZoom < 3.0f)
         {
-            m_Sprite.SetTexture(m_pTexBtn03ps);
-            m_Sprite.Resize(32.0f, 16.0f);
-            m_Sprite.Move(-263.0f, 190.0f);
-            m_Sprite.Draw();
+            m_sprite.SetTexture(m_apTexture[2]);
+            m_sprite.Resize(32.0f, 16.0f);
+            m_sprite.Move(-263.0f, 190.0f);
+            m_sprite.Draw();
         };
 
         if (m_fImageZoom > 1.0f)
         {
-            m_Sprite.SetTexture(m_pTexBtn04ps);
-            m_Sprite.Resize(32.0f, 16.0f);
-            m_Sprite.Move(-106.0f, 190.0f);
-            m_Sprite.Draw();
+            m_sprite.SetTexture(m_apTexture[3]);
+            m_sprite.Resize(32.0f, 16.0f);
+            m_sprite.Move(-106.0f, 190.0f);
+            m_sprite.Draw();
         };
+#endif /* TMNT2_BUILD_EU */
     };
 
     if (!m_bFlagImgChange)
     {
         if (!m_bFlagImgZoom)
         {
-            m_Sprite.SetTexture(m_pTexBtn06ps);
-            m_Sprite.Resize(16.0f, 32.0f);
-            m_Sprite.Move(-266.0f, 160.0f);
-            m_Sprite.Draw();
+            struct ZOOMARROW
+            {
+                RwV2d position;
+                int32 textureIndex;
+            };
 
-            m_Sprite.SetTexture(m_pTexBtn05ps);
-            m_Sprite.Resize(16.0f, 32.0f);
-            m_Sprite.Move(-106.0f, 160.0f);
-            m_Sprite.Draw();
+            static const ZOOMARROW s_aZoomArrow[] =
+            {
+#ifdef TMNT2_BUILD_EU
+                { { -269.0f, 138.0f }, 3 },
+                { {   13.0f, 138.0f }, 4 },
+#else /* TMNT2_BUILD_EU */
+                { { -266.0f, 160.0f }, 4 },
+                { { -106.0f, 160.0f }, 5 },
+#endif /* TMNT2_BUILD_EU */
+            };
+
+            for (int32 i = 0; i < COUNT_OF(s_aZoomArrow); ++i)
+            {
+                m_sprite.SetTexture(m_apTexture[s_aZoomArrow[i].textureIndex]);
+                m_sprite.Resize(16.0f, 32.0f);
+                m_sprite.Move(s_aZoomArrow[i].position.x,
+                              s_aZoomArrow[i].position.y);
+                m_sprite.Draw();
+            };
         };
     };
 
     if (m_bFlagImgZoom)
     {
-        m_Sprite.SetTexture(m_pTexBtn07ps);
-        m_Sprite.Resize(64.0f, 64.0f);
-        m_Sprite.Move(96.0f, 177.0f);
-        m_Sprite.Draw();
+#ifdef TMNT2_BUILD_EU
+        m_sprite.SetTexture(m_apTexture[5]);
+        m_sprite.Resize(32.0f, 32.0f);
+        m_sprite.Move(-28.0f, 174.0f);
+        m_sprite.Draw();
+#else /* TMNT2_BUILD_EU */
+        m_sprite.SetTexture(m_apTexture[6]);
+        m_sprite.Resize(64.0f, 64.0f);
+        m_sprite.Move(96.0f, 177.0f);
+        m_sprite.Draw();
+#endif /* TMNT2_BUILD_EU */
     };
 
     if (float(m_uArrowAnimCnt) >= (CScreen::Framerate() * 0.5f))
@@ -559,7 +649,49 @@ void CDatabaseViewer_Container::ArrowDraw(void)
         ++m_uArrowAnimCnt;
     };
 
-    m_Sprite.SetAlpha(255);
+#ifdef TMNT2_BUILD_EU
+    m_sprite.SetOffset(0.5f, 0.5f);
+#endif /* TMNT2_BUILD_EU */
+    m_sprite.SetAlpha(255);
+};
+
+
+void CDatabaseViewer_Container::GuideDraw(void)
+{
+#ifdef TMNT2_BUILD_EU
+    CSystem2D::PushRenderState();
+
+    CGameFont::SetHeightScaled(1.75f);
+    CGameFont::SetRGBA(255, 255, 255, 255);
+
+    float fAppearOfsY = (float(m_uAppearAnimCnt) / (CScreen::Framerate() * 0.5f)) * 128.0f;
+
+    float fRowFirstOfsY = (286.0f - fAppearOfsY);
+    CGameFont::Show(CGameText::GetText(GAMETEXT_DBV_PREV), -242.0f, fRowFirstOfsY);
+    CGameFont::Show(CGameText::GetText(GAMETEXT_DBV_NEXT),   40.0f, fRowFirstOfsY);
+
+    float fRowSecondOfsY = (322.0f - fAppearOfsY);
+    CGameFont::Show(CGameText::GetText(GAMETEXT_EU_ZOOM),    -219.0f, fRowSecondOfsY);
+    CGameFont::Show(CGameText::GetText(GAMETEXT_DBV_SCROLL),   10.0f, fRowSecondOfsY);
+    CGameFont::Show(CGameText::GetText(GAMETEXT_MENU_BACK),   195.0f, fRowSecondOfsY);
+
+    CSystem2D::PopRenderState();
+
+    m_sprite.SetOffset(0.0f, 0.0f);
+	m_sprite.SetRGBA(255, 255, 255, 255);
+
+    m_sprite.SetTexture(m_apTexture[6]);
+    m_sprite.Resize(64.0f, 32.0f);
+    m_sprite.Move(-98.0f, (303.0f - fAppearOfsY));
+    m_sprite.Draw();
+
+    m_sprite.SetTexture(m_apTexture[7]);
+    m_sprite.Resize(64.0f, 32.0f);
+    m_sprite.Move(132.0f, (303.0f - fAppearOfsY));
+    m_sprite.Draw();
+
+    m_sprite.SetOffset(0.5f, 0.5f);
+#endif /* TMNT2_BUILD_EU */
 };
 
 
@@ -678,7 +810,8 @@ void CDatabaseViewer::OnMove(bool bRet, const void* pReturnValue)
 
 void CDatabaseViewer::OnDraw(void) const
 {
-    if ((m_ePhase > PHASE_LOAD) && (m_ePhase <= PHASE_END))
+    if ((m_ePhase >  PHASE_LOAD) &&
+        (m_ePhase <= PHASE_END))
     {
         CRenderStateManager::SetDefault();
 

@@ -34,61 +34,55 @@ void CDialog::SetSprite(float x, float y, float w, float h)
 
 void CDialog::DrawInWindow(const Rt2dBBox& bbox) const
 {
-    if (m_Title.Text())
+    if (m_textTitle.Text())
     {
         Rt2dBBox bboxTitle;
-        Rt2dBBox bboxText;
-
         bboxTitle.x = bbox.x - bbox.w * 0.45f;
         bboxTitle.y = (bbox.h * 0.2f) - bbox.y;
         bboxTitle.w = bbox.w * 0.9f;
         bboxTitle.h = bbox.h * 0.2f;
 
+        Rt2dBBox bboxText;
         bboxText.x = bbox.x - bbox.w * 0.45f;
         bboxText.y = bbox.h * -0.2f - bbox.y;
         bboxText.w = bbox.w * 0.9f;
         bboxText.h = bbox.h * 0.4f;
 
-        m_Title.Draw(bboxTitle);
-        m_Text.Draw(bboxText);
+        m_textTitle.Draw(bboxTitle);
+        m_textMsg.Draw(bboxText);
     }
-    else if (m_Text.Text())
+    else if (m_textMsg.Text())
     {
         Rt2dBBox bboxText;
-
         bboxText.x = bbox.x - bbox.w * 0.45f;
         bboxText.y = bbox.h * -0.2f - bbox.y;
         bboxText.w = bbox.w * 0.9f;
         bboxText.h = bbox.h * 0.6f;
 
-        m_Text.Draw(bboxText);
+        m_textMsg.Draw(bboxText);
     };
 
 	CGameFont::SetHeight(20.0f);
 
-    const wchar* pwszYes = CGameText::GetText(GAMETEXT(1));
+    const wchar* pwszYes = CGameText::GetText(GAMETEXT_YES);
     if (m_status == STATUS_YES)
         CGameFont::SetRGBA(0, 255, 0, 255);
     else
         CGameFont::SetRGBA(255, 180, 0, 255);
 
-    CGameFont::Show(
-        pwszYes,
-        m_bboxDraw.x - m_bboxDraw.w * 0.15f,
-        m_bboxDraw.h * 0.3f + m_bboxDraw.y
-    );
+    CGameFont::Show(pwszYes,
+                    m_bboxDraw.x - m_bboxDraw.w * 0.15f,
+                    m_bboxDraw.h * 0.3f + m_bboxDraw.y);
     
-    const wchar* pwszNo = CGameText::GetText(GAMETEXT(2));
+    const wchar* pwszNo = CGameText::GetText(GAMETEXT_NO);
     if (m_status == STATUS_NO)
         CGameFont::SetRGBA(0, 255, 0, 255);
     else
         CGameFont::SetRGBA(255, 180, 0, 255);
 
-    CGameFont::Show(
-        pwszNo,
-        m_bboxDraw.w * 0.15f + m_bboxDraw.x,
-        m_bboxDraw.h * 0.3f + m_bboxDraw.y
-    );
+    CGameFont::Show(pwszNo,
+                    m_bboxDraw.w * 0.15f + m_bboxDraw.x,
+                    m_bboxDraw.h * 0.3f + m_bboxDraw.y);
 
     m_aSprite[3].DrawRotate();
 };

@@ -1,7 +1,8 @@
 #pragma once
 
-#include "Game/System/2d/Anim2DBaseSequence.hpp"
 #include "Game/Component/Menu/Dialog.hpp"
+#include "Game/System/2d/Anim2DBaseSequence.hpp"
+#include "Game/System/Text/GameTextID.hpp"
 
 
 class CTitleSequence final : public CAnim2DSequence
@@ -37,11 +38,11 @@ private:
 
     struct MENUITEMINFO
     {
-        int32 m_iIndex;
-        int32 m_iStringID;
+        int32         m_iIndex;
+        GAMETEXT      m_textId;
         NEXT_SEQUENCE m_nextseq;
-        bool m_bVisible;
-        bool m_bEnabled;
+        bool          m_bVisible;
+        bool          m_bEnabled;
     };
 
 public:
@@ -53,6 +54,7 @@ public:
     virtual void OnDetach(void) override;
     virtual void OnMove(bool bRet, const void* pReturnValue) override;
     virtual void OnDraw(void) const override;
+    virtual void BeginFadeIn(void) override;
     void CheckPressStart(void);
     void UpdateTimers(void);
     void OpenNewGameWarning(void);
@@ -65,10 +67,11 @@ public:
 
 private:
     static MENUITEMINFO m_aMenuItemInfoTable[];
+    static bool m_bMovie;
 
-    NEXT_SEQUENCE m_NextSequence;
-    PHASE m_phase;
-    int32 m_iCurrentSelect;
-    float m_fTimer;
-    CDialog m_Dialog;
+    NEXT_SEQUENCE   m_nextSeq;
+    PHASE           m_phase;
+    int32           m_iCurrentSelect;
+    float           m_fTimer;
+    CDialog         m_dialog;
 };

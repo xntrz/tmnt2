@@ -20,7 +20,7 @@ CAreaPlaySequence::CAreaPlaySequence(void)
 , m_substep(0)
 #ifdef _DEBUG
 , m_bSkipAllMovies(false)
-#endif
+#endif /* _DEBUG */
 {
     ;
 };
@@ -42,11 +42,11 @@ bool CAreaPlaySequence::OnAttach(const void* pParam)
 #ifdef BUILD_TRIAL
     CTimeoutProcess::Enable(this, true);
     CTimeoutProcess::Start(this);
-#endif        
+#endif /* BUILD_TRIAL */
 
 #ifdef _DEBUG
-    m_bSkipAllMovies = bool(pParam != nullptr);
-#endif    
+	m_bSkipAllMovies = (pParam != nullptr);
+#endif /* _DEBUG */
 
     return true;
 };
@@ -355,9 +355,9 @@ void CAreaPlaySequence::callMovieSequence(MOVIEID::VALUE idMovie)
 #ifdef _DEBUG
     if (m_bSkipAllMovies)
         return;
-#endif
+#endif /* _DEBUG */
     
     CScreenFade::BlackIn(0.0f);
-    Call(PROCLABEL_SEQ_MOVIE, (const void*)idMovie);
+    Call(PROCLABEL_SEQ_MOVIE, reinterpret_cast<const void*>(idMovie));
 };
 

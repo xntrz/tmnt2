@@ -7,15 +7,15 @@
 #include "System/Common/SystemTime.hpp"
 
 
-struct CSecretInfo::PASSWORDINFO
+struct PASSWORDINFO
 {
-    const char* m_pszPassword;
+    const char*     m_pszPassword;
     SECRETID::VALUE m_PasswordID;
     SECRETID::VALUE m_SecretID;
 };
 
 
-/*static*/ const CSecretInfo::PASSWORDINFO CSecretInfo::m_aPasswordList[] =
+static const PASSWORDINFO s_aPasswordList[] =
 {
     { "LSDRRDR", SECRETID::ID_PASSWORD_CHEATCODE_MIGHTYTURTLE,  SECRETID::ID_CHEATCODE_MIGHTYTURTLE,    },
     { "DSRDMRM", SECRETID::ID_PASSWORD_CHEATCODE_HEALTH,        SECRETID::ID_CHEATCODE_HEALTH,          },
@@ -498,12 +498,12 @@ struct CSecretInfo::PASSWORDINFO
 };
 
 
-/*static*/ int32 CSecretInfo::GetGameText(SECRETID::VALUE idSecret)
+/*static*/ GAMETEXT CSecretInfo::GetGameText(SECRETID::VALUE idSecret)
 {
     ASSERT(idSecret >= SECRETID::ID_FIRST);
     ASSERT(idSecret < SECRETID::ID_MAX);
 
-    return (idSecret + 564);
+    return static_cast<GAMETEXT>((GAMETEXT_SECRET_0 - 1) + idSecret);
 };
 
 
@@ -533,14 +533,14 @@ struct CSecretInfo::PASSWORDINFO
 {
     ASSERT(pszPassword);
     
-    for (int32 i = 0; i < COUNT_OF(m_aPasswordList); ++i)
+    for (int32 i = 0; i < COUNT_OF(s_aPasswordList); ++i)
     {
-        if (!std::strcmp(m_aPasswordList[i].m_pszPassword, pszPassword))
+        if (!std::strcmp(s_aPasswordList[i].m_pszPassword, pszPassword))
         {
-            Unlock(m_aPasswordList[i].m_SecretID);
-            CGameData::Record().Secret().NotifySecret(m_aPasswordList[i].m_SecretID);
+            Unlock(s_aPasswordList[i].m_SecretID);
+            CGameData::Record().Secret().NotifySecret(s_aPasswordList[i].m_SecretID);
 
-            return m_aPasswordList[i].m_SecretID;
+            return s_aPasswordList[i].m_SecretID;
         };
     };
 
@@ -550,10 +550,10 @@ struct CSecretInfo::PASSWORDINFO
 
 /*static*/ const char* CSecretInfo::GetPassword(SECRETID::VALUE idSecret)
 {
-    for (int32 i = 0; i < COUNT_OF(m_aPasswordList); ++i)
+    for (int32 i = 0; i < COUNT_OF(s_aPasswordList); ++i)
     {
-        if (m_aPasswordList[i].m_PasswordID == idSecret)
-            return m_aPasswordList[i].m_pszPassword;
+        if (s_aPasswordList[i].m_PasswordID == idSecret)
+            return s_aPasswordList[i].m_pszPassword;
     };
 
     return nullptr;

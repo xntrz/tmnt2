@@ -86,6 +86,6 @@ namespace Math
 
     inline float LinearTween(float startValue, float changeValue, float time, float duration)
     {
-        return (startValue + time / duration * changeValue);
+        return (startValue + ((time / duration) * changeValue));
     };
 };

@@ -84,7 +84,7 @@ void CGameMainSequence::OnDetach(void)
 {
 #ifdef TARGET_PS2
     CPadConnectCheckProcess::Terminate(this);
-#endif
+#endif /* TARGET_PS2 */
 
     CGameData::Terminate();
     CLoadingDisplay::Terminate(this);
@@ -107,7 +107,7 @@ void CGameMainSequence::OnMove(bool bRet, const void* pReturnValue)
     {
 #ifdef BUILD_TRIAL        
         CTimeoutProcess::Reset(this);
-#endif
+#endif /* BUILD_TRIAL */
         if (pReturnValue)
         {
             m_iLabelNext = reinterpret_cast<int32>(pReturnValue);
@@ -150,9 +150,9 @@ void CGameMainSequence::OnMove(bool bRet, const void* pReturnValue)
                 CGameSound::LoadWave(0);
                 CGameSound::LoadWave(1);
                 m_step = STEP_LOAD_SOUND;
-#ifdef TARGET_PS2                    
+#ifdef TARGET_PS2
                 CPadConnectCheckProcess::Initialize(this);
-#endif                    
+#endif /* TARGET_PS2 */
             }
             break;
 
@@ -161,16 +161,19 @@ void CGameMainSequence::OnMove(bool bRet, const void* pReturnValue)
                 if (!CGameSound::IsLoadEnd())
                     break;
 
-                m_iLabelNext = m_iLabelPrev = m_iLabelCurrent = PROCLABEL_SEQ_SAVELOADCHECK;
+                m_iLabelNext    = PROCLABEL_SEQ_SAVELOADCHECK;
+                m_iLabelPrev    = PROCLABEL_SEQ_SAVELOADCHECK;
+                m_iLabelCurrent = PROCLABEL_SEQ_SAVELOADCHECK;                
+
                 m_param = nullptr;
                 m_step = STEP_RUN;
 
                 CScreen::SetFlipEnable(true);
 #ifdef _DEBUG
                 Call(PROCLABEL_SEQ_DBGMAIN);
-#else
+#else /* _DEBUG */
                 Call(PROCLABEL_SEQ_SAVELOADCHECK);
-#endif                
+#endif  /* _DEBUG */
             }
             break;
 
@@ -219,9 +222,9 @@ int32 CGameMainSequence::Branch(int32 iLabel)
     case PROCLABEL_SEQ_LOGODISP:
 #ifdef _DEBUG
         return PROCLABEL_SEQ_TITLE;
-#else
+#else /* _DEBUG */
         return (CConfigure::GetLaunchMode() != TYPEDEF::CONFIG_LAUNCH_NORMAL ? PROCLABEL_SEQ_TITLE : PROCLABEL_SEQ_MOVIE);
-#endif        
+#endif /* _DEBUG */
 
     case PROCLABEL_SEQ_TITLE:
         return PROCLABEL_SEQ_CHARASELECT;

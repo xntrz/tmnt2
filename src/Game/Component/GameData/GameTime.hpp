@@ -23,7 +23,9 @@ public:
     bool operator>=(const CGameTime& Gametime) const;
     bool operator!=(const CGameTime& Gametime) const;
     bool operator==(const CGameTime& Gametime) const;
-
+    CGameTime& operator+=(const CGameTime& Gametime);
+    CGameTime& operator+(const CGameTime& Gametime);
+    
 private:
     void clamp(void);
     

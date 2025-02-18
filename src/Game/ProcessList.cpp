@@ -4,6 +4,7 @@
 #include "Game/Sequence/GameMainSequence.hpp"
 #include "Game/Sequence/Menu/LogoSequence.hpp"
 #include "Game/Sequence/Menu/TitleSequence.hpp"
+#include "Game/Sequence/Menu/PreArcade.hpp"
 #include "Game/Sequence/Menu/ComingSoon.hpp"
 #include "Game/Sequence/Menu/CharacterSelectSequence.hpp"
 #include "Game/Sequence/Menu/UnlockSequence.hpp"
@@ -66,10 +67,13 @@ extern const PROCESSTYPES::PROCESS g_aProcessList[] =
     { PROCLABEL_DBGMENU,                PROCESSTYPES::PRIORITY_NORMAL + 1,  CDebugMenuProcess::Instance         },
     { PROCLABEL_DBGUNLOCK,              PROCESSTYPES::PRIORITY_HIGH,        CDbgUnlockProcess::Instance         },
     { PROCLABEL_ENEMYTESTPAI,           PROCESSTYPES::PRIORITY_HIGH,        EnemyTestPlayerAIInstance           },
-#endif
+#endif /* _DEBUG */
     { PROCLABEL_SEQ_MOVIE,              PROCESSTYPES::PRIORITY_NORMAL,      CMovieSequence::Instance            },
     { PROCLABEL_SEQ_LOGODISP,           PROCESSTYPES::PRIORITY_NORMAL,      CLogoDisplaySequence::Instance		},
     { PROCLABEL_SEQ_TITLE,              PROCESSTYPES::PRIORITY_NORMAL,      CTitleSequence::Instance            },
+#ifdef TMNT2_BUILD_EU
+    { PROCLABEL_SEQ_PRE_ARCADE,         PROCESSTYPES::PRIORITY_NORMAL,      CPreArcadeSequence::Instance        },
+#endif /* TMNT2_BUILD_EU */
     { PROCLABEL_SEQ_AREAPLAY,           PROCESSTYPES::PRIORITY_NORMAL,      CAreaPlaySequence::Instance         },
     { PROCLABEL_SEQ_ENDING,             PROCESSTYPES::PRIORITY_NORMAL,      CEndingSequence::Instance           },
     { PROCLABEL_SEQ_PLAYDEMO,           PROCESSTYPES::PRIORITY_NORMAL,      CPlayDemoSequence::Instance         },

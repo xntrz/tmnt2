@@ -502,7 +502,7 @@ void CGaugeMeter_Container::AnimGaugeFont_Period(void)
 
     case 2:
         {
-            float fDuration = CScreen::Framerate();
+            float fDuration = GAUGE_ANIM_DURATION_FRAMES(60);
 
             uAlpha = 0;
 

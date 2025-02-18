@@ -11,13 +11,6 @@
 
 class CStageInfo
 {
-protected:
-    struct INFO;
-
-    static const INFO m_aStageInfo[];
-    
-    static const INFO& Info(STAGEID::VALUE idStage);
-    
 public:
     enum CAMERAUPDATE
     {

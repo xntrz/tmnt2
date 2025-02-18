@@ -13,6 +13,7 @@
 #include "System/Common/Controller.hpp"
 #include "System/Common/System2D.hpp"
 #include "System/Common/Camera.hpp"
+#include "System/Common/Screen.hpp"
 
 
 /*static*/ STAGEID::VALUE CPlayDemoSequence::m_idStage = STAGEID::ID_ST02N;
@@ -59,6 +60,10 @@ CPlayDemoSequence::~CPlayDemoSequence(void)
 
 bool CPlayDemoSequence::OnAttach(const void* pParam)
 {
+#ifdef TMNT2_BUILD_EU
+    CScreen::SetPalMode(false);
+#endif /* TMNT2_BUILD_EU */
+    
     CGameData::Attribute().SetGamemode(GAMETYPES::GAMEMODE_DEMO);
     
     CGameData::PushRecord();
@@ -82,7 +87,9 @@ bool CPlayDemoSequence::OnAttach(const void* pParam)
 
     for (int32 i = 0; i < m_aStageTable[m_iStageIndex].m_nNumPlayers; ++i)
     {
-        ASSERT(i >= 0 && i < COUNT_OF(m_aPlayerTable));
+        ASSERT(i >= 0);
+        ASSERT(i < COUNT_OF(m_aPlayerTable));
+        
         CGameData::PlayParam().AddPlayerCharacter(i, m_aPlayerTable[i], GAMETYPES::COSTUME_NONE);
     };
 
@@ -149,6 +156,10 @@ void CPlayDemoSequence::OnDetach(void)
     CGameData::PopOption();
     CGameData::PopRecord();
     CGameData::Attribute().SetGamemode(GAMETYPES::GAMEMODE_NORMAL);
+
+#ifdef TMNT2_BUILD_EU
+    CScreen::SetPalMode(true);
+#endif /* TMNT2_BUILD_EU */
 };
 
 
@@ -187,15 +198,13 @@ void CPlayDemoSequence::OnDraw(void) const
         {
             CSystem2D::PushRenderState();
             
-			CGameFont::SetHeight(CGameFont::GetScreenHeightEx(TYPEDEF::VSCR_H / 3.0f));
+            CGameFont::SetHeightScaled(3.0f);
             CGameFont::SetRGBA(255, 124, 0, uAlphaBasis);
             
-            const wchar* pwszText = CGameText::GetText(GAMETEXT(11));
-            CGameFont::Show(
-                pwszText,
-                272.0f - CGameFont::GetStringWidth(pwszText),
-                192.0f
-            );
+            const wchar* pwszText = CGameText::GetText(GAMETEXT_MENU_START_BTN);
+            CGameFont::Show(pwszText,
+                            272.0f - CGameFont::GetStringWidth(pwszText),
+                            192.0f);
 
             m_LogoSprite.Draw();
 

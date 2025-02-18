@@ -31,14 +31,14 @@ protected:
         
     protected:
         wchar* m_pwszText;
-        float m_fHeight;
+        float  m_fHeight;
         RwRGBA m_Color;
     };
 
     struct SPRITETEXTURE
     {
         const char* m_pszName;
-        RwTexture* m_pTexture;
+        RwTexture*  m_pTexture;
     };
 
 public:
@@ -73,12 +73,12 @@ public:
 
 protected:
     static SPRITETEXTURE m_aSpriteTextureTable[SPRITENUM];
-    CSprite m_aSprite[SPRITENUM];
-    CMessageText m_Text;
-    CMessageText m_Title;
-    Rt2dBBox m_bboxDraw;
-    Rt2dBBox m_bbox;
-    PHASE m_phase;
-    float m_fTime;
-    bool m_bOpenAction;
+    CSprite              m_aSprite[SPRITENUM];
+    CMessageText         m_textMsg;
+    CMessageText         m_textTitle;
+    Rt2dBBox             m_bboxDraw;
+    Rt2dBBox             m_bbox;
+    PHASE                m_phase;
+    float                m_fTime;
+    bool                 m_bOpenAction;
 };

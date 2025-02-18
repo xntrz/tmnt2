@@ -30,7 +30,11 @@
 #define SCROLL_START        (SCROLL_START_S / 3.0f)
 #define SCROLL_STEP_S       (SCROLL_START_S / float(SCROLL_TIME / 2))
 #define SCROLL_STEP         (SCROLL_START / float(SCROLL_TIME / 2))
-#define FONT_SCR_SIZE       (CGameFont::GetScreenHeight())
+#define FONT_HEIGHT_SCALE   (2.0f)
+
+#define FONT_Y_POS(basePos, itemHeight, itemNo) \
+    ((basePos) + ((itemHeight) * (itemNo)))
+
 
 //
 //  Check values with original game
@@ -50,7 +54,6 @@ enum OPTIONMODE
     OPTIONMODE_GAME,
     OPTIONMODE_DIFFICULTY,
     OPTIONMODE_SAVE,
-    OPTIONMODE_CLASSICPAD,
     OPTIONMODE_GAME_OK,
 
     OPTIONMODE_SOUND,
@@ -94,128 +97,324 @@ enum OPTIONMODE
     OPTIONMODE_MAX,
 };
 
+
 struct FontData_t
 {
-    bool Flag;
-    GAMETEXT IdText;
-    RwV2d ScreenPos;
-    float Height;
-    RwRGBA Color;    
+    bool        Flag;
+    GAMETEXT    TextId;
+    RwV2d       ScreenPos;
+    float       Height;
+    RwRGBA      Color;    
     const char* Text;
 };
 
+
 struct SpriteData_t
 {
-    bool Flag;
-    GAMETEXT IdText;
-    CSprite Sprite;
-    RwV2d ScreenPos;
-    RwRGBA Color;
+    bool     Flag;
+    GAMETEXT TextId;
+    CSprite  Sprite;
+    RwV2d    ScreenPos;
+    RwRGBA   Color;
 };
+
 
 struct ButtonName_t
 {
-    uint32 Digital;
-    GAMETEXT IdText;
+    uint32   Digital;
+    GAMETEXT TextId;
 };
 
-static const RwRGBA s_ColorRed = { 0xFF, 0x00, 0x00, 0xFF };
-static const RwRGBA s_ColorGreen = { 0x00, 0xFF, 0x00, 0xFF };
-static const RwRGBA s_ColorBlue = { 0x00, 0x00, 0xFF, 0xFF };
-static const RwRGBA s_ColorOrange = { 0xFF, 0xB4, 0x00, 0xFF };
-static const RwRGBA s_ColorPurple = { 0xFF, 0x00, 0xFF, 0xFF };
-static const RwRGBA s_ColorCyan = { 0x80, 0x80, 0xFF, 0xFF };
-static const RwRGBA s_ColorWhite = { 0xFF, 0xFF, 0xFF, 0xFF };
+
+static const RwRGBA s_ColorRed      = { 0xFF, 0x00, 0x00, 0xFF };
+static const RwRGBA s_ColorGreen    = { 0x00, 0xFF, 0x00, 0xFF };
+static const RwRGBA s_ColorBlue     = { 0x00, 0x00, 0xFF, 0xFF };
+static const RwRGBA s_ColorOrange   = { 0xFF, 0xB4, 0x00, 0xFF };
+static const RwRGBA s_ColorPurple   = { 0xFF, 0x00, 0xFF, 0xFF };
+static const RwRGBA s_ColorCyan     = { 0x80, 0x80, 0xFF, 0xFF };
+static const RwRGBA s_ColorWhite    = { 0xFF, 0xFF, 0xFF, 0xFF };
+
+
+#ifdef TMNT2_BUILD_EU
+/* title font */
+#define FONT_TITLE_X_POS                (-271.0f)
+#define FONT_TITLE_Y_POS                (-185.0f)
+
+/* option font */
+#define FONT_OPTION_X                   (-108.0f)
+#define FONT_OPTION_Y                   (-120.0f)
+#define FONT_OPTION_HEIGHT              (29.0f)
+#define FONT_OPTION_X_POS(itemNo)       (FONT_OPTION_X)
+#define FONT_OPTION_Y_POS(itemNo)       (FONT_Y_POS(FONT_OPTION_Y, FONT_OPTION_HEIGHT, itemNo))
+#define FONT_OPTION_EXIT_Y_POS          (110.0f)
+
+/* game font */
+#define FONT_GAME_X                     (-108.0f)
+#define FONT_GAME_Y                     (-120.0f)
+#define FONT_GAME_HEIGHT                (58.0f)
+#define FONT_GAME_X_POS(itemNo)         (FONT_GAME_X)
+#define FONT_GAME_Y_POS(itemNo)         (FONT_Y_POS(FONT_GAME_Y, FONT_GAME_HEIGHT, itemNo))
+
+/* sound font */
+#define FONT_SOUND_X                    (-108.0f)
+#define FONT_SOUND_Y                    (-120.0f)
+#define FONT_SOUND_HEIGHT               (58.0f)
+#define FONT_SOUND_X_POS(itemNo)        (FONT_SOUND_X)
+#define FONT_SOUND_Y_POS(itemNo)        (FONT_Y_POS(FONT_SOUND_Y, FONT_SOUND_HEIGHT, itemNo))
+
+/* display font */
+#define FONT_DISPLAY_X                  (-108.0f)
+#define FONT_DISPLAY_Y                  (-120.0f)
+#define FONT_DISPLAY_HEIGHT             (58.0f)
+#define FONT_DISPLAY_X_POS(itemNo)      (FONT_DISPLAY_X)
+#define FONT_DISPLAY_Y_POS(itemNo)      (FONT_Y_POS(FONT_DISPLAY_Y, FONT_DISPLAY_HEIGHT, itemNo))
+
+/* pad config font */
+#define FONT_PAD_X                      (-108.0f)
+#define FONT_PAD_Y                      (-144.0f)
+#define FONT_PAD_HEIGHT                 (28.0f)
+#define FONT_PAD_X_POS(itemNo)          (FONT_PAD_X)
+#define FONT_PAD_Y_POS(itemNo)          (FONT_Y_POS(FONT_PAD_Y, FONT_PAD_HEIGHT, itemNo))
+
+/* pad button font */ // TODO
+#define FONT_PAD_BTN_X                  (202.0f)
+#define FONT_PAD_BTN_Y                  (-144.0f)
+#define FONT_PAD_BTN_HEIGHT             (28.0f)
+#define FONT_PAD_BTN_X_POS(itemNo)      (FONT_PAD_BTN_X)
+#define FONT_PAD_BTN_Y_POS(itemNo)      (FONT_Y_POS(FONT_PAD_BTN_Y, FONT_PAD_BTN_HEIGHT, itemNo))
+
+/* keyboard config font */
+#define FONT_KEYBOARD_X                 (-108.0f)
+#define FONT_KEYBOARD_Y                 (-144.0f)
+#define FONT_KEYBOARD_HEIGHT            (18.0f)
+#define FONT_KEYBOARD_X_POS(itemNo)     (FONT_KEYBOARD_X)
+#define FONT_KEYBOARD_Y_POS(itemNo)     (FONT_Y_POS(FONT_KEYBOARD_Y, FONT_KEYBOARD_HEIGHT, itemNo))
+
+/* keyboard button font */
+#define FONT_KEYBOARD_BTN_X             (192.0f)
+#define FONT_KEYBOARD_BTN_Y             (-144.0f)
+#define FONT_KEYBOARD_BTN_HEIGHT        (18.0f)
+#define FONT_KEYBOARD_BTN_X_POS(itemNo) (FONT_KEYBOARD_BTN_X)
+#define FONT_KEYBOARD_BTN_Y_POS(itemNo) (FONT_Y_POS(FONT_KEYBOARD_BTN_Y, FONT_KEYBOARD_BTN_HEIGHT, itemNo))
+
+/* reso font */
+#define FONT_RESO_X_POS                 (-61.0f)
+#define FONT_RESO_Y_POS                 (102.0f)
+
+/* help OK font */
+#define FONT_HELP_YES_X_POS             (-270.0f)
+#define FONT_HELP_YES_Y_POS             (196.0f)
+
+/* help CANCEL font */
+#define FONT_HELP_NO_X_POS              (0.0f)
+#define FONT_HELP_NO_Y_POS              (196.0f)
+
+/* pad decide font */
+#define FONT_DECIDE_X_POS               (-294.0f)
+#define FONT_DECIDE_Y_POS               (-3.0f)
+
+/* sure font */
+#define FONT_SURE_X_POS                 (-270.0f)
+#define FONT_SURE_Y_POS                 (-3.0f)
+
+/* password OK font */
+#define FONT_PWOK_X_POS                 (227.0f)
+#define FONT_PWOK_Y_POS                 (-14.0f)
+
+/* select pad font */
+#define FONT_SELPAD_X_POS               (-294.0f)
+#define FONT_SELPAD_Y_POS               (-3.0f)
+
+/* select key font */
+#define FONT_SELKEY_X_POS               (-294.0f)
+#define FONT_SELKEY_Y_POS               (-3.0f)
+#else /* TMNT2_BUILD_EU */
+/* title font */
+#define FONT_TITLE_X_POS                (-271.0f)
+#define FONT_TITLE_Y_POS                (-185.0f)
+
+/* option font */
+#define FONT_OPTION_X                   (-108.0f)
+#define FONT_OPTION_Y                   (-126.0f)
+#define FONT_OPTION_HEIGHT              (29.0f)
+#define FONT_OPTION_X_POS(itemNo)       (FONT_OPTION_X)
+#define FONT_OPTION_Y_POS(itemNo)       (FONT_Y_POS(FONT_OPTION_Y, FONT_OPTION_HEIGHT, itemNo))
+#define FONT_OPTION_EXIT_Y_POS          (26.0f)
+
+/* game font */
+#define FONT_GAME_X                     (-108.0f)
+#define FONT_GAME_Y                     (-126.0f)
+#define FONT_GAME_HEIGHT                (29.0f)
+#define FONT_GAME_X_POS(itemNo)         (FONT_GAME_X)
+#define FONT_GAME_Y_POS(itemNo)         (FONT_Y_POS(FONT_GAME_Y, FONT_GAME_HEIGHT, itemNo))
+
+/* sound font */
+#define FONT_SOUND_X                    (-108.0f)
+#define FONT_SOUND_Y                    (-126.0f)
+#define FONT_SOUND_HEIGHT               (29.0f)
+#define FONT_SOUND_X_POS(itemNo)        (FONT_SOUND_X)
+#define FONT_SOUND_Y_POS(itemNo)        (FONT_Y_POS(FONT_SOUND_Y, FONT_SOUND_HEIGHT, itemNo))
+
+/* display font */
+#define FONT_DISPLAY_X                  (-108.0f)
+#define FONT_DISPLAY_Y                  (-126.0f)
+#define FONT_DISPLAY_HEIGHT             (29.0f)
+#define FONT_DISPLAY_X_POS(itemNo)      (FONT_DISPLAY_X)
+#define FONT_DISPLAY_Y_POS(itemNo)      (FONT_Y_POS(FONT_DISPLAY_Y, FONT_DISPLAY_HEIGHT, itemNo))
+
+/* pad config font */
+#define FONT_PAD_X                      (-108.0f)
+#define FONT_PAD_Y                      (-144.0f)
+#define FONT_PAD_HEIGHT                 (28.0f)
+#define FONT_PAD_X_POS(itemNo)          (FONT_PAD_X)
+#define FONT_PAD_Y_POS(itemNo)          (FONT_Y_POS(FONT_PAD_Y, FONT_PAD_HEIGHT, itemNo))
+
+/* pad button font */
+#define FONT_PAD_BTN_X                  (148.0f)
+#define FONT_PAD_BTN_Y                  (-144.0f)
+#define FONT_PAD_BTN_HEIGHT             (28.0f)
+#define FONT_PAD_BTN_X_POS(itemNo)      (FONT_PAD_BTN_X)
+#define FONT_PAD_BTN_Y_POS(itemNo)      (FONT_Y_POS(FONT_PAD_BTN_Y, FONT_PAD_BTN_HEIGHT, itemNo))
+
+/* keyboard config font */
+#define FONT_KEYBOARD_X                 (-108.0f)
+#define FONT_KEYBOARD_Y                 (-144.0f)
+#define FONT_KEYBOARD_HEIGHT            (18.0f)
+#define FONT_KEYBOARD_X_POS(itemNo)     (FONT_KEYBOARD_X)
+#define FONT_KEYBOARD_Y_POS(itemNo)     (FONT_Y_POS(FONT_KEYBOARD_Y, FONT_KEYBOARD_HEIGHT, itemNo))
+
+/* keyboard button font */
+#define FONT_KEYBOARD_BTN_X             (148.0f)
+#define FONT_KEYBOARD_BTN_Y             (-144.0f)
+#define FONT_KEYBOARD_BTN_HEIGHT        (18.0f)
+#define FONT_KEYBOARD_BTN_X_POS(itemNo) (FONT_KEYBOARD_BTN_X)
+#define FONT_KEYBOARD_BTN_Y_POS(itemNo) (FONT_Y_POS(FONT_KEYBOARD_BTN_Y, FONT_KEYBOARD_BTN_HEIGHT, itemNo))
+
+/* reso font */
+#define FONT_RESO_X_POS                 (-77.0f)
+#define FONT_RESO_Y_POS                 (42.0f)
+
+/* help OK font */
+#define FONT_HELP_YES_X_POS             (-270.0f)
+#define FONT_HELP_YES_Y_POS             (196.0f)
+
+/* help CANCEL font */
+#define FONT_HELP_NO_X_POS              (0.0f)
+#define FONT_HELP_NO_Y_POS              (196.0f)
+
+/* pad decide font */
+#define FONT_DECIDE_X_POS               (-294.0f)
+#define FONT_DECIDE_Y_POS               (-3.0f)
+
+/* sure font */
+#define FONT_SURE_X_POS                 (-270.0f)
+#define FONT_SURE_Y_POS                 (-3.0f)
+
+/* password OK font */
+#define FONT_PWOK_X_POS                 (227.0f)
+#define FONT_PWOK_Y_POS                 (-14.0f)
+
+/* select pad font */
+#define FONT_SELPAD_X_POS               (-294.0f)
+#define FONT_SELPAD_Y_POS               (-3.0f)
+
+/* select key font */
+#define FONT_SELKEY_X_POS               (-294.0f)
+#define FONT_SELKEY_Y_POS               (-3.0f)
+#endif /* TMNT2_BUILD_EU */
+
 
 static const FontData_t s_DummyFont = { 0 };
-static const FontData_t s_TitleFont = { true, GAMETEXT(0x29E), { -271.0f, -185.0f }, 3.0f, s_ColorGreen };
+static const FontData_t s_TitleFont = { true, GAMETEXT_OP_TIT, { FONT_TITLE_X_POS, FONT_TITLE_Y_POS }, (FONT_HEIGHT_SCALE * 1.5f), s_ColorGreen };
+
 
 static const FontData_t s_aOptionFont[] =
 {
-    { true, GAMETEXT(0x2AD), { -108.0f, -126.0f  }, 2.0f, s_ColorOrange },
-    { true, GAMETEXT(0x2AE), { -108.0f, -97.0f   }, 2.0f, s_ColorOrange },
-    { true, GAMETEXT(0x2AF), { -108.0f, -68.0f   }, 2.0f, s_ColorOrange },
-    { true, GAMETEXT(0x2B0), { -108.0f, -39.0f   }, 2.0f, s_ColorOrange },
-    { true, GAMETEXT(0x2B1), { -108.0f, -10.0f   }, 2.0f, s_ColorOrange },
-    { true, GAMETEXT(0x2B2), { -108.0f, 19.0f    }, 2.0f, s_ColorPurple },
-    { true, GAMETEXT(0x2B3), { -223.0f, 26.0f    }, 2.0f, s_ColorOrange },
+    { true, GAMETEXT_OP_GAME,   { FONT_OPTION_X_POS(0), FONT_OPTION_Y_POS(0)   }, FONT_HEIGHT_SCALE, s_ColorOrange },
+    { true, GAMETEXT_OP_SOUND,  { FONT_OPTION_X_POS(1), FONT_OPTION_Y_POS(1)   }, FONT_HEIGHT_SCALE, s_ColorOrange },
+    { true, GAMETEXT_OP_DISP,   { FONT_OPTION_X_POS(2), FONT_OPTION_Y_POS(2)   }, FONT_HEIGHT_SCALE, s_ColorOrange },
+    { true, GAMETEXT_OP_CTRL,   { FONT_OPTION_X_POS(3), FONT_OPTION_Y_POS(3)   }, FONT_HEIGHT_SCALE, s_ColorOrange },
+    { true, GAMETEXT_OP_PW,     { FONT_OPTION_X_POS(4), FONT_OPTION_Y_POS(4)   }, FONT_HEIGHT_SCALE, s_ColorOrange },
+    { true, GAMETEXT_OP_DEF,    { FONT_OPTION_X_POS(5), FONT_OPTION_Y_POS(5)   }, FONT_HEIGHT_SCALE, s_ColorPurple },
+    { true, GAMETEXT_OP_EXIT,   { -223.0f,              FONT_OPTION_EXIT_Y_POS }, FONT_HEIGHT_SCALE, s_ColorOrange },
     { 0 },
 };
 
 static const FontData_t s_aGameFont[] =
 {
-    { true, GAMETEXT(0x2B5), { -108.0f, -126.0f  }, 2.0f, s_ColorOrange },
-    { true, GAMETEXT(0x2B6), { -108.0f, -97.0f   }, 2.0f, s_ColorOrange },
-    //{ true, GAMETEXT(0x0),   { -108.0f, -68.0f   }, 2.0f, s_ColorOrange, "Classic pad" },
-    { true, GAMETEXT(0x2B4), { -223.0f, 26.0f    }, 2.0f, s_ColorOrange },
+    { true, GAMETEXT_OP_GAME_DIFF,  { FONT_GAME_X_POS(0), FONT_GAME_Y_POS(0) }, FONT_HEIGHT_SCALE, s_ColorOrange },
+    { true, GAMETEXT_OP_GAME_SAVE,  { FONT_GAME_X_POS(1), FONT_GAME_Y_POS(1) }, FONT_HEIGHT_SCALE, s_ColorOrange },
+    { true, GAMETEXT_OP_OK,         { -223.0f,            26.0f              }, FONT_HEIGHT_SCALE, s_ColorOrange },
     { 0 },
 };
 
 static const FontData_t s_aSoundFont[] =
 {
-    { true, GAMETEXT(0x2B7), { -108.0f, -126.0f  }, 2.0f, s_ColorOrange },
-    { true, GAMETEXT(0x2B8), { -108.0f, -97.0f   }, 2.0f, s_ColorOrange },
-    { true, GAMETEXT(0x2B9), { -108.0f, -68.0f   }, 2.0f, s_ColorOrange },
-    { true, GAMETEXT(0x2BA), { -108.0f, -39.0f   }, 2.0f, s_ColorOrange },
-    { true, GAMETEXT(0x2B4), { -223.0f, 26.0f    }, 2.0f, s_ColorOrange },
+    { true, GAMETEXT_OP_SOUND_MODE,     { FONT_SOUND_X_POS(0), FONT_SOUND_Y_POS(0)  }, FONT_HEIGHT_SCALE, s_ColorOrange },
+    { true, GAMETEXT_OP_SOUND_V_BGM,    { FONT_SOUND_X_POS(1), FONT_SOUND_Y_POS(1)  }, FONT_HEIGHT_SCALE, s_ColorOrange },
+    { true, GAMETEXT_OP_SOUND_V_SE,     { FONT_SOUND_X_POS(2), FONT_SOUND_Y_POS(2)  }, FONT_HEIGHT_SCALE, s_ColorOrange },
+    { true, GAMETEXT_OP_SOUND_V_VOX,    { FONT_SOUND_X_POS(3), FONT_SOUND_Y_POS(3)  }, FONT_HEIGHT_SCALE, s_ColorOrange },
+    { true, GAMETEXT_OP_OK,             { -223.0f,             26.0f                }, FONT_HEIGHT_SCALE, s_ColorOrange },
     { 0 },
 };
 
 static const FontData_t s_aDisplayFont[] =
 {
-    { true, GAMETEXT(0x2BC), { -108.0f, -126.0f  }, 2.0f, s_ColorOrange },
-    { true, GAMETEXT(0x2BD), { -108.0f, -97.0f   }, 2.0f, s_ColorOrange },
-    { true, GAMETEXT(0x2BE), { -108.0f, -68.0f   }, 2.0f, s_ColorOrange },
-    { true, GAMETEXT(0x2BB), { -108.0f, -39.0f   }, 2.0f, s_ColorOrange },
-    { true, GAMETEXT(0x2B4), { -223.0f, 26.0f    }, 2.0f, s_ColorOrange },
+    { true, GAMETEXT_OP_DISP_HITFX, { FONT_DISPLAY_X_POS(0), FONT_DISPLAY_Y_POS(0) }, FONT_HEIGHT_SCALE, s_ColorOrange },
+    { true, GAMETEXT_OP_DISP_MARK,  { FONT_DISPLAY_X_POS(1), FONT_DISPLAY_Y_POS(1) }, FONT_HEIGHT_SCALE, s_ColorOrange },
+    { true, GAMETEXT_OP_DISP_HELP,  { FONT_DISPLAY_X_POS(2), FONT_DISPLAY_Y_POS(2) }, FONT_HEIGHT_SCALE, s_ColorOrange },
+    { true, GAMETEXT_OP_DISP_RESO,  { FONT_DISPLAY_X_POS(3), FONT_DISPLAY_Y_POS(3) }, FONT_HEIGHT_SCALE, s_ColorOrange },
+    { true, GAMETEXT_OP_OK,         { -223.0f,               26.0f                 }, FONT_HEIGHT_SCALE, s_ColorOrange },
     { 0 },
 };
 
 static const FontData_t s_aPadConfigFont[] =
 {
-    { true, GAMETEXT(0x2CA), { -108.0f, -144.0f  }, 2.0f, s_ColorOrange	},
-    { true, GAMETEXT(0x2C0), { -108.0f, -116.0f  }, 2.0f, s_ColorOrange	},
-    { true, GAMETEXT(0x2CB), { -108.0f, -88.0f   }, 2.0f, s_ColorOrange	},
-    { true, GAMETEXT(0x2C2), { -108.0f, -60.0f   }, 2.0f, s_ColorOrange	},
-    { true, GAMETEXT(0x2C3), { -108.0f, -32.0f   }, 2.0f, s_ColorOrange	},
-    { true, GAMETEXT(0x2C4), { -108.0f, -4.0f    }, 2.0f, s_ColorOrange	},
-    { true, GAMETEXT(0x2C5), { -108.0f, 24.0f    }, 2.0f, s_ColorOrange	},
-    { true, GAMETEXT(0x2C6), { -108.0f, 52.0f    }, 2.0f, s_ColorCyan	},
-    { true, GAMETEXT(0x2C8), { -108.0f, 108.0f   }, 2.0f, s_ColorOrange	},
-    { true, GAMETEXT(0x2C9), { -108.0f, 136.0f   }, 2.0f, s_ColorPurple	},
-    { true, GAMETEXT(0x2B4), { -223.0f, 26.0f    }, 2.0f, s_ColorOrange	},
+    { true, GAMETEXT_OP_CTRL_FUNC_1_PC, { FONT_PAD_X_POS(0),  FONT_PAD_Y_POS(0)  }, FONT_HEIGHT_SCALE, s_ColorOrange	},
+    { true, GAMETEXT_OP_CTRL_FUNC_2,    { FONT_PAD_X_POS(1),  FONT_PAD_Y_POS(1)  }, FONT_HEIGHT_SCALE, s_ColorOrange	},
+    { true, GAMETEXT_OP_CTRL_FUNC_3_PC, { FONT_PAD_X_POS(2),  FONT_PAD_Y_POS(2)  }, FONT_HEIGHT_SCALE, s_ColorOrange	},
+    { true, GAMETEXT_OP_CTRL_FUNC_4,    { FONT_PAD_X_POS(3),  FONT_PAD_Y_POS(3)  }, FONT_HEIGHT_SCALE, s_ColorOrange	},
+    { true, GAMETEXT_OP_CTRL_FUNC_5,    { FONT_PAD_X_POS(4),  FONT_PAD_Y_POS(4)  }, FONT_HEIGHT_SCALE, s_ColorOrange	},
+    { true, GAMETEXT_OP_CTRL_FUNC_6,    { FONT_PAD_X_POS(5),  FONT_PAD_Y_POS(5)  }, FONT_HEIGHT_SCALE, s_ColorOrange	},
+    { true, GAMETEXT_OP_CTRL_FUNC_7,    { FONT_PAD_X_POS(6),  FONT_PAD_Y_POS(6)  }, FONT_HEIGHT_SCALE, s_ColorOrange	},
+    { true, GAMETEXT_OP_CTRL_RST,       { FONT_PAD_X_POS(7),  FONT_PAD_Y_POS(7)  }, FONT_HEIGHT_SCALE, s_ColorCyan	    },
+    { true, GAMETEXT_OP_CTRL_VIB,       { FONT_PAD_X_POS(9),  FONT_PAD_Y_POS(9)  }, FONT_HEIGHT_SCALE, s_ColorOrange	},
+    { true, GAMETEXT_OP_CTRL_DEF,       { FONT_PAD_X_POS(10), FONT_PAD_Y_POS(10) }, FONT_HEIGHT_SCALE, s_ColorPurple	},
+    { true, GAMETEXT_OP_OK,             { -223.0f,            26.0f              }, FONT_HEIGHT_SCALE, s_ColorOrange	},
     { 0 },
 };
 
 static const FontData_t s_aKeyboardConfigFont[] =
 {
-    { true, GAMETEXT(0x2CA), { -108.0f, -144.0f  }, 1.5f, s_ColorOrange	},
-    { true, GAMETEXT(0x2C0), { -108.0f, -126.0f  }, 1.5f, s_ColorOrange	},
-    { true, GAMETEXT(0x2CB), { -108.0f, -108.0f  }, 1.5f, s_ColorOrange	},
-    { true, GAMETEXT(0x2C2), { -108.0f, -90.0f   }, 1.5f, s_ColorOrange	},
-    { true, GAMETEXT(0x2C3), { -108.0f, -72.0f   }, 1.5f, s_ColorOrange	},
-    { true, GAMETEXT(0x2C4), { -108.0f, -54.0f   }, 1.5f, s_ColorOrange	},
-    { true, GAMETEXT(0x2C5), { -108.0f, -36.0f   }, 1.5f, s_ColorOrange	},
-    { true, GAMETEXT(0x2CC), { -108.0f, -18.0f   }, 1.5f, s_ColorOrange	},
-    { true, GAMETEXT(0x2CD), { -108.0f, 0.0f     }, 1.5f, s_ColorOrange	},
-    { true, GAMETEXT(0x2CE), { -108.0f, 18.0f    }, 1.5f, s_ColorOrange	},
-    { true, GAMETEXT(0x2CF), { -108.0f, 36.0f    }, 1.5f, s_ColorOrange	},
-    { true, GAMETEXT(0x2D0), { -108.0f, 54.0f    }, 1.5f, s_ColorOrange	},
-    { true, GAMETEXT(0x2D1), { -108.0f, 72.0f    }, 1.5f, s_ColorOrange	},
-    { true, GAMETEXT(0x2C6), { -108.0f, 90.0f    }, 1.5f, s_ColorCyan	},
-    { true, GAMETEXT(0x2C9), { -108.0f, 144.0f   }, 1.5f, s_ColorPurple	},
-    { true, GAMETEXT(0x2B4), { -223.0f, 26.0f    }, 1.5f, s_ColorOrange	},
+    { true, GAMETEXT_OP_CTRL_FUNC_1_PC,     { FONT_KEYBOARD_X_POS(0),  FONT_KEYBOARD_Y_POS(0)  }, (FONT_HEIGHT_SCALE * 0.75f), s_ColorOrange	},
+    { true, GAMETEXT_OP_CTRL_FUNC_2,        { FONT_KEYBOARD_X_POS(1),  FONT_KEYBOARD_Y_POS(1)  }, (FONT_HEIGHT_SCALE * 0.75f), s_ColorOrange	},
+    { true, GAMETEXT_OP_CTRL_FUNC_3_PC,     { FONT_KEYBOARD_X_POS(2),  FONT_KEYBOARD_Y_POS(2)  }, (FONT_HEIGHT_SCALE * 0.75f), s_ColorOrange	},
+    { true, GAMETEXT_OP_CTRL_FUNC_4,        { FONT_KEYBOARD_X_POS(3),  FONT_KEYBOARD_Y_POS(3)  }, (FONT_HEIGHT_SCALE * 0.75f), s_ColorOrange	},
+    { true, GAMETEXT_OP_CTRL_FUNC_5,        { FONT_KEYBOARD_X_POS(4),  FONT_KEYBOARD_Y_POS(4)  }, (FONT_HEIGHT_SCALE * 0.75f), s_ColorOrange	},
+    { true, GAMETEXT_OP_CTRL_FUNC_6,        { FONT_KEYBOARD_X_POS(5),  FONT_KEYBOARD_Y_POS(5)  }, (FONT_HEIGHT_SCALE * 0.75f), s_ColorOrange	},
+    { true, GAMETEXT_OP_CTRL_FUNC_7,        { FONT_KEYBOARD_X_POS(6),  FONT_KEYBOARD_Y_POS(6)  }, (FONT_HEIGHT_SCALE * 0.75f), s_ColorOrange	},
+    { true, GAMETEXT_OP_CTRL_FUNC_8_PC,     { FONT_KEYBOARD_X_POS(7),  FONT_KEYBOARD_Y_POS(7)  }, (FONT_HEIGHT_SCALE * 0.75f), s_ColorOrange	},
+    { true, GAMETEXT_OP_CTRL_FUNC_9_PC,     { FONT_KEYBOARD_X_POS(8),  FONT_KEYBOARD_Y_POS(8)  }, (FONT_HEIGHT_SCALE * 0.75f), s_ColorOrange	},
+    { true, GAMETEXT_OP_CTRL_FUNC_10_PC,    { FONT_KEYBOARD_X_POS(9),  FONT_KEYBOARD_Y_POS(9)  }, (FONT_HEIGHT_SCALE * 0.75f), s_ColorOrange	},
+    { true, GAMETEXT_OP_CTRL_FUNC_11_PC,    { FONT_KEYBOARD_X_POS(10), FONT_KEYBOARD_Y_POS(10) }, (FONT_HEIGHT_SCALE * 0.75f), s_ColorOrange	},
+    { true, GAMETEXT_OP_CTRL_FUNC_12,       { FONT_KEYBOARD_X_POS(11), FONT_KEYBOARD_Y_POS(11) }, (FONT_HEIGHT_SCALE * 0.75f), s_ColorOrange	},
+    { true, GAMETEXT_OP_CTRL_FUNC_13,       { FONT_KEYBOARD_X_POS(12), FONT_KEYBOARD_Y_POS(12) }, (FONT_HEIGHT_SCALE * 0.75f), s_ColorOrange	},
+    { true, GAMETEXT_OP_CTRL_RST,           { FONT_KEYBOARD_X_POS(13), FONT_KEYBOARD_Y_POS(13) }, (FONT_HEIGHT_SCALE * 0.75f), s_ColorCyan	    },
+    { true, GAMETEXT_OP_CTRL_DEF,           { FONT_KEYBOARD_X_POS(16), FONT_KEYBOARD_Y_POS(16) }, (FONT_HEIGHT_SCALE * 0.75f), s_ColorPurple	},
+    { true, GAMETEXT_OP_OK,                 { -223.0f,                 26.0f                   }, (FONT_HEIGHT_SCALE * 0.75f), s_ColorOrange	},
     { 0 },
 };
 
-static const FontData_t s_ResolutionFont    = { true, GAMETEXT(-1),     { -77.0f,   42.0f   }, 2.0f, s_ColorOrange  };
-static const FontData_t s_HelpOkFont        = { true, GAMETEXT(0x8),    { -270.0f,  196.0f  }, 2.0f, s_ColorWhite   };
-static const FontData_t s_HelpCancelFont    = { true, GAMETEXT(0x9),    { 0.0f,     196.0f  }, 2.0f, s_ColorWhite   };
-static const FontData_t s_PadDecideFont     = { true, GAMETEXT(0x29A),  { -294.0f,  -3.0f   }, 2.0f, s_ColorWhite   };
-static const FontData_t s_SureFont          = { true, GAMETEXT(0x294),  { -270.0f,  -3.0f   }, 2.0f, s_ColorWhite   };
-static const FontData_t s_PasswordOkFont    = { true, GAMETEXT(0x2B4),  { 227.0f,   -14.0f  }, 2.0f, s_ColorOrange  };
-static const FontData_t s_SelectPadMsg      = { true, GAMETEXT(0x29B),  { -294.0f,  -3.0f   }, 2.0f, s_ColorWhite   };
-static const FontData_t s_SelectKeyMsg      = { true, GAMETEXT(0x29D),  { -294.0f,  -3.0f   }, 2.0f, s_ColorWhite   };
+
+static const FontData_t s_ResolutionFont = { true, GAMETEXT_EMPTY,              { FONT_RESO_X_POS,      FONT_RESO_Y_POS     }, FONT_HEIGHT_SCALE, s_ColorOrange };
+static const FontData_t s_HelpOkFont     = { true, GAMETEXT_HELP_FUNC_SELECT,   { FONT_HELP_YES_X_POS,  FONT_HELP_YES_Y_POS }, FONT_HEIGHT_SCALE, s_ColorWhite  };
+static const FontData_t s_HelpCancelFont = { true, GAMETEXT_HELP_FUNC_BACK,     { FONT_HELP_NO_X_POS,   FONT_HELP_NO_Y_POS  }, FONT_HEIGHT_SCALE, s_ColorWhite  };
+static const FontData_t s_PadDecideFont  = { true, GAMETEXT_OP_CTRL_DECIDE,     { FONT_DECIDE_X_POS,    FONT_DECIDE_Y_POS   }, FONT_HEIGHT_SCALE, s_ColorWhite  };
+static const FontData_t s_SureFont       = { true, GAMETEXT_OP_DEF_MSG,         { FONT_SURE_X_POS,      FONT_SURE_Y_POS     }, FONT_HEIGHT_SCALE, s_ColorWhite  };
+static const FontData_t s_PasswordOkFont = { true, GAMETEXT_OP_OK,              { FONT_PWOK_X_POS,      FONT_PWOK_Y_POS     }, FONT_HEIGHT_SCALE, s_ColorOrange };
+static const FontData_t s_SelectPadMsg   = { true, GAMETEXT_OP_CTRL_PAD,        { FONT_SELPAD_X_POS,    FONT_SELPAD_Y_POS   }, FONT_HEIGHT_SCALE, s_ColorWhite  };
+static const FontData_t s_SelectKeyMsg   = { true, GAMETEXT_OP_CTRL_KEY,        { FONT_SELKEY_X_POS,    FONT_SELKEY_Y_POS   }, FONT_HEIGHT_SCALE, s_ColorWhite  };
+
 
 static const char* s_apszPasswordMark[] =
 {
@@ -226,7 +425,9 @@ static const char* s_apszPasswordMark[] =
     "pass_icon_s",
 };
 
+
 static const char s_achPasswordTable[] = { 'L', 'R', 'M', 'D', 'S' };
+
 
 static const char* s_apszVolume[] =
 {
@@ -242,6 +443,7 @@ static const char* s_apszVolume[] =
     "op_icon_vol_10",
 };
 
+
 static OPTIONTYPES::BTNFUNC s_aPadButtonFunction[] =
 {
     OPTIONTYPES::BTNFUNC_ATTACK_A,
@@ -252,6 +454,7 @@ static OPTIONTYPES::BTNFUNC s_aPadButtonFunction[] =
     OPTIONTYPES::BTNFUNC_CHANGE_CHARA,
     OPTIONTYPES::BTNFUNC_GUARD,
 };
+
 
 static OPTIONTYPES::KEYFUNC s_aKeybordButtonFunction[] =
 {
@@ -270,6 +473,7 @@ static OPTIONTYPES::KEYFUNC s_aKeybordButtonFunction[] =
     OPTIONTYPES::KEYFUNC_CHANGE_GAUGE,
 };
 
+
 static OPTIONMODE s_aNextModeOptions[] =
 {
     OPTIONMODE_GAME,
@@ -281,13 +485,14 @@ static OPTIONMODE s_aNextModeOptions[] =
     OPTIONMODE_EXIT
 };
 
+
 static OPTIONMODE s_aNextModeGame[] =
 {
     OPTIONMODE_DIFFICULTY,
     OPTIONMODE_SAVE,
-    //OPTIONMODE_CLASSICPAD,
     OPTIONMODE_GAME_OK
 };
+
 
 static OPTIONMODE s_aNextModeSound[] =
 {
@@ -298,6 +503,7 @@ static OPTIONMODE s_aNextModeSound[] =
     OPTIONMODE_SOUND_OK
 };
 
+
 static OPTIONMODE s_aNextModeDisplay[] =
 {
     OPTIONMODE_EFFECT,
@@ -306,6 +512,7 @@ static OPTIONMODE s_aNextModeDisplay[] =
     OPTIONMODE_RESOLUTION,
     OPTIONMODE_DISPLAY_OK
 };
+
 
 static const char* s_apszNextWindow[] =
 {
@@ -318,16 +525,18 @@ static const char* s_apszNextWindow[] =
     nullptr
 };
 
+
 static GAMETEXT s_aNextTitleId[] =
 {
-    GAMETEXT(0x29F),
-    GAMETEXT(0x2A0),
-    GAMETEXT(0x2A1),
-    GAMETEXT(0x0),
-    GAMETEXT(0x2A2),
-    GAMETEXT(0x29E),
-    GAMETEXT(0x0)
+    GAMETEXT_OP_GAME_TIT,
+    GAMETEXT_OP_SOUND_TIT,
+    GAMETEXT_OP_DISP_TIT,
+    GAMETEXT_EMPTY,
+    GAMETEXT_OP_PW_TIT,
+    GAMETEXT_OP_TIT,
+    GAMETEXT_EMPTY
 };
+
 
 static int32 s_aNextIndexMax[] =
 {
@@ -340,6 +549,7 @@ static int32 s_aNextIndexMax[] =
     0
 };
 
+
 static const FontData_t* s_apNextModeFont[] =
 {
     s_aGameFont,
@@ -351,28 +561,29 @@ static const FontData_t* s_apNextModeFont[] =
     &s_DummyFont
 };
 
+
 static const ButtonName_t s_aPadButtonName[] =
 {
-    { CController::DIGITAL_RUP,     GAMETEXT(0x2DF) },
-    { CController::DIGITAL_RDOWN,   GAMETEXT(0x2DC) },
-    { CController::DIGITAL_RLEFT,   GAMETEXT(0x2DD) },
-    { CController::DIGITAL_RRIGHT,  GAMETEXT(0x2DE) },
-    { CController::DIGITAL_L1,      GAMETEXT(0x2E0) },
-    { CController::DIGITAL_L2,      GAMETEXT(0x2E1) },
-    { CController::DIGITAL_R1,      GAMETEXT(0x2E2) },
-    { CController::DIGITAL_R2,      GAMETEXT(0x2E3) },
+    { CController::DIGITAL_RUP,     GAMETEXT_OP_CTRL_PAD_BTN_4 },
+    { CController::DIGITAL_RDOWN,   GAMETEXT_OP_CTRL_PAD_BTN_1 },
+    { CController::DIGITAL_RLEFT,   GAMETEXT_OP_CTRL_PAD_BTN_2 },
+    { CController::DIGITAL_RRIGHT,  GAMETEXT_OP_CTRL_PAD_BTN_3 },
+    { CController::DIGITAL_L1,      GAMETEXT_OP_CTRL_PAD_BTN_5 },
+    { CController::DIGITAL_L2,      GAMETEXT_OP_CTRL_PAD_BTN_6 },
+    { CController::DIGITAL_R1,      GAMETEXT_OP_CTRL_PAD_BTN_7 },
+    { CController::DIGITAL_R2,      GAMETEXT_OP_CTRL_PAD_BTN_8 },
     { 0 },
 };
 
-static const uint32 s_PadConfigDigitalTrigger =
-    CController::DIGITAL_RUP    |
-    CController::DIGITAL_RDOWN  |
-    CController::DIGITAL_RLEFT  |
-    CController::DIGITAL_RRIGHT |
-    CController::DIGITAL_L1     |
-    CController::DIGITAL_L2     |
-    CController::DIGITAL_R1     |
-    CController::DIGITAL_R2;
+
+static const uint32 s_PadConfigDigitalTrigger = CController::DIGITAL_RUP    
+                                              | CController::DIGITAL_RDOWN
+                                              | CController::DIGITAL_RLEFT
+                                              | CController::DIGITAL_RRIGHT
+                                              | CController::DIGITAL_L1
+                                              | CController::DIGITAL_L2
+                                              | CController::DIGITAL_R1
+                                              | CController::DIGITAL_R2;
 
 
 static inline GAMETEXT GetPadButtonName(uint32 Digital)
@@ -380,10 +591,10 @@ static inline GAMETEXT GetPadButtonName(uint32 Digital)
     for (int32 i = 0; i < COUNT_OF(s_aPadButtonName); ++i)
     {
         if (s_aPadButtonName[i].Digital & Digital)
-            return s_aPadButtonName[i].IdText;
+            return s_aPadButtonName[i].TextId;
     };
 
-    return GAMETEXT(0x0);
+    return GAMETEXT_EMPTY;
 };
 
 
@@ -416,9 +627,9 @@ public:
     bool Move(void);
     void Draw(void);
     void Initialize(void);
-    void SettingInit(bool DisplayChanged);
+    void SettingInit(bool bDisplayChanged);
     void BaseSet(void);
-    void ArrowDisp(int32 Line);
+    void ArrowDisp(int32 Line, bool bWide = false);
     bool SettingProc(void);
     void CtrlProc(void);
     void DlgCreate(void);
@@ -486,7 +697,7 @@ private:
     int32 m_IndexLineNext;
     int32 m_IndexLineExit;
     int32 m_IndexLineExitExit;
-    PASSWORDTYPE m_aePassword[7];
+    PASSWORDTYPE m_aPassword[7];
     char m_szPassword[8];
     int32 m_PasswordCursor;
     bool m_bPasswordCheckState;
@@ -515,6 +726,9 @@ private:
     CMessageWindow* m_pWindow;
     CDialog* m_pDialog;
     CUnlockMessage* m_pUnlock;
+#ifdef TMNT2_BUILD_EU
+    bool m_bExtExitPipe;    
+#endif /* TMNT2_BUILD_EU */
 };
 
 
@@ -533,7 +747,7 @@ COptions::COptions(void)
 , m_bConfigPadMode(false)
 , m_bDefaultYes(false)
 , m_pszNextWindow(nullptr)
-, m_NextWindowTextId(GAMETEXT(0x0))
+, m_NextWindowTextId(GAMETEXT_EMPTY)
 , m_EffectTime(0)
 , m_EffectIn(0)
 , m_EffectOut(0)
@@ -555,7 +769,7 @@ COptions::COptions(void)
 , m_IndexLineNext(0)
 , m_IndexLineExit(0)
 , m_IndexLineExitExit(0)
-, m_aePassword()
+, m_aPassword()
 , m_szPassword()
 , m_PasswordCursor(0)
 , m_bPasswordCheckState(false)
@@ -595,16 +809,19 @@ COptions::~COptions(void)
 
 void COptions::Attach(void)
 {
-    IGamepad::SaveLockedState();
-
     Initialize();
+#ifdef TARGET_PC    
     SelectResolution();
-    DlgCreate();
+#endif /* TARGET_PC */    
+    DlgCreate();    
     
-    m_eOptionMode = OPTIONMODE_SCROLL_EFFECT;
+    m_eOptionMode     = OPTIONMODE_SCROLL_EFFECT;
     m_eOptionModeNext = OPTIONMODE_OPTIONS;
-    m_pFontDataNext = s_aOptionFont;
-    m_IndexMaxNext = COUNT_OF(s_aOptionFont) - 2;
+    m_pFontDataNext   = s_aOptionFont;
+    m_IndexMaxNext    = COUNT_OF(s_aOptionFont) - 2;
+#ifdef TMNT2_BUILD_EU
+    m_bExtExitPipe       = true;
+#endif /* TMNT2_BUILD_EU */
 };
 
 
@@ -614,8 +831,6 @@ void COptions::Detach(void)
     Rt2dDeviceSetLayerDepth(1.0f);
     
     CGameSound::FadeOut(CGameSound::FADESPEED_SLOW);
-    
-    IGamepad::RestoreLockedState();
 };
 
 
@@ -646,12 +861,34 @@ void COptions::Draw(void)
 {
     CSystem2D::PushRenderState();
 
+#ifdef TMNT2_BUILD_EU
+    if (m_bExtExitPipe)
+    {
+        if (m_aOptionBase[1].Flag)
+            m_aOptionBase[1].Sprite.Draw();
+        
+        if (m_aOptionBase[2].Flag)
+            m_aOptionBase[2].Sprite.Draw();
+        
+        if (m_aOptionBase[0].Flag)
+            m_aOptionBase[0].Sprite.Draw();
+    }
+    else
+    {
+        for (int32 i = 0; i < COUNT_OF(m_aOptionBase); ++i)
+        {
+            if (m_aOptionBase[i].Flag)
+                m_aOptionBase[i].Sprite.Draw();
+        };
+    };
+#else /* TMNT2_BUILD_EU */
     for (int32 i = 0; i < COUNT_OF(m_aOptionBase); ++i)
     {
         if (m_aOptionBase[i].Flag)
             m_aOptionBase[i].Sprite.Draw();
     };
-
+#endif /* TMNT2_BUILD_EU */
+    
     if (m_SelectPad.Flag)
         m_SelectPad.Sprite.Draw();
 
@@ -714,80 +951,123 @@ void COptions::Draw(void)
 
     CSystem2D::PopRenderState();
 
-    float Height = FONT_SCR_SIZE;
-
     if (m_WindowTitle.Flag)
     {
-		CGameFont::SetHeight(Height * m_WindowTitle.Height);
+        CGameFont::SetHeightScaled(m_WindowTitle.Height);
         CGameFont::SetRGBA(m_WindowTitle.Color);
-        CGameFont::Show(CGameText::GetText(m_WindowTitle.IdText), m_WindowTitle.ScreenPos.x, m_WindowTitle.ScreenPos.y);
+        CGameFont::Show(CGameText::GetText(m_WindowTitle.TextId),
+                        m_WindowTitle.ScreenPos.x,
+                        m_WindowTitle.ScreenPos.y);
     };
 
     for (int32 i = 0; i < COUNT_OF(m_Index); ++i)
     {
-		if (m_Index[i].Flag)
-		{
-			CGameFont::SetHeight(Height * m_Index[i].Height);
+        if (m_Index[i].Flag)
+        {
+            CGameFont::SetHeightScaled(m_Index[i].Height);
             CGameFont::SetRGBA(m_Index[i].Color);
-			if (m_Index[i].IdText)
-			{
-                CGameFont::Show(CGameText::GetText(m_Index[i].IdText), m_Index[i].ScreenPos.x, m_Index[i].ScreenPos.y);
-			}
-			else
-			{
-				if (m_Index[i].Text)
-                    CGameFont::Show(m_Index[i].Text, m_Index[i].ScreenPos.x, m_Index[i].ScreenPos.y);
-			};
+            
+            if (m_Index[i].TextId)
+            {
+                CGameFont::Show(CGameText::GetText(m_Index[i].TextId),
+                                m_Index[i].ScreenPos.x,
+                                m_Index[i].ScreenPos.y);
+            }
+            else
+            {
+                if (m_Index[i].Text)
+                    CGameFont::Show(m_Index[i].Text,
+                                    m_Index[i].ScreenPos.x,
+                                    m_Index[i].ScreenPos.y);
+            };
         };
     };
 
     for (int32 i = 0; i < COUNT_OF(m_OnOff); ++i)
     {
-		if (m_OnOff[i].Flag)
-		{
-			CGameFont::SetHeight(Height * m_OnOff[i].Height);
-			CGameFont::SetRGBA(m_OnOff[i].Color);
-            CGameFont::Show(CGameText::GetText(m_OnOff[i].IdText), m_OnOff[i].ScreenPos.x, m_OnOff[i].ScreenPos.y);
-		};
+        if (m_OnOff[i].Flag)
+        {
+            CGameFont::SetHeightScaled(m_OnOff[i].Height);
+            CGameFont::SetRGBA(m_OnOff[i].Color);
+            CGameFont::Show(CGameText::GetText(m_OnOff[i].TextId),
+                            m_OnOff[i].ScreenPos.x,
+                            m_OnOff[i].ScreenPos.y);
+        };
     };
 
     for (int32 i = 0; i < COUNT_OF(m_KeyboardFont); ++i)
     {
-		if (m_KeyboardFont[i].Flag)
-		{
-			CGameFont::SetHeight(Height * m_KeyboardFont[i].Height);
-			CGameFont::SetRGBA(m_KeyboardFont[i].Color);
-            CGameFont::Show(m_KeyboardFont[i].Text, m_KeyboardFont[i].ScreenPos.x, m_KeyboardFont[i].ScreenPos.y);
-		};
+        if (m_KeyboardFont[i].Flag)
+        {
+            CGameFont::SetHeightScaled(m_KeyboardFont[i].Height);
+            CGameFont::SetRGBA(m_KeyboardFont[i].Color);
+            CGameFont::Show(m_KeyboardFont[i].Text,
+                            m_KeyboardFont[i].ScreenPos.x,
+                            m_KeyboardFont[i].ScreenPos.y);
+        };
     };
 
     if (m_PasswordOk.Flag)
     {
-		CGameFont::SetHeight(Height * m_PasswordOk.Height);
+        CGameFont::SetHeightScaled(m_PasswordOk.Height);
         CGameFont::SetRGBA(m_PasswordOk.Color);
-        CGameFont::Show(CGameText::GetText(m_PasswordOk.IdText), m_PasswordOk.ScreenPos.x, m_PasswordOk.ScreenPos.y);
+        CGameFont::Show(CGameText::GetText(m_PasswordOk.TextId),
+                        m_PasswordOk.ScreenPos.x,
+                        m_PasswordOk.ScreenPos.y);
     };
 
     if (m_ResolutionFont.Flag)
     {
-		CGameFont::SetHeight(Height * m_ResolutionFont.Height);
+        CGameFont::SetHeightScaled(m_ResolutionFont.Height);
         CGameFont::SetRGBA(m_ResolutionFont.Color);
-        CGameFont::Show(m_ResolutionFont.Text, m_ResolutionFont.ScreenPos.x, m_ResolutionFont.ScreenPos.y);
+        CGameFont::Show(m_ResolutionFont.Text,
+                        m_ResolutionFont.ScreenPos.x,
+                        m_ResolutionFont.ScreenPos.y);
     };
 
+#ifdef TMNT2_BUILD_EU
+    CSystem2D::PushRenderState();
+
+    CGameFont::SetHeightScaled(2.0f);
+    CGameFont::SetRGBA(255, 255, 255, 255);
+
+    const wchar* pwszText = CGameText::GetText(GAMETEXT_EU_HELP_7);
+
+    if (CGameFont::GetStringWidth(pwszText) >= 500.0f)
+    {
+        Rt2dBBox bbox;
+        bbox.x = -272.0f;
+        bbox.y = -230.0f;
+        bbox.w =  500.0f;
+        bbox.h =   60.0f;
+
+        CGameFont::Flow(pwszText, &bbox);
+    }
+    else
+    {
+        CGameFont::Show(pwszText, -272.0f, 190.0f);
+    };
+
+    CSystem2D::PopRenderState();
+#else /* TMNT2_BUILD_EU */
     if (m_HelpOK.Flag)
     {       
-		CGameFont::SetHeight(Height * m_HelpOK.Height);
+        CGameFont::SetHeightScaled(m_HelpOK.Height);
         CGameFont::SetRGBA(m_HelpOK.Color);
-        CGameFont::Show(CGameText::GetText(m_HelpOK.IdText), m_HelpOK.ScreenPos.x, m_HelpOK.ScreenPos.y);
+        CGameFont::Show(CGameText::GetText(m_HelpOK.TextId),
+                        m_HelpOK.ScreenPos.x,
+                        m_HelpOK.ScreenPos.y);
     };
 
     if (m_HelpCANCEL.Flag)
     {
-		CGameFont::SetHeight(Height * m_HelpCANCEL.Height);
+        CGameFont::SetHeightScaled(m_HelpCANCEL.Height);
         CGameFont::SetRGBA(m_HelpCANCEL.Color);
-        CGameFont::Show(CGameText::GetText(m_HelpCANCEL.IdText), m_HelpCANCEL.ScreenPos.x, m_HelpCANCEL.ScreenPos.y);
+        CGameFont::Show(CGameText::GetText(m_HelpCANCEL.TextId),
+                        m_HelpCANCEL.ScreenPos.x,
+                        m_HelpCANCEL.ScreenPos.y);
     };
+#endif /* TMNT2_BUILD_EU */
 };
 
 
@@ -815,7 +1095,7 @@ void COptions::Initialize(void)
     for (int32 i = 0; i < COUNT_OF(m_aOptionBase); ++i)
         m_aOptionBase[i].Flag = false;
 
-    m_Cursor.Flag = false;
+    m_Cursor.Flag    = false;
     m_ConfigCur.Flag = false;
     m_SelectPad.Flag = false;
 
@@ -848,13 +1128,13 @@ void COptions::Initialize(void)
         m_KeyboardFont[i].Flag = false;
 
     m_ResolutionFont.Flag = false;
-    m_PasswordOk.Flag = false;
-    m_HelpOK.Flag = false;
-    m_HelpCANCEL.Flag = false;
+    m_PasswordOk.Flag     = false;
+    m_HelpOK.Flag         = false;
+    m_HelpCANCEL.Flag     = false;
 };
 
 
-void COptions::SettingInit(bool DisplayChanged)
+void COptions::SettingInit(bool bDisplayChanged)
 {
     CTextureManager::SetCurrentTextureSet("Options");
 
@@ -865,12 +1145,12 @@ void COptions::SettingInit(bool DisplayChanged)
     m_ConfigCur.Sprite.SetTexture(CTextureManager::GetRwTexture("op_icon_config_cursor"));
     m_ConfigCur.Sprite.Resize(16.0f, 32.0f);
 
-    m_pszWindow = "op_mozi_settei";
+    m_pszWindow     = "op_mozi_settei";
     m_pszNextWindow = "op_mozi_settei";
 
     BaseSet();
 
-    if (!DisplayChanged)
+    if (!bDisplayChanged)
         m_aOptionBase[2].Sprite.SetAlpha(0);
 
     m_SelectPad.Flag = false;
@@ -878,25 +1158,32 @@ void COptions::SettingInit(bool DisplayChanged)
     for (int32 i = 0; i < COUNT_OF(m_Switch); i += 2)
     {
         int32 Line = (i / 2);
+
+#ifdef TMNT2_BUILD_EU
+        float y = (float(Line) * 58.0f) - 120.0f;
+#else /* TMNT2_BUILD_EU */
         float y = (float(Line) * 29.0f) - 126.0f;
+#endif /* TMNT2_BUILD_EU */
         
         m_Switch[i + 0].Sprite.SetTexture(CTextureManager::GetRwTexture("op_icon_left_s"));
         m_Switch[i + 0].Sprite.Resize(8.0f, 8.0f);
-        m_Switch[i + 0].ScreenPos.x = 90.0f;
-        m_Switch[i + 0].ScreenPos.y = y;
-        m_Switch[i + 0].Sprite.Move(
-            m_Switch[i + 0].ScreenPos.x,
-            m_Switch[i + 0].ScreenPos.y
-        );
+#ifdef TMNT2_BUILD_EU
+        m_Switch[i + 0].ScreenPos = { 100.0f, y };
+#else /* TMNT2_BUILD_EU */
+        m_Switch[i + 0].ScreenPos = { 90.0f, y };
+#endif /* TMNT2_BUILD_EU */
+        m_Switch[i + 0].Sprite.Move(m_Switch[i + 0].ScreenPos.x,
+                                    m_Switch[i + 0].ScreenPos.y);
 
         m_Switch[i + 1].Sprite.SetTexture(CTextureManager::GetRwTexture("op_icon_right_s"));
         m_Switch[i + 1].Sprite.Resize(8.0f, 8.0f);
-        m_Switch[i + 1].ScreenPos.x = 230.0f;
-        m_Switch[i + 1].ScreenPos.y = y;
-        m_Switch[i + 1].Sprite.Move(
-            m_Switch[i + 1].ScreenPos.x,
-            m_Switch[i + 1].ScreenPos.y
-        );
+#ifdef TMNT2_BUILD_EU
+        m_Switch[i + 1].ScreenPos = { 230.0f, y };
+#else /* TMNT2_BUILD_EU */
+        m_Switch[i + 1].ScreenPos = { 230.0f, y };
+#endif /* TMNT2_BUILD_EU */
+        m_Switch[i + 1].Sprite.Move(m_Switch[i + 1].ScreenPos.x,
+                                    m_Switch[i + 1].ScreenPos.y);
     };
 
     for (int32 i = 0; i < COUNT_OF(m_Volume); ++i)
@@ -906,12 +1193,15 @@ void COptions::SettingInit(bool DisplayChanged)
             m_Volume[i][j].Sprite.SetTexture(CTextureManager::GetRwTexture(s_apszVolume[j]));
             m_Volume[i][j].Sprite.Resize(8.0f, 16.0f);
             m_Volume[i][j].Sprite.SetRGBA(s_ColorOrange);
+#ifdef TMNT2_BUILD_EU
+            m_Volume[i][j].ScreenPos.x = ((float(j) * 9.0f) - 70.0f);
+            m_Volume[i][j].ScreenPos.y = ((float(i + 1) * 58.0f) - 126.0f);
+#else /* TMNT2_BUILD_EU */
             m_Volume[i][j].ScreenPos.x = ((float(j) * 9.0f) + 105.0f);
             m_Volume[i][j].ScreenPos.y = ((float(i + 1) * 29.0f) - 126.0f);
-            m_Volume[i][j].Sprite.Move(
-                m_Volume[i][j].ScreenPos.x,
-                m_Volume[i][j].ScreenPos.y
-            );
+#endif /* TMNT2_BUILD_EU */
+            m_Volume[i][j].Sprite.Move(m_Volume[i][j].ScreenPos.x,
+                                       m_Volume[i][j].ScreenPos.y);
         };
     };
 
@@ -923,41 +1213,67 @@ void COptions::SettingInit(bool DisplayChanged)
     m_Resolution[2].Sprite.Resize(8.0f, 8.0f);
 
     m_WindowTitle = s_TitleFont;
-    if (!DisplayChanged)
+    if (!bDisplayChanged)
         m_WindowTitle.ScreenPos.x -= SCROLL_START_S;
 
-    m_NextWindowTextId = GAMETEXT(0x29E);
+    m_NextWindowTextId = GAMETEXT_OP_TIT;
     
-    m_HelpOK = s_HelpOkFont;
+    m_HelpOK     = s_HelpOkFont;
     m_HelpCANCEL = s_HelpCancelFont;
 
 #ifdef TARGET_PC
-    m_VideomodeNum = CGameData::Option().Display().GetVideomodeNum();
+    m_VideomodeNum   = CGameData::Option().Display().GetVideomodeNum();
     m_VideomodeNoCur = CGameData::Option().Display().GetVideomodeCur();
     m_VideomodeNoSel = m_VideomodeNoCur;
-#endif    
+#endif /* TARGET_PC */
 };
 
 
 void COptions::BaseSet(void)
 {
-    m_aOptionBase[0].Flag = true;
-    m_aOptionBase[0].ScreenPos = { -203.0f, 83.0f };
-    m_aOptionBase[0].Sprite.Move(m_aOptionBase[0].ScreenPos.x, m_aOptionBase[0].ScreenPos.y);
-    m_aOptionBase[0].Sprite.SetTexture(CTextureManager::GetRwTexture("op_pipe_s1"));
-    m_aOptionBase[0].Sprite.Resize(256.0f, 256.0f);
+#ifdef TMNT2_BUILD_EU
+    if (m_bExtExitPipe)
+    {
+        m_aOptionBase[0].Flag = true;
+        m_aOptionBase[0].ScreenPos = { -150.0f, 105.0f };
+        m_aOptionBase[0].Sprite.Move(m_aOptionBase[0].ScreenPos.x,
+                                     m_aOptionBase[0].ScreenPos.y);
+        m_aOptionBase[0].Sprite.SetTexture(CTextureManager::GetRwTexture("op_pipe_exit"));
+        m_aOptionBase[0].Sprite.Resize(256.0f, 128.0f);
 
-    m_aOptionBase[1].Flag = true;
-    m_aOptionBase[1].ScreenPos = { 80.0f, 2.0f };
-    m_aOptionBase[1].Sprite.Move(m_aOptionBase[1].ScreenPos.x, m_aOptionBase[1].ScreenPos.y);
-    m_aOptionBase[1].Sprite.SetTexture(CTextureManager::GetRwTexture("op_pipe_l1"));
-    m_aOptionBase[1].Sprite.Resize(512.0f, 512.0f);
 
+        m_aOptionBase[1].Flag = true;
+        m_aOptionBase[1].ScreenPos = { 80.0f, 2.0f };
+        m_aOptionBase[1].Sprite.Move(m_aOptionBase[1].ScreenPos.x,
+                                     m_aOptionBase[1].ScreenPos.y);
+        m_aOptionBase[1].Sprite.SetTexture(CTextureManager::GetRwTexture("op_pipe_l1"));
+        m_aOptionBase[1].Sprite.Resize(512.0f, 512.0f);
+    }
+    else
+#endif /* TMNT2_BUILD_EU */
+    {
+        m_aOptionBase[0].Flag = true;
+        m_aOptionBase[0].ScreenPos = { -203.0f, 83.0f };
+        m_aOptionBase[0].Sprite.Move(m_aOptionBase[0].ScreenPos.x,
+                                     m_aOptionBase[0].ScreenPos.y);
+        m_aOptionBase[0].Sprite.SetTexture(CTextureManager::GetRwTexture("op_pipe_s1"));
+        m_aOptionBase[0].Sprite.Resize(256.0f, 256.0f);
+
+
+        m_aOptionBase[1].Flag = true;
+        m_aOptionBase[1].ScreenPos = { 80.0f, 2.0f };
+        m_aOptionBase[1].Sprite.Move(m_aOptionBase[1].ScreenPos.x,
+                                     m_aOptionBase[1].ScreenPos.y);
+        m_aOptionBase[1].Sprite.SetTexture(CTextureManager::GetRwTexture("op_pipe_l1"));
+        m_aOptionBase[1].Sprite.Resize(512.0f, 512.0f);
+    };
+    
     if (m_pszWindow)
     {
         m_aOptionBase[2].Flag = true;
         m_aOptionBase[2].ScreenPos = { 122.0f, 77.0f };
-        m_aOptionBase[2].Sprite.Move(m_aOptionBase[2].ScreenPos.x, m_aOptionBase[2].ScreenPos.y);
+        m_aOptionBase[2].Sprite.Move(m_aOptionBase[2].ScreenPos.x,
+                                     m_aOptionBase[2].ScreenPos.y);
         m_aOptionBase[2].Sprite.SetTexture(CTextureManager::GetRwTexture(m_pszWindow));
         m_aOptionBase[2].Sprite.Resize(512.0f, 128.0f);
     }
@@ -968,19 +1284,45 @@ void COptions::BaseSet(void)
 };
 
 
-void COptions::ArrowDisp(int32 Line)
+void COptions::ArrowDisp(int32 Line, bool bWide /*= false*/)
 {
-    SpriteData_t* ArrowLeft = &m_Switch[(Line * 2) + 0];
-    SpriteData_t* ArrowRight = &m_Switch[(Line * 2) + 1];
+#ifdef TMNT2_BUILD_EU
+    float fRightOfsX = 35.0f;
+    if (!bWide)
+        fRightOfsX = 230.0f;
+#else /* TMNT2_BUILD_EU */
+    float fLeftOfsX = 90.0f;
+    if (bWide)
+        fLeftOfsX = -102.0f;
+#endif /* TMNT2_BUILD_EU */
 
+    
+    SpriteData_t* ArrowLeft  = &m_Switch[(Line * 2) + 0];
     ArrowLeft->Flag = true;
-    ArrowLeft->ScreenPos = { 90.0f - m_fSwitchMoveL, (float(Line) * 29.0f) - 126.0f };
-    ArrowLeft->Sprite.Move(ArrowLeft->ScreenPos.x, ArrowLeft->ScreenPos.y);
+#ifdef TMNT2_BUILD_EU
+    ArrowLeft->ScreenPos = { -92.0f - m_fSwitchMoveL,
+                             (float(Line) * 58.0f) - 91.0f };
+#else /* TMNT2_BUILD_EU */
+    ArrowLeft->ScreenPos = { fLeftOfsX - m_fSwitchMoveL,
+                             (float(Line) * 29.0f) - 126.0f };
+#endif /* TMNT2_BUILD_EU */
+    ArrowLeft->Sprite.Move(ArrowLeft->ScreenPos.x,
+                           ArrowLeft->ScreenPos.y);
 
+    
+    SpriteData_t* ArrowRight = &m_Switch[(Line * 2) + 1];
     ArrowRight->Flag = true;
-    ArrowRight->ScreenPos = { 230.0f + m_fSwitchMoveR, (float(Line) * 29.0f) - 126.0f };
-    ArrowRight->Sprite.Move(ArrowRight->ScreenPos.x, ArrowRight->ScreenPos.y);
+#ifdef TMNT2_BUILD_EU
+    ArrowRight->ScreenPos = { fRightOfsX + m_fSwitchMoveR,
+                              (float(Line) * 58.0f) - 91.0f };
+#else /* TMNT2_BUILD_EU */
+    ArrowRight->ScreenPos = { 230.0f + m_fSwitchMoveR,
+                              (float(Line) * 29.0f) - 126.0f };
+#endif /* TMNT2_BUILD_EU */
+    ArrowRight->Sprite.Move(ArrowRight->ScreenPos.x,
+                            ArrowRight->ScreenPos.y);
 
+    
     if (m_bSwitchMode)
     {
         SetArrowSwitch(Line);
@@ -988,6 +1330,7 @@ void COptions::ArrowDisp(int32 Line)
     else
     {
         SetArrowSelect(Line);
+
         m_fSwitchMoveL = 0.0f;
         m_fSwitchMoveR = 0.0f;
     };
@@ -1014,22 +1357,23 @@ bool COptions::SettingProc(void)
         {
             FontDataClear();
             FontDataSet(s_aOptionFont);
-            m_IndexMax = COUNT_OF(s_aOptionFont) - 2;
-            m_eOptionModeNext = s_aNextModeOptions[m_IndexLine];
-            m_pFontDataNext = s_apNextModeFont[m_IndexLine];
-            m_IndexMaxNext = s_aNextIndexMax[m_IndexLine];
-            m_pszNextWindow = s_apszNextWindow[m_IndexLine];
-            m_NextWindowTextId = s_aNextTitleId[m_IndexLine];
-            m_IndexLineExit = m_IndexLine;
-            m_IndexLineNext = 0;
-            m_VideomodeNoCur = m_VideomodeNoSel;
-            m_bSwitchMode = false;
-            m_bKeyConfig = false;
-            m_bConfigWindow = false;
-            m_bConfigPadMode = false;
-            m_bConfigWarning = false;
-            m_EffectTime = m_IndexLine == 5 ? 0 : SCROLL_TIME;
-            m_eCfgState = CFGSTATE_NONE;
+
+            m_IndexMax          = COUNT_OF(s_aOptionFont) - 2;
+            m_eOptionModeNext   = s_aNextModeOptions[m_IndexLine];
+            m_pFontDataNext     = s_apNextModeFont[m_IndexLine];
+            m_IndexMaxNext      = s_aNextIndexMax[m_IndexLine];
+            m_pszNextWindow     = s_apszNextWindow[m_IndexLine];
+            m_NextWindowTextId  = s_aNextTitleId[m_IndexLine];
+            m_IndexLineExit     = m_IndexLine;
+            m_IndexLineNext     = 0;
+            m_VideomodeNoCur    = m_VideomodeNoSel;
+            m_bSwitchMode       = false;
+            m_bKeyConfig        = false;
+            m_bConfigWindow     = false;
+            m_bConfigPadMode    = false;
+            m_bConfigWarning    = false;
+            m_EffectTime        = (m_IndexLine == 5 ? 0 : SCROLL_TIME);
+            m_eCfgState         = CFGSTATE_NONE;
         }
         break;
 
@@ -1037,19 +1381,20 @@ bool COptions::SettingProc(void)
         {
             FontDataClear();
             FontDataSet(s_aGameFont);
-            m_IndexMax = COUNT_OF(s_aGameFont) - 2;
-            m_eOptionModeNext = s_aNextModeGame[m_IndexLine];
-            m_IndexLineNext = m_IndexLine;
-            m_pFontDataNext = s_aOptionFont;
-            m_EffectTime = (m_IndexLine != m_IndexMax ? 0 : SCROLL_TIME);
-            m_IndexMaxNext = COUNT_OF(s_aOptionFont) - 2;
-            m_pszNextWindow = "op_mozi_settei";
-            m_NextWindowTextId = GAMETEXT(0x29E);
-            m_eCfgState = CFGSTATE_NONE;
-            m_bSwitchMode = false;
+
+            m_IndexMax          = COUNT_OF(s_aGameFont) - 2;
+            m_eOptionModeNext   = s_aNextModeGame[m_IndexLine];
+            m_IndexLineNext     = m_IndexLine;
+            m_pFontDataNext     = s_aOptionFont;
+            m_EffectTime        = (m_IndexLine != m_IndexMax ? 0 : SCROLL_TIME);
+            m_IndexMaxNext      = COUNT_OF(s_aOptionFont) - 2;
+            m_pszNextWindow     = "op_mozi_settei";
+            m_NextWindowTextId  = GAMETEXT_OP_TIT;
+            m_eCfgState         = CFGSTATE_NONE;
+            m_bSwitchMode       = false;
+
             SwitchDifficuly(0);
             SwitchDisp(1, CGameData::Option().Play().IsAutosaveEnabled());
-            //SwitchDisp(2, CGameData::Option().Play().IsClassicInput());
         }
         break;
 
@@ -1070,44 +1415,38 @@ bool COptions::SettingProc(void)
         }
         break;
 
-    case OPTIONMODE_CLASSICPAD:
-        {
-            /*
-            m_bSwitchMode = true;
-            SwitchDisp(2, CGameData::Option().Play().IsClassicInput());
-
-            bool SwitchState = SwitchOnOff(CGameData::Option().Play().IsClassicInput());
-            CGameData::Option().Play().SetClassicInput(SwitchState);
-            */
-        }
-        break;
-
     case OPTIONMODE_GAME_OK:
         {
             CGameData::Option().Play().Apply();
-            m_eOptionModePrev = m_eOptionMode;
-            m_eOptionMode = OPTIONMODE_OPTIONS;
-            m_IndexLine = m_IndexLineExit;
+            
+            m_eOptionModePrev   = m_eOptionMode;
+            m_eOptionMode       = OPTIONMODE_OPTIONS;
+            m_IndexLine         = m_IndexLineExit;
+
             SwitchClear();
         }
         break;
 
     case OPTIONMODE_SOUND:
         {
-            m_WindowTitle.IdText = GAMETEXT(0x2A0);
+            m_WindowTitle.TextId = GAMETEXT_OP_SOUND_TIT;
+
             FontDataClear();
             FontDataSet(s_aSoundFont);
-            m_IndexMax = COUNT_OF(s_aSoundFont) - 2;
-            m_eOptionModeNext = s_aNextModeSound[m_IndexLine];
-            m_IndexLineNext = m_IndexLine;
-            m_pFontDataNext = s_aOptionFont;
-            m_EffectTime = (m_IndexLine != m_IndexMax ? 0 : SCROLL_TIME);
-            m_IndexMaxNext = COUNT_OF(s_aOptionFont) - 2;
-            m_pszNextWindow = "op_mozi_settei";
-            m_NextWindowTextId = GAMETEXT(0x29E);
-            m_eCfgState = CFGSTATE_NONE;
-            m_bSwitchMode = false;
+
+            m_IndexMax          = COUNT_OF(s_aSoundFont) - 2;
+            m_eOptionModeNext   = s_aNextModeSound[m_IndexLine];
+            m_IndexLineNext     = m_IndexLine;
+            m_pFontDataNext     = s_aOptionFont;
+            m_EffectTime        = (m_IndexLine != m_IndexMax ? 0 : SCROLL_TIME);
+            m_IndexMaxNext      = COUNT_OF(s_aOptionFont) - 2;
+            m_pszNextWindow     = "op_mozi_settei";
+            m_NextWindowTextId  = GAMETEXT_OP_TIT;
+            m_eCfgState         = CFGSTATE_NONE;
+            m_bSwitchMode       = false;
+
             SwitchSound(0);
+
             SwitchVolume(1, OPTIONTYPES::VOLUMETYPE_BGM);
             SwitchVolume(2, OPTIONTYPES::VOLUMETYPE_SE);
             SwitchVolume(3, OPTIONTYPES::VOLUMETYPE_VOICE);
@@ -1145,35 +1484,39 @@ bool COptions::SettingProc(void)
     case OPTIONMODE_SOUND_OK:
         {
             CGameData::Option().Sound().Apply();
+            
             m_eOptionModePrev = m_eOptionMode;
-            m_eOptionMode = OPTIONMODE_OPTIONS;
-            m_IndexLine = m_IndexLineExit;
+            m_eOptionMode     = OPTIONMODE_OPTIONS;
+            m_IndexLine       = m_IndexLineExit;
+
             SwitchClear();
         }
         break;
 
     case OPTIONMODE_DISPLAY:
         {
-            m_WindowTitle.IdText = GAMETEXT(0x2A1);
+            m_WindowTitle.TextId = GAMETEXT_OP_DISP_TIT;
+
             FontDataClear();
             FontDataSet(s_aDisplayFont);
-            m_IndexMax = COUNT_OF(s_aDisplayFont) - 2;
-            m_eOptionModeNext = s_aNextModeDisplay[m_IndexLine];
-            m_IndexLineNext = m_IndexLine;
-            m_pFontDataNext = s_aOptionFont;
-            m_EffectTime = (m_IndexLine != m_IndexMax ? 0 : SCROLL_TIME);
-            m_IndexMaxNext = COUNT_OF(s_aOptionFont) - 2;
-            m_pszNextWindow = "op_mozi_settei";
-            m_NextWindowTextId = GAMETEXT(0x29E);
-            m_eCfgState = CFGSTATE_NONE;
-            m_bSwitchMode = false;
+            
+            m_IndexMax          = COUNT_OF(s_aDisplayFont) - 2;
+            m_eOptionModeNext   = s_aNextModeDisplay[m_IndexLine];
+            m_IndexLineNext     = m_IndexLine;
+            m_pFontDataNext     = s_aOptionFont;
+            m_EffectTime        = (m_IndexLine != m_IndexMax ? 0 : SCROLL_TIME);
+            m_IndexMaxNext      = COUNT_OF(s_aOptionFont) - 2;
+            m_pszNextWindow     = "op_mozi_settei";
+            m_NextWindowTextId  = GAMETEXT_OP_TIT;
+            m_eCfgState         = CFGSTATE_NONE;
+            m_bSwitchMode       = false;
 
             SwitchDisp(0, CGameData::Option().Display().IsEnabledFontEffect());
             SwitchDisp(1, CGameData::Option().Display().IsEnabledPlayerMarker());
             SwitchDisp(2, CGameData::Option().Display().IsHelpEnabled());
 #ifdef TARGET_PC            
             SwitchResolution();
-#endif            
+#endif /* TARGET_PC */          
         }
         break;
 
@@ -1217,17 +1560,17 @@ bool COptions::SettingProc(void)
     case OPTIONMODE_DISPLAY_OK:
         {
             m_eOptionModePrev = OPTIONMODE_DISPLAY_OK;
-            m_eOptionMode = OPTIONMODE_OPTIONS;
-            m_IndexLine = m_IndexLineExit;
+            m_eOptionMode     = OPTIONMODE_OPTIONS;
+            m_IndexLine       = m_IndexLineExit;
 
 #ifdef TARGET_PC            
             if (m_VideomodeNoCur != m_VideomodeNoSel)
             {
                 CGameData::Option().Display().SetVideomode(m_VideomodeNoSel);
-				if (CGameData::Option().Display().ApplyVideomode())
+                if (CGameData::Option().Display().ApplyVideomode())
                     SettingInit(true);
             };
-#endif
+#endif /* TARGET_PC */
             
             SwitchClear();
         }
@@ -1239,16 +1582,16 @@ bool COptions::SettingProc(void)
             
             if (MsgDecidePad())
             {
-                int32 iPad = m_ConfigPad;
-                if (iPad == CGameData::Attribute().GetVirtualPad())
+                int32 configPad = m_ConfigPad;
+                if (configPad == CGameData::Attribute().GetVirtualPad())
                 {
-                    m_EffectTime = SCROLL_TIME;
-                    m_pFontData = s_aOptionFont;
-                    m_IndexMaxNext = COUNT_OF(s_aOptionFont) - 2;
-                    m_eOptionMode = OPTIONMODE_SCROLL_EFFECT;
-                    m_eOptionModeNext = OPTIONMODE_CONTROLLER_OK;
-                    m_NextWindowTextId = GAMETEXT(0x29E);
-                    m_eCfgState = CFGSTATE_NONE;
+                    m_EffectTime        = SCROLL_TIME;
+                    m_pFontData         = s_aOptionFont;
+                    m_IndexMaxNext      = COUNT_OF(s_aOptionFont) - 2;
+                    m_eOptionMode       = OPTIONMODE_SCROLL_EFFECT;
+                    m_eOptionModeNext   = OPTIONMODE_CONTROLLER_OK;
+                    m_NextWindowTextId  = GAMETEXT_OP_TIT;
+                    m_eCfgState         = CFGSTATE_NONE;
 
                     if (m_pWindow->IsOpen())
                         m_pWindow->InputAction();
@@ -1257,13 +1600,13 @@ bool COptions::SettingProc(void)
                 {   
                     m_eOptionMode = OPTIONMODE_SELECTPAD;
 #ifdef TARGET_PC                    
-                    if (ControllerIsKeyboard(iPad))
+                    if (ControllerIsKeyboard(configPad))
                         CGameData::Option().Keyboard().Snapshot(m_KeyboardOptionData);
                     else
                         CGameData::Option().Gamepad(m_ConfigPad).Snapshot(m_GamepadOptionData);
-#else
+#else /* TARGET_PC */
                     CGameData::Option().Gamepad(m_ConfigPad).Snapshot(m_GamepadOptionData);
-#endif                    
+#endif /* TARGET_PC */              
                 };
             };
         }
@@ -1271,29 +1614,32 @@ bool COptions::SettingProc(void)
 
     case OPTIONMODE_SELECTPAD:
         {
-            m_NextWindowTextId = GAMETEXT(0x2B0);
+            m_NextWindowTextId = GAMETEXT_OP_CTRL;
 
 #ifdef TARGET_PC            
             if (ControllerIsKeyboard(m_ConfigPad))
             {
                 m_eOptionModeNext = OPTIONMODE_KEYBOARD;
-                m_pFontDataNext = s_aKeyboardConfigFont;
-                m_IndexMaxNext = COUNT_OF(s_aKeyboardConfigFont) - 2;
+                m_pFontDataNext   = s_aKeyboardConfigFont;
+                m_IndexMaxNext    = COUNT_OF(s_aKeyboardConfigFont) - 2;
+
                 SetPadSprite("op_pipe_config_key_pc");
             }
             else
             {
                 m_eOptionModeNext = OPTIONMODE_GAMEPAD;
-                m_pFontDataNext = s_aPadConfigFont;
-                m_IndexMaxNext = COUNT_OF(s_aPadConfigFont) - 2;
+                m_pFontDataNext   = s_aPadConfigFont;
+                m_IndexMaxNext    = COUNT_OF(s_aPadConfigFont) - 2;
+
                 SetPadSprite("op_pipe_config_pad");
             };
-#else
+#else /* TARGET_PC */
             m_eOptionModeNext = OPTIONMODE_GAMEPAD;
-            m_pFontDataNext = s_aPadConfigFont;
-            m_IndexMaxNext = COUNT_OF(s_aPadConfigFont) - 2;
+            m_pFontDataNext   = s_aPadConfigFont;
+            m_IndexMaxNext    = COUNT_OF(s_aPadConfigFont) - 2;
+            
             SetPadSprite("op_pipe_config_pad");
-#endif
+#endif /* TARGET_PC */
             
             m_SelectPad.Sprite.SetAlpha(0);
 
@@ -1302,9 +1648,9 @@ bool COptions::SettingProc(void)
                 if (m_pWindow->IsOpen())
                     m_pWindow->InputAction();
 
-                m_EffectTime = SCROLL_TIME;
-                m_eOptionMode = OPTIONMODE_SCROLL_EFFECT;
-                m_eCfgState = CFGSTATE_TO_CFG;
+                m_EffectTime    = SCROLL_TIME;
+                m_eOptionMode   = OPTIONMODE_SCROLL_EFFECT;
+                m_eCfgState     = CFGSTATE_TO_CFG;
                 m_bConfigWindow = true;
             };
         }
@@ -1312,15 +1658,17 @@ bool COptions::SettingProc(void)
 
     case OPTIONMODE_GAMEPAD:
         {
-            m_WindowTitle.IdText = GAMETEXT(0x2B0);
+            m_WindowTitle.TextId = GAMETEXT_OP_CTRL;
+
             FontDataClear();
             FontDataSet(s_aPadConfigFont);
-            m_bKeyConfig = (m_IndexLine < 7);
-            m_IndexMax = COUNT_OF(s_aPadConfigFont) - 2;
-            m_bSwitchMode = false;
+
+            m_bKeyConfig     = (m_IndexLine < 7);
+            m_IndexMax       = COUNT_OF(s_aPadConfigFont) - 2;
+            m_bSwitchMode    = false;
             m_bConfigPadMode = true;
-            m_EffectTime = 0;
-            m_eCfgState = CFGSTATE_NONE;
+            m_EffectTime     = 0;
+            m_eCfgState      = CFGSTATE_NONE;
             
             CfgGamepad();
             SwitchRumble();
@@ -1342,18 +1690,18 @@ bool COptions::SettingProc(void)
             default:
                 if (m_IndexLine == m_IndexMax)
                 {
-                    m_eOptionModeNext = OPTIONMODE_GAMEPAD_OK;
-                    m_EffectTime = SCROLL_TIME;
-                    m_pFontDataNext = s_aOptionFont;
-                    m_IndexMaxNext = COUNT_OF(s_aOptionFont) - 2;
-                    m_eCfgState = CFGSTATE_TO_OPT;
+                    m_eOptionModeNext   = OPTIONMODE_GAMEPAD_OK;
+                    m_EffectTime        = SCROLL_TIME;
+                    m_pFontDataNext     = s_aOptionFont;
+                    m_IndexMaxNext      = COUNT_OF(s_aOptionFont) - 2;
+                    m_eCfgState         = CFGSTATE_TO_OPT;
                 }
                 break;
             };
 
-            m_IndexLineNext = m_IndexLine;
-            m_pszNextWindow = "op_mozi_settei";
-            m_NextWindowTextId = GAMETEXT(0x29E);
+            m_IndexLineNext     = m_IndexLine;
+            m_pszNextWindow     = "op_mozi_settei";
+            m_NextWindowTextId  = GAMETEXT_OP_TIT;
         }
         break;
 
@@ -1373,7 +1721,8 @@ bool COptions::SettingProc(void)
     case OPTIONMODE_GAMEPAD_RUMBLE:
         {
             m_eOptionModeNext = m_eOptionModePrev;
-            m_bSwitchMode = true;
+            m_bSwitchMode     = true;
+            
             SwitchRumble();
         }
         break;
@@ -1395,11 +1744,11 @@ bool COptions::SettingProc(void)
         {
             CGameData::Option().Gamepad(m_ConfigPad).Apply();
             
-            m_eOptionModePrev = m_eOptionMode;
-            m_eOptionMode = OPTIONMODE_CONTROLLER_OK;
-            m_IndexLine = m_IndexLineExit;
-            m_bConfigWindow = false;
-            m_bConfigPadMode = false;
+            m_eOptionModePrev   = m_eOptionMode;
+            m_eOptionMode       = OPTIONMODE_CONTROLLER_OK;
+            m_IndexLine         = m_IndexLineExit;
+            m_bConfigWindow     = false;
+            m_bConfigPadMode    = false;
 
             if (CGameData::Attribute().GetVirtualPad() == CController::CONTROLLER_UNLOCKED_ON_VIRTUAL)
                 UnlockAllControllers();
@@ -1411,15 +1760,17 @@ bool COptions::SettingProc(void)
 #ifdef TARGET_PC        
     case OPTIONMODE_KEYBOARD:
         {
-            m_WindowTitle.IdText = GAMETEXT(0x2B0);
+            m_WindowTitle.TextId = GAMETEXT_OP_CTRL;
+
             FontDataClear();
             FontDataSet(s_aKeyboardConfigFont);
-            m_bKeyConfig = (m_IndexLine < 13);
-            m_IndexMax = COUNT_OF(s_aKeyboardConfigFont) - 2;
-            m_bSwitchMode = false;
+            
+            m_bKeyConfig     = (m_IndexLine < 13);
+            m_IndexMax       = COUNT_OF(s_aKeyboardConfigFont) - 2;
+            m_bSwitchMode    = false;
             m_bConfigPadMode = true;
-            m_EffectTime = 0;
-            m_eCfgState = CFGSTATE_NONE;
+            m_EffectTime     = 0;
+            m_eCfgState      = CFGSTATE_NONE;
 
             CfgKeyboard();
 
@@ -1436,18 +1787,18 @@ bool COptions::SettingProc(void)
             default:
                 if (m_IndexLine == m_IndexMax)
                 {
-                    m_eOptionModeNext = OPTIONMODE_KEYBOARD_OK;
-                    m_EffectTime = SCROLL_TIME;
-                    m_pFontDataNext = s_aOptionFont;
-                    m_IndexMaxNext = COUNT_OF(s_aOptionFont) - 2;
-                    m_eCfgState = CFGSTATE_TO_OPT;
+                    m_eOptionModeNext   = OPTIONMODE_KEYBOARD_OK;
+                    m_EffectTime        = SCROLL_TIME;
+                    m_pFontDataNext     = s_aOptionFont;
+                    m_IndexMaxNext      = COUNT_OF(s_aOptionFont) - 2;
+                    m_eCfgState         = CFGSTATE_TO_OPT;
                 }
                 break;
             };
 
-            m_IndexLineNext = m_IndexLine;
-            m_pszNextWindow = "op_mozi_settei";
-            m_NextWindowTextId = GAMETEXT(0x29E);
+            m_IndexLineNext    = m_IndexLine;
+            m_pszNextWindow    = "op_mozi_settei";
+            m_NextWindowTextId = GAMETEXT_OP_TIT;
         }
         break;
 
@@ -1482,10 +1833,10 @@ bool COptions::SettingProc(void)
             CGameData::Option().Keyboard().Apply();
 
             m_eOptionModePrev = m_eOptionMode;
-            m_eOptionMode = OPTIONMODE_CONTROLLER_OK;
-            m_IndexLine = m_IndexLineExit;
-            m_bConfigWindow = false;
-            m_bConfigPadMode = false;
+            m_eOptionMode     = OPTIONMODE_CONTROLLER_OK;
+            m_IndexLine       = m_IndexLineExit;
+            m_bConfigWindow   = false;
+            m_bConfigPadMode  = false;
 
             if (CGameData::Attribute().GetVirtualPad() == CController::CONTROLLER_UNLOCKED_ON_VIRTUAL)
                 UnlockAllControllers();
@@ -1498,15 +1849,17 @@ bool COptions::SettingProc(void)
     case OPTIONMODE_CONTROLLER_OK:
         {
             m_eOptionModePrev = OPTIONMODE_CONTROLLER_OK;
-            m_eOptionMode = OPTIONMODE_OPTIONS;
-            m_IndexLine = m_IndexLineExit;
+            m_eOptionMode     = OPTIONMODE_OPTIONS;
+            m_IndexLine       = m_IndexLineExit;
         }
         break;
 
     case OPTIONMODE_PASSWORD:
         {
-            m_WindowTitle.IdText = GAMETEXT(0x2A2);
+            m_WindowTitle.TextId = GAMETEXT_OP_PW_TIT;
+
             FontDataClear();
+
             m_Cursor.Flag = false;
             if (m_EffectTime > 0)
             {
@@ -1515,12 +1868,12 @@ bool COptions::SettingProc(void)
             }
             else
             {
-                m_eOptionMode = OPTIONMODE_INPUT;
-                m_EffectTime = SCROLL_TIME;
+                m_eOptionMode    = OPTIONMODE_INPUT;
+                m_EffectTime     = SCROLL_TIME;
                 m_PasswordCursor = 0;
 
-                for (int32 i = 0; i < COUNT_OF(m_aePassword); ++i)
-                    m_aePassword[i] = PASSWORD_L;
+                for (int32 i = 0; i < COUNT_OF(m_aPassword); ++i)
+                    m_aPassword[i] = PASSWORD_L;
 
                 for (int32 i = 0; i < COUNT_OF(m_szPassword); ++i)
                     m_szPassword[0] = '\0';
@@ -1550,22 +1903,23 @@ bool COptions::SettingProc(void)
                 }
                 else
                 {
-                    m_EffectTime = SCROLL_TIME;
-                    m_pFontDataNext = s_aOptionFont;
-                    m_IndexMaxNext = COUNT_OF(s_aOptionFont) - 2;
-                    m_eOptionMode = OPTIONMODE_SCROLL_EFFECT;
-                    m_eOptionModeNext = OPTIONMODE_OPTIONS;
-                    m_IndexLineNext = m_IndexLineExit;
-                    m_pszNextWindow = "op_mozi_settei";
-                    m_NextWindowTextId = GAMETEXT(0x29E);
+                    m_EffectTime        = SCROLL_TIME;
+                    m_pFontDataNext     = s_aOptionFont;
+                    m_IndexMaxNext      = COUNT_OF(s_aOptionFont) - 2;
+                    m_eOptionMode       = OPTIONMODE_SCROLL_EFFECT;
+                    m_eOptionModeNext   = OPTIONMODE_OPTIONS;
+                    m_IndexLineNext     = m_IndexLineExit;
+                    m_pszNextWindow     = "op_mozi_settei";
+                    m_NextWindowTextId  = GAMETEXT_OP_TIT;
                 };
             }
             else
             {
-                int32 iPad = CGameData::Attribute().GetVirtualPad();
-                if (CController::GetDigitalTrigger(iPad, CController::DIGITAL_OK))
+                int32 virtualPad = CGameData::Attribute().GetVirtualPad();
+                if (CController::GetDigitalTrigger(virtualPad, CController::DIGITAL_OK))
                 {
                     CGameSound::PlaySE(SDCODE_SE(0x1002));
+
                     m_pUnlock->InputAction();
                     m_bPasswordCheckState = false;
                 };
@@ -1587,6 +1941,7 @@ bool COptions::SettingProc(void)
 
                     CGameData::Option().Display().SetDefault();
                     CGameData::Option().Display().Apply();
+                    //CGameData::Option().Display().ApplyVideomode();
 
                     for (int32 i = 0; i < CController::Max(); ++i)
                     {
@@ -1594,8 +1949,10 @@ bool COptions::SettingProc(void)
                         CGameData::Option().Gamepad(i).Apply();
                     };
 
+#ifdef TARGET_PC
                     CGameData::Option().Keyboard().SetDefault();
                     CGameData::Option().Keyboard().Apply();
+#endif /* TARGET_PC */
                 };
 
                 m_bDefaultYes = false;
@@ -1615,11 +1972,11 @@ bool COptions::SettingProc(void)
             m_Cursor.Flag = false;
             if (m_EffectTime <= 0)
             {
-                m_eCfgState = CFGSTATE_NONE;
-                m_IndexMax = m_IndexMaxNext;
-                m_eOptionMode = m_eOptionModeNext;
-                m_IndexLine = m_IndexLineNext;
-                m_EffectTime = SCROLL_TIME;
+                m_eCfgState     = CFGSTATE_NONE;
+                m_IndexMax      = m_IndexMaxNext;
+                m_eOptionMode   = m_eOptionModeNext;
+                m_IndexLine     = m_IndexLineNext;
+                m_EffectTime    = SCROLL_TIME;
             }
             else
             {
@@ -1631,8 +1988,9 @@ bool COptions::SettingProc(void)
                 {
                     FontDataClear();
                     FontDataSet(m_pFontDataNext);
-                    m_WindowTitle.IdText = m_NextWindowTextId;
-                    m_pszWindow = m_pszNextWindow;
+
+                    m_WindowTitle.TextId = m_NextWindowTextId;
+                    m_pszWindow          = m_pszNextWindow;
                     
                     ScrollEffectIn();
                 };
@@ -1647,8 +2005,8 @@ bool COptions::SettingProc(void)
                     CfgToOption();
                     break;
 
-				default:
-					break;						
+                default:
+                    break;						
                 };
 
                 --m_EffectTime;
@@ -1662,7 +2020,10 @@ bool COptions::SettingProc(void)
             FontDataClear();
             return true;
         }
-        break;        
+        break;
+
+    default:
+        break;
     };
 
     return false;
@@ -1688,18 +2049,18 @@ void COptions::CtrlProc(void)
         if (CController::GetDigitalRepeat(m_CtrlPad, CController::DIGITAL_LUP))
         {
             CGameSound::PlaySE(SDCODE_SE(0x1004));
-			m_IndexLine = InvClamp(m_IndexLine - 1, 0, m_IndexMax - 1);
+            m_IndexLine = InvClamp(m_IndexLine - 1, 0, m_IndexMax - 1);
         }
         else if (CController::GetDigitalRepeat(m_CtrlPad, CController::DIGITAL_LDOWN))
         {
             CGameSound::PlaySE(SDCODE_SE(0x1004));
-			m_IndexLine = InvClamp(m_IndexLine + 1, 0, m_IndexMax - 1);
+            m_IndexLine = InvClamp(m_IndexLine + 1, 0, m_IndexMax - 1);
         }
         else if (CController::GetDigitalTrigger(m_CtrlPad, CController::DIGITAL_LLEFT))
         {
             CGameSound::PlaySE(SDCODE_SE(0x1004));
             m_IndexLinePrev = m_IndexLine;
-            m_IndexLine = m_IndexMax;
+            m_IndexLine     = m_IndexMax;
         }
         else if (CController::GetDigitalTrigger(m_CtrlPad, CController::DIGITAL_LRIGHT))
         {
@@ -1715,9 +2076,10 @@ void COptions::CtrlProc(void)
             if (CController::GetDigitalTrigger(m_CtrlPad, CController::DIGITAL_OK))
             {
                 CGameSound::PlaySE(SDCODE_SE(0x1002));
-                if ((m_eOptionModeNext == OPTIONMODE_GAMEPAD_DEFAULT) 
-					|| (m_eOptionModeNext == OPTIONMODE_KEYBOARD_DEFAULT)
-					|| (m_eOptionModeNext == OPTIONMODE_DEFAULT))
+                
+                if ((m_eOptionModeNext == OPTIONMODE_GAMEPAD_DEFAULT) ||
+                    (m_eOptionModeNext == OPTIONMODE_KEYBOARD_DEFAULT) ||
+                    (m_eOptionModeNext == OPTIONMODE_DEFAULT))
                 {
                     if (!m_pDialog->IsOpen())
                     {
@@ -1726,21 +2088,21 @@ void COptions::CtrlProc(void)
                         m_pDialog->SetController(m_CtrlPad);
                     };
 
-                    m_IndexLineNext = m_IndexLine;
-                    m_pszNextWindow = "op_mozi_settei";
-                    m_NextWindowTextId = GAMETEXT(0x29E);
+                    m_IndexLineNext     = m_IndexLine;
+                    m_pszNextWindow     = "op_mozi_settei";
+                    m_NextWindowTextId  = GAMETEXT_OP_TIT;
                 };
 
                 if (m_EffectTime <= 0)
                 {
-                    m_eOptionModePrev = m_eOptionMode;
-                    m_eOptionMode = m_eOptionModeNext;
-                    m_IndexLine = m_IndexLineNext;
+                    m_eOptionModePrev   = m_eOptionMode;
+                    m_eOptionMode       = m_eOptionModeNext;
+                    m_IndexLine         = m_IndexLineNext;
                 }
                 else
                 {
                     m_eOptionModePrev = m_eOptionMode;
-                    m_eOptionMode = OPTIONMODE_SCROLL_EFFECT;
+                    m_eOptionMode     = OPTIONMODE_SCROLL_EFFECT;
                 };
             }
             else if (CController::GetDigitalTrigger(m_CtrlPad, CController::DIGITAL_CANCEL))
@@ -1749,12 +2111,12 @@ void COptions::CtrlProc(void)
                 if (m_IndexLine == m_IndexMax)
                 {
                     m_eOptionModePrev = m_eOptionMode;
-                    m_eOptionMode = OPTIONMODE_SCROLL_EFFECT;
+                    m_eOptionMode     = OPTIONMODE_SCROLL_EFFECT;
                 }
                 else
                 {
                     m_IndexLinePrev = m_IndexLine;
-                    m_IndexLine = m_IndexMax;
+                    m_IndexLine     = m_IndexMax;
                 };
             };
         };
@@ -1778,10 +2140,6 @@ void COptions::DlgCreate(void)
     m_pDialog = new CDialog();
     m_pUnlock = new CUnlockMessage();
 
-    ASSERT(m_pWindow);
-    ASSERT(m_pDialog);
-    ASSERT(m_pUnlock);
-
     if (m_pWindow)
     {
         m_pWindow->Set(0.0f, 33.0f, 640.0f, 192.0f);
@@ -1792,11 +2150,9 @@ void COptions::DlgCreate(void)
     {
         m_pDialog->Set(0.0f, 33.0f, 640.0f, 192.0f);
         m_pDialog->SetOpenAction(true);
-        m_pDialog->SetTitle(
-            CGameText::GetText(s_SureFont.IdText),
-            s_SureFont.Height * FONT_SCR_SIZE,
-            s_SureFont.Color
-        );
+        m_pDialog->SetTitle(CGameText::GetText(s_SureFont.TextId),
+                            CGameFont::GetHeightScaled() * s_SureFont.Height,
+                            s_SureFont.Color);
     };
 };
 
@@ -1828,20 +2184,18 @@ bool COptions::MsgDecidePad(void)
     if (!m_pWindow->IsOpen())
     {
         m_pWindow->Open();
-        m_pWindow->SetText(
-            CGameText::GetText(s_PadDecideFont.IdText),
-            s_PadDecideFont.Height * FONT_SCR_SIZE,
-            s_PadDecideFont.Color
-        );
+        m_pWindow->SetText(CGameText::GetText(s_PadDecideFont.TextId),
+                           CGameFont::GetHeightScaled() * s_PadDecideFont.Height,
+                           s_PadDecideFont.Color);
     };
 
     m_Cursor.Flag = false;
 
     int32 virtualPad = CGameData::Attribute().GetVirtualPad();
-    uint32 DigitalTrigger = CController::GetDigitalTrigger(virtualPad);
-    if (DigitalTrigger)
+    uint32 digitalTrigger = CController::GetDigitalTrigger(virtualPad);
+    if (digitalTrigger)
     {        
-        if (DigitalTrigger & CController::DIGITAL_OK)
+        if (digitalTrigger & CController::DIGITAL_OK)
         {
             if (virtualPad == CController::CONTROLLER_LOCKED_ON_VIRTUAL)
                 m_ConfigPad = FindTriggeredController(CController::DIGITAL_OK, false);
@@ -1867,11 +2221,10 @@ bool COptions::MsgSelectCfg(void)
     m_Cursor.Flag = false;
 
     const FontData_t* pFontData = (m_eOptionModeNext == OPTIONMODE_GAMEPAD ? &s_SelectPadMsg : &s_SelectKeyMsg);
-    m_pWindow->SetText(
-        CGameText::GetText(pFontData->IdText),
-        pFontData->Height * FONT_SCR_SIZE,
-        pFontData->Color
-    );
+
+    m_pWindow->SetText(CGameText::GetText(pFontData->TextId),
+                       CGameFont::GetHeightScaled() * pFontData->Height,
+                       pFontData->Color);
 
     if (CController::GetDigitalTrigger(m_ConfigPad) ||
         CController::GetDigitalTrigger(CGameData::Attribute().GetVirtualPad()))
@@ -1885,25 +2238,26 @@ void COptions::CfgKeyboard(void)
 {
     static const FontData_t s_aKeyboardButtonFont[14] =
     {
-        { true, GAMETEXT(0x0), { 148.0f, -144.0f }, 1.5f, s_ColorOrange },
-        { true, GAMETEXT(0x0), { 148.0f, -126.0f }, 1.5f, s_ColorOrange },
-        { true, GAMETEXT(0x0), { 148.0f, -108.0f }, 1.5f, s_ColorOrange },
-        { true, GAMETEXT(0x0), { 148.0f, -90.0f  }, 1.5f, s_ColorOrange },
-        { true, GAMETEXT(0x0), { 148.0f, -72.0f  }, 1.5f, s_ColorOrange },
-        { true, GAMETEXT(0x0), { 148.0f, -54.0f  }, 1.5f, s_ColorOrange },
-        { true, GAMETEXT(0x0), { 148.0f, -36.0f  }, 1.5f, s_ColorOrange },
-        { true, GAMETEXT(0x0), { 148.0f, -18.0f  }, 1.5f, s_ColorOrange },
-        { true, GAMETEXT(0x0), { 148.0f, 0.0f    }, 1.5f, s_ColorOrange },
-        { true, GAMETEXT(0x0), { 148.0f, 18.0f   }, 1.5f, s_ColorOrange },
-        { true, GAMETEXT(0x0), { 148.0f, 36.0f   }, 1.5f, s_ColorOrange },
-        { true, GAMETEXT(0x0), { 148.0f, 54.0f   }, 1.5f, s_ColorOrange },
-        { true, GAMETEXT(0x0), { 148.0f, 72.0f   }, 1.5f, s_ColorOrange },
+        { true, GAMETEXT_EMPTY, { FONT_KEYBOARD_BTN_X_POS(0),  FONT_KEYBOARD_BTN_Y_POS(0)  }, (FONT_HEIGHT_SCALE * 0.75f), s_ColorOrange },
+        { true, GAMETEXT_EMPTY, { FONT_KEYBOARD_BTN_X_POS(1),  FONT_KEYBOARD_BTN_Y_POS(1)  }, (FONT_HEIGHT_SCALE * 0.75f), s_ColorOrange },
+        { true, GAMETEXT_EMPTY, { FONT_KEYBOARD_BTN_X_POS(2),  FONT_KEYBOARD_BTN_Y_POS(2)  }, (FONT_HEIGHT_SCALE * 0.75f), s_ColorOrange },
+        { true, GAMETEXT_EMPTY, { FONT_KEYBOARD_BTN_X_POS(3),  FONT_KEYBOARD_BTN_Y_POS(3)  }, (FONT_HEIGHT_SCALE * 0.75f), s_ColorOrange },
+        { true, GAMETEXT_EMPTY, { FONT_KEYBOARD_BTN_X_POS(4),  FONT_KEYBOARD_BTN_Y_POS(4)  }, (FONT_HEIGHT_SCALE * 0.75f), s_ColorOrange },
+        { true, GAMETEXT_EMPTY, { FONT_KEYBOARD_BTN_X_POS(5),  FONT_KEYBOARD_BTN_Y_POS(5)  }, (FONT_HEIGHT_SCALE * 0.75f), s_ColorOrange },
+        { true, GAMETEXT_EMPTY, { FONT_KEYBOARD_BTN_X_POS(6),  FONT_KEYBOARD_BTN_Y_POS(6)  }, (FONT_HEIGHT_SCALE * 0.75f), s_ColorOrange },
+        { true, GAMETEXT_EMPTY, { FONT_KEYBOARD_BTN_X_POS(7),  FONT_KEYBOARD_BTN_Y_POS(7)  }, (FONT_HEIGHT_SCALE * 0.75f), s_ColorOrange },
+        { true, GAMETEXT_EMPTY, { FONT_KEYBOARD_BTN_X_POS(8),  FONT_KEYBOARD_BTN_Y_POS(8)  }, (FONT_HEIGHT_SCALE * 0.75f), s_ColorOrange },
+        { true, GAMETEXT_EMPTY, { FONT_KEYBOARD_BTN_X_POS(9),  FONT_KEYBOARD_BTN_Y_POS(9)  }, (FONT_HEIGHT_SCALE * 0.75f), s_ColorOrange },
+        { true, GAMETEXT_EMPTY, { FONT_KEYBOARD_BTN_X_POS(10), FONT_KEYBOARD_BTN_Y_POS(10) }, (FONT_HEIGHT_SCALE * 0.75f), s_ColorOrange },
+        { true, GAMETEXT_EMPTY, { FONT_KEYBOARD_BTN_X_POS(11), FONT_KEYBOARD_BTN_Y_POS(11) }, (FONT_HEIGHT_SCALE * 0.75f), s_ColorOrange },
+        { true, GAMETEXT_EMPTY, { FONT_KEYBOARD_BTN_X_POS(12), FONT_KEYBOARD_BTN_Y_POS(12) }, (FONT_HEIGHT_SCALE * 0.75f), s_ColorOrange },
         { 0 },
     };
 
     static_assert((COUNT_OF(s_aKeyboardButtonFont) - 1) == COUNT_OF(s_aKeybordButtonFunction), "update me");
 
     const FontData_t* pKeyboardFontData = s_aKeyboardButtonFont;
+
     for (int32 i = 0; i < COUNT_OF(m_KeyboardFont); ++i)
     {
         if (!pKeyboardFontData->Flag)
@@ -1924,11 +2278,13 @@ void COptions::CfgKeyboard(void)
     else
     {
         m_KeyboardFont[m_IndexLine].Height *= 1.25f;
-        m_KeyboardFont[m_IndexLine].Color = s_ColorGreen;
+        m_KeyboardFont[m_IndexLine].Color   = s_ColorGreen;
 
-        m_ConfigCur.Flag = true;
-        m_ConfigCur.ScreenPos = { m_KeyboardFont[m_IndexLine].ScreenPos.x - 8.0f, m_KeyboardFont[m_IndexLine].ScreenPos.y };
-        m_ConfigCur.Sprite.Move(m_ConfigCur.ScreenPos.x, m_ConfigCur.ScreenPos.y);
+        m_ConfigCur.Flag      = true;
+        m_ConfigCur.ScreenPos = { m_KeyboardFont[m_IndexLine].ScreenPos.x - 8.0f,
+                                  m_KeyboardFont[m_IndexLine].ScreenPos.y };
+        m_ConfigCur.Sprite.Move(m_ConfigCur.ScreenPos.x,
+                                m_ConfigCur.ScreenPos.y);
     };
 
     for (int32 i = 0; i < COUNT_OF(s_aKeybordButtonFunction); ++i)
@@ -1939,7 +2295,9 @@ void COptions::CfgKeyboard(void)
 
     if (m_bKeyConfig)
     {
-        ASSERT( (m_IndexLine >= 0) && (m_IndexLine < COUNT_OF(s_aKeybordButtonFunction)) );
+        ASSERT(m_IndexLine >= 0);
+        ASSERT(m_IndexLine < COUNT_OF(s_aKeybordButtonFunction));
+
         if (CGameData::Option().Keyboard().AssignDownKey(s_aKeybordButtonFunction[m_IndexLine]))
             CGameSound::PlaySE(SDCODE_SE(0x1002));
     };
@@ -1950,21 +2308,22 @@ void COptions::CfgGamepad(void)
 {
     static const FontData_t s_aPadButtonFont[10] =
     {
-        { true, GAMETEXT(0x0), { 148.0f, -144.0f }, 2.0f, s_ColorOrange },
-        { true, GAMETEXT(0x0), { 148.0f, -116.0f }, 2.0f, s_ColorOrange },
-        { true, GAMETEXT(0x0), { 148.0f, -88.0f  }, 2.0f, s_ColorOrange },
-        { true, GAMETEXT(0x0), { 148.0f, -60.0f  }, 2.0f, s_ColorOrange },
-        { true, GAMETEXT(0x0), { 148.0f, -32.0f  }, 2.0f, s_ColorOrange },
-        { true, GAMETEXT(0x0), { 148.0f, -4.0f   }, 2.0f, s_ColorOrange },
-        { true, GAMETEXT(0x0), { 148.0f, 24.0f   }, 2.0f, s_ColorOrange },
-        { true, GAMETEXT(0x0), { 148.0f, 52.0f   }, 2.0f, s_ColorOrange },
-        { true, GAMETEXT(0x0), { 148.0f, 108.0f  }, 2.0f, s_ColorOrange },
+        { true, GAMETEXT_EMPTY, { FONT_PAD_BTN_X_POS(0), FONT_PAD_BTN_Y_POS(0) }, FONT_HEIGHT_SCALE, s_ColorOrange },
+        { true, GAMETEXT_EMPTY, { FONT_PAD_BTN_X_POS(1), FONT_PAD_BTN_Y_POS(1) }, FONT_HEIGHT_SCALE, s_ColorOrange },
+        { true, GAMETEXT_EMPTY, { FONT_PAD_BTN_X_POS(2), FONT_PAD_BTN_Y_POS(2) }, FONT_HEIGHT_SCALE, s_ColorOrange },
+        { true, GAMETEXT_EMPTY, { FONT_PAD_BTN_X_POS(3), FONT_PAD_BTN_Y_POS(3) }, FONT_HEIGHT_SCALE, s_ColorOrange },
+        { true, GAMETEXT_EMPTY, { FONT_PAD_BTN_X_POS(4), FONT_PAD_BTN_Y_POS(4) }, FONT_HEIGHT_SCALE, s_ColorOrange },
+        { true, GAMETEXT_EMPTY, { FONT_PAD_BTN_X_POS(5), FONT_PAD_BTN_Y_POS(5) }, FONT_HEIGHT_SCALE, s_ColorOrange },
+        { true, GAMETEXT_EMPTY, { FONT_PAD_BTN_X_POS(6), FONT_PAD_BTN_Y_POS(6) }, FONT_HEIGHT_SCALE, s_ColorOrange },
+        { true, GAMETEXT_EMPTY, { FONT_PAD_BTN_X_POS(8), FONT_PAD_BTN_Y_POS(8) }, FONT_HEIGHT_SCALE, s_ColorOrange },
+        { true, GAMETEXT_EMPTY, { FONT_PAD_BTN_X_POS(9), FONT_PAD_BTN_Y_POS(9) }, FONT_HEIGHT_SCALE, s_ColorOrange },
         { 0 },
     };
 
     static_assert((COUNT_OF(s_aPadButtonFont) - 3) == COUNT_OF(s_aPadButtonFunction), "update me");
 
     const FontData_t* pPadFontData = s_aPadButtonFont;
+
     for (int32 i = 0; i < COUNT_OF(m_OnOff); ++i)
     {
         if (!pPadFontData->Flag)
@@ -1987,26 +2346,28 @@ void COptions::CfgGamepad(void)
         m_OnOff[m_IndexLine].Height *= 1.25f;
         m_OnOff[m_IndexLine].Color = s_ColorGreen;
 
-        m_ConfigCur.Flag = true;
-        m_ConfigCur.ScreenPos = { m_OnOff[m_IndexLine].ScreenPos.x - 8.0f, m_OnOff[m_IndexLine].ScreenPos.y };
-        m_ConfigCur.Sprite.Move(m_ConfigCur.ScreenPos.x, m_ConfigCur.ScreenPos.y);
+        m_ConfigCur.Flag      = true;
+        m_ConfigCur.ScreenPos = { m_OnOff[m_IndexLine].ScreenPos.x - 8.0f,
+                                  m_OnOff[m_IndexLine].ScreenPos.y };
+        m_ConfigCur.Sprite.Move(m_ConfigCur.ScreenPos.x,
+                                m_ConfigCur.ScreenPos.y);
     };
 
     
     for (int32 i = 0; i < COUNT_OF(s_aPadButtonFunction); ++i)
     {
         m_aAssignButton[i] = CGameData::Option().Gamepad(m_ConfigPad).GetAssignedButton(s_aPadButtonFunction[i]);
-        m_OnOff[i].IdText = GetPadButtonName(m_aAssignButton[i]);
+        m_OnOff[i].TextId = GetPadButtonName(m_aAssignButton[i]);
     };
 
     if (m_bKeyConfig)
     {
-        uint32 DigitalTrigger = CController::GetDigitalTrigger(m_ConfigPad);
-        uint32 Btn = DigitalTrigger & s_PadConfigDigitalTrigger;
-        if(Btn)
+        uint32 digitalTrigger = CController::GetDigitalTrigger(m_ConfigPad);
+        uint32 button = digitalTrigger & s_PadConfigDigitalTrigger;
+        if(button)
         {
             CGameSound::PlaySE(SDCODE_SE(0x1002));
-            CGameData::Option().Gamepad(m_ConfigPad).AssignButton(s_aPadButtonFunction[m_IndexLine], Btn);            
+            CGameData::Option().Gamepad(m_ConfigPad).AssignButton(s_aPadButtonFunction[m_IndexLine], button);            
         };
     };
 };
@@ -2016,51 +2377,69 @@ void COptions::SwitchDisp(int32 Line, bool On)
 {
     ArrowDisp(Line);
     
-    m_OnOff[Line].Flag = true;
-    m_OnOff[Line].ScreenPos = { 105.0f, (float(Line) * 29.0f) - 126.0f };
-    m_OnOff[Line].IdText = (On ? GAMETEXT(0x2AB) : GAMETEXT(0x2AC));
-    m_OnOff[Line].Height = (m_bSwitchMode ? 2.5f : 2.0f);
-    m_OnOff[Line].Color = (m_bSwitchMode ? s_ColorGreen : s_ColorOrange);
+    m_OnOff[Line].Flag      = true;
+#ifdef TMNT2_BUILD_EU
+    m_OnOff[Line].ScreenPos = { -77.0f,
+                                (float(Line) * 58.0f) - 91.0f };
+#else /* TMNT2_BUILD_EU */
+    m_OnOff[Line].ScreenPos = { 105.0f,
+                                (float(Line) * 29.0f) - 126.0f };
+#endif /* TMNT2_BUILD_EU */
+    m_OnOff[Line].TextId    = (On ? GAMETEXT_OP_ON : GAMETEXT_OP_OFF);
+    m_OnOff[Line].Height    = (m_bSwitchMode ? 2.5f : 2.0f);
+    m_OnOff[Line].Color     = (m_bSwitchMode ? s_ColorGreen : s_ColorOrange);
 };
 
 
 void COptions::SwitchVolume(int32 Line, OPTIONTYPES::VOLUMETYPE Volumetype)
 {
-    ASSERT( (Volumetype >= 0) && (Volumetype < COUNT_OF(m_Volume)) );
+    ASSERT(Volumetype >= 0);
+    ASSERT(Volumetype < COUNT_OF(m_Volume));
 
-    ArrowDisp(Line);
+#ifdef TMNT2_BUILD_EU
+    ArrowDisp(Line, true);
+#else /* TMNT2_BUILD_EU */
+    ArrowDisp(Line, false);
+#endif /* TMNT2_BUILD_EU */
 
-    int32 Volume = CGameData::Option().Sound().GetVolume(Volumetype);
+    int32 soundVolume = CGameData::Option().Sound().GetVolume(Volumetype);
     for (int32 i = 0; i < COUNT_OF(m_Volume[0]); ++i)
     {
-        m_Volume[Volumetype][i].Flag = true;
-        m_Volume[Volumetype][i].Color = (m_bSwitchMode ? s_ColorGreen : s_ColorOrange);
-        m_Volume[Volumetype][i].Color.alpha = (Volume <= i ? 0x7F : 0xFF);
-        m_Volume[Volumetype][i].ScreenPos = { (float(i) * 9.0f) + 105.0f, float(Line) * 29.0f - 126.0f };
-		m_Volume[Volumetype][i].Sprite.SetRGBA(m_Volume[Volumetype][i].Color);
-        m_Volume[Volumetype][i].Sprite.Move(
-            m_Volume[Volumetype][i].ScreenPos.x,
-            m_Volume[Volumetype][i].ScreenPos.y
-        );
+        m_Volume[Volumetype][i].Flag        = true;
+        m_Volume[Volumetype][i].Color       = (m_bSwitchMode ? s_ColorGreen : s_ColorOrange);
+        m_Volume[Volumetype][i].Color.alpha = (soundVolume <= i ? 0x7F : 0xFF);
+#ifdef TMNT2_BUILD_EU
+        m_Volume[Volumetype][i].ScreenPos = { (float(i) * 9.0f) - 70.0f,
+                                              (float(Line) * 58.0f) - 97.0f };
+#else /* TMNT2_BUILD_EU */
+        m_Volume[Volumetype][i].ScreenPos   = { (float(i) * 9.0f) + 105.0f,
+                                                 float(Line) * 29.0f - 126.0f };
+#endif /* TMNT2_BUILD_EU */
+        m_Volume[Volumetype][i].Sprite.SetRGBA(m_Volume[Volumetype][i].Color);
+        m_Volume[Volumetype][i].Sprite.Move(m_Volume[Volumetype][i].ScreenPos.x,
+                                            m_Volume[Volumetype][i].ScreenPos.y);
     };
 
     if (m_bSwitchMode)
     {
-        int32 iPad = CGameData::Attribute().GetVirtualPad();
-        if (CController::GetDigitalTrigger(iPad, CController::DIGITAL_LLEFT))
+        int32 virtualPad = CGameData::Attribute().GetVirtualPad();
+
+        if (CController::GetDigitalTrigger(virtualPad, CController::DIGITAL_LLEFT))
         {
             CGameSound::PlaySE(SDCODE_SE(0x1004));
+
             m_fSwitchMoveL = SWITCH_ANM;
-            Volume = Clamp(Volume - 1, 0, Volume);
+            soundVolume = Clamp(soundVolume - 1, 0, soundVolume);
         }
-        else if (CController::GetDigitalTrigger(iPad, CController::DIGITAL_LRIGHT))
+        else if (CController::GetDigitalTrigger(virtualPad, CController::DIGITAL_LRIGHT))
         {
             CGameSound::PlaySE(SDCODE_SE(0x1004));
+
             m_fSwitchMoveR = SWITCH_ANM;
-            Volume = Clamp(Volume + 1, 0, CGameSound::VOLUME_MAX);
+            soundVolume = Clamp(soundVolume + 1, 0, CGameSound::VOLUME_MAX);
         };
 
-        CGameData::Option().Sound().SetVolume(Volumetype, Volume);
+        CGameData::Option().Sound().SetVolume(Volumetype, soundVolume);
 
         if (m_fSwitchMoveL > 0.0f)
             m_fSwitchMoveL -= SWITCH_ANM_STEP;
@@ -2073,43 +2452,53 @@ void COptions::SwitchVolume(int32 Line, OPTIONTYPES::VOLUMETYPE Volumetype)
 
 void COptions::SwitchSound(int32 Line)
 {
-    GAMETEXT aIdText[] =
+    GAMETEXT aTextId[] =
     {
-        GAMETEXT(0x2A6), // mono
-        GAMETEXT(0x2A7), // stereo
-        GAMETEXT(0x2A8), // surround
+        GAMETEXT_OP_SOUND_MONO,
+        GAMETEXT_OP_SOUND_STERO,
+        GAMETEXT_OP_SOUND_SUR,
+        //GAMETEXT_OP_SOUND_DPL,
+        //GAMETEXT_OP_SOUND_DD,
     };
 
-    static_assert(COUNT_OF(aIdText) == CGameSound::MODE_NUM, "update me");
+    static_assert(COUNT_OF(aTextId) == CGameSound::MODE_NUM, "update me");
     
     ArrowDisp(Line);
     
     m_OnOff[Line].Flag		= true;
-    m_OnOff[Line].ScreenPos = { 105.0f, (float(Line) * 29.0f) - 126.0f };
-    m_OnOff[Line].IdText	= aIdText[CGameData::Option().Sound().GetMode()];
+#ifdef TMNT2_BUILD_EU
+    m_OnOff[Line].ScreenPos = { -77.0f,
+                                (float(Line) * 58.0f) - 91.0f };
+#else /* TMNT2_BUILD_EU */
+    m_OnOff[Line].ScreenPos = { 105.0f,
+                                (float(Line) * 29.0f) - 126.0f };
+#endif /* TMNT2_BUILD_EU */
+    m_OnOff[Line].TextId    = aTextId[CGameData::Option().Sound().GetMode()];
     m_OnOff[Line].Height	= (m_bSwitchMode ? 2.5f : 2.0f);
     m_OnOff[Line].Color		= (m_bSwitchMode ? s_ColorGreen : s_ColorOrange);
 
     if (m_bSwitchMode)
     {
-        int32 Mode = CGameData::Option().Sound().GetMode();
-		int32 ModeMax = (CGameSound::MODE_NUM - 1); // exclude surround
+        int32 soundMode = CGameData::Option().Sound().GetMode();
+        int32 soundModeNum = (CGameSound::MODE_NUM - 1); // exclude surround
 
         int32 iPad = CGameData::Attribute().GetVirtualPad();
         if (CController::GetDigitalTrigger(iPad, CController::DIGITAL_LLEFT))
         {
             CGameSound::PlaySE(SDCODE_SE(0x1004));
+
             m_fSwitchMoveL = SWITCH_ANM;
-            Mode = InvClamp(Mode - 1, 0, ModeMax - 1);
+            soundMode = InvClamp(soundMode - 1, 0, soundModeNum - 1);
         }
         else if (CController::GetDigitalTrigger(iPad, CController::DIGITAL_LRIGHT))
         {
             CGameSound::PlaySE(SDCODE_SE(0x1004));
+
             m_fSwitchMoveR = SWITCH_ANM;
-            Mode = InvClamp(Mode + 1, 0, ModeMax - 1);
+            soundMode = InvClamp(soundMode + 1, 0, soundModeNum - 1);
         };
 
-        CGameData::Option().Sound().SetMode(CGameSound::MODE(Mode));
+        CGameData::Option().Sound().SetMode(CGameSound::MODE(soundMode));
 
         if (m_fSwitchMoveL > 0.0f)
             m_fSwitchMoveL -= SWITCH_ANM_STEP;
@@ -2122,42 +2511,50 @@ void COptions::SwitchSound(int32 Line)
 
 void COptions::SwitchDifficuly(int32 Line)
 {
-    GAMETEXT aIdText[] =
+    GAMETEXT aTextId[] =
     {
-        GAMETEXT(0x2A3), // easy
-        GAMETEXT(0x2A4), // normal
-        GAMETEXT(0x2A5), // hard
+        GAMETEXT_OP_GAME_EASY,
+        GAMETEXT_OP_GAME_NORM,
+        GAMETEXT_OP_GAME_HARD,
     };
 
-    static_assert(COUNT_OF(aIdText) == GAMETYPES::DIFFICULTY_NUM, "update me");
+    static_assert(COUNT_OF(aTextId) == GAMETYPES::DIFFICULTY_NUM, "update me");
 
-    m_OnOff[Line].Flag = true;
-    m_OnOff[Line].IdText = aIdText[CGameData::Option().Play().GetDifficulty()];
-    m_OnOff[Line].ScreenPos = { 105.0f, (float(Line) * 29.0f) - 126.0f };
-    m_OnOff[Line].Height = (m_bSwitchMode ? 2.5f : 2.0f);
-    m_OnOff[Line].Color = (m_bSwitchMode ? s_ColorGreen : s_ColorOrange);
+    m_OnOff[Line].Flag      = true;
+    m_OnOff[Line].TextId    = aTextId[CGameData::Option().Play().GetDifficulty()];
+#ifdef TMNT2_BUILD_EU
+    m_OnOff[Line].ScreenPos = { -77.0f,
+                                (float(Line) * 58.0f) - 91.0f };
+#else /* TMNT2_BUILD_EU */
+    m_OnOff[Line].ScreenPos = { 105.0f,
+                                (float(Line) * 29.0f) - 126.0f };
+#endif /* TMNT2_BUILD_EU */
+    m_OnOff[Line].Height    = (m_bSwitchMode ? 2.5f : 2.0f);
+    m_OnOff[Line].Color     = (m_bSwitchMode ? s_ColorGreen : s_ColorOrange);
 
     ArrowDisp(Line);
 
     if (m_bSwitchMode)
     {
-        int32 Level = CGameData::Option().Play().GetDifficulty();
+        int32 difficulty = CGameData::Option().Play().GetDifficulty();
         
-        int32 iPad = CGameData::Attribute().GetVirtualPad();
-        if (CController::GetDigitalTrigger(iPad, CController::DIGITAL_LLEFT))
+        int32 virtualPad = CGameData::Attribute().GetVirtualPad();
+        if (CController::GetDigitalTrigger(virtualPad, CController::DIGITAL_LLEFT))
         {
             CGameSound::PlaySE(SDCODE_SE(0x1004));
+
             m_fSwitchMoveL = SWITCH_ANM;
-            Level = InvClamp(Level - 1, 0, GAMETYPES::DIFFICULTY_NUM - 1);
+            difficulty = InvClamp(difficulty - 1, 0, GAMETYPES::DIFFICULTY_NUM - 1);
         }
-        else if (CController::GetDigitalTrigger(iPad, CController::DIGITAL_LRIGHT))
+        else if (CController::GetDigitalTrigger(virtualPad, CController::DIGITAL_LRIGHT))
         {
             CGameSound::PlaySE(SDCODE_SE(0x1004));
+
             m_fSwitchMoveR = SWITCH_ANM;
-            Level = InvClamp(Level + 1, 0, GAMETYPES::DIFFICULTY_NUM - 1);
+            difficulty = InvClamp(difficulty + 1, 0, GAMETYPES::DIFFICULTY_NUM - 1);
         };
         
-        CGameData::Option().Play().SetDifficulty(GAMETYPES::DIFFICULTY(Level));
+        CGameData::Option().Play().SetDifficulty(GAMETYPES::DIFFICULTY(difficulty));
 
         if (m_fSwitchMoveL > 0.0f)
             m_fSwitchMoveL -= SWITCH_ANM_STEP;
@@ -2172,9 +2569,11 @@ bool COptions::PasswordInput(void)
 {
     for (int32 i = 0; i < COUNT_OF(m_PasswordFrame) / 2; ++i)
     {
-		m_PasswordFrame[i].Flag = true;
-        m_PasswordFrame[i].ScreenPos = { (float(i) * 69.0f) - 233.0f, -55.0f };
-        m_PasswordFrame[i].Sprite.Move(m_PasswordFrame[i].ScreenPos.x, m_PasswordFrame[i].ScreenPos.y);
+        m_PasswordFrame[i].Flag = true;
+        m_PasswordFrame[i].ScreenPos = { (float(i) * 69.0f) - 233.0f,
+                                         -55.0f };
+        m_PasswordFrame[i].Sprite.Move(m_PasswordFrame[i].ScreenPos.x,
+                                      m_PasswordFrame[i].ScreenPos.y);
         m_PasswordFrame[i].Sprite.SetTexture(CTextureManager::GetRwTexture("op_pipe_pass"));
         m_PasswordFrame[i].Sprite.Resize(128.0f, 128.0f);
         m_PasswordFrame[i].Sprite.SetRGBA(s_ColorOrange);
@@ -2182,7 +2581,8 @@ bool COptions::PasswordInput(void)
 
     m_PasswordObj[0].Flag = true;
     m_PasswordObj[0].ScreenPos = { 243.0f, -14.0f };
-    m_PasswordObj[0].Sprite.Move(m_PasswordObj[0].ScreenPos.x, m_PasswordObj[0].ScreenPos.y);
+    m_PasswordObj[0].Sprite.Move(m_PasswordObj[0].ScreenPos.x,
+                                 m_PasswordObj[0].ScreenPos.y);
     m_PasswordObj[0].Sprite.SetTexture(CTextureManager::GetRwTexture("op_pipe_pass_ok"));
     m_PasswordObj[0].Sprite.Resize(128.0f, 64.0f);
     m_PasswordObj[0].Sprite.SetRGBA(s_ColorOrange);
@@ -2197,33 +2597,33 @@ bool COptions::PasswordInput(void)
 
     m_PasswordOk = s_PasswordOkFont;
 
-    int32 iPad = CGameData::Attribute().GetVirtualPad();
-    int32 PasswordMax = COUNT_OF(m_aePassword);
-    if (CController::GetDigitalTrigger(iPad, CController::DIGITAL_LLEFT))
+    int32 virtualPad = CGameData::Attribute().GetVirtualPad();
+    int32 passwordMax = COUNT_OF(m_aPassword);
+    if (CController::GetDigitalTrigger(virtualPad, CController::DIGITAL_LLEFT))
     {
         CGameSound::PlaySE(SDCODE_SE(0x1004));
-        m_PasswordCursor = InvClamp(m_PasswordCursor - 1, 0, PasswordMax);
+        m_PasswordCursor = InvClamp(m_PasswordCursor - 1, 0, passwordMax);
     }
-    else if (CController::GetDigitalTrigger(iPad, CController::DIGITAL_LRIGHT))
+    else if (CController::GetDigitalTrigger(virtualPad, CController::DIGITAL_LRIGHT))
     {
         CGameSound::PlaySE(SDCODE_SE(0x1004));
-        m_PasswordCursor = InvClamp(m_PasswordCursor + 1, 0, PasswordMax);
+        m_PasswordCursor = InvClamp(m_PasswordCursor + 1, 0, passwordMax);
     }
-    else if (CController::GetDigitalTrigger(iPad, CController::DIGITAL_CANCEL))
+    else if (CController::GetDigitalTrigger(virtualPad, CController::DIGITAL_CANCEL))
     {
         CGameSound::PlaySE(SDCODE_SE(0x1001));
-        if (m_PasswordCursor == PasswordMax)
+        if (m_PasswordCursor == passwordMax)
         {
             PasswordClear();
             return true;
         }
         else
         {
-            m_PasswordCursor = PasswordMax;
+            m_PasswordCursor = passwordMax;
         };
     };
 
-    if (m_PasswordCursor == PasswordMax)
+    if (m_PasswordCursor == passwordMax)
     {
         m_PasswordObj[1].Flag = false;
         m_PasswordObj[2].Flag = false;
@@ -2232,19 +2632,19 @@ bool COptions::PasswordInput(void)
 
         m_PasswordOk.Color = s_ColorGreen;
 
-        if (CController::GetDigitalTrigger(iPad, CController::DIGITAL_OK))
+        if (CController::GetDigitalTrigger(virtualPad, CController::DIGITAL_OK))
         {
             for (int32 i = 0; i < COUNT_OF(m_szPassword) - 1; ++i)
-                m_szPassword[i] = s_achPasswordTable[m_aePassword[i]];
+                m_szPassword[i] = s_achPasswordTable[m_aPassword[i]];
 
             m_szPassword[COUNT_OF(m_szPassword) - 1] = '\0';
 
-            SECRETID::VALUE IdSecret = CSecretInfo::CheckPassword(m_szPassword);
-            if (IdSecret != SECRETID::ID_NONE)
+            SECRETID::VALUE secretId = CSecretInfo::CheckPassword(m_szPassword);
+            if (secretId != SECRETID::ID_NONE)
             {
                 CGameSound::PlaySE(SDCODE_SE(0x1002));                
                 PasswordClear();
-                m_pUnlock->SetMessage(IdSecret);
+                m_pUnlock->SetMessage(secretId);
                 m_pUnlock->Open();
                 m_bPasswordCheckState = true;
                 return true;
@@ -2260,32 +2660,44 @@ bool COptions::PasswordInput(void)
     {
         m_PasswordFrame[m_PasswordCursor].Sprite.SetRGBA(s_ColorGreen);
 
-        m_PasswordObj[1].ScreenPos = { (float(m_PasswordCursor) * 69.0f) - 233.0f, -90.0f };
-        m_PasswordObj[1].Sprite.Move(m_PasswordObj[1].ScreenPos.x, m_PasswordObj[1].ScreenPos.y);
+        
+        m_PasswordObj[1].ScreenPos = { (float(m_PasswordCursor) * 69.0f) - 233.0f,
+                                        -90.0f };
+        m_PasswordObj[1].Sprite.Move(m_PasswordObj[1].ScreenPos.x,
+                                     m_PasswordObj[1].ScreenPos.y);
 
-        m_PasswordObj[2].ScreenPos = { (float(m_PasswordCursor) * 69.0f) - 233.0f, -17.0f };
-        m_PasswordObj[2].Sprite.Move(m_PasswordObj[2].ScreenPos.x, m_PasswordObj[2].ScreenPos.y);
+        
+        m_PasswordObj[2].ScreenPos = { (float(m_PasswordCursor) * 69.0f) - 233.0f,
+                                        -17.0f };
+        m_PasswordObj[2].Sprite.Move(m_PasswordObj[2].ScreenPos.x,
+                                     m_PasswordObj[2].ScreenPos.y);
 
-        int32 PasswordType = m_aePassword[m_PasswordCursor];
-        if (CController::GetDigitalTrigger(iPad, CController::DIGITAL_LUP))
+        
+        int32 PasswordType = m_aPassword[m_PasswordCursor];
+        if (CController::GetDigitalTrigger(virtualPad, CController::DIGITAL_LUP))
         {
             CGameSound::PlaySE(SDCODE_SE(0x1004));
             PasswordType = InvClamp(PasswordType - 1, 0, int32(PASSWORDMAX) - 1);
         }
-        else if (CController::GetDigitalTrigger(iPad, CController::DIGITAL_LDOWN))
+        else if (CController::GetDigitalTrigger(virtualPad, CController::DIGITAL_LDOWN))
         {
-            CGameSound::PlaySE(SDCODE_SE(0x1004));
+            CGameSound::PlaySE(SDCODE_SE(0x1004));            
             PasswordType = InvClamp(PasswordType + 1, 0, int32(PASSWORDMAX) - 1);
         };
-        m_aePassword[m_PasswordCursor] = PASSWORDTYPE(PasswordType);
+
+        m_aPassword[m_PasswordCursor] = PASSWORDTYPE(PasswordType);
     };
 
     for (int32 i = 0; i < COUNT_OF(m_PasswordFrame) / 2; ++i)
     {
-		m_PasswordFrame[i + 7].Flag = true;
-        m_PasswordFrame[i + 7].ScreenPos = { (float(i) * 69.0f) - 233.0f, -55.0f };
-        m_PasswordFrame[i + 7].Sprite.Move(m_PasswordFrame[i].ScreenPos.x, m_PasswordFrame[i].ScreenPos.y);
-        m_PasswordFrame[i + 7].Sprite.SetTexture(CTextureManager::GetRwTexture(s_apszPasswordMark[m_aePassword[i]]));
+        RwTexture* pTexture = CTextureManager::GetRwTexture(s_apszPasswordMark[m_aPassword[i]]);
+
+        m_PasswordFrame[i + 7].Flag = true;
+        m_PasswordFrame[i + 7].ScreenPos = { (float(i) * 69.0f) - 233.0f,
+                                             -55.0f };
+        m_PasswordFrame[i + 7].Sprite.Move(m_PasswordFrame[i].ScreenPos.x,
+                                           m_PasswordFrame[i].ScreenPos.y);
+        m_PasswordFrame[i + 7].Sprite.SetTexture(pTexture);
         m_PasswordFrame[i + 7].Sprite.Resize(64.0f, 64.0f);
     };
 
@@ -2304,7 +2716,8 @@ void COptions::PasswordScroll(bool In)
         m_PasswordFrame[i].Flag = true;
         m_PasswordFrame[i].ScreenPos.x = (float(i) * (69.0f - float(EffectTime))) + (-233.0f - float(EffectTime));
         m_PasswordFrame[i].ScreenPos.y = -55.0f;
-        m_PasswordFrame[i].Sprite.Move(m_PasswordFrame[i].ScreenPos.x, m_PasswordFrame[i].ScreenPos.y);
+        m_PasswordFrame[i].Sprite.Move(m_PasswordFrame[i].ScreenPos.x,
+                                       m_PasswordFrame[i].ScreenPos.y);
         m_PasswordFrame[i].Sprite.SetTexture(CTextureManager::GetRwTexture("op_pipe_pass"));
         m_PasswordFrame[i].Sprite.Resize(128.0f, 128.0f);
         m_PasswordFrame[i].Sprite.SetRGBA(s_ColorOrange);
@@ -2312,8 +2725,10 @@ void COptions::PasswordScroll(bool In)
     };
 
     m_PasswordObj[0].Flag = true;
-    m_PasswordObj[0].ScreenPos = { (243.0f - (float(Step) * float(Step))), -14.0f };
-    m_PasswordObj[0].Sprite.Move(m_PasswordObj[0].ScreenPos.x, m_PasswordObj[0].ScreenPos.y);
+    m_PasswordObj[0].ScreenPos = { (243.0f - (float(Step) * float(Step))),
+                                   -14.0f };
+    m_PasswordObj[0].Sprite.Move(m_PasswordObj[0].ScreenPos.x,
+                                 m_PasswordObj[0].ScreenPos.y);
     m_PasswordObj[0].Sprite.SetTexture(CTextureManager::GetRwTexture("op_pipe_pass_ok"));
     m_PasswordObj[0].Sprite.Resize(128.0f, 64.0f);
     m_PasswordObj[0].Sprite.SetRGBA(s_ColorOrange);
@@ -2338,34 +2753,50 @@ void COptions::PasswordClear(void)
 
 void COptions::SwitchRumble(void)
 {
-    m_Switch[0].Flag = true;
-    m_Switch[0].ScreenPos = { (m_OnOff[8].ScreenPos.x - 16.0f) - m_fSwitchMoveL, m_OnOff[8].ScreenPos.y };
-    m_Switch[0].Sprite.Move(m_Switch[0].ScreenPos.x, m_Switch[0].ScreenPos.y);
+    /* ctrl left cursor */
+    m_Switch[0].Flag      = true;
+    m_Switch[0].ScreenPos = { (m_OnOff[8].ScreenPos.x - 16.0f) - m_fSwitchMoveL,
+                              m_OnOff[8].ScreenPos.y };
+    m_Switch[0].Sprite.Move(m_Switch[0].ScreenPos.x,
+                            m_Switch[0].ScreenPos.y);
 
-    m_Switch[1].Flag = true;
-    m_Switch[1].ScreenPos = { (m_OnOff[8].ScreenPos.x - 16.0f) + 136.0f + m_fSwitchMoveR, m_OnOff[8].ScreenPos.y };
-    m_Switch[1].Sprite.Move(m_Switch[1].ScreenPos.x, m_Switch[1].ScreenPos.y);
+    /* ctrl right cursor */
+    m_Switch[1].Flag        = true;
+#ifdef TMNT2_BUILD_EU
+    m_Switch[1].ScreenPos = { (m_OnOff[8].ScreenPos.x - 16.0f) + 180.0f + m_fSwitchMoveR,
+                               m_OnOff[8].ScreenPos.y };
+#else /* TMNT2_BUILD_EU */
+    m_Switch[1].ScreenPos   = { (m_OnOff[8].ScreenPos.x - 16.0f) + 136.0f + m_fSwitchMoveR,
+                                 m_OnOff[8].ScreenPos.y };
+#endif /* TMNT2_BUILD_EU */
+    m_Switch[1].Sprite.Move(m_Switch[1].ScreenPos.x,
+                            m_Switch[1].ScreenPos.y);
 
-    m_OnOff[8].IdText = (CGameData::Option().Gamepad(m_ConfigPad).IsEnabledVibration() ? GAMETEXT(0x2AB) : GAMETEXT(0x2AC));
-    m_OnOff[8].Height = (m_bSwitchMode ? 2.5f : 2.0f);
-    m_OnOff[8].Color = (m_bSwitchMode ? s_ColorGreen : s_ColorOrange);
+    /* ctrl text */
+    m_OnOff[8].TextId   = (CGameData::Option().Gamepad(m_ConfigPad).IsEnabledVibration() ? GAMETEXT_OP_ON : GAMETEXT_OP_OFF);
+    m_OnOff[8].Height   = (m_bSwitchMode ? 2.5f : 2.0f);
+    m_OnOff[8].Color    = (m_bSwitchMode ? s_ColorGreen : s_ColorOrange);
 
+    
+    /* if is in switch mode */
     if (m_bSwitchMode)
     {
         SetArrowSwitch(0);
 
         bool bState = CGameData::Option().Gamepad(m_ConfigPad).IsEnabledVibration();
 
-        int32 iPad = CGameData::Attribute().GetVirtualPad();
-        if (CController::GetDigitalTrigger(iPad, CController::DIGITAL_LLEFT))
+        int32 virtualPad = CGameData::Attribute().GetVirtualPad();
+        if (CController::GetDigitalTrigger(virtualPad, CController::DIGITAL_LLEFT))
         {
             CGameSound::PlaySE(SDCODE_SE(0x1004));
+
             m_fSwitchMoveL = SWITCH_ANM;
             bState = !bState;
         }
-        else if (CController::GetDigitalTrigger(iPad, CController::DIGITAL_LRIGHT))
+        else if (CController::GetDigitalTrigger(virtualPad, CController::DIGITAL_LRIGHT))
         {
             CGameSound::PlaySE(SDCODE_SE(0x1004));
+
             m_fSwitchMoveR = SWITCH_ANM;
             bState = !bState;
         };
@@ -2390,26 +2821,49 @@ void COptions::SwitchRumble(void)
 void COptions::SwitchResolution(void)
 {
 #ifdef TARGET_PC    
-    m_Resolution[0].Flag = true;
+    m_Resolution[0].Flag      = true;
+#ifdef TMNT2_BUILD_EU
+    m_Resolution[0].ScreenPos = { 80.0f, 102.0f };
+#else /* TMNT2_BUILD_EU */
     m_Resolution[0].ScreenPos = { 64.0f, 42.0f };
-    m_Resolution[0].Sprite.Move(m_Resolution[0].ScreenPos.x, m_Resolution[0].ScreenPos.y);
+#endif /* TMNT2_BUILD_EU */
+    m_Resolution[0].Sprite.Move(m_Resolution[0].ScreenPos.x,
+                                m_Resolution[0].ScreenPos.y);
     m_Resolution[0].Sprite.SetRGBA(m_bSwitchMode ? s_ColorGreen : s_ColorOrange);
+
     
-    m_Resolution[1].Flag = true;
-    m_Resolution[1].ScreenPos = { -89.0f - m_fSwitchMoveL, 43.0f };
-    m_Resolution[1].Sprite.Move(m_Resolution[1].ScreenPos.x, m_Resolution[1].ScreenPos.y);
+    m_Resolution[1].Flag      = true;
+#ifdef TMNT2_BUILD_EU
+    m_Resolution[1].ScreenPos = { -73.0f - m_fSwitchMoveL,
+                                   103.0f };
+#else /* TMNT2_BUILD_EU */
+    m_Resolution[1].ScreenPos = { -89.0f - m_fSwitchMoveL,
+                                   43.0f };
+#endif /* TMNT2_BUILD_EU */
+    m_Resolution[1].Sprite.Move(m_Resolution[1].ScreenPos.x,
+                                m_Resolution[1].ScreenPos.y);
     m_Resolution[1].Sprite.SetAlpha(255);
 
+    
     m_Resolution[2].Flag = true;
-    m_Resolution[2].ScreenPos = { 217.0f + m_fSwitchMoveR, 43.0f };
-    m_Resolution[2].Sprite.Move(m_Resolution[2].ScreenPos.x, m_Resolution[2].ScreenPos.y);
+#ifdef TMNT2_BUILD_EU
+    m_Resolution[2].ScreenPos = { 233.0f + m_fSwitchMoveR,
+                                  103.0f };
+#else /* TMNT2_BUILD_EU */
+    m_Resolution[2].ScreenPos = { 217.0f + m_fSwitchMoveR,
+                                  43.0f };
+#endif /* TMNT2_BUILD_EU */
+    m_Resolution[2].Sprite.Move(m_Resolution[2].ScreenPos.x,
+                                m_Resolution[2].ScreenPos.y);
     m_Resolution[2].Sprite.SetAlpha(255);
 
-    m_ResolutionFont = s_ResolutionFont;
-    m_ResolutionFont.Flag = true;
+    
+    m_ResolutionFont        = s_ResolutionFont;
+    m_ResolutionFont.Flag   = true;
     m_ResolutionFont.Height = (m_bSwitchMode ? 2.5f : 2.0f);
-    m_ResolutionFont.Color = (m_bSwitchMode ? s_ColorGreen : s_ColorOrange);
-    m_ResolutionFont.Text = CGameData::Option().Display().GetVideomodeName(m_VideomodeNoSel);
+    m_ResolutionFont.Color  = (m_bSwitchMode ? s_ColorGreen : s_ColorOrange);
+    m_ResolutionFont.Text   = CGameData::Option().Display().GetVideomodeName(m_VideomodeNoSel);
+
     
     if (m_bSwitchMode)
     {
@@ -2419,17 +2873,19 @@ void COptions::SwitchResolution(void)
         m_Resolution[2].Sprite.SetTexture(CTextureManager::GetRwTexture("op_icon_right"));
         m_Resolution[2].Sprite.Resize(16.0f, 16.0f);
 
-        int32 iPad = CGameData::Attribute().GetVirtualPad();
-        if (CController::GetDigitalTrigger(iPad, CController::DIGITAL_LLEFT))
+        int32 virtualPad = CGameData::Attribute().GetVirtualPad();
+        if (CController::GetDigitalTrigger(virtualPad, CController::DIGITAL_LLEFT))
         {
             CGameSound::PlaySE(SDCODE_SE(0x1004));
-            m_fSwitchMoveL = SWITCH_ANM;
+            
+            m_fSwitchMoveL   = SWITCH_ANM;
             m_VideomodeNoSel = Clamp(m_VideomodeNoSel - 1, 0, m_VideomodeNum - 1);
         }
-        else if (CController::GetDigitalTrigger(iPad, CController::DIGITAL_LRIGHT))
+        else if (CController::GetDigitalTrigger(virtualPad, CController::DIGITAL_LRIGHT))
         {
             CGameSound::PlaySE(SDCODE_SE(0x1004));
-            m_fSwitchMoveR = SWITCH_ANM;
+            
+            m_fSwitchMoveR   = SWITCH_ANM;
             m_VideomodeNoSel = Clamp(m_VideomodeNoSel + 1, 0, m_VideomodeNum - 1);
         };
         
@@ -2467,14 +2923,14 @@ bool COptions::SwitchOnOff(bool On)
     if (!m_bSwitchMode)
         return bResult;
 
-    int32 iPad = CGameData::Attribute().GetVirtualPad();
-    if (CController::GetDigitalTrigger(iPad, CController::DIGITAL_LLEFT))
+    int32 virtualPad = CGameData::Attribute().GetVirtualPad();
+    if (CController::GetDigitalTrigger(virtualPad, CController::DIGITAL_LLEFT))
     {
         CGameSound::PlaySE(SDCODE_SE(0x1004));
         m_fSwitchMoveL = SWITCH_ANM;
         bResult = !On;
     }
-    else if (CController::GetDigitalTrigger(iPad, CController::DIGITAL_LRIGHT))
+    else if (CController::GetDigitalTrigger(virtualPad, CController::DIGITAL_LRIGHT))
     {
         CGameSound::PlaySE(SDCODE_SE(0x1004));
         m_fSwitchMoveR = SWITCH_ANM;
@@ -2556,31 +3012,31 @@ void COptions::SetPadSprite(const char* TextureName)
 
 void COptions::SetArrowSwitch(int32 Line)
 {
-	SpriteData_t* ArrowLeft = &m_Switch[(Line * 2) + 0];
-	SpriteData_t* ArrowRight = &m_Switch[(Line * 2) + 1];
+    SpriteData_t* ArrowLeft = &m_Switch[(Line * 2) + 0];
+    SpriteData_t* ArrowRight = &m_Switch[(Line * 2) + 1];
 
-	ArrowLeft->Sprite.SetTexture(CTextureManager::GetRwTexture("op_icon_left"));
-	ArrowLeft->Sprite.SetAlpha(255);
-	ArrowLeft->Sprite.Resize(16.0f, 16.0f);
+    ArrowLeft->Sprite.SetTexture(CTextureManager::GetRwTexture("op_icon_left"));
+    ArrowLeft->Sprite.SetAlpha(255);
+    ArrowLeft->Sprite.Resize(16.0f, 16.0f);
     
-	ArrowRight->Sprite.SetTexture(CTextureManager::GetRwTexture("op_icon_right"));
-	ArrowRight->Sprite.SetAlpha(255);
-	ArrowRight->Sprite.Resize(16.0f, 16.0f);
+    ArrowRight->Sprite.SetTexture(CTextureManager::GetRwTexture("op_icon_right"));
+    ArrowRight->Sprite.SetAlpha(255);
+    ArrowRight->Sprite.Resize(16.0f, 16.0f);
 };
 
 
 void COptions::SetArrowSelect(int32 Line)
 {
-	SpriteData_t* ArrowLeft = &m_Switch[(Line * 2) + 0];
-	SpriteData_t* ArrowRight = &m_Switch[(Line * 2) + 1];
+    SpriteData_t* ArrowLeft = &m_Switch[(Line * 2) + 0];
+    SpriteData_t* ArrowRight = &m_Switch[(Line * 2) + 1];
 
-	ArrowLeft->Sprite.SetTexture(CTextureManager::GetRwTexture("op_icon_left_s"));
-	ArrowLeft->Sprite.SetAlpha(255);
-	ArrowLeft->Sprite.Resize(8.0f, 8.0f);
+    ArrowLeft->Sprite.SetTexture(CTextureManager::GetRwTexture("op_icon_left_s"));
+    ArrowLeft->Sprite.SetAlpha(255);
+    ArrowLeft->Sprite.Resize(8.0f, 8.0f);
 
-	ArrowRight->Sprite.SetTexture(CTextureManager::GetRwTexture("op_icon_right_s"));
-	ArrowRight->Sprite.SetAlpha(255);
-	ArrowRight->Sprite.Resize(8.0f, 8.0f);
+    ArrowRight->Sprite.SetTexture(CTextureManager::GetRwTexture("op_icon_right_s"));
+    ArrowRight->Sprite.SetAlpha(255);
+    ArrowRight->Sprite.Resize(8.0f, 8.0f);
 };
 
 
@@ -2631,7 +3087,7 @@ void COptions::ScrollEffectIn(void)
 
 void COptions::ScrollEffectOut(void)
 {
-	int32 AlphaBasis = 255 * m_EffectTime / SCROLL_TIME_HALF - 255;
+    int32 AlphaBasis = 255 * m_EffectTime / SCROLL_TIME_HALF - 255;
     if (AlphaBasis < 0)
         AlphaBasis = 0;
 
@@ -2660,14 +3116,16 @@ void COptions::ScrollEffectOut(void)
         //  Left
         //
         m_Switch[i + 0].ScreenPos.x += SCROLL_STEP;
-        m_Switch[i + 0].Sprite.Move(m_Switch[i + 0].ScreenPos.x, m_Switch[i + 0].ScreenPos.y);
+        m_Switch[i + 0].Sprite.Move(m_Switch[i + 0].ScreenPos.x,
+                                    m_Switch[i + 0].ScreenPos.y);
         m_Switch[i + 0].Sprite.SetAlpha(uint8(AlphaBasis));
 
         //
         //  Right
         //
         m_Switch[i + 1].ScreenPos.x += SCROLL_STEP;
-        m_Switch[i + 1].Sprite.Move(m_Switch[i + 1].ScreenPos.x, m_Switch[i + 1].ScreenPos.y);
+        m_Switch[i + 1].Sprite.Move(m_Switch[i + 1].ScreenPos.x,
+                                    m_Switch[i + 1].ScreenPos.y);
         m_Switch[i + 1].Sprite.SetAlpha(uint8(AlphaBasis));
     };
 
@@ -2676,7 +3134,8 @@ void COptions::ScrollEffectOut(void)
         for (int32 j = 0; j < COUNT_OF(m_Volume[0]); ++j)
         {
             m_Volume[i][j].ScreenPos.x += SCROLL_STEP;
-            m_Volume[i][j].Sprite.Move(m_Volume[i][j].ScreenPos.x, m_Volume[i][j].ScreenPos.y);
+            m_Volume[i][j].Sprite.Move(m_Volume[i][j].ScreenPos.x,
+                                       m_Volume[i][j].ScreenPos.y);
             m_Volume[i][j].Sprite.SetAlpha(uint8(AlphaBasis));
         };
     };
@@ -2684,7 +3143,8 @@ void COptions::ScrollEffectOut(void)
     for (int32 i = 0; i < COUNT_OF(m_Resolution); ++i)
     {
         m_Resolution[i].ScreenPos.x += SCROLL_STEP;
-        m_Resolution[i].Sprite.Move(m_Resolution[i].ScreenPos.x, m_Resolution[i].ScreenPos.y);
+        m_Resolution[i].Sprite.Move(m_Resolution[i].ScreenPos.x,
+                                    m_Resolution[i].ScreenPos.y);
         m_Resolution[i].Sprite.SetAlpha(uint8(AlphaBasis));
     };
 
@@ -2696,6 +3156,31 @@ void COptions::ScrollEffectOut(void)
         m_KeyboardFont[i].ScreenPos.x += SCROLL_STEP;
         m_KeyboardFont[i].Color.alpha = uint8(AlphaBasis);
     };
+
+#ifdef TMNT2_BUILD_EU
+    if ((m_EffectTime - 1) <= 15)
+    {
+        switch (m_eOptionModeNext)
+        {
+        case OPTIONMODE_OPTIONS:
+        case OPTIONMODE_GAME_OK:
+        case OPTIONMODE_SOUND_OK:
+        case OPTIONMODE_DISPLAY_OK:
+        case OPTIONMODE_GAMEPAD:
+        case OPTIONMODE_GAMEPAD_OK:
+        case OPTIONMODE_KEYBOARD_OK:
+        case OPTIONMODE_CONTROLLER_OK:
+        case OPTIONMODE_PASSWORD_OK:
+        case OPTIONMODE_EXIT:
+            m_bExtExitPipe = true;
+            break;
+
+        default:
+            m_bExtExitPipe = false;
+            break;
+        };
+    };
+#endif /* TMNT2_BUILD_EU */
 };
 
 
@@ -2723,14 +3208,14 @@ COptionsSequence::~COptionsSequence(void)
 
 bool COptionsSequence::OnAttach(const void* pParam)
 {
+    IGamepad::SaveLockedState();
+
     if (!s_pOptions)
     {
         s_pOptions = new COptions();
         s_pOptions->Attach();
     };
 
-    ASSERT(s_pOptions);
-    
     return CAnim2DSequence::OnAttach(FILEID::ID_OPTIONS_PS2);
 };
 
@@ -2745,6 +3230,8 @@ void COptionsSequence::OnDetach(void)
     };
 
     CAnim2DSequence::OnDetach();
+
+    IGamepad::RestoreLockedState();
 };
 
 
@@ -2752,19 +3239,18 @@ void COptionsSequence::OnMove(bool bRet, const void* pReturnValue)
 {
     CAnim2DSequence::OnMove(bRet, pReturnValue);
 
-    switch (m_animstep)
+    switch (AnimStep())
     {
     case ANIMSTEP_DRAW:
-        {
-            if (s_pOptions->Move())
-                BeginFadeout();
-        }
+        if (s_pOptions->Move())
+            BeginFadeOut();
         break;
 
     case ANIMSTEP_END:
-        {
-            Ret();
-        }
+        Ret();
+        break;
+
+    default:
         break;
     };
 };
@@ -2777,8 +3263,14 @@ void COptionsSequence::OnDraw(void) const
 };
 
 
-void COptionsSequence::BeginFadein(void)
+bool COptionsSequence::OnAttach(const char* pszFilename)
+{
+    return false;
+};
+
+
+void COptionsSequence::BeginFadeIn(void)
 {
     s_pOptions->SettingInit(false);
-    CAnim2DSequence::BeginFadein();
+    CAnim2DSequence::BeginFadeIn();
 };

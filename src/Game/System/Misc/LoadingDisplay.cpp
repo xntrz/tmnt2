@@ -128,7 +128,7 @@ void CLoadingDisplay::Draw(void) const
 
     ASSERT(pwszPhase);
     
-    const wchar* pwszText = CGameText::GetText(GAMETEXT(3));
+    const wchar* pwszText = CGameText::GetText(GAMETEXT_LOADING);
     CTextData::StrCpy(wszBuffer, pwszText);
     CTextData::StrCat(wszBuffer, pwszPhase);
 

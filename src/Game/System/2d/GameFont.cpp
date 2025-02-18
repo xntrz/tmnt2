@@ -2,9 +2,22 @@
 
 #include "Game/System/Texture/TextureManager.hpp"
 #include "System/Common/Font.hpp"
-#include "System/Common/System2D.hpp"
 #include "System/Common/Screen.hpp"
 #include "System/Common/Sprite.hpp"
+#include "System/Common/System2D.hpp"
+#include "System/Common/TextData.hpp"
+
+
+static inline float GetFontHeight(Rt2dFont* pFont)
+{
+#ifdef TMNT2_BUILD_EU
+    return 8.5f;
+#else /* TMNT2_BUILD_EU */
+    float fHeight = Rt2dFontGetHeight(pFont);
+    float fScrH = static_cast<float>(CScreen::Height());
+    return ((fHeight * fScrH) / TYPEDEF::VSCR_H);
+#endif /* TMNT2_BUILD_EU */
+};
 
 
 /*static*/ CUnicodeFont* CGameFont::m_pFont = nullptr;
@@ -28,25 +41,21 @@
 {
     ASSERT(pszFilePath);
     ASSERT(pszTextureDict);
-    
-    bool bResult = false;    
 
-    if (CGameFont::SetTexDictionary(pszTextureDict))
-    {
-        Rt2dFontSetPath("");
-        Rt2dFont* pRt2dFont = Rt2dFontRead("Common/Fonts/MainFont");
-        ASSERT(pRt2dFont);
-		
-        m_pFont = new CUnicodeFont(pRt2dFont);
-        ASSERT(m_pFont);
-        
-        m_fHeight = GetScreenHeight();        
-        ChangeCharacterRect();
-        
-        bResult = true;
-    };
+    if (!CGameFont::SetTexDictionary(pszTextureDict))
+        return false;
     
-    return bResult;
+    Rt2dFontSetPath("");
+
+    Rt2dFont* pRt2dFont = Rt2dFontRead("Common/Fonts/MainFont");
+    ASSERT(pRt2dFont);
+
+    m_pFont   = new CUnicodeFont(pRt2dFont);
+    m_fHeight = GetFontHeight(m_pFont->GetFontObj());
+
+    ChangeCharacterRect();
+
+    return true;
 };
 
 
@@ -63,6 +72,7 @@
 /*static*/ bool CGameFont::SetTexDictionary(const char* pszName)
 {
     RwTexDictionary* pRwTexDictionary = CTextureManager::GetRwTextureDictionary(pszName);    
+
     if (!pRwTexDictionary)
         return false;
     
@@ -92,6 +102,17 @@
 /*static*/ void CGameFont::ConvertToUnicode(wchar* dst, const char* src)
 {
     CUnicodeFont::ConvertToUnicode(dst, src);
+};
+
+
+/*static*/ void CGameFont::ConvertToMultibyte(char* dst, const wchar* src)
+{
+    char szTempDst[1024];
+    szTempDst[0] = '\0';
+
+    CTextData::ToMultibyte(szTempDst, sizeof(szTempDst), src);
+
+    std::strcpy(dst, szTempDst);
 };
 
 
@@ -143,9 +164,15 @@
 };
 
 
-/*static*/ void CGameFont::SetHeight(float h)
+/*static*/ void CGameFont::SetHeight(float fHeight)
 {
-    m_fHeight = h;
+    m_fHeight = fHeight;
+};
+
+
+/*static*/ void CGameFont::SetHeightScaled(float fScale)
+{
+    SetHeight( GetFontHeight(m_pFont->GetFontObj()) * fScale );
 };
 
 
@@ -155,15 +182,9 @@
 };
 
 
-/*static*/ float CGameFont::GetScreenHeight(void)
+/*static*/ float CGameFont::GetHeightScaled(void)
 {
-    return (Rt2dFontGetHeight(m_pFont->GetFontObj()) * float(CScreen::Height())) / TYPEDEF::VSCR_H;
-};
-
-
-/*static*/ float CGameFont::GetScreenHeightEx(float fScreenH)
-{
-    return (Rt2dFontGetHeight(m_pFont->GetFontObj()) * static_cast<float>(CScreen::Height())) / fScreenH;
+    return GetFontHeight(m_pFont->GetFontObj());
 };
 
 

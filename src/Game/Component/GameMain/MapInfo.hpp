@@ -5,13 +5,6 @@
 
 class CMapInfo
 {
-protected:
-    struct INFO;
-
-    static const INFO m_aMapInfo[];
-
-    static const INFO& Info(MAPID::VALUE idMap);
-
 public:
     enum CATEGORY
     {

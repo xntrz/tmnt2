@@ -3,7 +3,9 @@
 #include "Game/Component/GameData/GameData.hpp"
 #include "Game/Component/GameMain/GameTypes.hpp"
 #include "Game/Component/Player/PlayerID.hpp"
+#include "Game/System/2d/Animation2D.hpp"
 #include "Game/System/2d/GameFont.hpp"
+#include "Game/System/DataLoader/DataLoader.hpp"
 #include "Game/System/Misc/ControllerMisc.hpp"
 #include "Game/System/Misc/ScreenFade.hpp"
 #include "Game/System/Misc/RenderStateManager.hpp"
@@ -48,28 +50,28 @@ private:
             ANIMDIR_RIGHT,
         };
 
-        STATE m_state;
-        int32 m_iCursor;
+        STATE   m_state;
+        int32   m_iCursor;
         ANIMDIR m_CursorAnimDir;
-        int32 m_iCursorDisplay;
-        int32 m_iCharacterMax;
-        int32 m_iCharacterNum;
-        int32 m_iPlayerNo;
-        int32 m_iController;
-        PLAYERID::VALUE m_aStackPlayerID[GAMETYPES::PLAYERS_MAX];
-        GAMETYPES::COSTUME m_aStackCostume[GAMETYPES::PLAYERS_MAX];
-        uint32 m_uAnimPressStartFrame;
-        uint32 m_uAnimPressStartDuration;
-        uint32 m_uAnimCharChangeFrame;
-        uint32 m_uAnimCharChangeDuration;
-        bool m_bSecret;
+        int32   m_iCursorDisplay;
+        int32   m_iCharacterMax;
+        int32   m_iCharacterNum;
+        int32   m_iPlayerNo;
+        int32   m_iController;
+        PLAYERID::VALUE     m_aStackPlayerID[GAMETYPES::PLAYERS_MAX];
+        GAMETYPES::COSTUME  m_aStackCostume[GAMETYPES::PLAYERS_MAX];
+        uint32  m_uAnimPressStartFrame;
+        uint32  m_uAnimPressStartDuration;
+        uint32  m_uAnimCharChangeFrame;
+        uint32  m_uAnimCharChangeDuration;
+        bool    m_bSecret;
     };
 
     struct CHARACTERINFO
     {
-        int32 m_iLockPlayer;
-        bool m_bLocked;
-        bool m_bEnable;
+        int32   m_iLockPlayer;
+        bool    m_bLocked;
+        bool    m_bEnable;
     };
 
 public:
@@ -90,7 +92,7 @@ public:
     void DrawPressStart(int32 iPlayerNo);
     void DrawPlayerLabels(int32 iPlayerNo);
     void DrawConfirmCheck(void);
-    void TextureLoad(void);
+    void Setting(void);
     bool PushStackCharacter(int32 iPlayerNo);
     bool PopStackCharacter(int32 iPlayerNo);
     void UnselectCharacterSearch(int32 iPlayerNo);
@@ -109,31 +111,31 @@ public:
     bool IsReturned(void) const;
 
 private:
-    float m_fTimer;
-    STATUS m_status;
-    CSprite m_sprite;
-    PLAYERINFO m_aPlayerInfo[GAMETYPES::PLAYERS_MAX];
-    CHARACTERINFO m_aCharacterInfo[PLAYERID::ID_MAX];
-    GAMETYPES::COSTUME m_aCostumeSelect[GAMETYPES::PLAYERS_MAX];    
-    RwTexture* m_pTextureWaku;
-    RwTexture* m_pTextureBg[5];
-    RwTexture* m_pTextureChr[8];
-    RwTexture* m_pTextureIconSelect;
-    RwTexture* m_pTextureIcon[4];
-    RwTexture* m_pTextureTurnNone;
-    RwTexture* m_pTextureTurn[4];    
-    RwTexture* m_pTextureName[8];    
-    RwTexture* m_pTexturePressStart;
-    RwTexture* m_pTextureStartP[4];    
-    RwTexture* m_pTextureP[4];
-    RwTexture* m_pTextureWindow;
-    RwTexture* m_pTextureCursorLeft;
-    RwTexture* m_pTextureCursorRight;
-    RwTexture* m_pTextureCursorUpDown;
-    RwTexture* m_pTextureCostumeSam;
-    RwTexture* m_pTextureCostumeNex;
-    int32 m_nChrMax;
-    bool m_bTextureLoad;
+    float               m_fTimer;
+    STATUS              m_status;
+    CSprite             m_sprite;
+    PLAYERINFO          m_aPlayerInfo[GAMETYPES::PLAYERS_MAX];
+    CHARACTERINFO       m_aCharacterInfo[PLAYERID::ID_MAX];
+    GAMETYPES::COSTUME  m_aCostumeSelect[GAMETYPES::PLAYERS_MAX];    
+    RwTexture*          m_pTextureWaku;
+    RwTexture*          m_pTextureBg[5];
+    RwTexture*          m_pTextureChr[8];
+    RwTexture*          m_pTextureIconSelect;
+    RwTexture*          m_pTextureIcon[4];
+    RwTexture*          m_pTextureTurnNone;
+    RwTexture*          m_pTextureTurn[4];    
+    RwTexture*          m_pTextureName[8];    
+    RwTexture*          m_pTexturePressStart;
+    RwTexture*          m_pTextureStartP[4];    
+    RwTexture*          m_pTextureP[4];
+    RwTexture*          m_pTextureWindow;
+    RwTexture*          m_pTextureCursorLeft;
+    RwTexture*          m_pTextureCursorRight;
+    RwTexture*          m_pTextureCursorUpDown;
+    RwTexture*          m_pTextureCostumeSam;
+    RwTexture*          m_pTextureCostumeNex;
+    int32               m_nChrMax;
+    bool                m_bTextureLoad;
 };
 
 
@@ -182,7 +184,7 @@ CPlayerSelectWorkPool::~CPlayerSelectWorkPool(void)
 
 void CPlayerSelectWorkPool::Attach(void)
 {
-	m_bTextureLoad = false;
+    m_bTextureLoad = false;
     m_status = STATUS_RUNNING;
     m_fTimer = 0.0f;
 };
@@ -217,11 +219,9 @@ void CPlayerSelectWorkPool::Move(void)
         else
             pPlayerInfo->m_state = PLAYERINFO::STATE_INACTIVE;
 
-        pPlayerInfo->m_uAnimPressStartDuration = 30;
+        pPlayerInfo->m_uAnimPressStartDuration = static_cast<uint32>(CScreen::Framerate() * 0.5f);
         if (pPlayerInfo->m_uAnimPressStartFrame < pPlayerInfo->m_uAnimPressStartDuration)
-        {
             ++pPlayerInfo->m_uAnimPressStartFrame;
-        };
         
         //
         //  Check if player active
@@ -229,19 +229,24 @@ void CPlayerSelectWorkPool::Move(void)
         if (pPlayerInfo->m_state != PLAYERINFO::STATE_ACTIVE)
             continue;
 
+        uint32 uChngAnimDuration = static_cast<uint32>(CScreen::Framerate() * 0.25f);
+#ifdef TMNT2_BUILD_EU
+        uChngAnimDuration = static_cast<uint32>(CScreen::Framerate() * 0.4f);
+#endif /* TMNT2_BUILD_EU */
+
         if (pPlayerInfo->m_iCursorDisplay != pPlayerInfo->m_iCursor)
         {
-            pPlayerInfo->m_uAnimCharChangeDuration = 15;
+            pPlayerInfo->m_uAnimCharChangeDuration = uChngAnimDuration;
             if (pPlayerInfo->m_uAnimCharChangeFrame >= pPlayerInfo->m_uAnimCharChangeDuration)
                 pPlayerInfo->m_iCursorDisplay = pPlayerInfo->m_iCursor;
             else
                 ++pPlayerInfo->m_uAnimCharChangeFrame;
         }
-		else
-		{
-			pPlayerInfo->m_uAnimCharChangeDuration = 15;
-			pPlayerInfo->m_uAnimCharChangeFrame = 15;
-		};
+        else
+        {
+            pPlayerInfo->m_uAnimCharChangeDuration = uChngAnimDuration;
+            pPlayerInfo->m_uAnimCharChangeFrame = uChngAnimDuration;
+        };
 
         //
         //  Check controller inptus
@@ -296,9 +301,9 @@ void CPlayerSelectWorkPool::Move(void)
         }
         else if (CController::GetDigitalTrigger(iController, CController::DIGITAL_LUP) ||
                  CController::GetDigitalTrigger(iController, CController::DIGITAL_LDOWN))
-		{
-			CGameSound::PlaySE(SDCODE_SE(4100));
-			if (m_aCharacterInfo[pPlayerInfo->m_iCursor + 4].m_bEnable)
+        {
+            CGameSound::PlaySE(SDCODE_SE(4100));
+            if (m_aCharacterInfo[pPlayerInfo->m_iCursor + 4].m_bEnable)
                 pPlayerInfo->m_bSecret = !pPlayerInfo->m_bSecret;
         }
         else if (CController::GetDigital(iController, CController::DIGITAL_L1))
@@ -325,16 +330,19 @@ void CPlayerSelectWorkPool::Move(void)
 
 void CPlayerSelectWorkPool::Draw(void)
 {
+    if (!m_bTextureLoad)
+        return;
+
     CSprite::PushRenderStates();
 
     for (int32 i = 0; i < COUNT_OF(m_aPlayerInfo); ++i)
     {
-		bool bConnected = false;
+        bool bConnected = false;
 
-		if (i >= CController::Max())
-			bConnected = false;
-		else
-			bConnected = (CController::GetState(i) == CController::STATE_CONNECT);
+        if (i >= CController::Max())
+            bConnected = false;
+        else
+            bConnected = (CController::GetState(i) == CController::STATE_CONNECT);
 
         if (bConnected)
         {
@@ -346,7 +354,7 @@ void CPlayerSelectWorkPool::Draw(void)
                 DrawWaku(i);
                 DrawIcon(i);
                 DrawNames(i);
-				DrawWakuSelect(i);
+                DrawWakuSelect(i);
                 DrawCursor(i);
                 DrawIconEx(i);
                 DrawPlayerLabels(i);
@@ -358,12 +366,33 @@ void CPlayerSelectWorkPool::Draw(void)
                 DrawPressStart(i);
             };
         }
-		else
-		{
-			DrawBg(i, false);
-			DrawWaku(i);
-		};
+        else
+        {
+            DrawBg(i, false);
+            DrawWaku(i);
+        };
     };
+
+#ifdef TMNT2_BUILD_EU
+    CGameFont::SetHeightScaled(2.0f);
+    CGameFont::SetRGBA(255, 255, 255, 255);
+
+    const wchar* pwszText = CGameText::GetText(GAMETEXT_EU_HELP_1);
+    if (CGameFont::GetStringWidth(pwszText) >= 500.0f)
+    {
+        Rt2dBBox bbox;
+        bbox.x = -272.0f;
+        bbox.y = -230.0f;
+        bbox.w =  500.0f;
+        bbox.h =   60.0f;
+
+        CGameFont::Flow(pwszText, &bbox);
+    }
+    else
+    {
+        CGameFont::Show(pwszText, -272.0f, 190.0f);
+    };
+#endif /* TMNT2_BUILD_EU */
 
     if(m_status >= STATUS_DECIDE)
         DrawConfirmCheck();
@@ -374,7 +403,7 @@ void CPlayerSelectWorkPool::Draw(void)
 
 void CPlayerSelectWorkPool::DrawBg(int32 iPlayerNo, bool bCheckLock)
 {
-	PLAYERINFO* pPlayerInfo = &m_aPlayerInfo[iPlayerNo];
+    PLAYERINFO* pPlayerInfo = &m_aPlayerInfo[iPlayerNo];
 
     if (pPlayerInfo->m_state == PLAYERINFO::STATE_ACTIVE)
     {
@@ -425,7 +454,7 @@ void CPlayerSelectWorkPool::DrawChr(int32 iPlayerNo)
     float fPosY = 21.0f;
     float fSubOffset = 10.0f;
     float fPosSub = fPosX - fSubOffset;
-	float move = 0.0f;
+    float move = 0.0f;
 
     if (pPlayerInfo->m_CursorAnimDir == PLAYERINFO::ANIMDIR_RIGHT)
         move = 10.0f;
@@ -575,7 +604,9 @@ void CPlayerSelectWorkPool::DrawCursor(int32 iPlayerNo)
         };
     };
 
-    ASSERT(iCursor >= 0 && iCursor < (COUNT_OF(m_aCharacterInfo) / 2));
+    ASSERT(iCursor >= 0);
+    ASSERT(iCursor < (COUNT_OF(m_aCharacterInfo) / 2));
+
     if (!m_aCharacterInfo[4 + iCursor].m_bEnable)
         return;
 
@@ -634,8 +665,8 @@ void CPlayerSelectWorkPool::DrawWakuSelect(int32 iPlayerNo)
 {
     static const RwV2d s_aTurnAnchors[GAMETYPES::PLAYERS_MAX] =
     {
-        { -214.0f, 50.0f    },
-        { -201.0f, 83.0f    },
+        { -214.0f,  50.0f   },
+        { -201.0f,  83.0f   },
         { -215.0f, 110.0f   },
         { -207.0f, 139.0f   },
     };
@@ -759,12 +790,10 @@ void CPlayerSelectWorkPool::DrawPressStart(int32 iPlayerNo)
 
     PLAYERINFO* pPlayerInfo = GetPlayerInfo(iPlayerNo);
     
-    fPressStartWH = Math::LinearTween(
-        256.0f + 128.0f,
-        -256.0f,
-        float(pPlayerInfo->m_uAnimPressStartFrame),
-        float(pPlayerInfo->m_uAnimPressStartDuration)
-    );
+    fPressStartWH = Math::LinearTween(256.0f + 128.0f,
+                                      -256.0f,
+                                      float(pPlayerInfo->m_uAnimPressStartFrame),
+                                      float(pPlayerInfo->m_uAnimPressStartDuration));
 
     m_sprite.SetTexture(m_pTexturePressStart);
     m_sprite.SetOffset(0.5f, 0.5f);
@@ -780,12 +809,10 @@ void CPlayerSelectWorkPool::DrawPressStart(int32 iPlayerNo)
     RENDERSTATE_PUSH(rwRENDERSTATESRCBLEND, rwBLENDSRCALPHA);
     RENDERSTATE_PUSH(rwRENDERSTATEDESTBLEND, rwBLENDONE);   
 
-    m_sprite.SetRGBA(
-        255,
-        255,
-        255,
-        uint8(127.0f - Math::Cos(m_fTimer * 13.5f) * 127.0f)
-    );
+    m_sprite.SetRGBA(255,
+                     255,
+                     255,
+                     uint8(127.0f - Math::Cos(m_fTimer * 13.5f) * 127.0f));
     m_sprite.Draw();
 
     RENDERSTATE_POP(rwRENDERSTATEZWRITEENABLE);
@@ -825,25 +852,31 @@ void CPlayerSelectWorkPool::DrawConfirmCheck(void)
 
     CGameFont::SetRGBA(255, 255, 255, 255);
 
-	CGameFont::SetHeight(CGameFont::GetScreenHeightEx(TYPEDEF::VSCR_H / 2.5f));
-    CGameFont::Show(CGameText::GetText(GAMETEXT(762)), -220.0f, -80.0f);
+    CGameFont::SetHeightScaled(2.5f);
+    CGameFont::Show(CGameText::GetText(GAMETEXT_CHRSEL_SURE), -220.0f, -80.0f);
 
-    const wchar* pwszOk = CGameText::GetText(GAMETEXT(1226));
-    const wchar* pwszCancel = CGameText::GetText(GAMETEXT(9));
+    CGameFont::SetHeightScaled(2.0f);
 
+#ifdef TMNT2_BUILD_EU    
+    CGameFont::Show(CGameText::GetText(GAMETEXT_EU_HELP_1), -200.0f, -50.0f);    
+#else /* TMNT2_BUILD_EU */
     wchar wszBuffer[256];
     wszBuffer[0] = UTEXT('\0');
 
+    const wchar* pwszOk = CGameText::GetText(GAMETEXT_MENU_HELP);
     CTextData::StrCpy(wszBuffer, pwszOk);
-	CTextData::StrCat(wszBuffer, UTEXT("   "));
+    
+    CTextData::StrCat(wszBuffer, UTEXT("   "));
+
+    const wchar* pwszCancel = CGameText::GetText(GAMETEXT_HELP_FUNC_BACK);
     CTextData::StrCat(wszBuffer, pwszCancel);
 
-	CGameFont::SetHeight(CGameFont::GetScreenHeightEx(TYPEDEF::VSCR_H / 2.0f));
     CGameFont::Show(wszBuffer, -200.0f, -50.0f);
+#endif /* TMNT2_BUILD_EU */
 };
 
 
-void CPlayerSelectWorkPool::TextureLoad(void)
+void CPlayerSelectWorkPool::Setting(void)
 {
     if (m_bTextureLoad)
         return;
@@ -882,11 +915,7 @@ void CPlayerSelectWorkPool::TextureLoad(void)
     m_pTextureName[5]       = CTextureManager::GetRwTexture("chsel_name_cas");
     m_pTextureName[6]       = CTextureManager::GetRwTexture("chsel_name_kar");
     m_pTextureName[7]       = CTextureManager::GetRwTexture("chsel_name_spl");    
-#ifdef TARGET_PC    
     m_pTexturePressStart    = CTextureManager::GetRwTexture("chsel_pressstart_ps");
-#else
-#error Not implemented for current target
-#endif    
     m_pTextureStartP[0]     = CTextureManager::GetRwTexture("chsel_start_p1");
     m_pTextureStartP[1]     = CTextureManager::GetRwTexture("chsel_start_p2");
     m_pTextureStartP[2]     = CTextureManager::GetRwTexture("chsel_start_p3");
@@ -908,7 +937,8 @@ void CPlayerSelectWorkPool::TextureLoad(void)
 
 bool CPlayerSelectWorkPool::PushStackCharacter(int32 iPlayerNo)
 {
-    ASSERT(iPlayerNo >= 0 && iPlayerNo < COUNT_OF(m_aPlayerInfo));
+    ASSERT(iPlayerNo >= 0);
+    ASSERT(iPlayerNo < COUNT_OF(m_aPlayerInfo));
 
     PLAYERINFO* pPlayerInfo = &m_aPlayerInfo[iPlayerNo];
     int32 iCursor = pPlayerInfo->m_iCursor;
@@ -935,7 +965,8 @@ bool CPlayerSelectWorkPool::PushStackCharacter(int32 iPlayerNo)
 
 bool CPlayerSelectWorkPool::PopStackCharacter(int32 iPlayerNo)
 {
-    ASSERT(iPlayerNo >= 0 && iPlayerNo < COUNT_OF(m_aPlayerInfo));
+    ASSERT(iPlayerNo >= 0);
+    ASSERT(iPlayerNo < COUNT_OF(m_aPlayerInfo));
 
     PLAYERINFO* pPlayerInfo = &m_aPlayerInfo[iPlayerNo];
 
@@ -947,8 +978,8 @@ bool CPlayerSelectWorkPool::PopStackCharacter(int32 iPlayerNo)
         pPlayerInfo->m_aStackPlayerID[pPlayerInfo->m_iCharacterNum] = PLAYERID::ID_MAX;
         pPlayerInfo->m_aStackCostume[pPlayerInfo->m_iCharacterNum] = GAMETYPES::COSTUME_NONE;
         
-		if (iChrIndex >= 4)
-			iChrIndex -= 4;
+        if (iChrIndex >= 4)
+            iChrIndex -= 4;
 
         if(iChrIndex >= 0)
         {
@@ -975,27 +1006,25 @@ void CPlayerSelectWorkPool::UnselectCharacterSearch(int32 iPlayerNo)
 
     pPlayerInfo->m_iCursorDisplay = pPlayerInfo->m_iCursor;
     
-	int32 i = 0;
-	do
-	{
+    int32 i = 0;
+    do
+    {
+        pPlayerInfo->m_iCursor = InvClamp(++pPlayerInfo->m_iCursor, 0, COUNT_OF(m_aPlayerInfo) - 1);
+        pPlayerInfo->m_CursorAnimDir = PLAYERINFO::ANIMDIR_RIGHT;
+        pPlayerInfo->m_uAnimCharChangeFrame = 0;
 
-		pPlayerInfo->m_iCursor = InvClamp(++pPlayerInfo->m_iCursor, 0, COUNT_OF(m_aPlayerInfo) - 1);
-		pPlayerInfo->m_CursorAnimDir = PLAYERINFO::ANIMDIR_RIGHT;
-		pPlayerInfo->m_uAnimCharChangeFrame = 0;
+        bool bEnable = m_aCharacterInfo[GetRealCursor(iPlayerNo)].m_bEnable;
+        bool bLocked = m_aCharacterInfo[pPlayerInfo->m_iCursor].m_bLocked;
 
-		bool bEnable = m_aCharacterInfo[GetRealCursor(iPlayerNo)].m_bEnable;
-		bool bLocked = m_aCharacterInfo[pPlayerInfo->m_iCursor].m_bLocked;
-
-		if (bEnable && !bLocked)
-			break;
-
-	} while (++i < 4);
+        if (bEnable && !bLocked)
+            break;
+    } while (++i < 4);
 };
 
 
 void CPlayerSelectWorkPool::Confirm(void)
 {
-	CGameData::PlayParam().ClearPlayer();
+    CGameData::PlayParam().ClearPlayer();
 
     for (int32 i = 0; i < COUNT_OF(m_aPlayerInfo); ++i)
     {
@@ -1003,11 +1032,9 @@ void CPlayerSelectWorkPool::Confirm(void)
         
         for (int32 j = 0; j < pPlayerInfo->m_iCharacterNum; ++j)
         {
-            CGameData::PlayParam().AddPlayerCharacter(
-                pPlayerInfo->m_iPlayerNo,
-                pPlayerInfo->m_aStackPlayerID[j],
-                pPlayerInfo->m_aStackCostume[j]
-            );
+            CGameData::PlayParam().AddPlayerCharacter(pPlayerInfo->m_iPlayerNo,
+                                                      pPlayerInfo->m_aStackPlayerID[j],
+                                                      pPlayerInfo->m_aStackCostume[j]);
         };
     };
 };
@@ -1031,7 +1058,7 @@ void CPlayerSelectWorkPool::LimitCheck(void)
 
     for (int32 i = 0; i < COUNT_OF(m_aPlayerInfo); ++i)
     {
-		while (m_aPlayerInfo[i].m_iCharacterNum > iSelectMax)
+        while (m_aPlayerInfo[i].m_iCharacterNum > iSelectMax)
             PopStackCharacter(i);
 
         m_aPlayerInfo[i].m_iCharacterMax = iSelectMax;
@@ -1065,15 +1092,17 @@ void CPlayerSelectWorkPool::PadCheck(void)
 
 PLAYERID::VALUE CPlayerSelectWorkPool::GetCharacterID(int32 iCursor) const
 {
-    ASSERT(iCursor >= 0 && iCursor < PLAYERID::ID_MAX);
-    
+    ASSERT(iCursor >= 0);
+    ASSERT(iCursor < PLAYERID::ID_MAX);
+
     return PLAYERID::VALUE(iCursor);
 };
 
 
 int32 CPlayerSelectWorkPool::GetCharacterIndex(PLAYERID::VALUE PlayerID) const
 {
-    ASSERT(PlayerID >= 0 && PlayerID < PLAYERID::ID_MAX);
+    ASSERT(PlayerID >= 0);
+    ASSERT(PlayerID < PLAYERID::ID_MAX);
 
     return int32(PlayerID);
 };
@@ -1081,7 +1110,8 @@ int32 CPlayerSelectWorkPool::GetCharacterIndex(PLAYERID::VALUE PlayerID) const
 
 CPlayerSelectWorkPool::PLAYERINFO* CPlayerSelectWorkPool::GetPlayerInfo(int32 iPlayerNo)
 {
-    ASSERT(iPlayerNo >= 0 && iPlayerNo < COUNT_OF(m_aPlayerInfo));
+    ASSERT(iPlayerNo >= 0);
+    ASSERT(iPlayerNo < COUNT_OF(m_aPlayerInfo));
 
     return &m_aPlayerInfo[iPlayerNo];
 };
@@ -1089,8 +1119,10 @@ CPlayerSelectWorkPool::PLAYERINFO* CPlayerSelectWorkPool::GetPlayerInfo(int32 iP
 
 int32 CPlayerSelectWorkPool::GetRealCursor(int32 iPlayerNo) const
 {
-    ASSERT(iPlayerNo >= 0 && iPlayerNo < COUNT_OF(m_aPlayerInfo));
-    return m_aPlayerInfo[iPlayerNo].m_iCursor + (m_aPlayerInfo[iPlayerNo].m_bSecret ? 4 : 0);
+    ASSERT(iPlayerNo >= 0);
+    ASSERT(iPlayerNo < COUNT_OF(m_aPlayerInfo));
+
+    return (m_aPlayerInfo[iPlayerNo].m_iCursor + (m_aPlayerInfo[iPlayerNo].m_bSecret ? 4 : 0));
 };
 
 
@@ -1107,29 +1139,19 @@ int32 CPlayerSelectWorkPool::GetTotalCharNum(void) const
 
 bool CPlayerSelectWorkPool::IsCostumeTaken(int32 iCursor, GAMETYPES::COSTUME Costume) const
 {
-    bool bResult = false;
-    
+    SECRETID::VALUE secretId = SECRETID::ID_NONE;
+
     switch (Costume)
     {
     case GAMETYPES::COSTUME_SAMURAI:
         {
             switch (GetCharacterID(iCursor))
             {
-            case PLAYERID::ID_LEO:
-                bResult = CGameData::Record().Secret().IsUnlockedSecret(SECRETID::ID_HOME_SAMURAI_LEO);
-                break;
-
-            case PLAYERID::ID_RAP:
-                bResult = CGameData::Record().Secret().IsUnlockedSecret(SECRETID::ID_HOME_SAMURAI_RAP);
-                break;
-
-            case PLAYERID::ID_MIC:
-                bResult = CGameData::Record().Secret().IsUnlockedSecret(SECRETID::ID_HOME_SAMURAI_MIC);
-                break;
-
-            case PLAYERID::ID_DON:
-                bResult = CGameData::Record().Secret().IsUnlockedSecret(SECRETID::ID_HOME_SAMURAI_DON);
-                break;
+            case PLAYERID::ID_LEO: secretId = SECRETID::ID_HOME_SAMURAI_LEO; break;
+            case PLAYERID::ID_RAP: secretId = SECRETID::ID_HOME_SAMURAI_RAP; break;
+            case PLAYERID::ID_MIC: secretId = SECRETID::ID_HOME_SAMURAI_MIC; break;
+            case PLAYERID::ID_DON: secretId = SECRETID::ID_HOME_SAMURAI_DON; break;
+            default: break;
             };
         }
         break;
@@ -1138,21 +1160,11 @@ bool CPlayerSelectWorkPool::IsCostumeTaken(int32 iCursor, GAMETYPES::COSTUME Cos
         {
             switch (GetCharacterID(iCursor))
             {
-            case PLAYERID::ID_LEO:
-                bResult = CGameData::Record().Secret().IsUnlockedSecret(SECRETID::ID_HOME_NEXUS_LEO);
-                break;
-
-            case PLAYERID::ID_RAP:
-                bResult = CGameData::Record().Secret().IsUnlockedSecret(SECRETID::ID_HOME_NEXUS_RAP);
-                break;
-
-            case PLAYERID::ID_MIC:
-                bResult = CGameData::Record().Secret().IsUnlockedSecret(SECRETID::ID_HOME_NEXUS_MIC);
-                break;
-
-            case PLAYERID::ID_DON:
-                bResult = CGameData::Record().Secret().IsUnlockedSecret(SECRETID::ID_HOME_NEXUS_DON);
-                break;
+            case PLAYERID::ID_LEO: secretId = SECRETID::ID_HOME_NEXUS_LEO; break;
+            case PLAYERID::ID_RAP: secretId = SECRETID::ID_HOME_NEXUS_RAP; break;
+            case PLAYERID::ID_MIC: secretId = SECRETID::ID_HOME_NEXUS_MIC; break;
+            case PLAYERID::ID_DON: secretId = SECRETID::ID_HOME_NEXUS_DON; break;
+            default: break;
             };
         }
         break;
@@ -1161,7 +1173,10 @@ bool CPlayerSelectWorkPool::IsCostumeTaken(int32 iCursor, GAMETYPES::COSTUME Cos
         break;
     };
 
-    return bResult;
+    if (secretId == SECRETID::ID_NONE)
+        return false;
+
+    return CGameData::Record().Secret().IsUnlockedSecret(secretId);
 };
 
 
@@ -1206,7 +1221,6 @@ CCharacterSelectSequence::~CCharacterSelectSequence(void)
 bool CCharacterSelectSequence::OnAttach(const void* pParam)
 {
     m_pWorkPool = new CPlayerSelectWorkPool;
-    ASSERT(m_pWorkPool);
     m_pWorkPool->Attach();
 
 #ifdef BUILD_TRIAL
@@ -1217,8 +1231,13 @@ bool CCharacterSelectSequence::OnAttach(const void* pParam)
     
     UnlockAllControllers();
     m_pWorkPool->LimitCheck();
-
+    
+#ifdef TMNT2_BUILD_EU
+    CDataLoader::Regist(FILEID::ID_CHARSELECT);
+    return CAnim2DSequence::OnAttach(FILEID::ID_LANG_CHARSELECT);
+#else /* TMNT2_BUILD_EU */
     return CAnim2DSequence::OnAttach(FILEID::ID_CHARSELECT);
+#endif /* TMNT2_BUILD_EU */
 };
 
 
@@ -1231,7 +1250,6 @@ void CCharacterSelectSequence::OnDetach(void)
     if (m_pWorkPool)
     {
         m_pWorkPool->Detach();
-
         delete m_pWorkPool;
         m_pWorkPool = nullptr;
     };
@@ -1240,7 +1258,7 @@ void CCharacterSelectSequence::OnDetach(void)
 
 void CCharacterSelectSequence::OnMove(bool bRet, const void* pReturnValue)
 {
-    switch (m_animstep)
+    switch (AnimStep())
     {
     case ANIMSTEP_FADEIN:
         {
@@ -1250,7 +1268,7 @@ void CCharacterSelectSequence::OnMove(bool bRet, const void* pReturnValue)
                 CGameSound::PlayBGM(SDCODE_BGM(12321));
         }
         break;
-	
+    
     case ANIMSTEP_DRAW:
         {
             m_pWorkPool->Move();
@@ -1258,28 +1276,28 @@ void CCharacterSelectSequence::OnMove(bool bRet, const void* pReturnValue)
             if (m_pWorkPool->IsEnded())
             {
                 CGameSound::FadeOut(CGameSound::FADESPEED_SLOW);
-				BeginFadeout();
+                BeginFadeOut();
 
-				if (m_pWorkPool->IsConfirmed())
-					CGameSound::PlaySE(SDCODE_SE(4101));
-				else if (m_pWorkPool->IsReturned())
-					CGameSound::PlaySE(SDCODE_SE(4097));
-			};
+                if (m_pWorkPool->IsConfirmed())
+                    CGameSound::PlaySE(SDCODE_SE(4101));
+                else if (m_pWorkPool->IsReturned())
+                    CGameSound::PlaySE(SDCODE_SE(4097));
+            };
         }
         break;
 
     case ANIMSTEP_END:
         {
             if (m_pWorkPool->IsConfirmed())
-			{
-				m_pWorkPool->Confirm();
+            {
+                m_pWorkPool->Confirm();
                 CGameData::Attribute().SetVirtualPad(CController::CONTROLLER_LOCKED_ON_VIRTUAL);
                 Ret();
             }
             else if (m_pWorkPool->IsReturned())
             {
-				Ret((const void*)PROCLABEL_SEQ_TITLE);
-			}
+                Ret(reinterpret_cast<const void*>(PROCLABEL_SEQ_TITLE));
+            }
             else
             {
                 Ret();
@@ -1298,10 +1316,24 @@ void CCharacterSelectSequence::OnMove(bool bRet, const void* pReturnValue)
 void CCharacterSelectSequence::OnDraw(void) const
 {
     CAnim2DSequence::OnDraw();
+    CRenderStateManager::SetDefault();
 
     if (CAnim2DSequence::IsDrawing())
     {
-        m_pWorkPool->TextureLoad();
+        m_pWorkPool->Setting();
         m_pWorkPool->Draw();
+        CRenderStateManager::SetDefault();
     };
+};
+
+
+void CCharacterSelectSequence::BeginFadeIn(void)
+{
+#ifdef TMNT2_BUILD_EU
+    Animation2D().SetText("CHARSEL_TITLE", CGameText::GetText(GAMETEXT_CHRSEL_TIT));
+#else /* TMNT2_BUILD_EU */    
+    Animation2D().SetText("#@OK  '@CANCEL", "#@OK  ;@CANCEL");
+#endif /* TMNT2_BUILD_EU */
+    
+    CAnim2DSequence::BeginFadeIn();
 };

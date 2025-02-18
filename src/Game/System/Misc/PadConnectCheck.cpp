@@ -18,40 +18,39 @@ class CPadConnectCheckMsgWindow : public CMessageWindow
 public:
     inline CPadConnectCheckMsgWindow(void) : CMessageWindow(CMessageWindow::COLOR_ERROR) {};
     virtual ~CPadConnectCheckMsgWindow(void) {};
+
     virtual void DrawInWindow(const Rt2dBBox& bbox) const override;
 };
 
 
-void CPadConnectCheckMsgWindow::DrawInWindow(const Rt2dBBox& bbox) const
+/*virtual*/ void CPadConnectCheckMsgWindow::DrawInWindow(const Rt2dBBox& bbox) const /*override*/
 {
-    if (m_Title.Text())
+    if (m_textTitle.Text())
     {
         Rt2dBBox bboxTitle;
-        Rt2dBBox bboxText;
-
         bboxTitle.x = bbox.x - bbox.w * 0.44f;
         bboxTitle.y = (bbox.h * 0.2f) - bbox.y;
         bboxTitle.w = bbox.w * 0.88f;
         bboxTitle.h = bbox.h * 0.2f;
 
-        bboxText.x = bbox.x - bbox.w * 0.44f;
-        bboxText.y = bbox.h * -0.4f - bbox.y;
-        bboxText.w = bbox.w * 0.88f;
-        bboxText.h = bbox.h * 0.6f;
+        Rt2dBBox bboxMsg;
+        bboxMsg.x = bbox.x - bbox.w * 0.44f;
+        bboxMsg.y = bbox.h * -0.4f - bbox.y;
+        bboxMsg.w = bbox.w * 0.88f;
+        bboxMsg.h = bbox.h * 0.6f;
 
-        m_Title.Draw(bboxTitle);
-        m_Text.Draw(bboxText);
+        m_textTitle.Draw(bboxTitle);
+        m_textMsg.Draw(bboxMsg);
     }
-    else if (m_Text.Text())
+    else if (m_textMsg.Text())
     {
-        Rt2dBBox bboxText;
+        Rt2dBBox bboxMsg;
+        bboxMsg.x = bbox.x - bbox.w * 0.44f;
+        bboxMsg.y = bbox.h * -0.4f - bbox.y;
+        bboxMsg.w = bbox.w * 0.88f;
+        bboxMsg.h = bbox.h * 0.8f;
 
-        bboxText.x = bbox.x - bbox.w * 0.44f;
-        bboxText.y = bbox.h * -0.4f - bbox.y;
-        bboxText.w = bbox.w * 0.88f;
-        bboxText.h = bbox.h * 0.8f;
-
-        m_Text.Draw(bboxText);
+        m_textMsg.Draw(bboxMsg);
     };
 };
 
@@ -81,7 +80,6 @@ void CPadConnectCheckMsgWindow::DrawInWindow(const Rt2dBBox& bbox) const
 /*static*/ void CPadConnectCheckProcess::Reset(CProcess* pSender)
 {
     static MESSAGE s_message;
-    
     s_message.m_type = MESSAGE::TYPE_RESET;
 
     pSender->Mail().Send(PROCLABEL_PADCONNECTCHECK, PROCESSTYPES::MAIL::TYPE_MSG, &s_message);
@@ -110,7 +108,6 @@ bool CPadConnectCheckProcess::Attach(void)
     m_iSeqLabel = PROCESSTYPES::LABEL_EOL;
 
     m_pWindow = new CPadConnectCheckMsgWindow;
-    ASSERT(m_pWindow);
     m_pWindow->Set(0.0f, 0.0f, CSprite::m_fVirtualScreenW, 160.0f);
     m_pWindow->SetOpenAction(false);
     m_pWindow->SetPriority(CMessageWindow::PRIORITY_TOP);
@@ -358,9 +355,12 @@ void CPadConnectCheckProcess::WarningBegin(int32 iController)
         m_bSleepFlag = true;
         m_iSeqLabel = iSeqCurrently;
         m_iWarningMsgTextID = -1;
+
         int32 iControllerPort = CController::GetPhysicalPort(iController);
         WarningMsgSet(iControllerPort);
+
         m_pWindow->Open();
+
         CGameSound::PlaySE(SDCODE_SE(0x1003));
     };
 };
@@ -374,7 +374,9 @@ void CPadConnectCheckProcess::WarningEnd(void)
     {
         m_bSleepFlag = false;
         m_iSeqLabel = PROCESSTYPES::LABEL_EOL;
+        
         m_pWindow->InputAction();
+
         CGameSound::PlaySE(SDCODE_SE(0x1003));
     };
 };

@@ -1,7 +1,7 @@
 #include "MenuController.hpp"
 
-#include "Game/System/Misc/Gamepad.hpp"
 #include "Game/Component/GameData/GameData.hpp"
+#include "Game/System/Misc/Gamepad.hpp"
 
 
 /*static*/ const char* CMenuController::m_apszButtonLabel[] =
@@ -73,7 +73,7 @@
 };
 
 
-/*static*/ uint32 CMenuController::m_auDigitalDataTable[] =
+/*static*/ uint32 CMenuController::m_aDigitalDataTable[] =
 {
     IPad::DIGITAL,
     IPad::DIGITAL,
@@ -103,7 +103,7 @@
 
 /*static*/ bool CMenuController::Initialize(void)
 {
-    for (int32 i = 0; i < COUNT_OF(m_auDigitalDataTable); ++i)
+    for (int32 i = 0; i < COUNT_OF(m_aDigitalDataTable); ++i)
     {
         uint32 uDigital = IPad::DIGITAL;
         
@@ -150,7 +150,7 @@
             break;
         };
 
-        m_auDigitalDataTable[i] = uDigital;
+        m_aDigitalDataTable[i] = uDigital;
         m_abLockKeyData[i] = false;		
     };
 
@@ -222,7 +222,7 @@ CMenuController::CMenuController(void)
 	m_aControllerEnableBit[3] = 0;
 	m_aControllerEnableBit[4] = 0;
 
-    static_assert(COUNT_OF(m_auDigitalDataTable) == BUTTON_ID_MAX, "update me");
+    static_assert(COUNT_OF(m_aDigitalDataTable) == BUTTON_ID_MAX, "update me");
     static_assert(COUNT_OF(m_abLockKeyData) == BUTTON_ID_MAX, "update me");
     static_assert(COUNT_OF(m_apszButtonLabel) == (CONTROLLER_ID_MAX * BUTTON_ID_MAX), "update me");
 };
@@ -247,7 +247,7 @@ void CMenuController::CheckButtonLabelList(Rt2dMaestro* pMaestro)
             if (Rt2dMaestroFindStringLabel(pMaestro, rt2dANIMLABELTYPEBUTTON, m_apszButtonLabel[idx], &index))
             {
                 m_aButtonLabelID[i][j] = index;
-                m_aControllerEnableBit[i] |= m_auDigitalDataTable[j];
+                m_aControllerEnableBit[i] |= m_aDigitalDataTable[j];
             }
             else
             {
@@ -261,19 +261,23 @@ void CMenuController::CheckButtonLabelList(Rt2dMaestro* pMaestro)
 void CMenuController::SetButtonState(Rt2dMaestro* pMaestro, CONTROLLER_ID iController, BUTTON_ID iButton, int32 iAnimButtonState)
 {
     ASSERT(pMaestro);
-    ASSERT(iController >= 0 && iController < CONTROLLER_ID_MAX);
-    ASSERT(iButton >= 0 && iButton < BUTTON_ID_MAX);
-    ASSERT(iController >= 0 && iController < COUNT_OF(m_aButtonLabelID));
-    ASSERT(iButton >= 0 && iButton < COUNT_OF(m_aButtonLabelID[0]));
+    ASSERT(iController >= 0);
+    ASSERT(iController < CONTROLLER_ID_MAX);
+    ASSERT(iController >= 0);
+    ASSERT(iController < COUNT_OF(m_aButtonLabelID));
+    ASSERT(iButton >= 0);
+    ASSERT(iButton < BUTTON_ID_MAX);
+    ASSERT(iButton >= 0);
+    ASSERT(iButton < COUNT_OF(m_aButtonLabelID[0]));
 
     int32 index = m_aButtonLabelID[iController][iButton];
     if (index >= 0)
     {
-        ButtonByLabelPacket Packet;
-        Packet.m_iButtonID = index;
-        Packet.m_iAnimButtonState = iAnimButtonState;
+        ButtonByLabelPacket packet;
+        packet.btnId = index;
+        packet.btnState = iAnimButtonState;
 
-        Rt2dMaestroForAllVisibleAnimations(pMaestro, AnimationsCallBack, &Packet);
+        Rt2dMaestroForAllVisibleAnimations(pMaestro, AnimationsCallBack, &packet);
     };
 };
 
@@ -282,17 +286,17 @@ void CMenuController::Trigger(Rt2dMaestro* pMaestro)
 {    
     ASSERT(pMaestro);
 
-    int32 iControllerMax = IPad::Max() + 1;
     const int32 iControllerNo[CONTROLLER_ID_MAX] =
     {
 		CGameData::Attribute().GetVirtualPad(), 0, 1, 2, 3,
     };
 
-    for (int32 i = 0; i < iControllerMax; ++i)
+    int32 controllerMax = IPad::Max() + 1;
+    for (int32 i = 0; i < controllerMax; ++i)
     {
-        uint32 uDigital = IPad::GetDigitalTrigger(iControllerNo[i]);
-		uint32 uResult = (m_aControllerEnableBit[i] & uDigital);
-        if(uResult == 0)
+        uint32 digital = IPad::GetDigitalTrigger(iControllerNo[i]);
+        
+        if (!(m_aControllerEnableBit[i] & digital))
             continue;
 
 		bool bFlag = true;
@@ -300,12 +304,12 @@ void CMenuController::Trigger(Rt2dMaestro* pMaestro)
         for (int32 j = 0; j < BUTTON_ID_MAX; ++j)
         {
 			bool b1 = (j != BUTTON_ID_START);
-			bool b2 = ((m_auDigitalDataTable[BUTTON_ID_START] & m_auDigitalDataTable[BUTTON_ID_OK]) == 0);
+			bool b2 = ((m_aDigitalDataTable[BUTTON_ID_START] & m_aDigitalDataTable[BUTTON_ID_OK]) == 0);
 			bool b3 = (m_abLockKeyData[j] != true);
 
 			if ((b1 || b2) && b3)
 			{
-				if (IPad::GetDigitalTrigger(iControllerNo[i], m_auDigitalDataTable[j]))
+				if (IPad::GetDigitalTrigger(iControllerNo[i], m_aDigitalDataTable[j]))
 				{
 					if (bFlag)
 					{
@@ -326,14 +330,15 @@ void CMenuController::KeyPress(Rt2dMaestro* pMaestro, uint32 uKey)
     ASSERT(pMaestro);
 
     BUTTON_ID iButton = GetPadToButtonID(uKey);
-    ASSERT(iButton >= 0 && iButton < BUTTON_ID_MAX);
+    ASSERT(iButton >= 0);
+    ASSERT(iButton < BUTTON_ID_MAX);
 
     int32 index = m_aButtonLabelID[CONTROLLER_ID_VIRTUAL][iButton];
     if (index > -1)
     {
         ButtonByLabelPacket Packet;
-        Packet.m_iButtonID = index;
-        Packet.m_iAnimButtonState = rt2dANIMBUTTONSTATEOVERUPTOOVERDOWN;
+        Packet.btnId = index;
+        Packet.btnState = rt2dANIMBUTTONSTATEOVERUPTOOVERDOWN;
 
         Rt2dMaestroForAllVisibleAnimations(pMaestro, AnimationsCallBack, &Packet);
     };
@@ -348,17 +353,14 @@ void CMenuController::FlashUnlockKeyEnable(bool bEnable)
 
 /*static*/ Rt2dMaestro* CMenuController::AnimationsCallBack(Rt2dMaestro* maestro, Rt2dAnim* anim, Rt2dAnimProps* props, void* pData)
 {
-    ASSERT(pData);
-    
-    ButtonByLabelPacket* pPacket = (ButtonByLabelPacket*)pData;
-    Rt2dMessage Message = { 0 };
-    
-    Message.messageType = rt2dMESSAGETYPEBUTTONBYLABEL;
-    Message.index       = -1;
-    Message.intParam1   = pPacket->m_iButtonID;
-    Message.intParam2   = pPacket->m_iAnimButtonState;
-    
-    Rt2dMaestroPostMessages(maestro, &Message, 1);
+    ButtonByLabelPacket* pPacket = static_cast<ButtonByLabelPacket*>(pData);
+    ASSERT(pPacket);
 
-	return maestro;
+    Rt2dMessage msg = { 0 };    
+    msg.messageType = rt2dMESSAGETYPEBUTTONBYLABEL;
+    msg.index       = -1;
+    msg.intParam1   = pPacket->btnId;
+    msg.intParam2   = pPacket->btnState;
+    
+    return Rt2dMaestroPostMessages(maestro, &msg, 1);
 };

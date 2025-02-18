@@ -33,6 +33,7 @@ static const Rt2dBBox s_WindowRect = { 0.0f, 0.0f, 640.0f, 224.0f };
     {
         RwTexture* pRwTexture = CTextureManager::GetRwTexture(m_aPasswordTextureTable[i].m_pszName);
         ASSERT(pRwTexture);
+
         m_aPasswordTextureTable[i].m_pTexture = pRwTexture;
     };
 };
@@ -47,10 +48,10 @@ CUnlockMessage::CUnlockMessage(void)
     SetOpenAction(true);
     
     CTextureManager::SetCurrentTextureSet("MessageWindow");
-    m_CursorSprite.SetTexture(CTextureManager::GetRwTexture("win_icon"));
+    m_cursorSprite.SetTexture(CTextureManager::GetRwTexture("win_icon"));
 
-    const wchar* pwszText = CGameText::GetText(GAMETEXT(4));
-    m_CursorText.SetText(pwszText, s_fWindowFontSize, s_WindowFontColor);
+    const wchar* pwszText = CGameText::GetText(GAMETEXT_OK);
+    m_cursorText.SetText(pwszText, s_fWindowFontSize, s_WindowFontColor);
 };
 
 
@@ -70,41 +71,39 @@ void CUnlockMessage::SetSprite(float x, float y, float w, float h)
         m_aSpritePassword[i].Resize(PASSWORD_SPRITE_SIZE, PASSWORD_SPRITE_SIZE);
     };
 
-    m_CursorSprite.Move(x - 220.0f, y + 70.0f);
-    m_CursorSprite.ResizeStrict(28.0f, 28.0f);
+    m_cursorSprite.Move(x - 220.0f, y + 70.0f);
+    m_cursorSprite.ResizeStrict(28.0f, 28.0f);
 };
 
 
 void CUnlockMessage::DrawInWindow(const Rt2dBBox& bbox) const
 {
-    if (m_Title.Text())
+    if (m_textTitle.Text())
     {
-        Rt2dBBox bboxTitle;
-        Rt2dBBox bboxText;
-        
+        Rt2dBBox bboxTitle;        
         bboxTitle.x = bbox.x - bbox.w * 0.45f;
         bboxTitle.y = bbox.h * 0.2f - bbox.y;
         bboxTitle.w = bbox.w * 0.9f;
         bboxTitle.h = bbox.h * 0.2f;
 
-        bboxText.x = bbox.x - bbox.w * 0.45f;
-        bboxText.y = bbox.h * -0.2f - bbox.y;
-        bboxText.w = bbox.w * 0.9f;
-        bboxText.h = bbox.h * 0.4f;
+        Rt2dBBox bboxMsg;
+        bboxMsg.x = bbox.x - bbox.w * 0.45f;
+        bboxMsg.y = bbox.h * -0.2f - bbox.y;
+        bboxMsg.w = bbox.w * 0.9f;
+        bboxMsg.h = bbox.h * 0.4f;
 
-        m_Title.Draw(bboxTitle);
-        m_Text.Draw(bboxText);
+        m_textTitle.Draw(bboxTitle);
+        m_textMsg.Draw(bboxMsg);
     }
     else
     {
-        Rt2dBBox bboxText;
-        
-        bboxText.x = bbox.x - bbox.w * 0.45f;
-        bboxText.y = bbox.h * -0.2f - bbox.y;
-        bboxText.w = bbox.w * 0.8f;
-        bboxText.h = bbox.h * 0.56f;
+        Rt2dBBox bboxMsg;
+        bboxMsg.x = bbox.x - bbox.w * 0.4f;
+        bboxMsg.y = bbox.h * -0.2f - bbox.y;
+        bboxMsg.w = bbox.w * 0.8f;
+        bboxMsg.h = bbox.h * 0.57f;
 
-        m_Text.Draw(bboxText);
+        m_textMsg.Draw(bboxMsg);
     };
 
     if (m_bPasswordDraw)
@@ -113,7 +112,7 @@ void CUnlockMessage::DrawInWindow(const Rt2dBBox& bbox) const
             m_aSpritePassword[i].Draw();
     };
 
-    m_CursorSprite.DrawRotate();
+    m_cursorSprite.DrawRotate();
 
     Rt2dBBox bboxCursor;
     bboxCursor.x = bbox.x - bbox.w * 0.3f;
@@ -121,7 +120,7 @@ void CUnlockMessage::DrawInWindow(const Rt2dBBox& bbox) const
     bboxCursor.w = bbox.w * 0.9f;
     bboxCursor.h = bbox.h * 0.55f;
 
-    m_CursorText.Draw(bboxCursor);
+    m_cursorText.Draw(bboxCursor);
 };
 
 
@@ -130,7 +129,8 @@ void CUnlockMessage::Input(void)
     m_fCursorRotation += (CScreen::TimerStride() * 4.0f);
     if (m_fCursorRotation >= 360.0f)
         m_fCursorRotation -= 360.0f;
-    m_CursorSprite.SetRotate(m_fCursorRotation);
+    
+    m_cursorSprite.SetRotate(m_fCursorRotation);
 
     int32 iController = CGameData::Attribute().GetVirtualPad();
     if (CController::GetDigitalTrigger(iController, CController::DIGITAL_OK))
@@ -140,50 +140,35 @@ void CUnlockMessage::Input(void)
 
 void CUnlockMessage::SetMessage(SECRETID::VALUE idSecret)
 {
-    const wchar* pwszText = CGameText::GetText(GAMETEXT(CSecretInfo::GetGameText(idSecret)));
-    
+    GAMETEXT secretTextId = CSecretInfo::GetGameText(idSecret);
+    const wchar* pwszText = CGameText::GetText(secretTextId);
+
     SetText(pwszText, s_fWindowFontSize, s_WindowFontColor);
-    
-    if (idSecret >= SECRETID::PASSWORDSTART && idSecret < SECRETID::PASSWORDMAX)
+    SetSizeFromID(idSecret);
+
+    if ((idSecret >= SECRETID::PASSWORDSTART) &&
+        (idSecret <  SECRETID::PASSWORDMAX))
         SetPassword(CSecretInfo::GetPassword(idSecret));
     else
-        m_bPasswordDraw = false;
+        SetPasswordDraw(false);
 };
 
 
 void CUnlockMessage::SetPassword(const char* pszPassword)
 {
-    int32 PasswordLen = std::strlen(pszPassword);
-
-    ASSERT(PasswordLen == COUNT_OF(m_aSpritePassword));
+    int32 len = static_cast<int32>(std::strlen(pszPassword));
+    ASSERT(len == COUNT_OF(m_aSpritePassword));
     
-    for (int32 i = 0; i < PasswordLen; ++i)
+    for (int32 i = 0; i < len; ++i)
     {
         switch (pszPassword[i])
         {
-        case 'L':
-            m_aSpritePassword[i].SetTexture(m_aPasswordTextureTable[0].m_pTexture);
-            break;
-
-        case 'R':
-            m_aSpritePassword[i].SetTexture(m_aPasswordTextureTable[1].m_pTexture);
-            break;
-
-        case 'M':
-            m_aSpritePassword[i].SetTexture(m_aPasswordTextureTable[2].m_pTexture);
-            break;
-
-        case 'D':
-            m_aSpritePassword[i].SetTexture(m_aPasswordTextureTable[3].m_pTexture);
-            break;
-
-        case 'S':
-            m_aSpritePassword[i].SetTexture(m_aPasswordTextureTable[4].m_pTexture);
-            break;
-
-        default:
-            ASSERT(false);
-            break;
+        case 'L': m_aSpritePassword[i].SetTexture(m_aPasswordTextureTable[0].m_pTexture); break;
+        case 'R': m_aSpritePassword[i].SetTexture(m_aPasswordTextureTable[1].m_pTexture); break;
+        case 'M': m_aSpritePassword[i].SetTexture(m_aPasswordTextureTable[2].m_pTexture); break;
+        case 'D': m_aSpritePassword[i].SetTexture(m_aPasswordTextureTable[3].m_pTexture); break;
+        case 'S': m_aSpritePassword[i].SetTexture(m_aPasswordTextureTable[4].m_pTexture); break;
+        default: ASSERT(false); break;
         };
 
         m_aSpritePassword[i].Move(i * PASSWORD_SPRITE_SIZE - PASSWORD_SPRITE_X, 15.0f);

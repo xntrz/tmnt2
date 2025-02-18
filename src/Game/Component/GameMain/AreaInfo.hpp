@@ -11,14 +11,6 @@
 
 class CAreaInfo
 {
-protected:
-    struct INFO;
-
-    static INFO m_aNormalInfo[];
-    static INFO m_aNexusInfo[];
-
-    static INFO& Info(AREAID::VALUE idArea);
-
 public:
     static const wchar* GetDispName(AREAID::VALUE idArea);
     static const wchar* GetDispWorldName(AREAID::VALUE idArea);

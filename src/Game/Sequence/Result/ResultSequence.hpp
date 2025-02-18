@@ -18,11 +18,11 @@ public:
     virtual void OnDetach(void) override;
     virtual void OnMove(bool bRet, const void* pReturnValue) override;
     virtual void OnDraw(void) const override;
-    virtual void BeginFadein(void) override;
-    void ResultItemProc(void);
+    virtual void BeginFadeIn(void) override;
+    void MessageProc(void);
 
 private:
-    CResultWorkPool* m_pResultWorkPool;
-    GAMETYPES::RESULTTYPE m_resulttype;
-    const char* m_pszLvlUpCrystal;
+    CResultWorkPool*      m_pResultWorkPool;
+    GAMETYPES::RESULTTYPE m_resultType;
+    const char*           m_pszLvlUpCrystal;
 };

@@ -3,27 +3,27 @@
 
 #include "Game/Component/GameData/GameData.hpp"
 #include "Game/System/DataLoader/DataLoader.hpp"
-#include "Game/System/Texture/TextureManager.hpp"
-#include "Game/System/Misc/RenderStateManager.hpp"
 #include "Game/System/Misc/ScreenFade.hpp"
 #include "Game/System/Misc/LoadingDisplay.hpp"
+#include "Game/System/Misc/RenderStateManager.hpp"
+#include "Game/System/Texture/TextureManager.hpp"
 #include "System/Common/System2D.hpp"
 #include "System/Common/RenderState.hpp"
 
 
 CAnim2DSequence::CAnim2DSequence(void)
-: m_pAnimation2D(nullptr)
-, m_bDisplayLoading(true)
-, m_bResumed(false)
+: CAnim2DSequence("")
 {
-    m_szAnimName[0] = '\0';
+    ;
 };
 
 
 CAnim2DSequence::CAnim2DSequence(const char* pszAnimName)
-: m_pAnimation2D(nullptr)
+: m_szAnimName()
+, m_animStep(ANIMSTEP_READFILE)
+, m_pAnimation2D(nullptr)
 , m_bDisplayLoading(true)
-, m_bResumed(false)
+, m_bRet(false)
 {
     SetAnimationName(pszAnimName);
 };
@@ -38,8 +38,10 @@ CAnim2DSequence::~CAnim2DSequence(void)
 void CAnim2DSequence::OnDetach(void)
 {
     CLoadingDisplay::Stop(this);
-    m_pAnimation2D->Stop();
+
+    Animation2D().Stop();
     m_pAnimation2D = nullptr;
+
     CAnimation2DLoader::Close(m_szAnimName);
     CTextureManager::GenerationDec();
     CAnimation2D::Terminate();
@@ -48,7 +50,7 @@ void CAnim2DSequence::OnDetach(void)
 
 void CAnim2DSequence::OnMove(bool bRet, const void* pReturnValue)
 {
-    switch (m_animstep)
+    switch (m_animStep)
     {
     case ANIMSTEP_READFILE:
         {
@@ -59,13 +61,14 @@ void CAnim2DSequence::OnMove(bool bRet, const void* pReturnValue)
 
             CLoadingDisplay::Stop(this);
 
-            ASSERT(std::strlen(m_szAnimName) > 0);
+            m_bRet = bRet;
 
-            m_bResumed = bRet;
+            ASSERT(std::strlen(m_szAnimName) > 0);
             m_pAnimation2D = CAnimation2DLoader::Get(m_szAnimName);
             ASSERT(m_pAnimation2D);
+
             if (m_pAnimation2D)
-                BeginFadein();
+                BeginFadeIn();
             else
                 CSequence::Ret();
         }
@@ -76,28 +79,28 @@ void CAnim2DSequence::OnMove(bool bRet, const void* pReturnValue)
             if (CScreenFade::IsFading())
                 break;
             
-            m_animstep = ANIMSTEP_DRAW;
+            m_animStep = ANIMSTEP_DRAW;
             CGameData::Attribute().SetInteractive(true);
         }
         break;
         
     case ANIMSTEP_DRAW:
         {
-            m_pAnimation2D->Update();
-            m_pAnimation2D->Input();
+            Animation2D().Update();
+            Animation2D().Input();
         }
         break;
         
     case ANIMSTEP_FADEOUT:
         {
             if (!CScreenFade::IsFading())
-                m_animstep = ANIMSTEP_END;
+                m_animStep = ANIMSTEP_END;
         }
         break;
         
     case ANIMSTEP_END:
         {
-            m_bResumed = false;
+            m_bRet = false;
         }
         break;
         
@@ -116,7 +119,7 @@ void CAnim2DSequence::OnDraw(void) const
 
 		if (CSystem2D::BeginScene())
 		{
-			m_pAnimation2D->Draw();
+			Animation2D().Draw();
 			CSystem2D::EndScene();
 		};
 	};
@@ -132,7 +135,7 @@ bool CAnim2DSequence::OnAttach(int32 iFileID)
     if (m_bDisplayLoading)
         CLoadingDisplay::Start(this);
 
-	m_animstep = ANIMSTEP_READFILE;
+	m_animStep = ANIMSTEP_READFILE;
 
     return true;
 };
@@ -147,30 +150,31 @@ bool CAnim2DSequence::OnAttach(const char* pszFilename)
     if (m_bDisplayLoading)
         CLoadingDisplay::Start(this);
     
-	m_animstep = ANIMSTEP_READFILE;
+	m_animStep = ANIMSTEP_READFILE;
 
     return true;
 };
 
 
-void CAnim2DSequence::BeginFadein(void)
+void CAnim2DSequence::BeginFadeIn(void)
 {
-    if (!m_bResumed)
+    if (!m_bRet)
     {
-        m_pAnimation2D->KeyInfoChange();
-        m_pAnimation2D->Start();
+        Animation2D().KeyInfoChange();
+        Animation2D().Start();
     };
     
     CScreenFade::BlackIn();
-    m_animstep = ANIMSTEP_FADEIN;
+    m_animStep = ANIMSTEP_FADEIN;
 };
 
 
-void CAnim2DSequence::BeginFadeout(void)
+void CAnim2DSequence::BeginFadeOut(void)
 {
     CGameData::Attribute().SetInteractive(false);
+
     CScreenFade::BlackOut();
-    m_animstep = ANIMSTEP_FADEOUT;
+    m_animStep = ANIMSTEP_FADEOUT;
 };
 
 
@@ -181,7 +185,7 @@ bool CAnim2DSequence::IsAnim2DMessageList(const char** pTable, int32 max, int32*
     
     for (int32 i = 0; i < max; ++i)
     {
-        if (m_pAnimation2D->CheckMessageGetURL(pTable[i]))
+        if (Animation2D().CheckMessageGetURL(pTable[i]))
         {
             *index = i;
             return true;
@@ -194,15 +198,41 @@ bool CAnim2DSequence::IsAnim2DMessageList(const char** pTable, int32 max, int32*
 
 bool CAnim2DSequence::IsDrawing(void) const
 {
-    return ((m_animstep >= ANIMSTEP_FADEIN) &&
-            (m_animstep <= ANIMSTEP_FADEOUT));
+    return ((m_animStep >= ANIMSTEP_FADEIN) &&
+            (m_animStep <= ANIMSTEP_FADEOUT));
 };
 
 
 void CAnim2DSequence::SetAnimationName(const char* pszAnimName)
 {
     ASSERT(pszAnimName);
-    ASSERT(std::strlen(pszAnimName) < COUNT_OF(m_szAnimName));
+    ASSERT(std::strlen(pszAnimName) < sizeof(m_szAnimName));
 
     std::strcpy(m_szAnimName, pszAnimName);
+};
+
+
+CAnimation2D& CAnim2DSequence::Animation2D(void)
+{
+    ASSERT(m_pAnimation2D);
+    return *m_pAnimation2D;
+};
+
+
+CAnimation2D& CAnim2DSequence::Animation2D(void) const
+{
+    ASSERT(m_pAnimation2D);
+    return *m_pAnimation2D;
+};
+
+
+CAnim2DSequence::ANIMSTEP CAnim2DSequence::AnimStep(void) const
+{
+    return m_animStep;
+};
+
+
+void CAnim2DSequence::EnableLoadingDisplay(bool bEnable)
+{
+    m_bDisplayLoading = bEnable;
 };

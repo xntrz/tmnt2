@@ -30,14 +30,14 @@ public:
     void ResetTime(void);
 
 private:
-    float m_fTimeRate;
-    int32 m_iStep;
+    float        m_fTimeRate;
+    int32        m_iStep;
     CHomeCamera* m_pHomeCamera;
-    CHomeSprite m_sprite;
-    RwTexture* m_apTextureSel[HOMETYPES::DOORKINDNUM];
-    RwTexture* m_apTextureTxt[HOMETYPES::DOORKINDNUM];
-    RwTexture* m_apTextureArr[HOMETYPES::DOORPOSITIONNUM];    
-    bool m_bTextureSettingFlag;
+    CHomeSprite  m_sprite;
+    RwTexture*   m_apTextureSel[HOMETYPES::DOORKINDNUM];
+    RwTexture*   m_apTextureTxt[HOMETYPES::DOORKINDNUM];
+    RwTexture*   m_apTextureArr[HOMETYPES::DOORPOSITIONNUM];    
+    bool         m_bTextureSettingFlag;
 };
 
 
@@ -62,10 +62,8 @@ void CHomeSprite::SetTextureAndVirtualSize(RwTexture* pTexture)
     
     SetTexture(pTexture);
 
-    Resize(
-		float(RwRasterGetWidthMacro(pRaster)), 
-		float(RwRasterGetHeightMacro(pRaster))
-	);
+    Resize(static_cast<float>(RwRasterGetWidthMacro(pRaster)), 
+		   static_cast<float>(RwRasterGetHeightMacro(pRaster)));
 };
 
 
@@ -149,10 +147,10 @@ void CHome2DContainer::Draw(void)
     if (!m_bTextureSettingFlag)
         return;
 
-    RENDERSTATE_PUSH(rwRENDERSTATEFOGENABLE, false);
-    RENDERSTATE_PUSH(rwRENDERSTATEZTESTENABLE, false);
+    RENDERSTATE_PUSH(rwRENDERSTATEFOGENABLE,    false);
+    RENDERSTATE_PUSH(rwRENDERSTATEZTESTENABLE,  false);
     RENDERSTATE_PUSH(rwRENDERSTATEZWRITEENABLE, false);
-    RENDERSTATE_PUSH(rwRENDERSTATECULLMODE, rwCULLMODECULLNONE);
+    RENDERSTATE_PUSH(rwRENDERSTATECULLMODE,     rwCULLMODECULLNONE);
 
     switch (m_pHomeCamera->GetMode())
     {
@@ -163,6 +161,9 @@ void CHome2DContainer::Draw(void)
     case CHomeCamera::MODE_DOOR:
         DrawArrow();
         DrawDoorName();
+        break;
+
+    default:
         break;
     };
 
@@ -213,6 +214,9 @@ void CHome2DContainer::DrawDoorName(void)
 
     case HOMETYPES::DOORSTATUS_UPDATE:
         m_sprite.SetRGBA(255, 127, 0, 255);
+        break;
+
+    default:
         break;
     };
     
@@ -345,9 +349,7 @@ static inline CHome2DContainer& Home2DContainer(void)
 /*static*/ void CHome2D::Initialize(CHomeCamera* pHomeCamera)
 {
     if (!s_pHome2DContainer)
-    {
         s_pHome2DContainer = new CHome2DContainer(pHomeCamera);
-    };
 };
 
 

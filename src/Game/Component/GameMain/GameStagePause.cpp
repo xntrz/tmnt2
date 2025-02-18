@@ -59,8 +59,10 @@ void CDummyStagePause::Draw(void)
 void CMenuStagePause::Start(void* param)
 {
     CGaugeInformation::DispInit();
+    
     CGameSound::PlaySE(SDCODE_SE(4099));
     CGameSound::Pause();
+
     EnableStickToDirButton(true);
 };
 
@@ -146,17 +148,17 @@ void CMenuStagePause::Draw(void)
 
 /*static*/ const CTutorialStagePause::TUTORIALINFO CTutorialStagePause::m_aTutorialMessageInfo [] =
 {
-    { GAMETEXT(0x0),     SEGROUPID::VALUE(-1)    },
-    { GAMETEXT(0x47B),   SEGROUPID::VALUE(0xA8)  },
-    { GAMETEXT(0x47C),   SEGROUPID::VALUE(0xA9)  },
-    { GAMETEXT(0x47D),   SEGROUPID::VALUE(0xAA)  },
-    { GAMETEXT(0x47E),   SEGROUPID::VALUE(0xAC)  },
-    { GAMETEXT(0x47F),   SEGROUPID::VALUE(0xAD)  },
-    { GAMETEXT(0x480),   SEGROUPID::VALUE(0xAE)  },
-    { GAMETEXT(0x481),   SEGROUPID::VALUE(0xB2)  },
-    { GAMETEXT(0x482),   SEGROUPID::VALUE(0xB4)  },
-    { GAMETEXT(0x483),   SEGROUPID::VALUE(0xB6)  },
-    { GAMETEXT(0x484),   SEGROUPID::VALUE(0xB8)  },
+    { GAMETEXT_EMPTY,       SEGROUPID::VALUE(-1)    },
+    { GAMETEXT_HELP_DLG_1,  SEGROUPID::VALUE(0xA8)  },
+    { GAMETEXT_HELP_DLG_2,  SEGROUPID::VALUE(0xA9)  },
+    { GAMETEXT_HELP_DLG_3,  SEGROUPID::VALUE(0xAA)  },
+    { GAMETEXT_HELP_DLG_4,  SEGROUPID::VALUE(0xAC)  },
+    { GAMETEXT_HELP_DLG_5,  SEGROUPID::VALUE(0xAD)  },
+    { GAMETEXT_HELP_DLG_6,  SEGROUPID::VALUE(0xAE)  },
+    { GAMETEXT_HELP_DLG_7,  SEGROUPID::VALUE(0xB2)  },
+    { GAMETEXT_HELP_DLG_8,  SEGROUPID::VALUE(0xB4)  },
+    { GAMETEXT_HELP_DLG_9,  SEGROUPID::VALUE(0xB6)  },
+    { GAMETEXT_HELP_DLG_10, SEGROUPID::VALUE(0xB8)  },
 };
 
 

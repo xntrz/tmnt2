@@ -100,6 +100,20 @@ bool CGameTime::operator==(const CGameTime& Gametime) const
 };
 
 
+CGameTime& CGameTime::operator+=(const CGameTime& Gametime)
+{
+    Add(Gametime);
+    return *this;
+};
+
+
+CGameTime& CGameTime::operator+(const CGameTime& Gametime)
+{
+    Add(Gametime);
+    return *this;
+};
+
+
 void CGameTime::clamp(void)
 {
     static const uint32 HMS_MAX = GAMETIME_HMS(100, 0, 0);

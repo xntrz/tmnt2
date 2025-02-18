@@ -6,7 +6,7 @@
 
 class CGameMainSequence : public CSequence
 {
-protected:
+private:
     enum STEP
     {
         STEP_LOAD_TEXTURE = 0,
@@ -27,7 +27,7 @@ public:
     void PreMovie(void);
     void PostMovie(void);
     
-protected:
+private:
     STEP            m_step;
     int32           m_iLabelNext;
     int32           m_iLabelPrev;

@@ -10,10 +10,6 @@ class CAreaWorkPool;
 class CAreaSequence final : public CAnim2DSequence
 {
 public:
-#ifdef _DEBUG    
-    static bool m_bDebugClearAnimRequest;
-#endif
-    
     static CProcess* Instance(void);
 
     CAreaSequence(void);
@@ -25,10 +21,10 @@ public:
     bool AreaSelectLoad(void);
     
 private:
-    CAreaWorkPool* m_pWorkPool;
-    CDialog* m_pDlgSure;
-    bool m_bDlgRunning;
+    CAreaWorkPool*  m_pWorkPool;
+    CDialog*        m_pDlgSure;
+    bool            m_bDlgRunning;
 #ifdef _DEBUG
-    bool m_bDebugCall;
-#endif    
+    bool            m_bDebugCall;
+#endif /* _DEBUG */
 };

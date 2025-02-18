@@ -1,6 +1,5 @@
 #include "EnemyTestStageSeqState.hpp"
 #include "EnemyTestStageSequence.hpp"
-#include "EnemyTestCamera.hpp"
 #include "EnemyTestMakeFileSequence.hpp"
 #include "Game/Component/Player/ConcretePlayerCharacter/Splinter.hpp"
 #include "Game/Component/Player/Manipulator.hpp"
@@ -161,7 +160,23 @@ void CLoadEnemyTestStageSeqState::LoadStage(void)
 {
     GAMETYPES::STAGEMODE stageMode = CStageInfo::GetMode(m_testCtx.stageId);
     CGameLoader::LoadStageCommonData(stageMode);
+#ifdef TMNT2_BUILD_EU
+    CDataLoader::Regist(FILEID::ID_LANG_GAUGE_EU);
 
+    switch (CStageInfo::GetMode(m_testCtx.stageId))
+    {
+    case GAMETYPES::STAGEMODE_HOME:
+        CDataLoader::Regist(FILEID::ID_LANG_HOME_EU);
+        break;
+
+    case GAMETYPES::STAGEMODE_RIDE:
+        CDataLoader::Regist(FILEID::ID_LANG_RIDE_EU);
+        break;
+
+    default:
+        break;
+    };
+#endif /* TMNT2_BUILD_EU */
     CGameLoader::LoadStage(m_testCtx.stageId);
 };
 
@@ -252,9 +267,7 @@ void CPlayEnemyTestStageSeqState::OnAttach(CStageBaseSequence* pSeq, const void*
     stage.AddPlayers();
     stage.AddGauge();
     stage.AddStageObjects();
-
-    m_pCameraUpdater = new CEnemyTestCamera;
-    stage.SetCameraUpdater(m_pCameraUpdater);
+    stage.SetCameraUpdater(CStageInfo::CAMERAUPDATE_NORMAL);
 
     m_step = STEP_PLAYING;
 
@@ -281,12 +294,6 @@ void CPlayEnemyTestStageSeqState::OnDetach(CStageBaseSequence* pSeq)
     CGameStage& stage = pSeq->Stage();
 
     stage.SetCameraUpdater(CStageInfo::CAMERAUPDATE_NORMAL);
-
-    if (m_pCameraUpdater)
-    {
-        delete m_pCameraUpdater;
-        m_pCameraUpdater = nullptr;
-    };
 
     ASSERT(m_pPlaySeqState == this);
     m_pPlaySeqState = nullptr;

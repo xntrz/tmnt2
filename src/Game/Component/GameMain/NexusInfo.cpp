@@ -3,34 +3,31 @@
 #include "Game/System/Text/GameText.hpp"
 
 
-namespace
+struct NEXUSINFO
 {
-    struct NEXUSINFO
-    {
-        const char* m_pszLabel;
-        GAMETEXT m_idTextStart;
-    };
+    const char* name;
+    GAMETEXT    textIdStart;
+};
 
 
-    static const NEXUSINFO s_aNexusInfoList[] =
-    {
-        { "Kitty",          GAMETEXT(1157) },
-        { "Monster",        GAMETEXT(1167) },
-        { "Foot",           GAMETEXT(1177) },
-        { "Battle Nexus",   GAMETEXT(1187) },
-    };
+static const NEXUSINFO s_aNexusInfo[] =
+{
+    { "Kitty",          GAMETEXT_NEXUS_A_TEAM_1 },
+    { "Monster",        GAMETEXT_NEXUS_B_TEAM_1 },
+    { "Foot",           GAMETEXT_NEXUS_C_TEAM_1 },
+    { "Battle Nexus",   GAMETEXT_NEXUS_D_TEAM_1 },
+};
 
-    
-    static_assert(COUNT_OF(s_aNexusInfoList) == GAMETYPES::NEXUSID_NUM, "update me");
 
-    
-    static inline const NEXUSINFO NexusInfo(GAMETYPES::NEXUSID idNexus)
-    {
-        ASSERT(idNexus >= 0);
-        ASSERT(idNexus < COUNT_OF(s_aNexusInfoList));
+static_assert(COUNT_OF(s_aNexusInfo) == GAMETYPES::NEXUSID_NUM, "update me");
 
-        return s_aNexusInfoList[idNexus];
-    };
+
+static inline const NEXUSINFO& NexusInfo(GAMETYPES::NEXUSID idNexus)
+{
+    ASSERT(idNexus >= 0);
+    ASSERT(idNexus < COUNT_OF(s_aNexusInfo));
+
+    return s_aNexusInfo[idNexus];
 };
 
 
@@ -39,7 +36,7 @@ namespace
     ASSERT(nRoundNo >= 0);
     ASSERT(nRoundNo < GAMETYPES::STAGE_MAX);
 
-    GAMETEXT idText = GAMETEXT(NexusInfo(idNexus).m_idTextStart + nRoundNo);
+    GAMETEXT idText = GAMETEXT(NexusInfo(idNexus).textIdStart + nRoundNo);
     
     const wchar* pwszText = CGameText::GetText(idText);
     ASSERT(pwszText);

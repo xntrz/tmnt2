@@ -3,13 +3,14 @@
 #include "Game/Component/GameData/GameData.hpp"
 #include "Game/Component/GameMain/AreaInfo.hpp"
 #include "Game/Component/GameMain/AreaID.hpp"
+#include "Game/System/2d/GameFont.hpp"
 #include "Game/System/Sound/GameSound.hpp"
 #include "Game/System/Text/GameText.hpp"
-#include "Game/System/2d/GameFont.hpp"
 #include "Game/System/Texture/TextureManager.hpp"
 #include "System/Common/RenderState.hpp"
 #include "System/Common/Sprite.hpp"
 #include "System/Common/Screen.hpp"
+#include "System/Common/Configure.hpp"
 #include "System/Common/Controller.hpp"
 #include "System/Common/TextData.hpp"
 #include "System/Common/System2D.hpp"
@@ -96,29 +97,46 @@ public:
     void RenderStatePop(void);
 
 private:
-    RwTexture* m_AreaMenuTexture[9];
-    CSprite m_sprite;
-    bool m_bTextureSettingFlag;
-    bool m_bMenuDispFlag;
-    bool m_bSubMenuDispFlag;
-    uint32 m_MenuAnimCount;
-    uint32 m_SubMenuAnimCount;
-    int32 m_nMenuItemCount;
-    int32 m_aMenuItemTable[MENUITEM_MAX];
-    int32 m_nSubMenuItemCount;
-    int32 m_aSubMenuItemTable[MENUITEM_MAX];
+    RwTexture*  m_AreaMenuTexture[9];
+    CSprite     m_sprite;
+    bool        m_bTextureSettingFlag;
+    bool        m_bMenuDispFlag;
+    bool        m_bSubMenuDispFlag;
+    uint32      m_MenuAnimCount;
+    uint32      m_SubMenuAnimCount;
+    int32       m_nMenuItemCount;
+    int32       m_aMenuItemTable[MENUITEM_MAX];
+    int32       m_nSubMenuItemCount;
+    int32       m_aSubMenuItemTable[MENUITEM_MAX];
     SUBMENUTYPE m_SubmenuType;
-    int32 m_nCursor;
-    float m_fCursorRot;
-    int32 m_nSubCursor;
-    int32 m_nSubCursorPage;
-    float m_fSubCursorRot;
+    int32       m_nCursor;
+    float       m_fCursorRot;
+    int32       m_nSubCursor;
+    int32       m_nSubCursorPage;
+    float       m_fSubCursorRot;
 };
 
 
 CAreaMenu_Container::CAreaMenu_Container(void)
+: m_AreaMenuTexture()
+, m_sprite()
+, m_bTextureSettingFlag(false)
+, m_bMenuDispFlag(false)
+, m_bSubMenuDispFlag(false)
+, m_MenuAnimCount(0)
+, m_SubMenuAnimCount(0)
+, m_nMenuItemCount(0)
+, m_aMenuItemTable()
+, m_nSubMenuItemCount(0)
+, m_aSubMenuItemTable()
+, m_SubmenuType(SUBMENUTYPE_NONE)
+, m_nCursor(0)
+, m_fCursorRot(0.0f)
+, m_nSubCursor(0)
+, m_nSubCursorPage(0)
+, m_fSubCursorRot(0.0f)
 {
-	m_bTextureSettingFlag = false;
+    ;
 };
 
 
@@ -259,9 +277,11 @@ AREATYPES::NEXTSEQUENCE CAreaMenu_Container::AreaMenuSelect_Sub(void)
 
     default:
         {
-            ASSERT(m_nCursor >= 0 && m_nCursor < COUNT_OF(m_aMenuItemTable));
-            ASSERT(m_nCursor >= 0 && m_nCursor < m_nMenuItemCount);
-            
+            ASSERT(m_nCursor >= 0);
+            ASSERT(m_nCursor < COUNT_OF(m_aMenuItemTable));
+            ASSERT(m_nCursor >= 0);
+            ASSERT(m_nCursor < m_nMenuItemCount);
+
             if (m_MenuAnimCount < uAnimDur)
                 break;
 
@@ -342,8 +362,10 @@ AREATYPES::NEXTSEQUENCE CAreaMenu_Container::AreaMenuSelect_Sub(void)
 void CAreaMenu_Container::AreaMenuStationWarp_Sub(void)
 {
     ASSERT(m_SubmenuType == SUBMENUTYPE_WARP);
-    ASSERT(m_nSubCursor >= 0 && m_nSubCursor < COUNT_OF(m_aSubMenuItemTable));
-    ASSERT(m_nSubCursor >= 0 && m_nSubCursor < m_nSubMenuItemCount);
+    ASSERT(m_nSubCursor >= 0);
+    ASSERT(m_nSubCursor < COUNT_OF(m_aSubMenuItemTable));
+    ASSERT(m_nSubCursor >= 0);
+    ASSERT(m_nSubCursor < m_nSubMenuItemCount);
 
     m_SubmenuType = SUBMENUTYPE_NONE;
     
@@ -429,35 +451,31 @@ void CAreaMenu_Container::AreaInfoMenuDraw_Sub(void)
         {
             { -296.0f, -194.0f, },
             { -150.0f, -194.0f, },
-            { -296.0f, 24.0f,   },
-            { -150.0f, 24.0f,   },
+            { -296.0f,   24.0f, },
+            { -150.0f,   24.0f, },
         };
 
         int32 nWindowNo = CAreaInfo::GetWindowNo(idAreaCur);
     
         RenderStatePush();
-        WindowDisp(
-            WINDOWTYPE_INFO,
-            s_aWindowPos[nWindowNo].x,
-            s_aWindowPos[nWindowNo].y,
-            320.0f,
-            25.0f
-        );
+        WindowDisp(WINDOWTYPE_INFO,
+                   s_aWindowPos[nWindowNo].x,
+                   s_aWindowPos[nWindowNo].y,
+                   320.0f,
+                   25.0f);
         RenderStatePop();
 
         CSystem2D::PushRenderState();
         
         if (idAreaCur == AREAID::HOME)
         {
-			CGameFont::SetHeight(CGameFont::GetScreenHeightEx(TYPEDEF::VSCR_H / 2.0f));
+            CGameFont::SetHeightScaled(2.0f);
             CGameFont::SetRGBA(255, 255, 255, 255);
-            CGameFont::Show(
-                CAreaInfo::GetDispName(idAreaCur),
-                s_aWindowPos[nWindowNo].x + 60.0f,
-                s_aWindowPos[nWindowNo].y + 50.0f
-            );
+            CGameFont::Show(CAreaInfo::GetDispName(idAreaCur),
+                            s_aWindowPos[nWindowNo].x + 60.0f,
+                            s_aWindowPos[nWindowNo].y + 50.0f);
             
-			CGameFont::SetHeight(CGameFont::GetScreenHeightEx(TYPEDEF::VSCR_H / 1.85f));
+            CGameFont::SetHeightScaled(1.85f);
             CGameFont::SetRGBA(134, 238, 0, 255);
 
             float fOffsetX = 70.0f;
@@ -465,61 +483,82 @@ void CAreaMenu_Container::AreaInfoMenuDraw_Sub(void)
 
             if (CGameData::Record().Antique().GetShopState())
             {
-                CGameFont::Show(
-                    CGameText::GetText(GAMETEXT(1224)),
-                    s_aWindowPos[nWindowNo].x + fOffsetX,
-                    s_aWindowPos[nWindowNo].y + fOffsetY
-                );
+                CGameFont::Show(CGameText::GetText(GAMETEXT_MENU_HOME_SHOP),
+                                s_aWindowPos[nWindowNo].x + fOffsetX,
+                                s_aWindowPos[nWindowNo].y + fOffsetY);
                 fOffsetY += 15.0f;
             };
 
             if (CGameData::Record().Nexus().GetNexusState())
             {
-                CGameFont::Show(
-                    CGameText::GetText(GAMETEXT(1223)),
-                    s_aWindowPos[nWindowNo].x + fOffsetX,
-                    s_aWindowPos[nWindowNo].y + fOffsetY
-                );
+                CGameFont::Show(CGameText::GetText(GAMETEXT_MENU_HOME_TOURNEY),
+                                s_aWindowPos[nWindowNo].x + fOffsetX,
+                                s_aWindowPos[nWindowNo].y + fOffsetY);
                 fOffsetY += 15.0f;
             };
 
             if (CGameData::Record().Database().GetDatabaseState())
             {
-                CGameFont::Show(
-                    CGameText::GetText(GAMETEXT(1225)),
-                    s_aWindowPos[nWindowNo].x + fOffsetX,
-                    s_aWindowPos[nWindowNo].y + fOffsetY
-                );
+                CGameFont::Show(CGameText::GetText(GAMETEXT_MENU_HOME_DB),
+                                s_aWindowPos[nWindowNo].x + fOffsetX,
+                                s_aWindowPos[nWindowNo].y + fOffsetY);
             };
         }
         else
         {
+#ifdef TMNT2_BUILD_EU
             static wchar s_wszEpisodeBuffer[128];
-            static wchar s_wszEpisodeNoBuffer[128];
-            
             s_wszEpisodeBuffer[0]   = UTEXT('\0');
+            
+            static wchar s_wszEpisodeNoBuffer[128];
             s_wszEpisodeNoBuffer[0] = UTEXT('\0');
 
             CGameFont::ConvertToUnicode(s_wszEpisodeNoBuffer, CAreaInfo::GetEpisode(idAreaCur));
             
-            const wchar* pszText = CGameText::GetText(GAMETEXT(752));    // EPISODE
-            CTextData::Sprintf(s_wszEpisodeBuffer, UTEXT("%s %s"), pszText, s_wszEpisodeNoBuffer);
+            const wchar* pszFormat = CGameText::GetText(GAMETEXT_AREA_EPISODE);
+            CTextData::Sprintf(s_wszEpisodeBuffer, pszFormat, s_wszEpisodeNoBuffer);
         
-			CGameFont::SetHeight(CGameFont::GetScreenHeightEx(TYPEDEF::VSCR_H / 2.0f));
+            CGameFont::SetHeightScaled(2.0f);
 
             CGameFont::SetRGBA(255, 170, 0, 255);
-            CGameFont::Show(
-                s_wszEpisodeBuffer,
-                s_aWindowPos[nWindowNo].x + 60.0f,
-                s_aWindowPos[nWindowNo].y + 65.0f
-            );
+            CGameFont::Show(s_wszEpisodeBuffer,
+                            s_aWindowPos[nWindowNo].x + 60.0f,
+                            s_aWindowPos[nWindowNo].y + 60.0f);
+
+            float fOfsY = (CAreaInfo::GetWindowNo(idAreaCur) >= 2 ? -270.0f : 165.0f);
+
+            Rt2dBBox bbox;
+            bbox.x = (s_aWindowPos[nWindowNo].x + 60.0f);
+            bbox.y = (fOfsY + s_aWindowPos[nWindowNo].y + 80.0f);
+            bbox.w = 330.0f;
+            bbox.h = 80.0f;
+
+            CGameFont::SetRGBA(255, 255, 255, 255);
+            CGameFont::Flow(CAreaInfo::GetDispName(idAreaCur), &bbox);
+#else /* TMNT2_BUILD_EU */
+            static wchar s_wszEpisodeBuffer[128];
+            s_wszEpisodeBuffer[0]   = UTEXT('\0');
+            
+            static wchar s_wszEpisodeNoBuffer[128];
+            s_wszEpisodeNoBuffer[0] = UTEXT('\0');
+
+            CGameFont::ConvertToUnicode(s_wszEpisodeNoBuffer, CAreaInfo::GetEpisode(idAreaCur));
+            
+            const wchar* pszText = CGameText::GetText(GAMETEXT_AREA_EPISODE);
+            CTextData::Sprintf(s_wszEpisodeBuffer, UTEXT("%s %s"), pszText, s_wszEpisodeNoBuffer);
+        
+            CGameFont::SetHeightScaled(2.0f);
+
+            CGameFont::SetRGBA(255, 170, 0, 255);
+            CGameFont::Show(s_wszEpisodeBuffer,
+                            s_aWindowPos[nWindowNo].x + 60.0f,
+                            s_aWindowPos[nWindowNo].y + 65.0f);
             
             CGameFont::SetRGBA(255, 255, 255, 255);
-            CGameFont::Show(
-                CAreaInfo::GetDispName(idAreaCur),
-                s_aWindowPos[nWindowNo].x + 60.0f,
-                s_aWindowPos[nWindowNo].y + 85.0f
-            );
+            CGameFont::Show(CAreaInfo::GetDispName(idAreaCur),
+                            s_aWindowPos[nWindowNo].x + 60.0f,
+                            s_aWindowPos[nWindowNo].y + 85.0f);
+#endif /* TMNT2_BUILD_EU */
 
             if (CGameData::Record().Secret().IsUnlockedSecret(SECRETID::ID_SEARCH_ANTIQUE))
             {
@@ -532,10 +571,13 @@ void CAreaMenu_Container::AreaInfoMenuDraw_Sub(void)
                     m_sprite.SetOffset(0.0f, 0.0f);
                     m_sprite.SetTexture(m_AreaMenuTexture[3]);
                     m_sprite.Resize(64.0f, 64.0f);
-                    m_sprite.Move(
-                        s_aWindowPos[nWindowNo].x + 220.0f,
-                        s_aWindowPos[nWindowNo].y + 30.0f
-                    );
+#ifdef TMNT2_BUILD_EU
+                    m_sprite.Move(s_aWindowPos[nWindowNo].x + 220.0f,
+                                  s_aWindowPos[nWindowNo].y + 25.0f);
+#else /* TMNT2_BUILD_EU */
+                    m_sprite.Move(s_aWindowPos[nWindowNo].x + 220.0f,
+                                  s_aWindowPos[nWindowNo].y + 30.0f);
+#endif /* TMNT2_BUILD_EU */
                     m_sprite.Draw();
                 };
             };
@@ -553,26 +595,28 @@ void CAreaMenu_Container::AreaMenuDisp(void)
     if (m_MenuAnimCount < uAnimDur)
         ++m_MenuAnimCount;
 
-    float fWidth = Math::LinearTween(
-        (m_bMenuDispFlag ? 0.0f : 300.0f),
-        (m_bMenuDispFlag ? 300.0f : -300.0f),
-        float(m_MenuAnimCount),
-        float(uAnimDur)
-    );
+    float fWidthChange = 300.0f;
+#ifdef TMNT2_BUILD_EU
+    if (CConfigure::GetLanguage() == TYPEDEF::CONFIG_LANG_FRENCH)
+        fWidthChange = 420.0f;
+    else
+        fWidthChange = 350.0f;
+#endif /* TMNT2_BUILD_EU */
+
+    float fWidth = Math::LinearTween((m_bMenuDispFlag ? 0.0f : fWidthChange),
+                                     (m_bMenuDispFlag ? fWidthChange : -fWidthChange),
+                                     float(m_MenuAnimCount),
+                                     float(uAnimDur));
     
-    float fHeight = Math::LinearTween(
-        (m_bMenuDispFlag ? 0.0f : m_nMenuItemCount * 23.0f),
-        (m_bMenuDispFlag ? m_nMenuItemCount * 23.0f : -(m_nMenuItemCount * 23.0f)),
-        float(m_MenuAnimCount),
-        float(uAnimDur)
-    );
+    float fHeight = Math::LinearTween((m_bMenuDispFlag ? 0.0f : m_nMenuItemCount * 23.0f),
+                                      (m_bMenuDispFlag ? m_nMenuItemCount * 23.0f : -(m_nMenuItemCount * 23.0f)),
+                                      float(m_MenuAnimCount),
+                                      float(uAnimDur));
     
-    uint8 AlphaBasis = uint8(Math::LinearTween(
-        (m_bMenuDispFlag ? 0.0f : 255.0f),
-        (m_bMenuDispFlag ? 255.0f : -255.0f),
-        float(m_MenuAnimCount),
-        float(uAnimDur)
-    ));
+    uint8 AlphaBasis = uint8(Math::LinearTween((m_bMenuDispFlag ? 0.0f : 255.0f),
+                                               (m_bMenuDispFlag ? 255.0f : -255.0f),
+                                               float(m_MenuAnimCount),
+                                               float(uAnimDur)));
 
 	RenderStatePush();
     WindowDisp(WINDOWTYPE_NORMAL, -296.0f, -194.0f, fWidth, fHeight);
@@ -587,7 +631,7 @@ void CAreaMenu_Container::AreaMenuDisp(void)
         m_sprite.ResetUV();
         m_sprite.SetRGBA(255, 255, 255, AlphaBasis);
         m_sprite.SetOffset(0.0f, 0.0f);
-        m_sprite.SetTexture(m_AreaMenuTexture[ 1 ]);
+        m_sprite.SetTexture(m_AreaMenuTexture[1]);
         m_sprite.Move(-253.0f, (m_nCursor * 25.0f) - 145.0f);
         m_sprite.SetRotate(m_fCursorRot);
         m_sprite.ResizeStrict(32.0f, 32.0f);
@@ -603,19 +647,13 @@ void CAreaMenu_Container::AreaMenuDisp(void)
         
         if (m_bMenuDispFlag)
         {
-            float fPosX = Math::LinearTween(
-                -213.0f - ((i + 1) * 20.0f),
-                ((i + 1) * 20.0f),
-                float(m_MenuAnimCount),
-                float(uAnimDur)
-            );
+            float fPosX = Math::LinearTween(-213.0f - ((i + 1) * 20.0f),
+                                            ((i + 1) * 20.0f),
+                                            float(m_MenuAnimCount),
+                                            float(uAnimDur));
             
-			CGameFont::SetHeight(CGameFont::GetScreenHeightEx(TYPEDEF::VSCR_H / 2.15f));
-            CGameFont::Show(
-                GetAreaMenuName(m_aMenuItemTable[i]),
-                fPosX,
-                (i * 25.0f) - 129.0f
-            );            
+            CGameFont::SetHeightScaled(2.15f);
+            CGameFont::Show(GetAreaMenuName(m_aMenuItemTable[i]), fPosX, ((i * 25.0f) - 129.0f));
         };
     };
     CSystem2D::PopRenderState();
@@ -651,34 +689,32 @@ void CAreaMenu_Container::MenuDispSub_Station(void)
     if (m_SubMenuAnimCount < uAnimDur)
         ++m_SubMenuAnimCount;
 
-    float fWidth = Math::LinearTween(
-        (m_bSubMenuDispFlag ? 0.0f : 300.0f),
-        (m_bSubMenuDispFlag ? 300.0f : -300.0f),
-        float(m_SubMenuAnimCount),
-        float(uAnimDur)
-    );
+    float fWidthChange = 300.0f;
+#ifdef TMNT2_BUILD_EU
+    fWidthChange = 350.0f;
+#endif /* TMNT2_BUILD_EU */
 
-    float fHeight = Math::LinearTween(
-        (m_bSubMenuDispFlag ? 0.0f : m_nSubMenuItemCount * 23.0f),
-        (m_bSubMenuDispFlag ? m_nSubMenuItemCount * 23.0f : -(m_nSubMenuItemCount * 23.0f)),
-        float(m_SubMenuAnimCount),
-        float(uAnimDur)
-    );
+    float fWidth = Math::LinearTween((m_bSubMenuDispFlag ? 0.0f : fWidthChange),
+                                     (m_bSubMenuDispFlag ? fWidthChange : -fWidthChange),
+                                     float(m_SubMenuAnimCount),
+                                     float(uAnimDur));
 
-    uint8 AlphaBasis = uint8(Math::LinearTween(
-        (m_bSubMenuDispFlag ? 0.0f : 255.0f),
-        (m_bSubMenuDispFlag ? 255.0f : -255.0f),
-        float(m_SubMenuAnimCount),
-        float(uAnimDur)
-    ));
+    float fHeight = Math::LinearTween((m_bSubMenuDispFlag ? 0.0f : m_nSubMenuItemCount * 23.0f),
+                                      (m_bSubMenuDispFlag ? m_nSubMenuItemCount * 23.0f : -(m_nSubMenuItemCount * 23.0f)),
+                                      float(m_SubMenuAnimCount),
+                                      float(uAnimDur));
+
+    uint8 AlphaBasis = uint8(Math::LinearTween((m_bSubMenuDispFlag ? 0.0f : 255.0f),
+                                               (m_bSubMenuDispFlag ? 255.0f : -255.0f),
+                                               float(m_SubMenuAnimCount),
+                                               float(uAnimDur)));
 
     RenderStatePush();
     WindowDisp(WINDOWTYPE_NORMAL,
-        -256.0f,
-        (m_nCursor * 25.0f) - 144.0f,
-        fWidth,
-        fHeight
-    );
+               -256.0f,
+               (m_nCursor * 25.0f) - 144.0f,
+               fWidth,
+               fHeight);
     RenderStatePop();
 
     CSystem2D::PushRenderState();
@@ -690,10 +726,8 @@ void CAreaMenu_Container::MenuDispSub_Station(void)
         m_sprite.SetRGBA(255, 255, 255, AlphaBasis);
         m_sprite.SetOffset(0.0f, 0.0f);
         m_sprite.SetTexture(m_AreaMenuTexture[1]);
-        m_sprite.Move(
-            -213.0f,
-            (m_nSubCursor * 25.0f) + (m_nCursor * 25.0f) - 95.0f
-        );
+        m_sprite.Move(-213.0f,
+                     (m_nSubCursor * 25.0f) + (m_nCursor * 25.0f) - 95.0f);
         m_sprite.SetRotate(m_fSubCursorRot);
         m_sprite.ResizeStrict(32.0f, 32.0f);
         m_sprite.DrawRotate();
@@ -708,20 +742,14 @@ void CAreaMenu_Container::MenuDispSub_Station(void)
 
         if (m_bSubMenuDispFlag)
         {
-            float fPosX = Math::LinearTween(
-                -173.0f - ((i + 1) * 20.0f),
-                ((i + 1) * 20.0f),
-                float(m_SubMenuAnimCount),
-                float(uAnimDur)
-            );
+            float fPosX = Math::LinearTween(-173.0f - ((i + 1) * 20.0f),
+                                            ((i + 1) * 20.0f),
+                                            float(m_SubMenuAnimCount),
+                                            float(uAnimDur));
 
-			CGameFont::SetHeight(CGameFont::GetScreenHeightEx(TYPEDEF::VSCR_H / 2.15f));
+            CGameFont::SetHeightScaled(2.15f);
             
-            CGameFont::Show(
-                GetStationName(m_aSubMenuItemTable[i]),
-                fPosX,
-                (m_nCursor * 25.0f) + (i * 25.0f) - 79.0f
-            );
+            CGameFont::Show(GetStationName(m_aSubMenuItemTable[i]), fPosX, ((m_nCursor * 25.0f) + (i * 25.0f) - 79.0f));
         };
     };
     CSystem2D::PopRenderState();
@@ -735,34 +763,27 @@ void CAreaMenu_Container::MenuDispSub_Combo(void)
     if (m_SubMenuAnimCount < uAnimDur)
         ++m_SubMenuAnimCount;
 
-    float fWidth = Math::LinearTween(
-        (m_bSubMenuDispFlag ? 0.0f : 400.0f),
-        (m_bSubMenuDispFlag ? 400.0f : -400.0f),
-        float(m_SubMenuAnimCount),
-        float(uAnimDur)
-    );
+    float fWidth = Math::LinearTween((m_bSubMenuDispFlag ? 0.0f : 400.0f),
+                                     (m_bSubMenuDispFlag ? 400.0f : -400.0f),
+                                     float(m_SubMenuAnimCount),
+                                     float(uAnimDur));
 
-    float fHeight = Math::LinearTween(
-        (m_bSubMenuDispFlag ? 0.0f : 221.0f),
-        (m_bSubMenuDispFlag ? 221.0f : -221.0f),
-        float(m_SubMenuAnimCount),
-        float(uAnimDur)
-    );
+    float fHeight = Math::LinearTween((m_bSubMenuDispFlag ? 0.0f : 221.0f),
+                                      (m_bSubMenuDispFlag ? 221.0f : -221.0f),
+                                      float(m_SubMenuAnimCount),
+                                      float(uAnimDur));
 
-    uint8 AlphaBasis = uint8(Math::LinearTween(
-        (m_bSubMenuDispFlag ? 0.0f : 255.0f),
-        (m_bSubMenuDispFlag ? 255.0f : -255.0f),
-        float(m_SubMenuAnimCount),
-        float(uAnimDur)
-    ));
+    uint8 AlphaBasis = uint8(Math::LinearTween((m_bSubMenuDispFlag ? 0.0f : 255.0f),
+                                               (m_bSubMenuDispFlag ? 255.0f : -255.0f),
+                                               float(m_SubMenuAnimCount),
+                                               float(uAnimDur)));
 
     RenderStatePush();
     WindowDisp(WINDOWTYPE_NORMAL,
-        -276.0f,
-        -174.0f,
-        fWidth,
-        fHeight
-    );
+               -276.0f,
+               -174.0f,
+               fWidth,
+               fHeight);
     RenderStatePop();
 
     CSystem2D::PushRenderState();
@@ -774,29 +795,24 @@ void CAreaMenu_Container::MenuDispSub_Combo(void)
         m_sprite.SetRGBA(255, 255, 255, AlphaBasis);
         m_sprite.SetOffset(0.0f, 0.0f);
         m_sprite.SetTexture(m_AreaMenuTexture[1]);
-        m_sprite.Move(
-            -233.0f,
-            (m_nSubCursor * 25.0f) - 125.0f
-        );
+        m_sprite.Move(-233.0f,
+                      (m_nSubCursor * 25.0f) - 125.0f);
         m_sprite.SetRotate(m_fSubCursorRot);
         m_sprite.ResizeStrict(32.0f, 32.0f);
         m_sprite.DrawRotate();
 
         m_sprite.SetRGBA(255, 255, 255, AlphaBasis);
         m_sprite.SetTexture(m_AreaMenuTexture[4]);
-        m_sprite.Move(
-            127.0f,
-            -125.0f
-        );
+        m_sprite.Move(127.0f, -125.0f);
         m_sprite.Resize(64.0f, 32.0f);
         m_sprite.Draw();
     };
 
 
     int32 nPageElements = (m_nSubCursorPage ? COMBOPAGEMAX - 1 : COMBOPAGEMAX);
-    int32 nComboNameText = (m_nSubCursorPage ? GAMETEXT(1204) : GAMETEXT(1197));
-    
-    for (int32 i = 0; i < nPageElements; ++i, ++nComboNameText)
+    int32 nComboTextId = (m_nSubCursorPage ? GAMETEXT_MENU_COMBO_NAME_8 : GAMETEXT_MENU_COMBO_NAME_1);
+
+    for (int32 i = 0; i < nPageElements; ++i, ++nComboTextId)
     {
         if (m_nSubCursor == i)
             CGameFont::SetRGBA(50, 200, 0, AlphaBasis);
@@ -805,19 +821,17 @@ void CAreaMenu_Container::MenuDispSub_Combo(void)
 
         if (m_bSubMenuDispFlag)
         {
-            float fPosX = Math::LinearTween(
-                -193.0f - ((i + 1) * 20.0f),
-                ((i + 1) * 20.0f),
-                float(m_SubMenuAnimCount),
-                float(uAnimDur)
-            );
+            float fPosX = Math::LinearTween(-193.0f - ((i + 1) * 20.0f),
+                                            ((i + 1) * 20.0f),
+                                            float(m_SubMenuAnimCount),
+                                            float(uAnimDur));
 
-			CGameFont::SetHeight(CGameFont::GetScreenHeightEx(TYPEDEF::VSCR_H / 2.15f));
+            CGameFont::SetHeightScaled(2.15f);
             
             if (IsComboMenuSecret(i + (COMBOPAGEMAX * m_nSubCursorPage)))
-                CGameFont::Show(CGameText::GetText(GAMETEXT(nComboNameText)), fPosX, (i * 25.0f) - 109.0f);
+                CGameFont::Show(CGameText::GetText(GAMETEXT(nComboTextId)), fPosX, (i * 25.0f) - 109.0f);
             else
-                CGameFont::Show(CGameText::GetText(GAMETEXT(901)), fPosX, (i * 25.0f) - 109.0f);            
+                CGameFont::Show(CGameText::GetText(GAMETEXT_DB_HATENA), fPosX, (i * 25.0f) - 109.0f);
         };
     };
 
@@ -848,7 +862,7 @@ void CAreaMenu_Container::MenuDispSub_Combo(void)
         { COMBOTYPE_A, COMBOTYPE_A, COMBOTYPE_B, COMBOTYPE_B, COMBOTYPE_C, },
     };
     
-    int32 nComboDescText = (m_nSubCursorPage ? GAMETEXT(1217) : GAMETEXT(1210));
+    int32 nComboDescText = (m_nSubCursorPage ? GAMETEXT_MENU_COMBO_INFO_8 : GAMETEXT_MENU_COMBO_INFO_1);
     int32 nSubCursorReal = (m_nSubCursor + (COMBOPAGEMAX * m_nSubCursorPage));
     
     if (m_bSubMenuDispFlag && IsComboMenuSecret(nSubCursorReal))
@@ -857,11 +871,15 @@ void CAreaMenu_Container::MenuDispSub_Combo(void)
         {
             Rt2dBBox bbox;
             bbox.x = -210.0f;
+#ifdef TMNT2_BUILD_EU
+            bbox.y = -350.0f;
+#else /* TMNT2_BUILD_EU */
             bbox.y = -370.0f;
-            bbox.w = 400.0f;
-            bbox.h = 300.0f;
+#endif /* TMNT2_BUILD_EU */
+            bbox.w =  400.0f;
+            bbox.h =  300.0f;
 
-			CGameFont::SetHeight(CGameFont::GetScreenHeightEx(TYPEDEF::VSCR_H / 1.65f));
+            CGameFont::SetHeightScaled(1.65f);
             CGameFont::SetRGBA(0, 128, 200, 255);
             CGameFont::Flow(CGameText::GetText(GAMETEXT(nComboDescText + m_nSubCursor)), &bbox);
         }
@@ -913,9 +931,11 @@ void CAreaMenu_Container::MenuDispSub_Combo(void)
 
 bool CAreaMenu_Container::IsComboMenuSecret(int32 nSubCursor)
 {
-    ASSERT(nSubCursor >= 0 && nSubCursor < COMBOMAX);
-    
+    ASSERT(nSubCursor >= 0);
+    ASSERT(nSubCursor < COMBOMAX);
+
     bool bResult = false;
+    
     int32 nCryRedNum    = CGameData::Record().Item().GetCrystalNum(GAMETYPES::CRYSTALTYPE_RED);
     int32 nCryGreenNum  = CGameData::Record().Item().GetCrystalNum(GAMETYPES::CRYSTALTYPE_GREEN);
     int32 nCryOrangeNum = CGameData::Record().Item().GetCrystalNum(GAMETYPES::CRYSTALTYPE_ORANGE);
@@ -1003,8 +1023,9 @@ void CAreaMenu_Container::WindowDisp(WINDOWTYPE type, float x, float y, float w,
 
     static_assert(COUNT_OF(s_aWindowUV) == WINDOWPARTNUM, "update me");
 
-    ASSERT(type >= 0 && type < WINDOWTYPENUM);
-    
+    ASSERT(type >= 0);
+    ASSERT(type < WINDOWTYPENUM);
+
     m_sprite.ResetUV();
     m_sprite.SetRGBA(255, 255, 255, 255);
     m_sprite.SetTexture(m_AreaMenuTexture[type == WINDOWTYPE_NORMAL ? 0 : 2 ]);
@@ -1089,12 +1110,10 @@ void CAreaMenu_Container::WindowDisp(WINDOWTYPE type, float x, float y, float w,
 
         m_sprite.Move(x + fOffsetX, y + fOffsetY);
         m_sprite.Resize(fSizeW, fSizeH);
-        m_sprite.SetUV(
-            s_aWindowUV[i].x,
-            s_aWindowUV[i].y,
-            s_aWindowUV[i].w,
-            s_aWindowUV[i].h
-        );
+        m_sprite.SetUV(s_aWindowUV[i].x,
+                       s_aWindowUV[i].y,
+                       s_aWindowUV[i].w,
+                       s_aWindowUV[i].h);
         m_sprite.Draw();
     };
 };
@@ -1104,21 +1123,24 @@ const wchar* CAreaMenu_Container::GetAreaMenuName(int32 nMenuNo)
 {
     static const GAMETEXT s_aAreaMenuGametext[] =
     {
-        GAMETEXT(741),
-        GAMETEXT(742),
-        GAMETEXT(744),
-        GAMETEXT(745),
-        GAMETEXT(746),
-        GAMETEXT(747),
-        GAMETEXT(748),
-        GAMETEXT(749),
+        GAMETEXT_AREA_MENU_WARP,
+        GAMETEXT_AREA_MENU_CHRSEL,
+        GAMETEXT_AREA_MENU_INFO,
+        GAMETEXT_AREA_MENU_OP,
+        GAMETEXT_AREA_MENU_SAVE,
+        GAMETEXT_AREA_MENU_LOAD,
+        GAMETEXT_AREA_MENU_TITRET,
+        GAMETEXT_AREA_MENU_BACK,
     };
 
     static_assert(COUNT_OF(s_aAreaMenuGametext) == MAINMAX, "update me");
 
     //ASSERT(nMenuNo >= 0 && nMenuNo < m_nMenuItemCount);
-    ASSERT(nMenuNo >= 0 && nMenuNo < MAINMAX);
-    ASSERT(nMenuNo >= 0 && nMenuNo < COUNT_OF(s_aAreaMenuGametext));
+    ASSERT(nMenuNo >= 0);
+    ASSERT(nMenuNo < MAINMAX);
+
+    ASSERT(nMenuNo >= 0);
+    ASSERT(nMenuNo < COUNT_OF(s_aAreaMenuGametext));
 
     return CGameText::GetText(s_aAreaMenuGametext[nMenuNo]);
 };
@@ -1127,30 +1149,31 @@ const wchar* CAreaMenu_Container::GetAreaMenuName(int32 nMenuNo)
 const wchar* CAreaMenu_Container::GetStationName(int32 nWarpNo)
 {
     ASSERT(m_SubmenuType == SUBMENUTYPE_WARP);
-    ASSERT(nWarpNo >= 0 && nWarpNo < WARPMAX);
+    ASSERT(nWarpNo >= 0);
+    ASSERT(nWarpNo < WARPMAX);
 
     switch (nWarpNo)
     {
     case WARP_NY:
-        return CGameText::GetText(GAMETEXT(89));
+        return CGameText::GetText(GAMETEXT_STATION_NY);
         
     case WARP_DHO:
-        return CGameText::GetText(GAMETEXT(90));
+        return CGameText::GetText(GAMETEXT_STATION_DHO);
         
     case WARP_TRI:
-        return CGameText::GetText(GAMETEXT(91));
+        return CGameText::GetText(GAMETEXT_STATION_TRI);
         
     case WARP_JPN:
-        return CGameText::GetText(GAMETEXT(92));
+        return CGameText::GetText(GAMETEXT_STATION_JAP);
         
     case WARP_FNY:
         if (CGameData::Record().Area().GetAreaState(AREAID::ID_AREA50) == CAreaRecord::STATE_CLEAR)
-            return CGameText::GetText(GAMETEXT(95));
+            return CGameText::GetText(GAMETEXT_STATION_FNY);
         else
-            return CGameText::GetText(GAMETEXT(93));
+            return CGameText::GetText(GAMETEXT_STATION_UNK);
 
     case WARP_KUR:
-        return CGameText::GetText(GAMETEXT(94));
+        return CGameText::GetText(GAMETEXT_STATION_KUR);
 
     default:
         ASSERT(false);
@@ -1161,18 +1184,18 @@ const wchar* CAreaMenu_Container::GetStationName(int32 nWarpNo)
 
 void CAreaMenu_Container::RenderStatePush(void)
 {
-    RENDERSTATE_PUSH(rwRENDERSTATETEXTUREADDRESS, rwTEXTUREADDRESSCLAMP);
-    RENDERSTATE_PUSH(rwRENDERSTATEBORDERCOLOR, 0);
-    RENDERSTATE_PUSH(rwRENDERSTATETEXTUREPERSPECTIVE, true);
-    RENDERSTATE_PUSH(rwRENDERSTATETEXTUREFILTER, rwFILTERLINEAR);
-    RENDERSTATE_PUSH(rwRENDERSTATEZTESTENABLE, true);
-    RENDERSTATE_PUSH(rwRENDERSTATESHADEMODE, rwSHADEMODEGOURAUD);
-    RENDERSTATE_PUSH(rwRENDERSTATEVERTEXALPHAENABLE, true);
-    RENDERSTATE_PUSH(rwRENDERSTATEFOGENABLE, false);
-    RENDERSTATE_PUSH(rwRENDERSTATECULLMODE, rwCULLMODECULLNONE);
-    RENDERSTATE_PUSH(rwRENDERSTATEZWRITEENABLE, true);
-    RENDERSTATE_PUSH(rwRENDERSTATESRCBLEND, rwBLENDSRCALPHA);
-    RENDERSTATE_PUSH(rwRENDERSTATEDESTBLEND, rwBLENDINVSRCALPHA);
+    RENDERSTATE_PUSH(rwRENDERSTATETEXTUREADDRESS,       rwTEXTUREADDRESSCLAMP);
+    RENDERSTATE_PUSH(rwRENDERSTATEBORDERCOLOR,          0);
+    RENDERSTATE_PUSH(rwRENDERSTATETEXTUREPERSPECTIVE,   true);
+    RENDERSTATE_PUSH(rwRENDERSTATETEXTUREFILTER,        rwFILTERLINEAR);
+    RENDERSTATE_PUSH(rwRENDERSTATEZTESTENABLE,          true);
+    RENDERSTATE_PUSH(rwRENDERSTATESHADEMODE,            rwSHADEMODEGOURAUD);
+    RENDERSTATE_PUSH(rwRENDERSTATEVERTEXALPHAENABLE,    true);
+    RENDERSTATE_PUSH(rwRENDERSTATEFOGENABLE,            false);
+    RENDERSTATE_PUSH(rwRENDERSTATECULLMODE,             rwCULLMODECULLNONE);
+    RENDERSTATE_PUSH(rwRENDERSTATEZWRITEENABLE,         true);
+    RENDERSTATE_PUSH(rwRENDERSTATESRCBLEND,             rwBLENDSRCALPHA);
+    RENDERSTATE_PUSH(rwRENDERSTATEDESTBLEND,            rwBLENDINVSRCALPHA);
 };
 
 

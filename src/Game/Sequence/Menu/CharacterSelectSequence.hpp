@@ -17,7 +17,8 @@ public:
     virtual void OnDetach(void) override;
     virtual void OnMove(bool bRet, const void* pReturnValue) override;
     virtual void OnDraw(void) const override;
-    
+    virtual void BeginFadeIn(void) override;
+
 private:
     CPlayerSelectWorkPool* m_pWorkPool;
 };

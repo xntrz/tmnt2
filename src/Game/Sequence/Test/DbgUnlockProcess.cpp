@@ -64,8 +64,8 @@ void CDbgUnlockProcess::Move(void)
             CGameData::Record().Area().SetAreaCleared(AREAID::VALUE(i), CAreaRecord::CLEAR_ROOT_B);
             CGameData::Record().Area().SetAreaRank(AREAID::VALUE(i), GAMETYPES::CLEARRANK_SS);
 
-            CGameTime cleartime(60 * 5); // 5 min
-            CGameData::Record().Area().UpdateAreaClearTime(AREAID::VALUE(i), cleartime);
+            CGameTime clearTime(60 * 5); // 5 min
+            CGameData::Record().Area().UpdateAreaClearTime(AREAID::VALUE(i), clearTime);
         };
     };
 
@@ -117,13 +117,18 @@ void CDbgUnlockProcess::Move(void)
         for (int32 i = 0; i < GAMETYPES::NEXUSID_NUM; ++i)
         {
             CGameData::Record().Nexus().SetTournamentState(GAMETYPES::NEXUSID(i), CNexusRecord::STATE_CLEAR);
+            CGameTime totalClearTime;
             for (int32 j = 0; j < GAMETYPES::STAGE_MAX; ++j)
             {
                 CGameData::Record().Nexus().SetStagePlayed(GAMETYPES::NEXUSID(i), j);
 
-                CGameTime cleartime(60 * 5); // 5 min
-                CGameData::Record().Nexus().UpdateStageClearTime(GAMETYPES::NEXUSID(i), j, cleartime);
+                CGameTime clearTime(60 * 5); // 5 min
+                CGameData::Record().Nexus().UpdateStageClearTime(GAMETYPES::NEXUSID(i), j, clearTime);
+
+                totalClearTime += clearTime;
             };
+
+            CGameData::Record().Nexus().UpdateTournamentClearTime(GAMETYPES::NEXUSID(i), totalClearTime);
         };
     };
 

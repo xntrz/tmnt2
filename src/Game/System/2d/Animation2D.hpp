@@ -61,11 +61,13 @@ public:
     void ResetHandler(void);
     void CheckStringObject(void);
     bool CheckMessageGetURL(const char* pszName) const;
-    bool SetText(const char* pszOrgString, const char* pszNewString);
+    bool SetText(const char* pszOrgString, const char* pszNewString);    
+    bool SetText(const char* pszOrgString, const wchar* pwszNewString);
     bool SetStringObjectText(Rt2dObject* pScene, const char* pszOrgString, const char* pszNewString);
+    bool SetStringObjectText(Rt2dObject* pScene, const wchar* pwszOrgString, const wchar* pwszNewString);
     RwTexture* GetTextureAddr(const char* pszFilename);
     void SetTexture(const char* pszOrgTexture, const char* pszNewTexture);
-    void SubstituteTexture(Rt2dObject* pScene, RwTexture* pOrgTexture, RwTexture* pNewTexture);
+    void ReplaceTexture(Rt2dObject* pScene, RwTexture* pOrgTexture, RwTexture* pNewTexture);
     void SetInterpolateAll(bool bSet);
     void FlashKeyPress(uint32 uKey);
     void FlashUnlockKeyEnable(bool bEnable);
@@ -80,10 +82,10 @@ private:
 
 private:
     static CAnimation2D* m_pAnimation2D;
-    static uint32 m_uAnimation2DRef;
-    int32 m_iMessageIndex;
-    Rt2dMaestro* m_pMaestro;
-    CMenuSound m_MenuSound;
-    CMenuController m_MenuController;
-    CCenterStringObject m_CenterStringObj;
+    static uint32        m_uAnimation2DRef;
+    int32                m_iMessageIndex;
+    Rt2dMaestro*         m_pMaestro;
+    CMenuSound           m_menuSound;
+    CMenuController      m_menuController;
+    CCenterStringObject  m_centerStrObj;
 };

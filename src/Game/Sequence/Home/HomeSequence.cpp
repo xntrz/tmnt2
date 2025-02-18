@@ -187,7 +187,7 @@ int32 CHomeSequence::Branch(int32 iLabel, const void* param)
 
     case PROCLABEL_SEQ_NEXUSRETRY:
         {
-            bool bRetryFlag = *reinterpret_cast<const bool*>(param);
+            bool bRetryFlag = (param != nullptr);
             
             if (bRetryFlag)
             {

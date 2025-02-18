@@ -29,16 +29,20 @@ public:
     virtual void OnDraw(void) const override;
     virtual bool OnAttach(int32 iFileID);
     virtual bool OnAttach(const char* pszFilename);
-    virtual void BeginFadein(void);
-    virtual void BeginFadeout(void);
+    virtual void BeginFadeIn(void);
+    virtual void BeginFadeOut(void);
     bool IsAnim2DMessageList(const char** pTable, int32 max, int32* index) const;
     bool IsDrawing(void) const;
     void SetAnimationName(const char* pszAnimName);
+    CAnimation2D& Animation2D(void);
+    CAnimation2D& Animation2D(void) const;
+    ANIMSTEP AnimStep(void) const;
+    void EnableLoadingDisplay(bool bEnable);
 
-protected:
-    char m_szAnimName[ANIMNAME_MAX];
-    ANIMSTEP m_animstep;
-    CAnimation2D* m_pAnimation2D;
-    bool m_bDisplayLoading;
-    bool m_bResumed;
+private:
+    char                    m_szAnimName[ANIMNAME_MAX];
+    ANIMSTEP                m_animStep;
+    mutable CAnimation2D*   m_pAnimation2D;
+    bool                    m_bDisplayLoading;
+    bool                    m_bRet;
 };

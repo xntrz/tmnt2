@@ -164,7 +164,7 @@ void CComingSoonSequence::DrawScreen(float t) const
 
     CSprite sprite;
     sprite.SetTexture(m_pTexture);
-	sprite.SetPositionAndSize(0.0f, 0.0f, 640.0f, 480.0f);// float(CScreen::Width()), float(CScreen::Height()));
+	sprite.SetPositionAndSize(0.0f, 0.0f, 640.0f, 480.0f);
     sprite.SetRGBA(255, 255, 255, AlphaBasis);
     sprite.SetUV(0.0f, 0.0f, 0.625f, 0.9375f);
     sprite.Draw();

@@ -42,8 +42,8 @@ public:
     void SetPriority(PRIORITY priority);
 
 protected:
-    static int32 m_iWindowNum;    
-    static WINDOWINFO m_aWindowTable [];
-    static RwRGBA m_aColorTable [];
-    int32 m_iWindowIndex;
+    static int32        m_iWindowNum;    
+    static WINDOWINFO   m_aWindowTable[];
+    static RwRGBA       m_aColorTable[];
+    int32               m_iWindowIndex;
 };

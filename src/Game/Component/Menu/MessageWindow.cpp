@@ -2,13 +2,15 @@
 
 
 /*static*/ int32 CMessageWindow::m_iWindowNum = 0;
+
 /*static*/ CMessageWindow::WINDOWINFO CMessageWindow::m_aWindowTable[CMessageWindow::MESSAGEWINDOW_MAX];
+
 /*static*/ RwRGBA CMessageWindow::m_aColorTable[]
 {
-    { 0x7E, 0xFF, 0x78, 0xFF },
-    { 0x79, 0xA2, 0xFF, 0xFF },
-    { 0xFF, 0x79, 0xB1, 0xFF },
-    { 0x7E, 0xFF, 0x78, 0x80 },
+    /* COLOR_NORMAL     */  { 0x7E, 0xFF, 0x78, 0xFF },
+    /* COLOR_UNLOCK     */  { 0x79, 0xA2, 0xFF, 0xFF },
+    /* COLOR_ERROR      */  { 0xFF, 0x79, 0xB1, 0xFF },
+    /* COLOR_TUTORIAL   */  { 0x7E, 0xFF, 0x78, 0x80 },
 };
 
 
@@ -35,7 +37,7 @@
     for (int32 i = 0; i < m_iWindowNum; ++i)
     {
         if (m_aWindowTable[i].m_pWindow &&
-            m_aWindowTable[i].m_priority == CMessageWindow::PRIORITY_NORMAL)
+            (m_aWindowTable[i].m_priority == CMessageWindow::PRIORITY_NORMAL))
         {
             m_aWindowTable[i].m_pWindow->Draw();
         };
@@ -48,7 +50,7 @@
     for (int32 i = 0; i < m_iWindowNum; ++i)
     {
         if (m_aWindowTable[i].m_pWindow &&
-            m_aWindowTable[i].m_priority == CMessageWindow::PRIORITY_TOP)
+            (m_aWindowTable[i].m_priority == CMessageWindow::PRIORITY_TOP))
         {
             m_aWindowTable[i].m_pWindow->Draw();
         };
@@ -73,7 +75,7 @@ CMessageWindow::CMessageWindow(COLOR color)
 
     for (int32 i = 0; i < COUNT_OF(m_aWindowTable); ++i)
     {
-        if (!m_aWindowTable[ i ].m_pWindow)
+        if (!m_aWindowTable[i].m_pWindow)
         {
             m_iWindowIndex = i;
             break;
@@ -94,7 +96,8 @@ CMessageWindow::CMessageWindow(COLOR color)
 CMessageWindow::~CMessageWindow(void)
 {
     ASSERT(m_iWindowNum > 0);
-    ASSERT(m_iWindowIndex >= 0 && m_iWindowIndex < MESSAGEWINDOW_MAX);
+    ASSERT(m_iWindowIndex >= 0);
+    ASSERT(m_iWindowIndex < MESSAGEWINDOW_MAX);
     ASSERT(m_aWindowTable[m_iWindowIndex].m_pWindow);
     ASSERT(m_aWindowTable[m_iWindowIndex].m_pWindow == this);
 
@@ -105,8 +108,9 @@ CMessageWindow::~CMessageWindow(void)
 
 void CMessageWindow::SetColor(COLOR color)
 {
-    ASSERT(color >= 0 && color < COUNT_OF(m_aColorTable));
-    
+    ASSERT(color >= 0);
+    ASSERT(color < COUNT_OF(m_aColorTable));
+
     m_aSprite[0].SetRGBA(m_aColorTable[color]);
     m_aSprite[1].SetRGBA(m_aColorTable[color]);
     m_aSprite[2].SetRGBA(m_aColorTable[color]);
@@ -115,7 +119,8 @@ void CMessageWindow::SetColor(COLOR color)
 
 void CMessageWindow::SetPriority(PRIORITY priority)
 {
-    ASSERT(m_iWindowIndex >= 0 && m_iWindowIndex < MESSAGEWINDOW_MAX);
+    ASSERT(m_iWindowIndex >= 0);
+    ASSERT(m_iWindowIndex < MESSAGEWINDOW_MAX);
     ASSERT(m_aWindowTable[m_iWindowIndex].m_pWindow);
     ASSERT(m_aWindowTable[m_iWindowIndex].m_pWindow == this);
 

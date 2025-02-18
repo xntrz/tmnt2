@@ -32,14 +32,13 @@ bool CNexusRetrySequence::OnAttach(const void* pParam)
     m_step = STEP_START;
     m_bRetryFlag = false;
 
-    int32 nController = CGameData::Attribute().GetVirtualPad();
-
-    m_pDlg = new CDialog(CDialog::COLOR_UNLOCK, CDialog::STATUS_YES, nController);
-    ASSERT(m_pDlg);
-
+    m_pDlg = new CDialog;
     m_pDlg->Set(0.0f, 0.0f, 640.0f, 128.0f);
-    m_pDlg->SetText(CGameText::GetText(GAMETEXT(930)), 16.0f, { 0xFF, 0xFF, 0xFF, 0xFF });
+    m_pDlg->SetStatus(CDialog::STATUS_NO);
     m_pDlg->SetOpenAction(false);
+    m_pDlg->SetText(CGameText::GetText(GAMETEXT_GG_TOURNEY_RETRY),
+                    16.0f,
+                    { 0xFF, 0xFF, 0xFF, 0xFF });
     
     CScreenFade::BlackOut(0.0f);
 
@@ -105,7 +104,7 @@ void CNexusRetrySequence::OnMove(bool bRet, const void* pReturnValue)
 
     case STEP_EOL:
         {
-            Ret((const void*)m_bRetryFlag);
+            Ret(reinterpret_cast<const void*>(m_bRetryFlag));
         }
         break;
 

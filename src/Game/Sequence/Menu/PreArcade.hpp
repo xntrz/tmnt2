@@ -3,21 +3,31 @@
 #include "System/Common/Process/Sequence.hpp"
 
 
-class CDatabaseSequence final : public CSequence
+#ifdef TMNT2_BUILD_EU
+
+class CPreArcadeSequence : public CSequence
 {
+private:
+    enum STEP
+    {
+        STEP_RET = 0,
+        STEP_FADE_IN,
+        STEP_DISP_WARNING,
+        STEP_FADE_OUT,
+        STEP_EXIT,
+    };
+
 public:
-    static void SetDBViewerNo(int32 iDBViewerNo);
-    static int32 GetDBViewerNo(void);
     static CProcess* Instance(void);
 
-    CDatabaseSequence(void);
-    virtual ~CDatabaseSequence(void);
     virtual bool OnAttach(const void* pParam) override;
     virtual void OnDetach(void) override;
     virtual void OnMove(bool bRet, const void* pReturnValue) override;
     virtual void OnDraw(void) const override;
-    int32 DatabaseBranch(int32 iLabel);
-    
+
 private:
-    int32        m_iLabelCurrent;
+    int32 m_step;
+    float m_fTimer;
 };
+
+#endif /* TMNT2_BUILD_EU */

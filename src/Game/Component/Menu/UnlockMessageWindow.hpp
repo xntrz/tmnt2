@@ -25,10 +25,10 @@ public:
     void SetSizeFromID(SECRETID::VALUE idSecret);    
 
 private:
-    static SPRITETEXTURE m_aPasswordTextureTable [];
-    CSprite m_aSpritePassword[ PASSWORD_SPRITE_NUM ];
-    CSprite m_CursorSprite;
-    CMessageText m_CursorText;
-    float m_fCursorRotation;
-    bool m_bPasswordDraw;
+    static SPRITETEXTURE m_aPasswordTextureTable[];
+    CSprite              m_aSpritePassword[PASSWORD_SPRITE_NUM];
+    CSprite              m_cursorSprite;
+    CMessageText         m_cursorText;
+    float                m_fCursorRotation;
+    bool                 m_bPasswordDraw;
 };

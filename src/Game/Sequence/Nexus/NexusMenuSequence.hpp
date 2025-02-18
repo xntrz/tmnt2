@@ -29,13 +29,12 @@ public:
     virtual bool OnAttach(const void* pParam) override;
     virtual void OnDetach(void) override;
     virtual void OnMove(bool bRet, const void* pReturnValue) override;
-    virtual void BeginFadein(void) override;
-
-private:
-    void replaceText(void);
-    void replaceTexture(void);
-    bool menuMessageProc(void);
-    void pressFlashKeyByNexusState(GAMETYPES::NEXUSID idNexus);
+    virtual void OnDraw(void) const override;
+    virtual void BeginFadeIn(void) override;
+    void ReplaceText(void);
+    void ReplaceTexture(void);
+    void MessageProc(void);
+    void PressFlashKeyByNexusState(GAMETYPES::NEXUSID idNexus);
 
 private:
     NEXUSMENU m_nexusmenu;

@@ -92,6 +92,25 @@ void CLoadStageSeqState::LoadPlayers(void)
 void CLoadStageSeqState::LoadData(void)
 {
     LoadStageCommon();
+
+#ifdef TMNT2_BUILD_EU
+    CDataLoader::Regist(FILEID::ID_LANG_GAUGE_EU);
+
+    switch (CStageInfo::GetMode(m_idStage))
+    {
+    case GAMETYPES::STAGEMODE_HOME:
+        CDataLoader::Regist(FILEID::ID_LANG_HOME_EU);
+        break;
+
+    case GAMETYPES::STAGEMODE_RIDE:
+        CDataLoader::Regist(FILEID::ID_LANG_RIDE_EU);
+        break;
+
+    default:
+        break;
+    };
+#endif /* TMNT2_BUILD_EU */
+
     LoadPlayers();
     LoadStage();
 };

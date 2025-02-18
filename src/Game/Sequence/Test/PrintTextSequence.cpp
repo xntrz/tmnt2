@@ -22,16 +22,17 @@ void CPrintTextSequence::OnMove(bool bRet, const void* pReturnValue)
         {
             int32 SysTextNum = CSystemText::GetTextNum();
             for (int32 i = 0; i < SysTextNum; ++i)
-                std::wprintf(L"%d) %s\n", i, CSystemText::GetText(SYSTEXT(i)));
+                std::wprintf(L"%d (0x%X): %s\n", i, i, CSystemText::GetText(SYSTEXT(i)));
         }
         break;
 
     default:        
     case 1:
         {
+
             int32 GameTextNum = CGameText::GetTextNum();
             for (int32 i = 0; i < GameTextNum; ++i)
-                std::wprintf(L"%d) %s\n", i, CGameText::GetText(GAMETEXT(i)));
+                std::wprintf(L"%d (0x%X): %s\n", i, i, CGameText::GetText(GAMETEXT(i)));
         }
         break;
     };

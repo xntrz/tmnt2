@@ -25,17 +25,21 @@ void CDisplayOptionData::Initialize(void)
 #ifdef TARGET_PC
     m_iVideomodeNum = CPCSpecific::GetVideomodeNum();
     m_iVideomodeCur = CPCSpecific::GetVideomodeCur();    
+
     m_pVideomode = new VIDEOMODE[m_iVideomodeNum];
 
     for (int32 i = 0; i < m_iVideomodeNum; ++i)
     {
-		PC::VIDEOMODE vm;
-
-		CPCSpecific::GetVideomode(i, vm);
+		PC::VIDEOMODE videomode;
+		CPCSpecific::GetVideomode(i, videomode);
         
-		std::sprintf(m_pVideomode[i].m_szName, "%d x %d x %d", vm.w, vm.h, vm.d);
+        std::sprintf(m_pVideomode[i].m_szName,
+                     "%d x %d x %d",
+                     videomode.w,
+                     videomode.h,
+                     videomode.d);
     };
-#endif
+#endif /* TARGET_PC */
 };
 
 
@@ -50,7 +54,7 @@ void CDisplayOptionData::Terminate(void)
         m_iVideomodeNum = 0;
         m_iVideomodeCur = -1;
     };
-#endif
+#endif /* TARGET_PC */
 };
 
 
@@ -80,9 +84,9 @@ void CDisplayOptionData::Snapshot(RAWDATA& rRawData) const
     rRawData.m_bPlayerMarkerFlag    = m_bPlayerMarkerFlag;
     rRawData.m_bHelpFlag            = m_bHelpFlag;
 
-#ifdef TARGET_PC    
+#ifdef TARGET_PC
     rRawData.m_iVideomodeNo         = m_iVideomodeCur;
-#endif        
+#endif /* TARGET_PC */
 };
 
 
@@ -92,9 +96,9 @@ void CDisplayOptionData::Restore(const RAWDATA& rRawData)
     m_bPlayerMarkerFlag = rRawData.m_bPlayerMarkerFlag;
     m_bHelpFlag         = rRawData.m_bHelpFlag;
 
-#ifdef TARGET_PC    
+#ifdef TARGET_PC
     m_iVideomodeCur     = rRawData.m_iVideomodeNo;
-#endif
+#endif /* TARGET_PC */
 };
 
 
@@ -135,7 +139,6 @@ bool CDisplayOptionData::IsHelpEnabled(void) const
 
 
 #ifdef TARGET_PC
-
 
 void CDisplayOptionData::SetVideomode(int32 No)
 {

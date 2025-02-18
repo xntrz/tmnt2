@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Game/System/Text/GameText.hpp"
+#include "Game/System/Text/GameTextID.hpp"
 
 
 namespace SEGROUPID

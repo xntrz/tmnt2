@@ -9,7 +9,7 @@
 
 CWindowObject::CMessageText::CMessageText(void)
 : m_pwszText(nullptr)
-, m_fHeight(CGameFont::GetScreenHeight())
+, m_fHeight(CGameFont::GetHeightScaled() * 1.0f)
 , m_Color({0xFF, 0xFF, 0xFF, 0xFF})
 {
     ;
@@ -44,12 +44,11 @@ void CWindowObject::CMessageText::SetText(const wchar* pwszText)
 
     if (pwszText)
     {
-        int32 TextLen = CTextData::StrLen(pwszText);
-        m_pwszText = new wchar[TextLen + 1];
-        ASSERT(m_pwszText);
+        int32 len = CTextData::StrLen(pwszText);
 
-        if (m_pwszText)
-            CTextData::StrCpy(m_pwszText, pwszText);
+        m_pwszText = new wchar[len + 1];
+
+        CTextData::StrCpy(m_pwszText, pwszText);
     };
 };
 
@@ -58,9 +57,11 @@ void CWindowObject::CMessageText::Draw(const Rt2dBBox& bbox) const
 {
     if (m_pwszText)
     {
-		CGameFont::SetHeight(m_fHeight);
+        Rt2dBBox bboxDraw = bbox;
+
+        CGameFont::SetHeight(m_fHeight);
         CGameFont::SetRGBA(m_Color);
-        CGameFont::Flow(m_pwszText, (Rt2dBBox*)&bbox);
+        CGameFont::Flow(m_pwszText, &bboxDraw);
     };
 };
 
@@ -69,6 +70,11 @@ const wchar* CWindowObject::CMessageText::Text(void) const
 {
     return m_pwszText;
 };
+
+
+//
+// *********************************************************************************
+//
 
 
 /*static*/ const float CWindowObject::OPENTIME = 0.25f;
@@ -91,13 +97,19 @@ const wchar* CWindowObject::CMessageText::Text(void) const
     {
         RwTexture* pRwTexture = CTextureManager::GetRwTexture(m_aSpriteTextureTable[i].m_pszName);
         ASSERT(pRwTexture);
+        
         m_aSpriteTextureTable[i].m_pTexture = pRwTexture;
     };
 };
 
 
 CWindowObject::CWindowObject(void)
-: m_phase(PHASE_NONE)
+: m_aSprite()
+, m_textMsg()
+, m_textTitle()
+, m_bboxDraw({ 0.0f })
+, m_bbox({ 0.0f })
+, m_phase(PHASE_NONE)
 , m_fTime(0.0f)
 , m_bOpenAction(true)
 {
@@ -135,34 +147,32 @@ void CWindowObject::DoneInput(void)
 
 void CWindowObject::DrawInWindow(const Rt2dBBox& bbox) const
 {
-    if (m_Title.Text())
+    if (m_textTitle.Text())
     {
         Rt2dBBox bboxTitle;
-        Rt2dBBox bboxText;
-
         bboxTitle.x = bbox.x - bbox.w * 0.45f;
         bboxTitle.y = (bbox.h * 0.2f) - bbox.y;
         bboxTitle.w = bbox.w * 0.9f;
         bboxTitle.h = bbox.h * 0.2f;
 
-        bboxText.x = bbox.x - bbox.w * 0.45f;
-        bboxText.y = bbox.h * -0.4f - bbox.y;
-        bboxText.w = bbox.w * 0.9f;
-        bboxText.h = bbox.h * 0.6f;
+        Rt2dBBox bboxMsg;
+        bboxMsg.x = bbox.x - bbox.w * 0.45f;
+        bboxMsg.y = bbox.h * -0.4f - bbox.y;
+        bboxMsg.w = bbox.w * 0.9f;
+        bboxMsg.h = bbox.h * 0.6f;
 
-        m_Title.Draw(bboxTitle);
-        m_Text.Draw(bboxText);
+        m_textTitle.Draw(bboxTitle);
+        m_textMsg.Draw(bboxMsg);
     }
-    else if(m_Text.Text())
+    else if(m_textMsg.Text())
     {
-        Rt2dBBox bboxText;
+        Rt2dBBox bboxMsg;
+        bboxMsg.x = bbox.x - bbox.w * 0.45f;
+        bboxMsg.y = bbox.h * -0.4f - bbox.y;
+        bboxMsg.w = bbox.w * 0.9f;
+        bboxMsg.h = bbox.h * 0.8f;
 
-        bboxText.x = bbox.x - bbox.w * 0.45f;
-        bboxText.y = bbox.h * -0.4f - bbox.y;
-        bboxText.w = bbox.w * 0.9f;
-        bboxText.h = bbox.h * 0.8f;
-
-        m_Text.Draw(bboxText);
+        m_textMsg.Draw(bboxMsg);
     };
 };
 
@@ -228,6 +238,9 @@ void CWindowObject::Draw(void) const
         m_aSprite[2].Draw();
         DrawInWindow(m_bboxDraw);
         CSystem2D::PopRenderState();
+        break;
+
+    default:
         break;
     };
 };
@@ -297,52 +310,40 @@ void CWindowObject::SetPositionOnOpening(void)
 {
     float t = ((OPENTIME - m_fTime) * 4.0f);
     
-    m_bboxDraw =
-    {
-        m_bbox.x,
-        m_bbox.y + (t * ((m_bbox.h + 240.0f - m_bbox.y) * t)),
-        m_bbox.w,
-        m_bbox.h,
-    };
+    m_bboxDraw.x = m_bbox.x;
+    m_bboxDraw.y = m_bbox.y + (t * ((m_bbox.h + 240.0f - m_bbox.y) * t));
+    m_bboxDraw.w = m_bbox.w;
+    m_bboxDraw.h = m_bbox.h;
 
-    SetSprite(
-        m_bboxDraw.x,
-        m_bboxDraw.y,
-        m_bboxDraw.w,
-        m_bboxDraw.h
-    );
+    SetSprite(m_bboxDraw.x,
+              m_bboxDraw.y,
+              m_bboxDraw.w,
+              m_bboxDraw.h);
 };
 
 
 void CWindowObject::SetPositionOnClosing(void)
 {
-    float t = m_fTime * 4.0f;
+    float t = (m_fTime * 4.0f);
 
-    m_bboxDraw =
-    {
-        m_bbox.x,
-        m_bbox.y + (t * ((-240.0f - m_bbox.h - m_bbox.y) * t)),
-        m_bbox.w,
-        m_bbox.h,
-    };
+    m_bboxDraw.x = m_bbox.x;
+    m_bboxDraw.y = m_bbox.y + (t * ((-240.0f - m_bbox.h - m_bbox.y) * t));
+    m_bboxDraw.w = m_bbox.w;
+    m_bboxDraw.h = m_bbox.h;
 
-    SetSprite(
-        m_bboxDraw.x,
-        m_bboxDraw.y,
-        m_bboxDraw.w,
-        m_bboxDraw.h
-    );
+    SetSprite(m_bboxDraw.x,
+              m_bboxDraw.y,
+              m_bboxDraw.w,
+              m_bboxDraw.h);
 };
 
 
 void CWindowObject::SetPosition(Rt2dBBox& bbox)
 {
-    SetPosition(
-        bbox.x,
-        bbox.y,
-        bbox.w,
-        bbox.h
-    );
+    SetPosition(bbox.x,
+                bbox.y,
+                bbox.w,
+                bbox.h);
 };
 
 
@@ -371,25 +372,25 @@ void CWindowObject::SetTexture(void)
 
 void CWindowObject::SetTitle(const wchar* pwszText, float fHeight, const RwRGBA& rColor)
 {
-    m_Title.SetText(pwszText, fHeight, rColor);
+    m_textTitle.SetText(pwszText, fHeight, rColor);
 };
 
 
 void CWindowObject::SetTitle(const wchar* pwszText)
 {
-    m_Title.SetText(pwszText);
+    m_textTitle.SetText(pwszText);
 };
 
 
 void CWindowObject::SetText(const wchar* pwszText, float fHeight, const RwRGBA& rColor)
 {
-    m_Text.SetText(pwszText, fHeight, rColor);
+    m_textMsg.SetText(pwszText, fHeight, rColor);
 };
 
 
 void CWindowObject::SetText(const wchar* pwszText)
 {
-    m_Text.SetText(pwszText);
+    m_textMsg.SetText(pwszText);
 };
 
 
@@ -401,7 +402,8 @@ void CWindowObject::SetOpenAction(bool bSet)
 
 bool CWindowObject::IsOpen(void) const
 {
-    return (m_phase > PHASE_NONE && m_phase <= PHASE_CLOSE);
+    return (m_phase >  PHASE_NONE) &&
+           (m_phase <= PHASE_CLOSE);
 };
 
 

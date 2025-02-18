@@ -24,7 +24,7 @@ public:
     void CheckSoundLabelList(Rt2dMaestro* pMaestro);
 
 private:
-    static const char* m_apszSoundLabel[];
-    static int32 m_anSoundTable[];
-    int32 m_ansoundLabelID[SOUND_ID_MAX];
+    static const char*  m_apszSoundLabel[];
+    static int32        m_anSoundTable[];
+    int32               m_ansoundLabelID[SOUND_ID_MAX];
 };

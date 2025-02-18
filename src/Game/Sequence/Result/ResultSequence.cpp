@@ -1,22 +1,24 @@
 #include "ResultSequence.hpp"
 
-#include "Game/Component/GameData/GameData.hpp"
 #include "Game/Component/GameMain/AreaInfo.hpp"
+#include "Game/Component/GameData/GameData.hpp"
 #include "Game/Component/GameMain/NexusInfo.hpp"
-#include "Game/System/Text/GameText.hpp"
 #include "Game/System/2d/GameFont.hpp"
 #include "Game/System/2d/Animation2D.hpp"
 #include "Game/System/2d/MenuController.hpp"
-#include "Game/System/Sound/GameSound.hpp"
+#include "Game/System/DataLoader/DataLoader.hpp"
 #include "Game/System/Misc/RenderStateManager.hpp"
+#include "Game/System/Sound/GameSound.hpp"
+#include "Game/System/Text/GameText.hpp"
 #include "Game/System/Texture/TextureManager.hpp"
-#include "System/Common/Sprite.hpp"
-#include "System/Common/Controller.hpp"
 #include "System/Common/File/FileID.hpp"
+#include "System/Common/Controller.hpp"
+#include "System/Common/Configure.hpp"
 #include "System/Common/RenderState.hpp"
-#include "System/Common/TextData.hpp"
 #include "System/Common/Screen.hpp"
 #include "System/Common/System2D.hpp"
+#include "System/Common/Sprite.hpp"
+#include "System/Common/TextData.hpp"
 
 
 class CResultWorkPool
@@ -55,19 +57,19 @@ public:
     void SetPrizeNo(int32 nPrizeNo);
     
 private:
-    RwTexture* m_apTexture[25];
-    CSprite m_sprite;    
-    bool m_bTextureSettingFlag;
-    int32 m_aOldCry[GAMETYPES::CRYSTALTYPE_NUM - 1];
-    int32 m_aAddCry[GAMETYPES::CRYSTALTYPE_NUM - 1];
-    int32 m_aLvlupCry[GAMETYPES::CRYSTALTYPE_NUM - 1];
-    int32 m_aCryTable[(GAMETYPES::CRYSTALTYPE_NUM - 1) * 3];
-    int32 m_nLvlupCryIndex;
-    ANIMTYPE m_animtype;
-    float m_afRotate[2];
-    uint32 m_auAnimCnt[4];
-    bool m_bAnimFlag;
-    int32 m_nPrizeNo;
+    RwTexture*  m_apTexture[25];
+    CSprite     m_sprite;    
+    bool        m_bTextureSettingFlag;
+    int32       m_aOldCry[GAMETYPES::CRYSTALTYPE_NUM - 1];
+    int32       m_aAddCry[GAMETYPES::CRYSTALTYPE_NUM - 1];
+    int32       m_aLvlupCry[GAMETYPES::CRYSTALTYPE_NUM - 1];
+    int32       m_aCryTable[(GAMETYPES::CRYSTALTYPE_NUM - 1) * 3];
+    int32       m_nLvlupCryIndex;
+    ANIMTYPE    m_animtype;
+    float       m_afRotate[2];
+    uint32      m_auAnimCnt[4];
+    bool        m_bAnimFlag;
+    int32       m_nPrizeNo;
 };
 
 
@@ -202,10 +204,7 @@ void CResultWorkPool::CrystalPieceDraw(void)
         float dt = (float(m_auAnimCnt[0]) / fDuration);
         
         m_sprite.SetTexture(m_apTexture[m_aCryTable[i] + 11]);
-        m_sprite.Move(
-            float(i) * (dt * 64.0f) + (float(nNumAddCry) * -32.0f) + 32.0f,
-            -50.0f
-        );
+        m_sprite.Move(float(i) * (dt * 64.0f) + (float(nNumAddCry) * -32.0f) + 32.0f, -50.0f);
         m_sprite.Draw();
     };
 };
@@ -280,15 +279,15 @@ void CResultWorkPool::CrystalLvlUpDraw(void)
 
                 uAlphaBasis = uint8(Math::LinearTween(0.0f, 255.0f, float(m_auAnimCnt[3]), fDurationSub2));
 
-                const wchar* pwszText = CGameText::GetText(GAMETEXT(790));
+                const wchar* pwszText = CGameText::GetText(GAMETEXT_RES_CRY_LVLUP);
                 float x = -(CGameFont::GetStringWidth(pwszText) * 0.5f);
                 float y = Math::LinearTween(-100.0f, 10.0f, float(m_auAnimCnt[3]), fDurationSub2);
                 
-				CGameFont::SetHeight(CGameFont::GetScreenHeightEx(TYPEDEF::VSCR_H / 2.5f));
+                CGameFont::SetHeightScaled(2.5f);
                 CGameFont::SetRGBA(255, 255, 255, uAlphaBasis);
                 CGameFont::Show(pwszText, x, y);
                 
-                pwszText = CGameText::GetText(GAMETEXT(m_nLvlupCryIndex + 791));
+                pwszText = CGameText::GetText(GAMETEXT(GAMETEXT_RES_CRY_LVLUP_R + m_nLvlupCryIndex));
                 x = -(CGameFont::GetStringWidth(pwszText) * 0.5f);
                 y = Math::LinearTween(-70.0f, 10.0f, float(m_auAnimCnt[3]), fDurationSub2);
 
@@ -503,20 +502,20 @@ void CResultWorkPool::CrystalGrowingDraw(void)
 	uint8 uAlphaBasis = uint8(Math::LinearTween(0.0f, 255.0f, float(m_auAnimCnt[0]), fDuration));
     float fOfsY = Math::LinearTween(0.0f, 10.0f, float(m_auAnimCnt[0]), fDuration);
 
-	CGameFont::SetHeight(CGameFont::GetScreenHeightEx(TYPEDEF::VSCR_H / 2.0f));
+    CGameFont::SetHeightScaled(2.0f);
     CGameFont::SetRGBA(255, 255, 255, uAlphaBasis);
 
-    const wchar* pwszText = CGameText::GetText(GAMETEXT(m_nLvlupCryIndex + 786));
+    const wchar* pwszText = CGameText::GetText(GAMETEXT(GAMETEXT_GG_ATTACK + m_nLvlupCryIndex));
     float x = -(CGameFont::GetStringWidth(pwszText) * 0.5f);
     float y = fOfsY - 120.0f;
     CGameFont::Show(pwszText, x, y);
 
-    int32 aCryText[4] =
+    GAMETEXT aCryText[4] =
     {
-        768,
-        771,
-        777,
-        774,
+        GAMETEXT_RES_GROW_RED_1,
+        GAMETEXT_RES_GROW_GREEN_1,
+        GAMETEXT_RES_GROW_ORANGE_1,
+        GAMETEXT_RES_GROW_WHITE_1,
     };
 
     Rt2dBBox bbox = { 0 };
@@ -610,10 +609,10 @@ void CResultWorkPool::BattleNexusWinnerDraw(void)
 
 	uint8 uAlphaBasis = uint8(Math::LinearTween(0.0f, 255.0f, float(m_auAnimCnt[0]), fDuration));
 
-	CGameFont::SetHeight(CGameFont::GetScreenHeightEx(TYPEDEF::VSCR_H / 2.5f));
+    CGameFont::SetHeightScaled(2.5f);
     CGameFont::SetRGBA(255, 255, 255, uAlphaBasis);
 
-    const wchar* pwszText = CGameText::GetText(GAMETEXT(812));
+    const wchar* pwszText = CGameText::GetText(GAMETEXT_RES_NEXUS_WON);
     float fOfsX = -(CGameFont::GetStringWidth(pwszText) * 0.5f);
     CGameFont::Show(pwszText, fOfsX, 70.0f);
 
@@ -621,19 +620,19 @@ void CResultWorkPool::BattleNexusWinnerDraw(void)
     switch (idArea)
     {
     case AREAID::ID_AREA60_A:
-        pwszText = CGameText::GetText(GAMETEXT(85));
+        pwszText = CGameText::GetText(GAMETEXT_AREA60A_NAME);
         break;
 
     case AREAID::ID_AREA60_B:
-        pwszText = CGameText::GetText(GAMETEXT(86));
+        pwszText = CGameText::GetText(GAMETEXT_AREA60B_NAME);
         break;
 
     case AREAID::ID_AREA60_C:
-        pwszText = CGameText::GetText(GAMETEXT(87));
+        pwszText = CGameText::GetText(GAMETEXT_AREA60C_NAME);
         break;
 
     case AREAID::ID_AREA60_D:
-        pwszText = CGameText::GetText(GAMETEXT(88));
+        pwszText = CGameText::GetText(GAMETEXT_AREA60D_NAME);
         break;
 
     default:
@@ -765,7 +764,7 @@ void CResultWorkPool::SetPrizeNo(int32 nPrizeNo)
 
 CResultSequence::CResultSequence(void)
 : m_pResultWorkPool(nullptr)
-, m_resulttype(GAMETYPES::RESULTTYPE_NORMAL)
+, m_resultType(GAMETYPES::RESULTTYPE_NORMAL)
 , m_pszLvlUpCrystal(nullptr)
 {
     ;
@@ -780,41 +779,42 @@ CResultSequence::~CResultSequence(void)
 
 bool CResultSequence::OnAttach(const void* pParam)
 {    
-    m_resulttype = CGameData::PlayResult().GetResultType();
+    m_resultType = CGameData::PlayResult().GetResultType();
 
     m_pResultWorkPool = new CResultWorkPool;
     m_pResultWorkPool->ResultDataSet();
 
-    bool bResult = false;
-    
-    switch (m_resulttype)
+    const char* pszAnimName = nullptr;
+    FILEID::VALUE fileId = FILEID::ID_INVALID;
+
+    switch (m_resultType)
     {
     case GAMETYPES::RESULTTYPE_NORMAL:
-        SetAnimationName("result");
-        bResult = CAnim2DSequence::OnAttach(FILEID::ID_RESULT);
+        pszAnimName = "result";
+        fileId      = FILEID::ID_RESULT;
         break;
 
     case GAMETYPES::RESULTTYPE_RIDE:
-        SetAnimationName("result_r");
-        bResult = CAnim2DSequence::OnAttach(FILEID::ID_RESULT_R);
+        pszAnimName = "result_r";
+        fileId      = FILEID::ID_RESULT_R;
         break;
 
     case GAMETYPES::RESULTTYPE_NEXUS:        
         if (CGameData::PlayResult().GetAreaResult() == CGamePlayResult::AREARESULT_GAMECLEAR)
         {
-            bResult = CAnim2DSequence::OnAttach(FILEID::ID_RESULT_N);
-            SetAnimationName("result_n");
+            pszAnimName = "result_n";
+            fileId      = FILEID::ID_RESULT_N;
         }
         else
         {
-            bResult = CAnim2DSequence::OnAttach(FILEID::ID_RESULT_N_LOSE);
-            SetAnimationName("result_n_lose");
+            pszAnimName = "result_n_lose";
+            fileId      = FILEID::ID_RESULT_N_LOSE;
         };
         break;
 
     case GAMETYPES::RESULTTYPE_ENDING:
-        SetAnimationName("result_e");
-        bResult = CAnim2DSequence::OnAttach(FILEID::ID_RESULT_E);
+        pszAnimName = "result_e";
+        fileId      = FILEID::ID_RESULT_E;
         break;
 
     default:
@@ -822,9 +822,14 @@ bool CResultSequence::OnAttach(const void* pParam)
         break;
     };
 
-    ASSERT(bResult);
-
-    return bResult;
+#ifdef TMNT2_BUILD_EU
+    SetAnimationName("result");
+    CDataLoader::Regist(fileId);
+    return CAnim2DSequence::OnAttach(FILEID::ID_LANG_RES);
+#else /* TMNT2_BUILD_EU */
+    SetAnimationName(pszAnimName);
+    return CAnim2DSequence::OnAttach(fileId);
+#endif /* TMNT2_BUILD_EU */
 };
 
 
@@ -845,7 +850,7 @@ void CResultSequence::OnMove(bool bRet, const void* pReturnValue)
 {
     CAnim2DSequence::OnMove(bRet, pReturnValue);
 
-    switch (m_animstep)
+    switch (AnimStep())
     {
     case ANIMSTEP_FADEIN:
         {
@@ -856,7 +861,7 @@ void CResultSequence::OnMove(bool bRet, const void* pReturnValue)
         
     case ANIMSTEP_DRAW:
         {
-            ResultItemProc();
+            MessageProc();
         }        
         break;
 
@@ -886,37 +891,100 @@ void CResultSequence::OnDraw(void) const
         m_pResultWorkPool->Draw();
         CRenderStateManager::SetDefault();
     };
+
+#ifdef TMNT2_BUILD_EU
+    CSystem2D::PushRenderState();
+
+    CGameFont::SetHeightScaled(2.0f);
+    CGameFont::SetRGBA(255, 255, 255, 255);
+
+    const wchar* pwszText = CGameText::GetText(GAMETEXT_EU_HELP_9);
+
+    if (CGameFont::GetStringWidth(pwszText) >= 500.0f)
+    {
+        Rt2dBBox bbox;
+        bbox.x = -272.0f;
+        bbox.y = -230.0f;
+        bbox.w =  500.0f;
+        bbox.h =   60.0f;
+
+        CGameFont::Flow(pwszText, &bbox);
+    }
+    else
+    {
+        CGameFont::Show(pwszText, -272.0f, 190.0f);
+    };
+
+    CSystem2D::PopRenderState();
+#endif /* TMNT2_BUILD_EU */
 };
 
 
-void CResultSequence::BeginFadein(void)
+void CResultSequence::BeginFadeIn(void)
 {
+#ifdef TMNT2_BUILD_EU
+    if (m_resultType != GAMETYPES::RESULTTYPE_ENDING)
+    {
+        Animation2D().SetText("RB_S_00", CGameText::GetText(GAMETEXT_RES_ANTIQ_GET));
+        Animation2D().SetText("RC_S_00", CGameText::GetText(GAMETEXT_RES_CRY_GET));
+        Animation2D().SetText("RC_S_01", CGameText::GetText(GAMETEXT_GG_ATTACK));
+        Animation2D().SetText("RC_S_02", CGameText::GetText(GAMETEXT_GG_DEFENCE));
+        Animation2D().SetText("RC_S_03", CGameText::GetText(GAMETEXT_GG_CHARGE));
+        Animation2D().SetText("RC_S_04", CGameText::GetText(GAMETEXT_GG_AERIAL));
+    };
+#endif /* TMNT2_BUILD_EU */
+
+    char szOrgStr[64];
+    szOrgStr[0] = '\0';
+
+    char szNewStr[64];
+    szNewStr[0] = '\0';
+
     const char* pszBgTexName = nullptr;
-    char szOrg[32];
-    char szNew[32];
 
-    szOrg[0] = '\0';
-    szNew[0] = '\0';
-
-    switch (m_resulttype)
+    switch (m_resultType)
     {
     case GAMETYPES::RESULTTYPE_NORMAL:
         {
-            m_pszLvlUpCrystal = "result_071";
             pszBgTexName = "result_018";
 
-            const CGameTime& Cleartime = CGameData::PlayResult().GetCleartimeTotal();
-            std::sprintf(szNew, "%d:%02d:%02d", Cleartime.GetHour(), Cleartime.GetMinute(), Cleartime.GetSecond());
-            m_pAnimation2D->SetText("RA_N_00", szNew);
+#ifdef TMNT2_BUILD_EU
+            m_pszLvlUpCrystal = "result_070";
+#else /* TMNT2_BUILD_EU */
+            m_pszLvlUpCrystal = "result_071";
+#endif /* TMNT2_BUILD_EU */
+
+#ifdef TMNT2_BUILD_EU            
+            Animation2D().SetText("RA_T_00", CGameText::GetText(GAMETEXT_EU_RES_RANK_CLEAR));            
+            Animation2D().SetText("RA_S_00", CGameText::GetText(GAMETEXT_RES_CLR_TIME));            
+            Animation2D().SetText("RA_S_01", CGameText::GetText(GAMETEXT_RES_CLR_LIFE));
+            Animation2D().SetText("RA_S_02", CGameText::GetText(GAMETEXT_RES_CLR_ITEM));
+#endif /* TMNT2_BUILD_EU */
+
+            const CGameTime& clearTime = CGameData::PlayResult().GetCleartimeTotal();
+            std::sprintf(szNewStr,
+                         "%d:%02d:%02d",
+                         clearTime.GetHour(),
+                         clearTime.GetMinute(),
+                         clearTime.GetSecond());
+            Animation2D().SetText("RA_N_00", szNewStr);
 
             float fRemainHPRatio = CGameData::PlayResult().GetRemainedHPRatio();
-            std::sprintf(szNew, "%.1f%%", fRemainHPRatio);
-            m_pAnimation2D->SetText("RA_N_01", szNew);
+            std::sprintf(szNewStr, "%.1f%%", fRemainHPRatio);
+            Animation2D().SetText("RA_N_01", szNewStr);
 
             float fItemTakeRatio = CGameData::PlayResult().GetItemTakeRatio();
-            std::sprintf(szNew, "%.1f%%", fItemTakeRatio);
-            m_pAnimation2D->SetText("RA_N_02", szNew);
+            std::sprintf(szNewStr, "%.1f%%", fItemTakeRatio);
+            Animation2D().SetText("RA_N_02", szNewStr);
 
+#ifdef TMNT2_BUILD_EU   
+            Animation2D().SetText("RD_T_00", CGameText::GetText(GAMETEXT_RES_RANK_TIT));
+            Animation2D().SetText("RD_S_00", CGameText::GetText(GAMETEXT_RES_RANK_TECH));            
+            Animation2D().SetText("RD_S_01", CGameText::GetText(GAMETEXT_RES_RANK_OFFENSE));            
+            Animation2D().SetText("RD_S_02", CGameText::GetText(GAMETEXT_RES_RANK_DEFENCE));
+            Animation2D().SetText("RD_S_03", CGameText::GetText(GAMETEXT_RES_RANK_AERIAL));
+#endif /* TMNT2_BUILD_EU */
+            
             for (int32 i = 0; i < GAMETYPES::CHARACTER_MAX; ++i)
             {
                 const char* pszTextureName = nullptr;
@@ -924,89 +992,77 @@ void CResultSequence::BeginFadein(void)
                 PLAYERID::VALUE idPlayer = CGameData::PlayResult().GetPlayerCharacter(i);
                 switch (idPlayer)
                 {
-                case PLAYERID::ID_LEO:
-                    pszTextureName = "res_per_face_leo";
-                    break;
-
-                case PLAYERID::ID_RAP:
-                    pszTextureName = "res_per_face_rap";
-                    break;
-
-                case PLAYERID::ID_MIC:
-                    pszTextureName = "res_per_face_mic";
-                    break;
-
-                case PLAYERID::ID_DON:
-                    pszTextureName = "res_per_face_don";
-                    break;
-
-                case PLAYERID::ID_SLA:
-                    pszTextureName = "res_per_face_sla";
-                    break;
-
-                case PLAYERID::ID_CAS:
-                    pszTextureName = "res_per_face_cay";
-                    break;
-
-                case PLAYERID::ID_KAR:
-                    pszTextureName = "res_per_face_kar";
-                    break;
-
-                case PLAYERID::ID_SPL:
-                    pszTextureName = "res_per_face_spl";
-                    break;
-
-                default:
-                    ASSERT(false);
-                    break;
+                case PLAYERID::ID_LEO: pszTextureName = "res_per_face_leo"; break;
+                case PLAYERID::ID_RAP: pszTextureName = "res_per_face_rap"; break;
+                case PLAYERID::ID_MIC: pszTextureName = "res_per_face_mic"; break;
+                case PLAYERID::ID_DON: pszTextureName = "res_per_face_don"; break;
+                case PLAYERID::ID_SLA: pszTextureName = "res_per_face_sla"; break;
+                case PLAYERID::ID_CAS: pszTextureName = "res_per_face_cay"; break;
+                case PLAYERID::ID_KAR: pszTextureName = "res_per_face_kar"; break;
+                case PLAYERID::ID_SPL: pszTextureName = "res_per_face_spl"; break;
+                default: ASSERT(false); break;
                 };
 
-                switch (i)
+
+                static const char* s_apszOrgTexName[] =
                 {
-                case 0:
-                    m_pAnimation2D->SetTexture("result_080", pszTextureName);
-                    break;
-
-                case 1:
-                    m_pAnimation2D->SetTexture("result_085", pszTextureName);
-                    break;
-
-                case 2:
-                    m_pAnimation2D->SetTexture("result_088", pszTextureName);
-                    break;
-                    
-                case 3:
-                    m_pAnimation2D->SetTexture("result_091", pszTextureName);
-                    break;
-
-                default:
-                    break;
+#ifdef TMNT2_BUILD_EU
+                    "result_079",
+                    "result_084",
+                    "result_087",
+                    "result_090",
+#else /* TMNT2_BUILD_EU */
+                    "result_080",
+                    "result_085",
+                    "result_088",
+                    "result_091",
+#endif /* TMNT2_BUILD_EU */
                 };
+
+                static_assert(COUNT_OF(s_apszOrgTexName) == GAMETYPES::CHARACTER_MAX, "table incorrect");
+
+                Animation2D().SetTexture(s_apszOrgTexName[i], pszTextureName);
             };
         }
-        break;
+        break; /* case GAMETYPES::RESULTTYPE_NORMAL */
         
     case GAMETYPES::RESULTTYPE_RIDE:
         {
-            m_pszLvlUpCrystal = "result_r_082";
             pszBgTexName = "result_r_019";
-            
+
+#ifdef TMNT2_BUILD_EU
+            m_pszLvlUpCrystal = "result_r_081";
+#else /* TMNT2_BUILD_EU */
+            m_pszLvlUpCrystal = "result_r_082";
+#endif /* TMNT2_BUILD_EU */
+
+#ifdef TMNT2_BUILD_EU
+            Animation2D().SetText("RRA_T_00", CGameText::GetText(GAMETEXT_EU_RES_RANK_CLEAR));
+            Animation2D().SetText("RRA_S_00", CGameText::GetText(GAMETEXT_RES_RIDE_GOLD));
+            Animation2D().SetText("RRA_S_01", CGameText::GetText(GAMETEXT_RES_RIDE_SILV));
+            Animation2D().SetText("RRA_S_02", CGameText::GetText(GAMETEXT_RES_RIDE_POINT));
+#endif /* TMNT2_BUILD_EU */
+
             int32 nNumGoldCoin = CGameData::PlayResult().GetRideGoldCoin();
-            std::sprintf(szNew, "%d", nNumGoldCoin);
-            m_pAnimation2D->SetText("RRA_N_00", szNew);
+            std::sprintf(szNewStr, "%d", nNumGoldCoin);
+            Animation2D().SetText("RRA_N_00", szNewStr);
 
             int32 nNumSilverCoin = CGameData::PlayResult().GetRideSilverCoin();
-            std::sprintf(szNew, "%d", nNumSilverCoin);
-            m_pAnimation2D->SetText("RRA_N_01", szNew);
+            std::sprintf(szNewStr, "%d", nNumSilverCoin);
+            Animation2D().SetText("RRA_N_01", szNewStr);
 
             int32 nNumPoint = CGameData::PlayResult().GetRideCoinPoint();
-            std::sprintf(szNew, "%d", nNumPoint);
-            m_pAnimation2D->SetText("RRA_N_02", szNew);
+            std::sprintf(szNewStr, "%d", nNumPoint);
+            Animation2D().SetText("RRA_N_02", szNewStr);
+
+#ifdef TMNT2_BUILD_EU
+            Animation2D().SetText("RRB_T_00", CGameText::GetText(GAMETEXT_RES_RIDE_PRIZE));
+#endif /* TMNT2_BUILD_EU */
 
             m_pResultWorkPool->SetPrizeNo(-1);
 
             int32 nNumPrize = CGameData::PlayParam().GetPrizeInfoNum();
-            int32 nIndex = 0;
+            int32 prizeNo = 0;
             for (int32 i = 0; i < nNumPrize; ++i)
             {
                 if (CGameData::PlayParam().PrizeInfo(i).m_bTaken)
@@ -1014,62 +1070,67 @@ void CResultSequence::BeginFadein(void)
 
                 if (CGameData::PlayParam().PrizeInfo(i).m_PrizeType != GAMETYPES::PRIZE_COMEBACK)
                     continue;
-
-                const char* pszPrizeName = nullptr;
+                
+                const wchar* pwszPrizeName = nullptr;
 
                 switch (CGameData::PlayParam().PrizeInfo(i).m_PrizeType)
                 {
-                case GAMETYPES::PRIZE_CRYSTAL:
-                    pszPrizeName = "Piece of Crystal";
-                    break;
-
-                case GAMETYPES::PRIZE_ANTIQUE:
-                    pszPrizeName = "Antique";
-                    break;
-
-                case GAMETYPES::PRIZE_COMEBACK:
-                    pszPrizeName = "Doppelganger";
-                    break;
-
-                case GAMETYPES::PRIZE_BONUS:
-                    pszPrizeName = "Bonus Material";
-                    break;
-
-                default:
-                    ASSERT(false);
-                    break;
+                case GAMETYPES::PRIZE_CRYSTAL:  pwszPrizeName = CGameText::GetText(GAMETEXT_PRIZE_CRY);    break;
+                case GAMETYPES::PRIZE_ANTIQUE:  pwszPrizeName = CGameText::GetText(GAMETEXT_PRIZE_ANTIQ);  break;
+                case GAMETYPES::PRIZE_COMEBACK: pwszPrizeName = CGameText::GetText(GAMETEXT_PRIZE_DEKU);   break;
+                case GAMETYPES::PRIZE_BONUS:    pwszPrizeName = CGameText::GetText(GAMETEXT_PRIZE_DB);     break;
+                default: ASSERT(false); break;
                 };
-                
-                std::sprintf(szOrg, "RRB_S_%02d", nIndex);
-                m_pAnimation2D->SetText(szOrg, pszPrizeName);
 
-                if (CGameData::PlayParam().PrizeInfo(i).m_PrizeType == GAMETYPES::PRIZE_COMEBACK &&
+                std::sprintf(szOrgStr, "RRB_S_%02d", prizeNo);
+                Animation2D().SetText(szOrgStr, pwszPrizeName);
+                
+                if ((CGameData::PlayParam().PrizeInfo(i).m_PrizeType == GAMETYPES::PRIZE_COMEBACK) &&
                     CGameData::PlayParam().PrizeInfo(i).m_bTaken)
                 {
-                    std::sprintf(szOrg, "RRB_N_%02d", nIndex);
-                    m_pAnimation2D->SetText(szOrg, "---------");
+                    std::sprintf(szOrgStr, "RRB_N_%02d", prizeNo);
+                    Animation2D().SetText(szOrgStr, "-----");
                 }
                 else
                 {
-                    std::sprintf(szOrg, "RRB_N_%02d", nIndex);
-                    std::sprintf(szNew, "%d", CGameData::PlayParam().PrizeInfo(i).m_iPointsNum);
-                    m_pAnimation2D->SetText(szOrg, szNew);
+                    std::sprintf(szOrgStr, "RRB_N_%02d", prizeNo);
+                    std::sprintf(szNewStr, "%d", CGameData::PlayParam().PrizeInfo(i).m_iPointsNum);
+                    Animation2D().SetText(szOrgStr, szNewStr);
                 };
 
                 if (CGameData::PlayResult().GetRideTakenPrizeNo() == i)
-                    m_pResultWorkPool->SetPrizeNo(nIndex);
+                    m_pResultWorkPool->SetPrizeNo(prizeNo);
 
-                ++nIndex;
+                ++prizeNo;
             };
 
-            for (int32 i = nIndex; i < GAMETYPES::PRIZE_NUM - 1; ++i)
+            for (int32 i = prizeNo; i < (GAMETYPES::PRIZE_NUM - 1); ++i)
             {
-                std::sprintf(szOrg, "RRB_S_%02d", i);
-                m_pAnimation2D->SetText(szOrg, " ");
+                std::sprintf(szOrgStr, "RRB_S_%02d", i);
+                Animation2D().SetText(szOrgStr, " ");
 
-                std::sprintf(szOrg, "RRB_N_%02d", i);
-                m_pAnimation2D->SetText(szOrg, " ");
+                std::sprintf(szOrgStr, "RRB_N_%02d", i);
+                Animation2D().SetText(szOrgStr, " ");
             };
+
+#ifdef TMNT2_BUILD_EU            
+            Animation2D().SetText("RRD_T_00", CGameText::GetText(GAMETEXT_RES_RANK_TIT));            
+            Animation2D().SetText("RRD_S_00", CGameText::GetText(GAMETEXT_RES_RANK_TECH));            
+            Animation2D().SetText("RRD_S_01", CGameText::GetText(GAMETEXT_RES_RIDE_COIN));
+            Animation2D().SetText("RRD_S_02", CGameText::GetText(GAMETEXT_RES_RIDE_CTRL));
+#endif /* TMNT2_BUILD_EU */
+
+            if ((CGameData::PlayParam().GetArea() == AREAID::ID_AREA22) ||
+                (CGameData::PlayParam().GetArea() == AREAID::ID_AREA32))
+#ifdef TMNT2_BUILD_EU
+                Animation2D().SetText("RRD_S_03", CGameText::GetText(GAMETEXT_RES_RIDE_SHOT));
+            else
+                Animation2D().SetText("RRD_S_03", CGameText::GetText(GAMETEXT_RES_RIDE_TRICK));
+#else /* TMNT2_BUILD_EU */
+                Animation2D().SetText("RIDE_PERSONAL3", CGameText::GetText(GAMETEXT_RES_RIDE_SHOT));
+            else
+                Animation2D().SetText("RIDE_PERSONAL3", CGameText::GetText(GAMETEXT_RES_RIDE_TRICK));
+#endif /* TMNT2_BUILD_EU */
 
             for (int32 i = 0; i < GAMETYPES::CHARACTER_MAX; ++i)
             {
@@ -1078,69 +1139,66 @@ void CResultSequence::BeginFadein(void)
                 PLAYERID::VALUE idPlayer = CGameData::PlayResult().GetPlayerCharacter(i);
                 switch (idPlayer)
                 {
-                case PLAYERID::ID_LEO:
-                    pszTextureName = "res_per_face_leo";
-                    break;
-
-                case PLAYERID::ID_RAP:
-                    pszTextureName = "res_per_face_rap";
-                    break;
-
-                case PLAYERID::ID_MIC:
-                    pszTextureName = "res_per_face_mic";
-                    break;
-
-                case PLAYERID::ID_DON:
-                    pszTextureName = "res_per_face_don";
-                    break;
-
-                case PLAYERID::ID_SLA:
-                    pszTextureName = "res_per_face_sla";
-                    break;
-
-                case PLAYERID::ID_CAS:
-                    pszTextureName = "res_per_face_cay";
-                    break;
-
-                case PLAYERID::ID_KAR:
-                    pszTextureName = "res_per_face_kar";
-                    break;
-
-                case PLAYERID::ID_SPL:
-                    pszTextureName = "res_per_face_spl";
-                    break;
-
-                default:
-                    ASSERT(false);
-                    break;
+                case PLAYERID::ID_LEO:  pszTextureName = "res_per_face_leo";    break;
+                case PLAYERID::ID_RAP:  pszTextureName = "res_per_face_rap";    break;
+                case PLAYERID::ID_MIC:  pszTextureName = "res_per_face_mic";    break;
+                case PLAYERID::ID_DON:  pszTextureName = "res_per_face_don";    break;
+                case PLAYERID::ID_SLA:  pszTextureName = "res_per_face_sla";    break;
+                case PLAYERID::ID_CAS:  pszTextureName = "res_per_face_cay";    break;
+                case PLAYERID::ID_KAR:  pszTextureName = "res_per_face_kar";    break;
+                case PLAYERID::ID_SPL:  pszTextureName = "res_per_face_spl";    break;
+                default: ASSERT(false); break;
                 };
-                
-                switch (i)
+
+                static const char* s_apszOrgTexName[] =
                 {
-                case 0:
-                    m_pAnimation2D->SetTexture("result_r_094", pszTextureName);
-                    break;
-
-                case 1:
-                    m_pAnimation2D->SetTexture("result_r_099", pszTextureName);
-                    break;
-
-                case 2:
-                    m_pAnimation2D->SetTexture("result_r_102", pszTextureName);
-                    break;
-
-                case 3:
-                    m_pAnimation2D->SetTexture("result_r_105", pszTextureName);
-                    break;
+#ifdef TMNT2_BUILD_EU
+                    "result_r_093",
+                    "result_r_098",
+                    "result_r_101",
+                    "result_r_104",
+#else /* TMNT2_BUILD_EU */
+                    "result_r_094",
+                    "result_r_099",
+                    "result_r_102",
+                    "result_r_105",
+#endif /* TMNT2_BUILD_EU */
                 };
+
+                static_assert(COUNT_OF(s_apszOrgTexName) == GAMETYPES::CHARACTER_MAX, "table incorrect");
+
+                Animation2D().SetTexture(s_apszOrgTexName[i], pszTextureName);
             };
         }
-        break;
+        break; /* case GAMETYPES::RESULTTYPE_RIDE */
         
     case GAMETYPES::RESULTTYPE_NEXUS:
         {
-            m_pszLvlUpCrystal = "result_n_071";
             pszBgTexName = nullptr;
+
+#ifdef TMNT2_BUILD_EU
+            m_pszLvlUpCrystal = "result_n_070";
+#else /* TMNT2_BUILD_EU */
+            m_pszLvlUpCrystal = "result_n_071";
+#endif /* TMNT2_BUILD_EU */
+
+#ifdef TMNT2_BUILD_EU
+            Animation2D().SetText("NRB_T_00", CGameText::GetText(GAMETEXT_RES_RIDE_PRIZE));
+            Animation2D().SetText("NRD_T_00", CGameText::GetText(GAMETEXT_EU_RES_RANK_CLEAR));
+            Animation2D().SetText("NRD_T_01", CGameText::GetText(GAMETEXT_RES_TIT));
+            Animation2D().SetText("NRD_I_00", CGameText::GetText(GAMETEXT_EU_RES_RANK_TIME));
+            Animation2D().SetText("NRD_I_01", CGameText::GetText(GAMETEXT_RES_RANK_MVP));
+
+            switch (CConfigure::GetLanguage())
+            {
+            case TYPEDEF::CONFIG_LANG_ENGLISH: Animation2D().SetTexture("result_n_028", "res_nex_congrasd");   break;
+            case TYPEDEF::CONFIG_LANG_GERMAN:  Animation2D().SetTexture("result_n_028", "res_nex_congrasd_g"); break;
+            case TYPEDEF::CONFIG_LANG_FRENCH:  Animation2D().SetTexture("result_n_028", "res_nex_congrasd_f"); break;
+            case TYPEDEF::CONFIG_LANG_SPANISH: Animation2D().SetTexture("result_n_028", "res_nex_congrasd_s"); break;
+            case TYPEDEF::CONFIG_LANG_ITALIAN: Animation2D().SetTexture("result_n_028", "res_nex_congrasd_i"); break;
+            default: ASSERT(false); break;
+            };
+#endif /* TMNT2_BUILD_EU */
 
             AREAID::VALUE idArea = CGameData::PlayParam().GetArea();
             switch (idArea)
@@ -1149,35 +1207,41 @@ void CResultSequence::BeginFadein(void)
                 {
                     if (CGameData::Record().Nexus().GetTournamentState(GAMETYPES::NEXUSID_KITTY_OPEN) == CNexusRecord::STATE_CLEAR)
                     {
-                        m_pAnimation2D->SetText("NRB_S_00", "Doppelganger");
-						m_pAnimation2D->SetText("NRB_S_01", "");
+                        Animation2D().SetText("NRB_S_00", CGameText::GetText(GAMETEXT_PRIZE_DEKU));
+                        Animation2D().SetText("NRB_S_01", CGameText::GetText(GAMETEXT_EMPTY));
                     }
                     else
                     {
-                        m_pAnimation2D->SetText("NRB_S_00", "Piece of Crystal");
-                        m_pAnimation2D->SetText("NRB_S_01", "Antique");
+                        Animation2D().SetText("NRB_S_00", CGameText::GetText(GAMETEXT_PRIZE_CRY));
+                        Animation2D().SetText("NRB_S_01", CGameText::GetText(GAMETEXT_AT_SEARCH));
                     };
 
-                    m_pAnimation2D->SetTexture("result_n_027", "res_nex_trophy2");
-                    m_pAnimation2D->SetTexture("result_n_032", "res_nex_trophy2");
+#ifdef TMNT2_BUILD_EU
+                    Animation2D().SetTexture("result_n_026", "res_nex_trophy2");
+                    Animation2D().SetTexture("result_n_031", "res_nex_trophy2");
+#else /* TMNT2_BUILD_EU */
+                    Animation2D().SetTexture("result_n_027", "res_nex_trophy2");
+                    Animation2D().SetTexture("result_n_032", "res_nex_trophy2");
+#endif /* TMNT2_BUILD_EU */
                 }
                 break;
 
             case AREAID::ID_AREA60_B:
                 {
                     if (CGameData::Record().Nexus().GetTournamentState(GAMETYPES::NEXUSID_MONSTER_OPEN) == CNexusRecord::STATE_CLEAR)
-                    {
-                        m_pAnimation2D->SetText("NRB_S_00", "Doppelganger");
-                    }
+                        Animation2D().SetText("NRB_S_00", CGameText::GetText(GAMETEXT_PRIZE_DEKU));
                     else
-                    {
-                        m_pAnimation2D->SetText("NRB_S_00", "Piece of Crystal");
-                    };
+                        Animation2D().SetText("NRB_S_00", CGameText::GetText(GAMETEXT_PRIZE_CRY));
 
-                    m_pAnimation2D->SetText("NRB_S_01", "");
+                    Animation2D().SetText("NRB_S_01", CGameText::GetText(GAMETEXT_EMPTY));
 
-                    m_pAnimation2D->SetTexture("result_n_027", "res_nex_trophy2");
-                    m_pAnimation2D->SetTexture("result_n_032", "res_nex_trophy2");
+#ifdef TMNT2_BUILD_EU
+                    Animation2D().SetTexture("result_n_026", "res_nex_trophy2");
+                    Animation2D().SetTexture("result_n_031", "res_nex_trophy2");
+#else /* TMNT2_BUILD_EU */
+                    Animation2D().SetTexture("result_n_027", "res_nex_trophy2");
+                    Animation2D().SetTexture("result_n_032", "res_nex_trophy2");
+#endif /* TMNT2_BUILD_EU */
                 }
                 break;
 
@@ -1185,17 +1249,22 @@ void CResultSequence::BeginFadein(void)
                 {
                     if (CGameData::Record().Nexus().GetTournamentState(GAMETYPES::NEXUSID_FOOT_COMBAT) == CNexusRecord::STATE_CLEAR)
                     {
-                        m_pAnimation2D->SetText("NRB_S_00", "Doppelganger");
-                        m_pAnimation2D->SetText("NRB_S_01", "");
+                        Animation2D().SetText("NRB_S_00", CGameText::GetText(GAMETEXT_PRIZE_DEKU));
+                        Animation2D().SetText("NRB_S_01", CGameText::GetText(GAMETEXT_EMPTY));
                     }
                     else
                     {
-                        m_pAnimation2D->SetText("NRB_S_00", "Piece of Crystal");
-                        m_pAnimation2D->SetText("NRB_S_01", "Antique");
+                        Animation2D().SetText("NRB_S_00", CGameText::GetText(GAMETEXT_PRIZE_CRY));
+                        Animation2D().SetText("NRB_S_01", CGameText::GetText(GAMETEXT_PRIZE_ANTIQ));
                     };
 
-                    m_pAnimation2D->SetTexture("result_n_027", "res_foot_trophy");
-                    m_pAnimation2D->SetTexture("result_n_032", "res_nex_trophy_hikari2");
+#ifdef TMNT2_BUILD_EU
+                    Animation2D().SetTexture("result_n_026", "res_foot_trophy");
+                    Animation2D().SetTexture("result_n_031", "res_nex_trophy_hikari2");
+#else /* TMNT2_BUILD_EU */
+                    Animation2D().SetTexture("result_n_027", "res_foot_trophy");
+                    Animation2D().SetTexture("result_n_032", "res_nex_trophy_hikari2");
+#endif /* TMNT2_BUILD_EU */
                 }
                 break;
 
@@ -1203,13 +1272,13 @@ void CResultSequence::BeginFadein(void)
                 {
                     if (CGameData::Record().Nexus().GetTournamentState(GAMETYPES::NEXUSID_BATTLE_NEXUS) == CNexusRecord::STATE_CLEAR)
                     {
-                        m_pAnimation2D->SetText("NRB_S_00", "Doppelganger");
-                        m_pAnimation2D->SetText("NRB_S_01", "");
+                        Animation2D().SetText("NRB_S_00", CGameText::GetText(GAMETEXT_PRIZE_DEKU));
+                        Animation2D().SetText("NRB_S_01", CGameText::GetText(GAMETEXT_EMPTY));
                     }
                     else
                     {
-                        m_pAnimation2D->SetText("NRB_S_00", "Piece of Crystal");
-                        m_pAnimation2D->SetText("NRB_S_01", "Antique");
+                        Animation2D().SetText("NRB_S_00", CGameText::GetText(GAMETEXT_PRIZE_CRY));
+                        Animation2D().SetText("NRB_S_01", CGameText::GetText(GAMETEXT_PRIZE_ANTIQ));
                     };
                 }
                 break;
@@ -1225,14 +1294,14 @@ void CResultSequence::BeginFadein(void)
             {
                 if (i >= m_pResultWorkPool->GetBattleNexusBattleNo())
                 {
-                    std::sprintf(szOrg, "NRD_S_%02d", i + 1);
-                    m_pAnimation2D->SetText(szOrg, "---------");
+                    std::sprintf(szOrgStr, "NRD_S_%02d", i + 1);
+                    Animation2D().SetText(szOrgStr, "-----");
                     
-                    std::sprintf(szOrg, "NRD_N_%02d", i + 1);
-                    m_pAnimation2D->SetText(szOrg, "---------");
+                    std::sprintf(szOrgStr, "NRD_N_%02d", i + 1);
+                    Animation2D().SetText(szOrgStr, "-----");
                     
-                    std::sprintf(szOrg, "NRD_S2_%02d", i + 1);
-                    m_pAnimation2D->SetText(szOrg, "---------");
+                    std::sprintf(szOrgStr, "NRD_S2_%02d", i + 1);
+                    Animation2D().SetText(szOrgStr, "-----");
                 }
                 else
                 {
@@ -1243,150 +1312,155 @@ void CResultSequence::BeginFadein(void)
                     const wchar* pwszText = CNexusInfo::GetTeamName(idNexus, i);
                     CTextData::ToMultibyte(szBuff, sizeof(szBuff), pwszText);
 
-                    std::sprintf(szOrg, "NRD_S_%02d", i + 1);
-                    std::sprintf(szNew, "%s", szBuff);
-                    m_pAnimation2D->SetText(szOrg, szNew);
+                    std::sprintf(szOrgStr, "NRD_S_%02d", i + 1);
+                    std::sprintf(szNewStr, "%s", szBuff);
+                    Animation2D().SetText(szOrgStr, szNewStr);
 
-                    CGameTime cleartime = CGameData::PlayResult().GetStageCleartime(i);
-                    std::sprintf(szOrg, "NRD_N_%02d", i + 1);
-                    std::sprintf(szNew, "%d:%02d:%02d", cleartime.GetHour(), cleartime.GetMinute(), cleartime.GetSecond());
-                    m_pAnimation2D->SetText(szOrg, szNew);
+                    CGameTime clearTime = CGameData::PlayResult().GetStageCleartime(i);
+                    std::sprintf(szOrgStr, "NRD_N_%02d", i + 1);
+                    std::sprintf(szNewStr,
+                                 "%d:%02d:%02d",
+                                 clearTime.GetHour(),
+                                 clearTime.GetMinute(),
+                                 clearTime.GetSecond());
+                    Animation2D().SetText(szOrgStr, szNewStr);
                 
-                    const char* pszMvpName = nullptr;
-                    int32 nMvpNo = CGameData::PlayResult().GetStageMVP(i);
-                    PLAYERID::VALUE idMvp = CGameData::PlayResult().GetPlayerCharacter(nMvpNo);
-                    switch (idMvp)
+                    const wchar* pwszMvpName = nullptr;
+
+                    int32 mvpChrNo = CGameData::PlayResult().GetStageMVP(i);
+                    PLAYERID::VALUE mvpPlayerId = CGameData::PlayResult().GetPlayerCharacter(mvpChrNo);
+                    switch (mvpPlayerId)
                     {
-                    case PLAYERID::ID_LEO:
-                        pszMvpName = "LEONARDO";
-                        break;
-
-                    case PLAYERID::ID_RAP:
-                        pszMvpName = "RAPHAEL";
-                        break;
-
-                    case PLAYERID::ID_MIC:
-                        pszMvpName = "MICHELANGELO";
-                        break;
-
-                    case PLAYERID::ID_DON:
-                        pszMvpName = "DONATELLO";
-                        break;
-
-                    case PLAYERID::ID_SLA:
-                        pszMvpName = "SLASHUUR";
-                        break;
-
-                    case PLAYERID::ID_CAS:
-                        pszMvpName = "CASEY";
-                        break;
-
-                    case PLAYERID::ID_KAR:
-                        pszMvpName = "KARAI";
-                        break;
-
-                    case PLAYERID::ID_SPL:
-                        pszMvpName = "SPLINTER";
-                        break;
-
-                    default:
-                        ASSERT(false);
-                        break;
+                    case PLAYERID::ID_LEO:  pwszMvpName = CGameText::GetText(GAMETEXT_DB_CHR_LEO); break;
+                    case PLAYERID::ID_RAP:  pwszMvpName = CGameText::GetText(GAMETEXT_DB_CHR_RAP); break;
+                    case PLAYERID::ID_MIC:  pwszMvpName = CGameText::GetText(GAMETEXT_DB_CHR_MIC); break;
+                    case PLAYERID::ID_DON:  pwszMvpName = CGameText::GetText(GAMETEXT_DB_CHR_DON); break;
+                    case PLAYERID::ID_SLA:  pwszMvpName = CGameText::GetText(GAMETEXT_DB_CHR_SLA); break;
+                    case PLAYERID::ID_CAS:  pwszMvpName = CGameText::GetText(GAMETEXT_DB_CHR_CAS); break;
+                    case PLAYERID::ID_KAR:  pwszMvpName = CGameText::GetText(GAMETEXT_DB_CHR_KAR); break;
+                    case PLAYERID::ID_SPL:  pwszMvpName = CGameText::GetText(GAMETEXT_DB_CHR_SPL); break;
+                    default: ASSERT(false); break;
                     };
 
-                    std::sprintf(szOrg, "NRD_S2_%02d", i + 1);
-                    std::sprintf(szNew, "%s", pszMvpName);
-                    m_pAnimation2D->SetText(szOrg, szNew);                    
+                    std::sprintf(szOrgStr, "NRD_S2_%02d", i + 1);
+                    Animation2D().SetText(szOrgStr, pwszMvpName);
                 };
             };
 
-            float fRemainHPRatio = CGameData::PlayResult().GetRemainedHPRatio();
-            std::sprintf(szNew, "%.1f%%", fRemainHPRatio);
-            m_pAnimation2D->SetText("NRE_N_01", szNew);
+#ifdef TMNT2_BUILD_EU
+            Animation2D().SetText("NRE_S_00", CGameText::GetText(GAMETEXT_RES_CLR_LIFE));
 
-            CGameTime cleartimeTotal = CGameData::PlayResult().GetCleartimeTotal();
-            std::sprintf(szNew, "%d:%02d:%02d", cleartimeTotal.GetHour(), cleartimeTotal.GetMinute(), cleartimeTotal.GetSecond());
-            m_pAnimation2D->SetText("NRE_S_02", szNew);            
+            float fRemainHPRatio = CGameData::PlayResult().GetRemainedHPRatio();
+            std::sprintf(szNewStr, "%.1f%%", fRemainHPRatio);
+            Animation2D().SetText("NRE_N_00", szNewStr);
+
+            Animation2D().SetText("NRE_S_01", CGameText::GetText(GAMETEXT_RES_CLR_TIME));
+
+            CGameTime clearTimeTotal = CGameData::PlayResult().GetCleartimeTotal();
+            std::sprintf(szNewStr,
+                         "%d:%02d:%02d",
+                         clearTimeTotal.GetHour(),
+                         clearTimeTotal.GetMinute(),
+                         clearTimeTotal.GetSecond());
+            Animation2D().SetText("NRE_N_01", szNewStr);
+#else /* TMNT2_BUILD_EU */
+            float fRemainHPRatio = CGameData::PlayResult().GetRemainedHPRatio();
+            std::sprintf(szNewStr, "%.1f%%", fRemainHPRatio);
+            Animation2D().SetText("NRE_N_01", szNewStr);
+
+            CGameTime clearTimeTotal = CGameData::PlayResult().GetCleartimeTotal();
+            std::sprintf(szNewStr,
+                         "%d:%02d:%02d",
+                         clearTimeTotal.GetHour(),
+                         clearTimeTotal.GetMinute(),
+                         clearTimeTotal.GetSecond());
+            Animation2D().SetText("NRE_S_02", szNewStr);
+#endif /* TMNT2_BUILD_EU */
         }
-        break;
+        break; /* case GAMETYPES::RESULTTYPE_NEXUS */
         
     case GAMETYPES::RESULTTYPE_ENDING:
         {
+#ifdef TMNT2_BUILD_EU            
+            Animation2D().SetText("ERA_T_00", CGameText::GetText(GAMETEXT_EU_RES_RANK_PERF));
+            Animation2D().SetText("ERB_T_00", CGameText::GetText(GAMETEXT_RES_CLR_TIME));
+            Animation2D().SetText("ERC_T_00", CGameText::GetText(GAMETEXT_RES_END_TIT));
+            Animation2D().SetText("ERE_T_00", CGameText::GetText(GAMETEXT_RES_END_ACHIEVE_RATIO));
+            Animation2D().SetText("ERA_S_00", CGameText::GetText(GAMETEXT_EU_RES_RANK_SS));
+            Animation2D().SetText("ERA_S_01", CGameText::GetText(GAMETEXT_EU_RES_RANK_S));
+            Animation2D().SetText("ERA_S_02", CGameText::GetText(GAMETEXT_EU_RES_RANK_A));
+            Animation2D().SetText("ERA_S_03", CGameText::GetText(GAMETEXT_EU_RES_RANK_B));
+            Animation2D().SetText("ERA_S_04", CGameText::GetText(GAMETEXT_EU_RES_RANK_C));
+            Animation2D().SetText("ERA_S_05", CGameText::GetText(GAMETEXT_EU_RES_RANK_D));
+            Animation2D().SetText("ERA_S_06", CGameText::GetText(GAMETEXT_EU_RES_RANK_E));
+#endif /* TMNT2_BUILD_EU */
+
             for (int32 i = 0; i < GAMETYPES::CLEARRANK_NUM; ++i)
             {
-                int32 nNum = CGameData::Record().Area().CountRankedArea(GAMETYPES::CLEARRANK(i));
+                int32 numRankedArea = CGameData::Record().Area().CountRankedArea(GAMETYPES::CLEARRANK(i));
 
-                std::sprintf(szOrg, "ERA_N_%02d", GAMETYPES::CLEARRANK_NUM - i);
-                std::sprintf(szNew, "%d", nNum);
-                m_pAnimation2D->SetText(szOrg, szNew);
+                std::sprintf(szOrgStr, "ERA_N_%02d", GAMETYPES::CLEARRANK_NUM - i);
+                std::sprintf(szNewStr, "%d", numRankedArea);
+                Animation2D().SetText(szOrgStr, szNewStr);
             };
 
-            CGameTime ClearTime;
-            CGameData::Record().Area().CalcTotalClearTime(ClearTime);
+            CGameTime clearTime;
+            CGameData::Record().Area().CalcTotalClearTime(clearTime);
 
-            std::sprintf(szNew, "%d:%02d:%02d", ClearTime.GetHour(), ClearTime.GetMinute(), ClearTime.GetSecond());
-            m_pAnimation2D->SetText("ERB_N_00", szNew);
+            std::sprintf(szNewStr,
+                         "%d:%02d:%02d",
+                         clearTime.GetHour(),
+                         clearTime.GetMinute(),
+                         clearTime.GetSecond());
+            Animation2D().SetText("ERB_N_00", szNewStr);
 
-            GAMETYPES::CLEARRANK ClearRank[2] = { GAMETYPES::CLEARRANK_NONE };
-            ClearRank[0] = CGameData::Record().Area().CalcTotalClearRank();
-            ClearRank[1] = CGameData::Record().Area().CalcTotalClearTimeRank();
+            GAMETYPES::CLEARRANK aClearRank[2] = { GAMETYPES::CLEARRANK_NONE };
+            aClearRank[0] = CGameData::Record().Area().CalcTotalClearRank();
+            aClearRank[1] = CGameData::Record().Area().CalcTotalClearTimeRank();
             
             const char* apszClearRankTexName[2] = { nullptr };
 
-            for (int32 i = 0; i < COUNT_OF(ClearRank); ++i)
+            for (int32 i = 0; i < COUNT_OF(aClearRank); ++i)
             {
-                switch (ClearRank[i])
+                switch (aClearRank[i])
                 {
-                case GAMETYPES::CLEARRANK_E:
-                    apszClearRankTexName[i] = "res_rank_e";
-                    break;
-                    
-                case GAMETYPES::CLEARRANK_D:
-                    apszClearRankTexName[i] = "res_rank_d";
-                    break;
-                    
-                case GAMETYPES::CLEARRANK_C:
-                    apszClearRankTexName[i] = "res_rank_c";
-                    break;
-                    
-                case GAMETYPES::CLEARRANK_B:
-                    apszClearRankTexName[i] = "res_rank_b";
-                    break;
-                    
-                case GAMETYPES::CLEARRANK_A:
-                    apszClearRankTexName[i] = "res_rank_a";
-                    break;
-                    
-                case GAMETYPES::CLEARRANK_S:
-                    apszClearRankTexName[i] = "res_rank_s";
-                    break;
-                    
-                case GAMETYPES::CLEARRANK_SS:
-                    apszClearRankTexName[i] = "res_rank_ss";
-                    break;
-                    
-                default:
-                    ASSERT(false);
-                    break;
+                case GAMETYPES::CLEARRANK_E:    apszClearRankTexName[i] = "res_rank_e";     break;                    
+                case GAMETYPES::CLEARRANK_D:    apszClearRankTexName[i] = "res_rank_d";     break;                    
+                case GAMETYPES::CLEARRANK_C:    apszClearRankTexName[i] = "res_rank_c";     break;                    
+                case GAMETYPES::CLEARRANK_B:    apszClearRankTexName[i] = "res_rank_b";     break;                    
+                case GAMETYPES::CLEARRANK_A:    apszClearRankTexName[i] = "res_rank_a";     break;                    
+                case GAMETYPES::CLEARRANK_S:    apszClearRankTexName[i] = "res_rank_s";     break;                    
+                case GAMETYPES::CLEARRANK_SS:   apszClearRankTexName[i] = "res_rank_ss";    break;                    
+                default: ASSERT(false); break;
                 };
             };
 
-            m_pAnimation2D->SetTexture("result_e_042", apszClearRankTexName[1]);
-            m_pAnimation2D->SetTexture("result_e_045", apszClearRankTexName[0]);
+#ifdef TMNT2_BUILD_EU
+            Animation2D().SetTexture("result_e_041", apszClearRankTexName[1]);
+            Animation2D().SetTexture("result_e_044", apszClearRankTexName[0]);
+#else /* TMNT2_BUILD_EU */
+            Animation2D().SetTexture("result_e_042", apszClearRankTexName[1]);
+            Animation2D().SetTexture("result_e_045", apszClearRankTexName[0]);
+#endif /* TMNT2_BUILD_EU */
 
-            uint32 uPoints = CGameData::Record().GetAchievedPoint();
-            std::sprintf(szNew, "%u%%", uPoints);
-            m_pAnimation2D->SetText("100%", szNew);
+            int32 points = CGameData::Record().GetAchievedPoint();
+            std::sprintf(szNewStr, "%d%%", points);
+
+#ifdef TMNT2_BUILD_EU
+            Animation2D().SetText("ERE_N_00", szNewStr);
+#else /* TMNT2_BUILD_EU */
+            Animation2D().SetText("100%", szNewStr);
+#endif /* TMNT2_BUILD_EU */
         }
-        break;
+        break; /* case GAMETYPES::RESULTTYPE_ENDING */
 
     default:
         ASSERT(false);
         break;
     };
 
-    if (m_resulttype == GAMETYPES::RESULTTYPE_NORMAL ||
-        m_resulttype == GAMETYPES::RESULTTYPE_RIDE)
+    if ((m_resultType == GAMETYPES::RESULTTYPE_NORMAL) ||
+        (m_resultType == GAMETYPES::RESULTTYPE_RIDE))
     {
         ASSERT(pszBgTexName);
         
@@ -1394,97 +1468,77 @@ void CResultSequence::BeginFadein(void)
         WORLDID::VALUE idWorld = CAreaInfo::GetWorldNo(idArea);
         switch (idWorld)
         {
-        case WORLDID::ID_MNY:
-            m_pAnimation2D->SetTexture(pszBgTexName, "res_bg_ny");
-            break;
-
-        case WORLDID::ID_DHO:
-            m_pAnimation2D->SetTexture(pszBgTexName, "res_bg_dhoonib");
-            break;
-
-        case WORLDID::ID_TRI:
-            m_pAnimation2D->SetTexture(pszBgTexName, "res_bg_tri");
-            break;
-
-        case WORLDID::ID_JPN:
-            m_pAnimation2D->SetTexture(pszBgTexName, "res_bg_japan");
-            break;
-
-        case WORLDID::ID_FNY:
-            m_pAnimation2D->SetTexture(pszBgTexName, "res_bg_fny");
-            break;
-
-        case WORLDID::ID_KUR:
-            m_pAnimation2D->SetTexture(pszBgTexName, "res_bg_kuraiyama");
-            break;
-
-        default:
-            ASSERT(false);
-            break;
+        case WORLDID::ID_MNY: Animation2D().SetTexture(pszBgTexName, "res_bg_ny");          break;
+        case WORLDID::ID_DHO: Animation2D().SetTexture(pszBgTexName, "res_bg_dhoonib");     break;
+        case WORLDID::ID_TRI: Animation2D().SetTexture(pszBgTexName, "res_bg_tri");         break;
+        case WORLDID::ID_JPN: Animation2D().SetTexture(pszBgTexName, "res_bg_japan");       break;
+        case WORLDID::ID_FNY: Animation2D().SetTexture(pszBgTexName, "res_bg_fny");         break;
+        case WORLDID::ID_KUR: Animation2D().SetTexture(pszBgTexName, "res_bg_kuraiyama");   break;
+        default: ASSERT(false); break;
         };
     };
 
     for (int32 i = 0; i < 4; ++i)
     {
-        std::sprintf(szOrg, "RC_N_%02d", i + 1);
-        std::sprintf(szNew, "%02d", m_pResultWorkPool->GetCrystalData(GAMETYPES::CRYSTALTYPE(i)));
-        m_pAnimation2D->SetText(szOrg, szNew);
+        std::sprintf(szOrgStr, "RC_N_%02d", i + 1);
+        std::sprintf(szNewStr, "%02d", m_pResultWorkPool->GetCrystalData(GAMETYPES::CRYSTALTYPE(i)));
+        Animation2D().SetText(szOrgStr, szNewStr);
     };
 
     CGameSound::PlayBGM(SDCODE_BGM(12322));
     
-    CAnim2DSequence::BeginFadein();
+    CAnim2DSequence::BeginFadeIn();
 };
 
 
-void CResultSequence::ResultItemProc(void)
+void CResultSequence::MessageProc(void)
 {
-    if (m_pAnimation2D->CheckMessageGetURL("CheckAntique"))
+    if (Animation2D().CheckMessageGetURL("CheckAntique"))
     {
         if (CGameData::PlayResult().IsAntiqueTaken())
         {
-            m_pAnimation2D->FlashKeyPress(CController::DIGITAL_LUP);
+            Animation2D().FlashKeyPress(CController::DIGITAL_LUP);
             m_pResultWorkPool->ResultAnimAnit(CResultWorkPool::ANIMTYPE_NONE);
         }
         else
         {
-            m_pAnimation2D->FlashKeyPress(CController::DIGITAL_LDOWN);
+            Animation2D().FlashKeyPress(CController::DIGITAL_LDOWN);
         };
     }
-    else if (m_pAnimation2D->CheckMessageGetURL("CheckCrystal"))
+    else if (Animation2D().CheckMessageGetURL("CheckCrystal"))
     {
         if (m_pResultWorkPool->CheckGetCrystal())
         {
-            m_pAnimation2D->FlashKeyPress(CController::DIGITAL_LUP);
+            Animation2D().FlashKeyPress(CController::DIGITAL_LUP);
             m_pResultWorkPool->ResultAnimAnit(CResultWorkPool::ANIMTYPE_NONE);
         }
         else
         {
-            m_pAnimation2D->FlashKeyPress(CController::DIGITAL_LDOWN);
+            Animation2D().FlashKeyPress(CController::DIGITAL_LDOWN);
         };
     }
-    else if (m_pAnimation2D->CheckMessageGetURL("CheckCrystal10") ||
-        m_pAnimation2D->CheckMessageGetURL("CheckCrystal10R"))
+    else if (Animation2D().CheckMessageGetURL("CheckCrystal10") ||
+             Animation2D().CheckMessageGetURL("CheckCrystal10R"))
     {
         m_pResultWorkPool->ResultAnimAnit(CResultWorkPool::ANIMTYPE_NONE);
         if (m_pResultWorkPool->CheckLvlUpCrystal())
         {
-            m_pAnimation2D->FlashKeyPress(CController::DIGITAL_LUP);
+            Animation2D().FlashKeyPress(CController::DIGITAL_LUP);
         }
         else
         {
-            m_pAnimation2D->FlashKeyPress(CController::DIGITAL_LDOWN);
+            Animation2D().FlashKeyPress(CController::DIGITAL_LDOWN);
         };
     }
-    else if (m_pAnimation2D->CheckMessageGetURL("CrystalPiece"))
+    else if (Animation2D().CheckMessageGetURL("CrystalPiece"))
     {
         m_pResultWorkPool->ResultAnimAnit(CResultWorkPool::ANIMTYPE_CRYSTAL_PIECE);
     }
-    else if (m_pAnimation2D->CheckMessageGetURL("CrystalLevelUp"))
+    else if (Animation2D().CheckMessageGetURL("CrystalLevelUp"))
     {
         m_pResultWorkPool->ResultAnimAnit(CResultWorkPool::ANIMTYPE_CRYSTAL_LVLUP);
     }
-    else if (m_pAnimation2D->CheckMessageGetURL("CrystalLevelUpEnd"))
+    else if (Animation2D().CheckMessageGetURL("CrystalLevelUpEnd"))
     {
         const char* pszCryTexName = nullptr;
         
@@ -1512,57 +1566,57 @@ void CResultSequence::ResultItemProc(void)
             break;
         };
 
-        ASSERT(pszCryTexName);
-        m_pAnimation2D->SetTexture(m_pszLvlUpCrystal, pszCryTexName);
+        Animation2D().SetTexture(m_pszLvlUpCrystal, pszCryTexName);
+
         m_pszLvlUpCrystal = pszCryTexName;
     }
-    else if (m_pAnimation2D->CheckMessageGetURL("PersonalRank"))
+    else if (Animation2D().CheckMessageGetURL("PersonalRank"))
     {
         m_pResultWorkPool->ResultAnimAnit(CResultWorkPool::ANIMTYPE_PERSONAL_RESULT);
     }
-    else if (m_pAnimation2D->CheckMessageGetURL("PrizeCursor"))
+    else if (Animation2D().CheckMessageGetURL("PrizeCursor"))
     {
         m_pResultWorkPool->ResultAnimAnit(CResultWorkPool::ANIMTYPE_PRIZE_CURSOR);
     }
-    else if (m_pAnimation2D->CheckMessageGetURL("PrizeCursorEnd") ||
-             m_pAnimation2D->CheckMessageGetURL("GROWIN_START"))
+    else if (Animation2D().CheckMessageGetURL("PrizeCursorEnd") ||
+             Animation2D().CheckMessageGetURL("GROWIN_START"))
     {
         m_pResultWorkPool->ResultAnimAnit(CResultWorkPool::ANIMTYPE_NONE);
     }
-    else if (m_pAnimation2D->CheckMessageGetURL("GROWIN"))
+    else if (Animation2D().CheckMessageGetURL("GROWIN"))
     {
         m_pResultWorkPool->ResultAnimAnit(CResultWorkPool::ANIMTYPE_CRYSTAL_GROWING);
     }
-    else if (m_pAnimation2D->CheckMessageGetURL("GROWIN_END"))
+    else if (Animation2D().CheckMessageGetURL("GROWIN_END"))
     {
         m_pResultWorkPool->ResultAnimAnit(CResultWorkPool::ANIMTYPE_NONE);
     }
-    else if (m_pAnimation2D->CheckMessageGetURL("CUpNameStart"))
+    else if (Animation2D().CheckMessageGetURL("CUpNameStart"))
     {
         m_pResultWorkPool->ResultAnimAnit(CResultWorkPool::ANIMTYPE_BATTLENEXUS_WINNER);
     }
-    else if (m_pAnimation2D->CheckMessageGetURL("CupNameEnd"))
+    else if (Animation2D().CheckMessageGetURL("CupNameEnd"))
     {
         m_pResultWorkPool->ResultAnimAnit(CResultWorkPool::ANIMTYPE_NONE);
     }
-    else if (m_pAnimation2D->CheckMessageGetURL("SoundWindow"))
+    else if (Animation2D().CheckMessageGetURL("SoundWindow"))
     {
         CGameSound::PlaySE(SDCODE_SE(4113));
     }
-    else if (m_pAnimation2D->CheckMessageGetURL("SoundCrystal"))
+    else if (Animation2D().CheckMessageGetURL("SoundCrystal"))
     {
         CGameSound::PlaySE(SDCODE_SE(4119));
     }
-    else if (m_pAnimation2D->CheckMessageGetURL("SoundAntique"))
+    else if (Animation2D().CheckMessageGetURL("SoundAntique"))
     {
         CGameSound::PlaySE(SDCODE_SE(4114));
     }
-    else if (m_pAnimation2D->CheckMessageGetURL("SoundCrystalLvUp"))
+    else if (Animation2D().CheckMessageGetURL("SoundCrystalLvUp"))
     {
         CGameSound::PlaySE(SDCODE_SE(4108));
     }
-    else if (m_pAnimation2D->CheckMessageGetURL("ResultEnd"))
+    else if (Animation2D().CheckMessageGetURL("ResultEnd"))
     {
-        BeginFadeout();
+        BeginFadeOut();
     };
 };

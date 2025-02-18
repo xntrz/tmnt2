@@ -31,7 +31,7 @@
 
 CMenuSound::CMenuSound(void)
 {
-    ;
+    static_assert(COUNT_OF(m_apszSoundLabel) == COUNT_OF(m_anSoundTable), "sound code & name tables should match");
 };
 
 

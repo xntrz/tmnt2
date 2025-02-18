@@ -7,14 +7,11 @@
 #include "StageID.hpp"
 #include "DatabaseItemID.hpp"
 
+#include "Game/System/Text/GameTextID.hpp"
+
 
 class CSecretInfo
 {
-private:
-    struct PASSWORDINFO;
-    
-    static const PASSWORDINFO m_aPasswordList[];
-    
 public:
     static void CheckStartArea(AREAID::VALUE idArea);
     static void CheckEndArea(AREAID::VALUE idArea);
@@ -34,7 +31,7 @@ public:
     static void CheckGift(AREAID::VALUE idArea);
     static void CheckCrystal(void);
     static void CheckDatabase(void);
-    static int32 GetGameText(SECRETID::VALUE idSecret);
+    static GAMETEXT GetGameText(SECRETID::VALUE idSecret);
     static DBITEMID::VALUE GetDatabase(SECRETID::VALUE idSecret);
     static SECRETID::VALUE CheckPassword(const char* pszPassword);
     static const char* GetPassword(SECRETID::VALUE idSecret);

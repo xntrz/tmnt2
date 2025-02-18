@@ -33,6 +33,6 @@ public:
     
 protected:
     STATUS m_status;
-    float m_fCursorRotation;
-    int32 m_iController;
+    float  m_fCursorRotation;
+    int32  m_iController;
 };

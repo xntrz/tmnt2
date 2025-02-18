@@ -1,17 +1,18 @@
 #include "Animation2D.hpp"
 #include "GameFont.hpp"
 
-#include "System/Common/System2D.hpp"
-#include "System/Common/Sprite.hpp"
-#include "System/Common/Screen.hpp"
 #include "Game/System/Texture/TextureManager.hpp"
+#include "System/Common/Screen.hpp"
+#include "System/Common/Sprite.hpp"
+#include "System/Common/System2D.hpp"
+#include "System/Common/TextData.hpp"
 
 
 /*static*/ CAnimation2DLoader::LoadAnimationData CAnimation2DLoader::m_aList[FILEMAX] =
 {
-    {},
-    {},
-    {},
+    { nullptr, "" },
+    { nullptr, "" },
+    { nullptr, "" },
 };
 
 
@@ -47,7 +48,8 @@
 
 /*static*/ void CAnimation2DLoader::Close(const char* pszName)
 {    
-    ASSERT(m_iFileNum > 0 && m_iFileNum < FILEMAX);
+    ASSERT(m_iFileNum > 0);
+    ASSERT(m_iFileNum < FILEMAX);
 
     for (int32 i = 0; i < COUNT_OF(m_aList); ++i)
     {
@@ -71,7 +73,8 @@
 
 /*static*/ CAnimation2D* CAnimation2DLoader::Get(const char* pszName)
 {
-    ASSERT(m_iFileNum > 0 && m_iFileNum < FILEMAX);
+    ASSERT(m_iFileNum > 0);
+    ASSERT(m_iFileNum < FILEMAX);
 
     for (int32 i = 0; i < m_iFileNum; ++i)
     {
@@ -87,23 +90,34 @@
 
 /*static*/ CAnimation2D* CAnimation2DLoader::Get(int32 index)
 {
-    ASSERT(index >= 0 && index < FILEMAX);
-    ASSERT(index >= 0 && index < m_iFileNum);
+    ASSERT(index >= 0);
+    ASSERT(index < FILEMAX);
+
+    ASSERT(index >= 0);
+    ASSERT(index < m_iFileNum);
 
     return m_aList[index].m_pAnimation2D;
 };
 
 
-/*static*/ Rt2dObject* CAnimation2D::CCenterStringObject::SetCenterAllStringObjectCallback(Rt2dObject* object, Rt2dObject* parent, void* data)
+//
+// *********************************************************************************
+//
+
+
+/*static*/ Rt2dObject*
+CAnimation2D::CCenterStringObject::SetCenterAllStringObjectCallback(Rt2dObject* object,
+                                                                    Rt2dObject* parent,
+                                                                    void* data)
 {
     ASSERT(data);
     
     if (Rt2dObjectIsScene(object))
     {
         RwV3d vPos = Rt2dObjectGetMTM(object)->pos;
-        vPos.x += ((RwV3d*)data)->x;
-        vPos.y += ((RwV3d*)data)->y;
-        vPos.z += ((RwV3d*)data)->z;
+        vPos.x += static_cast<RwV3d*>(data)->x;
+        vPos.y += static_cast<RwV3d*>(data)->y;
+        vPos.z += static_cast<RwV3d*>(data)->z;
 
         Rt2dSceneForAllChildren(object, SetCenterAllStringObjectCallback, &vPos);
     }
@@ -112,10 +126,11 @@
         float fHeight = Rt2dObjectStringGetHeight(object);
         char* pszText = Rt2dObjectStringGetText(object);
         float fWidth = Rt2dFontGetStringWidth(CGameFont::GetFontObj(), pszText, fHeight);
+
         RwMatrix* pMatrix = Rt2dObjectGetMTM(object);
         RwV3d vTranslation = pMatrix->pos;
         
-        vTranslation.x = fWidth * -0.5f - ((RwV3d*)data)->x;
+        vTranslation.x = fWidth * -0.5f - static_cast<RwV3d*>(data)->x;
         
         RwMatrixTranslate(pMatrix, &vTranslation, rwCOMBINEREPLACE);
     };
@@ -134,6 +149,11 @@ void CAnimation2D::CCenterStringObject::SetCenterAllStringObject(Rt2dMaestro* pM
     RwV3d vPos = Rt2dObjectGetMTM(pScene)->pos;    
     Rt2dSceneForAllChildren(pScene, SetCenterAllStringObjectCallback, &vPos);
 };
+
+
+//
+// *********************************************************************************
+//
 
 
 /*static*/ CAnimation2D* CAnimation2D::m_pAnimation2D = nullptr;
@@ -175,8 +195,7 @@ void CAnimation2D::CCenterStringObject::SetCenterAllStringObject(Rt2dMaestro* pM
     ASSERT(uBufferSize);
 
     CAnimation2D* pAnimation2D = new CAnimation2D;
-    if (pAnimation2D)
-        pAnimation2D->ReadBuffer(pBuffer, uBufferSize);
+    pAnimation2D->ReadBuffer(pBuffer, uBufferSize);
 
     return pAnimation2D;
 };
@@ -222,12 +241,13 @@ CAnimation2D::~CAnimation2D(void)
 
 void CAnimation2D::ReadBuffer(void* pBuffer, uint32 uBufferSize)
 {
-    RwMemory MemoryStream;
-    MemoryStream.start = (RwUInt8*)pBuffer;
-    MemoryStream.length = uBufferSize;
+    RwMemory memStream;
+    memStream.start  = static_cast<RwUInt8*>(pBuffer);
+    memStream.length = uBufferSize;
 
-    RwStream* pRwStream = RwStreamOpen(rwSTREAMMEMORY, rwSTREAMREAD, &MemoryStream);
+    RwStream* pRwStream = RwStreamOpen(rwSTREAMMEMORY, rwSTREAMREAD, &memStream);
     ASSERT(pRwStream);
+
     if (pRwStream)
     {
         if (RwStreamFindChunk(pRwStream, rwID_2DMAESTRO, nullptr, nullptr))
@@ -236,7 +256,7 @@ void CAnimation2D::ReadBuffer(void* pBuffer, uint32 uBufferSize)
             ASSERT(m_pMaestro);
         };
 
-        RwStreamClose(pRwStream, &MemoryStream);
+        RwStreamClose(pRwStream, &memStream);
     };
 };
 
@@ -245,29 +265,32 @@ void CAnimation2D::Start(void)
 {
 	ASSERT(m_pMaestro);
 
-	Rt2dBBox* pBBox = Rt2dMaestroGetBBox(m_pMaestro);
-	Rt2dObject* pScene = Rt2dMaestroGetScene(m_pMaestro);
-
-	RwV2d xstep;
-	RwV2d ystep;
-	RwV2d origin;
+	RwV2d xstep = Math::VECTOR2_ZERO;
+	RwV2d ystep = Math::VECTOR2_ZERO;
+	RwV2d origin = Math::VECTOR2_ZERO;
 	Rt2dDeviceGetStep(&xstep, &ystep, &origin);
     
-    RwV2d scale;
-    scale.x = ((xstep.y + xstep.x) * CScreen::Width()) / pBBox->w;
-    scale.y = ((ystep.y + ystep.x) * CScreen::Height()) / pBBox->h;
+    Rt2dBBox* pBBox = Rt2dMaestroGetBBox(m_pMaestro);
+    ASSERT(pBBox);
 
-	RwV2d translation;
-	translation.x = ((CSprite::m_fVirtualScreenW - pBBox->w) * 0.5f) + origin.x;
+    RwV2d scale = Math::VECTOR2_ZERO;
+    scale.x = ((xstep.y + xstep.x) * static_cast<float>(CScreen::Width()))  / pBBox->w;
+    scale.y = ((ystep.y + ystep.x) * static_cast<float>(CScreen::Height())) / pBBox->h;
+
+    RwV2d translation = Math::VECTOR2_ZERO;
+	translation.x =  ((CSprite::m_fVirtualScreenW - pBBox->w) * 0.5f) + origin.x;
 	translation.y = (((CSprite::m_fVirtualScreenH - pBBox->h) * 0.5f) + pBBox->h) + origin.y;
 	
-	Rt2dObjectMTMScale(pScene, scale.x, scale.y);
+    Rt2dObject* pScene = Rt2dMaestroGetScene(m_pMaestro);
+    ASSERT(pScene);
+
+    Rt2dObjectMTMScale(pScene, scale.x, scale.y);
 	Rt2dObjectMTMTranslate(pScene, translation.x, translation.y);
 
 	SetHandler();
 	SetInterpolateAll(true);
-	m_MenuController.CheckButtonLabelList(m_pMaestro);
-	m_MenuSound.CheckSoundLabelList(m_pMaestro);
+	m_menuController.CheckButtonLabelList(m_pMaestro);
+	m_menuSound.CheckSoundLabelList(m_pMaestro);
 	CheckStringObject();
 
     Rt2dSceneUpdateLTM(pScene);
@@ -320,7 +343,7 @@ void CAnimation2D::Input(void)
 {
     ASSERT(m_pMaestro);
     
-    m_MenuController.Trigger(m_pMaestro);
+    m_menuController.Trigger(m_pMaestro);
 };
 
 
@@ -377,7 +400,42 @@ bool CAnimation2D::SetText(const char* pszOrgString, const char* pszNewString)
     Rt2dObject* pScene = Rt2dMaestroGetScene(m_pMaestro);
     ASSERT(pScene);
 
+#ifdef TMNT2_BUILD_EU
+    wchar wszOrgStr[512];
+    wszOrgStr[0] = UTEXT('\0');
+    CGameFont::ConvertToUnicode(wszOrgStr, pszOrgString);
+
+    wchar wszNewStr[512];
+    wszNewStr[0] = UTEXT('\0');
+    CGameFont::ConvertToUnicode(wszNewStr, pszNewString);
+
+    return SetStringObjectText(pScene, wszOrgStr, wszNewStr);
+#else /* TMNT2_BUILD_EU */
     return SetStringObjectText(pScene, pszOrgString, pszNewString);
+#endif /* TMNT2_BUILD_EU */
+};
+
+
+bool CAnimation2D::SetText(const char* pszOrgString, const wchar* pwszNewString)
+{
+    ASSERT(m_pMaestro);
+
+    Rt2dObject* pScene = Rt2dMaestroGetScene(m_pMaestro);
+    ASSERT(pScene);
+
+#if !defined(TMNT2_BUILD_EU)
+    char szNewString[512];
+    szNewString[0] = '\0';
+    CGameFont::ConvertToMultibyte(szNewString, pwszNewString);
+
+    return SetStringObjectText(pScene, pszOrgString, szNewString);
+#else /* !defined(TMNT2_BUILD_EU) */    
+    wchar wszOrgStr[512];
+    wszOrgStr[0] = UTEXT('\0');
+    CGameFont::ConvertToUnicode(wszOrgStr, pszOrgString);
+
+    return SetStringObjectText(pScene, wszOrgStr, pwszNewString);
+#endif /* !defined(TMNT2_BUILD_EU) */
 };
 
 
@@ -388,9 +446,9 @@ bool CAnimation2D::SetStringObjectText(Rt2dObject* pScene, const char* pszOrgStr
     ASSERT(pszNewString);
 
     bool bResult = false;
-    int32 iNumChilds = Rt2dSceneGetChildCount(pScene);
-    
-    for (int32 i = 0; i < iNumChilds; ++i)
+
+    int32 childCount = Rt2dSceneGetChildCount(pScene);
+    for (int32 i = 0; i < childCount; ++i)
     {
         Rt2dObject* pObject = Rt2dSceneGetChildByIndex(pScene, i);
         ASSERT(pObject);
@@ -401,6 +459,8 @@ bool CAnimation2D::SetStringObjectText(Rt2dObject* pScene, const char* pszOrgStr
         case rt2DOBJECTTYPEOBJECTSTRING:
             {
                 const char* pszString = Rt2dObjectStringGetText(pObject);
+                ASSERT(pszString);
+
                 if (!std::strcmp(pszString, pszOrgString))
                 {
                     Rt2dObjectStringSetText(pObject, pszNewString);
@@ -411,6 +471,56 @@ bool CAnimation2D::SetStringObjectText(Rt2dObject* pScene, const char* pszOrgStr
             
         case rt2DOBJECTTYPESCENE:
             SetStringObjectText(pObject, pszOrgString, pszNewString);
+            break;
+
+        default:
+            break;
+        };
+    };
+
+    return bResult;
+};
+
+
+bool CAnimation2D::SetStringObjectText(Rt2dObject* pScene, const wchar* pwszOrgString, const wchar* pwszNewString)
+{
+    ASSERT(pScene);
+    ASSERT(pwszOrgString);
+    ASSERT(pwszNewString);
+
+    bool bResult = false;
+
+    int32 childCount = Rt2dSceneGetChildCount(pScene);
+    for (int32 i = 0; i < childCount; ++i)
+    {
+        Rt2dObject* pObject = Rt2dSceneGetChildByIndex(pScene, i);
+        ASSERT(pObject);
+
+        int32 type = Rt2dObjectGetObjectType(pObject);
+        switch (type)
+        {
+        case rt2DOBJECTTYPEOBJECTSTRING:
+            {
+                const char* pszString = Rt2dObjectStringGetText(pObject);
+                ASSERT(pszString);
+
+                wchar wszStringW[512];
+                wszStringW[0] = UTEXT('\0');
+                CGameFont::ConvertToUnicode(wszStringW, pszString);
+
+                if (!CTextData::StrCmp(wszStringW, pwszOrgString))
+                {
+                    Rt2dObjectStringSetText(pObject, reinterpret_cast<const RwChar*>(pwszNewString));
+                    bResult = true;
+                };
+            }
+            break;
+
+        case rt2DOBJECTTYPESCENE:
+            SetStringObjectText(pObject, pwszOrgString, pwszNewString);
+            break;
+
+        default:
             break;
         };
     };
@@ -431,38 +541,40 @@ void CAnimation2D::SetTexture(const char* pszOrgTexture, const char* pszNewTextu
     ASSERT(pszOrgTexture);
     ASSERT(pszNewTexture);
     
-    RwTexture* pTextureOrg = CTextureManager::GetRwTexture(pszOrgTexture);
-    RwTexture* pTextureNew = CTextureManager::GetRwTexture(pszNewTexture);
     Rt2dObject* pScene = Rt2dMaestroGetScene(m_pMaestro);
     ASSERT(pScene);
 
-    SubstituteTexture(pScene, pTextureOrg, pTextureNew);
+    RwTexture* pTextureOrg = CTextureManager::GetRwTexture(pszOrgTexture);    
+    RwTexture* pTextureNew = CTextureManager::GetRwTexture(pszNewTexture);
+    
+    ReplaceTexture(pScene, pTextureOrg, pTextureNew);
 };
 
 
-void CAnimation2D::SubstituteTexture(Rt2dObject* pScene, RwTexture* pOrgTexture, RwTexture* pNewTexture)
+void CAnimation2D::ReplaceTexture(Rt2dObject* pScene, RwTexture* pOrgTexture, RwTexture* pNewTexture)
 {
     ASSERT(pScene);
     ASSERT(pOrgTexture);
     ASSERT(pNewTexture);
 
-    int32 iChildNum = Rt2dSceneGetChildCount(pScene);
-    for (int32 i = 0; i < iChildNum; ++i)
+    int32 childCount = Rt2dSceneGetChildCount(pScene);
+    for (int32 i = 0; i < childCount; ++i)
     {
         Rt2dObject* pObject = Rt2dSceneGetChildByIndex(pScene, i);
+
         int32 type = Rt2dObjectGetObjectType(pObject);
         switch (type)
         {
         case rt2DOBJECTTYPESHAPE:
             {
-                int32 iNodeCount = Rt2dShapeGetNodeCount(pObject);
-                for (int32 j = 0; j < iNodeCount; ++j)
+                int32 nodeCount = Rt2dShapeGetNodeCount(pObject);
+                for (int32 j = 0; j < nodeCount; ++j)
                 {
                     struct _rt2dShapeNode
                     {
-                        uint32 flag;
-                        Rt2dPath* path;
-                        Rt2dBrush* brush;
+                        RwUInt32    flag;
+                        Rt2dPath*   path;
+                        Rt2dBrush*  brush;
                     };
 
                     RwSList* list = pObject->data.shape.rep->nodes;
@@ -480,7 +592,10 @@ void CAnimation2D::SubstituteTexture(Rt2dObject* pScene, RwTexture* pOrgTexture,
             break;
 
         case rt2DOBJECTTYPESCENE:
-            SubstituteTexture(pObject, pOrgTexture, pNewTexture);
+            ReplaceTexture(pObject, pOrgTexture, pNewTexture);
+            break;
+
+        default:
             break;
         };
     };
@@ -499,13 +614,13 @@ void CAnimation2D::FlashKeyPress(uint32 uKey)
 {
     ASSERT(m_pMaestro);
     
-    m_MenuController.KeyPress(m_pMaestro, uKey);
+    m_menuController.KeyPress(m_pMaestro, uKey);
 };
 
 
 void CAnimation2D::FlashUnlockKeyEnable(bool bEnable)
 {
-    m_MenuController.FlashUnlockKeyEnable(bEnable);
+    m_menuController.FlashUnlockKeyEnable(bEnable);
 };
 
 
@@ -524,27 +639,28 @@ void CAnimation2D::KeyInfoChange_Sub(Rt2dObject* pScene)
 {
     ASSERT(pScene);
 
-    int32 iChildNum = Rt2dSceneGetChildCount(pScene);
-    for (int32 i = 0; i < iChildNum; ++i)
+    int32 childCount = Rt2dSceneGetChildCount(pScene);
+    for (int32 i = 0; i < childCount; ++i)
     {
         Rt2dObject* pObject = Rt2dSceneGetChildByIndex(pScene, i);
+
         int32 type = Rt2dObjectGetObjectType(pObject);
         switch (type)
         {
         case rt2DOBJECTTYPEOBJECTSTRING:
             {
-                static const char GUARD[]   = "GUARD";
-                static const char ATTACK[]  = "ATTACK";
-                static const char JUMP[]    = "JUMP";
+#ifdef TARGET_PC
+                static const char GUARD[]   = "Guard";
+                static const char ATTACK[]  = "WeakAttack";
+                static const char JUMP[]    = "Jump";
 
                 bool bIsTextChanged = false;
-                char szBuff[128];
                 int32 nWritePos = 0;
 
-                std::memset(szBuff, 0x00, sizeof(szBuff));
+                char szBuff[256];
+                szBuff[0] = '\0';
 
                 const char* pszText = Rt2dObjectStringGetText(pObject);
-
                 while (*pszText)
                 {
                     ASSERT(nWritePos < sizeof(szBuff));
@@ -575,6 +691,12 @@ void CAnimation2D::KeyInfoChange_Sub(Rt2dObject* pScene)
                         break;
                     };
                 };
+#else /* TARGET_PC */
+#error Not implemented for current target
+#endif /* TARGET_PC */
+
+                ASSERT(nWritePos < sizeof(szBuff));
+				szBuff[nWritePos] = '\0';
 
                 if (bIsTextChanged)
                     Rt2dObjectStringSetText(pObject, szBuff);
@@ -584,6 +706,9 @@ void CAnimation2D::KeyInfoChange_Sub(Rt2dObject* pScene)
         case rt2DOBJECTTYPESCENE:
             KeyInfoChange_Sub(pObject);
             break;
+
+        default:
+            break;
         };
     };
 };
@@ -591,7 +716,7 @@ void CAnimation2D::KeyInfoChange_Sub(Rt2dObject* pScene)
 
 void CAnimation2D::SetCenterAllStrings(void)
 {
-    m_CenterStringObj.SetCenterAllStringObject(m_pMaestro);
+    m_centerStrObj.SetCenterAllStringObject(m_pMaestro);
 };
 
 
@@ -602,7 +727,7 @@ void CAnimation2D::SetCenterAllStrings(void)
     if (message->messageType == rt2dMESSAGETYPEGETURL)
     {
         ASSERT(m_pAnimation2D);
-        if (!m_pAnimation2D->m_MenuSound.CallSound(message->intParam1))
+        if (!m_pAnimation2D->m_menuSound.CallSound(message->intParam1))
             m_pAnimation2D->m_iMessageIndex = message->intParam1;
     };
 
@@ -618,30 +743,36 @@ void CAnimation2D::SetCenterAllStrings(void)
     {
         Rt2dSceneForAllChildren(object, &CAnimation2D::AllStringObjectCallback, data);
     }
-    else if(Rt2dObjectIsObjectString(object))
+    else if (Rt2dObjectIsObjectString(object))
     {
         const char* pszText = Rt2dObjectStringGetText(object);
         ConvertButtonSymbol(object);
 
-		wchar wszBuff[128];
-		wszBuff[0] = UTEXT('\0');
-
+#ifdef TMNT2_BUILD_EU
+        Rt2dObjectStringSetText(object, pszText);      
+#else /* TMNT2_BUILD_EU */
+        wchar wszBuff[128];
+        wszBuff[0] = UTEXT('\0');
         CGameFont::ConvertToUnicode(wszBuff, pszText);
 
-		Rt2dObjectStringSetText(object, (const RwChar*)wszBuff);
-        
-        ++(*(int32*)data);
+        Rt2dObjectStringSetText(object, reinterpret_cast<const RwChar*>(wszBuff));    
+#endif /* TMNT2_BUILD_EU */
+
+        ++(*static_cast<int32*>(data));
     };
 
     return object;
 };
 
 
-/*static*/ Rt2dMaestro* CAnimation2D::AllAnimSetInterpolateCallback(Rt2dMaestro* maestro, Rt2dAnim* anim, Rt2dAnimProps* props, void* pData)
+/*static*/ Rt2dMaestro* CAnimation2D::AllAnimSetInterpolateCallback(Rt2dMaestro* maestro,
+                                                                    Rt2dAnim* anim,
+                                                                    Rt2dAnimProps* props,
+                                                                    void* pData)
 {
     ASSERT(pData);
     
-    Rt2dAnimSetInterpolate(anim, (RwBool)pData);
+    Rt2dAnimSetInterpolate(anim, static_cast<RwBool>(pData != nullptr));
     return maestro;
 };
 

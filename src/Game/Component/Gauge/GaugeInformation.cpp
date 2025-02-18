@@ -5,6 +5,7 @@
 #include "Game/Component/GameMain/MapInfo.hpp"
 #include "Game/Component/GameMain/StageInfo.hpp"
 #include "Game/Component/GameMain/AreaInfo.hpp"
+#include "Game/Component/GameMain/NexusInfo.hpp"
 #include "Game/Component/Menu/Dialog.hpp"
 #include "Game/System/2d/GameFont.hpp"
 #include "Game/System/Text/GameText.hpp"
@@ -87,7 +88,9 @@ public:
 
 private:
     CSprite         m_sprite;
+#if !defined(TMNT2_BUILD_EU)
     RwTexture*      m_pTextureFont;
+#endif /* !defined(TMNT2_BUILD_EU) */
     RwTexture*      m_pTextureGGBar;
     RwTexture*      m_pTextureGGIconSel1;
     RwTexture*      m_pTextureGGIconOff;
@@ -133,17 +136,16 @@ CGaugeInformation_Container::CGaugeInformation_Container(void)
 {
     std::memset(m_aBossGaugeInfo, 0x00, sizeof(m_aBossGaugeInfo));
 
-    m_pConfirmDlg = new CDialog(CDialog::COLOR_NORMAL, CDialog::STATUS_NO, CGameData::Attribute().GetVirtualPad());
-
+    m_pConfirmDlg = new CDialog(CDialog::COLOR_NORMAL,
+                                CDialog::STATUS_NO,
+                                CGameData::Attribute().GetVirtualPad());
     m_pConfirmDlg->Set(0.0f, 105.0f, 640.0f, 140.0f);
     m_pConfirmDlg->SetOpenAction(true);
     m_pConfirmDlg->SetStatus(CDialog::STATUS_NO);
-    m_pConfirmDlg->SetText(
-		CGameText::GetText(GAMETEXT(758)), 
-		CGameFont::GetScreenHeightEx(TYPEDEF::VSCR_H / 2.0f),
-		{ 0xFF, 0xFF, 0xFF, 0xFF }
-	);
-    
+    m_pConfirmDlg->SetText(CGameText::GetText(GAMETEXT_AREA_RET),
+                           CGameFont::GetHeightScaled() * 2.0f,
+                           { 0xFF, 0xFF, 0xFF, 0xFF });
+
     m_bDlgRunFlag = false;
 };
 
@@ -223,11 +225,15 @@ void CGaugeInformation_Container::PausePeriodSub(void)
                     }
                     else if (CController::GetDigitalTrigger(iController, CController::DIGITAL_CANCEL))
 					{
-						CGameSound::PlaySE(SDCODE_SE(4100));
 						if (m_nCursor != PAUSERESULT_BACK)
+						{
+							CGameSound::PlaySE(SDCODE_SE(4100));
                             m_nCursor = PAUSERESULT_BACK;
-                        else
+						}
+						else
+						{
                             m_pausestatus = CGaugeInformation::PAUSESTATUS_BACK;
+						};
                     }
                     else if (CController::GetDigitalTrigger(iController, CController::DIGITAL_LUP))
 					{
@@ -291,9 +297,9 @@ void CGaugeInformation_Container::PauseDrawSub(void)
 
     CSystem2D::PushRenderState();
 
-	CGameFont::SetHeight(CGameFont::GetScreenHeightEx(TYPEDEF::VSCR_H / 3.75f));
+    CGameFont::SetHeightScaled(3.75f);
     CGameFont::SetRGBA(255, 170, 0, 255);
-    CGameFont::Show(CGameText::GetText(GAMETEXT(908)), -220.0f, -100.0f);
+    CGameFont::Show(CGameText::GetText(GAMETEXT_GG_PAUSE), -220.0f, -100.0f);
 
     float fDuration = GAUGE_ANIM_DURATION_FRAMES(30);
     float fStartValue = (m_bCursorAnimFlag ? 255.0f : 0.0f);
@@ -311,19 +317,32 @@ void CGaugeInformation_Container::PauseDrawSub(void)
     };
 
     RENDERSTATE_PUSH(rwRENDERSTATEZWRITEENABLE, false);
-    RENDERSTATE_PUSH(rwRENDERSTATESRCBLEND, rwBLENDSRCALPHA);
-    RENDERSTATE_PUSH(rwRENDERSTATEDESTBLEND, rwBLENDONE);
+    RENDERSTATE_PUSH(rwRENDERSTATESRCBLEND,     rwBLENDSRCALPHA);
+    RENDERSTATE_PUSH(rwRENDERSTATEDESTBLEND,    rwBLENDONE);
 
     CGameFont::SetRGBA(255, 170, 0, uAlphaBasis);
-    CGameFont::Show(CGameText::GetText(GAMETEXT(908)), -220.0f, -100.0f);
+    CGameFont::Show(CGameText::GetText(GAMETEXT_GG_PAUSE), -220.0f, -100.0f);
     
     RENDERSTATE_PUSH(rwRENDERSTATEZWRITEENABLE, true);
-    RENDERSTATE_PUSH(rwRENDERSTATESRCBLEND, rwBLENDSRCALPHA);
-    RENDERSTATE_PUSH(rwRENDERSTATEDESTBLEND, rwBLENDINVSRCALPHA);
+    RENDERSTATE_PUSH(rwRENDERSTATESRCBLEND,     rwBLENDSRCALPHA);
+    RENDERSTATE_PUSH(rwRENDERSTATEDESTBLEND,    rwBLENDINVSRCALPHA);
 
-	CGameFont::SetHeight(CGameFont::GetScreenHeightEx(TYPEDEF::VSCR_H / 2.0f));
+    RwV2d vecHelpPos = Math::VECTOR2_ZERO;
+#ifdef TMNT2_BUILD_EU
+    vecHelpPos.x =  10.0f;
+    vecHelpPos.y = -85.0f;
+    CGameFont::SetHeightScaled(1.5f);
+#else /* TMNT2_BUILD_EU */
+    vecHelpPos.x =  50.0f;
+    vecHelpPos.y = -85.0f;
+    CGameFont::SetHeightScaled(2.0f);
+#endif /* TMNT2_BUILD_EU */
     CGameFont::SetRGBA(255, 255, 255, 255);    
-    CGameFont::Show(CGameText::GetText(GAMETEXT(m_bShowInformationFlag ? 8 : 9)), 50.0f, -85.0f);
+    CGameFont::Show(CGameText::GetText(m_bShowInformationFlag ? GAMETEXT_HELP_FUNC_BACK : GAMETEXT_HELP_FUNC_SELECT), &vecHelpPos);
+
+#ifdef TMNT2_BUILD_EU
+    CGameFont::SetHeightScaled(2.0f);
+#endif /* TMNT2_BUILD_EU */
 
     m_sprite.Resize(float(CScreen::Width()), 16.0f);
     m_sprite.SetOffset(0.5f, 0.5f);
@@ -336,65 +355,69 @@ void CGaugeInformation_Container::PauseDrawSub(void)
     {
         if (CGameData::PlayParam().GetStageMode() == GAMETYPES::STAGEMODE_RIDE)
         {
-			CGameFont::SetHeight(CGameFont::GetScreenHeight() * 2.0f);
+            CGameFont::SetHeightScaled(2.0f);
             CGameFont::SetRGBA(255, 170, 0, 255);
-            CGameFont::Show(CGameText::GetText(GAMETEXT(933)), -220.0f, -50.0f);
+            CGameFont::Show(CGameText::GetText(GAMETEXT_GG_CTRLS), -220.0f, -50.0f);
 
             float fOfsY = -30.0f;
-			CGameFont::SetHeight(CGameFont::GetScreenHeight() * 1.85f);
+            CGameFont::SetHeightScaled(1.85f);
             CGameFont::SetRGBA(255, 255, 255, 255);
-            
+
             if (CGameData::PlayParam().GetArea() == AREAID::ID_AREA22 ||
                 CGameData::PlayParam().GetArea() == AREAID::ID_AREA32)
             {
-                CGameFont::Show(CGameText::GetText(GAMETEXT(935)), -200.0f, -30.0f);
-                CGameFont::Show(CGameText::GetText(GAMETEXT(936)), -200.0f, -10.0f);
+                CGameFont::Show(CGameText::GetText(GAMETEXT_GG_RIDE_MOVE_D), -200.0f, -30.0f);
+                CGameFont::Show(CGameText::GetText(GAMETEXT_GG_RIDE_MOVE_U), -200.0f, -10.0f);
                 fOfsY = 10.0f;
             };
 
-            CGameFont::Show(CGameText::GetText(GAMETEXT(937)), -200.0f, fOfsY);
+            CGameFont::Show(CGameText::GetText(GAMETEXT_GG_RIDE_MOVE_R), -200.0f, fOfsY);
             fOfsY += 20.0f;
-            
-            CGameFont::Show(CGameText::GetText(GAMETEXT(938)), -200.0f, fOfsY);
+
+            CGameFont::Show(CGameText::GetText(GAMETEXT_GG_RIDE_MOVE_L), -200.0f, fOfsY);
             fOfsY += 20.0f;
-            
+
             if (CGameData::PlayParam().GetArea() == AREAID::ID_AREA22 ||
                 CGameData::PlayParam().GetArea() == AREAID::ID_AREA32)
             {
-                CGameFont::Show(CGameText::GetText(GAMETEXT(939)), -200.0f, fOfsY);
+                CGameFont::Show(CGameText::GetText(GAMETEXT_GG_RIDE_SHOOT), -200.0f, fOfsY);
                 fOfsY += 20.0f;
             };
 
-            CGameFont::Show(CGameText::GetText(GAMETEXT(940)), -200.0f, fOfsY);
+            CGameFont::Show(CGameText::GetText(GAMETEXT_GG_RIDE_TRICK_R), -200.0f, fOfsY);
             fOfsY += 20.0f;
-            
-            CGameFont::Show(CGameText::GetText(GAMETEXT(941)), -200.0f, fOfsY);
+
+            CGameFont::Show(CGameText::GetText(GAMETEXT_GG_RIDE_TRICK_L), -200.0f, fOfsY);
             fOfsY += 20.0f;
-            
-            CGameFont::Show(CGameText::GetText(GAMETEXT(942)), -200.0f, fOfsY);
+
+            CGameFont::Show(CGameText::GetText(GAMETEXT_GG_RIDE_CHNG_MSG), -200.0f, fOfsY);
             fOfsY += 20.0f;
-            
-            CGameFont::Show(CGameText::GetText(GAMETEXT(943)), -200.0f, fOfsY);
+
+            CGameFont::Show(CGameText::GetText(GAMETEXT_GG_RIDE_CHNG), -200.0f, fOfsY);
         }
         else
         {
-			CGameFont::SetHeight(CGameFont::GetScreenHeight() * 2.0f);
+#ifdef TMNT2_BUILD_EU
+            CGameFont::SetHeightScaled(1.5f);
+#else /* TMNT2_BUILD_EU */
+            CGameFont::SetHeightScaled(2.0f);
+#endif /* TMNT2_BUILD_EU */
             CGameFont::SetRGBA(255, 170, 0, 255);
-            CGameFont::Show(CGameText::GetText(GAMETEXT(911)), -220.0f, -50.0f);
+            CGameFont::Show(CGameText::GetText(GAMETEXT_GG_CRYLVL), -220.0f, -50.0f);
 
             CGameFont::SetRGBA(255, 255, 255, 255);
-            CGameFont::Show(CGameText::GetText(GAMETEXT(786)), -200.0f, -25.0f);
-            CGameFont::Show(CGameText::GetText(GAMETEXT(787)), -200.0f, 35.0f);
-            CGameFont::Show(CGameText::GetText(GAMETEXT(788)), 50.0f, -25.0f);
-            CGameFont::Show(CGameText::GetText(GAMETEXT(789)), 50.0f, 35.0f);
+            CGameFont::Show(CGameText::GetText(GAMETEXT_GG_ATTACK), -200.0f, -25.0f);
+            CGameFont::Show(CGameText::GetText(GAMETEXT_GG_DEFENCE), -200.0f, 35.0f);
+            CGameFont::Show(CGameText::GetText(GAMETEXT_GG_CHARGE), 50.0f, -25.0f);
+            CGameFont::Show(CGameText::GetText(GAMETEXT_GG_AERIAL), 50.0f, 35.0f);
 
             m_sprite.SetOffset(0.0f, 0.0f);
             m_sprite.Resize(64.0f, 64.0f);
 
-            for (int32 i = 0; i < 4; ++i)
+            for (int32 i = 0; i < (GAMETYPES::CRYSTALTYPE_NUM - 1); ++i) // exlcude NONE value
             {
                 int32 nCryNum = 0;
-                
+
                 switch (i)
                 {
                 case 0:
@@ -427,7 +450,7 @@ void CGaugeInformation_Container::PauseDrawSub(void)
 
                     float x = 0.0f;
                     float y = 0.0f;
-                    
+
                     if (i >= 2)
                     {
                         x = float(idx) * 48.0f + 50.0f;
@@ -466,26 +489,26 @@ void CGaugeInformation_Container::PauseDrawSub(void)
         for (int32 i = 0; i < PAUSERESULTNUM; ++i)
         {
             const wchar* pwszText = nullptr;
-            
+
             switch (i)
             {
             case PAUSERESULT_BACK:
-                pwszText = CGameText::GetText(GAMETEXT(749));
+                pwszText = CGameText::GetText(GAMETEXT_AREA_MENU_BACK);
                 break;
 
             case PAUSERESULT_INFO:
-                pwszText = CGameText::GetText(GAMETEXT(912));
+                pwszText = CGameText::GetText(GAMETEXT_GG_INFO);
                 break;
 
             case PAUSERESULT_RET_WORLD:
                 if (CGameData::PlayParam().GetStageMode() == GAMETYPES::STAGEMODE_NEXUS)
-                    pwszText = CGameText::GetText(GAMETEXT(923));
+                    pwszText = CGameText::GetText(GAMETEXT_GG_TOURNEY_RET);
                 else
-                    pwszText = CGameText::GetText(GAMETEXT(913));
+                    pwszText = CGameText::GetText(GAMETEXT_GG_RET_MAP);
                 break;
-                
+
             case PAUSERESULT_RET_TITLE:
-                pwszText = CGameText::GetText(GAMETEXT(914));
+                pwszText = CGameText::GetText(GAMETEXT_GG_RET_TIT);
                 break;
 
             default:
@@ -497,49 +520,55 @@ void CGaugeInformation_Container::PauseDrawSub(void)
             else
                 CGameFont::SetRGBA(255, 170, 0, 255);
 
-			CGameFont::SetHeight(CGameFont::GetScreenHeightEx(TYPEDEF::VSCR_H / 2.0f));
+            CGameFont::SetHeightScaled(2.0f);
             CGameFont::Show(pwszText, -200.0f, i * 25.0f - 50.0f);
         };
 
-		CGameFont::SetHeight(CGameFont::GetScreenHeightEx(TYPEDEF::VSCR_H / 1.65f));
+        CGameFont::SetHeightScaled(1.65f);
         CGameFont::SetRGBA(0, 128, 200, 255);
 
-        Rt2dBBox bbox = { -220.0f, -350.0f, 440.0f, 300.0f };
+        Rt2dBBox bbox;
+        bbox.x = -220.0f;
+        bbox.y = -350.0f;
+        bbox.w =  440.0f;
+        bbox.h =  300.0f;
+
+        const wchar* pwszText = nullptr;
+
         if (CGameData::PlayParam().GetStageMode() == GAMETYPES::STAGEMODE_NEXUS)
         {
-            const wchar* pwszText = nullptr;
             AREAID::VALUE idArea = CGameData::PlayParam().GetArea();
             
             switch (idArea)
             {
             case AREAID::ID_AREA60_A:
-                pwszText = CGameText::GetText(GAMETEXT(878));
+                pwszText = CGameText::GetText(GAMETEXT_AREA60_A_BRIEF);
                 break;
 
             case AREAID::ID_AREA60_B:
-                pwszText = CGameText::GetText(GAMETEXT(879));
+                pwszText = CGameText::GetText(GAMETEXT_AREA60_B_BRIEF);
                 break;
 
             case AREAID::ID_AREA60_C:
-                pwszText = CGameText::GetText(GAMETEXT(880));
+                pwszText = CGameText::GetText(GAMETEXT_AREA60_C_BRIEF);
                 break;
                 
             case AREAID::ID_AREA60_D:
-                pwszText = CGameText::GetText(GAMETEXT(881));
+                pwszText = CGameText::GetText(GAMETEXT_AREA60_D_BRIEF);
                 break;
 
             default:
                 ASSERT(false);
                 break;
             };
-
-            CGameFont::Flow(pwszText, &bbox);
         }
         else
         {
             AREAID::VALUE idArea = CGameData::PlayParam().GetArea();
-            CGameFont::Flow(CGameText::GetText(GAMETEXT(idArea + 823)), &bbox);
+			pwszText = CGameText::GetText(GAMETEXT((GAMETEXT_AREA01_BRIEF - 1) + idArea));
         };
+
+        CGameFont::Flow(pwszText, &bbox);
     };
 
     CSystem2D::PopRenderState();
@@ -577,33 +606,82 @@ void CGaugeInformation_Container::MissionInfoDrawSub(void)
 
     CSystem2D::PushRenderState();
 
-	CGameFont::SetHeight(CGameFont::GetScreenHeightEx(TYPEDEF::VSCR_H / 2.0f));
     CGameFont::SetRGBA(255, 170, 0, 255);
+    CGameFont::SetHeightScaled(2.0f);
 
     if (CGameData::PlayParam().GetStageMode() == GAMETYPES::STAGEMODE_NEXUS)
     {
-        CGameFont::Show(CGameText::GetText(GAMETEXT(929)), -240.0f, -140.0f);
+        CGameFont::Show(CGameText::GetText(GAMETEXT_GG_TOURNEY), -240.0f, -140.0f);
     }
     else
     {
-        CGameFont::Show(CGameText::GetText(GAMETEXT(931)), -240.0f, -140.0f);
-        
-        float fStrW = CGameFont::GetStringWidth(CGameText::GetText(GAMETEXT(931)));
+#ifdef TMNT2_BUILD_EU
+        const char* pszEpisode = CAreaInfo::GetEpisode(CGameData::PlayParam().GetArea());
+        ASSERT(pszEpisode != nullptr);
+
+        wchar wszEpisode[128];
+        wszEpisode[0] = UTEXT('\0');
+        CGameFont::ConvertToUnicode(wszEpisode, pszEpisode);
+
+        wchar wszEpisodeFmtBuff[256];
+        wszEpisodeFmtBuff[0] = UTEXT('\0');        
+        CTextData::Sprintf(wszEpisodeFmtBuff, CGameText::GetText(GAMETEXT_GG_EPISODE), wszEpisode);
+
+        CGameFont::Show(wszEpisodeFmtBuff, -240.0f, -140.0f);
+#else /* TMNT2_BUILD_EU */
+        CGameFont::Show(CGameText::GetText(GAMETEXT_GG_EPISODE), -240.0f, -140.0f);
+
+        float fStrW = CGameFont::GetStringWidth(CGameText::GetText(GAMETEXT_GG_EPISODE));
         CGameFont::Show(CAreaInfo::GetEpisode(CGameData::PlayParam().GetArea()), fStrW - 240.0f, -140.0f);
+#endif /* TMNT2_BUILD_EU */
     };
 
-	CGameFont::SetHeight(CGameFont::GetScreenHeightEx(TYPEDEF::VSCR_H / 2.5f));
     CGameFont::SetRGBA(255, 170, 0, 255);
+    CGameFont::SetHeightScaled(2.5f);
+#ifdef TMNT2_BUILD_EU
+    if (CGameFont::GetStringWidth(CAreaInfo::GetDispName(CGameData::PlayParam().GetArea())) >= 440.0f)
+    {
+        Rt2dBBox bbox;
+        bbox.x = -220.0f;
+        bbox.y = 75.0f;
+        bbox.w = 440.0f;
+        bbox.h = 60.0f;
+
+        CGameFont::Flow(CAreaInfo::GetDispName(CGameData::PlayParam().GetArea()), &bbox);
+    }
+    else
+    {
+        CGameFont::Show(CAreaInfo::GetDispName(CGameData::PlayParam().GetArea()), -230.0f, -110.0f);
+    };
+#else /* TMNT2_BUILD_EU */
     CGameFont::Show(CAreaInfo::GetDispName(CGameData::PlayParam().GetArea()), -230.0f, -110.0f);
+#endif /* TMNT2_BUILD_EU */
 
-	CGameFont::SetHeight(CGameFont::GetScreenHeightEx(TYPEDEF::VSCR_H / 2.0f));
+    CGameFont::SetHeightScaled(2.0f);
     CGameFont::SetRGBA(202, 0, 103, 255);
-    CGameFont::Show(CGameText::GetText(GAMETEXT(932)), -230.0f, -80.0f);
+    float fObjectivePosY = -80.0f;
+#ifdef TMNT2_BUILD_EU    
+    fObjectivePosY = -70.0f;
+#endif /* TMNT2_BUILD_EU */
+    CGameFont::Show(CGameText::GetText(GAMETEXT_GG_OBJECTIVE), -230.0f, fObjectivePosY);
 
-	CGameFont::SetHeight(CGameFont::GetScreenHeightEx(TYPEDEF::VSCR_H / 2.0f));
+#ifdef TMNT2_BUILD_EU
+    CGameFont::SetHeightScaled(1.75f);
+#else /* TMNT2_BUILD_EU */
+    CGameFont::SetHeightScaled(2.0f);
+#endif /* TMNT2_BUILD_EU */
     CGameFont::SetRGBA(202, 0, 103, 255);
-    
-    Rt2dBBox bbox = { -220.0f, -230.0f, 440.0f, 300.0f };
+
+    Rt2dBBox bbox;
+    bbox.x = -220.0f;
+#ifdef TMNT2_BUILD_EU
+    bbox.y = -235.0f;
+#else /* TMNT2_BUILD_EU */
+    bbox.y = -230.0f;
+#endif /* TMNT2_BUILD_EU */
+    bbox.w =  440.0f;
+    bbox.h =  300.0f;
+
     const wchar* pwszText = nullptr;
     
     if (CGameData::PlayParam().GetStageMode() == GAMETYPES::STAGEMODE_NEXUS)
@@ -611,19 +689,19 @@ void CGaugeInformation_Container::MissionInfoDrawSub(void)
         switch (CGameData::PlayParam().GetArea())
         {
         case AREAID::ID_AREA60_A:
-            pwszText = CGameText::GetText(GAMETEXT(878));
+            pwszText = CGameText::GetText(GAMETEXT_AREA60_A_BRIEF);
             break;
             
         case AREAID::ID_AREA60_B:
-            pwszText = CGameText::GetText(GAMETEXT(879));
+            pwszText = CGameText::GetText(GAMETEXT_AREA60_B_BRIEF);
             break;
             
         case AREAID::ID_AREA60_C:
-            pwszText = CGameText::GetText(GAMETEXT(880));
+            pwszText = CGameText::GetText(GAMETEXT_AREA60_C_BRIEF);
             break;
             
         case AREAID::ID_AREA60_D:
-            pwszText = CGameText::GetText(GAMETEXT(881));
+            pwszText = CGameText::GetText(GAMETEXT_AREA60_D_BRIEF);
             break;
             
         default:
@@ -633,15 +711,20 @@ void CGaugeInformation_Container::MissionInfoDrawSub(void)
     }
     else
     {
-        pwszText = CGameText::GetText(GAMETEXT(823 + CGameData::PlayParam().GetArea()));        
+        AREAID::VALUE areaId = CGameData::PlayParam().GetArea();
+		pwszText = CGameText::GetText(GAMETEXT((GAMETEXT_AREA01_BRIEF - 1) + areaId));
     };
 
     ASSERT(pwszText);
     CGameFont::Flow(pwszText, &bbox);
 
-	CGameFont::SetHeight(CGameFont::GetScreenHeightEx(TYPEDEF::VSCR_H / 2.0f));
+#ifdef TMNT2_BUILD_EU
+    CGameFont::SetHeightScaled(1.75f);
+#else /* TMNT2_BUILD_EU */
+    CGameFont::SetHeightScaled(2.0f);
+#endif /* TMNT2_BUILD_EU */
     CGameFont::SetRGBA(255, 255, 255, 255);
-    CGameFont::Show(CGameText::GetText(GAMETEXT(1226)), -230.0f, 135.0f);
+    CGameFont::Show(CGameText::GetText(GAMETEXT_MENU_HELP), -230.0f, 135.0f);
 
     CSystem2D::PopRenderState();
 };
@@ -657,7 +740,11 @@ void CGaugeInformation_Container::SetBattleNexusInfoSub(void)
 
 bool CGaugeInformation_Container::IsBattleNexusInfoEndSub(void)
 {
+#ifdef TMNT2_BUILD_EU
+    return (m_eNexusStep > NEXUSSTEP_FIGHT);
+#else /* TMNT2_BUILD_EU */
     return (m_eNexusStep >= NEXUSSTEP_FIGHT);
+#endif /* TMNT2_BUILD_EU */
 };
 
 
@@ -780,46 +867,41 @@ void CGaugeInformation_Container::DispBattleNexusInfoSub(void)
         break;
     };
 
-    if ((m_eNexusStep == NEXUSSTEP_ENEMY_IN)
-        || (m_eNexusStep == NEXUSSTEP_ENEMY_WAIT)
-        || (m_eNexusStep == NEXUSSTEP_ENEMY_OUT))
-    {                
+    if ((m_eNexusStep == NEXUSSTEP_ENEMY_WAIT) ||
+        (m_eNexusStep == NEXUSSTEP_ENEMY_OUT))
+    {
         STAGEID::VALUE IdStage = CGameData::PlayParam().GetStage();
         AREAID::VALUE IdArea = CGameData::PlayParam().GetArea();
-        int32 StageIndex = CAreaInfo::IndexOfStage(IdArea, IdStage);
-        int32 StringOffset = -1;
 
-        const int32 aStringOffset[] = { 1157, 1167, 1177, 1187 };
-
-#ifdef _DEBUG        
-        int32 idx = (IdArea - AREAID::NEXUSSTART);
-        ASSERT(idx >= 0);
-        ASSERT(idx < COUNT_OF(aStringOffset));;
-#endif /* _DEBUG */
-        
-        StringOffset = aStringOffset[IdArea - AREAID::NEXUSSTART];
+        int32 stageIndex = CAreaInfo::IndexOfStage(IdArea, IdStage);
 
         CSystem2D::PushRenderState();
-        
+
+        /* draw battle no format str */
         wchar wszBuff[128];
-        const wchar* pwszFormat = CGameText::GetText(GAMETEXT(0x39E));
-        CTextData::Sprintf(wszBuff, pwszFormat, StageIndex + 1);
+        wszBuff[0] = UTEXT('\0');
 
-		CGameFont::SetHeight(CGameFont::GetScreenHeightEx(TYPEDEF::VSCR_H / 2.87f));
-        CGameFont::SetRGBA(255, 170, 0, Alpha);
-        CGameFont::Show(
-            wszBuff,
-            -(CGameFont::GetStringWidth(wszBuff) * 0.5f),
-            -20.0f
-        );
+        const wchar* pwszFormat = CGameText::GetText(GAMETEXT_GG_TOURNEY_BATTLE);
+        CTextData::Sprintf(wszBuff, pwszFormat, stageIndex + 1);
 
-        const wchar* pwszText = CGameText::GetText(GAMETEXT(StringOffset + StageIndex));
+        CGameFont::SetHeightScaled(2.5f);
         CGameFont::SetRGBA(255, 170, 0, Alpha);
-        CGameFont::Show(
-            pwszText,
-            -(CGameFont::GetStringWidth(pwszText) * 0.5f),
-            20.0f
-        );
+        CGameFont::Show(wszBuff,
+                        -(CGameFont::GetStringWidth(wszBuff) * 0.5f),
+                        -20.0f);
+
+        /* draw team name str */
+        GAMETYPES::NEXUSID nexusId = CAreaInfo::GetNexusID(IdArea);
+        ASSERT(nexusId >= 0);
+        ASSERT(nexusId < GAMETYPES::NEXUSID_NUM);
+
+        const wchar* pwszText = CNexusInfo::GetTeamName(nexusId, stageIndex);
+        ASSERT(pwszText != nullptr);
+
+        CGameFont::SetRGBA(255, 170, 0, Alpha);
+        CGameFont::Show(pwszText,
+                        -(CGameFont::GetStringWidth(pwszText) * 0.5f),
+                        20.0f);
 
         CSystem2D::PopRenderState();
     };
@@ -831,8 +913,6 @@ void CGaugeInformation_Container::DispBattleNexusInfoSub(void)
             m_sprite.SetTexture(m_pTextureBtReady);
         else if (m_eNexusStep == NEXUSSTEP_FIGHT)
             m_sprite.SetTexture(m_pTextureBtFight);
-        else
-            ASSERT(false);
 
         m_sprite.SetOffset(0.5f, 0.5f);
         m_sprite.Move(0.0f, 0.0f);
@@ -966,7 +1046,7 @@ void CGaugeInformation_Container::BossGaugeDrawSub(int32 no)
 
     CSystem2D::PushRenderState();
     
-    CGameFont::SetHeight(CGameFont::GetScreenHeightEx(TYPEDEF::VSCR_H / 2.0f));
+    CGameFont::SetHeightScaled(2.0f);
     CGameFont::SetRGBA(255, 255, 255, 255);
     CGameFont::Show(pwszEnemyName,
                     268.0f - CGameFont::GetStringWidth(pwszEnemyName),
@@ -984,7 +1064,12 @@ void CGaugeInformation_Container::InfoSettings(void)
     m_bTextureInitedFlag = true;
 
     CTextureManager::SetCurrentTextureSet("gg_clear");
+
+#if !defined(TMNT2_BUILD_EU)
     m_pTextureFont = CTextureManager::GetRwTexture("font");
+    ASSERT(m_pTextureFont);
+#endif /* !defined(TMNT2_BUILD_EU) */
+    
     m_pTextureGGBar = CTextureManager::GetRwTexture("gg_bar");
     m_pTextureGGIconSel1 = CTextureManager::GetRwTexture("gg_icon_select1");
     m_pTextureGGIconOff = CTextureManager::GetRwTexture("gg_icon_off");
@@ -992,13 +1077,12 @@ void CGaugeInformation_Container::InfoSettings(void)
     m_pTextureBtReady = CTextureManager::GetRwTexture("bt_ready");
     m_pTextureBtFight = CTextureManager::GetRwTexture("bt_fight");
 
-    ASSERT(m_pTextureFont);
     ASSERT(m_pTextureGGBar);
     ASSERT(m_pTextureGGIconSel1);
-    ASSERT(m_pTextureGGIconOff);
-    ASSERT(m_pTextureGGIconOn);
-    ASSERT(m_pTextureBtReady);
-    ASSERT(m_pTextureBtFight);
+    //ASSERT(m_pTextureGGIconOff);
+    //ASSERT(m_pTextureGGIconOn);
+    //ASSERT(m_pTextureBtReady);
+    //ASSERT(m_pTextureBtFight);
 
     CTextureManager::SetCurrentTextureSet("gg_e_guage");
     m_pTextureGGEnemyGauge = CTextureManager::GetRwTexture("gg_enemy_guage");

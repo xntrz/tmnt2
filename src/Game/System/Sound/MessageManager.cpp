@@ -4,6 +4,7 @@
 
 #include "Game/Component/GameData/GameData.hpp"
 #include "Game/System/2d/GameFont.hpp"
+#include "Game/System/Text/GameText.hpp"
 #include "System/Common/Screen.hpp"
 #include "System/Common/RenderState.hpp"
 #include "System/Common/Camera.hpp"
@@ -14,13 +15,14 @@ static const float APPEAR_TIME      = 0.5f;
 static const float SHOW_TIME        = 4.0f;
 static const float DISAPPEAR_TIME   = 0.5f;
 
-static const RwV2d s_vBasePosition      = { 0.0f, 336.0f };
-static const RwV2d s_vStringBoxWH       = { 488.0f, 70.0f };
-static const RwV3d s_vStringBoxOffset   = { 75.0f, 72.0f };
+static const RwV2d s_vBasePosition      = {   0.0f,  336.0f };
+static const RwV2d s_vStringBoxWH       = { 488.0f,   70.0f };
+static const RwV3d s_vStringBoxOffset   = {  75.0f,   72.0f };
 
 static const RwRGBA s_initialTextRGBA   = { 0xFF, 0xFF, 0xFF, 0x00 };
 static const RwRGBA s_lastTextRGBA      = { 0xFF, 0xFF, 0xFF, 0xFF };
 static const RwRGBA s_initialVertexRGBA = { 0x00 };
+
 static const RwRGBA s_aLastVerexRGBA[6 * 2] =
 {
     { 0x00, 0x00, 0x00, 0x36 },
@@ -67,8 +69,8 @@ private:
     void messageFadeOut(void);
     void messageSet(void);
     void colorLinerMove(uint8*, uint8, uint8);
-    void vertexColorLinerMove(bool FadeInFlag);
-    void stringColorLinerMove(bool FadeInFlag);
+    void vertexColorLinerMove(bool bFadeInFlag);
+    void stringColorLinerMove(bool bFadeInFlag);
     void vertexSet(void);
     void rsPush(void);
     void rsPop(void);
@@ -78,32 +80,36 @@ private:
     bool isValidID(SEGROUPID::VALUE idGroup);
     
 private:
-    SEGROUPID::VALUE m_TextSeGroupID;
-    float m_fTimer;
-    RwIm2DVertex m_aVertices[6];
-    RwRGBA m_aVerticesColor[6];
-    RwRGBA m_MsgColor;
-    Rt2dBBox m_MsgBBox;
-    STATE m_State;
-    bool m_SeGroupIDPlayFlag[SEGROUPID::ID_MAX];
-    int32 m_StageKind;
-    int32 m_NumStringLines;
+    SEGROUPID::VALUE m_seGroupId;
+    float            m_fTimer;
+    RwIm2DVertex     m_aVertices[6];
+    RwRGBA           m_aVerticesColor[6];
+    RwRGBA           m_msgColor;
+    Rt2dBBox         m_msgBBox;
+    STATE            m_state;
+    bool             m_abSeGroupIdPlayFlag[SEGROUPID::ID_MAX];
+    int32            m_stageKind;
+    int32            m_numStringLines;
 };
 
 
 CMessageContainer::CMessageContainer(void)
-: m_TextSeGroupID(SEGROUPID::ID_INVALID)
+: m_seGroupId(SEGROUPID::ID_INVALID)
 , m_fTimer(0.0f)
 , m_aVertices()
 , m_aVerticesColor()
-, m_MsgColor()
-, m_MsgBBox()
-, m_State(STATE_IDLE)
-, m_SeGroupIDPlayFlag()
-, m_StageKind(getStageKind())
-, m_NumStringLines(0)
+, m_msgColor()
+, m_msgBBox()
+, m_state(STATE_IDLE)
+, m_abSeGroupIdPlayFlag()
+, m_stageKind(getStageKind())
+, m_numStringLines(0)
 {
-    ;
+    std::memset(m_aVertices, 0, sizeof(m_aVertices));
+    std::memset(m_aVerticesColor, 0, sizeof(m_aVerticesColor));
+    
+    for (int32 i = 0; i < COUNT_OF(m_abSeGroupIdPlayFlag); ++i)
+        m_abSeGroupIdPlayFlag[i] = false;
 };
 
 
@@ -115,12 +121,9 @@ CMessageContainer::~CMessageContainer(void)
 
 void CMessageContainer::Period(void)
 {
-    switch (m_State)
+    switch (m_state)
     {
     case STATE_IDLE:
-        {
-            ;
-        }
         break;
 
     case STATE_APPEAR:
@@ -133,7 +136,7 @@ void CMessageContainer::Period(void)
             else
             {
                 m_fTimer -= APPEAR_TIME;
-                m_State = STATE_SHOW;
+                m_state = STATE_SHOW;
             };
         }
         break;
@@ -147,7 +150,7 @@ void CMessageContainer::Period(void)
             else
             {
                 m_fTimer -= SHOW_TIME;
-                m_State = STATE_DISAPPEAR;
+                m_state = STATE_DISAPPEAR;
             };
         }
         break;
@@ -162,7 +165,7 @@ void CMessageContainer::Period(void)
             else
             {
                 m_fTimer -= DISAPPEAR_TIME;
-                m_State = STATE_IDLE;
+                m_state = STATE_IDLE;
             };
         }
         break;
@@ -188,7 +191,7 @@ void CMessageContainer::Draw(void)
 
 bool CMessageContainer::IsDrawing(void)
 {
-    return (m_State != STATE_IDLE);
+    return (m_state != STATE_IDLE);
 };
 
 
@@ -205,7 +208,7 @@ bool CMessageContainer::Request(SEGROUPID::VALUE idGroup, PLAYERID::VALUE idPlay
         if (CVoiceManager::SetVoice(idGroup, idPlayer, bIsHelpID))
         {
             OnlyTextRequest(idGroup);
-            m_SeGroupIDPlayFlag[idGroup] = true;
+            m_abSeGroupIdPlayFlag[idGroup] = true;
             return true;
         };
     };
@@ -222,9 +225,9 @@ bool CMessageContainer::OnlyTextRequest(SEGROUPID::VALUE idGroup)
     if (!SEGROUPID::GetGameText(idGroup))
         return false;
 
-    m_TextSeGroupID = idGroup;
+    m_seGroupId = idGroup;
     m_fTimer = 0.0f;
-    m_State = STATE_APPEAR;
+    m_state = STATE_APPEAR;
     
     messageSet();
     vertexSet();
@@ -232,7 +235,7 @@ bool CMessageContainer::OnlyTextRequest(SEGROUPID::VALUE idGroup)
     for (int32 i = 0; i < COUNT_OF(m_aVerticesColor); ++i)
         m_aVerticesColor[i] = s_initialVertexRGBA;
     
-    m_MsgColor = { 0xFF, 0xFF, 0xFF, 0x00 };
+    m_msgColor = { 0xFF, 0xFF, 0xFF, 0x00 };
     
     CGameSound::PlaySE(SDCODE_SE(0x100D));
 
@@ -254,9 +257,17 @@ void CMessageContainer::drawWindow(void)
 
 void CMessageContainer::drawMessage(void)
 {
-	CGameFont::SetHeight(CGameFont::GetScreenHeightEx(TYPEDEF::VSCR_H / 2.0f));
-	CGameFont::SetRGBA(m_MsgColor);
-    CGameFont::Flow(CGameText::GetText(SEGROUPID::GetGameText(m_TextSeGroupID)), &m_MsgBBox);
+#ifdef TMNT2_BUILD_EU
+    CGameFont::SetHeightScaled(1.75f);
+#else /* TMNT2_BUILD_EU */
+    CGameFont::SetHeightScaled(2.0f);
+#endif /* TMNT2_BUILD_EU */        
+    CGameFont::SetRGBA(m_msgColor);
+
+    GAMETEXT helpTextId = SEGROUPID::GetGameText(m_seGroupId);
+    const wchar* pwszText = CGameText::GetText(helpTextId);
+    
+    CGameFont::Flow(pwszText, &m_msgBBox);
 };
 
 
@@ -276,85 +287,80 @@ void CMessageContainer::messageFadeOut(void)
 
 void CMessageContainer::colorLinerMove(uint8* result, uint8 start, uint8 end)
 {
-	*result = uint8(Math::Lerp(float(start), float(end), m_fTimer * 2.0f));
+    *result = static_cast<uint8>(Math::Lerp(static_cast<float>(start),
+                                            static_cast<float>(end),
+                                            m_fTimer * 2.0f));
 };
 
 
-void CMessageContainer::vertexColorLinerMove(bool FadeInFlag)
+void CMessageContainer::vertexColorLinerMove(bool bFadeInFlag)
 {
     for (int32 i = 0; i < COUNT_OF(m_aVerticesColor); ++i)
     {
-        RwRGBA ColorStart;
-        RwRGBA ColorEnd;
+        RwRGBA colorStart = (bFadeInFlag ? s_initialVertexRGBA                   : s_aLastVerexRGBA[i + 6 * m_stageKind]);
+        RwRGBA colorEnd   = (bFadeInFlag ? s_aLastVerexRGBA[i + 6 * m_stageKind] : s_initialVertexRGBA);        
 
-        ColorStart = (FadeInFlag ? s_initialVertexRGBA : s_aLastVerexRGBA[i + 6 * m_StageKind]);
-        ColorEnd = (FadeInFlag ? s_aLastVerexRGBA[i + 6 * m_StageKind] : s_initialVertexRGBA);        
-
-        colorLinerMove(&m_aVerticesColor[i].red,    ColorStart.red,     ColorEnd.red);
-        colorLinerMove(&m_aVerticesColor[i].green,  ColorStart.green,   ColorEnd.green);
-        colorLinerMove(&m_aVerticesColor[i].blue,   ColorStart.blue,    ColorEnd.blue);
-        colorLinerMove(&m_aVerticesColor[i].alpha,  ColorStart.alpha,   ColorEnd.alpha); 
+        colorLinerMove(&m_aVerticesColor[i].red,    colorStart.red,     colorEnd.red);
+        colorLinerMove(&m_aVerticesColor[i].green,  colorStart.green,   colorEnd.green);
+        colorLinerMove(&m_aVerticesColor[i].blue,   colorStart.blue,    colorEnd.blue);
+        colorLinerMove(&m_aVerticesColor[i].alpha,  colorStart.alpha,   colorEnd.alpha); 
     };
 };
 
 
-void CMessageContainer::stringColorLinerMove(bool FadeInFlag)
+void CMessageContainer::stringColorLinerMove(bool bFadeInFlag)
 {
-    RwRGBA ColorStart;
-    RwRGBA ColorEnd;
+    RwRGBA colorStart = (bFadeInFlag ? s_initialTextRGBA : s_lastTextRGBA);
+    RwRGBA colorEnd   = (bFadeInFlag ? s_lastTextRGBA    : s_initialTextRGBA);
 
-    ColorStart = (FadeInFlag ? s_initialTextRGBA : s_lastTextRGBA);
-    ColorEnd = (FadeInFlag ? s_lastTextRGBA : s_initialTextRGBA);
-
-    colorLinerMove(&m_MsgColor.red,     ColorStart.red,     ColorEnd.red);
-    colorLinerMove(&m_MsgColor.green,   ColorStart.green,   ColorEnd.green);
-    colorLinerMove(&m_MsgColor.blue,    ColorStart.blue,    ColorEnd.blue);
-    colorLinerMove(&m_MsgColor.alpha,   ColorStart.alpha,   ColorEnd.alpha);
+    colorLinerMove(&m_msgColor.red,     colorStart.red,     colorEnd.red);
+    colorLinerMove(&m_msgColor.green,   colorStart.green,   colorEnd.green);
+    colorLinerMove(&m_msgColor.blue,    colorStart.blue,    colorEnd.blue);
+    colorLinerMove(&m_msgColor.alpha,   colorStart.alpha,   colorEnd.alpha);
 };
 
 
 void CMessageContainer::messageSet(void)
 {
-    float sw = float(CScreen::Width());
-    float sh = float(CScreen::Height());
+    float fScrW = static_cast<float>(CScreen::Width());
+    float fScrH = static_cast<float>(CScreen::Height());
 
-    m_MsgBBox.x = (s_vBasePosition.x + s_vStringBoxOffset.x) * (sw / TYPEDEF::VSCR_W);  // to real screen
-    m_MsgBBox.x *= (CSprite::m_fVirtualScreenW / sw);                                   // to virt screen
-	m_MsgBBox.x -= -CSprite::m_fVirtualScreenX;
+    float x = (s_vBasePosition.x + s_vStringBoxOffset.x);
+    float y = (s_vBasePosition.y + s_vStringBoxOffset.y);
 
-    m_MsgBBox.y = (s_vBasePosition.y + s_vStringBoxOffset.y) * (sh / TYPEDEF::VSCR_H);  // to real screen
-    m_MsgBBox.y *= (CSprite::m_fVirtualScreenH / sh);                                   // to virt screen
-	m_MsgBBox.y -= -CSprite::m_fVirtualScreenY;
-	m_MsgBBox.y *= -1.0f;
-
-    m_MsgBBox.w = s_vStringBoxWH.x;
-    m_MsgBBox.h = getStringBoxHeight();
+    m_msgBBox.x =  (x * (fScrW / TYPEDEF::VSCR_W)) * (CSprite::m_fVirtualScreenW / fScrW) - -CSprite::m_fVirtualScreenX;
+    m_msgBBox.y = ((y * (fScrH / TYPEDEF::VSCR_H)) * (CSprite::m_fVirtualScreenH / fScrH) - -CSprite::m_fVirtualScreenY) * -1.0f;
+    m_msgBBox.w = s_vStringBoxWH.x;
+    m_msgBBox.h = getStringBoxHeight();
 };
 
 
 void CMessageContainer::vertexSet(void)
 {
-	float sw = float(CScreen::Width());
-	float sh = float(CScreen::Height());
+	float fScrW = static_cast<float>(CScreen::Width());
+    float fScrH = static_cast<float>(CScreen::Height());
+    
     float fOfsY = 0.0f;
     float fHeight = CGameFont::GetHeight();
     
-    if (m_NumStringLines < 4)
+    if (m_numStringLines < 4)
     {
         fOfsY = s_vBasePosition.y;
     }
     else
     {
-        fOfsY = s_vBasePosition.y - (float(m_NumStringLines - 3) * fHeight);
+        fOfsY = s_vBasePosition.y - (static_cast<float>(m_numStringLines - 3) * fHeight);
         if (fOfsY < 0.0f)
             fOfsY = 0.0f;
     };
 
     float x0 = s_vBasePosition.x;
-    float x1 = s_vBasePosition.x + sw;
-    float y0 = fOfsY + (sh - fOfsY);
-    float y1 = fOfsY + (0.1f * (sh - fOfsY));
-    float z = RwIm2DGetNearScreenZ();
+    float x1 = s_vBasePosition.x + fScrW;
+
+    float y0 = fOfsY + (fScrH - fOfsY);
+    float y1 = fOfsY + (0.1f * (fScrH - fOfsY));
+
+    float z = RwIm2DGetNearScreenZMacro();
     
     RwV2d aPos[] =
     {
@@ -366,12 +372,12 @@ void CMessageContainer::vertexSet(void)
         { x1, fOfsY },
     };
 
-    static_assert(COUNT_OF(aPos) == COUNT_OF(m_aVertices), "update me");
+    static_assert(COUNT_OF(aPos) == COUNT_OF(m_aVertices), "update table");
     
     for (int32 i = 0; i < COUNT_OF(aPos); ++i)
     {
-        m_aVertices[i].x = aPos[i].x * (sw / TYPEDEF::VSCR_W); // to real screen pos
-		m_aVertices[i].y = aPos[i].y * (sh / TYPEDEF::VSCR_H); // to real screen pos
+        m_aVertices[i].x = aPos[i].x * (fScrW / TYPEDEF::VSCR_W); // to real screen pos
+		m_aVertices[i].y = aPos[i].y * (fScrH / TYPEDEF::VSCR_H); // to real screen pos
         m_aVertices[i].z = z;
     };
 };
@@ -379,15 +385,15 @@ void CMessageContainer::vertexSet(void)
 
 void CMessageContainer::rsPush(void)
 {
-    RENDERSTATE_PUSH(rwRENDERSTATEZTESTENABLE, false);
-    RENDERSTATE_PUSH(rwRENDERSTATEZWRITEENABLE, false);
-    RENDERSTATE_PUSH(rwRENDERSTATESRCBLEND, rwBLENDSRCALPHA);
-    RENDERSTATE_PUSH(rwRENDERSTATEDESTBLEND, rwBLENDINVSRCALPHA);
+    RENDERSTATE_PUSH(rwRENDERSTATEZTESTENABLE,       false);
+    RENDERSTATE_PUSH(rwRENDERSTATEZWRITEENABLE,      false);
+    RENDERSTATE_PUSH(rwRENDERSTATESRCBLEND,          rwBLENDSRCALPHA);
+    RENDERSTATE_PUSH(rwRENDERSTATEDESTBLEND,         rwBLENDINVSRCALPHA);
     RENDERSTATE_PUSH(rwRENDERSTATEVERTEXALPHAENABLE, true);
-    RENDERSTATE_PUSH(rwRENDERSTATEFOGENABLE, false);
-    RENDERSTATE_PUSH(rwRENDERSTATEFOGCOLOR, 0);
-    RENDERSTATE_PUSH(rwRENDERSTATECULLMODE, rwCULLMODECULLNONE);
-    RENDERSTATE_PUSH(rwRENDERSTATETEXTURERASTER, 0);
+    RENDERSTATE_PUSH(rwRENDERSTATEFOGENABLE,         false);
+    RENDERSTATE_PUSH(rwRENDERSTATEFOGCOLOR,          0);
+    RENDERSTATE_PUSH(rwRENDERSTATECULLMODE,          rwCULLMODECULLNONE);
+    RENDERSTATE_PUSH(rwRENDERSTATETEXTURERASTER,     0);
 };
 
 
@@ -431,6 +437,7 @@ int32 CMessageContainer::getStageKind(void)
     case STAGEID::ID_ST58OB1:
     case STAGEID::ID_ST58OB2:
         return 1;
+
     default:
         return 0;
     };
@@ -439,14 +446,17 @@ int32 CMessageContainer::getStageKind(void)
 
 float CMessageContainer::getStringBoxHeight(void)
 {
-    CGameFont::SetHeight(CGameFont::GetScreenHeightEx(TYPEDEF::VSCR_H / 2.0f));
+    CGameFont::SetHeightScaled(2.0f);
 
-    m_NumStringLines = CGameFont::CountFlowLine(CGameText::GetText(SEGROUPID::GetGameText(m_TextSeGroupID)), s_vStringBoxWH.x);
-    if (m_NumStringLines < 3)
+    GAMETEXT helpTextId = SEGROUPID::GetGameText(m_seGroupId);
+    const wchar* pwszText = CGameText::GetText(helpTextId);
+    
+    m_numStringLines = CGameFont::CountFlowLine(pwszText, s_vStringBoxWH.x);
+    if (m_numStringLines < 3)
         return 70.0f;
 
-    float fResult = (m_NumStringLines - 3) * CGameFont::GetHeight() + 70.0f;
-    ASSERT(fResult < 400.0f, "%d", (m_NumStringLines - 3));
+    float fResult = static_cast<float>(m_numStringLines - 3) * CGameFont::GetHeight() + 70.0f;
+    ASSERT(fResult <= 400.0f, "%d", (m_numStringLines - 3));
 
     return fResult;
 };
@@ -462,7 +472,7 @@ bool CMessageContainer::isValidID(SEGROUPID::VALUE idGroup)
 {
     if (isHelpEnable() || !SEGROUPID::IsHelpID(idGroup))
     {
-        if (SEGROUPID::IsCallFree(idGroup) || !m_SeGroupIDPlayFlag[idGroup])
+        if (SEGROUPID::IsCallFree(idGroup) || !m_abSeGroupIdPlayFlag[idGroup])
             return true;
     };
 
