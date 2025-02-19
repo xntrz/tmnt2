@@ -1,14 +1,89 @@
 dir_bin = "%{wks.location}/../../bin/%{cfg.buildcfg}"
-dir_obj = "%{wks.location}/../../obj/%{cfg.buildcfg}/%{prj.name}"
+dir_obj = "%{wks.location}/../../obj/%{prj.name}/%{cfg.buildcfg}"
 dir_src = "%{wks.location}/../../src"
 dir_lib = "%{wks.location}/../../vendor"
 dir_pch = "src"
 
 
+config_types = {
+   -- NA
+   "NA_DEBUG",
+   "NA_RELEASE",   
+   -- EU
+   "EU_DEBUG",
+   "EU_RELEASE",
+}
+
+
+local function isempty(str)
+  return (str == nil) or (str == '')
+end
+
+
+local function getConfigs(filterStr, exclude)
+    result = ""
+    concatSep = " or "
+    concatNum = 0
+    for i, k in ipairs(config_types) do
+      if (isempty(filterStr)) then
+         if (concatNum ~= 0) then
+            result = result..concatSep
+         end
+         result = result..k
+         concatNum = concatNum + 1
+      else
+         doConcat = false
+         if (string.find(k, filterStr)) then
+            if not (exclude) then
+               doConcat = true
+            end
+         else
+            if (exclude) then
+               doConcat = true
+            end
+         end      
+         if doConcat then
+            if (concatNum ~= 0) then
+               result = result..concatSep
+            end
+            result = result..k
+            concatNum = concatNum + 1
+         end
+      end      
+    end
+    return result
+end
+
+
+local function getConfigsAll()
+   return getConfigs("")
+end
+
+
+local function getConfigsDebug()
+   return getConfigs("DEBUG")
+end
+
+
+local function getConfigsRelease()
+   return getConfigs("RELEASE")
+end
+
+
+local function getConfigsAllNA()
+   return getConfigs("NA")
+end
+
+
+local function getConfigsAllEU()
+   return getConfigs("EU")
+end
+
+
 workspace "TMNT2"      
    location "build/%{_ACTION}"
    filename "TMNT2"
-   configurations { "Debug", "Release" }
+   configurations { config_types }
    system "Windows"
    startproject "Game"
    targetdir "%{dir_bin}"
@@ -34,7 +109,7 @@ workspace "TMNT2"
       linkoptions { "/SAFESEH:NO", "/DYNAMICBASE:NO" }
    filter { "kind:WindowedApp or StaticLib" }
       linkoptions { "/MACHINE:X86" }   
-   filter "configurations:Debug"
+   filter { "configurations:"..getConfigsDebug() }
       defines { "_DEBUG", "RWDEBUG" }
       symbols "On"
       optimize "Off"
@@ -43,7 +118,7 @@ workspace "TMNT2"
       staticruntime "On"
       runtime "Debug"
       editandcontinue "On"
-   filter "configurations:Release"
+   filter { "configurations:"..getConfigsRelease() }
       defines { "NDEBUG" }
       symbols "Off"
       optimize "Full"
@@ -53,26 +128,23 @@ workspace "TMNT2"
       runtime "Release"
       editandcontinue "Off"
       flags { "NoIncrementalLink", "NoBufferSecurityCheck", "NoRuntimeChecks", "MultiProcessorCompile" }
+   filter {}
 
 
-project "TMNT2"
+function project_base_initialize()
    dependson { "System" }
    targetname "%{wks.name}"
    kind "WindowedApp"
    removefiles { 
       "src/System/Common/MemPool.*", -- unused in PC version
       "src/System/Common/Debug/**.*", -- TODO
-      --"src/Game/Component/Enemy/ConcreteEnemyCharacter/**.*", -- TODO
-      --"src/Game/Component/Enemy/ConcreteAIModerator/**.*", -- TODO
    }
-   includedirs  
-   {  
+   includedirs {  
       "$(DXSDK_DIR)Include",
-		"%{dir_lib}/rwsdk37/include/d3d9", 
-		"%{dir_lib}/cri/include", 
-	}
-   libdirs  
-   { 
+      "%{dir_lib}/rwsdk37/include/d3d9", 
+      "%{dir_lib}/cri/include", 
+   }
+   libdirs { 
       "$(DXSDK_DIR)Lib/x86",
       "%{dir_lib}/cri/lib/x86",
    }
@@ -80,26 +152,21 @@ project "TMNT2"
    forceincludes "Game\\pch.hpp"
    pchheader "Game/pch.hpp"
    pchsource "%{dir_pch}/Game/pch.cpp"
-   files 
-   {    
+   files {    
       "%{dir_src}/System/**.rc",
    }
-   links 
-   { 
+   links  { 
       -- directx
       "dinput8.lib",
       "dxguid.lib",
       "dsound.lib",
-
       -- win32
       "winmm.lib",
       "ksuser.lib",
-
       -- cri
       "cri_adxpcx86_dsound8.lib",
       "cri_mwsfdpcx86.lib",
       --"cri_adxpcx86_xaudio2.lib",
-
       -- rw
       "rtbmp.lib",
       "rtpng.lib",
@@ -123,12 +190,24 @@ project "TMNT2"
       "rtintsec.lib",
       "rtcharse.lib",
       "legacy_stdio_definitions.lib",
-	  "rptoon.lib"
+      "rptoon.lib"
    } 
    linkoptions {
       "/ignore:4099" -- PDB 'X' was not found with 'X' or at 'X'; linking object as if no debug info
    }
-   filter { "configurations:Debug" }
-      libdirs  { "%{dir_lib}/rwsdk37/lib/d3d9/debug", "%{dir_bin}" }
-   filter { "configurations:Release" }
-      libdirs  {  "%{dir_lib}/rwsdk37/lib/d3d9/release", "%{dir_bin}" }
+   filter { "configurations:"..getConfigsDebug() }
+      libdirs { "%{dir_lib}/rwsdk37/lib/d3d9/debug", "%{dir_bin}" }
+   filter { "configurations:"..getConfigsRelease() }
+      libdirs { "%{dir_lib}/rwsdk37/lib/d3d9/release", "%{dir_bin}" }
+   filter {}
+end
+
+
+project "TMNT2"
+   project_base_initialize()
+   filter { "configurations:"..getConfigsAllEU() }
+      defines { "TMNT2_BUILD_EU" }
+   --filter { "configurations:"..getConfigsAllNA() }
+   --   debugargs { "-afspath=Z:/tmnt2_na -wnd" }
+   --filter { "configurations:"..getConfigsAllEU() }
+   --   debugargs { "-afspath=Z:/tmnt2_eu -wnd -lang=en" }
