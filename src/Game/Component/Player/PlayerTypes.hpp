@@ -98,7 +98,7 @@ namespace PLAYERTYPES
         static const char* JUMP_WALL           = "all_jump";
         static const char* THROW_COMBINATION   = "all_tag";
     }; /* namespace EFFECTNAMES */
-
+    
     enum STATUS
     {
         STATUS_INVALID = -1,
@@ -196,7 +196,7 @@ namespace PLAYERTYPES
         RIDESTATUS_SHIP_ROLL_RIGHT,
         RIDESTATUS_SHIP_ROLL_LEFT,
         RIDEMAX,
-    };
+    }; /* enum STATUS */
 
     enum CHARGEPHASE
     {

@@ -878,7 +878,7 @@ void CPlayerCharacter::OnAttach(CPlayerCharacter* pBeforeCharacter, bool bChange
     {
         UpdateModel();
 
-        RwV3d vPosition = *m_pModel->GetBonePositionFromID(CHARACTERTYPES::BONEID_HEAD);
+        RwV3d vPosition = *m_pModel->GetBonePositionFromID(10);
         pBandanaMod->Reset(&vPosition);
     };
 

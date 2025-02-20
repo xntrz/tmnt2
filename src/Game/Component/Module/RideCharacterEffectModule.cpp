@@ -324,15 +324,15 @@ void CRideExhaustUnit::Run(void)
 CBoardEffectModule::CBoardEffectModule(CPlayerCharacter* pPlayerChr)
 : CRideCharacterEffectModule(pPlayerChr, RIDERTYPE_BOARD)
 {
-    static const RwV3d RIDE_BOARD_LEFTWING  = { -0.47f,  0.44f,  -0.026f };
-    static const RwV3d RIDE_BOARD_RIGHTWING = {  0.47f,  0.44f,  -0.026f };
-    static const RwV3d RIDE_BOARD_CENTER    = {  0.0f,   1.65f,   0.2f    };
-    static const RwV3d RIDE_EXHAUST         = {  0.0f,   0.0f,    1.0f    };
+    static const RwV3d RIDE_BOARD_LEFTWING  = { -0.475f,  0.45f,  -0.026f };
+    static const RwV3d RIDE_BOARD_RIGHTWING = {  0.475f,  0.45f,  -0.026f };
+    static const RwV3d RIDE_BOARD_CENTER    = {    0.0f,  1.65f,     0.2f };
+    static const RwV3d RIDE_EXHAUST         = {    0.0f,   0.0f,     1.0f };
 
-    m_aRideEffectUnit[0].Initialize(m_ridertype, m_pPlayerChr, CHARACTERTYPES::BONEID_RIDE_WING, EFFECTID::ID_RIDE_PARTICLE, &RIDE_BOARD_LEFTWING);
-    m_aRideEffectUnit[1].Initialize(m_ridertype, m_pPlayerChr, CHARACTERTYPES::BONEID_RIDE_WING, EFFECTID::ID_RIDE_PARTICLE, &RIDE_BOARD_RIGHTWING);
-    m_aRideEffectUnit[2].Initialize(m_ridertype, m_pPlayerChr, CHARACTERTYPES::BONEID_RIDE_WING, EFFECTID::ID_RIDE_ENGINE, &RIDE_BOARD_CENTER);
-    m_ExhaustUnit.Initialize(m_ridertype, m_pPlayerChr, CHARACTERTYPES::BONEID_RIDE_WING, EFFECTID::ID_RIDE_WIND, &RIDE_EXHAUST);
+    m_aRideEffectUnit[0].Initialize(m_ridertype, m_pPlayerChr, 20, EFFECTID::ID_RIDE_PARTICLE, &RIDE_BOARD_LEFTWING);
+    m_aRideEffectUnit[1].Initialize(m_ridertype, m_pPlayerChr, 20, EFFECTID::ID_RIDE_PARTICLE, &RIDE_BOARD_RIGHTWING);
+    m_aRideEffectUnit[2].Initialize(m_ridertype, m_pPlayerChr, 20, EFFECTID::ID_RIDE_ENGINE, &RIDE_BOARD_CENTER);
+    m_ExhaustUnit.Initialize(m_ridertype, m_pPlayerChr, 20, EFFECTID::ID_RIDE_WIND, &RIDE_EXHAUST);
     
     RegistUnit(&m_aRideEffectUnit[0]);
     RegistUnit(&m_aRideEffectUnit[1]);
@@ -355,11 +355,11 @@ CBoardEffectModule::~CBoardEffectModule(void)
 CSpaceShipEffectModule::CSpaceShipEffectModule(CPlayerCharacter* pPlayerChr)
 : CRideCharacterEffectModule(pPlayerChr, RIDERTYPE_SHIP)
 {
-    static const RwV3d RIDE_SPACESHIP_LEFTJET   = { -0.152f, 0.04f, -0.8f };
-    static const RwV3d RIDE_SPACESHIP_RIGHTJET  = {  0.152f, 0.04f, -0.8f };
+    static const RwV3d RIDE_SPACESHIP_LEFTJET   = { -0.152f, 0.04f, -0.79f };
+    static const RwV3d RIDE_SPACESHIP_RIGHTJET  = {  0.152f, 0.04f, -0.79f };
 
-    m_aRideEffectUnit[0].Initialize(m_ridertype, m_pPlayerChr, CHARACTERTYPES::BONEID_BODY, EFFECTID::ID_RIDE_ENGINE, &RIDE_SPACESHIP_LEFTJET);
-    m_aRideEffectUnit[1].Initialize(m_ridertype, m_pPlayerChr, CHARACTERTYPES::BONEID_BODY, EFFECTID::ID_RIDE_ENGINE, &RIDE_SPACESHIP_RIGHTJET);
+    m_aRideEffectUnit[0].Initialize(m_ridertype, m_pPlayerChr, 2, EFFECTID::ID_RIDE_ENGINE, &RIDE_SPACESHIP_LEFTJET);
+    m_aRideEffectUnit[1].Initialize(m_ridertype, m_pPlayerChr, 2, EFFECTID::ID_RIDE_ENGINE, &RIDE_SPACESHIP_RIGHTJET);
 
     RegistUnit(&m_aRideEffectUnit[0]);
     RegistUnit(&m_aRideEffectUnit[1]);

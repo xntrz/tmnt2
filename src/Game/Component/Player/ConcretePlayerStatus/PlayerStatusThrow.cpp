@@ -738,7 +738,7 @@ namespace PlayerStatus
             ASSERT(pModel);
 
             CCharacter::MSG_LIFT_INFO liftinfo = { 0 };
-            liftinfo.m_vPosition    = *pModel->GetBonePositionFromID(CHARACTERTYPES::BONEID_RIGHT_WRIST);
+            liftinfo.m_vPosition    = *pModel->GetBonePositionFromID(3);
             liftinfo.m_fDirection   = rPlayerChr.GetDirection();
             liftinfo.m_iStatus      = rPlayerChr.GetStatus();
             

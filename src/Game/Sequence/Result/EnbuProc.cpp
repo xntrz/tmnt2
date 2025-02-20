@@ -23,7 +23,14 @@ class CEnbuProc_Container
 {
 private:
     friend CEnbuProc;
-    
+
+    enum RANKVALUE
+    {
+        RANKVALUE_HIGH = 0,
+        RANKVALUE_NORMAL,
+        RANKVALUE_LOW,
+    };
+
 public:
     CEnbuProc_Container(void);
     ~CEnbuProc_Container(void);
@@ -40,9 +47,9 @@ public:
 
 private:
     PLAYERID::VALUE      m_idPlayerMvp;
-    GAMETYPES::COSTUME   m_Costume;
-    GAMETYPES::CLEARRANK m_RankMvp;
-    GAMETYPES::CLEARRANK m_RankTotal;
+    GAMETYPES::COSTUME   m_costume;
+    GAMETYPES::CLEARRANK m_rankMvp;
+    GAMETYPES::CLEARRANK m_rankTotal;
     CCharacter*          m_pCharacter;
     CModel*              m_pModel;
     CMotionController*   m_pMotionController;
@@ -55,14 +62,15 @@ private:
     bool                 m_bFlagEnd;
     bool                 m_bFlagBandana;
     bool                 m_bFlagIdle;
+    RANKVALUE            m_rankValue;
 };
 
 
 CEnbuProc_Container::CEnbuProc_Container(void)
 : m_idPlayerMvp(PLAYERID::ID_MAX)
-, m_Costume(GAMETYPES::COSTUME_NONE)
-, m_RankMvp(GAMETYPES::CLEARRANK_NONE)
-, m_RankTotal(GAMETYPES::CLEARRANK_NONE)
+, m_costume(GAMETYPES::COSTUME_NONE)
+, m_rankMvp(GAMETYPES::CLEARRANK_NONE)
+, m_rankTotal(GAMETYPES::CLEARRANK_NONE)
 , m_pCharacter(nullptr)
 , m_pModel(nullptr)
 , m_pMotionController(nullptr)
@@ -71,19 +79,27 @@ CEnbuProc_Container::CEnbuProc_Container(void)
 , m_bFlagEnd(false)
 , m_bFlagBandana(false)
 , m_bFlagIdle(false)
+, m_rankValue(RANKVALUE_HIGH)
 {
     std::memset(m_apTexture, 0x00, sizeof(m_apTexture));
     std::memset(m_afAnimOfsX, 0x00, sizeof(m_afAnimOfsX));
     std::memset(m_aAnimFrameCnt, 0x00, sizeof(m_aAnimFrameCnt));
 
-    int32 nMvp = CGameData::PlayResult().GetMVP();
+    int32 mvp = CGameData::PlayResult().GetMVP();
 
-    m_idPlayerMvp = CGameData::PlayResult().GetPlayerCharacter(nMvp);
-	m_RankMvp = CGameData::PlayResult().GetPersonalRank(nMvp);
-    m_RankTotal = CGameData::PlayResult().GetTotalRank();
+    m_idPlayerMvp = CGameData::PlayResult().GetPlayerCharacter(mvp);
+	m_rankMvp = CGameData::PlayResult().GetPersonalRank(mvp);
+    m_rankTotal = CGameData::PlayResult().GetTotalRank();
     
-    int32 nCharaIndex = CGameData::PlayResult().IndexOfChara(m_idPlayerMvp);
-    m_Costume = CGameData::PlayParam().CharaInfo(nCharaIndex).m_Costume;
+    int32 chrIndex = CGameData::PlayResult().IndexOfChara(m_idPlayerMvp);
+    m_costume = CGameData::PlayParam().CharaInfo(chrIndex).m_Costume;
+
+    if (m_rankMvp == GAMETYPES::CLEARRANK_E)
+        m_rankValue = RANKVALUE_LOW;
+    else if (m_rankMvp < GAMETYPES::CLEARRANK_A)
+        m_rankValue = RANKVALUE_NORMAL;
+    else
+        m_rankValue = RANKVALUE_HIGH;
 };
 
 
@@ -162,11 +178,11 @@ void CEnbuProc_Container::Settings(void)
         break;
     };
 
-    if (m_Costume)
+    if (m_costume)
         m_bFlagBandana = false;
 
     if (m_bFlagBandana)
-        m_pBandanaModule = new CBandanaModule(m_pCharacter, m_pModel, CHARACTERTYPES::BONEID_HEAD, &vBandanaOffset, BandanaColor);        
+        m_pBandanaModule = new CBandanaModule(m_pCharacter, m_pModel, 10, &vBandanaOffset, BandanaColor);        
 
     CMotionManager::SetCurrentMotionSet("enbu");
     
@@ -267,7 +283,7 @@ void CEnbuProc_Container::Period(void)
             m_pMotionController->SetPlaymode(CMotionController::PLAYMODE_REPEAT);
             m_pMotionController->Play();
 
-            if (m_RankMvp >= GAMETYPES::CLEARRANK_A)
+            if (m_rankMvp >= GAMETYPES::CLEARRANK_A)
             {
                 switch (m_idPlayerMvp)
                 {
@@ -434,14 +450,13 @@ void CEnbuProc_Container::EnbuBgDraw(void)
     RENDERSTATE_POP(rwRENDERSTATEZWRITEENABLE);
 
     float fStep = 0.0f;
-    
-    GAMETYPES::CLEARRANK MvpRank = CGameData::PlayResult().GetPersonalRank(CGameData::PlayResult().GetMVP());
-    if (MvpRank == GAMETYPES::CLEARRANK_E)
+
+    if (m_rankValue == RANKVALUE_LOW)
         fStep = 4.0f;
-    else if (MvpRank < GAMETYPES::CLEARRANK_A)
+    else if (m_rankValue == RANKVALUE_NORMAL)
         fStep = 8.0f;
     else
-        fStep = 16.0f; // S / SS
+        fStep = 16.0f;
 
     m_afAnimOfsX[0] += (fStep * 4.0f);
     if (m_afAnimOfsX[0] >= 1024.0f)
@@ -461,7 +476,7 @@ void CEnbuProc_Container::EnbuRankDraw(void)
 {
     if (m_bFlagIdle)
     {
-        switch (m_RankTotal)
+        switch (m_rankTotal)
         {
         case GAMETYPES::CLEARRANK_E:
             {
@@ -473,7 +488,7 @@ void CEnbuProc_Container::EnbuRankDraw(void)
                 uint8 uAlphaBasis = uint8(Math::LinearTween(0.0f, 255.0f, float(m_aAnimFrameCnt[0]), fDuration));
 
                 m_sprite.SetOffset(0.5f, 0.5f);
-                m_sprite.SetTexture(m_apTexture[m_RankTotal + 3]);
+                m_sprite.SetTexture(m_apTexture[m_rankTotal + 3]);
                 m_sprite.Move(0.0f, 120.0f);
                 m_sprite.Resize(128.0f, 64.0f);
                 m_sprite.SetRGBA(255, 255, 255, uAlphaBasis);
@@ -497,7 +512,7 @@ void CEnbuProc_Container::EnbuRankDraw(void)
                     float fSize = fDelta + fDelta + 6.0f;
 
                     m_sprite.SetOffset(0.5f, 0.5f);
-                    m_sprite.SetTexture(m_apTexture[m_RankTotal + 3]);
+                    m_sprite.SetTexture(m_apTexture[m_rankTotal + 3]);
                     m_sprite.Move(0.0f, 120.0f);
                     m_sprite.SetRGBA(255, 255, 255, uint8(fDelta * 255.0f));
                     m_sprite.Resize(
@@ -527,10 +542,10 @@ void CEnbuProc_Container::EnbuRankDraw(void)
     }
     else
     {
-        if (m_RankMvp)
+        if (m_rankMvp)
         {
             m_sprite.SetOffset(0.5f, 0.5f);
-            m_sprite.SetTexture(m_apTexture[m_RankMvp + 3]);
+            m_sprite.SetTexture(m_apTexture[m_rankMvp + 3]);
             m_sprite.Move(0.0f, 120.0f);
             m_sprite.Resize(128.0f, 64.0f);
             m_sprite.SetRGBA(255, 255, 255, 255);
@@ -546,7 +561,7 @@ void CEnbuProc_Container::EnbuAtomicSet(void)
     {
     case PLAYERID::ID_LEO:
         {
-            switch (m_Costume)
+            switch (m_costume)
             {
             case GAMETYPES::COSTUME_SAMURAI:
                 {
@@ -563,12 +578,12 @@ void CEnbuProc_Container::EnbuAtomicSet(void)
                     m_pModel->SetPartsDrawEnable(10, true);
                     m_pModel->SetPartsDrawEnable(11, true);
 
-                    if (m_RankMvp == GAMETYPES::CLEARRANK_E)
+                    if (m_rankMvp == GAMETYPES::CLEARRANK_E)
                     {
                         m_pModel->SetPartsDrawEnable(6, true);
                         m_pModel->SetPartsDrawEnable(8, false);
                     }
-                    else if ((m_RankMvp == GAMETYPES::CLEARRANK_C) && (m_fTime > 1.5f))
+                    else if ((m_rankMvp == GAMETYPES::CLEARRANK_C) && (m_fTime > 1.5f))
                     {
                         m_pModel->SetPartsDrawEnable(0, true);
                         m_pModel->SetPartsDrawEnable(1, true);
@@ -583,7 +598,7 @@ void CEnbuProc_Container::EnbuAtomicSet(void)
                         m_pModel->SetPartsDrawEnable(10, true);
                         m_pModel->SetPartsDrawEnable(11, true);
                     }
-                    else if ((m_RankMvp == GAMETYPES::CLEARRANK_D) && (m_fTime < 2.75f))
+                    else if ((m_rankMvp == GAMETYPES::CLEARRANK_D) && (m_fTime < 2.75f))
                     {
                         m_pModel->SetPartsDrawEnable(0, true);
                         m_pModel->SetPartsDrawEnable(1, true);
@@ -608,7 +623,7 @@ void CEnbuProc_Container::EnbuAtomicSet(void)
                     m_pModel->SetPartsDrawEnable(2, true);
                     m_pModel->SetPartsDrawEnable(3, true);
 
-                    if (m_RankMvp == GAMETYPES::CLEARRANK_E)
+                    if (m_rankMvp == GAMETYPES::CLEARRANK_E)
                         m_pModel->SetPartsDrawEnable(0, false);
                 }
                 break;
@@ -622,12 +637,12 @@ void CEnbuProc_Container::EnbuAtomicSet(void)
                     m_pModel->SetPartsDrawEnable(4, false);
                     m_pModel->SetPartsDrawEnable(5, false);
 
-                    if (m_RankMvp == GAMETYPES::CLEARRANK_E)
+                    if (m_rankMvp == GAMETYPES::CLEARRANK_E)
                     {
                         m_pModel->SetPartsDrawEnable(2, false);
                         m_pModel->SetPartsDrawEnable(5, true);
                     }
-                    else if ((m_RankMvp == GAMETYPES::CLEARRANK_C) && (m_fTime > 1.5f))
+                    else if ((m_rankMvp == GAMETYPES::CLEARRANK_C) && (m_fTime > 1.5f))
                     {
                         m_pModel->SetPartsDrawEnable(0, true);
                         m_pModel->SetPartsDrawEnable(1, false);
@@ -636,7 +651,7 @@ void CEnbuProc_Container::EnbuAtomicSet(void)
                         m_pModel->SetPartsDrawEnable(4, true);
                         m_pModel->SetPartsDrawEnable(5, true);
                     }
-                    else if ((m_RankMvp == GAMETYPES::CLEARRANK_D) && (m_fTime < 2.75f))
+                    else if ((m_rankMvp == GAMETYPES::CLEARRANK_D) && (m_fTime < 2.75f))
                     {
                         m_pModel->SetPartsDrawEnable(0, true);
                         m_pModel->SetPartsDrawEnable(1, true);
@@ -694,13 +709,13 @@ void CEnbuProc_Container::EnbuAtomicSet(void)
             m_pModel->SetPartsDrawEnable(2, true);
             m_pModel->SetPartsDrawEnable(3, true);
 
-            if (m_RankMvp == GAMETYPES::CLEARRANK_A)
+            if (m_rankMvp == GAMETYPES::CLEARRANK_A)
             {
                 m_pModel->SetPartsDrawEnable(2, false);
                 m_pModel->SetPartsDrawEnable(3, false);
             }
-            else if (m_RankMvp == GAMETYPES::CLEARRANK_S ||
-                     m_RankMvp == GAMETYPES::CLEARRANK_SS)
+            else if (m_rankMvp == GAMETYPES::CLEARRANK_S ||
+                     m_rankMvp == GAMETYPES::CLEARRANK_SS)
             {
                 m_pModel->SetPartsDrawEnable(2, false);
             };
@@ -726,10 +741,10 @@ void CEnbuProc_Container::EnbuBandanaSet(void)
     {
         ASSERT(m_pBandanaModule);
         
-        RwV3d vBonePos = *m_pModel->GetBonePositionFromID(CHARACTERTYPES::BONEID_HEAD);
-        RwV3d vWind = { 3.5f, vBonePos.y - 1.0f, -1.0f };
+        RwV3d vBonePos = *m_pModel->GetBonePositionFromID(10);
+        RwV3d vWind = { 3.5f, (vBonePos.y - 1.0f), -1.0f };
 
-        if (m_bFlagEnd)
+        if (m_bFlagEnd && (m_rankValue == RANKVALUE_LOW))
             vWind.y = vBonePos.y - 1.5f;
 
         m_pBandanaModule->SetWind(&vWind);
@@ -740,91 +755,34 @@ void CEnbuProc_Container::EnbuBandanaSet(void)
 
 const char* CEnbuProc_Container::GetMvpNameStr(void) const
 {
-    const char* pszResult = nullptr;
-
     switch (m_idPlayerMvp)
     {
-    case PLAYERID::ID_LEO:
-        pszResult = "leo";
-        break;
-        
-    case PLAYERID::ID_RAP:
-        pszResult = "rap";
-        break;
-        
-    case PLAYERID::ID_MIC:
-        pszResult = "mic";
-        break;
-        
-    case PLAYERID::ID_DON:
-        pszResult = "don";
-        break;
-        
-    case PLAYERID::ID_SLA:
-        pszResult = "sls";
-        break;
-        
-    case PLAYERID::ID_CAS:
-        pszResult = "cas";
-        break;
-        
-    case PLAYERID::ID_KAR:
-        pszResult = "kri";
-        break;
-        
-    case PLAYERID::ID_SPL:
-        pszResult = "spl";
-        break;
-
-    default:
-        ASSERT(false);
-        break;
+    case PLAYERID::ID_LEO: return "leo";        
+    case PLAYERID::ID_RAP: return "rap";        
+    case PLAYERID::ID_MIC: return "mic";        
+    case PLAYERID::ID_DON: return "don";        
+    case PLAYERID::ID_SLA: return "sls";        
+    case PLAYERID::ID_CAS: return "cas";        
+    case PLAYERID::ID_KAR: return "kri";        
+    case PLAYERID::ID_SPL: return "spl";
+    default:ASSERT(false); return nullptr;
     };
-
-    return pszResult;
 };
 
 
 const char* CEnbuProc_Container::GetRankNameStr(void) const
 {
-    const char* pszResult = nullptr;
-    
-    switch (m_RankMvp)
+    switch (m_rankMvp)
     {
-    case GAMETYPES::CLEARRANK_E:
-        pszResult = "E";
-        break;
-
-    case GAMETYPES::CLEARRANK_D:
-        pszResult = "D";
-        break;
-
-    case GAMETYPES::CLEARRANK_C:
-        pszResult = "C";
-        break;
-
-    case GAMETYPES::CLEARRANK_B:
-        pszResult = "B";
-        break;
-
-    case GAMETYPES::CLEARRANK_A:
-        pszResult = "A";
-        break;
-
-    case GAMETYPES::CLEARRANK_S:
-        pszResult = "S";
-        break;
-
-    case GAMETYPES::CLEARRANK_SS:
-        pszResult = "SS";
-        break;
-        
-    default:
-        ASSERT(false);
-        break;
+    case GAMETYPES::CLEARRANK_E:  return  "E";
+    case GAMETYPES::CLEARRANK_D:  return  "D";
+    case GAMETYPES::CLEARRANK_C:  return  "C";
+    case GAMETYPES::CLEARRANK_B:  return  "B";
+    case GAMETYPES::CLEARRANK_A:  return  "A";
+    case GAMETYPES::CLEARRANK_S:  return  "S";
+    case GAMETYPES::CLEARRANK_SS: return  "SS";        
+    default: ASSERT(false); return nullptr;
     };
-
-    return pszResult;
 };
 
 
@@ -887,13 +845,13 @@ static inline CEnbuProc_Container& EnbuProcContainer(void)
 
 /*static*/ GAMETYPES::CLEARRANK CEnbuProc::GetEnbuRank(void)
 {
-    return EnbuProcContainer().m_RankMvp;
+    return EnbuProcContainer().m_rankMvp;
 };
 
 
 /*static*/ GAMETYPES::COSTUME CEnbuProc::GetEnbuCostume(void)
 {
-    return EnbuProcContainer().m_Costume;
+    return EnbuProcContainer().m_costume;
 };
 
 

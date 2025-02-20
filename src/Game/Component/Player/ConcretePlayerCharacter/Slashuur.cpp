@@ -109,7 +109,7 @@ CSlashuur::CSlashuur(GAMETYPES::COSTUME costume)
     parameter.m_feature.m_fJumpInitializeSpeed  = 7.5f;
     parameter.m_feature.m_fAerialMoveSpeed      = 5.2f;
     parameter.m_feature.m_fAerialAcceleration   = 12.0f;
-    parameter.m_feature.m_nKnifeAttachBoneID    = CHARACTERTYPES::BONEID_RIGHT_WRIST;
+    parameter.m_feature.m_nKnifeAttachBoneID    = 3;
     
     parameter.m_pStateMachine = new CPlayerStateMachine(this, PLAYERTYPES::STATUS::NORMALMAX);
 
@@ -125,7 +125,7 @@ CSlashuur::CSlashuur(GAMETYPES::COSTUME costume)
 
     m_pModuleMan->Include(new CBandanaModule(this,
                                              m_pModel,
-                                             CHARACTERTYPES::BONEID_HEAD,
+                                             10,
                                              &Slashuur::BANDANA_OFFSET,
                                              CBandanaModule::BANDANACOLOR_SLASHUURGREY));
 };

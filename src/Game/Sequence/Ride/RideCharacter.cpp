@@ -665,20 +665,34 @@ void CRideCharacter::Move(void)
     float dx = damping - (dt * (m_padinfo.fStickX * m_fControlRate) * 18.0f);
     float px = m_vPosition.x + dx * dt;
 
-    dx = (px >= x_max ? 0.0f : dx);
-    dx = (px <= x_min ? 0.0f : dx);
+    if (px > x_max)
+        dx = (x_max - m_vPosition.x) * CScreen::Framerate();
+    
+    if (px < x_min)
+        dx = (x_min - m_vPosition.x) * CScreen::Framerate();
 
 	//
 	//	y vel
-	//
-    float dy = (m_padinfo.fStickY * m_fControlRate) * 1.9444444f;
+    //
+    float y = (m_padinfo.fStickY * m_fControlRate);
+    float dy = 0.0f;
+    if (y < 0.0f)
+    {
+        float toMinZ = (z_min - m_vPosition.z);
 
-	float py = m_vPosition.z + dy * dt;
+        dy = dt * y * 1.9444444f;
 
-	dy = (py >= z_max ? 0.0f : dy);
-	dy = (py <= z_min ? 0.0f : dy);
+        if (dy >= toMinZ)
+            dy *= CScreen::Framerate();
+        else
+            dy = (toMinZ * CScreen::Framerate());
+    }
+    else if (y > 0.0f)
+    {
+        dy = (z_max - m_vPosition.z) / (z_max - z_min) * y * 1.9444444f;
+    };
 
-	//
+    //
 	//	apply vel
 	//
 	RwV3d vBasisVec = Math::VECTOR3_ZERO;

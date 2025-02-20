@@ -52,10 +52,6 @@ public:
     };
 
 public:
-#ifdef _DEBUG    
-    static int32 Tick;
-#endif /* _DEBUG */    
-    
     static CGameStage* GetCurrent(void);
     
     CGameStage(void);

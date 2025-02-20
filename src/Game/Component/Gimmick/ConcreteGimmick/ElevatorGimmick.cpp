@@ -89,15 +89,15 @@ CElevatorGimmick::CElevatorGimmick(const char* pszName, void* pParam)
             ENEMYID::VALUE id;
         } static const s_aEnemyInfo[5] =
         {
-            { {  1.5f, 0.0f, -1.5f }, ENEMYID::ID_FOOT_NINJA_SWORD },
-            { {  1.5f, 0.0f,  1.5f }, ENEMYID::ID_FOOT_NINJA_SWORD },
-            { {  0.0f, 0.0f,  0.0f }, ENEMYID::ID_FOOT_NINJA_STAFF },
-            { { -1.5f, 0.0f, -1.5f }, ENEMYID::ID_FOOT_NINJA_SWORD },
-            { { -1.5f, 0.0f,  1.5f }, ENEMYID::ID_FOOT_NINJA_SWORD },
+            { {  1.5f, 0.0f, -1.5f }, ENEMYID::ID_FOOT_NINJA_STAFF },
+            { {  1.5f, 0.0f,  1.5f }, ENEMYID::ID_FOOT_NINJA_STAFF },
+            { {  0.0f, 0.0f,  0.0f }, ENEMYID::ID_FOOT_NINJA_SWORD },
+            { { -1.5f, 0.0f, -1.5f }, ENEMYID::ID_FOOT_NINJA_STAFF },
+            { { -1.5f, 0.0f,  1.5f }, ENEMYID::ID_FOOT_NINJA_STAFF },
         };
 
         for (int32 i = 0; i < COUNT_OF(s_aEnemyInfo); ++i)
-            m_generator.SetGenerateInfo(i, s_aEnemyInfo[i].vPos, -90.0f, s_aEnemyInfo->id, 1);
+            m_generator.SetGenerateInfo(i, s_aEnemyInfo[i].vPos, -90.0f, s_aEnemyInfo[i].id, 1);
     }
     else
     {
@@ -106,7 +106,7 @@ CElevatorGimmick::CElevatorGimmick(const char* pszName, void* pParam)
         //
         //  init pillar
         //
-        RwV3d vPosition     = { -11.871f, -7.421f, -6.8649f };
+        RwV3d vPosition     = { -11.871f, -7.421f, -6.8649998f };
         RwV3d vGoalPosition = { vPosition.x,  vPosition.y + 8.0f, vPosition.z };
         RwV3d vVelocity     = { 0.0f, 1.6f, 0.0f };
 
@@ -266,6 +266,9 @@ void CElevatorGimmick::PostMove(void)
 				m_state = STATE_END;
 			};
         }
+        break;
+
+    default:
         break;
     };
 
@@ -433,6 +436,9 @@ void CElevatorPartsFloorGimmick::Run(float dt)
     case STATE_MOVE:
         Move(&vDltPos, dt);
         break;
+
+    default:
+        break;
     };
 
     RegistCollisionModel(&vDltPos);
@@ -480,6 +486,9 @@ void CElevatorPartsHatchGimmick::Run(float dt)
 
     case STATE_MOVE:
         Move(&vDltPos, dt);
+        break;
+
+    default:
         break;
     };
 

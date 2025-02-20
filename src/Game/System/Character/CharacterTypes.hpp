@@ -21,23 +21,10 @@ namespace CHARACTERTYPES
 
     enum BONEID
     {
-        // TODO naming and move this to PLAYERTYPES because they are are different for enemy and player
-        BONEID_POSITION     = 0,
-        BONEID_GROUND       = 1,
-        BONEID_BODY         = 2,
-        BONEID_RIGHT_WRIST  = 3,
-
-        BONEID_RIGHT_HAND   = 7,
-        BONEID_LEFT_HAND    = 8,
-
-        BONEID_HEAD         = 10,
-
-        BONEID_RIGHT_HAND_S = 12,
-        BONEID_LEFT_HAND_S  = 13,
-
-        BONEID_RIDE_WING    = 20,
-
-        BONEIDNUM,
+        /* common base bone ids for all characters */
+        BONEID_POSITION = 0,
+        BONEID_GROUND,
+        BONEID_BODY,
     };
 
     enum ATTACKDIRECTIONTYPE

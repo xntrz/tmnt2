@@ -771,11 +771,8 @@ void CCharacter::Initialize(PARAMETER* pParameter)
 
     m_pMotionParameterController = new CMotionParameterController(pParameter->m_pszModelName, m_pModel->GetPartsNum());
 
-    m_collision =
-    {
-        m_pMotionParameterController->GetCollisionParameter()->m_fRadius,
-        m_pMotionParameterController->GetCollisionParameter()->m_fHeight
-    };
+    m_collision = { m_pMotionParameterController->GetCollisionParameter()->m_fRadius,
+                    m_pMotionParameterController->GetCollisionParameter()->m_fHeight };
 
     CMotionManager::SetCurrentMotionSet(pParameter->m_pszMotionSetName);
     

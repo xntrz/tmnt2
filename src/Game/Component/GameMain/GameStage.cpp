@@ -31,9 +31,13 @@
 #include "Game/System/Sound/MessageManager.hpp"
 #include "Game/System/Misc/ScreenFade.hpp"
 #include "Game/System/Misc/RenderStateManager.hpp"
-#include "Game/System/Misc/DebugShape.hpp"
 #include "System/Common/Camera.hpp"
 #include "System/Common/Controller.hpp"
+
+#ifdef _DEBUG
+#include "GameStageDebug.hpp"
+#include "Game/System/Misc/DebugShape.hpp"
+#endif /* _DEBUG */
 
 #ifdef TARGET_PC
 #include "System/PC/PCSpecific.hpp"
@@ -42,9 +46,6 @@
 
 
 /*static*/ CGameStage* CGameStage::m_pCurrent = nullptr;
-#ifdef _DEBUG
-/*static*/ int32 CGameStage::Tick = 0;
-#endif /* _DEBUG */    
 
 
 /*static*/ CGameStage* CGameStage::GetCurrent(void)
@@ -71,11 +72,7 @@ CGameStage::CGameStage(void)
 , m_pCameraUpdater(nullptr)
 , m_pPauseHandler(nullptr)
 {
-    std::memset(m_apExGauge, 0x00, sizeof(m_apExGauge));
-
-#ifdef _DEBUG    
-    Tick = 0;
-#endif /* _DEBUG */    
+    std::memset(m_apExGauge, 0x00, sizeof(m_apExGauge));  
 };
 
 
@@ -127,6 +124,7 @@ void CGameStage::Initialize(void)
 
 #ifdef _DEBUG
     CDebugShape::Initialize();
+    CGameStageDebug::Reset();
 #endif /* _DEBUG */
 };
 
@@ -243,7 +241,7 @@ void CGameStage::Period(void)
     };
 
 #ifdef _DEBUG
-    ++Tick;
+    ++CGameStageDebug::STAGE_TICK;
 #endif /* _DEBUG */
 };
 

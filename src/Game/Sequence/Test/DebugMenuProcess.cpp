@@ -307,7 +307,7 @@ void CDebugMenu::InitMenu(void)
         CGameStage::GetCurrent()->NotifyGameOver();
     });
 
-    m_menu.AddFloat("Stage camera zoom scale", 1.0f, 20.0f, 0.1f, 1.0f, [](float value, bool trigger) {
+    m_menu.AddFloat("Stage camera zoom scale", 0.01f, 20.0f, 0.1f, 1.0f, [](float value, bool trigger) {
         CGameStageDebug::CAMERA_ZOOM_SCALE = value;
     });
 
@@ -315,7 +315,7 @@ void CDebugMenu::InitMenu(void)
         CGameStageDebug::CAMERA_MANUAL_SPEED = value;
     });
 
-    m_menu.AddIntDisp("Stage tick", &CGameStage::Tick);
+    m_menu.AddIntDisp("Stage tick", &CGameStageDebug::STAGE_TICK);
     m_menu.SetLastItemEnable(false);
     m_menu.AddInt("Step stage for", 1, 61, 1, 1, [](int32 value, bool trigger) {
         if (trigger)
@@ -327,6 +327,10 @@ void CDebugMenu::InitMenu(void)
                 m_pInstance->m_numFramesInStep = Clamp(value, 1, 60);
             };
         };        
+    });
+
+    m_menu.AddInt("Temp Counter", 0, 60, 1, 1, [](int32 value, bool trigger) {
+        CGameStageDebug::COUNTER = value;        
     });
 
     m_menu.AddBool("Godmode", [](bool bValue, bool bTrigger) {

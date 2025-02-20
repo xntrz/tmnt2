@@ -92,10 +92,10 @@ void CAccumulateUnit::SetColor(const RwRGBA& color)
 //
 
 
-static const RwRGBA STEPZERO_COLOR  = { 0x00, 0x00, 0x00 ,0x00 };
-static const RwRGBA STEPONE_COLOR   = { 0xFF, 0x33, 0x33 ,0xFF };
-static const RwRGBA STEPTWO_COLOR   = { 0xFF, 0x64, 0x64 ,0xFF };
-static const RwRGBA STEPTHREE_COLOR = { 0xFF, 0xc8, 0xC8 ,0xFF };
+static const RwRGBA STEP_ZERO_COLOR  = { 0x00, 0x00, 0x00 ,0x00 };
+static const RwRGBA STEP_ONE_COLOR   = { 0xFF, 0x33, 0x33 ,0xFF };
+static const RwRGBA STEP_TWO_COLOR   = { 0xFF, 0x64, 0x64 ,0xFF };
+static const RwRGBA STEP_THREE_COLOR = { 0xFF, 0xc8, 0xC8 ,0xFF };
 
 
 /*static*/ CList<CAccumulateModule> CAccumulateModule::m_listDraw;
@@ -109,7 +109,7 @@ static const RwRGBA STEPTHREE_COLOR = { 0xFF, 0xc8, 0xC8 ,0xFF };
 
     if (pCharacter->GetCharacterType() == CCharacter::TYPE_PLAYER)
     {
-        CPlayerCharacter* pPlayerChr = (CPlayerCharacter*)pCharacter;
+        CPlayerCharacter* pPlayerChr = static_cast<CPlayerCharacter*>(pCharacter);
         
         switch (pPlayerChr->GetID())
         {
@@ -239,7 +239,7 @@ void CAccumulateModule::SetEffectOff(void)
 void CAccumulateModule::SetStepZero(void)
 {
     for (CAccumulateUnit& it : m_listAccumulate)
-        it.SetColor(STEPZERO_COLOR);
+        it.SetColor(STEP_ZERO_COLOR);
 
     RwV3d vPosition = Math::VECTOR3_ZERO;
     m_pCharacter->GetBodyPosition(&vPosition);
@@ -254,7 +254,7 @@ void CAccumulateModule::SetStepZero(void)
 void CAccumulateModule::SetStepOne(void)
 {
     for (CAccumulateUnit& it : m_listAccumulate)
-        it.SetColor(STEPONE_COLOR);
+        it.SetColor(STEP_ONE_COLOR);
 
     RwV3d vPosition = Math::VECTOR3_ZERO;
     m_pCharacter->GetBodyPosition(&vPosition);
@@ -272,7 +272,7 @@ void CAccumulateModule::SetStepOne(void)
 void CAccumulateModule::SetStepTwo(void)
 {
     for (CAccumulateUnit& it : m_listAccumulate)
-        it.SetColor(STEPTWO_COLOR);
+        it.SetColor(STEP_TWO_COLOR);
 
     RwV3d vPosition = Math::VECTOR3_ZERO;
     m_pCharacter->GetBodyPosition(&vPosition);
@@ -290,7 +290,7 @@ void CAccumulateModule::SetStepTwo(void)
 void CAccumulateModule::SetStepThree(void)
 {
     for (CAccumulateUnit& it : m_listAccumulate)
-        it.SetColor(STEPTHREE_COLOR);
+        it.SetColor(STEP_THREE_COLOR);
 
     RwV3d vPosition = Math::VECTOR3_ZERO;
     m_pCharacter->GetBodyPosition(&vPosition);
@@ -334,29 +334,18 @@ void CAccumulateModule::EffectSetPosition(uint32 hEffect, const RwV3d* pvPositio
 CLeonardoAccumulateModule::CLeonardoAccumulateModule(CCharacter* pCharacter)
 : CAccumulateModule(pCharacter)
 {
-    static const RwV3d LEONARDO_TOP_RIGHT   = { 0.02f,  1.0f,   0.02f   };
+    static const RwV3d LEONARDO_TOP_RIGHT   = {  0.02f,  1.0f,   0.02f  };
     static const RwV3d LEONARDO_BOTTOM_RIGHT= { -0.01f, -0.3f,  -0.01f  };
-    static const RwV3d LEONARDO_TOP_LEFT    = { 0.0f,   1.0f,   -0.01f  };
-    static const RwV3d LEONARDO_BOTTOM_LEFT = { 0.01f,  -0.3f,  -0.01f  };
+    static const RwV3d LEONARDO_TOP_LEFT    = {  0.0f,   1.0f,  -0.01f  };
+    static const RwV3d LEONARDO_BOTTOM_LEFT = {  0.01f, -0.3f,  -0.01f  };
 
     CModel* pModel = m_pCharacter->GetModel();
     ASSERT(pModel);
 
-    m_aAccumulateUnit[0].Initialize(
-        pModel,
-        CHARACTERTYPES::BONEID_RIGHT_HAND,
-        &LEONARDO_TOP_RIGHT,
-        &LEONARDO_BOTTOM_RIGHT
-    );
-
-    m_aAccumulateUnit[1].Initialize(
-        pModel,
-        CHARACTERTYPES::BONEID_LEFT_HAND,
-        &LEONARDO_TOP_LEFT,
-        &LEONARDO_BOTTOM_LEFT
-    );
-
+    m_aAccumulateUnit[0].Initialize(pModel, 7, &LEONARDO_TOP_RIGHT, &LEONARDO_BOTTOM_RIGHT);
     m_aAccumulateUnit[0].SetRadius(0.15f);
+
+    m_aAccumulateUnit[1].Initialize(pModel, 8, &LEONARDO_TOP_LEFT, &LEONARDO_BOTTOM_LEFT);
     m_aAccumulateUnit[1].SetRadius(0.15f);
 
     RegistUnit(&m_aAccumulateUnit[0]);
@@ -372,29 +361,18 @@ CLeonardoAccumulateModule::CLeonardoAccumulateModule(CCharacter* pCharacter)
 CRaphaelAccumulateModule::CRaphaelAccumulateModule(CCharacter* pCharacter)
 : CAccumulateModule(pCharacter)
 {
-    static const RwV3d RAPHAEL_TOP_RIGHT    = { 0.0f,   0.6f,   0.0f    };
-    static const RwV3d RAPHAEL_BOTTOM_RIGHT = { 0.0f,   -0.1f,  0.0f    };
-    static const RwV3d RAPHAEL_TOP_LEFT     = { 0.0f,   0.6f,   -0.01f  };
-    static const RwV3d RAPHAEL_BOTTOM_LEFT  = { 0.0f,  -0.1f,   -0.0f   };
+    static const RwV3d RAPHAEL_TOP_RIGHT    = { 0.0f,   0.6f,  0.0f   };
+    static const RwV3d RAPHAEL_BOTTOM_RIGHT = { 0.0f,  -0.1f,  0.0f   };
+    static const RwV3d RAPHAEL_TOP_LEFT     = { 0.0f,   0.6f,  0.0f   };
+    static const RwV3d RAPHAEL_BOTTOM_LEFT  = { 0.0f,  -0.1f,  0.0f   };
 
     CModel* pModel = m_pCharacter->GetModel();
     ASSERT(pModel);
 
-    m_aAccumulateUnit[0].Initialize(
-        pModel,
-        CHARACTERTYPES::BONEID_RIGHT_HAND,
-        &RAPHAEL_TOP_RIGHT,
-        &RAPHAEL_BOTTOM_RIGHT
-    );
-
-    m_aAccumulateUnit[1].Initialize(
-        pModel,
-        CHARACTERTYPES::BONEID_LEFT_HAND,
-        &RAPHAEL_TOP_LEFT,
-        &RAPHAEL_BOTTOM_LEFT
-    );
-
+    m_aAccumulateUnit[0].Initialize(pModel, 7, &RAPHAEL_TOP_RIGHT, &RAPHAEL_BOTTOM_RIGHT);
     m_aAccumulateUnit[0].SetRadius(0.15f);
+
+    m_aAccumulateUnit[1].Initialize(pModel, 8, &RAPHAEL_TOP_LEFT, &RAPHAEL_BOTTOM_LEFT);
     m_aAccumulateUnit[1].SetRadius(0.15f);
 
     RegistUnit(&m_aAccumulateUnit[0]);
@@ -410,49 +388,28 @@ CRaphaelAccumulateModule::CRaphaelAccumulateModule(CCharacter* pCharacter)
 CMichelangeroAccumulateModule::CMichelangeroAccumulateModule(CCharacter* pCharacter)
 : CAccumulateModule(pCharacter)
 {
-    static const RwV3d MIC_TOP_RIGHT        = { 0.0f,   0.21f,      0.0f };
-    static const RwV3d MIC_BOTTOM_RIGHT     = { 0.0f,   -0.1f,      0.0f };
-    static const RwV3d MIC_TOP_LEFT         = { 0.0f,   0.31f,      0.0f };
+    static const RwV3d MIC_TOP_RIGHT        = { 0.0f,    0.21f,     0.0f };
+    static const RwV3d MIC_BOTTOM_RIGHT     = { 0.0f,    -0.1f,     0.0f };
+    static const RwV3d MIC_TOP_LEFT         = { 0.0f,    0.31f,     0.0f };
     static const RwV3d MIC_BOTTOM_LEFT      = { 0.0f,   -0.05f,     0.0f };
-    static const RwV3d MIC_TOP_RIGHT_S      = { 0.0f,   0.4f,       0.0f };
-    static const RwV3d MIC_BOTTOM_RIGHT_S   = { 0.0f,   -0.1f,      0.0f };
-    static const RwV3d MIC_TOP_LEFT_S       = { 0.0f,   0.5f,       0.0f };
-    static const RwV3d MIC_BOTTOM_LEFT_S    = { 0.0f,   0.0f,       0.0f };
+    static const RwV3d MIC_TOP_RIGHT_S      = { 0.0f,     0.4f,     0.0f };
+    static const RwV3d MIC_BOTTOM_RIGHT_S   = { 0.0f,    -0.1f,     0.0f };
+    static const RwV3d MIC_TOP_LEFT_S       = { 0.0f,     0.5f,     0.0f };
+    static const RwV3d MIC_BOTTOM_LEFT_S    = { 0.0f,     0.0f,     0.0f };
 
     CModel* pModel = m_pCharacter->GetModel();
     ASSERT(pModel);
 
-    m_aAccumulateUnit[0].Initialize(
-        pModel,
-        CHARACTERTYPES::BONEID_RIGHT_HAND,
-        &MIC_TOP_RIGHT,
-        &MIC_BOTTOM_RIGHT
-    );
-
-    m_aAccumulateUnit[1].Initialize(
-        pModel,
-        CHARACTERTYPES::BONEID_RIGHT_HAND_S,
-        &MIC_TOP_RIGHT_S,
-        &MIC_BOTTOM_RIGHT_S
-    );
-
-    m_aAccumulateUnit[2].Initialize(
-        pModel,
-        CHARACTERTYPES::BONEID_LEFT_HAND,
-        &MIC_TOP_LEFT,
-        &MIC_BOTTOM_LEFT
-    );
-
-    m_aAccumulateUnit[3].Initialize(
-        pModel,
-        CHARACTERTYPES::BONEID_LEFT_HAND_S,
-        &MIC_TOP_LEFT_S,
-        &MIC_BOTTOM_LEFT_S
-    );
-
+    m_aAccumulateUnit[0].Initialize(pModel, 7, &MIC_TOP_RIGHT, &MIC_BOTTOM_RIGHT);
     m_aAccumulateUnit[0].SetRadius(0.15f);
+
+    m_aAccumulateUnit[1].Initialize(pModel, 12, &MIC_TOP_RIGHT_S, &MIC_BOTTOM_RIGHT_S);
     m_aAccumulateUnit[1].SetRadius(0.15f);
+
+    m_aAccumulateUnit[2].Initialize(pModel, 8, &MIC_TOP_LEFT, &MIC_BOTTOM_LEFT);
     m_aAccumulateUnit[2].SetRadius(0.15f);
+
+    m_aAccumulateUnit[3].Initialize(pModel, 13, &MIC_TOP_LEFT_S, &MIC_BOTTOM_LEFT_S);
     m_aAccumulateUnit[3].SetRadius(0.15f);
 
     RegistUnit(&m_aAccumulateUnit[0]);
@@ -470,19 +427,13 @@ CMichelangeroAccumulateModule::CMichelangeroAccumulateModule(CCharacter* pCharac
 CDonatelloAccumulateModule::CDonatelloAccumulateModule(CCharacter* pCharacter)
 : CAccumulateModule(pCharacter)
 {
-    static const RwV3d DON_TOP_RIGHT    = { 0.0f,   1.05f,      -0.02f  };
-    static const RwV3d DON_BOTTOM_RIGHT = { 0.0f,   -1.1f,      0.0f    };    
+    static const RwV3d DON_TOP_RIGHT    = { 0.0f,   1.05f,   -0.02f };
+    static const RwV3d DON_BOTTOM_RIGHT = { 0.0f,   -1.1f,    0.0f  };    
 
     CModel* pModel = m_pCharacter->GetModel();
     ASSERT(pModel);
 
-    m_aAccumulateUnit[0].Initialize(
-        pModel,
-        CHARACTERTYPES::BONEID_RIGHT_HAND,
-        &DON_TOP_RIGHT,
-        &DON_BOTTOM_RIGHT
-    );
-
+    m_aAccumulateUnit[0].Initialize(pModel, 7, &DON_TOP_RIGHT, &DON_BOTTOM_RIGHT);
     m_aAccumulateUnit[0].SetRadius(0.15f);
 
     RegistUnit(&m_aAccumulateUnit[0]);
@@ -511,45 +462,19 @@ CSlashuurAccumulateModule::CSlashuurAccumulateModule(CCharacter* pCharacter)
     CModel* pModel = m_pCharacter->GetModel();
     ASSERT(pModel);
 
-    m_aAccumulateUnit[0].Initialize(
-        pModel,
-        CHARACTERTYPES::BONEID_RIGHT_HAND,
-        &SLASHUUR_STICK_TOP,
-        &SLASHUUR_STICK_BOTTOM
-    );
-
-    m_aAccumulateUnit[1].Initialize(
-        pModel,
-        CHARACTERTYPES::BONEID_RIGHT_HAND,
-        &SLASHUUR_NECK_TOP,
-        &SLASHUUR_NECK_BOTTOM
-    );
-
-    m_aAccumulateUnit[2].Initialize(
-        pModel,
-        CHARACTERTYPES::BONEID_RIGHT_HAND,
-        &SLASHUUR_OCCIPITAL_TOP,
-        &SLASHUUR_OCCIPITAL_BOTTOM
-    );
-
-    m_aAccumulateUnit[3].Initialize(
-        pModel,
-        CHARACTERTYPES::BONEID_RIGHT_HAND,
-        &SLASHUUR_BEAK_TOP,
-        &SLASHUUR_BEAK_BOTTOM
-    );
-
-    m_aAccumulateUnit[4].Initialize(
-        pModel,
-        CHARACTERTYPES::BONEID_RIGHT_HAND,
-        &SLASHUUR_BEAK2_TOP,
-        &SLASHUUR_BEAK2_BOTTOM
-    );
-
+    m_aAccumulateUnit[0].Initialize(pModel, 7, &SLASHUUR_STICK_TOP, &SLASHUUR_STICK_BOTTOM);
     m_aAccumulateUnit[0].SetRadius(0.2f);
+
+    m_aAccumulateUnit[1].Initialize(pModel, 7, &SLASHUUR_NECK_TOP, &SLASHUUR_NECK_BOTTOM);
     m_aAccumulateUnit[1].SetRadius(0.31f);
+
+    m_aAccumulateUnit[2].Initialize(pModel, 7, &SLASHUUR_OCCIPITAL_TOP, &SLASHUUR_OCCIPITAL_BOTTOM);
     m_aAccumulateUnit[2].SetRadius(0.31f);
+
+    m_aAccumulateUnit[3].Initialize(pModel, 7, &SLASHUUR_BEAK_TOP, &SLASHUUR_BEAK_BOTTOM);
     m_aAccumulateUnit[3].SetRadius(0.31f);
+
+    m_aAccumulateUnit[4].Initialize(pModel, 7, &SLASHUUR_BEAK2_TOP, &SLASHUUR_BEAK2_BOTTOM);
     m_aAccumulateUnit[4].SetRadius(0.31f);
 
     RegistUnit(&m_aAccumulateUnit[0]);
@@ -576,21 +501,10 @@ CCaseyAccumulateModule::CCaseyAccumulateModule(CCharacter* pCharacter)
     CModel* pModel = m_pCharacter->GetModel();
     ASSERT(pModel);
 
-    m_aAccumulateUnit[0].Initialize(
-        pModel,
-        CHARACTERTYPES::BONEID_RIGHT_HAND,
-        &CASEY_SHAFT_TOP,
-        &CASEY_SHAFT_BOTTOM
-    );
-
-    m_aAccumulateUnit[1].Initialize(
-        pModel,
-        CHARACTERTYPES::BONEID_RIGHT_HAND,
-        &CASEY_TIP_TOP,
-        &CASEY_TIP_BOTTOM
-    );
-
+    m_aAccumulateUnit[0].Initialize(pModel, 7, &CASEY_SHAFT_TOP, &CASEY_SHAFT_BOTTOM);
     m_aAccumulateUnit[0].SetRadius(0.15f);
+
+    m_aAccumulateUnit[1].Initialize(pModel, 7, &CASEY_TIP_TOP, &CASEY_TIP_BOTTOM);
     m_aAccumulateUnit[1].SetRadius(0.3f);
 
     RegistUnit(&m_aAccumulateUnit[0]);
@@ -614,21 +528,10 @@ CKaraiAccumulateModule::CKaraiAccumulateModule(CCharacter* pCharacter)
     CModel* pModel = m_pCharacter->GetModel();
     ASSERT(pModel);
 
-    m_aAccumulateUnit[0].Initialize(
-        pModel,
-        CHARACTERTYPES::BONEID_RIGHT_HAND,
-        &KARAI_RIGHT_TOP,
-        &KARAI_RIGHT_BOTTOM
-    );
-
-    m_aAccumulateUnit[1].Initialize(
-        pModel,
-        CHARACTERTYPES::BONEID_LEFT_HAND,
-        &KARAI_LEFT_TOP,
-        &KARAI_LEFT_BOTTOM
-    );
-
+    m_aAccumulateUnit[0].Initialize(pModel, 7, &KARAI_RIGHT_TOP, &KARAI_RIGHT_BOTTOM);
     m_aAccumulateUnit[0].SetRadius(0.15f);
+
+    m_aAccumulateUnit[1].Initialize(pModel, 8, &KARAI_LEFT_TOP, &KARAI_LEFT_BOTTOM);
     m_aAccumulateUnit[1].SetRadius(0.3f);
 
     RegistUnit(&m_aAccumulateUnit[0]);
@@ -644,19 +547,13 @@ CKaraiAccumulateModule::CKaraiAccumulateModule(CCharacter* pCharacter)
 CSplinterAccumulateModule::CSplinterAccumulateModule(CCharacter* pCharacter)
 : CAccumulateModule(pCharacter)
 {
-    static const RwV3d SPLINTER_RIGHT_TOP       = { -0.09f,  0.03f, -0.5f  };
+    static const RwV3d SPLINTER_RIGHT_TOP       = { -0.09f, -0.03f, -0.5f  };
     static const RwV3d SPLINTER_RIGHT_BOTTOM    = {  0.05f,  0.01f,  0.35f };
 
     CModel* pModel = m_pCharacter->GetModel();
     ASSERT(pModel);
 
-    m_aAccumulateUnit[0].Initialize(
-        pModel,
-        CHARACTERTYPES::BONEID_RIGHT_HAND,
-        &SPLINTER_RIGHT_TOP,
-        &SPLINTER_RIGHT_BOTTOM
-    );
-
+    m_aAccumulateUnit[0].Initialize(pModel, 7, &SPLINTER_RIGHT_TOP, &SPLINTER_RIGHT_BOTTOM);
     m_aAccumulateUnit[0].SetRadius(0.15f);
 
     RegistUnit(&m_aAccumulateUnit[0]);
