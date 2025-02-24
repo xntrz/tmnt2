@@ -16,7 +16,7 @@ public:
     ~CParticleSet(void);
     CParticleSet* Clone(void);
     void Initialize(void);
-    void Read(const void* pBuffer, uint32 uBufferSize);
+    void Read(void* pBuffer, uint32 uBufferSize);
     void Reset(void);
     void Run(float dt);
     void Draw(RwCamera* pCamera);

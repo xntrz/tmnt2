@@ -55,7 +55,7 @@ public:
     static void SetDamage(uint32 hMagic, int32 nPower);
     static void SetStatusTime(uint32 hMagic, float fTime);
     static void SetHitAttack(uint32 hMagic, MAGICTYPES::FEATURE feature);
-    static void SetStatus(uint32 hMagic, int32 nStatus);
+    static void SetChangeStatus(uint32 hMagic, int32 nStatus);
     static void SetFlyawaySpeed(uint32 hMagic, float x, float y);
     static void SetSpeed(uint32 hMagic, const RwV3d* pvVector);
     static void SetSpeed(uint32 hMagic, float fDirection, float fSpeed);

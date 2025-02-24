@@ -50,6 +50,7 @@ public:
     void ConvertEndian(PEFINFO::PARTICLEINFO* pParticleInfo);
     void ReadParticleData(PEFINFO::PARTICLEINFO* pParticleInfo);
     void Initialize(void);
+    void InitializeVector(void);
     void StartParticle(void);
     void Run(float dt);
     void Draw(RwCamera* pCamera);

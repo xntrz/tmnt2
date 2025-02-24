@@ -576,7 +576,7 @@ void CMagicManager::CParameter::SetSoundPlay(bool bSet)
     if (!pMagic)
         return 0;
 
-    CMagic* pMagicPlay = pMagic->Clone();
+	CMagic* pMagicPlay = pMagic->Clone();
     ASSERT(pMagicPlay);
 
     pMagicPlay->SetPosition(pvPosition);
@@ -728,7 +728,7 @@ void CMagicManager::CParameter::SetSoundPlay(bool bSet)
 };
 
 
-/*static*/ void CMagicManager::SetStatus(uint32 hMagic, int32 nStatus)
+/*static*/ void CMagicManager::SetChangeStatus(uint32 hMagic, int32 nStatus)
 {
     CMagic* pMagic = MagicFromHandle(hMagic);
     if (pMagic)

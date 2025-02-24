@@ -79,11 +79,11 @@ void CMagic::Run(void)
         return;
 
     float dt = CGameProperty::GetElapsedTime();
-
+    
     RwV3d vMyPosition = Math::VECTOR3_ZERO;
     GetPosition(&vMyPosition);
 
-    if (Math::FEqual(m_fNowTime, 0.0f))
+    if (m_fNowTime == 0.0f)
         Appearing(&vMyPosition);
 
     if (m_pParticleSet)
@@ -209,7 +209,7 @@ CMagic* CMagic::Clone(void)
     CMagic* pMagic = new CMagic(GetName());
 
     pMagic->m_vPosition         = m_vPosition;
-    pMagic->m_pParticleSet      = m_pParticleSet->Clone();
+	pMagic->m_pParticleSet      = m_pParticleSet->Clone();
     pMagic->m_feature           = m_feature;
     pMagic->m_collisionBody     = m_collisionBody;
     pMagic->m_collisionAttack   = m_collisionAttack;
@@ -225,9 +225,10 @@ CMagic* CMagic::Clone(void)
     pMagic->m_bFinishStart      = m_bFinishStart;
     pMagic->m_fInitBodyRadius   = m_fInitBodyRadius;
     pMagic->m_fInitAttackRadius = m_fInitAttackRadius;
-    pMagic->m_fNowTime          = m_fNowTime;
-    pMagic->m_nCharaHitNum      = m_nCharaHitNum;
-    pMagic->m_nMapObjectHitNum  = m_nMapObjectHitNum;
+	pMagic->m_fNowTime          = 0.0f;
+	pMagic->m_nMapHitNum        = 0;
+	pMagic->m_nCharaHitNum      = 0;
+	pMagic->m_nMapObjectHitNum  = 0;
 
     std::strcpy(pMagic->m_szBaseEffectName,     m_szBaseEffectName);
     std::strcpy(pMagic->m_szAppearEffectName,   m_szAppearEffectName);
@@ -320,6 +321,9 @@ void CMagic::SetParameter(CMagicParameter* pMagicParameter)
     if (pMagicParameter->m_pszVanishMagicName)
         std::strcpy(m_szVanishMagicName, pMagicParameter->m_pszVanishMagicName);
 
+	if (pMagicParameter->m_fScale != 1.0f)
+		SetScale(pMagicParameter->m_fScale);
+
     m_feature           = pMagicParameter->m_feature;
     m_collisionBody     = pMagicParameter->m_collisionBody;
     m_collisionAttack   = pMagicParameter->m_collisionAttack;
@@ -329,10 +333,7 @@ void CMagic::SetParameter(CMagicParameter* pMagicParameter)
     m_nReflectNumMax    = pMagicParameter->m_nReflectNumMax;
     m_fChangeSize       = pMagicParameter->m_fChangeSize;
     m_fHitTimingStart   = pMagicParameter->m_fHitTimingStart;
-    m_fHitTimingEnd     = pMagicParameter->m_fHitTimingEnd;
-    
-	if (!Math::FEqual(pMagicParameter->m_fScale, 1.0f))
-		SetScale(pMagicParameter->m_fScale);
+    m_fHitTimingEnd     = pMagicParameter->m_fHitTimingEnd;   
 
     m_fInitBodyRadius   = m_collisionBody.m_fRadius;
     m_fInitAttackRadius = m_collisionAttack.m_fRadius;
@@ -472,25 +473,19 @@ void CMagic::SetDirection(const RwV3d* pvDirection)
 
     RwMatrix matrix;
     RwMatrixSetIdentityMacro(&matrix);
-    Math::Matrix_Update(
-        &matrix,
-        &vAxisX,
-        &vAxisY,
-        &vAxisZ,
-        &Math::VECTOR3_ZERO
-    );
+    Math::Matrix_Update(&matrix,
+                        &vAxisX,
+                        &vAxisY,
+                        &vAxisZ,
+                        &Math::VECTOR3_ZERO);
 
-    RwV3dTransformVector(
-        &m_collisionBody.m_vPosition,
-        &m_collisionBody.m_vPosition,
-        &matrix
-    );
+    RwV3dTransformVector(&m_collisionBody.m_vPosition,
+                         &m_collisionBody.m_vPosition,
+                         &matrix);
 
-    RwV3dTransformVector(
-        &m_collisionAttack.m_vPosition,
-        &m_collisionAttack.m_vPosition,
-        &matrix
-    );
+    RwV3dTransformVector(&m_collisionAttack.m_vPosition,
+                         &m_collisionAttack.m_vPosition,
+                         &matrix);
 
     m_pParticleSet->SetVector(&vAxisX, &vAxisY, &vAxisZ);
 };

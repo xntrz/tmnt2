@@ -488,11 +488,11 @@ static inline CEffect* EffectFromHandle(uint32 hEffect)
 };
 
 
-/*static*/ void CEffectManager::Read(const char* pszName, const void* pBuffer, uint32 uBufferSize)
+/*static*/ void CEffectManager::Read(const char* pszName, void* pBuffer, uint32 uBufferSize)
 {
     ASSERT(pBuffer);
     ASSERT(uBufferSize > 0);
-    
+
     if (!EffectContainer().IsEnableRegistPool())
         return;
 
@@ -500,8 +500,6 @@ static inline CEffect* EffectFromHandle(uint32 hEffect)
         return;
 
     CEffect* pEffect = new CEffect(pszName);
-    ASSERT(pEffect);
-
     if (pEffect)
     {
         pEffect->ReadEffect(pBuffer, uBufferSize);
@@ -547,7 +545,7 @@ static inline CEffect* EffectFromHandle(uint32 hEffect)
     if (!pEffect)
         return 0;
 
-    CEffect* pEffectPlay = pEffect->Clone();
+	CEffect* pEffectPlay = pEffect->Clone();
     ASSERT(pEffectPlay);
 
     pEffectPlay->SetDirection(0.0f);
@@ -670,12 +668,12 @@ static inline CEffect* EffectFromHandle(uint32 hEffect)
 
 /*static*/ void CEffectManager::ConvertWithDestroy(const char* pszName, CMagicParameter* pMagicParameter)
 {
-    CEffect* pEffect = EffectContainer().Search(pszName);
+    CEffect* pEffect = EffectContainer().SearchCurrent(pMagicParameter->GetBaseEffectName());
     if (pEffect)
     {
         CMagic* pMagic = new CMagic(pszName);
 
-        pMagic->CreateSubstance(pszName);
+        pMagic->CreateSubstance(pMagicParameter->GetBaseEffectName());
         pMagic->SetParameter(pMagicParameter);
         pMagic->SetStringEffectOn(CGameData::Option().Display().IsEnabledFontEffect());
 
@@ -688,7 +686,7 @@ static inline CEffect* EffectFromHandle(uint32 hEffect)
 
 /*static*/ void CEffectManager::Convert(const char* pszName, CMagicParameter* pMagicParameter)
 {
-    CEffect* pEffect = EffectContainer().Search(pMagicParameter->GetBaseEffectName());
+    CEffect* pEffect = EffectContainer().SearchCurrent(pMagicParameter->GetBaseEffectName());
     if (pEffect)
     {
         CMagic* pMagic = new CMagic(pszName);

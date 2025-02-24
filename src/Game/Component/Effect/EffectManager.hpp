@@ -15,7 +15,7 @@ public:
     static void Terminate(void);
     static void Period(void);
     static void Draw(RwCamera* pRwCamera);
-    static void Read(const char* pszName, const void* pBuffer, uint32 uBufferSize);
+    static void Read(const char* pszName, void* pBuffer, uint32 uBufferSize);
     static CEffect* GetEffectFromPool(const char* pszName);
     static uint32 Play(EFFECTID::VALUE idEffect, const RwV3d* pvPosition, bool bPlaySound = true);
     static uint32 Play(EFFECTID::VALUE idEffect, const RwV3d* pvPosition, float fDirection, bool bPlaySound = true);

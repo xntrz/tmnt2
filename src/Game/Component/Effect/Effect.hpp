@@ -24,7 +24,7 @@ public:
     virtual void Run(void) override;
     CEffect* Clone(void);
     CParticleSet* CloneParticle(void);
-    void ReadEffect(const void* pBuffer, uint32 uBufferSize);
+    void ReadEffect(void* pBuffer, uint32 uBufferSize);
     void Draw(RwCamera* pCamera);
     EFFECTID::VALUE GetID(void) const;
     void Start(void);

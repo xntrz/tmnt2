@@ -31,30 +31,19 @@ CParticleSet::~CParticleSet(void)
 CParticleSet* CParticleSet::Clone(void)
 {
     CParticleSet* pParticleSet = new CParticleSet;
-    ASSERT(pParticleSet);
-
-    std::memcpy(
-        pParticleSet->m_szEffectName,
-        m_szEffectName,
-        sizeof(pParticleSet->m_szEffectName)
-    );
     
-    std::memcpy(
-        pParticleSet->m_szTexDictName,
-        m_szTexDictName,
-        sizeof(pParticleSet->m_szTexDictName)
-    );
+    std::memcpy(pParticleSet->m_szEffectName, m_szEffectName, sizeof(pParticleSet->m_szEffectName));    
+    std::memcpy(pParticleSet->m_szTexDictName, m_szTexDictName, sizeof(pParticleSet->m_szTexDictName));
 
-    pParticleSet->m_nParticleNum = m_nParticleNum;
-    pParticleSet->m_bLoop = m_bLoop;
-    pParticleSet->m_bTrace = m_bTrace;
-    pParticleSet->m_bStringOn = m_bStringOn;
+    pParticleSet->m_nParticleNum     = m_nParticleNum;
+    pParticleSet->m_bLoop            = m_bLoop;
+    pParticleSet->m_bTrace           = m_bTrace;
+    pParticleSet->m_bStringOn        = m_bStringOn;
     pParticleSet->m_fEffectStartTime = m_fEffectStartTime;
 
     for (int32 i = 0; i < m_nParticleNum; ++i)
     {
-        CParticle* pParticle = new CParticle();
-        ASSERT(pParticle);
+        CParticle* pParticle = new CParticle;
 
         pParticle->Copy(m_apParticle[i]);
         pParticleSet->m_apParticle[i] = pParticle;
@@ -71,16 +60,17 @@ void CParticleSet::Initialize(void)
 };
 
 
-void CParticleSet::Read(const void* pBuffer, uint32 uBufferSize)
+void CParticleSet::Read(void* pBuffer, uint32 uBufferSize)
 {
     Reset();
     
-    RwMemory MemoryStream;
-    MemoryStream.start = (RwUInt8*)pBuffer;
-    MemoryStream.length = uBufferSize;
+    RwMemory memStream;
+    memStream.start = static_cast<RwUInt8*>(pBuffer);
+    memStream.length = uBufferSize;
 
-    RwStream* pStream = RwStreamOpen(rwSTREAMMEMORY, rwSTREAMREAD, &MemoryStream);
+    RwStream* pStream = RwStreamOpen(rwSTREAMMEMORY, rwSTREAMREAD, &memStream);
     ASSERT(pStream);
+
     if (!pStream)
         return;
     
@@ -104,7 +94,6 @@ void CParticleSet::Read(const void* pBuffer, uint32 uBufferSize)
     for (int32 i = 0; i < m_nParticleNum; ++i)
     {
         CParticle* pParticle = new CParticle();
-        ASSERT(pParticle);
 
         PEFINFO::PARTICLEINFO particleinfo = { 0 };
         RwStreamRead(pStream, &particleinfo, sizeof(particleinfo));

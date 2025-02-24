@@ -55,31 +55,28 @@ void CEffect::Run(void)
 
     if (m_pTracer)
     {
-        RwV3d vPos = Math::VECTOR3_ZERO;
         RwV3d vOffset = Math::VECTOR3_ZERO;
-
         if (m_bTraceDirection)
         {
-            RwMatrix matrix;
-            RwMatrixSetIdentityMacro(&matrix);
+            RwMatrix matRot;
+            RwMatrixSetIdentityMacro(&matRot);
 
-            Math::Matrix_Update(
-                &matrix,
-                &Math::VECTOR3_AXIS_X,
-                &Math::VECTOR3_AXIS_Y,
-                &Math::VECTOR3_AXIS_Z,
-                &Math::VECTOR3_ZERO
-            );
+            Math::Matrix_Update(&matRot,
+                                &Math::VECTOR3_AXIS_X,
+                                &Math::VECTOR3_AXIS_Y,
+                                &Math::VECTOR3_AXIS_Z,
+                                &Math::VECTOR3_ZERO);
 
-            Math::Matrix_RotateY(&matrix, GetDirectionFromObject());
-            m_pParticleSet->SetVector(&matrix.right, &matrix.up, &matrix.at);
-            RwV3dTransformPoint(&vOffset, &m_vOffset, &matrix);
+            Math::Matrix_RotateY(&matRot, GetDirectionFromObject());
+            m_pParticleSet->SetVector(&matRot.right, &matRot.up, &matRot.at);
+            RwV3dTransformPoint(&vOffset, &m_vOffset, &matRot);
         }
         else
         {
             vOffset = m_vOffset;
         };
-        
+
+        RwV3d vPos = Math::VECTOR3_ZERO;
         if (GetPositionFromObject(&vPos))
         {
             Math::Vec3_Add(&vPos, &vPos, &vOffset);
@@ -95,8 +92,7 @@ void CEffect::Run(void)
 CEffect* CEffect::Clone(void)
 {
     CEffect* pEffect = new CEffect(GetName());
-    ASSERT(pEffect);
-
+    
     pEffect->m_vPosition = m_vPosition;
     pEffect->m_pParticleSet = m_pParticleSet->Clone();
 
@@ -107,11 +103,11 @@ CEffect* CEffect::Clone(void)
 CParticleSet* CEffect::CloneParticle(void)
 {
     ASSERT(m_pParticleSet);
-    return m_pParticleSet->Clone();
+	return m_pParticleSet->Clone();
 };
 
 
-void CEffect::ReadEffect(const void* pBuffer, uint32 uBufferSize)
+void CEffect::ReadEffect(void* pBuffer, uint32 uBufferSize)
 {
     ASSERT(pBuffer);
     ASSERT(uBufferSize > 0);
@@ -124,8 +120,6 @@ void CEffect::ReadEffect(const void* pBuffer, uint32 uBufferSize)
     };
 
     m_pParticleSet = new CParticleSet();
-    ASSERT(m_pParticleSet);
-
     m_pParticleSet->Read(pBuffer, uBufferSize);
     m_pParticleSet->SetGravity(CGameProperty::GetGravity());
 };
@@ -236,20 +230,18 @@ void CEffect::SetDirection(float fDirection)
 {
     ASSERT(m_pParticleSet);
 
-    RwMatrix matrix;
-    RwMatrixSetIdentityMacro(&matrix);
+    RwMatrix matRot;
+    RwMatrixSetIdentityMacro(&matRot);
 
-    Math::Matrix_Update(
-        &matrix,
-        &Math::VECTOR3_AXIS_X,
-        &Math::VECTOR3_AXIS_Y,
-        &Math::VECTOR3_AXIS_Z,
-        &Math::VECTOR3_ZERO
-    );
+    Math::Matrix_Update(&matRot,
+                        &Math::VECTOR3_AXIS_X,
+                        &Math::VECTOR3_AXIS_Y,
+                        &Math::VECTOR3_AXIS_Z,
+                        &Math::VECTOR3_ZERO);
 
-    Math::Matrix_RotateY(&matrix, fDirection);
+    Math::Matrix_RotateY(&matRot, fDirection);
     
-    m_pParticleSet->SetVector(&matrix.right, &matrix.up, &matrix.at);
+    m_pParticleSet->SetVector(&matRot.right, &matRot.up, &matRot.at);
 };
 
 
@@ -344,8 +336,8 @@ float CEffect::GetDirectionFromObject(void)
 {
     if (m_pTracer)
         return m_pTracer->GetDirection();
-    else
-        return 0.0f;
+    
+    return 0.0f;
 };
 
 

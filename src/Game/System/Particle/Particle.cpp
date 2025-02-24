@@ -183,6 +183,8 @@ void CParticle::Copy(const CParticle* pParticle)
 
     if (m_type == PEFINFO::PARTICLETYPE_CYLINDER)
         CreateCylinder(m_fTopRadius, m_fBottomRadius, m_nPointNum, m_fHeight);
+
+    InitializeVector();
 };
 
 
@@ -265,6 +267,8 @@ void CParticle::ReadParticleData(PEFINFO::PARTICLEINFO* pParticleInfo)
 
     if (m_type == PEFINFO::PARTICLETYPE_CYLINDER)
         CreateCylinder(m_fTopRadius, m_fBottomRadius, m_nPointNum, m_fHeight);
+
+    InitializeVector();
 };
 
 
@@ -284,6 +288,14 @@ void CParticle::Initialize(void)
         for (int32 i = 0; i < m_nTransitionMax; ++i)
             m_listTransitionPool.push_back(&m_paTransition[i]);
     };
+};
+
+
+void CParticle::InitializeVector(void)
+{
+    SetVector(&Math::VECTOR3_AXIS_X,
+              &Math::VECTOR3_AXIS_Y,
+              &Math::VECTOR3_AXIS_Z);
 };
 
 
@@ -556,9 +568,9 @@ void CParticle::SetVector(const RwV3d* pvAxisX, const RwV3d* pvAxisY, const RwV3
     ASSERT(pvAxisZ);
     
     RwMatrix matrix;
-    RwV3d vBuff = Math::VECTOR3_ZERO;
     RwMatrixSetIdentityMacro(&matrix);
     
+    RwV3d vBuff = Math::VECTOR3_ZERO;
     Math::Matrix_Update(&matrix, pvAxisX, pvAxisY, pvAxisZ, &vBuff);
 
     m_vAxisX = *pvAxisX;

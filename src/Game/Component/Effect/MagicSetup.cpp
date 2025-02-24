@@ -688,9 +688,9 @@ static void SetPurpleEnergyBall(void)
 static void SetWindPress(void)
 {
     MAGICTYPES::FEATURE feature = MAGICTYPES::FEATURE_ATTACK_TO_PLAYER
-                                 | MAGICTYPES::FEATURE_LIVETIME
-                                 | MAGICTYPES::FEATURE_ATTACK
-                                 | MAGICTYPES::FEATURE_COLLISION_CHANGE_SIZE;
+                                | MAGICTYPES::FEATURE_LIVETIME
+                                | MAGICTYPES::FEATURE_ATTACK
+                                | MAGICTYPES::FEATURE_COLLISION_CHANGE_SIZE;
 
     CMagicParameter param;
     param.SetBaseEffectName(EFFECTID::GetNameFromID(EFFECTID::ID_WIND_PRESS));
@@ -700,7 +700,7 @@ static void SetWindPress(void)
     param.SetHitTiming(0.0f, 0.5f);
     param.SetChangeSize(2.0f);
 
-    CMagicManager::ChangeToAttached();
+	CMagicManager::ChangeToAttached();
     CEffectManager::ConvertWithDestroy(EFFECTID::GetNameFromID(EFFECTID::ID_WIND_PRESS), &param);
 };
 
