@@ -2059,7 +2059,7 @@ bool CBaseAI6045::CDecisionUnitAttackNormal::CheckObstacleFront(float fDistance,
 CBaseAI6045::CDecisionUnitAttackNormalForUnusualStatus::CDecisionUnitAttackNormalForUnusualStatus(const char* pszUnitName)
 : CDecisionUnitAttackNormal(pszUnitName)
 {
-    m_orderType = BASEAI6045::ORDERTYPE_ATTACK_SPECIAL;
+    ;
 };
 
 

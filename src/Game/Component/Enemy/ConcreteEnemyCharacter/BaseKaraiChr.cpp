@@ -791,7 +791,7 @@ CBaseKaraiChr::CAttackBStatusObserver::Observing(void) /*override*/
     {
     case STEP_BEGIN:
         {
-            if (m_orderType != BASEAI6045::ORDERTYPE_ATTACK_BB)
+            if (m_orderType != KARAI_AI::ORDERTYPE_ATTACK_BB)
             {
                 m_step = STEP_END;
                 break;
@@ -884,7 +884,7 @@ CBaseKaraiChr::CAttackAStatusObserver::Observing(void) /*override*/
     {
     case STEP_BEGIN:
         {
-            if (m_orderType == BASEAI6045::ORDERTYPE_ATTACK_A)
+            if (m_orderType == KARAI_AI::ORDERTYPE_ATTACK_A)
             {
                 m_step = STEP_END;
                 break;
@@ -906,7 +906,7 @@ CBaseKaraiChr::CAttackAStatusObserver::Observing(void) /*override*/
 
     case STEP_AA:
         {
-            if (m_orderType == BASEAI6045::ORDERTYPE_ATTACK_AA)
+            if (m_orderType == KARAI_AI::ORDERTYPE_ATTACK_AA)
             {
                 m_step = STEP_END;
                 break;
@@ -920,9 +920,9 @@ CBaseKaraiChr::CAttackAStatusObserver::Observing(void) /*override*/
                 const char* pszMotionName = nullptr;
                 switch (m_orderType)
                 {
-                case BASEAI6045::ORDERTYPE_ATTACK_AAA: pszMotionName = BASEKARAI::MOTIONNAMES::ATTACK_AAA; break;
-                case BASEAI6045::ORDERTYPE_ATTACK_AAB: pszMotionName = BASEKARAI::MOTIONNAMES::ATTACK_AAB; break;
-                case BASEAI6045::ORDERTYPE_ATTACK_AAC: pszMotionName = BASEKARAI::MOTIONNAMES::ATTACK_AAC; break;
+                case KARAI_AI::ORDERTYPE_ATTACK_AAA: pszMotionName = BASEKARAI::MOTIONNAMES::ATTACK_AAA; break;
+                case KARAI_AI::ORDERTYPE_ATTACK_AAB: pszMotionName = BASEKARAI::MOTIONNAMES::ATTACK_AAB; break;
+                case KARAI_AI::ORDERTYPE_ATTACK_AAC: pszMotionName = BASEKARAI::MOTIONNAMES::ATTACK_AAC; break;
                 default: ASSERT(false); break;
                 };
 
@@ -1267,40 +1267,40 @@ CBaseKaraiChr::CThinkingStatusObserver::Observing(void) /*override*/
                 m_nextStatus = BASEKARAI::STATUS_ATTACK_COUNTER;
                 break;
 
-            case BASEAI6045::ORDERTYPE_ATTACK_A:
-            case BASEAI6045::ORDERTYPE_ATTACK_AA:
-            case BASEAI6045::ORDERTYPE_ATTACK_AAA:
-            case BASEAI6045::ORDERTYPE_ATTACK_AAB:
-            case BASEAI6045::ORDERTYPE_ATTACK_AAC:
+            case KARAI_AI::ORDERTYPE_ATTACK_A:
+            case KARAI_AI::ORDERTYPE_ATTACK_AA:
+            case KARAI_AI::ORDERTYPE_ATTACK_AAA:
+            case KARAI_AI::ORDERTYPE_ATTACK_AAB:
+            case KARAI_AI::ORDERTYPE_ATTACK_AAC:
                 m_nextStatus = ENEMYTYPES::STATUS_ATTACK_A;
                 break;
 
-            case BASEAI6045::ORDERTYPE_ATTACK_B:
-            case BASEAI6045::ORDERTYPE_ATTACK_BB:
+            case KARAI_AI::ORDERTYPE_ATTACK_B:
+            case KARAI_AI::ORDERTYPE_ATTACK_BB:
                 m_nextStatus = ENEMYTYPES::STATUS_ATTACK_B;
                 break;
 
-            case BASEAI6045::ORDERTYPE_ATTACK_C1:
+            case KARAI_AI::ORDERTYPE_ATTACK_C1:
                 m_nextStatus = ENEMYTYPES::STATUS_ATTACK_C;
                 break;
 
-            case BASEAI6045::ORDERTYPE_ATTACK_C2:
+            case KARAI_AI::ORDERTYPE_ATTACK_C2:
                 m_nextStatus = BASEKARAI::STATUS_ATTACK_C;
                 break;
 
-            case BASEAI6045::ORDERTYPE_ATTACK_D:
+            case KARAI_AI::ORDERTYPE_ATTACK_D:
                 m_nextStatus = BASEKARAI::STATUS_ATTACK_D;
                 break;
 
-            case BASEAI6045::ORDERTYPE_ATTACK_E:
+            case KARAI_AI::ORDERTYPE_ATTACK_E:
                 m_nextStatus = BASEKARAI::STATUS_ATTACK_E;
                 break;
 
-            case BASEAI6045::ORDERTYPE_ATTACK_F:
+            case KARAI_AI::ORDERTYPE_ATTACK_F:
                 m_nextStatus = BASEKARAI::STATUS_ATTACK_F;
                 break;
                 
-            case BASEAI6045::ORDERTYPE_ATTACK_SPECIAL:
+            case KARAI_AI::ORDERTYPE_ATTACK_SPECIAL:
                 m_nextStatus = BASEKARAI::STATUS_ATTACK_SPECIAL;
                 break;
 

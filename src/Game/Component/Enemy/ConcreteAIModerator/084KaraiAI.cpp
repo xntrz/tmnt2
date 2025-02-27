@@ -145,7 +145,7 @@ C084KaraiAI::CDecisionUnitAttackSpecial::CDecisionUnitAttackSpecial(CBaseKaraiCh
 {
     m_fDistanceCondition = EnemyChr().AICharacteristic().m_fDistanceOfSuitable;
     m_fAngleCondition    = MATH_DEG2RAD(45.0f);
-    m_orderType          = BASEAI6045::ORDERTYPE_ATTACK_SPECIAL;
+    m_orderType          = KARAI_AI::ORDERTYPE_ATTACK_SPECIAL;
 };
 
 
@@ -176,7 +176,7 @@ C084KaraiAI::CDecisionUnitAttackSpecialForUnusualStatus::CDecisionUnitAttackSpec
 {
     m_fDistanceCondition = EnemyChr().AICharacteristic().m_fDistanceOfSuitable;
     m_fAngleCondition    = MATH_DEG2RAD(45.0f);
-    m_orderType          = BASEAI6045::ORDERTYPE_ATTACK_SPECIAL;
+    m_orderType          = KARAI_AI::ORDERTYPE_ATTACK_SPECIAL;
 };
 
 
@@ -190,7 +190,7 @@ C084KaraiAI::CDecisionUnitAttackF::CDecisionUnitAttackF(void)
 {
     m_fDistanceCondition = EnemyChr().AICharacteristic().m_fDistanceOfSuitable;
     m_fAngleCondition    = MATH_DEG2RAD(45.0f);
-    m_orderType          = BASEAI6045::ORDERTYPE_ATTACK_F;
+    m_orderType          = KARAI_AI::ORDERTYPE_ATTACK_F;
 };
 
 
@@ -218,7 +218,7 @@ C084KaraiAI::CDecisionUnitAttackD::CDecisionUnitAttackD(void)
 {
     m_fDistanceCondition = EnemyChr().AICharacteristic().m_fDistanceOfSuitable;
     m_fAngleCondition    = MATH_DEG2RAD(45.0f);
-    m_orderType          = BASEAI6045::ORDERTYPE_ATTACK_D;
+    m_orderType          = KARAI_AI::ORDERTYPE_ATTACK_D;
 };
 
 
@@ -269,7 +269,7 @@ C084KaraiAI::CDecisionUnitAttackE::CDecisionUnitAttackE(void)
 : CBaseAI6045::CDecisionUnitAttackCounter(KARAI_AI::AIDECISIONUNITNAME::ATTACK_E)
 {
     m_fDistanceCondition    = EnemyChr().AICharacteristic().m_fDistanceOfSuitable;
-    m_orderType             = BASEAI6045::ORDERTYPE_ATTACK_E;
+    m_orderType             = KARAI_AI::ORDERTYPE_ATTACK_E;
 };
 
 
@@ -283,7 +283,7 @@ C084KaraiAI::CDecisionUnitAttackC::CDecisionUnitAttackC(void)
 {
     m_fDistanceCondition = EnemyChr().AICharacteristic().m_fDistanceOfSuitable;
     m_fAngleCondition    = MATH_DEG2RAD(45.0f);
-    m_orderType          = BASEAI6045::ORDERTYPE_ATTACK_C1;
+    m_orderType          = KARAI_AI::ORDERTYPE_ATTACK_C1;
 };
 
 
@@ -318,7 +318,7 @@ C084KaraiAI::CDecisionUnitAttackC::CDecisionUnitAttackC(void)
 C084KaraiAI::CDecisionUnitAttackC2::CDecisionUnitAttackC2(void)
 : CBaseAI6045::CDecisionUnitAttackNormal(KARAI_AI::AIDECISIONUNITNAME::ATTACK_C2)
 {
-    m_orderType          = BASEAI6045::ORDERTYPE_ATTACK_C2;
+    m_orderType = KARAI_AI::ORDERTYPE_ATTACK_C2;
 };
 
 
@@ -434,6 +434,7 @@ C084KaraiAI::CDecisionUnitAttackBForUnusualStatus::CDecisionUnitAttackBForUnusua
 {
     m_fDistanceCondition = EnemyChr().AICharacteristic().m_fDistanceOfSuitable;
     m_fAngleCondition    = MATH_DEG2RAD(45.0f);
+    m_orderType          = KARAI_AI::ORDERTYPE_ATTACK_SPECIAL;
 };
 
 
@@ -459,6 +460,7 @@ C084KaraiAI::CDecisionUnitAttackA::CDecisionUnitAttackA(CBaseKaraiChr* pBaseKara
 {
     m_fDistanceCondition = EnemyChr().AICharacteristic().m_fDistanceOfSuitable;
     m_fAngleCondition    = MATH_DEG2RAD(45.0f);
+    m_orderType          = KARAI_AI::ORDERTYPE_ATTACK_SPECIAL;
 };
 
 
@@ -513,7 +515,7 @@ C084KaraiAI::CDecisionUnitAttackAForUnusualStatus::CDecisionUnitAttackAForUnusua
 
 /*static*/ void C084KaraiAI::SetAttackTypeA(CEnemyAIDecisionUnit& rDecisionUnit, int32 freqTableAA, int32 freqTableAAA)
 {
-    int32 attackType = BASEAI6045::ORDERTYPE_ATTACK_A;
+    int32 attackType = KARAI_AI::ORDERTYPE_ATTACK_A;
 
     if (rDecisionUnit.IsSatisfyFrequency(freqTableAA))
     {
@@ -525,20 +527,20 @@ C084KaraiAI::CDecisionUnitAttackAForUnusualStatus::CDecisionUnitAttackAForUnusua
             float fChanceAAB = ((1.0f / 3.0f) * 1.0f);
 
             if (fRand >= fChanceAAC)
-                attackType = BASEAI6045::ORDERTYPE_ATTACK_AAC;
+                attackType = KARAI_AI::ORDERTYPE_ATTACK_AAC;
             else if (fRand >= fChanceAAB)
-                attackType = BASEAI6045::ORDERTYPE_ATTACK_AAB;
+                attackType = KARAI_AI::ORDERTYPE_ATTACK_AAB;
             else
-                attackType = BASEAI6045::ORDERTYPE_ATTACK_AAA;
+                attackType = KARAI_AI::ORDERTYPE_ATTACK_AAA;
         }
         else
         {
-            attackType = BASEAI6045::ORDERTYPE_ATTACK_AA;
+            attackType = KARAI_AI::ORDERTYPE_ATTACK_AA;
         };
     }
     else
     {
-        attackType = BASEAI6045::ORDERTYPE_ATTACK_A;
+        attackType = KARAI_AI::ORDERTYPE_ATTACK_A;
     };
 
     rDecisionUnit.EnemyChr().AIThinkOrder().OrderAttack().m_iAttackType = attackType;
@@ -548,9 +550,9 @@ C084KaraiAI::CDecisionUnitAttackAForUnusualStatus::CDecisionUnitAttackAForUnusua
 /*static*/ void C084KaraiAI::SetAttackTypeB(CEnemyAIDecisionUnit& rDecisionUnit, int32 freqTableBB)
 {
     if (rDecisionUnit.IsSatisfyFrequency(freqTableBB))
-        rDecisionUnit.EnemyChr().AIThinkOrder().OrderAttack().m_iAttackType = BASEAI6045::ORDERTYPE_ATTACK_B;
+        rDecisionUnit.EnemyChr().AIThinkOrder().OrderAttack().m_iAttackType = KARAI_AI::ORDERTYPE_ATTACK_B;
     else
-        rDecisionUnit.EnemyChr().AIThinkOrder().OrderAttack().m_iAttackType = BASEAI6045::ORDERTYPE_ATTACK_BB;
+        rDecisionUnit.EnemyChr().AIThinkOrder().OrderAttack().m_iAttackType = KARAI_AI::ORDERTYPE_ATTACK_BB;
 };
 
 
