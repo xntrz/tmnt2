@@ -4,16 +4,16 @@ If you encountered problem with running please open an issue and attach all need
 
 <p float="left">
 <img src="scr1.png" width="250"/>
-<!-- <img src="scr2.png" width="250"/> -->
+<!-- <img src="scr4.png" width="250"/> -->
 <img src="scr3.png" width="250"/>
-<img src="scr4.png" width="250"/>
+<img src="scr2.png" width="250"/>
 </p>
 
 &nbsp;
 > # Current project status:
 ✔️ Basic gameplay\
 ✔️ Sound\
-🔨 Enemies & Bosses (33/76)
+🔨 Enemies & Bosses (34/76)
 
 &nbsp;
 > # Building & Run
