@@ -92,9 +92,9 @@ public:
 
     static CPlayerCharacter* FindNextPlayer(void);
 
-    static void MakeNearerPlayerData(const CCharacterCompositor* pChrCompositor);
+    static int32 MakeNearerPlayerData(const CCharacterCompositor* pChrCompositor);
 
-    static void MakeNearerPlayerData(const RwV3d* vecPos);
+    static int32 MakeNearerPlayerData(const RwV3d* vecPos);
 
     static float GetAimTargetValueForNearerPlayerData(const CEnemyCharacter* pEnemyChr,
                                                       const NEARER_PLAYERDATA* pData,
@@ -194,5 +194,14 @@ public:
 class CAIUtils6045
 {
 public:
-    // TODO enemy 6045 group
+    static bool CalcGroundPointAllPlayer(RwV3d* pvecPos);
+
+    static bool CheckObstacleBetweenPosToPos(const RwV3d* pvecStart,
+                                             const RwV3d* pvecEnd,
+                                             float fThickSize = -1.0f);
+    
+    static bool CheckObstacleBetweenEnemyToPlayer(const CCharacterCompositor* pChrCompositor,
+                                                  int32 iPlayerNo,
+                                                  bool bCheckThick,
+                                                  float fCheckDistance = -1.0f);
 };

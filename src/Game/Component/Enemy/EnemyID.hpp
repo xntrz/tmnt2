@@ -48,7 +48,7 @@
  *
  *
  *  CBaseAI6045 list:
- *    TODO
+ *  - ID_KARAI
  *
  *
  *  CBaseAI6043 enemy list:

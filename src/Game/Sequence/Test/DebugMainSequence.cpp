@@ -204,6 +204,7 @@ bool CDebugMainSequence::OnAttach(const void* pParam)
     m_menu.AddTrigger("gs machine test",        CallArea,       AREAID::ID_AREA17);
     m_menu.AddTrigger("fall rubble test",       CallArea,       CallAreaParamMake(AREAID::ID_AREA58, 1, CALLAREA_FLAG_GMKGEN_DISABLE));
     m_menu.AddTrigger("trailer chase test",     CallArea,       AREAID::ID_AREA43);
+    m_menu.AddTrigger("karai test",             CallArea,       AREAID::ID_AREA57);
     m_menu.AddTrigger("fugitoid demo",          CallArea,       AREAID::ID_AREA15);
     m_menu.AddTrigger("fps drop test",          CallArea,       AREAID::ID_AREA54);
     m_menu.AddTrigger("demo sync test",         CallSeq,        PROCLABEL_SEQ_PLAYDEMO);

@@ -37,6 +37,7 @@
 #include "ConcreteEnemyCharacter/055Kurage.hpp"
 #include "ConcreteEnemyCharacter/056Kabuto.hpp"
 #include "ConcreteEnemyCharacter/057UtromSaucer.hpp"
+#include "ConcreteEnemyCharacter/084Karai.hpp"
 #include "ConcreteEnemyCharacter/098Fugitoid.hpp"
 
 #include "Game/Component/GameMain/GameProperty.hpp"
@@ -149,6 +150,9 @@ static CEnemyCharacter* CreateEnemyCharacter(ENEMYID::VALUE id)
 
     case ENEMYID::ID_UTROM_SAUCER:
         return new C057UtromSaucer;
+
+    case ENEMYID::ID_KARAI:
+        return new C084Karai;
 
     case ENEMYID::ID_FUGITOID:
         return new C098Fugitoid;
@@ -263,6 +267,9 @@ static EFFECTID::VALUE GetEnemyCharacterNeededEffect(ENEMYID::VALUE enemyId, int
 
     case ENEMYID::ID_UTROM_SAUCER:
         return C057UtromSaucer::GetNeededEffect(no);
+
+    case ENEMYID::ID_KARAI:
+        return C084Karai::GetNeededEffect(no);
 
     case ENEMYID::ID_FUGITOID:
         return C098Fugitoid::GetNeededEffect(no);

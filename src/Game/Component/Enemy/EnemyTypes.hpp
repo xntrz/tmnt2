@@ -7,14 +7,13 @@ namespace ENEMYTYPES
 {
     enum APPEARTYPE
     {
-        // TODO appear type
-        APPEARTYPE_WALK_SLOW    = 0,
-        APPEARTYPE_WALK_FAST    = 1,
-        //APPEARTYPE_UNKNOWN    = 2,
-        APPEARTYPE_FALL         = 3,
-        APPEARTYPE_FLY_UP       = 4,
-        APPEARTYPE_FLY_DOWN     = 5,
-        APPEARTYPE_MOTION       = 6, // MOTIONNAMES::TOJO
+        APPEARTYPE_WALK_SLOW = 0,
+        APPEARTYPE_WALK_FAST,
+        APPEARTYPE_NONE,
+        APPEARTYPE_FALL,
+        APPEARTYPE_FLY_UP,
+        APPEARTYPE_FLY_DOWN,
+        APPEARTYPE_MOTION, // MOTIONNAMES::TOJO
     };
 
     namespace MOTIONNAMES

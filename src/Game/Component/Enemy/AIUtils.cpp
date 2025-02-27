@@ -117,16 +117,16 @@ CAIUtils::GetPlayerStateFlag(PLAYERTYPES::STATUS eStatus)
 };
 
 
-/*static*/ void CAIUtils::MakeNearerPlayerData(const CCharacterCompositor* pChrCompositor)
+/*static*/ int32 CAIUtils::MakeNearerPlayerData(const CCharacterCompositor* pChrCompositor)
 {
-    RwV3d vecPos = Math::VECTOR3_ZERO;
-    pChrCompositor->GetFootPosition(&vecPos);
+    RwV3d vecFootPos = Math::VECTOR3_ZERO;
+    pChrCompositor->GetFootPosition(&vecFootPos);
 
-    MakeNearerPlayerData(&vecPos);
+    return MakeNearerPlayerData(&vecFootPos);
 };
 
 
-/*static*/ void CAIUtils::MakeNearerPlayerData(const RwV3d* vecPos)
+/*static*/ int32 CAIUtils::MakeNearerPlayerData(const RwV3d* vecPos)
 {
     CPlayerCharacter* apPlayerChr[GAMETYPES::PLAYERS_MAX];
     int32 numActivePlayer = 0;
@@ -165,11 +165,13 @@ CAIUtils::GetPlayerStateFlag(PLAYERTYPES::STATUS eStatus)
         s_apNearerPlayerDataList[s_iNearerPlayerDataNum++] = pData;
     };
 
-    auto itBegin = std::begin(s_apNearerPlayerDataList);
-    auto itEnd   = std::end(s_apNearerPlayerDataList);
-    std::sort(itBegin, itEnd, [](const NEARER_PLAYERDATA* pDataA, const NEARER_PLAYERDATA* pDataB) {
-            return (pDataA->distance < pDataB->distance);
-    });
+    auto sortCallback = [](const NEARER_PLAYERDATA* pDataA, const NEARER_PLAYERDATA* pDataB) {
+        return (pDataA->distance < pDataB->distance);
+    };
+
+    std::sort(s_apNearerPlayerDataList, s_apNearerPlayerDataList + s_iNearerPlayerDataNum, sortCallback);
+
+    return s_iNearerPlayerDataNum;
 };
 
 
@@ -177,7 +179,30 @@ CAIUtils::GetPlayerStateFlag(PLAYERTYPES::STATUS eStatus)
                                                                 const NEARER_PLAYERDATA* pData,
                                                                 float fJudgeWait)
 {
-    return 0.0f; // TODO 6045 group (move it to CAIUtils6045 maybe ?)
+    float fDirMe = pEnemyChr->Compositor().GetDirection();
+
+    float fDirDiff = pData->angle - fDirMe;
+    fDirDiff = CEnemyUtils::RadianCorrect(fDirDiff);
+    fDirDiff = std::fabs(fDirDiff);
+
+    float fDirDiffRatio = (fDirDiff * MATH_INV_PI);
+
+    float fRatioOfRearView = pEnemyChr->AICharacteristic().m_fRatioOfRearView;
+    float fRatioOfFrontView = pEnemyChr->AICharacteristic().m_fRatioOfFrontView;
+
+    float fViewRatio = fRatioOfFrontView + ((fRatioOfRearView - fRatioOfFrontView) * fDirDiffRatio);
+
+    float fRadiusOfAction = pEnemyChr->AICharacteristic().m_fRadiusOfAction;
+    float fDistanceOfSuitable = pEnemyChr->AICharacteristic().m_fDistanceOfSuitable;
+
+    float fViewDistance = (fRadiusOfAction - fDistanceOfSuitable) * fViewRatio;
+
+    float fDist = (fDistanceOfSuitable + fViewDistance);
+
+    if (fJudgeWait == 0.0f)
+        return fDirDiffRatio;
+
+    return (pData->distance / (fDist * fJudgeWait * 0.2f)) + fDirDiffRatio;
 };
 
 
@@ -789,10 +814,138 @@ CAIUtils::CalcEscapePointForHitPlane(RwV3d* avecPos,
     ESCAPEPOINT_RESULT result = ESCAPEPOINT_RESULT_NONE;
 
     if (afSafePointDistance[0] > 0.0f)
-        result |= (ESCAPEPOINT_RESULT_NONE | ESCAPEPOINT_RESULT_LEFT);
+        result |= ESCAPEPOINT_RESULT_LEFT;
 
     if (afSafePointDistance[1] > 0.0f)
         result |= ESCAPEPOINT_RESULT_RIGHT;
 
     return result;
+};
+
+
+//
+// *********************************************************************************
+//
+
+
+/*static*/ bool CAIUtils6045::CalcGroundPointAllPlayer(RwV3d* pvecPos)
+{
+    ASSERT(pvecPos != nullptr);
+
+    RwV3d vecBuf = Math::VECTOR3_ZERO;
+    int32 numPos = 0;
+
+    int32 playersNum = CAIUtils::GetPlayerNum();
+    for (int32 i = 0; i < playersNum; ++i)
+    {
+        CPlayerCharacter* pPlayerChr = CAIUtils::GetActivePlayer(i);
+        if (!pPlayerChr)
+            continue;
+
+        RwV3d vecFootPos = Math::VECTOR3_ZERO;
+        pPlayerChr->GetFootPosition(&vecFootPos);
+
+        Math::Vec3_Add(&vecBuf, &vecBuf, &vecFootPos);
+
+        ++numPos;
+    };
+
+    if (numPos)
+    {
+        Math::Vec3_Scale(pvecPos, &vecBuf, (1.0f / static_cast<float>(numPos)));
+        return true;
+    };
+
+    return false;
+};
+
+
+/*static*/ bool CAIUtils6045::CheckObstacleBetweenPosToPos(const RwV3d* pvecStart,
+                                                           const RwV3d* pvecEnd,
+                                                           float fThickSize /*= -1.0f*/)
+{
+    ASSERT(pvecStart != nullptr);
+    ASSERT(pvecEnd != nullptr);
+
+    if (fThickSize <= 0.0f)
+    {
+        RwV3d vecStart = *pvecStart;
+        RwV3d vecEnd = *pvecEnd;
+
+        if (!CWorldMap::CheckCollisionLine(&vecStart, &vecEnd))
+            return false;
+    }
+    else
+    {
+        bool bFound = false;
+
+        for (int32 i = 0; i < CAIUtils::THICKLINE_NUM; ++i)
+        {
+            RwV3d vecStart = Math::VECTOR3_ZERO;
+            RwV3d vecEnd = Math::VECTOR3_ZERO;
+            
+            CAIUtils::GetThickLine(&vecStart,
+                                   &vecEnd,
+                                   pvecStart,
+                                   pvecEnd,
+                                   fThickSize,
+                                   static_cast<CAIUtils::THICKLINE_TYPE>(i));
+
+            bFound = CWorldMap::CheckCollisionLine(&vecStart, &vecEnd);
+            if (bFound)
+                break;
+        };
+
+        if (!bFound)
+            return false;
+    };
+
+    const CWorldMap::COLLISIONRESULT* pCollisionResult = CWorldMap::GetCollisionResult();
+    ASSERT(pCollisionResult != nullptr);
+
+    float fDistToPos = CEnemyUtils::GetDistance(pvecStart, pvecEnd);
+    float fDistToMap = CEnemyUtils::GetDistance(pvecStart, &pCollisionResult->m_vClosestPt);
+
+    return (fDistToMap < fDistToPos);
+};
+
+
+/*static*/ bool CAIUtils6045::CheckObstacleBetweenEnemyToPlayer(const CCharacterCompositor* pChrCompositor,
+                                                                int32 iPlayerNo,
+                                                                bool bCheckThick,
+                                                                float fCheckDistance /*= -1.0f*/)
+{
+    ASSERT(pChrCompositor != nullptr);
+
+    CPlayerCharacter* pPlayerChr = CAIUtils::GetActivePlayer(iPlayerNo);
+    if (!pPlayerChr)
+        return true;
+    
+    RwV3d vecFootPosPlayer = Math::VECTOR3_ZERO;
+    pPlayerChr->GetFootPosition(&vecFootPosPlayer);
+    vecFootPosPlayer.y += 0.2f;
+
+    RwV3d vecFootPosEnemy = Math::VECTOR3_ZERO;
+    pChrCompositor->GetFootPosition(&vecFootPosEnemy);
+    vecFootPosEnemy.y += 0.2f;
+
+    if (fCheckDistance >= 0.0f)
+    {
+        RwV3d vecBuf = Math::VECTOR3_ZERO;
+        Math::Vec3_Sub(&vecBuf, &vecFootPosPlayer, &vecFootPosEnemy);
+        Math::Vec3_Normalize(&vecBuf, &vecBuf);
+        Math::Vec3_Scale(&vecBuf, &vecBuf, fCheckDistance);
+
+        Math::Vec3_Add(&vecFootPosPlayer, &vecFootPosEnemy, &vecBuf);
+    };
+
+    if (bCheckThick)
+    {
+        float fHitRadius = CAIUtils::GetMapHitRadius(pChrCompositor);
+        fHitRadius *= 2.0f;
+        
+        return CheckObstacleBetweenPosToPos(&vecFootPosEnemy, &vecFootPosPlayer, fHitRadius);
+    };
+    
+    return CheckObstacleBetweenPosToPos(&vecFootPosEnemy, &vecFootPosPlayer);
 };

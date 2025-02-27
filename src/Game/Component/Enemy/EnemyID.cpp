@@ -78,7 +78,7 @@ static ENEMYINFO s_aEnemyInfo[] =
     { ENEMYID::ID_SPASMOSAUR,                   "SPASMOSAUR",                   GAMETEXT_ENEMY_081,     "",     false   },
     { ENEMYID::ID_HUN_A,                        "HUN A",                        GAMETEXT_ENEMY_082,     "",     false   },
     { ENEMYID::ID_HUN_B,                        "HUN B",                        GAMETEXT_ENEMY_083,     "",     false   },
-    { ENEMYID::ID_KARAI,                        "KARAI",                        GAMETEXT_ENEMY_084,     "",     false   },
+    { ENEMYID::ID_KARAI,                        "KARAI",                        GAMETEXT_ENEMY_084,     "",     true    },
     { ENEMYID::ID_MIYAMOTO_USAGI,               "MIYAMOTO USAGI",               GAMETEXT_ENEMY_085,     "",     false   },
     { ENEMYID::ID_FOOT_MECH_SPLINTER,           "FOOTMECH SPLINTER",            GAMETEXT_ENEMY_086,     "",     false   },
     { ENEMYID::ID_SLASSHUR,                     "SLASSHUR",                     GAMETEXT_ENEMY_087,     "",     false   },

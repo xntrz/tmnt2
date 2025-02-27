@@ -3,6 +3,8 @@
 #include "AIUtils.hpp"
 #include "EnemyTracer.hpp"
 
+#include "ConcreteAIModerator/BaseAI6045.hpp"
+
 #include "Game/Component/Effect/EffectManager.hpp"
 #include "Game/Component/Player/PlayerCharacter.hpp"
 #include "Game/Component/GameMain/GameProperty.hpp"
@@ -206,7 +208,9 @@ CMotionManagedStatusObserver::CMotionManagedStatusObserver(void)
 {
     EnemyChr().Compositor().SetVelocity(&Math::VECTOR3_ZERO);
     EnemyChr().Compositor().SetAcceleration(&Math::VECTOR3_ZERO);
-    EnemyChr().Compositor().ChangeMotion(ENEMYTYPES::MOTIONNAMES::IDLE, true);
+
+    bool bForce = true;
+    EnemyChr().Compositor().ChangeMotion(ENEMYTYPES::MOTIONNAMES::IDLE, bForce);
 
     m_fTime = 0.0f;
 };
@@ -226,16 +230,16 @@ CMotionManagedStatusObserver::CMotionManagedStatusObserver(void)
     int32 waitType = EnemyChr().AIThinkOrder().OrderWait().m_iWaitType;
     switch (waitType)
     {
-    case 1: // TODO: 6045 group order type naming
+    case BASEAI6045::ORDERTYPE_WAIT_TURN_NO:
         {
             float fRotSpeed = EnemyChr().CharacterParameter().m_feature.m_fRotateRate;
             int32 iRotTarget = EnemyChr().AIThinkOrder().OrderWait().m_iPlayerNo;
 
-            CEnemyUtils::RotateToPlayer(&EnemyChr().Compositor(), iRotTarget, fRotSpeed, 0.05235f);
+            CEnemyUtils::RotateToPlayer(&EnemyChr().Compositor(), iRotTarget, fRotSpeed, MATH_DEG2RAD(3.0f));
         }
         break;
 
-    case 2: // TODO: 6045 group order type naming
+    case BASEAI6045::ORDERTYPE_WAIT_TURN_POS:
         {
             float fRotSpeed = EnemyChr().CharacterParameter().m_feature.m_fRotateRate;
             RwV3d vRotPosition = EnemyChr().AIThinkOrder().OrderWait().m_vAt;
@@ -382,27 +386,27 @@ CMotionManagedStatusObserver::CMotionManagedStatusObserver(void)
 {
     if (Status() == ENEMYTYPES::STATUS_RUN)
     {
-        EnemyChr().Compositor().ChangeMotion(ENEMYTYPES::MOTIONNAMES::RUN, true);
+        bool bForce = true;
+        EnemyChr().Compositor().ChangeMotion(ENEMYTYPES::MOTIONNAMES::RUN, bForce);
 
         m_fMoveSpeed = EnemyChr().CharacterParameter().m_feature.m_fRunMoveSpeed;
         
-        // TODO 6045 or 6043 ai order move type naming
-        m_moveTypeJudgeBegin    = 2;
-        m_moveTypeJudgeEnd      = 3;
-        m_moveTypeJudgeMovePos  = 2;
+        m_moveTypeJudgeBegin    = BASEAI6045::ORDERTYPE_MOVE_RUN_POS;
+        m_moveTypeJudgeEnd      = BASEAI6045::ORDERTYPE_MOVE_RUN_NO;
+        m_moveTypeJudgeMovePos  = BASEAI6045::ORDERTYPE_MOVE_RUN_POS;
     }
     else
     {
         ASSERT(Status() == ENEMYTYPES::STATUS_WALK);
 
-        EnemyChr().Compositor().ChangeMotion(ENEMYTYPES::MOTIONNAMES::WALK, true);
+        bool bForce = true;
+        EnemyChr().Compositor().ChangeMotion(ENEMYTYPES::MOTIONNAMES::WALK, bForce);
         
         m_fMoveSpeed = EnemyChr().CharacterParameter().m_feature.m_fWalkMoveSpeed;
         
-        // TODO 6045 or 6043 ai order move type naming
-        m_moveTypeJudgeBegin    = 0;
-        m_moveTypeJudgeEnd      = 1;
-        m_moveTypeJudgeMovePos  = 0;
+        m_moveTypeJudgeBegin    = BASEAI6045::ORDERTYPE_MOVE_WALK_POS;
+        m_moveTypeJudgeEnd      = BASEAI6045::ORDERTYPE_MOVE_WALK_NO;
+        m_moveTypeJudgeMovePos  = BASEAI6045::ORDERTYPE_MOVE_WALK_POS;
     };
 
     m_nextStatus = ENEMYTYPES::STATUS_IDLE;
@@ -462,7 +466,7 @@ CMotionManagedStatusObserver::CMotionManagedStatusObserver(void)
     if (fDist >= 0.125f)
     {
         float fRotSpeed = EnemyChr().CharacterParameter().m_feature.m_fRotateRate;
-        CEnemyUtils::RotateToPosition(&EnemyChr().Compositor(), &vMarkPos, fRotSpeed, 0.05235f);
+        CEnemyUtils::RotateToPosition(&EnemyChr().Compositor(), &vMarkPos, fRotSpeed, MATH_DEG2RAD(3.0f));
 
         RwV3d vVelocity = { 0.0f, 0.0f, m_fMoveSpeed };
         EnemyChr().Compositor().RotateVectorByDirection(&vVelocity, &vVelocity);

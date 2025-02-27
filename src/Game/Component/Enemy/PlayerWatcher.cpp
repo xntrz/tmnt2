@@ -338,7 +338,7 @@ bool CPlayerWatcher::IsAttackWithinRange(float fLength, float fFrontAngle)
         {
             if (IsPlayerInTheFront(i, fFrontAngle))
             {
-                if (IsPlayerlookAtMe(i, Math::PI / 2))
+                if (IsPlayerLookAtMe(i, Math::PI / 2))
                 {
                     if (IsPlayerAttack(i))
                     {
@@ -367,7 +367,7 @@ bool CPlayerWatcher::IsAttackTriggerWithinRange(float fLength, float fFrontAngle
         {
             if (IsPlayerInTheFront(i, fFrontAngle))
             {
-                if (IsPlayerlookAtMe(i, Math::PI / 2))
+                if (IsPlayerLookAtMe(i, Math::PI / 2))
                 {
                     if (IsPlayerAttackTrigger(i))
                     {
@@ -396,7 +396,7 @@ bool CPlayerWatcher::IsShootShuriken(float fLength)
     {
         if (IsPlayerWithinRange(i, fLength))
         {
-            if (IsPlayerlookAtMe(i, Math::PI / 6))
+            if (IsPlayerLookAtMe(i, Math::PI / 6))
             {
                 if (IsShootThrowKnife(i))
                 {
@@ -421,7 +421,7 @@ bool CPlayerWatcher::IsShootShurikenTrigger(float fLength)
     {
         if (IsPlayerWithinRange(i, fLength))
         {
-            if (IsPlayerlookAtMe(i, Math::PI / 6))
+            if (IsPlayerLookAtMe(i, Math::PI / 6))
             {
                 m_aPlayerKnife[0] -= CGameProperty::GetElapsedTime();
                 
@@ -452,7 +452,7 @@ bool CPlayerWatcher::IsChargeAttack(float fLength)
     {
         if (IsPlayerWithinRange(i, fLength))
         {
-            if (IsPlayerlookAtMe(i, Math::PI / 6))
+            if (IsPlayerLookAtMe(i, Math::PI / 6))
             {
                 if (IsShootChargeAttack(i))
                 {
@@ -471,48 +471,46 @@ bool CPlayerWatcher::IsChargeAttack(float fLength)
 
 bool CPlayerWatcher::IsHighAttack(float fLength, float fLowSide, float fHighSide)
 {
-    // TODO review
-    
     bool bResult = false;
 
     float fDistanceOfSuitable = EnemyChara().AICharacteristic().m_fDistanceOfSuitable;
     if (fLength >= 0.0f)
         fDistanceOfSuitable = fLength;
     
-    int32 nPlayerCnt = CAIUtils::GetPlayerNum();
-    for (int32 i = 0; i < nPlayerCnt; ++i)
+    int32 numPlayer = CAIUtils::GetPlayerNum();
+    for (int32 i = 0; i < numPlayer; ++i)
     {
         CPlayerCharacter* pPlayerChr = CAIUtils::GetActivePlayer(i);
-        if (pPlayerChr)
+        if (!pPlayerChr)
+            continue;
+
+        RwV3d vPlayerPos = Math::VECTOR3_ZERO;
+        pPlayerChr->GetFootPosition(&vPlayerPos);
+
+        RwV3d vToPlayer = Math::VECTOR3_ZERO;
+        Math::Vec3_Sub(&vToPlayer, &vPlayerPos, &m_vMyPos);
+
+        if ((vToPlayer.y <= fLowSide) ||
+            (vToPlayer.y >= fHighSide))
         {
-            RwV3d vPlayerPos = Math::VECTOR3_ZERO;
-            RwV3d vToPlayer = Math::VECTOR3_ZERO;
+            m_aPlayerJump[i] = false;
+            continue;
+        };
 
-            pPlayerChr->GetFootPosition(&vPlayerPos);
-            Math::Vec3_Sub(&vToPlayer, &vPlayerPos, &m_vMyPos);
+        float fD = ((vToPlayer.y - fLowSide) / (fHighSide - fLowSide)) * fDistanceOfSuitable;
 
-            if ((vToPlayer.y > fLowSide) && (vToPlayer.y < fHighSide))
-            {
-                float fD = ((vToPlayer.y - fLowSide) / (fHighSide - fLength)) * fDistanceOfSuitable;
-                
-                float fLengthXZ = Math::Vec3_Length(&vToPlayer);
-                vToPlayer.y = 0.0f;
-                if (fD > fLengthXZ)
-                {
-                    SetPlayerData(i, PLAYER_DATA_TEMP);
-                    m_aPlayerJump[i] = true;
-                    bResult = true;
-                    break;
-                }
-                else
-                {
-                    m_aPlayerJump[i] = false;
-                };
-            }
-            else
-            {
-                m_aPlayerJump[i] = false;
-            };
+        vToPlayer.y = 0.0f;
+
+        float fLengthXZ = Math::Vec3_Length(&vToPlayer);
+        if (fD <= fLengthXZ)
+        {
+            m_aPlayerJump[i] = false;
+        }
+        else if (!m_aPlayerJump[i])
+        {
+            SetPlayerData(i, PLAYER_DATA_TEMP);
+            m_aPlayerJump[i] = true;
+            bResult = true;
         };
     };
 
@@ -625,7 +623,7 @@ bool CPlayerWatcher::IsPlayerAttackTriggerWithinRange(int32 iPlayerIndex, float 
         {
             if (IsPlayerInTheFront(iPlayerIndex, fFrontAngle))
             {
-                if (IsPlayerlookAtMe(iPlayerIndex, Math::PI / 2) || (fDist < 2.0f))
+                if (IsPlayerLookAtMe(iPlayerIndex, Math::PI / 2) || (fDist < 2.0f))
                 {
                     if (IsAttack(iPlayerIndex))
                     {
@@ -654,7 +652,7 @@ bool CPlayerWatcher::IsPlayerShootShurikenTrigger(int32 iPlayerIndex, float fLen
         float fDist = GetDistanceFromPlayer(iPlayerIndex, &m_vMyPos);
         if (fDist <= fLength)
         {
-            if (IsPlayerlookAtMe(iPlayerIndex, Math::PI / 6))
+            if (IsPlayerLookAtMe(iPlayerIndex, Math::PI / 6))
             {
                 m_aPlayerKnife[iPlayerIndex] -= CGameProperty::GetElapsedTime();
                 if (IsShootThrowKnife(iPlayerIndex) && (m_aPlayerKnife[iPlayerIndex] <= 0.0f))
@@ -673,31 +671,32 @@ bool CPlayerWatcher::IsPlayerShootShurikenTrigger(int32 iPlayerIndex, float fLen
 
 bool CPlayerWatcher::IsPlayerViewArea(int32 iPlayerIndex)
 {
-    bool bResult = false;
-
     iPlayerIndex = PlayerIndexCorrection(iPlayerIndex);
-    if (iPlayerIndex != -1)
-    {
-        CPlayerCharacter* pPlayerChr = CAIUtils::GetActivePlayer(iPlayerIndex);
-        if (pPlayerChr)
-        {
-            RwV3d vecPos = Math::VECTOR3_ZERO;
-            pPlayerChr->GetFootPosition(&vecPos);
+	if (iPlayerIndex == -1)
+		return false;
 
-            float fDist = m_vMyPos.y - vecPos.y;
-            if (fDist < 0.0f)
-                fDist = -fDist;
+	if (!IsPlayerActionRange(iPlayerIndex, 1.0f))
+		return false;
 
-            if (fDist <= 3.0f)
-                bResult = true;
-        };
-    };
+	CPlayerCharacter* pPlayerChr = CAIUtils::GetActivePlayer(iPlayerIndex);
+	if (!pPlayerChr)
+		return false;
 
-    return bResult;
+	RwV3d vecPos = Math::VECTOR3_ZERO;
+	pPlayerChr->GetFootPosition(&vecPos);
+
+	float fDist = (m_vMyPos.y - vecPos.y);
+	if (fDist < 0.0f)
+		fDist = -fDist;
+
+	if (fDist > 3.0f)
+		return false;
+
+	return true;
 };
 
 
-bool CPlayerWatcher::IsPlayerlookAtMe(int32 iPlayerIndex, float fAngle)
+bool CPlayerWatcher::IsPlayerLookAtMe(int32 iPlayerIndex, float fAngle)
 {
     bool bResult = false;
     
@@ -896,7 +895,7 @@ bool CPlayerWatcher::IsLeoDash(float fLength)
         if (fDist < fLength)
         {
             if (IsAttackLeoDash(iPlayerIndex))
-                bResult = IsPlayerlookAtMe(iPlayerIndex, Math::PI05);
+                bResult = IsPlayerLookAtMe(iPlayerIndex, Math::PI05);
         };
     };
 
@@ -988,12 +987,9 @@ int32 CPlayerWatcher::GetPlayerNoFromID(PLAYERID::VALUE id)
 };
 
 
-float CPlayerWatcher::GetDirection(const RwV3d* a, const RwV3d* b)
+float CPlayerWatcher::GetDirection(const RwV3d* pvecPos, const RwV3d* pvecAt)
 {
-    return Math::ATan2(
-        b->x - a->x,
-        b->z - a->z
-    );
+    return Math::ATan2((pvecAt->x - pvecPos->x), (pvecAt->z - pvecPos->z));
 };
 
 
@@ -1080,7 +1076,9 @@ void CPlayerWatcher::SetPlayerData(int32 iPlayerIndex, PLAYER_DATA_TYPE type)
 
 CPlayerWatcher::PLAYERDATA* CPlayerWatcher::GetPlayerData(PLAYER_DATA_TYPE type)
 {
-    ASSERT(type >= 0 && type < COUNT_OF(m_aPlayerData));
+    ASSERT(type >= 0);
+    ASSERT(type < COUNT_OF(m_aPlayerData));
+    
     return &m_aPlayerData[type];
 };
 
@@ -1096,6 +1094,6 @@ int32 CPlayerWatcher::PlayerIndexCorrection(int32 iPlayerIndex)
 {
     if (iPlayerIndex == -1)
         return GetPlayerData(PLAYER_DATA_TEMP)->No;
-    else
-        return iPlayerIndex;
+    
+    return iPlayerIndex;
 };

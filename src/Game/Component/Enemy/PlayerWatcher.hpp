@@ -130,7 +130,7 @@ public:
     bool IsPlayerAttackTriggerWithinRange(int32 iPlayerIndex, float fLength, float fFrontAngle);
     bool IsPlayerShootShurikenTrigger(int32 iPlayerIndex, float fLength);
     bool IsPlayerViewArea(int32 iPlayerIndex);
-    bool IsPlayerlookAtMe(int32 iPlayerIndex, float fAngle);
+    bool IsPlayerLookAtMe(int32 iPlayerIndex, float fAngle);
     bool IsPlayerInTheFront(int32 iPlayerIndex, float fFrontAngle);
     bool IsPlayerWithinRange(int32 iPlayerIndex, float fLength);
     bool IsPlayerSuitRange(int32 iPlayerIndex, float fRate);
@@ -142,7 +142,7 @@ public:
     int32 GetPlayerNumThere(RwV3d* pvCenter, float fRadius);
     bool IsTogether(int32 iPlayerNum, float fRadius);
     int32 GetPlayerNoFromID(PLAYERID::VALUE id);
-    float GetDirection(const RwV3d* a, const RwV3d* b);
+    float GetDirection(const RwV3d* pvecPos, const RwV3d* pvecAt);
     int32 GetNearPlayer(RwV3d* pvCenter, float* pfDistNearest, RwV3d* pvPosNearest, CAIUtils::PLAYER_STATE_FLAG state);
     void SetTargetType(TARGET_TYPE type);
     void ClearTargetType(void);

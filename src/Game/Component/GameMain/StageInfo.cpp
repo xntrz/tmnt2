@@ -253,7 +253,7 @@ static const STAGEINFO& StageInfo(STAGEID::VALUE idStage)
     {
 #ifdef _DEBUG
     case STAGEID::ID_STTEST:
-        enemyId = ENEMYID::ID_FOOT_TECH_NINJA;
+        enemyId = ENEMYID::ID_KARAI;
         break;
 #endif /* _DEBUG */
         

@@ -4,10 +4,12 @@
 #include "AIUtils.hpp"
 
 #include "Game/Component/Shot/Shot.hpp"
+#include "Game/Component/Shot/ShotManager.hpp"
 #include "Game/Component/Effect/Effect.hpp"
 #include "Game/Component/Effect/EffectGeneric.hpp"
 #include "Game/Component/Effect/EffectManager.hpp"
 #include "Game/Component/Effect/Magic.hpp"
+#include "Game/Component/Effect/MagicManager.hpp"
 #include "Game/Component/Player/PlayerCharacter.hpp"
 #include "Game/Component/GameData/GameData.hpp"
 #include "Game/Component/GameMain/GameProperty.hpp"
@@ -15,6 +17,7 @@
 #include "Game/Component/GameMain/StageInfo.hpp"
 #include "Game/Component/GameMain/MapInfo.hpp"
 #include "Game/Component/Module/AmbientLightModule.hpp"
+#include "Game/System/GameObject/GameObjectManager.hpp"
 #include "Game/System/Model/Model.hpp"
 #include "Game/System/Map/WorldMap.hpp"
 #include "Game/System/Sound/GameSound.hpp"
@@ -826,4 +829,232 @@ float CEnemyUtils::CKnockBackControl::GetPlayerNumRate(void) const
 
     if (pEnemyChr->Compositor().GetCollisionGround()->m_attribute != MAPTYPES::ATTRIBUTE_DEATH)
         CGameSound::PlayObjectSE(&pEnemyChr->Compositor(), SDCODE_SE(4121));
+};
+
+
+//
+// *********************************************************************************
+//
+
+
+class CEnemyTracer6045 : public CEnemyTracer
+{
+public:
+    CEnemyTracer6045(const CCharacterCompositor* pChrCompositor, CEnemyUtils6045::TRACE traceType);
+    virtual void GetPosition(RwV3d* pvPosition) override;
+
+private:
+    CEnemyUtils6045::TRACE m_traceType;
+};
+
+
+
+CEnemyTracer6045::CEnemyTracer6045(const CCharacterCompositor* pChrCompositor, CEnemyUtils6045::TRACE traceType)
+: CEnemyTracer(pChrCompositor)
+, m_traceType(traceType)
+{
+    ;
+};
+
+
+/*virtual*/ void CEnemyTracer6045::GetPosition(RwV3d* pvPosition) /*override*/
+{
+    ASSERT(pvPosition);
+
+    CGameObject* pObj = CGameObjectManager::GetObject(m_hObj);
+    if (pObj)
+    {
+        ASSERT(pObj->GetType() == GAMEOBJECTTYPE::CHARACTER);
+
+        CCharacterCompositor* pChrCompositor = static_cast<CCharacterCompositor*>(pObj);
+        ASSERT(pChrCompositor->GetCharacterType() == CCharacter::TYPE_ENEMY);
+
+        switch (m_traceType)
+        {
+        case CEnemyUtils6045::TRACE_FOOT:
+            pChrCompositor->GetFootPosition(pvPosition);
+            break;
+
+        case CEnemyUtils6045::TRACE_BODY:
+            pChrCompositor->GetBodyPosition(pvPosition);
+            break;
+
+        default:
+            ASSERT(false);
+            break;
+        };
+    };
+};
+
+
+//
+// *********************************************************************************
+//
+
+
+/*static*/ uint32 CEnemyUtils6045::EntryTraceEffect(EFFECTID::VALUE effectId,
+                                                    const CCharacterCompositor* pCompositor,
+                                                    float fScale,
+                                                    TRACE traceType,
+                                                    bool bTraceDirection,
+                                                    const RwV3d* pvecOffset /*= nullptr*/)
+{
+    ASSERT(pCompositor != nullptr);
+
+    RwV3d vecOffset = Math::VECTOR3_ZERO;
+    if (pvecOffset)
+        vecOffset = *pvecOffset;
+
+    uint32 hEffect = 0;
+    if (bTraceDirection)
+        hEffect = CEffectManager::PlayTrace(effectId, new CEnemyTracer6045(pCompositor, traceType), &vecOffset, pCompositor->GetDirection());
+    else
+        hEffect = CEffectManager::PlayTrace(effectId, new CEnemyTracer6045(pCompositor, traceType), &vecOffset);
+
+    ASSERT(hEffect);
+    if (hEffect)
+        CEffectManager::SetScale(hEffect, fScale);
+
+    return hEffect;
+};
+
+
+/*static*/ uint32 CEnemyUtils6045::EntrySimpleEffect(EFFECTID::VALUE effectId,
+                                                     const RwV3d* pvecPos,
+                                                     float fScale,
+                                                     bool bPlaySound /*= true*/)
+{
+    uint32 hEffect = CEffectManager::Play(effectId, pvecPos, bPlaySound);
+    ASSERT(hEffect);
+
+    if (hEffect)
+        CEffectManager::SetScale(hEffect, fScale);
+
+    return hEffect;
+};
+
+
+/*static*/ bool CEnemyUtils6045::GetDirection(float* pfDirection,
+                                              const CCharacterCompositor* pChrCompositor,
+                                              const RwV3d* pvecAt)
+{
+    ASSERT(pChrCompositor != nullptr);
+
+    RwV3d vecFootPos = Math::VECTOR3_ZERO;
+    pChrCompositor->GetFootPosition(&vecFootPos);
+
+    return GetDirection(pfDirection, &vecFootPos, pvecAt);
+};
+
+
+/*static*/ bool CEnemyUtils6045::GetDirection(float* pfDirection,
+                                              const RwV3d* pvecPos,
+                                              const RwV3d* pvecAt)
+{
+    ASSERT(pvecPos != nullptr);
+    ASSERT(pvecAt != nullptr);
+
+    if (!pfDirection)
+        return false;
+
+    RwV3d vecPos = *pvecPos;
+    vecPos.y = 0.0f;
+
+    RwV3d vecAt = *pvecAt;
+    vecAt.y = 0.0f;
+
+    if (Math::Vec3_IsEqual(&vecPos, &vecAt))
+        return false;
+
+    *pfDirection = CEnemyUtils::GetDirection(&vecPos, &vecAt);
+    return true;
+};
+
+
+/*static*/ void CEnemyUtils6045::SetGravitySpecialSetting(CCharacterCompositor* pChrCompositor,
+                                                          float fGravity)
+{
+    pChrCompositor->SetCharacterFlag(CHARACTERTYPES::FLAG_CANCEL_GRAVITY);
+
+    RwV3d vecAccel = { 0.0f, fGravity, 0.0f };
+    pChrCompositor->SetAcceleration(&vecAccel);
+};
+
+
+/*static*/ void CEnemyUtils6045::ClearGravitySpecialSetting(CCharacterCompositor* pChrCompositor)
+{
+    pChrCompositor->SetAcceleration(&Math::VECTOR3_ZERO);
+    pChrCompositor->ClearCharacterFlag(CHARACTERTYPES::FLAG_CANCEL_GRAVITY);
+};
+
+
+/*static*/ uint32 CEnemyUtils6045::EntrySimpleMagic(MAGICID::VALUE magicId,
+                                                    const RwV3d* pvecPos,
+                                                    float fScale /*= 1.0f*/,
+                                                    bool bPlaySound /*= true*/)
+{
+    const char* pszMagicName = MAGICID::GetNameFromID(magicId);
+
+    uint32 hMagic = CMagicManager::Play(pszMagicName, pvecPos, nullptr, nullptr, bPlaySound);
+    ASSERT(hMagic);
+
+    if (hMagic)
+        CMagicManager::SetScale(hMagic, fScale);
+
+    return hMagic;
+};
+
+
+/*static*/ uint32 CEnemyUtils6045::EntryShotWeapon(SHOTID::VALUE shotId,
+                                                   CCharacterCompositor* pChrCompositor,
+                                                   const RwV3d* pvecPos,
+                                                   const RwV3d* pvecDir,
+                                                   float fCorrectionRad,
+                                                   float fLifetime,
+                                                   bool bPlaySound /*= false*/)
+{
+    uint32 hShot = CShotManager::Shot(shotId, pvecPos, pvecDir, pChrCompositor, fCorrectionRad, fLifetime);
+    ASSERT(hShot);
+
+    if (bPlaySound)
+        CGameSound::PlayObjectSE(pChrCompositor, SDCODE_SE(0x1020));
+
+    return hShot;
+};
+
+
+/*static*/ uint32 CEnemyUtils6045::EntryShotWeapon(SHOTID::VALUE shotId,
+                                                   CCharacterCompositor* pChrCompositor,
+                                                   const RwV3d* pvecPos,
+                                                   const RwV3d* pvecDir,
+                                                   bool bPlaySound /*= false*/)
+{
+    return EntryShotWeapon(shotId, pChrCompositor, pvecPos, pvecDir, MATH_DEG2RAD(15.0f), 5.0f, bPlaySound);
+};
+
+
+/*static*/ void CEnemyUtils6045::ReplaceVelocityToNowDirection(CCharacterCompositor* pChrCompositor,
+                                                               float fMoveVelocity)
+{
+    ASSERT(pChrCompositor != nullptr);
+
+    RwV3d vecVelocity = { 0.0f, 0.0f, fMoveVelocity };
+    pChrCompositor->RotateVectorByDirection(&vecVelocity, &vecVelocity);
+    pChrCompositor->SetVelocity(&vecVelocity);
+};
+
+
+/*static*/ float CEnemyUtils6045::GetXZDistance(const RwV3d* pvecPos,
+                                                const RwV3d* pvecAt)
+{
+    ASSERT(pvecPos != nullptr);
+    ASSERT(pvecAt != nullptr);
+
+    RwV3d vecPos = *pvecPos;
+    vecPos.y = 0.0f;
+
+    RwV3d vecAt = *pvecAt;
+    vecAt.y = 0.0f;
+
+    return CEnemyUtils::GetDistance(&vecPos, &vecAt);
 };

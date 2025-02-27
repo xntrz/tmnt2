@@ -5,7 +5,7 @@
 #include "Game/System/GameObject/GameObjectManager.hpp"
 
 
-CEnemyTracer::CEnemyTracer(CCharacterCompositor* pChrCompositor)
+CEnemyTracer::CEnemyTracer(const CCharacterCompositor* pChrCompositor)
 : m_hObj(0)
 {
     ASSERT(pChrCompositor->GetCharacterType() == CCharacter::TYPE_ENEMY);
@@ -13,7 +13,7 @@ CEnemyTracer::CEnemyTracer(CCharacterCompositor* pChrCompositor)
 };
 
 
-CEnemyTracer::CEnemyTracer(CEnemyCharacter* pEnemyChr)
+CEnemyTracer::CEnemyTracer(const CEnemyCharacter* pEnemyChr)
 : CEnemyTracer(&pEnemyChr->Compositor())
 {
     ;

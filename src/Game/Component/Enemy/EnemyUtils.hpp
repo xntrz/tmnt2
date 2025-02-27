@@ -1,8 +1,12 @@
 #pragma once
 
 #include "EnemyTypes.hpp"
+#include "EnemyTracer.hpp"
 
+#include "Game/Component/Effect/EffectID.hpp"
+#include "Game/Component/Effect/MagicID.hpp"
 #include "Game/Component/GameMain/MapID.hpp"
+#include "Game/Component/Shot/ShotID.hpp"
 
 
 class CGameObject;
@@ -112,5 +116,60 @@ public:
 class CEnemyUtils6045
 {
 public:
-    // TODO enemy 6045 group
+    enum TRACE
+    {
+        TRACE_FOOT = 0,
+        TRACE_BODY,
+    };
+
+public:
+    static uint32 EntryTraceEffect(EFFECTID::VALUE effectId,
+                                   const CCharacterCompositor* pCompositor,
+                                   float fScale,
+                                   TRACE traceType,
+                                   bool bTraceDirection,
+                                   const RwV3d* pvecOffset = nullptr);
+
+    static uint32 EntrySimpleEffect(EFFECTID::VALUE effectId,
+                                    const RwV3d* pvecPos,
+                                    float fScale,
+                                    bool bPlaySound = true);
+
+    static bool GetDirection(float* pfDirection,
+                             const CCharacterCompositor* pChrCompositor,
+                             const RwV3d* pvecAt);
+
+    static bool GetDirection(float* pfDirection,
+                             const RwV3d* pvecPos,
+                             const RwV3d* pvecAt);
+
+    static void SetGravitySpecialSetting(CCharacterCompositor* pChrCompositor,
+                                         float fGravity);
+
+    static void ClearGravitySpecialSetting(CCharacterCompositor* pChrCompositor);
+
+    static uint32 EntrySimpleMagic(MAGICID::VALUE magicId,
+                                   const RwV3d* pvecPos,
+                                   float fScale = 1.0f,
+                                   bool bPlaySound = true);
+
+    static uint32 EntryShotWeapon(SHOTID::VALUE shotId,
+                                  CCharacterCompositor* pChrCompositor,
+                                  const RwV3d* pvecPos,
+                                  const RwV3d* pvecDir,
+                                  float fCorrectionRad,
+                                  float fLifetime,
+                                  bool bPlaySound = false);
+
+    static uint32 EntryShotWeapon(SHOTID::VALUE shotId,
+                                  CCharacterCompositor* pChrCompositor,
+                                  const RwV3d* pvecPos,
+                                  const RwV3d* pvecDir,
+                                  bool bPlaySound = false);
+
+    static void ReplaceVelocityToNowDirection(CCharacterCompositor* pChrCompositor,
+                                              float fMoveVelocity);
+
+    static float GetXZDistance(const RwV3d* pvecPos,
+                               const RwV3d* pvecAt);
 };
