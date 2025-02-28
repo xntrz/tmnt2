@@ -11,8 +11,8 @@ namespace EFFECT_GENERIC
     enum DEATHTYPE
     {
         DEATHTYPE_NORMAL = 0,
-        DEATHTYPE_MONSTER,
         DEATHTYPE_MACHINE,
+        DEATHTYPE_MONSTER,
     };
 
     void CallHitEffect(CHitAttackData* pAttack, const RwV3d* pvPosition);

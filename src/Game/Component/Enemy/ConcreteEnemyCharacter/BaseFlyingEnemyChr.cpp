@@ -653,7 +653,7 @@ CBaseFlyingEnemyChr::CBaseFlyingEnemyChr(ENEMYID::VALUE enemyId)
     AttachStatusObserver(ENEMYTYPES::STATUS_APPEAR,     new CAppearStatusObserver);
     AttachStatusObserver(ENEMYTYPES::STATUS_IDLE,       new CIdleStatusObserver);
     AttachStatusObserver(ENEMYTYPES::STATUS_WALK,       new CMoveStatusObserver);
-    AttachStatusObserver(ENEMYTYPES::STATUS_DEATH,      new CDeathStatusObserver(EFFECT_GENERIC::DEATHTYPE_MACHINE, 0.4f));
+    AttachStatusObserver(ENEMYTYPES::STATUS_DEATH,      new CDeathStatusObserver(EFFECT_GENERIC::DEATHTYPE_MONSTER, 0.4f));
 };
 
 

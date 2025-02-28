@@ -357,7 +357,7 @@ C055Kurage::C055Kurage(void)
     Initialize(&parameter, bReplace);
 
     /* CBaseFlyingEnemyChr status */
-    AttachStatusObserver(ENEMYTYPES::STATUS_DEATH,      new CBaseFlyingEnemyChr::CDeathStatusObserver(EFFECT_GENERIC::DEATHTYPE_MONSTER, 1.0f));
+    AttachStatusObserver(ENEMYTYPES::STATUS_DEATH,      new CBaseFlyingEnemyChr::CDeathStatusObserver(EFFECT_GENERIC::DEATHTYPE_MACHINE, 1.0f));
 
     /* C055Kurage status */
     AttachStatusObserver(ENEMYTYPES::STATUS_WALK,       new CMoveStatusObserver);

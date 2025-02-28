@@ -690,7 +690,7 @@ CBaseGeneralEnemyChr::CDeathMechStatusObserver::Observing(void) /*override*/
     RwV3d vPosition = Math::VECTOR3_ZERO;
     EnemyChr().Compositor().GetPosition(&vPosition);
 
-    EFFECT_GENERIC::CallDeathEffect(EFFECT_GENERIC::DEATHTYPE_MONSTER, &vPosition);
+    EFFECT_GENERIC::CallDeathEffect(EFFECT_GENERIC::DEATHTYPE_MACHINE, &vPosition);
 	
 	return ENEMYTYPES::STATUS_QUIT;
 };

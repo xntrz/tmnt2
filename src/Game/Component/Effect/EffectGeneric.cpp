@@ -177,7 +177,7 @@ namespace EFFECT_GENERIC
             }
             break;
             
-        case DEATHTYPE_MONSTER:
+        case DEATHTYPE_MACHINE:
             {
                 CMagicManager::CParameter param;
                 param.SetPositon(pvPosition);
@@ -191,7 +191,7 @@ namespace EFFECT_GENERIC
             }
             break;
             
-        case DEATHTYPE_MACHINE:
+        case DEATHTYPE_MONSTER:
             {
                 uint32 hEffect = CEffectManager::Play(EFFECTID::ID_KO_SMOKE, pvPosition);
                 ASSERT(hEffect);

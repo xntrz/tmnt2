@@ -276,7 +276,7 @@ C053BombBatMech::C053BombBatMech(void)
     Initialize(&parameter, bReplace);
 
     /* CBaseFlyingEnemyChr status */
-    AttachStatusObserver(ENEMYTYPES::STATUS_DEATH,  new CBaseFlyingEnemyChr::CDeathStatusObserver(EFFECT_GENERIC::DEATHTYPE_MONSTER, 0.4f));
+    AttachStatusObserver(ENEMYTYPES::STATUS_DEATH,  new CBaseFlyingEnemyChr::CDeathStatusObserver(EFFECT_GENERIC::DEATHTYPE_MACHINE, 0.4f));
 
     /* C053BombBatMech status */
     AttachStatusObserver(ENEMYTYPES::STATUS_FIRE_B, new CBodyBlowStatusObserver);
@@ -344,7 +344,7 @@ C053BombBatMech::C053BombBatMech(void)
             RwV3d vecPos = Math::VECTOR3_ZERO;
             Compositor().GetPosition(&vecPos);
 
-            EFFECT_GENERIC::CallDeathEffect(EFFECT_GENERIC::DEATHTYPE_MONSTER, &vecPos, 0.75f);
+            EFFECT_GENERIC::CallDeathEffect(EFFECT_GENERIC::DEATHTYPE_MACHINE, &vecPos, 0.75f);
             
             SetStatus(ENEMYTYPES::STATUS_QUIT);
         };

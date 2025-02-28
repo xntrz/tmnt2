@@ -229,7 +229,7 @@ C057UtromSaucer::CDeathStatusObserver::Observing(void) /*override*/
     RwV3d vecPos = Math::VECTOR3_ZERO;
     EnemyChr().Compositor().GetPosition(&vecPos);
 
-    EFFECT_GENERIC::CallDeathEffect(EFFECT_GENERIC::DEATHTYPE_MONSTER, &vecPos, 1.5f);
+    EFFECT_GENERIC::CallDeathEffect(EFFECT_GENERIC::DEATHTYPE_MACHINE, &vecPos, 1.5f);
 
     return ENEMYTYPES::STATUS_QUIT;
 };
@@ -330,7 +330,7 @@ C057UtromSaucer::C057UtromSaucer(void)
     bool  bRepeatChase = (FrequencyParameter(CEnemyParameter::FREQUENCY_FIRE_REPEATCHASE) != 0);
     MAGICID::VALUE magicId = MAGICID::ID_LASER_BEAM_FED;
 
-    AttachStatusObserver(ENEMYTYPES::STATUS_DEATH,      new CDeathStatusObserver(0.4f));
+    AttachStatusObserver(ENEMYTYPES::STATUS_DEATH,      new CDeathStatusObserver(1.5f));
     AttachStatusObserver(ENEMYTYPES::STATUS_WALK,       new CMoveStatusObserver);
     AttachStatusObserver(ENEMYTYPES::STATUS_FIRE_B,     new CFireStatusObserver(magicId, repeatCount, bRepeatChase));
     AttachStatusObserver(ENEMYTYPES::STATUS_FIRE_BB,    new CFireStatusObserver(magicId, repeatCount, bRepeatChase));

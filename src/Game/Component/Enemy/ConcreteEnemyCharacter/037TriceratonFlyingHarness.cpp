@@ -153,7 +153,11 @@ void C037TriceratonFlyingHarness::CMoveStatusObserver::Direction(const RwV3d* ve
         RwV3d vecFootPosPlayer = Math::VECTOR3_ZERO;
         pPlayerChr->GetFootPosition(&vecFootPosPlayer);
 
-        fDir = CEnemyUtils::GetDirection(vecPos, &vecFootPosPlayer);
+		if (Math::FEqual(vecPos->x, vecFootPosPlayer.x) &&
+			Math::FEqual(vecPos->z, vecFootPosPlayer.z))
+			fDir = EnemyChr().Compositor().GetDirection();
+		else
+			fDir = CEnemyUtils::GetDirection(vecPos, &vecFootPosPlayer);
     };
 
     EnemyChr().Compositor().RotateDirection(fDir, m_fRotRate);
@@ -425,7 +429,7 @@ C037TriceratonFlyingHarness::CDeathStatusObserver::Observing(void) /*override*/
     RwV3d vecMyPos = Math::VECTOR3_ZERO;
     EnemyChr().Compositor().GetPosition(&vecMyPos);
 
-    EFFECT_GENERIC::CallDeathEffect(EFFECT_GENERIC::DEATHTYPE_MONSTER, &vecMyPos, 1.5f);    
+    EFFECT_GENERIC::CallDeathEffect(EFFECT_GENERIC::DEATHTYPE_MACHINE, &vecMyPos, 1.5f);    
 
     return ENEMYTYPES::STATUS_QUIT;
 };

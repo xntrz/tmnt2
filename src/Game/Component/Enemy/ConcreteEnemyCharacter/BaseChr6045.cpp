@@ -460,12 +460,12 @@ void CBaseChr6045::CDeathStatusObserver::EntryDeathEffect(void)
         EFFECT_GENERIC::CallDeathEffect(EFFECT_GENERIC::DEATHTYPE_NORMAL, &vecBodyPos, m_fEffectScale);
         break;
 
-    case DEATHKIND_MONSTER:
-        EFFECT_GENERIC::CallDeathEffect(EFFECT_GENERIC::DEATHTYPE_MONSTER, &vecBodyPos, m_fEffectScale);
-        break;
-
     case DEATHKIND_MACHINE:
         EFFECT_GENERIC::CallDeathEffect(EFFECT_GENERIC::DEATHTYPE_MACHINE, &vecBodyPos, m_fEffectScale);
+        break;
+        
+    case DEATHKIND_MONSTER:
+        EFFECT_GENERIC::CallDeathEffect(EFFECT_GENERIC::DEATHTYPE_MONSTER, &vecBodyPos, m_fEffectScale);
         break;
 
     case DEATHKIND_NEXUS:

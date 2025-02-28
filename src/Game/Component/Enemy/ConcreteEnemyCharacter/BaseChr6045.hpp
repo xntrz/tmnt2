@@ -109,8 +109,8 @@ public:
         {
             DEATHKIND_NONE = 0,
             DEATHKIND_NORMAL,
-            DEATHKIND_MONSTER,
             DEATHKIND_MACHINE,
+            DEATHKIND_MONSTER,
             DEATHKIND_MOTION,
             DEATHKIND_NEXUS,
         };

@@ -101,7 +101,7 @@ C056Kabuto::C056Kabuto(void)
     Initialize(&parameter, bReplace);
 
     /* CBaseFlyingEnemyChr status */
-    AttachStatusObserver(ENEMYTYPES::STATUS_DEATH,      new CBaseFlyingEnemyChr::CDeathStatusObserver(EFFECT_GENERIC::DEATHTYPE_MONSTER, 1.0f));
+    AttachStatusObserver(ENEMYTYPES::STATUS_DEATH,      new CBaseFlyingEnemyChr::CDeathStatusObserver(EFFECT_GENERIC::DEATHTYPE_MACHINE, 1.0f));
 
     /* CBaseGunnerEnemyChr status */
     int32 repeatCount  = static_cast<int32>(FrequencyParameter(CEnemyParameter::FREQUENCY_FIRE_REPEATCOUNT));
