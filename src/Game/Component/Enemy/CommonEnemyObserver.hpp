@@ -148,9 +148,10 @@ public:
         virtual RESULT Observing(void) override;
         virtual ENEMYTYPES::STATUS OnEnd(void) override;
 
-    private:
+    protected:
         bool m_bCheckVelocityFlag;
         bool m_bHitFlag;
+        bool m_bDirCorrection;
     };
 
     class CFlyawayBoundFrontStatus : public CFlyawayBoundStatus {};

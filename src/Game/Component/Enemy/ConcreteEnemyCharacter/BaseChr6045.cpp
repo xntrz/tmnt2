@@ -169,6 +169,37 @@ CBaseChr6045::CKnockForGuardPriorityStatusObserver::Observing(void) /*override*/
 //
 
 
+/*virtual*/ ENEMYTYPES::STATUS CBaseChr6045::CJumpReadyStatusObserver::OnEnd(void) /*override*/
+{
+    RwV3d vecVelocity = Math::VECTOR3_ZERO;
+    EnemyChr().Compositor().GetVelocity(&vecVelocity);
+    vecVelocity.y = 0.0f;
+
+    float fMoveSpeed = Math::Vec3_Length(&vecVelocity);
+    if (Math::FEqual(fMoveSpeed, 0.0f))
+    {
+        float fAerialMoveSpeed = EnemyChr().Feature().m_fAerialMoveSpeed;
+
+        RwV3d vecVelocityXZ = { 0.0f, 0.0f, fAerialMoveSpeed };
+        EnemyChr().Compositor().RotateVectorByDirection(&vecVelocityXZ, &vecVelocityXZ);
+
+        Math::Vec3_Add(&vecVelocity, &vecVelocity, &vecVelocityXZ);
+    };
+
+    float fJumpInitSpeed = EnemyChr().Feature().m_fJumpInitializeSpeed;
+    vecVelocity.y = fJumpInitSpeed;
+
+    EnemyChr().Compositor().SetVelocity(&vecVelocity);
+
+    return ENEMYTYPES::STATUS_AERIAL;
+};
+
+
+//
+// *********************************************************************************
+//
+
+
 CBaseChr6045::CGuardStatusObserver::CGuardStatusObserver(void)
 : m_step(STEP_GUARD_BEGIN)
 , m_fGuardTime(0.0f)

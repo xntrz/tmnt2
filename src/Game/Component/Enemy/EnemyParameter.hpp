@@ -22,12 +22,12 @@ public:
         /* 9 */  FREQUENCY_GUARD_JUMP_ATTACK,
         /* 10 */ FREQUENCY_GUARD_RUN_ATTACK,
         /* 11 */ FREQUENCY_GUARD_THROW,
-        /* 12 */ FREQUENCY_MOVE_APPROACH,
+        /* 12 */ FREQUENCY_MOVE_APPROACH, // 0 - straight line, 1 - turn, 2 - back, 3 - hit and away
         /* 13 */ FREQUENCY_MOVE_FORMATION,
-        /* 14 */ FREQUENCY_TRIGGER_ATTACK, // 0 none, 1 - by damaged, 2 - by suitable distance, 3 - TODO, 4 - by turtle status
-        /* 15 */ FREQUENCY_TRIGGER_MOVE,
-        /* 16 */ FREQUENCY_TRIGGER_ESCAPE,
-        /* 17 */ FREQUENCY_TRIGGER_REDUCTION_HP,
+        /* 14 */ FREQUENCY_TRIGGER_ATTACK, // 0 - none, 1 - by damaged, 2 - by suitable distance, 3 - TODO, 4 - by turtle status
+        /* 15 */ FREQUENCY_TRIGGER_MOVE, // 0 - none, 1 - by damaged, 2 - by suitable distance, 3 - TODO, 4 - by turtle status
+        /* 16 */ FREQUENCY_TRIGGER_ESCAPE, // probably same as both above
+        /* 17 */ FREQUENCY_TRIGGER_REDUCTION_HP, // 1 - runaway
         /* 18 */ FREQUENCY_FIRE_CONVERGENCE,
         /* 19 */ FREQUENCY_FIRE_RANGE,
         /* 20 */ FREQUENCY_FIRE_RANGE_RATE,

@@ -101,7 +101,18 @@ bool CLoadEnemyTestStageSeqState::OnMove(CStageBaseSequence* pSeq)
     {
     case STEP_INIT:
         {
-            CGameSound::StageBefore(m_testCtx.stageId);
+            STAGEID::VALUE stageId = CEnemy::GetNeededStage(m_testCtx.enemyId[0]);
+            if (stageId != STAGEID::ID_NONE)
+            {
+                CGameData::PlayParam().SetStage(stageId);
+                CGameSound::StageBefore(stageId);
+                CGameData::PlayParam().SetStage(m_testCtx.stageId);
+            }
+            else
+            {
+                CGameSound::StageBefore(m_testCtx.stageId);
+            };
+
             m_step = STEP_LOAD_SOUND;
         }
         break;

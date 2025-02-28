@@ -165,6 +165,7 @@ protected:
 class CEnemyAIDecisionUnitTrigger : public CEnemyAIDecisionUnit
 {
 public:
+    CEnemyAIDecisionUnitTrigger(void);
     virtual bool CheckTerm(void) override;
     virtual void InitTrigger(void);
     virtual void ProcTrigger(void);
@@ -262,7 +263,10 @@ public:
     bool ProcAIThinkOrderResult(void);
     void ProcUpdateUnit(void);
     CEnemyCharacter& EnemyChr();
-
+    void DebugDrawInfo(void);
+    void DebugDrawPatrolArea(void);
+    void DebugDrawSuitableArea(void);
+    
 private:
     CEnemyAIDecisionUnit* m_apAIDecisionUnit[18];
     int32 m_numAIDicisionUnit;
@@ -291,6 +295,7 @@ public:
     {
     public:
         CDecisionUnitMove(void);
+        CDecisionUnitMove(const char* pszUnitName);
         virtual bool CheckTerm(void) override;
         virtual RESULT Update(void) override;
         virtual void OnStart(void) override;
@@ -301,7 +306,7 @@ public:
         bool IsMoveToRun(float fDistance);
         void SetMoveTime(float fTime);
         void SetMoveStopDistance(float fDistance);
-        void SetPatrolAreaEnable(bool bEnable);
+        void SetPatrolAreaEnable(bool bEnable);        
 
     protected:
         float m_fMoveTime;
@@ -313,6 +318,7 @@ public:
     {
     public:
         CDecisionUnitMove2(void);
+        CDecisionUnitMove2(const char* pszUnitName);
         virtual bool IsDoing(void) override;
         virtual bool ThinkMoveOrder(void) override;
         bool ThinkMoveOrderBack(void);
@@ -328,10 +334,12 @@ public:
         bool CalcRunawayPoint(RwV3d* pvecRunawayPoint, float fRunawayDistance);
         void SetCheckObstacleDistance(float fDist);
         void SetCheckObstacleDistanceDivNum(int32 iDivNum);
+        void SetCheckJump(bool bState);
 
     protected:
         float m_fCheckObstacleDistane;
-        int32 m_iCheckObstacleDistanceDivNum;        
+        int32 m_iCheckObstacleDistanceDivNum;
+        bool m_bCheckJump;
     };
 
     class CDecisionUnitMoveBoss : public CDecisionUnitMove2
@@ -340,6 +348,36 @@ public:
         virtual bool IsDoing(void) override;
         virtual bool ThinkMoveOrder(void) override;
         bool ThinkMoveOrderStraightLineForBoss(void);
+    };
+
+    class CDecisionUnitMovePatrolOrigin : public CDecisionUnitMove2
+    {
+    public:
+        CDecisionUnitMovePatrolOrigin(void);
+        virtual bool CheckTerm(void) override;
+        virtual RESULT Update(void) override;
+        virtual void OnEnd(void) override;
+        virtual bool IsDoing(void) override;
+        bool ThinkMoveOrderPatrolOrigin(void);
+        bool IsPlayerPatrolArea(void);
+        bool IsReachPatrolOrigin(float* pfDist = nullptr);
+        void SetWaitTimer(float fTimer);
+
+    private:
+        float m_fTimer;
+        float m_fWaitTimer;
+    };
+
+    class CDecisionUnitMoveObstacleJump : public CEnemyAIDecisionUnit
+    {
+    public:
+        CDecisionUnitMoveObstacleJump(void);
+        virtual bool CheckTerm(void) override;
+        virtual void OnStart(void) override;
+        void SetCheckObstacleDistance(float fDist);
+
+    private:
+        float m_fCheckObstacleDistance;
     };
 
     class CDecisionUnitGuard : public CEnemyAIDecisionUnit
@@ -365,7 +403,6 @@ public:
         CDecisionUnitAttackNormal(const char* pszUnitName);
         virtual bool CheckTerm(void) override;
         virtual void OnStart(void) override;
-        bool CheckObstacleFront(float fDistance, float fSafeHeight);
     };
 
     class CDecisionUnitAttackNormalForUnusualStatus : public CDecisionUnitAttackNormal
@@ -422,7 +459,7 @@ public:
     const CEnemyAIDecisionUnitManager& DecisionUnitManager(void) const;
     CEnemyAIDecisionUnitCommonParameter& DecisionUnitCommonParameter(void);
     const CEnemyAIDecisionUnitCommonParameter& DecisionUnitCommonParameter(void) const;
-    
+
 protected:
     CEnemyAIDecisionUnitManager* m_pAIDecisionUnitManager;
     CEnemyAIDecisionUnitCommonParameter* m_pAIDecisionUnitCommonParameter;

@@ -48,6 +48,12 @@ public:
         virtual ENEMYTYPES::STATUS OnEnd(void) override;
     };
 
+    class CJumpReadyStatusObserver : public CCommonEnemyObserver::CJumpReadyStatus
+    {
+    public:
+        virtual ENEMYTYPES::STATUS OnEnd(void) override;
+    };
+
     class CGuardStatusObserver : public CStatusObserver
     {
     protected:
@@ -129,7 +135,6 @@ public:
         DEATHKIND m_deathKind;
         float m_fEffectScale;
     };
-
 
     class CNothingStatusObserver : public CStatusObserver
     {

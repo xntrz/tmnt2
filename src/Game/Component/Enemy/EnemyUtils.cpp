@@ -48,7 +48,7 @@ CEnemyUtils::CModelColorControl::CModelColorControl(void)
 , m_colorSrc({ 0.0f, 0.0f, 0.0f })
 , m_colorDst({ 0.0f, 0.0f, 0.0f })
 , m_colorChange({ 0.0f, 0.0f, 0.0f })
-, m_bLight(false)
+, m_bLight(true)
 , m_pChrCompositor(nullptr)
 {
     ;

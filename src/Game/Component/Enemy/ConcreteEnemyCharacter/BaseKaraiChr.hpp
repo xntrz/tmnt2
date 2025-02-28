@@ -29,7 +29,7 @@ namespace BASEKARAI
         static const char* ATTACK_SPECIAL1     = "C1";
         static const char* ATTACK_SPECIAL2     = "C2";
         static const char* ATTACK_SPECIAL3     = "C3";
-    } /* namespace MOTIONNAMES */;
+    }; /* namespace MOTIONNAMES */
 
     enum STATUS
     {
@@ -42,7 +42,7 @@ namespace BASEKARAI
         STATUS_ATTACK_SPECIAL,
         STATUS_ATTACKTODO,
         STATUS_ATTACK_COUNTER,
-    } /* enum STATUS */;
+    }; /* enum STATUS */
 
     static const float GUARD_COUNTERACTION_TIME[] = { 0.5f, 0.5f, 0.5f };
     static_assert(COUNT_OF(GUARD_COUNTERACTION_TIME) == GAMETYPES::DIFFICULTY_NUM, "table incorrect");

@@ -37,6 +37,10 @@
 #include "ConcreteEnemyCharacter/055Kurage.hpp"
 #include "ConcreteEnemyCharacter/056Kabuto.hpp"
 #include "ConcreteEnemyCharacter/057UtromSaucer.hpp"
+#include "ConcreteEnemyCharacter/060MouserRobot.hpp"
+#include "ConcreteEnemyCharacter/061MouserRobotB.hpp"
+#include "ConcreteEnemyCharacter/062KrokodilMouser.hpp"
+#include "ConcreteEnemyCharacter/063Raptor.hpp"
 #include "ConcreteEnemyCharacter/084Karai.hpp"
 #include "ConcreteEnemyCharacter/098Fugitoid.hpp"
 
@@ -150,6 +154,18 @@ static CEnemyCharacter* CreateEnemyCharacter(ENEMYID::VALUE id)
 
     case ENEMYID::ID_UTROM_SAUCER:
         return new C057UtromSaucer;
+
+    case ENEMYID::ID_MOUSER_ROBOT:
+        return new C060MouserRobot;
+
+    case ENEMYID::ID_MOUSER_ROBOT_B:
+        return new C061MouserRobotB;
+
+    case ENEMYID::ID_KROKODIL_MOUSER:
+        return new C062KrokodilMouser;
+
+    case ENEMYID::ID_RAPTOR:
+        return new C063Raptor;
 
     case ENEMYID::ID_KARAI:
         return new C084Karai;
@@ -268,6 +284,18 @@ static EFFECTID::VALUE GetEnemyCharacterNeededEffect(ENEMYID::VALUE enemyId, int
     case ENEMYID::ID_UTROM_SAUCER:
         return C057UtromSaucer::GetNeededEffect(no);
 
+    case ENEMYID::ID_MOUSER_ROBOT:
+        return C060MouserRobot::GetNeededEffect(no);
+
+    case ENEMYID::ID_MOUSER_ROBOT_B:
+        return C061MouserRobotB::GetNeededEffect(no);
+
+    case ENEMYID::ID_KROKODIL_MOUSER:
+        return C062KrokodilMouser::GetNeededEffect(no);
+
+    case ENEMYID::ID_RAPTOR:
+        return C063Raptor::GetNeededEffect(no);
+
     case ENEMYID::ID_KARAI:
         return C084Karai::GetNeededEffect(no);
 
@@ -279,6 +307,21 @@ static EFFECTID::VALUE GetEnemyCharacterNeededEffect(ENEMYID::VALUE enemyId, int
     };
 
     return EFFECTID::ID_UNKNOWN;
+};
+
+
+static STAGEID::VALUE GetEnemyCharacterStageId(ENEMYID::VALUE enemyId)
+{
+    switch (enemyId)
+    {
+    case ENEMYID::ID_KARAI:
+        return STAGEID::ID_ST57NB;
+
+    default:
+        break;
+    };
+
+    return STAGEID::ID_NONE;
 };
 
 
@@ -345,6 +388,12 @@ static EFFECTID::VALUE GetEnemyCharacterNeededEffect(ENEMYID::VALUE enemyId, int
 /*static*/ EFFECTID::VALUE CEnemy::GetNeededEffect(ENEMYID::VALUE enemyId, int32 no)
 {
     return GetEnemyCharacterNeededEffect(enemyId, no);
+};
+
+
+/*static*/ STAGEID::VALUE CEnemy::GetNeededStage(ENEMYID::VALUE enemyId)
+{
+    return GetEnemyCharacterStageId(enemyId);
 };
 
 

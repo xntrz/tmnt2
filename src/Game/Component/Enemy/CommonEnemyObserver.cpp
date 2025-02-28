@@ -705,6 +705,7 @@ CCommonEnemyObserver::CFlyawayStatus::CFlyawayStatus(bool bHandleCrashWallFlag)
 
     m_bCheckVelocityFlag = false;
     m_bHitFlag = false;
+    m_bDirCorrection = true;
 };
 
 
@@ -751,7 +752,7 @@ CCommonEnemyObserver::CFlyawayStatus::CFlyawayStatus(bool bHandleCrashWallFlag)
     if (!EnemyChr().Compositor().IsMotionEnd())
         return RESULT_CONTINUE;
 
-    if (Status() == ENEMYTYPES::STATUS_FLYAWAY_BOUND_BACK)
+    if (m_bDirCorrection && (Status() == ENEMYTYPES::STATUS_FLYAWAY_BOUND_BACK))
     {
         float fDir = EnemyChr().Compositor().GetDirection();
         fDir += MATH_PI;

@@ -648,7 +648,14 @@ C084KaraiAI::C084KaraiAI(CEnemyCharacter* pEnemyChr)
     static_cast<CBaseAI6045::CDecisionUnitMoveBoss*>(pUnit)->SetMoveTime(KARAI_AI::MOVE_TIME);
     static_cast<CBaseAI6045::CDecisionUnitMoveBoss*>(pUnit)->SetConditionDistance(KARAI_AI::MOVE_CONDITION_DISTANCE);
     static_cast<CBaseAI6045::CDecisionUnitMoveBoss*>(pUnit)->SetMoveStopDistance(KARAI_AI::MOVE_STOP_DISTANCE);
+    static_cast<CBaseAI6045::CDecisionUnitMoveBoss*>(pUnit)->SetCheckJump(false);
     Attach(pUnit);
+
+#ifdef _DEBUG
+    pUnit = new CBaseAI6045::CDecisionUnitMoveObstacleJump;
+    static_cast<CBaseAI6045::CDecisionUnitMoveObstacleJump*>(pUnit)->SetCheckObstacleDistance(2.0f);
+    Attach(pUnit);
+#endif /* _DEBUG */    
 
     pUnit = new CBaseAI6045::CDecisionUnitIdle;
     Attach(pUnit);

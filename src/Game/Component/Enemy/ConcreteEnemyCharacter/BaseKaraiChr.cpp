@@ -1413,12 +1413,14 @@ CBaseKaraiChr::CBaseKaraiChr(ENEMYID::VALUE enemyId)
     /* CBaseChr6045 status */
     AttachStatusObserver(ENEMYTYPES::STATUS_KNOCK_FRONT,            new CBaseChr6045::CKnockForGuardPriorityStatusObserver);
     AttachStatusObserver(ENEMYTYPES::STATUS_KNOCK_BACK,             new CBaseChr6045::CKnockForGuardPriorityStatusObserver);
+#ifdef _DEBUG
+    AttachStatusObserver(ENEMYTYPES::STATUS_JUMP_READY,             new CBaseChr6045::CJumpReadyStatusObserver);
+#endif /* _DEBUG */    
 
     /* CCommonEnemyObserver status */
     AttachStatusObserver(ENEMYTYPES::STATUS_IDLE,                   new CCommonEnemyObserver::CIdleStatus);
     AttachStatusObserver(ENEMYTYPES::STATUS_WALK,                   new CCommonEnemyObserver::CMoveStatus);
     AttachStatusObserver(ENEMYTYPES::STATUS_RUN,                    new CCommonEnemyObserver::CMoveStatus);
-    AttachStatusObserver(ENEMYTYPES::STATUS_JUMP_READY,             new CCommonEnemyObserver::CJumpReadyStatus);
     AttachStatusObserver(ENEMYTYPES::STATUS_AERIAL,                 new CCommonEnemyObserver::CAerialStatus);
     AttachStatusObserver(ENEMYTYPES::STATUS_TOUCHDOWN,              new CCommonEnemyObserver::CTouchdownStatus);
     AttachStatusObserver(ENEMYTYPES::STATUS_FLYAWAY_FRONT,          new CCommonEnemyObserver::CFlyawayStatus(false));

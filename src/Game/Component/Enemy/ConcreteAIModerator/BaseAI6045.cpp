@@ -179,6 +179,13 @@ const CEnemyAIDecisionUnitCommonParameter& CEnemyAIDecisionUnit::DecisionUnitCom
 //
 
 
+CEnemyAIDecisionUnitTrigger::CEnemyAIDecisionUnitTrigger(void)
+: CEnemyAIDecisionUnit(BASEAI6045::AIDECISIONUNITNAME::TRIGGER, TYPE_ETC)
+{
+    ;
+};
+
+
 /*virtual*/ bool CEnemyAIDecisionUnitTrigger::CheckTerm(void) /*override*/
 {
     return false;
@@ -216,7 +223,7 @@ const CEnemyAIDecisionUnitCommonParameter& CEnemyAIDecisionUnit::DecisionUnitCom
         !DecisionUnitCommonParameter().TestSpecialFlag(BASEAI6045::FLAG_TRIGGER_MOVERUN_PERMIT))
     {
         uint8 freq = EnemyChr().FrequencyParameter(CEnemyParameter::FREQUENCY_TRIGGER_MOVE);
-        switch (freq)
+        switch (freq) // TODO freq naming
         {
         case 1:
             {
@@ -267,7 +274,7 @@ const CEnemyAIDecisionUnitCommonParameter& CEnemyAIDecisionUnit::DecisionUnitCom
         !DecisionUnitCommonParameter().TestSpecialFlag(BASEAI6045::FLAG_TRIGGER_ATTACK_PERMIT))
     {
         uint8 freq = EnemyChr().FrequencyParameter(CEnemyParameter::FREQUENCY_TRIGGER_ATTACK);
-        switch (freq)
+        switch (freq) // TODO freq naming
         {
         case 1:
             {
@@ -866,117 +873,9 @@ void CEnemyAIDecisionUnitManager::Run(void)
 void CEnemyAIDecisionUnitManager::Draw(void)
 {
 #ifdef _DEBUG
-    if (!CEnemyDebug::SHOW_AI_INFO)
-        return;
-
-    RwV3d vecMyPos = Math::VECTOR3_ZERO;
-    EnemyChr().Compositor().GetFootPosition(&vecMyPos);
-
-    float fHeight = EnemyChr().Compositor().GetCollisionParameter().m_fHeight;
-
-    vecMyPos.y += (fHeight * 1.5f);
-
-    enum
-    {
-        INFOFLAG_NAME = (1 << 0),
-        INFOFLAG_ORDER = (1 << 1),
-        INFOFLAG_MOTION = (1 << 2),
-        INFOFLAG_UNIT = (1 << 3),
-    };
-
-    uint32 infoFlag = 0;
-
-    char szName[128];
-    szName[0] = '\0';
-
-    char szInfoOrder[128];
-    szInfoOrder[0] = '\0';
-
-    char szMotion[128];
-    szMotion[0] = '\0';
-
-    char szDecisionUnit[128];
-    szDecisionUnit[0] = '\0';
-
-    /* get name */
-    const char* pszObjName = EnemyChr().GetName();
-    ASSERT(pszObjName);
-
-    std::sprintf(szName, "%s", pszObjName);
-    infoFlag |= INFOFLAG_NAME;
-
-    /* get order info */
-    static const char* s_apszOrderName[] =
-    {
-        "NOTHING",
-        "WAIT",
-        "MOVE",
-        "RUN",
-        "ATTACK",
-        "DEFENCE",
-    };
-
-    static_assert(COUNT_OF(s_apszOrderName) == CAIThinkOrder::ORDER_MAX, "update table");
-
-    std::sprintf(szInfoOrder, "ORDER: %s", s_apszOrderName[EnemyChr().AIThinkOrder().GetOrder()]);
-    infoFlag |= INFOFLAG_ORDER;
-
-    /* get motion info */
-    const char* pszMotion = EnemyChr().Compositor().GetMotionName();
-    if (pszMotion)
-    {
-        std::sprintf(szMotion, "MOTION: %s", pszMotion);
-        infoFlag |= INFOFLAG_MOTION;
-    }
-    else
-    {
-        std::sprintf(szMotion, "NO MOTION");
-        infoFlag |= INFOFLAG_MOTION;
-    };
-
-    /* get decision unit info */
-    if (m_pNowDecisionUnit)
-    {
-        std::sprintf(szDecisionUnit, "UNIT: %s", m_pNowDecisionUnit->GetName());
-        infoFlag |= INFOFLAG_UNIT;
-    }
-    else
-    {
-        std::sprintf(szDecisionUnit, "NO UNIT");
-        infoFlag |= INFOFLAG_UNIT;
-    };
-
-    /* draw by info flag */
-    RwRGBA color = { 0xFF, 0xFF, 0x7F, 0xFF }; // yellow
-
-    CDebugShape::m_fLabelHeight = 14.0f;
-    CDebugShape::m_fLabelOffsetY = 0.0f;
-
-    if (infoFlag & INFOFLAG_NAME)
-    {
-        CDebugShape::ShowLabel(&vecMyPos, szName, color);
-        CDebugShape::m_fLabelOffsetY += CDebugShape::m_fLabelHeight;
-    };
-
-    if (infoFlag & INFOFLAG_ORDER)
-    {
-        CDebugShape::ShowLabel(&vecMyPos, szInfoOrder, color);
-        CDebugShape::m_fLabelOffsetY += CDebugShape::m_fLabelHeight;
-    };
-
-    if (infoFlag & INFOFLAG_MOTION)
-    {
-        CDebugShape::ShowLabel(&vecMyPos, szMotion, color);
-        CDebugShape::m_fLabelOffsetY += CDebugShape::m_fLabelHeight;
-    };
-
-    if (infoFlag & INFOFLAG_UNIT)
-    {
-        CDebugShape::ShowLabel(&vecMyPos, szDecisionUnit, color);
-        CDebugShape::m_fLabelOffsetY += CDebugShape::m_fLabelHeight;
-    };
-
-    CDebugShape::m_fLabelOffsetY = 0.0f;
+    DebugDrawInfo();
+    DebugDrawPatrolArea();
+    DebugDrawSuitableArea();
 #endif /* _DEBUG */
 };
 
@@ -996,9 +895,7 @@ void CEnemyAIDecisionUnitManager::Attach(CEnemyAIDecisionUnit* pDecisionUnit)
 
     m_apAIDecisionUnit[m_numAIDicisionUnit++] = pDecisionUnit;
 
-    //pDecisionUnit->m_pEnemyChr      = m_pEnemyChr;
-    //pDecisionUnit->m_pAIModerator   = &m_pEnemyChr->AIModerator();
-    pDecisionUnit->m_id             = (m_numAIDicisionUnit - 1);
+    pDecisionUnit->m_id = (m_numAIDicisionUnit - 1);
     pDecisionUnit->m_pAIDecisionUnitCommonParameter = m_pAIDecisionUnitCommonParameter;
     
     if (!std::strcmp(pDecisionUnit->GetName(), BASEAI6045::AIDECISIONUNITNAME::TRIGGER))
@@ -1125,7 +1022,7 @@ bool CEnemyAIDecisionUnitManager::ProcAIThinkOrderResult(void)
 
 void CEnemyAIDecisionUnitManager::ProcUpdateUnit(void)
 {
-    CEnemyAIDecisionUnit::RESULT result = CEnemyAIDecisionUnit::RESULT_CONTINUE;
+	CEnemyAIDecisionUnit::RESULT result = CEnemyAIDecisionUnit::RESULT_STOP;
 
     if (m_pNowDecisionUnit)
         result = m_pNowDecisionUnit->Update();
@@ -1159,6 +1056,165 @@ void CEnemyAIDecisionUnitManager::ProcUpdateUnit(void)
 CEnemyCharacter& CEnemyAIDecisionUnitManager::EnemyChr()
 {
     return *m_pEnemyChr;
+};
+
+
+void CEnemyAIDecisionUnitManager::DebugDrawInfo(void)
+{
+#ifdef _DEBUG
+    if (!CEnemyDebug::SHOW_AI_INFO)
+        return;
+
+    RwV3d vecMyPos = Math::VECTOR3_ZERO;
+    EnemyChr().Compositor().GetFootPosition(&vecMyPos);
+
+    float fHeight = EnemyChr().Compositor().GetCollisionParameter().m_fHeight;
+
+    vecMyPos.y += (fHeight * 1.5f);
+
+    enum
+    {
+        INFOFLAG_NAME   = (1 << 0),
+        INFOFLAG_ORDER  = (1 << 1),
+        INFOFLAG_MOTION = (1 << 2),
+        INFOFLAG_UNIT   = (1 << 3),
+    };
+
+    uint32 infoFlag = 0;
+
+    char szName[128];
+    szName[0] = '\0';
+
+    char szInfoOrder[128];
+    szInfoOrder[0] = '\0';
+
+    char szMotion[128];
+    szMotion[0] = '\0';
+
+    char szDecisionUnit[128];
+    szDecisionUnit[0] = '\0';
+
+    /* get name */
+    const char* pszObjName = EnemyChr().GetName();
+    ASSERT(pszObjName);
+
+    std::sprintf(szName, "%s", pszObjName);
+    infoFlag |= INFOFLAG_NAME;
+
+    /* get order info */
+    static const char* s_apszOrderName [] =
+    {
+        "NOTHING",
+        "WAIT",
+        "MOVE",
+        "RUN",
+        "ATTACK",
+        "DEFENCE",
+    };
+
+    static_assert(COUNT_OF(s_apszOrderName) == CAIThinkOrder::ORDER_MAX, "update table");
+
+    std::sprintf(szInfoOrder, "ORDER: %s", s_apszOrderName[EnemyChr().AIThinkOrder().GetOrder()]);
+    infoFlag |= INFOFLAG_ORDER;
+
+    /* get motion info */
+    const char* pszMotion = EnemyChr().Compositor().GetMotionName();
+    if (pszMotion)
+    {
+        std::sprintf(szMotion, "MOTION: %s", pszMotion);
+        infoFlag |= INFOFLAG_MOTION;
+    }
+    else
+    {
+        std::sprintf(szMotion, "NO MOTION");
+        infoFlag |= INFOFLAG_MOTION;
+    };
+
+    /* get decision unit info */
+    if (m_pNowDecisionUnit)
+    {
+        std::sprintf(szDecisionUnit, "UNIT: %s", m_pNowDecisionUnit->GetName());
+        infoFlag |= INFOFLAG_UNIT;
+    }
+    else
+    {
+        std::sprintf(szDecisionUnit, "NO UNIT");
+        infoFlag |= INFOFLAG_UNIT;
+    };
+
+    /* draw by info flag */
+    RwRGBA color = { 0xFF, 0xFF, 0x7F, 0xFF }; // yellow
+
+    CDebugShape::m_fLabelHeight = 14.0f;
+    CDebugShape::m_fLabelOffsetY = 0.0f;
+
+    if (infoFlag & INFOFLAG_NAME)
+    {
+        CDebugShape::ShowLabel(&vecMyPos, szName, color);
+        CDebugShape::m_fLabelOffsetY += CDebugShape::m_fLabelHeight;
+    };
+
+    if (infoFlag & INFOFLAG_ORDER)
+    {
+        CDebugShape::ShowLabel(&vecMyPos, szInfoOrder, color);
+        CDebugShape::m_fLabelOffsetY += CDebugShape::m_fLabelHeight;
+    };
+
+    if (infoFlag & INFOFLAG_MOTION)
+    {
+        CDebugShape::ShowLabel(&vecMyPos, szMotion, color);
+        CDebugShape::m_fLabelOffsetY += CDebugShape::m_fLabelHeight;
+    };
+
+    if (infoFlag & INFOFLAG_UNIT)
+    {
+        CDebugShape::ShowLabel(&vecMyPos, szDecisionUnit, color);
+        CDebugShape::m_fLabelOffsetY += CDebugShape::m_fLabelHeight;
+    };
+
+    CDebugShape::m_fLabelOffsetY = 0.0f;
+#endif /* _DEBUG */
+};
+
+
+void CEnemyAIDecisionUnitManager::DebugDrawPatrolArea(void)
+{
+#ifdef _DEBUG
+    if (!CEnemyDebug::SHOW_AI_PATROL_AREA)
+        return;
+
+    RwV3d vecPatrolOrigin = EnemyChr().Feature().m_vPatrolOrigin;
+    float fPatrolRadius = EnemyChr().Feature().m_fPatrolRadius;
+
+    RwSphere sphere;
+    sphere.center = vecPatrolOrigin;
+    sphere.radius = fPatrolRadius;
+
+    RwRGBA color = { 0xFF, 0x00, 0x00, 0x40 };
+    CDebugShape::ShowSphere(&sphere, color);
+#endif /* _DEBUG */
+};
+
+
+void CEnemyAIDecisionUnitManager::DebugDrawSuitableArea(void)
+{
+#ifdef _DEBUG
+    if (!CEnemyDebug::SHOW_AI_SUITABLE_AREA)
+        return;
+
+    float fDistOfSuit = EnemyChr().AICharacteristic().m_fDistanceOfSuitable;
+    float fRadiusOfAction = EnemyChr().AICharacteristic().m_fRadiusOfAction;
+
+    RwV3d vecPosition = Math::VECTOR3_ZERO;
+    EnemyChr().Compositor().GetFootPosition(&vecPosition);
+
+    RwSphere sphere;
+    sphere.center = vecPosition;
+    sphere.radius = (fRadiusOfAction - fDistOfSuit);
+
+    RwRGBA color = { 0x00, 0xFF, 0x00, 0x40 };
+    CDebugShape::ShowSphere(&sphere, color);
+#endif /* _DEBUG */
 };
 
 
@@ -1217,7 +1273,14 @@ void CBaseAI6045::CDecisionUnitIdle::SetIdleAIThinkOrderParameter(void)
 
 
 CBaseAI6045::CDecisionUnitMove::CDecisionUnitMove(void)
-: CEnemyAIDecisionUnit(BASEAI6045::AIDECISIONUNITNAME::MOVE, TYPE_MOVE)
+: CDecisionUnitMove(BASEAI6045::AIDECISIONUNITNAME::MOVE)
+{
+    ;
+};
+
+
+CBaseAI6045::CDecisionUnitMove::CDecisionUnitMove(const char* pszUnitName)
+: CEnemyAIDecisionUnit(pszUnitName, TYPE_MOVE)
 , m_fMoveTime(0.0f)
 , m_fMoveStopDistance(0.0f)
 , m_bPatrolAreaEnable(false)
@@ -1406,8 +1469,18 @@ void CBaseAI6045::CDecisionUnitMove::SetPatrolAreaEnable(bool bEnable)
 
 
 CBaseAI6045::CDecisionUnitMove2::CDecisionUnitMove2(void)
-: m_fCheckObstacleDistane(3.0f)
+: CDecisionUnitMove2(BASEAI6045::AIDECISIONUNITNAME::MOVE)
+{
+    ;
+};
+
+
+
+CBaseAI6045::CDecisionUnitMove2::CDecisionUnitMove2(const char* pszUnitName)
+: CDecisionUnitMove(pszUnitName)
+, m_fCheckObstacleDistane(3.0f)
 , m_iCheckObstacleDistanceDivNum(3)
+, m_bCheckJump(true)
 {
     ;
 };
@@ -1443,14 +1516,14 @@ CBaseAI6045::CDecisionUnitMove2::CDecisionUnitMove2(void)
                                    | BASEAI6045::FLAG_TRIGGER_REDUCTIONHP_PERMIT;
 
     if (DecisionUnitCommonParameter().TestSpecialFlag(sflag) &&
-        (EnemyChr().FrequencyParameter(CEnemyParameter::FREQUENCY_TRIGGER_REDUCTION_HP) == 1))
+        (EnemyChr().FrequencyParameter(CEnemyParameter::FREQUENCY_TRIGGER_REDUCTION_HP) == 1)) // TODO freq naming
     {
         return ThinkMoveOrderRunaway();
     }
     else
     {
         uint8 freq = EnemyChr().FrequencyParameter(CEnemyParameter::FREQUENCY_MOVE_APPROACH);
-        switch (freq)
+        switch (freq) // TODO freq naming
         {
         case 0: return ThinkMoveOrderStraightLine();
         case 1: return ThinkMoveOrderTurn();
@@ -1564,28 +1637,152 @@ bool CBaseAI6045::CDecisionUnitMove2::ThinkMoveOrderBack(void)
 
 bool CBaseAI6045::CDecisionUnitMove2::ThinkMoveOrderHitAndAway(void)
 {
-    // TODO
-    return false;
+    if (!DecisionUnitCommonParameter().IsViewDataValid())
+    {
+        ClearHitAndAwaySetting();
+        return false;
+    };
+
+    if (!DecisionUnitCommonParameter().TestSpecialFlag(BASEAI6045::FLAG_MOVE_HITANDAWAY))
+        return ThinkMoveOrderStraightLine();
+
+    float fDistanceOfSuitable = EnemyChr().AICharacteristic().m_fDistanceOfSuitable;
+    fDistanceOfSuitable *= 2.0f;
+
+    if (!CalcRunawayPoint(&m_vecOrderPos, fDistanceOfSuitable))
+    {
+        ClearHitAndAwaySetting();
+        return false;
+    };
+
+    RwV3d vecFootPos = Math::VECTOR3_ZERO;
+    EnemyChr().Compositor().GetFootPosition(&vecFootPos);
+
+    if (CEnemyUtils::GetDistance(&vecFootPos, &m_vecOrderPos) < 0.25f)
+    {
+        ClearHitAndAwaySetting();
+        DecisionUnitCommonParameter().SetMoveWaitTime(0.75f);
+        return false;
+    };
+
+    if (CheckMapCollisionAndHole(&vecFootPos, &m_vecOrderPos))
+    {
+        ClearHitAndAwaySetting();
+        return false;
+    };
+
+    m_orderType = (IsMoveToRun(1000.0f) ? BASEAI6045::ORDERTYPE_MOVE_RUN_POS : BASEAI6045::ORDERTYPE_MOVE_WALK_POS);
+
+    return true;
 };
 
 
 bool CBaseAI6045::CDecisionUnitMove2::ThinkMoveOrderRunaway(void)
 {
-    // TODO
-    return false;
+    if (!DecisionUnitCommonParameter().IsViewDataValid())
+        return false;
+
+    float fDistanceOfSuitable = EnemyChr().AICharacteristic().m_fDistanceOfSuitable;
+    fDistanceOfSuitable *= 2.0f;
+
+    if (!CalcRunawayPoint(&m_vecOrderPos, fDistanceOfSuitable))
+        return false;
+    
+    RwV3d vecFootPos = Math::VECTOR3_ZERO;
+    EnemyChr().Compositor().GetFootPosition(&vecFootPos);
+
+    if (CEnemyUtils::GetDistance(&vecFootPos, &m_vecOrderPos) < 0.25f)
+        return false;
+
+    if (CheckMapCollisionAndHole(&vecFootPos, &m_vecOrderPos))
+        return false;
+
+    m_orderType = (IsMoveToRun(1000.0f) ? BASEAI6045::ORDERTYPE_MOVE_RUN_POS : BASEAI6045::ORDERTYPE_MOVE_WALK_POS);
+
+    return true;
 };
 
 
 bool CBaseAI6045::CDecisionUnitMove2::ThinkMoveOrderStraightLine(void)
 {
-    // TODO
-    return false;
+   if (!DecisionUnitCommonParameter().IsViewDataValid())
+        return false;
+
+    RwV3d vecFootPosMe = Math::VECTOR3_ZERO;
+    EnemyChr().Compositor().GetFootPosition(&vecFootPosMe);
+
+    int32 numPlayerInViewArea = DecisionUnitCommonParameter().GetViewDataNum();
+    for (int32 i = 0; i < numPlayerInViewArea; ++i)
+    {
+        const CAIUtils::NEARER_PLAYERDATA& nearerPlayerData = DecisionUnitCommonParameter().GetViewData(i);
+
+        if (nearerPlayerData.distance < m_fMoveStopDistance)
+        {
+            if (!CAIUtils6045::CheckObstacleBetweenEnemyToPlayer(&EnemyChr().Compositor(), nearerPlayerData.no, false))
+                return false;
+        };
+
+        RwV3d vecStart = Math::VECTOR3_ZERO;
+        RwV3d vecEnd = Math::VECTOR3_ZERO;
+        if (GetCheckObstacleLine(nearerPlayerData.no, &vecStart, &vecEnd))
+        {
+            float fJumpInitSpeed = EnemyChr().Feature().m_fJumpInitializeSpeed;
+            float fMapHitRadius = CAIUtils::GetMapHitRadius(&EnemyChr().Compositor());            
+
+            CAIUtils::CHECKMOVELINE_RESULT checkMoveLineResult = CAIUtils::CheckMoveLine(&vecStart,
+                                                                                         &vecEnd,
+                                                                                         fMapHitRadius,
+                                                                                         m_iCheckObstacleDistanceDivNum,
+                                                                                         fJumpInitSpeed);
+
+            if (checkMoveLineResult == CAIUtils::CHECKMOVELINE_RESULT_PERMISSION)
+            {
+                m_orderTargetNo = nearerPlayerData.no;
+                m_orderType = (IsMoveToRun(nearerPlayerData.distance) ?
+                                BASEAI6045::ORDERTYPE_MOVE_RUN_NO :
+                                BASEAI6045::ORDERTYPE_MOVE_WALK_NO);
+
+                return true;
+            }
+            else if (checkMoveLineResult == CAIUtils::CHECKMOVELINE_RESULT_NEEDJUMP)
+            {
+                if (m_bCheckJump && (i == 0))
+                    return false;
+            };
+        };
+    };
+
+    const CAIUtils::NEARER_PLAYERDATA& nearerPlayerData = DecisionUnitCommonParameter().GetViewData(0);
+
+    CPlayerCharacter* pPlayerChr = CAIUtils::GetActivePlayer(nearerPlayerData.no);
+    if (!pPlayerChr)
+        return false;
+
+    RwV3d vecFootPosPlayer = Math::VECTOR3_ZERO;
+    pPlayerChr->GetFootPosition(&vecFootPosPlayer);
+
+    float fRadiusOfAction = EnemyChr().AICharacteristic().m_fRadiusOfAction;
+    RwV3d vecMovePos = Math::VECTOR3_ZERO;
+    float fDistance = CAIUtils::CalcMovePointEscapeObstacle(&vecMovePos,
+                                                            &EnemyChr(),
+                                                            &vecFootPosPlayer,
+                                                            1.0f,
+                                                            fRadiusOfAction);
+
+    if (fDistance < 0.0f)
+        return false;
+
+    m_vecOrderPos = vecMovePos;
+    m_orderType = (IsMoveToRun(fDistance) ? BASEAI6045::ORDERTYPE_MOVE_RUN_POS : BASEAI6045::ORDERTYPE_MOVE_WALK_POS);
+
+    return true;
 };
 
 
 bool CBaseAI6045::CDecisionUnitMove2::ThinkMoveOrderTurn(void)
 {
     // TODO
+    ASSERT(false);
     return false;
 };
 
@@ -1688,6 +1885,12 @@ void CBaseAI6045::CDecisionUnitMove2::SetCheckObstacleDistanceDivNum(int32 iDivN
 };
 
 
+void CBaseAI6045::CDecisionUnitMove2::SetCheckJump(bool bState)
+{
+    m_bCheckJump = bState;
+};
+
+
 //
 // *********************************************************************************
 //
@@ -1758,20 +1961,8 @@ bool CBaseAI6045::CDecisionUnitMoveBoss::ThinkMoveOrderStraightLineForBoss(void)
             }
             else if (checkMoveLineResult == CAIUtils::CHECKMOVELINE_RESULT_NEEDJUMP)
             {
-#ifdef _DEBUG                
-                RwV3d vecVelocity = Math::VECTOR3_ZERO;
-                EnemyChr().Compositor().GetVelocity(&vecVelocity);
-                vecVelocity.y = 0.0f;
-
-                float fSpeed = Math::Vec3_Length(&vecVelocity);
-                if (fSpeed > 1.0f)
-                {
-                    m_orderTargetNo = pNearerPlayerData->no;
-                    m_orderType = BASEAI6045::ORDERTYPE_MOVE_JUMP;
-
-                    return true;
-                };
-#endif /* _DEBUG */                
+                if (m_bCheckJump && (i == 0))
+                    return false;
             };
         };
     };
@@ -1809,6 +2000,236 @@ bool CBaseAI6045::CDecisionUnitMoveBoss::ThinkMoveOrderStraightLineForBoss(void)
 //
 
 
+CBaseAI6045::CDecisionUnitMovePatrolOrigin::CDecisionUnitMovePatrolOrigin(void)
+: CDecisionUnitMove2(BASEAI6045::AIDECISIONUNITNAME::MOVE_PATROLORIGIN)
+, m_fTimer(0.0f)
+, m_fWaitTimer(3.0f)
+{
+    ;
+};
+
+
+/*virtual*/ bool CBaseAI6045::CDecisionUnitMovePatrolOrigin::CheckTerm(void) /*override*/
+{
+    if (IsDoing() && ThinkMoveOrderPatrolOrigin())
+    {
+        if (m_fTimer <= m_fWaitTimer)
+        {
+            m_fTimer += CGameProperty::GetElapsedTime();
+            return false;
+        };
+
+        return true;
+    };
+
+    m_fTimer = 0.0f;
+    return false;
+};
+
+
+/*virtual*/ CBaseAI6045::CDecisionUnitMovePatrolOrigin::RESULT
+CBaseAI6045::CDecisionUnitMovePatrolOrigin::Update(void) /*override*/
+{
+    if (!IsDoing())
+        return RESULT_STOP;
+
+    if (!ThinkMoveOrderPatrolOrigin())
+        return RESULT_STOP;
+
+    SetMoveOrder();
+    return RESULT_CONTINUE;
+};
+
+
+/*virtual*/ void CBaseAI6045::CDecisionUnitMovePatrolOrigin::OnEnd(void) /*override*/
+{
+    CDecisionUnitMove2::OnEnd();
+
+    m_fTimer = 0.0f;
+};
+
+
+/*virtual*/ bool CBaseAI6045::CDecisionUnitMovePatrolOrigin::IsDoing(void) /*override*/
+{
+    if (IsPlayerPatrolArea())
+        return false;
+
+    return !IsReachPatrolOrigin();
+};
+
+
+bool CBaseAI6045::CDecisionUnitMovePatrolOrigin::ThinkMoveOrderPatrolOrigin(void)
+{
+    RwV3d vecFootPos = Math::VECTOR3_ZERO;
+    EnemyChr().Compositor().GetFootPosition(&vecFootPos);
+
+    RwV3d vecPatrolOrg = EnemyChr().Feature().m_vPatrolOrigin;
+
+    RwV3d vecStart = Math::VECTOR3_ZERO;
+    RwV3d vecEnd = Math::VECTOR3_ZERO;
+    CAIUtils::GetLineForRange(&vecStart, &vecEnd, &vecFootPos, &vecPatrolOrg, m_fCheckObstacleDistane);
+
+    float fJumpInitSpeed = EnemyChr().Feature().m_fJumpInitializeSpeed;
+    float fMapHitRadius = CAIUtils::GetMapHitRadius(&EnemyChr().Compositor());
+    CAIUtils::CHECKMOVELINE_RESULT checkMoveLineResult = CAIUtils::CheckMoveLine(&vecStart,
+                                                                                 &vecEnd,
+                                                                                 fMapHitRadius,
+                                                                                 m_iCheckObstacleDistanceDivNum,
+                                                                                 fJumpInitSpeed);
+
+    if (checkMoveLineResult == CAIUtils::CHECKMOVELINE_RESULT_PERMISSION)
+    {
+        float fDistance = CEnemyUtils::GetDistance(&vecStart, &vecEnd);
+
+        m_orderType = IsMoveToRun(fDistance) ? BASEAI6045::ORDERTYPE_MOVE_RUN_POS : BASEAI6045::ORDERTYPE_MOVE_WALK_POS;
+        m_vecOrderPos = vecEnd;
+
+        return true;
+    }
+    else if (checkMoveLineResult == CAIUtils::CHECKMOVELINE_RESULT_NEEDJUMP)
+    {
+        m_orderType = BASEAI6045::ORDERTYPE_MOVE_JUMP;
+        m_vecOrderPos = vecEnd;
+
+        return true;
+    };
+
+    float fRadiusOfAction = EnemyChr().AICharacteristic().m_fRadiusOfAction;
+    RwV3d vecMovePt = Math::VECTOR3_ZERO;
+    float fDist = CAIUtils::CalcMovePointEscapeObstacle(&vecMovePt,
+                                                        &EnemyChr(),
+                                                        &vecPatrolOrg,
+                                                        1.0f,
+                                                        fRadiusOfAction);
+    if (fDist < 0.0f)
+        return false;
+
+    m_orderType = IsMoveToRun(fDist) ? BASEAI6045::ORDERTYPE_MOVE_RUN_POS : BASEAI6045::ORDERTYPE_MOVE_WALK_POS;
+    m_vecOrderPos = vecMovePt;
+
+    return true;
+};
+
+
+bool CBaseAI6045::CDecisionUnitMovePatrolOrigin::IsPlayerPatrolArea(void)
+{
+    int32 numPlayers = CAIUtils::GetPlayerNum();
+    for (int32 i = 0; i < numPlayers; ++i)
+    {
+        CPlayerCharacter* pPlayerChr = CAIUtils::GetActivePlayer(i);
+        if (!pPlayerChr)
+            continue;
+
+        RwV3d vecFootPosPlayer = Math::VECTOR3_ZERO;
+        pPlayerChr->GetFootPosition(&vecFootPosPlayer);
+
+        if (CAIUtils::IsInsidePatrolArea(&vecFootPosPlayer, &EnemyChr().Feature()))
+            return true;
+    };
+
+    return false;
+};
+
+
+bool CBaseAI6045::CDecisionUnitMovePatrolOrigin::IsReachPatrolOrigin(float* pfDist /*= nullptr*/)
+{
+    RwV3d vecFootPos = Math::VECTOR3_ZERO;
+    EnemyChr().Compositor().GetFootPosition(&vecFootPos);
+
+    RwV3d vecPatrolOrg = EnemyChr().Feature().m_vPatrolOrigin;
+
+    RwV3d vecDistance = Math::VECTOR3_ZERO;
+    Math::Vec3_Sub(&vecDistance, &vecPatrolOrg, &vecFootPos);
+
+    float fDistance = Math::Vec3_Length(&vecDistance);
+    if (pfDist)
+        *pfDist = fDistance;
+
+    return (fDistance < 0.5f);
+};
+
+
+void CBaseAI6045::CDecisionUnitMovePatrolOrigin::SetWaitTimer(float fTimer)
+{
+    m_fWaitTimer = fTimer;
+};
+
+
+//
+// *********************************************************************************
+//
+
+
+CBaseAI6045::CDecisionUnitMoveObstacleJump::CDecisionUnitMoveObstacleJump(void)
+: CEnemyAIDecisionUnit(BASEAI6045::AIDECISIONUNITNAME::MOVE_OBSTACLEJUMP, TYPE_MOVE)
+, m_fCheckObstacleDistance(3.0f)
+{
+    ;
+};
+
+
+/*virtual*/ bool CBaseAI6045::CDecisionUnitMoveObstacleJump::CheckTerm(void) /*override*/
+{
+    if (EnemyChr().AICharacteristic().m_fRatioOfMove < DecisionUnitCommonParameter().GetRatioOfMove())
+        return false;
+
+    if (DecisionUnitCommonParameter().GetMoveWaitTime() > 0.0f)
+        return false;
+
+    if (!DecisionUnitCommonParameter().IsViewDataValid())
+        return false;
+
+    float fObstacleHeight = 0.0f;
+    if (!CAIUtils::CheckStep(&EnemyChr().Compositor(), m_fCheckObstacleDistance, &fObstacleHeight))
+        return false;
+
+    float fJumpInitSpeed = EnemyChr().Feature().m_fJumpInitializeSpeed;
+    float fGravity = CGameProperty::GetGravity();
+    float fJumpHeight = CEnemyUtils::GetJumpableHeight(fJumpInitSpeed, fGravity);
+
+    RwV3d vecFootPos = Math::VECTOR3_ZERO;
+    EnemyChr().Compositor().GetFootPosition(&vecFootPos);
+
+    if (Math::FEqual(vecFootPos.y, fObstacleHeight))
+        return false;
+
+    if ((fObstacleHeight - vecFootPos.y) > fJumpHeight)
+        return false;
+
+    RwV3d vecDistance = { 0.0f, 0.0f, m_fCheckObstacleDistance };
+    EnemyChr().Compositor().RotateVectorByDirection(&vecDistance, &vecDistance);
+
+    RwV3d vecStart = vecFootPos;
+    vecStart.y = (fObstacleHeight + 0.1f);
+
+    RwV3d vecEnd = vecStart;
+    Math::Vec3_Add(&vecEnd, &vecEnd, &vecDistance);
+
+    if (CWorldMap::CheckCollisionLine(&vecStart, &vecEnd))
+        return false;
+
+    return true;
+};
+
+
+/*virtual*/ void CBaseAI6045::CDecisionUnitMoveObstacleJump::OnStart(void) /*override*/
+{
+    EnemyChr().AIThinkOrder().SetOrder(CAIThinkOrder::ORDER_MOVE);
+    EnemyChr().AIThinkOrder().OrderMove().m_iMoveType = BASEAI6045::ORDERTYPE_MOVE_JUMP;
+};
+
+
+void CBaseAI6045::CDecisionUnitMoveObstacleJump::SetCheckObstacleDistance(float fDist)
+{
+    m_fCheckObstacleDistance = fDist;
+};
+
+
+//
+// *********************************************************************************
+//
+
+
 CBaseAI6045::CDecisionUnitGuard::CDecisionUnitGuard(void)
 : CEnemyAIDecisionUnit(BASEAI6045::AIDECISIONUNITNAME::GUARD, TYPE_GUARD)
 {
@@ -1830,7 +2251,7 @@ CBaseAI6045::CDecisionUnitGuard::CDecisionUnitGuard(void)
             DecisionUnitCommonParameter().TestSpecialFlag(BASEAI6045::FLAG_TRIGGER_REDUCTIONHP_PERMIT))
         {
             uint8 freq = EnemyChr().FrequencyParameter(CEnemyParameter::FREQUENCY_TRIGGER_REDUCTION_HP);
-            if (freq == 2)
+            if (freq == 2) // TODO freq naming
                 fChance *= 0.5f;
             else if (freq == 3)
                 fChance *= 1.5f;
@@ -1899,7 +2320,7 @@ bool CBaseAI6045::CDecisionUnitGuard::IsDoing(void)
         DecisionUnitCommonParameter().TestSpecialFlag(BASEAI6045::FLAG_TRIGGER_REDUCTIONHP_PERMIT))
     {
         uint8 freq = EnemyChr().FrequencyParameter(CEnemyParameter::FREQUENCY_TRIGGER_REDUCTION_HP);
-        if (freq == 2)
+        if (freq == 2) // TODO freq naming
             fChance *= 0.5f;
         else if (freq == 3)
             fChance *= 1.5f;
@@ -2041,13 +2462,6 @@ CBaseAI6045::CDecisionUnitAttackNormal::CDecisionUnitAttackNormal(const char* ps
     EnemyChr().AIThinkOrder().OrderAttack().m_iPlayerNo = m_orderTargetNo;
 
     DecisionUnitCommonParameter().SetAttackTimer(0.0f);
-};
-
-
-bool CBaseAI6045::CDecisionUnitAttackNormal::CheckObstacleFront(float fDistance, float fSafeHeight)
-{
-    // TODO mouser
-    return false;
 };
 
 
