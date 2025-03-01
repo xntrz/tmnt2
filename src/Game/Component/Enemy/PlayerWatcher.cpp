@@ -265,7 +265,37 @@ uint32 CPlayerStateWatcher::Sub_GetStateFlag(PLAYERTYPES::STATUS eStatus) const
 };
 
 
+//
+// *********************************************************************************
+//
+
+
 /*static*/ const float CPlayerWatcher::DIST_MAX = (256.0f * 256.0f);
+
+
+/*static*/ float CPlayerWatcher::GetDistanceFromPlayer(int32 iPlayerIndex, RwV3d* pvPosition)
+{
+    CPlayerCharacter* pPlayerChr = CAIUtils::GetActivePlayer(iPlayerIndex);
+    if (!pPlayerChr)
+        return DIST_MAX;
+
+    RwV3d vecPlayer = Math::VECTOR3_ZERO;
+    pPlayerChr->GetFootPosition(&vecPlayer);
+
+    RwV3d vecDistance = Math::VECTOR3_ZERO;
+    Math::Vec3_Sub(&vecDistance, &vecPlayer, pvPosition);
+    vecDistance.y = 0.0f;
+
+    float fDist = Math::Vec3_Length(&vecDistance);
+    return fDist;
+};
+
+
+/*static*/ float CPlayerWatcher::GetDirection(const RwV3d* pvecPos, const RwV3d* pvecAt)
+{
+    return std::atan2((pvecAt->x - pvecPos->x),
+                      (pvecAt->z - pvecPos->z));
+};
 
 
 CPlayerWatcher::CPlayerWatcher(void)
@@ -357,33 +387,27 @@ bool CPlayerWatcher::IsAttackWithinRange(float fLength, float fFrontAngle)
 
 bool CPlayerWatcher::IsAttackTriggerWithinRange(float fLength, float fFrontAngle)
 {
-    bool bResult = false;
-
     int32 nPlayerCnt = CAIUtils::GetPlayerNum();
     for (int32 i = 0; i < nPlayerCnt; ++i)
     {
         float fDist = GetDistanceFromPlayer(i, &m_vMyPos);
-        if (fDist <= fLength)
-        {
-            if (IsPlayerInTheFront(i, fFrontAngle))
-            {
-                if (IsPlayerLookAtMe(i, Math::PI / 2))
-                {
-                    if (IsPlayerAttackTrigger(i))
-                    {
-                        if (m_aPlayerStatusPrev[i] != m_aPlayerStatusCurr[i])
-                        {
-                            SetPlayerData(i, PLAYER_DATA_TEMP);
-                            bResult = true;
-                            break;
-                        };
-                    };
-                };
-            };
-        };
+		if (fDist > fLength)
+			continue;
+
+		if (!IsPlayerInTheFront(i, fFrontAngle))
+			continue;
+
+		if (IsPlayerLookAtMe(i, MATH_DEG2RAD(90.0f)) || (fDist < 2.0f))
+		{
+			if (IsAttack(i) && (m_aPlayerStatusPrev[i] != m_aPlayerStatusCurr[i]))
+			{
+				SetPlayerData(i, PLAYER_DATA_TEMP);
+				return true;
+			};
+		};
     };
 
-    return bResult;
+	return false;
 };
 
 
@@ -518,7 +542,7 @@ bool CPlayerWatcher::IsHighAttack(float fLength, float fLowSide, float fHighSide
 };
 
 
-bool CPlayerWatcher::IsSuitableArea(float fLength, float fViewAngle)
+bool CPlayerWatcher::IsSuitableArea(float fViewAngle, float fLength /*= -1.0f*/)
 {
     bool bResult = false;
     float fDistOfSuit = EnemyChara().AICharacteristic().m_fDistanceOfSuitable;
@@ -604,41 +628,36 @@ bool CPlayerWatcher::IsPlayerAttack(int32 iPlayerIndex)
 bool CPlayerWatcher::IsPlayerAttackTrigger(int32 iPlayerIndex)
 {
     iPlayerIndex = PlayerIndexCorrection(iPlayerIndex);
-    if (iPlayerIndex != -1)
-        return IsAttackTrigger(iPlayerIndex);
-    else
-        return false;
+	if (iPlayerIndex != -1)
+		return IsAttackTrigger(iPlayerIndex);
+
+	return false;
 };
 
 
 bool CPlayerWatcher::IsPlayerAttackTriggerWithinRange(int32 iPlayerIndex, float fLength, float fFrontAngle)
 {
-    bool bResult = false;
+	float fDist = GetDistanceFromPlayer(iPlayerIndex, &m_vMyPos);
+	if (fDist > fLength)
+		return false;
 
-    iPlayerIndex = PlayerIndexCorrection(iPlayerIndex);
-    if (iPlayerIndex != -1)
-    {
-        float fDist = GetDistanceFromPlayer(iPlayerIndex, &m_vMyPos);
-        if (fDist <= fLength)
-        {
-            if (IsPlayerInTheFront(iPlayerIndex, fFrontAngle))
-            {
-                if (IsPlayerLookAtMe(iPlayerIndex, Math::PI / 2) || (fDist < 2.0f))
-                {
-                    if (IsAttack(iPlayerIndex))
-                    {
-                        if (m_aPlayerStatusPrev[iPlayerIndex] != m_aPlayerStatusCurr[iPlayerIndex])
-                        {
-                            SetPlayerData(iPlayerIndex, PLAYER_DATA_TEMP);
-                            bResult = true;
-                        };
-                    };
-                };
-            };
-        };
-    };
+	if (!IsPlayerInTheFront(iPlayerIndex, fFrontAngle))
+		return false;
 
-    return bResult;
+	if (!IsPlayerLookAtMe(iPlayerIndex, MATH_DEG2RAD(90.0f)))
+	{
+		if (fDist >= 2.0f)
+			return false;
+	};
+
+	if (!IsAttack(iPlayerIndex))
+		return false;
+
+	if (m_aPlayerStatusPrev[iPlayerIndex] == m_aPlayerStatusCurr[iPlayerIndex])
+		return false;
+
+	SetPlayerData(iPlayerIndex, PLAYER_DATA_TEMP);
+	return true;
 };
 
 
@@ -682,14 +701,13 @@ bool CPlayerWatcher::IsPlayerViewArea(int32 iPlayerIndex)
 	if (!pPlayerChr)
 		return false;
 
-	RwV3d vecPos = Math::VECTOR3_ZERO;
-	pPlayerChr->GetFootPosition(&vecPos);
+	RwV3d vecFootPosPlayer = Math::VECTOR3_ZERO;
+	pPlayerChr->GetFootPosition(&vecFootPosPlayer);
 
-	float fDist = (m_vMyPos.y - vecPos.y);
-	if (fDist < 0.0f)
-		fDist = -fDist;
+	float fHeight = (m_vMyPos.y - vecFootPosPlayer.y);
+	fHeight = std::fabs(fHeight);
 
-	if (fDist > 3.0f)
+	if (fHeight > 3.0f)
 		return false;
 
 	return true;
@@ -726,29 +744,25 @@ bool CPlayerWatcher::IsPlayerLookAtMe(int32 iPlayerIndex, float fAngle)
 
 bool CPlayerWatcher::IsPlayerInTheFront(int32 iPlayerIndex, float fFrontAngle)
 {
-    if (fFrontAngle >= Math::PI2)
+    if (fFrontAngle >= MATH_PI2)
         return true;
 
     iPlayerIndex = PlayerIndexCorrection(iPlayerIndex);
-    if (iPlayerIndex == -1)
-        return true;
+	if (iPlayerIndex == -1)
+		return false;
 
     CPlayerCharacter* pPlayerChr = CAIUtils::GetActivePlayer(iPlayerIndex);
     if (!pPlayerChr)
         return false;
 
-    RwV3d vecPos = Math::VECTOR3_ZERO;
-    pPlayerChr->GetFootPosition(&vecPos);
+    RwV3d vecFootPosPlayer = Math::VECTOR3_ZERO;
+    pPlayerChr->GetFootPosition(&vecFootPosPlayer);
     
-    float fAngle = GetDirection(&m_vMyPos, &vecPos);
-    fAngle = Math::RadianCorrect(fAngle);
-    if (fAngle < 0.0f)
-        fAngle = -fAngle;
-
-    if (fAngle < (Math::PI - fFrontAngle))
-        return false;
-    else
-        return true;
+	float fDir = GetDirection(&vecFootPosPlayer, &m_vMyPos) - m_fMyAngle;
+    fDir = Math::RadianCorrect(fDir);
+	fDir = std::fabs(fDir);
+    
+	return (fDir >= (MATH_PI - fFrontAngle));
 };
 
 
@@ -759,8 +773,8 @@ bool CPlayerWatcher::IsPlayerWithinRange(int32 iPlayerIndex, float fLength)
 
     if (iPlayerIndex != -1)
         return (GetDistanceFromPlayer(iPlayerIndex, &m_vMyPos) <= fLength);
-    else
-        return false;
+
+	return false;
 };
 
 
@@ -832,26 +846,6 @@ bool CPlayerWatcher::IsPlayerStop(int32 iPlayerIndex)
     };
 
     return bResult;
-};
-
-
-float CPlayerWatcher::GetDistanceFromPlayer(int32 iPlayerIndex, RwV3d* pvPosition)
-{
-    float fPlayerDist = DIST_MAX;
-    
-    CPlayerCharacter* pPlayerChr = CAIUtils::GetActivePlayer(iPlayerIndex);
-    if (pPlayerChr)
-    {
-        RwV3d vecPlayer = Math::VECTOR3_ZERO;
-        pPlayerChr->GetFootPosition(&vecPlayer);
-
-        RwV3d vecLength = Math::VECTOR3_ZERO;
-        Math::Vec3_Sub(&vecLength, pvPosition, &vecPlayer);
-
-        fPlayerDist = Math::Vec3_Length(&vecLength);
-    };
-    
-    return fPlayerDist;
 };
 
 
@@ -987,12 +981,6 @@ int32 CPlayerWatcher::GetPlayerNoFromID(PLAYERID::VALUE id)
 };
 
 
-float CPlayerWatcher::GetDirection(const RwV3d* pvecPos, const RwV3d* pvecAt)
-{
-    return Math::ATan2((pvecAt->x - pvecPos->x), (pvecAt->z - pvecPos->z));
-};
-
-
 int32 CPlayerWatcher::GetNearPlayer(RwV3d* pvCenter, float* pfDistNearest, RwV3d* pvPosNearest, CAIUtils::PLAYER_STATE_FLAG state)
 {
     int32 iPlayerIndex = -1;
@@ -1096,4 +1084,21 @@ int32 CPlayerWatcher::PlayerIndexCorrection(int32 iPlayerIndex)
         return GetPlayerData(PLAYER_DATA_TEMP)->No;
     
     return iPlayerIndex;
+};
+
+
+void CPlayerWatcher::GetTargetTypePosition(RwV3d* pvPos) const
+{
+    ASSERT(pvPos != nullptr);
+    ASSERT(m_eTargetType <= TARGET_TYPE_ATTACKLAST);
+
+    *pvPos = m_aPlayerData[m_eTargetType].Position;
+};
+
+
+int32 CPlayerWatcher::GetTargetTypeNo(void) const
+{
+    ASSERT(m_eTargetType <= TARGET_TYPE_ATTACKLAST);
+
+    return m_aPlayerData[m_eTargetType].No;
 };

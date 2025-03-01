@@ -8,7 +8,6 @@
 class CEnemyCharacter;
 
 
-/* TODO: this functional relate to 6045 group, test it later */
 class CEnemyContainer final : public CGameObject
 {
 public:
@@ -16,15 +15,15 @@ public:
     {
     public:
         CServeEnemy(void);
-        virtual ~CServeEnemy(void);
-        void             Set(CEnemyCharacter* pEnemyChr);
-        void             Clean(void);
+        ~CServeEnemy(void);
+        void Set(CEnemyCharacter* pEnemyChr);
+        void Clean(void);
         CEnemyCharacter* GetCharacter(void) const;
-        void             GetPosition(RwV3d* pvPosition) const;
-        bool             IsBusy(void) const;
-        bool             IsValid(void) const;
-        ENEMYID::VALUE   GetID(void) const;
-        uint32           GetOwner(void) const;
+        void GetPosition(RwV3d* pvPosition) const;
+        bool IsBusy(void) const;
+        bool IsValid(void) const;
+        ENEMYID::VALUE GetID(void) const;
+        uint32 GetOwner(void) const;
 
     private:
         uint32          m_hEnemy; // handle to 'CEnemy' game object of type 'ENEMY' (!! not CEnemyCharacter !!)
@@ -40,8 +39,8 @@ public:
     virtual void Run(void) override;
     CServeEnemy* FindFirst(void);
     CServeEnemy* FindNext(void);
-    void         Attach(CEnemyCharacter* pEnemyChr);
-    void         SetEnemyIDFilter(ENEMYID::VALUE eID);
+    void Attach(CEnemyCharacter* pEnemyChr);
+    void SetEnemyIDFilter(ENEMYID::VALUE eID);
 
 private:
     static CEnemyContainer* m_pInstance;

@@ -30,6 +30,9 @@
 #include "ConcreteEnemyCharacter/035TriceratonSoldier.hpp"
 #include "ConcreteEnemyCharacter/036TriceratonShooter.hpp"
 #include "ConcreteEnemyCharacter/037TriceratonFlyingHarness.hpp"
+#include "ConcreteEnemyCharacter/040StoneBiter.hpp"
+#include "ConcreteEnemyCharacter/041Bergox.hpp"
+#include "ConcreteEnemyCharacter/048Rynokk.hpp"
 #include "ConcreteEnemyCharacter/050BloodSucker.hpp"
 #include "ConcreteEnemyCharacter/051PoisonBat.hpp"
 #include "ConcreteEnemyCharacter/052HypnosisBat.hpp"
@@ -133,6 +136,15 @@ static CEnemyCharacter* CreateEnemyCharacter(ENEMYID::VALUE id)
 
     case ENEMYID::ID_TRICERATION_FLYING_HARNESS:
         return new C037TriceratonFlyingHarness;
+
+    case ENEMYID::ID_STONE_BITER:
+        return new C040StoneBiter;
+
+    case ENEMYID::ID_BERGOX:
+        return new C041Bergox;
+
+    case ENEMYID::ID_RYNOKK:
+        return new C048Rynokk;
 
     case ENEMYID::ID_BLOOD_SUCKER:
         return new C050BloodSucker;
@@ -262,6 +274,15 @@ static EFFECTID::VALUE GetEnemyCharacterNeededEffect(ENEMYID::VALUE enemyId, int
 
     case ENEMYID::ID_TRICERATION_FLYING_HARNESS:
         return C037TriceratonFlyingHarness::GetNeededEffect(no);
+
+    case ENEMYID::ID_STONE_BITER:
+        return C040StoneBiter::GetNeededEffect(no);
+
+    case ENEMYID::ID_BERGOX:
+        return C041Bergox::GetNeededEffect(no);
+
+    case ENEMYID::ID_RYNOKK:
+        return C048Rynokk::GetNeededEffect(no);
 
     case ENEMYID::ID_BLOOD_SUCKER:
         return C050BloodSucker::GetNeededEffect(no);

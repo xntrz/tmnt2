@@ -113,6 +113,9 @@ public:
     };
 
 public:
+    static float GetDistanceFromPlayer(int32 iPlayerIndex, RwV3d* pvPosition);
+    static float GetDirection(const RwV3d* pvecPos, const RwV3d* pvecAt);
+
     CPlayerWatcher(void);
     ~CPlayerWatcher(void);
     void Initialize(CEnemyCharacter* pEnemyChara);
@@ -123,7 +126,7 @@ public:
     bool IsShootShurikenTrigger(float fLength);
     bool IsChargeAttack(float fLength);
     bool IsHighAttack(float fLength, float fLowSide, float fHighSide);
-    bool IsSuitableArea(float fLength, float fViewAngle);
+    bool IsSuitableArea(float fViewAngle, float fLength = -1.0f);
     bool IsViewArea(CAIUtils::PLAYER_STATE_FLAG state);
     bool IsPlayerAttack(int32 iPlayerIndex);
     bool IsPlayerAttackTrigger(int32 iPlayerIndex);
@@ -136,13 +139,11 @@ public:
     bool IsPlayerSuitRange(int32 iPlayerIndex, float fRate);
     bool IsPlayerActionRange(int32 iPlayerIndex, float fRate);
     bool IsPlayerStop(int32 iPlayerIndex);
-    float GetDistanceFromPlayer(int32 iPlayerIndex, RwV3d* pvPosition);
     bool IsDonBarrier(float fLength);
     bool IsLeoDash(float fLength);
     int32 GetPlayerNumThere(RwV3d* pvCenter, float fRadius);
     bool IsTogether(int32 iPlayerNum, float fRadius);
     int32 GetPlayerNoFromID(PLAYERID::VALUE id);
-    float GetDirection(const RwV3d* pvecPos, const RwV3d* pvecAt);
     int32 GetNearPlayer(RwV3d* pvCenter, float* pfDistNearest, RwV3d* pvPosNearest, CAIUtils::PLAYER_STATE_FLAG state);
     void SetTargetType(TARGET_TYPE type);
     void ClearTargetType(void);
@@ -150,6 +151,8 @@ public:
     PLAYERDATA* GetPlayerData(PLAYER_DATA_TYPE type);
     CEnemyCharacter& EnemyChara(void);
     int32 PlayerIndexCorrection(int32 iPlayerIndex);
+    void GetTargetTypePosition(RwV3d* pvPos) const;
+    int32 GetTargetTypeNo(void) const;
 
 private:
     PLAYERDATA m_aPlayerData[PLAYER_DATA_MAX];

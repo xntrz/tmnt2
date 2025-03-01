@@ -608,7 +608,7 @@ void CBaseKaraiChr::CAttackCStatusObserver::SetShotContinualSetting(int32 iShotN
     m_fShotRadSize           = (fAreaRadius / static_cast<float>(iShotNum));
     m_fShotContinualInterval = (fShotTime / static_cast<float>(iShotNum));
     m_fShotContinualTime     = fShotTime;
-	m_shotContinualAimNo     = iAimNo;
+    m_shotContinualAimNo     = iAimNo;
 };
 
 
@@ -1240,11 +1240,11 @@ CBaseKaraiChr::CThinkingStatusObserver::Observing(void) /*override*/
             {
                 m_nextStatus = ENEMYTYPES::STATUS_JUMP_READY;
             }
-            else if (moveType == BASEAI6045::ORDERTYPE_MOVE_SPECIAL)
+            else if (moveType == KARAI_AI::ORDERTYPE_MOVE_BACKROUND)
             {
                 m_nextStatus = BASEKARAI::STATUS_MOVE_BACKROUND;
             }
-            else if (moveType == BASEAI6045::ORDERTYPE_MOVE_JUMP_ESCAPE)
+            else if (moveType == KARAI_AI::ORDERTYPE_MOVE_JUMP_ESCAPE)
             {
                 m_nextStatus = BASEKARAI::STATUS_MOVE_JUMPESCAPE;
             };

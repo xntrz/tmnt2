@@ -708,6 +708,12 @@ bool CEnemyAIDecisionUnitCommonParameter::IsMove(void) const
 };
 
 
+float CEnemyAIDecisionUnitCommonParameter::GetAttackInterval(void) const
+{
+    return m_fAttackInterval;
+};
+
+
 float CEnemyAIDecisionUnitCommonParameter::GetRatioOfActivity(void) const
 {
     return m_fRatioOfActivity;
@@ -886,11 +892,11 @@ void CEnemyAIDecisionUnitManager::Attach(CEnemyAIDecisionUnit* pDecisionUnit)
     ASSERT(m_numAIDicisionUnit < COUNT_OF(m_apAIDecisionUnit));
 
 #ifdef _DEBUG    
-	for (int32 i = 0; i < m_numAIDicisionUnit; ++i)
-	{
-		if (!std::strcmp(m_apAIDecisionUnit[i]->GetName(), pDecisionUnit->GetName()))
-			ASSERT(false, "%s decision unit already registered!", pDecisionUnit->GetName());
-	};
+    for (int32 i = 0; i < m_numAIDicisionUnit; ++i)
+    {
+        if (!std::strcmp(m_apAIDecisionUnit[i]->GetName(), pDecisionUnit->GetName()))
+            ASSERT(false, "%s decision unit already registered!", pDecisionUnit->GetName());
+    };
 #endif /* _DEBUG */
 
     m_apAIDecisionUnit[m_numAIDicisionUnit++] = pDecisionUnit;
@@ -966,7 +972,7 @@ bool CEnemyAIDecisionUnitManager::ProcThinkingFrequency(void)
     float fThinkFrequency = m_pEnemyChr->AICharacteristic().m_fThinkingFrequency;
     fThinkFrequency = (1.0f - fThinkFrequency);
 
-    if (fThinkFrequency < 0.0f)
+    if (fThinkFrequency <= 0.0f)
         fThinkFrequency = 0.0f;
 
     if (fThinkFrequency <= m_fThinkTimer)
@@ -1022,7 +1028,7 @@ bool CEnemyAIDecisionUnitManager::ProcAIThinkOrderResult(void)
 
 void CEnemyAIDecisionUnitManager::ProcUpdateUnit(void)
 {
-	CEnemyAIDecisionUnit::RESULT result = CEnemyAIDecisionUnit::RESULT_STOP;
+    CEnemyAIDecisionUnit::RESULT result = CEnemyAIDecisionUnit::RESULT_STOP;
 
     if (m_pNowDecisionUnit)
         result = m_pNowDecisionUnit->Update();
@@ -1381,11 +1387,11 @@ CBaseAI6045::CDecisionUnitMove::Update(void) /*override*/
     const CAIUtils::NEARER_PLAYERDATA& nearerPlayerData = DecisionUnitCommonParameter().GetViewData(nearerViewDataNo);
 
     m_orderTargetNo = nearerPlayerData.no;
-	m_orderType = (IsMoveToRun(nearerPlayerData.distance) ? BASEAI6045::ORDERTYPE_MOVE_RUN_NO : BASEAI6045::ORDERTYPE_MOVE_WALK_NO);
+    m_orderType = (IsMoveToRun(nearerPlayerData.distance) ? BASEAI6045::ORDERTYPE_MOVE_RUN_NO : BASEAI6045::ORDERTYPE_MOVE_WALK_NO);
 
     EnemyChr().AIThinkOrder().OrderMove().m_iMoveType = m_orderType;
 
-	return true;
+    return true;
 };
 
 

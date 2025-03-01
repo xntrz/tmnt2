@@ -558,23 +558,6 @@ float CEnemyUtils::CKnockBackControl::GetPlayerNumRate(void) const
 };
 
 
-/*static*/ float CEnemyUtils::GetDistanceFromPlayer(int32 playerNo, const RwV3d* pos)
-{
-    CPlayerCharacter* pPlayerChr = CAIUtils::GetActivePlayer(playerNo);
-    if (!pPlayerChr)
-        return static_cast<float>(TYPEDEF::UINT16_MAX);
-
-    RwV3d vPlayerPos = Math::VECTOR3_ZERO;
-    pPlayerChr->GetFootPosition(&vPlayerPos);
-
-    RwV3d vec = Math::VECTOR3_ZERO;
-    Math::Vec3_Sub(&vec, &vPlayerPos, pos);
-    vec.y = 0.0f;
-
-    return std::fabs(Math::Vec3_Length(&vec));
-};
-
-
 /*static*/ float CEnemyUtils::GetDirection(const RwV3d* pos, const RwV3d* at)
 {
     ASSERT(pos);
@@ -1057,4 +1040,26 @@ CEnemyTracer6045::CEnemyTracer6045(const CCharacterCompositor* pChrCompositor, C
     vecAt.y = 0.0f;
 
     return CEnemyUtils::GetDistance(&vecPos, &vecAt);
+};
+
+
+/*static*/ float CEnemyUtils6045::RotateToTarget(CCharacterCompositor* pChrCompositor,
+                                                 RwV3d* pvecTargetPos,
+                                                 float fRotateRate)
+{
+    ASSERT(pChrCompositor != nullptr);
+    ASSERT(pvecTargetPos != nullptr);
+
+    RwV3d vecFootPos = Math::VECTOR3_ZERO;
+    pChrCompositor->GetFootPosition(&vecFootPos);
+
+    float fDir = std::atan2(pvecTargetPos->x - vecFootPos.x,
+                            pvecTargetPos->z - vecFootPos.z);
+
+    if (fRotateRate >= 0.0f)
+        pChrCompositor->RotateDirection(fDir, fRotateRate);
+    else
+        pChrCompositor->SetDirection(fDir);
+
+    return CEnemyUtils::RadianCorrect(fDir);
 };

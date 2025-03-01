@@ -58,7 +58,7 @@ bool C084KaraiAI::CDecisionUnitMoveEscape::ProcEscapeSetting(const RwV3d* pvecPl
 
     if (Math::Vec3_IsEqual(&vecEnemyPos, &Math::VECTOR3_ZERO))
     {
-        m_orderType = BASEAI6045::ORDERTYPE_MOVE_SPECIAL; // backaway
+        m_orderType = KARAI_AI::ORDERTYPE_MOVE_BACKROUND;
 
         vecDir = { 0.0f, 0.0f, -3.0f };
         EnemyChr().Compositor().RotateVectorByDirection(&vecDir, &vecDir);
@@ -79,7 +79,7 @@ bool C084KaraiAI::CDecisionUnitMoveEscape::ProcEscapeSetting(const RwV3d* pvecPl
 
         if (CAIUtils::CheckStep(&vecStart, &vecEnd))
         {
-            m_orderType = BASEAI6045::ORDERTYPE_MOVE_JUMP_ESCAPE; // jump escape
+            m_orderType = KARAI_AI::ORDERTYPE_MOVE_JUMP_ESCAPE;
 
             Math::Vec3_Sub(&vecDir, pvecPlayerPos, &vecEnemyPos);
             vecDir.y = 0.0f;
@@ -89,7 +89,7 @@ bool C084KaraiAI::CDecisionUnitMoveEscape::ProcEscapeSetting(const RwV3d* pvecPl
         }
         else
         {
-            m_orderType = BASEAI6045::ORDERTYPE_MOVE_SPECIAL; // backaway
+            m_orderType = KARAI_AI::ORDERTYPE_MOVE_BACKROUND;
 
             Math::Vec3_Sub(&vecDir, &vecEnemyPos, pvecPlayerPos);
             vecDir.y = 0.0f;

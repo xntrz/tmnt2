@@ -23,9 +23,8 @@ namespace BASEAI6045
         ORDERTYPE_MOVE_RUN_POS,
         ORDERTYPE_MOVE_RUN_NO,
         ORDERTYPE_MOVE_JUMP,
-        
-        ORDERTYPE_MOVE_SPECIAL = 9,
-        ORDERTYPE_MOVE_JUMP_ESCAPE,
+
+        ORDERTYPE_MOVE_EXTEND = 9,    
     };
 
     /* CAIThinkOrder attack order type */
@@ -120,7 +119,7 @@ public:
     CEnemyAIDecisionUnit(const char* pszUnitName, TYPE type);
     inline virtual ~CEnemyAIDecisionUnit(void) {};
     inline virtual bool CheckTerm(void) { return true; };
-	inline virtual RESULT Update(void) { return RESULT_STOP; };
+    inline virtual RESULT Update(void) { return RESULT_STOP; };
     inline virtual void OnStart(void) {}
     inline virtual void OnEnd(void) {}
 
@@ -211,6 +210,7 @@ public:
     bool IsAttack(void) const;
     bool IsMoveTime(void) const;
     bool IsMove(void) const;
+    float GetAttackInterval(void) const;
     float GetRatioOfActivity(void) const;
     float GetRatioOfMove(void) const;
     float GetMoveWaitTime(void) const;

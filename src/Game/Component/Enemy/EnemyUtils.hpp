@@ -91,7 +91,6 @@ public:
     static float GetJumpableHeight(float fJumpInitSpeed, float fGravity);
     static float GetDistance(const RwV3d* pos, const RwV3d* at);
     static float GetDistance(const CCharacterCompositor* pChrCompositor, const RwV3d* at);
-    static float GetDistanceFromPlayer(int32 playerNo, const RwV3d* pos);
     static float GetDirection(const RwV3d* pos, const RwV3d* at);
     static float GetDirection(const CCharacterCompositor* pChrCompositor, const RwV3d* at);
     static float GetDirection(const RwV3d* at);
@@ -172,4 +171,8 @@ public:
 
     static float GetXZDistance(const RwV3d* pvecPos,
                                const RwV3d* pvecAt);
+
+    static float RotateToTarget(CCharacterCompositor* pChrCompositor,
+                                RwV3d* pvecTargetPos,
+                                float fRotateRate);
 };

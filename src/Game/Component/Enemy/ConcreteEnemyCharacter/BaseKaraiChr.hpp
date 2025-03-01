@@ -44,7 +44,7 @@ namespace BASEKARAI
         STATUS_ATTACK_COUNTER,
     }; /* enum STATUS */
 
-    static const float GUARD_COUNTERACTION_TIME[] = { 0.5f, 0.5f, 0.5f };
+    static const float GUARD_COUNTERACTION_TIME[] = { 0.5f, 0.5f, 0.35f };
     static_assert(COUNT_OF(GUARD_COUNTERACTION_TIME) == GAMETYPES::DIFFICULTY_NUM, "table incorrect");
 
     static const float ATTACK_SPECIAL_CHARGETIME[] = { 1.75f, 1.25f, 0.75f,};

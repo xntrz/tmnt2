@@ -497,7 +497,7 @@ CMotionManagedStatusObserver::CMotionManagedStatusObserver(void)
 
 /*virtual*/ void CCommonEnemyObserver::CDashStatus::OnStart(void) /*override*/
 {
-    ;
+    // TODO
 };
 
 
@@ -509,6 +509,7 @@ CMotionManagedStatusObserver::CMotionManagedStatusObserver(void)
 
 /*virtual*/ ENEMYTYPES::STATUS CCommonEnemyObserver::CDashStatus::OnEnd(void) /*override*/
 {
+    EnemyChr().ClearFlag(ENEMYTYPES::FLAG_INVINCIBILITY);
     return ENEMYTYPES::STATUS_THINKING;
 };
 
@@ -520,13 +521,75 @@ CMotionManagedStatusObserver::CMotionManagedStatusObserver(void)
 
 /*virtual*/ void CCommonEnemyObserver::CGuardStatus::OnStart(void) /*override*/
 {
-    ;
+    EnemyChr().Compositor().SetVelocity(&Math::VECTOR3_ZERO);
+
+    m_step = STEP_START;
+    m_fRemainGuardTime = 3.0f;
 };
 
 
 /*virtual*/ CCommonEnemyObserver::CGuardStatus::RESULT CCommonEnemyObserver::CGuardStatus::Observing(void) /*override*/
 {
-    return RESULT_END;
+    switch (m_step)
+    {
+    case STEP_START:
+        {
+            bool bForce = true;
+            EnemyChr().Compositor().ChangeMotion(ENEMYTYPES::MOTIONNAMES::GUARD_1, bForce);
+
+			++m_step;
+        }
+        break;
+
+    case STEP_START_RUN:
+        {
+            if (EnemyChr().Compositor().IsMotionEnd())
+                ++m_step;
+        }
+        break;
+
+    case STEP_HOLD:
+        {
+            bool bForce = true;
+            EnemyChr().Compositor().ChangeMotion(ENEMYTYPES::MOTIONNAMES::GUARD_2, bForce);
+
+            EnemyChr().AIThinkOrder().SetAnswer(CAIThinkOrder::RESULT_ACCEPT);
+
+            ++m_step;
+        }
+        break;
+
+    case STEP_HOLD_RUN:
+        {
+            if ((EnemyChr().AIThinkOrder().GetOrder() != CAIThinkOrder::ORDER_DEFENCE) ||
+                (m_fRemainGuardTime <= 0.0f))
+                ++m_step;
+
+            m_fRemainGuardTime -= CGameProperty::GetElapsedTime();
+        }
+        break;
+
+    case STEP_END:
+        {
+            bool bForce = true;
+            EnemyChr().Compositor().ChangeMotion(ENEMYTYPES::MOTIONNAMES::GUARD_3, bForce);
+
+            ++m_step;
+        }
+        break;
+
+    case STEP_END_RUN:
+        {
+            if (EnemyChr().Compositor().IsMotionEnd())
+                return RESULT_END;
+        }
+        break;
+
+    default:
+        break;
+    };
+
+    return RESULT_CONTINUE;
 };
 
 

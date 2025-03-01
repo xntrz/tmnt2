@@ -48,6 +48,13 @@
  *
  *
  *  CBaseAI6045 list:
+ *  - ID_STONE_BITER
+ *  - ID_BERGOX
+ *  - ID_RYNOKK
+ *  - ID_MOUSER_ROBOT
+ *  - ID_MOUSER_ROBOT_B
+ *  - ID_KROKODIL_MOUSER
+ *  - ID_RAPTOR
  *  - ID_KARAI
  *
  *

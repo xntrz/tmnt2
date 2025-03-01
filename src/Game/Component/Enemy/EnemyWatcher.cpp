@@ -4,6 +4,7 @@
 #include "Enemy.hpp"
 #include "EnemyUtils.hpp"
 #include "AIUtils.hpp"
+#include "PlayerWatcher.hpp"
 
 #include "Game/Component/GameMain/GameTypes.hpp"
 #include "Game/System/GameObject/GameObjectManager.hpp"
@@ -15,13 +16,7 @@
 /*static*/ CEnemyContainer& CEnemyContainer::Instance(void)
 {
     if (!m_pInstance)
-    {
-        /**
-         *  Since this is game object it will be automatically freed when
-         *  game object manager terminates and pointer will be set to NULL in destructor.
-         */
         m_pInstance = new CEnemyContainer;
-    };
 
     return *m_pInstance;
 };
@@ -127,7 +122,7 @@ CEnemyContainer::CEnemyContainer(void)
 , m_aServeEnemy()
 , m_iEnemyFind(0)
 {
-    ASSERT(m_pInstance == this);
+    ASSERT(m_pInstance == nullptr);
 };
 
 
@@ -268,27 +263,26 @@ bool CEnemyWatcher::IsFriendStayFront(float fDistance)
 
     ASSERT(Search(m_pEnemyChr->GetOwner()));
 
-    RwV3d vMyPosition = Math::VECTOR3_ZERO;
-    m_pEnemyChr->Compositor().GetFootPosition(&vMyPosition);
+    RwV3d vecPosMe = Math::VECTOR3_ZERO;
+    m_pEnemyChr->Compositor().GetFootPosition(&vecPosMe);
 
     CEnemyContainer::CServeEnemy* pServeEnemy = CEnemyContainer::Instance().FindFirst();
     while (pServeEnemy)
     {
         if (pServeEnemy->GetOwner() != m_pEnemyChr->GetOwner())
         {
-            RwV3d vPosition = Math::VECTOR3_ZERO;
-            pServeEnemy->GetPosition(&vPosition);
+            RwV3d vecPosFriend = Math::VECTOR3_ZERO;
+            pServeEnemy->GetPosition(&vecPosFriend);
 
-            if (CEnemyUtils::GetDistance(&vPosition, &vMyPosition) < fDistance)
+            float fDist = CEnemyUtils::GetDistance(&vecPosFriend, &vecPosMe);
+            if (fDist < fDistance)
             {
-                float fDirection = CEnemyUtils::GetDirection(&vPosition, &vMyPosition);
+                float fDir = CPlayerWatcher::GetDirection(&vecPosFriend, &vecPosMe);
+                fDir -= m_pEnemyChr->Compositor().GetDirection();
+                fDir = CEnemyUtils::RadianCorrect(fDir);
+                fDir = std::fabs(fDir);
 
-                float fRad = (fDirection - m_pEnemyChr->Compositor().GetDirection());
-
-                fRad = CEnemyUtils::RadianCorrect(fRad);
-                fRad = std::fabs(fRad);
-
-                if (fRad > MATH_DEG2RAD(160.0f))
+                if (fDir > MATH_DEG2RAD(160.0f))
                     return true;
             };
         };
@@ -313,9 +307,9 @@ int32 CEnemyWatcher::GetFreePlayerNo(int32 iPlayerPurposeMax /*= -1*/)
     {
         if (pServeEnemy->GetOwner() != m_pEnemyChr->GetOwner())
         {
-            int32 playerNo = GetPurposePlayerNo(pServeEnemy->GetOwner());
-            if (playerNo > -1)
-                ++aPlayerPurposeNum[playerNo];                
+            int32 iPlayerNo = GetPurposePlayerNo(pServeEnemy->GetOwner());
+            if (iPlayerNo > -1)
+                ++aPlayerPurposeNum[iPlayerNo];                
         };
 
         pServeEnemy = CEnemyContainer::Instance().FindNext();
@@ -338,10 +332,10 @@ int32 CEnemyWatcher::GetFreePlayerNo(int32 iPlayerPurposeMax /*= -1*/)
         }
         else if (aPlayerPurposeNum[i] <= iPlayerPurposeMax)
         {
-            RwV3d vMyPosition = Math::VECTOR3_ZERO;
-            m_pEnemyChr->Compositor().GetFootPosition(&vMyPosition);
+            RwV3d vecPosMe = Math::VECTOR3_ZERO;
+            m_pEnemyChr->Compositor().GetFootPosition(&vecPosMe);
 
-            float fDistance = CEnemyUtils::GetDistanceFromPlayer(i, &vMyPosition);
+            float fDistance = CPlayerWatcher::GetDistanceFromPlayer(i, &vecPosMe);
             if (fDistance < fDistMin)
             {
                 fDistMin = fDistance;
@@ -374,7 +368,6 @@ int32 CEnemyWatcher::GetPurposePlayerNo(uint32 hEnemy)
     int32 iPlayerNo = -1;
 
     CEnemyCharacter* pEnemyChr = Search(hEnemy);
-
     CAIThinkOrder::ORDER orderType = pEnemyChr->AIThinkOrder().GetOrder();
     switch (orderType)
     {
@@ -394,14 +387,11 @@ int32 CEnemyWatcher::GetPurposePlayerNo(uint32 hEnemy)
         break;
     };
 
-    /**
-     *  TODO:   review and test this later - in IDB there '>' not '>='
-     *          but player indexing starts from 0
-     */
-    if (iPlayerNo >= CAIUtils::GetPlayerNum())
-        iPlayerNo = -1;
+    if ((iPlayerNo >= 0) &&
+        (iPlayerNo < CAIUtils::GetPlayerNum()))
+        return iPlayerNo;
 
-    return iPlayerNo;
+    return -1;
 };
 
 

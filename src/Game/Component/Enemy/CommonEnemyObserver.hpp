@@ -103,12 +103,23 @@ public:
 
     class CGuardStatus : public CEnemyCharacter::CStatusObserver
     {
+    protected:
+        enum STEP
+        {
+            STEP_START = 0,
+            STEP_START_RUN,
+            STEP_HOLD,
+            STEP_HOLD_RUN,
+            STEP_END,
+            STEP_END_RUN,
+        };
+
     public:
         virtual void OnStart(void) override;
         virtual RESULT Observing(void) override;
         virtual ENEMYTYPES::STATUS OnEnd(void) override;
 
-    private:
+    protected:
         int32 m_step;
         float m_fRemainGuardTime;
     };
