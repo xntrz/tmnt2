@@ -419,9 +419,6 @@ CBaseMouserChr::CDeathStatusObserver::CDeathStatusObserver(CBaseMouserChr* pBase
 //
 
 
-DEFINE_NEEDED_EFFECTS_FOR(CBaseMouserChr, { EFFECTID::ID_SHRD_ELEC });
-
-
 CBaseMouserChr::CBaseMouserChr(ENEMYID::VALUE enemyId)
 : CEnemyCharacter(enemyId)
 {

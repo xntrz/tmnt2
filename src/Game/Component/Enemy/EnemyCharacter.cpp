@@ -169,8 +169,10 @@ CEnemyCharacter::CEnemyCharacter(ENEMYID::VALUE idEnemy)
 , m_hCharacter(0)
 , m_pAIModerator(nullptr)
 , m_ID(idEnemy)
+, m_hOwner(0)
+, m_AIThinkOrder()
 , m_pParameter(nullptr)
-, m_eflag(ENEMYTYPES::FLAG_NONE)
+, m_eflag(ENEMYTYPES::FLAG_DEFAULT)
 , m_puFrequencyParam(nullptr)
 , m_bRunning(false)
 , m_bRunningAI(false)
@@ -1238,6 +1240,12 @@ bool CEnemyCharacter::TestFlag(ENEMYTYPES::FLAG flag) const
 void* CEnemyCharacter::SharedData(void) const
 {
     return StatusSubject().GetSharedData();
+};
+
+
+bool CEnemyCharacter::IsAIModeratorExist(void) const
+{
+    return (m_pAIModerator != nullptr);
 };
 
 

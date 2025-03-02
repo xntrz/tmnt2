@@ -1787,9 +1787,99 @@ bool CBaseAI6045::CDecisionUnitMove2::ThinkMoveOrderStraightLine(void)
 
 bool CBaseAI6045::CDecisionUnitMove2::ThinkMoveOrderTurn(void)
 {
-    // TODO
-    ASSERT(false);
-    return false;
+    if (!DecisionUnitCommonParameter().IsViewDataValid())
+    {
+        ClearTurnSetting();
+        return false;
+    };
+
+    if (!DecisionUnitCommonParameter().TestSpecialFlag(BASEAI6045::FLAG_MOVE_TURN))
+    {
+        m_orderTargetNo = DecisionUnitCommonParameter().GetViewData(0).no;
+        DecisionUnitCommonParameter().SetSpecialFlag(BASEAI6045::FLAG_MOVE_TURN);
+    };
+
+    CPlayerCharacter* pPlayerChr = CAIUtils::GetActivePlayer(m_orderTargetNo);
+    if (!pPlayerChr)
+    {
+        ClearTurnSetting();
+        return false;
+    };
+
+    RwV3d vecFootPosMe = Math::VECTOR3_ZERO;
+    EnemyChr().Compositor().GetFootPosition(&vecFootPosMe);
+
+    RwV3d vecFootPosPlayer = Math::VECTOR3_ZERO;
+    pPlayerChr->GetFootPosition(&vecFootPosPlayer);
+
+    RwV3d vecPlayerToMe = Math::VECTOR3_ZERO;
+    Math::Vec3_Sub(&vecPlayerToMe, &vecFootPosMe, &vecFootPosPlayer);
+
+    float fDistance = Math::Vec3_Length(&vecPlayerToMe);
+    float fDistanceOfSuitable = EnemyChr().AICharacteristic().m_fDistanceOfSuitable;
+    if (fDistance < fDistanceOfSuitable)
+    {
+        ClearTurnSetting();
+        return false;
+    };
+
+    float fDirDiff = std::atan2(vecPlayerToMe.x, vecPlayerToMe.z) - pPlayerChr->GetDirection();
+    fDirDiff = CEnemyUtils::RadianCorrect(fDirDiff);
+
+    float fDirDiffAbs = std::fabs(fDirDiff);
+    fDirDiffAbs = (MATH_PI * 0.5f) - fDirDiffAbs;
+    fDirDiffAbs = std::fabs(fDirDiff);
+
+    if (fDirDiffAbs < (MATH_DEG2RAD(18.0f) * 0.5f))
+    {
+        m_vecOrderPos = vecFootPosPlayer;
+        if (!CheckMapCollisionAndHole(&vecFootPosMe, &m_vecOrderPos))
+        {
+            float fDistance = CEnemyUtils::GetDistance(&m_vecOrderPos, &vecFootPosMe);
+            m_orderType = (IsMoveToRun(fDistance) ? BASEAI6045::ORDERTYPE_MOVE_RUN_POS : BASEAI6045::ORDERTYPE_MOVE_WALK_POS);
+            return true;
+        };
+
+        ClearTurnSetting();
+        return false;
+    };
+
+    float fAngle = (MATH_PI * 0.5f) - ((MATH_PI * 0.5f) - std::fabs(fDirDiff)) * 0.5f;
+    if (fDirDiff < 0.0f)
+        fAngle *= -1.0f;
+
+    fDirDiff = std::fabs(fDirDiff);
+
+    fDistanceOfSuitable = EnemyChr().AICharacteristic().m_fDistanceOfSuitable;
+    float fDistanceMin = (fDistanceOfSuitable * 1.25f);
+    float fDistanceMax = ((fDistanceOfSuitable * 2.0f) - fDistanceMin);
+
+    float fDirDiffRatio = (fDirDiff * (MATH_INV_PI * 2.0f));
+
+    fDistance = (fDistanceMax * (1.0f - fDirDiffRatio)) + fDistanceMin;
+
+    fAngle += pPlayerChr->GetDirection();
+    fAngle = CEnemyUtils::RadianCorrect(fAngle);
+
+    RwMatrix matRotY;
+    RwMatrixSetIdentityMacro(&matRotY);
+    Math::Matrix_RotateY(&matRotY, fAngle);
+
+    RwV3d vecDir = Math::VECTOR3_AXIS_Z;
+    RwV3dTransformVector(&vecDir, &vecDir, &matRotY);
+
+    Math::Vec3_Scale(&vecDir, &vecDir, fDistance);
+
+    Math::Vec3_Add(&m_vecOrderPos, &vecFootPosPlayer, &vecDir);
+
+    if (CheckMapCollisionAndHole(&vecFootPosMe, &m_vecOrderPos))
+    {
+        ClearTurnSetting();
+        return false;
+    };
+
+    m_orderType = (IsMoveToRun(fDistance) ? BASEAI6045::ORDERTYPE_MOVE_RUN_POS : BASEAI6045::ORDERTYPE_MOVE_WALK_POS);
+    return true;
 };
 
 

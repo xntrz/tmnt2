@@ -10,7 +10,6 @@ class CEnemyCharacter;
 class CCharacterCompositor;
 
 
-/* TODO: this functional relate to 6045 group, test it later */
 class CPlayerStateWatcher
 {
 public:
@@ -80,7 +79,6 @@ private:
 };
 
 
-/* TODO: this functional relate to 6045 group, test it later */
 class CPlayerWatcher : public CPlayerStateWatcher
 {
 public:
@@ -88,9 +86,9 @@ public:
     
     struct PLAYERDATA
     {
-        int32 No;
-        RwV3d Position;
-        float Length;
+        int32 no;
+        RwV3d position;
+        float distance;
     };
 
     enum PLAYER_DATA_TYPE

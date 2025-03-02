@@ -10,6 +10,7 @@
 #include "Game/Component/Effect/EffectManager.hpp"
 #include "Game/Component/Effect/Magic.hpp"
 #include "Game/Component/Effect/MagicManager.hpp"
+#include "Game/Component/Effect/MagicParameter.hpp"
 #include "Game/Component/Player/PlayerCharacter.hpp"
 #include "Game/Component/GameData/GameData.hpp"
 #include "Game/Component/GameMain/GameProperty.hpp"
@@ -815,6 +816,24 @@ float CEnemyUtils::CKnockBackControl::GetPlayerNumRate(void) const
 };
 
 
+
+/*static*/ void CEnemyUtils::GetWorldBonePosition(RwV3d* pvecWorldPos,
+                                                  const CCharacterCompositor* pChrCompositor,
+                                                  int32 iBoneID,
+                                                  const RwV3d* pvecOffset /*= nullptr*/)
+{
+    ASSERT(pChrCompositor != nullptr);
+    ASSERT(pvecWorldPos != nullptr);
+    
+    pChrCompositor->GetBonePosition(pvecWorldPos, iBoneID, pvecOffset);
+
+    RwV3d vecPos = Math::VECTOR3_ZERO;
+    pChrCompositor->GetPosition(&vecPos);
+
+    Math::Vec3_Add(pvecWorldPos, pvecWorldPos, &vecPos);
+};
+
+
 //
 // *********************************************************************************
 //
@@ -1062,4 +1081,63 @@ CEnemyTracer6045::CEnemyTracer6045(const CCharacterCompositor* pChrCompositor, C
         pChrCompositor->SetDirection(fDir);
 
     return CEnemyUtils::RadianCorrect(fDir);
+};
+
+
+/*static*/ uint32 CEnemyUtils6045::EntrySalivaShotEffect(MAGICID::VALUE magicId,
+                                                         CCharacterCompositor* pChrCompositor,
+                                                         int32 iBoneID,
+                                                         const RwV3d* pvecOffset,
+                                                         float fAimArea,
+                                                         float fAimRate,
+                                                         float fScale,
+                                                         const RwV3d* pvecTargetPos /*= nullptr*/)
+{
+    ASSERT(pChrCompositor != nullptr);
+    ASSERT(pvecOffset != nullptr);
+
+    /* get magic pos */
+    RwV3d vecPos = Math::VECTOR3_ZERO;
+    CEnemyUtils::GetWorldBonePosition(&vecPos, pChrCompositor, iBoneID, pvecOffset);
+
+    /* get magic speed & direction */
+    float fSpeed = 10.0f;
+    float fDirection = pChrCompositor->GetDirection();
+    if (pvecTargetPos)
+    {
+        RwV3d vecTargetPos = *pvecTargetPos;
+        float fMapHeight = CWorldMap::GetMapHeight(&vecTargetPos);
+        vecTargetPos.y = (fMapHeight + (fScale * 0.4f));
+
+        float fGravity = CGameProperty::GetGravity();
+        RwV3d vecSpeed = Math::VECTOR3_ZERO;
+        CEnemyUtils::GetJumpSpeedPosToPos(&vecSpeed, 0.0f, &vecPos, &vecTargetPos, fGravity);
+
+        fSpeed = Math::Vec3_Length(&vecSpeed);
+        fSpeed = Clamp(fSpeed, 5.0f, 20.0f);
+
+        CEnemyUtils6045::GetDirection(&fDirection, &Math::VECTOR3_ZERO, &vecSpeed);
+    };
+
+    float fRand = Math::RandFloat();
+    if (fRand >= fAimRate)
+        fDirection += (1.0f - fRand) / (1.0f - fAimRate) * fAimArea - fAimArea * 0.5f;
+    fDirection = CEnemyUtils::RadianCorrect(fDirection);
+
+    /* play magic */
+    CMagicManager::CParameter param;
+    param.SetPositon(&vecPos);
+    param.SetDirection(fDirection);
+    param.SetObject(pChrCompositor);
+
+    uint32 hMagic = CMagicManager::Play(magicId, &param);
+    ASSERT(hMagic);
+
+    if (hMagic)
+    {
+        CMagicManager::SetSpeed(hMagic, fDirection, fSpeed);
+        CMagicManager::SetScale(hMagic, fScale);
+    };
+
+    return hMagic;
 };

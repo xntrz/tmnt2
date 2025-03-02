@@ -114,7 +114,7 @@ public:
     };
 
 public:
-    static EFFECTID::VALUE GetNeededEffect(int32 no);
+    DEFINE_NEEDED_EFFECTS({ EFFECTID::ID_SHRD_ELEC });
 
     CBaseMouserChr(ENEMYID::VALUE enemyId);
     virtual ~CBaseMouserChr(void);

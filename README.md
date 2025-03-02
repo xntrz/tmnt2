@@ -13,7 +13,7 @@ If you encountered problem with running please open an issue and attach all need
 > # Current project status:
 ✔️ Basic gameplay\
 ✔️ Sound\
-🔨 Enemies & Bosses (34/76)
+🔨 Enemies & Bosses (49/76)
 
 &nbsp;
 > # Building & Run

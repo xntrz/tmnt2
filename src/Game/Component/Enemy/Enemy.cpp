@@ -32,6 +32,12 @@
 #include "ConcreteEnemyCharacter/037TriceratonFlyingHarness.hpp"
 #include "ConcreteEnemyCharacter/040StoneBiter.hpp"
 #include "ConcreteEnemyCharacter/041Bergox.hpp"
+#include "ConcreteEnemyCharacter/042SpiderMonster.hpp"
+#include "ConcreteEnemyCharacter/043Redurian.hpp"
+#include "ConcreteEnemyCharacter/044KingNail.hpp"
+#include "ConcreteEnemyCharacter/045Greenpus.hpp"
+#include "ConcreteEnemyCharacter/046Razorfist.hpp"
+#include "ConcreteEnemyCharacter/047MadMuncher.hpp"
 #include "ConcreteEnemyCharacter/048Rynokk.hpp"
 #include "ConcreteEnemyCharacter/050BloodSucker.hpp"
 #include "ConcreteEnemyCharacter/051PoisonBat.hpp"
@@ -44,6 +50,8 @@
 #include "ConcreteEnemyCharacter/061MouserRobotB.hpp"
 #include "ConcreteEnemyCharacter/062KrokodilMouser.hpp"
 #include "ConcreteEnemyCharacter/063Raptor.hpp"
+#include "ConcreteEnemyCharacter/065CarnivorousPlant.hpp"
+#include "ConcreteEnemyCharacter/066MuralCarnivorousPlant.hpp"
 #include "ConcreteEnemyCharacter/084Karai.hpp"
 #include "ConcreteEnemyCharacter/098Fugitoid.hpp"
 
@@ -143,6 +151,24 @@ static CEnemyCharacter* CreateEnemyCharacter(ENEMYID::VALUE id)
     case ENEMYID::ID_BERGOX:
         return new C041Bergox;
 
+    case ENEMYID::ID_SPIDER_MONSTER:
+        return new C042SpiderMonster;
+
+    case ENEMYID::ID_REDURION:
+        return new C043Redurian;
+
+    case ENEMYID::ID_KING_NAIL:
+        return new C044KingNail;
+
+    case ENEMYID::ID_GREENPUS:
+        return new C045Greenpus;
+
+    case ENEMYID::ID_RAZORFIST:
+        return new C046Razorfist;
+
+    case ENEMYID::ID_MAD_MUNCHER:
+        return new C047MadMuncher;
+
     case ENEMYID::ID_RYNOKK:
         return new C048Rynokk;
 
@@ -178,6 +204,12 @@ static CEnemyCharacter* CreateEnemyCharacter(ENEMYID::VALUE id)
 
     case ENEMYID::ID_RAPTOR:
         return new C063Raptor;
+
+    case ENEMYID::ID_CARNIVOROUS_PLANT:
+        return new C065CarnivorousPlant;
+
+    case ENEMYID::ID_MURAL_CARNIVOROUS_PLANT:
+        return new C066MuralCarnivorousPlant;
 
     case ENEMYID::ID_KARAI:
         return new C084Karai;
@@ -281,6 +313,24 @@ static EFFECTID::VALUE GetEnemyCharacterNeededEffect(ENEMYID::VALUE enemyId, int
     case ENEMYID::ID_BERGOX:
         return C041Bergox::GetNeededEffect(no);
 
+    case ENEMYID::ID_SPIDER_MONSTER:
+        return C042SpiderMonster::GetNeededEffect(no);
+
+    case ENEMYID::ID_REDURION:
+        return C043Redurian::GetNeededEffect(no);
+
+    case ENEMYID::ID_KING_NAIL:
+        return C044KingNail::GetNeededEffect(no);
+
+    case ENEMYID::ID_GREENPUS:
+        return C045Greenpus::GetNeededEffect(no);
+
+    case ENEMYID::ID_RAZORFIST:
+        return C046Razorfist::GetNeededEffect(no);
+
+    case ENEMYID::ID_MAD_MUNCHER:
+        return C047MadMuncher::GetNeededEffect(no);
+
     case ENEMYID::ID_RYNOKK:
         return C048Rynokk::GetNeededEffect(no);
 
@@ -316,6 +366,12 @@ static EFFECTID::VALUE GetEnemyCharacterNeededEffect(ENEMYID::VALUE enemyId, int
 
     case ENEMYID::ID_RAPTOR:
         return C063Raptor::GetNeededEffect(no);
+
+    case ENEMYID::ID_CARNIVOROUS_PLANT:
+        return C065CarnivorousPlant::GetNeededEffect(no);
+
+    case ENEMYID::ID_MURAL_CARNIVOROUS_PLANT:
+        return C066MuralCarnivorousPlant::GetNeededEffect(no);
 
     case ENEMYID::ID_KARAI:
         return C084Karai::GetNeededEffect(no);

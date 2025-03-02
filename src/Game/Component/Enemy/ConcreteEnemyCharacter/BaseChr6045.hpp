@@ -103,7 +103,7 @@ public:
         virtual RESULT Observing(void) override;
         virtual ENEMYTYPES::STATUS OnEnd(void) override;
 
-    private:
+    protected:
         const char* m_pszMotion;
         bool m_bMotionEnd;
     };
@@ -147,6 +147,28 @@ public:
     private:
         const char* m_pszMotion;
         ENEMYTYPES::STATUS m_nextStatus;
+    };
+
+    class CAttackSalivaShotStatusObserver : public COneShotMotionForAttack
+    {
+    public:
+        CAttackSalivaShotStatusObserver(const char* pszMotionName);
+        virtual void OnStart(void) override;
+        virtual RESULT Observing(void) override;
+        virtual ENEMYTYPES::STATUS OnEnd(void) override;
+
+    protected:
+        bool            m_bPlayerAimFlag;
+        bool            m_bShotFlag;
+        MAGICID::VALUE  m_eMagicID;
+        int32           m_iSEID;
+        int32           m_iBoneID;
+        RwV3d           m_vecOffset;
+        float           m_fScale;
+        float           m_fAimArea;
+        int32           m_iAimRateFreqTableNo;
+        int32           m_iAttackPlayerNo;
+        RwV3d           m_vecTargetPos;
     };
 
 public:

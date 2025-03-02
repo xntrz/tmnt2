@@ -1340,11 +1340,6 @@ CBaseKaraiChr::CThinkingStatusObserver::Observing(void) /*override*/
 //
 
 
-DEFINE_NEEDED_EFFECTS_FOR(CBaseKaraiChr, { EFFECTID::ID_WIND_PRESS,
-                                           EFFECTID::ID_SHRD_ELEC,
-                                           EFFECTID::ID_WARP_START });
-
-
 /*static*/ void CBaseKaraiChr::GetDashMarkPosition(RwV3d* pvecPos,
                                                    const CCharacterCompositor* pChrCompositor,
                                                    int32 iPlayerNo,
@@ -1572,16 +1567,4 @@ void CBaseKaraiChr::ClearModeEffects(void)
         CEffectManager::Finish(m_hEffectFinal);
         m_hEffectFinal = 0;
     };
-};
-
-
-bool CBaseKaraiChr::AttachStatusObserver(BASEKARAI::STATUS status, CStatusObserver* pStatusObserver)
-{
-    return AttachStatusObserver(static_cast<ENEMYTYPES::STATUS>(status), pStatusObserver);
-};
-
-
-bool CBaseKaraiChr::SetStatus(BASEKARAI::STATUS status)
-{
-    return SetStatus(static_cast<ENEMYTYPES::STATUS>(status));
 };

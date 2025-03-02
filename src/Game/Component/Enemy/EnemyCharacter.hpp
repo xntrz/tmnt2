@@ -8,11 +8,39 @@
 #include "Game/Component/Effect/EffectID.hpp"
 
 
-/**
- *  Defines array of required effects for enemy
- *
- *  USAGE example: DEFINE_NEEDED_EFFECTS_FOR(C002FootNinja, { EFFECTID::ID_KO_FLASH });
- */
+#define DEFINE_EXTEND_STATUS_FN(TStatus, TBase)                                                 \
+    using TBase::AttachStatusObserver;                                                          \
+    inline bool AttachStatusObserver(TStatus status, CStatusObserver* pStatusObserver)          \
+    {                                                                                           \
+        return AttachStatusObserver(static_cast<ENEMYTYPES::STATUS>(status), pStatusObserver);  \
+    };                                                                                          \
+                                                                                                \
+    using TBase::SetStatus;                                                                     \
+    inline bool SetStatus(TStatus status)                                                       \
+    {                                                                                           \
+        return SetStatus(static_cast<ENEMYTYPES::STATUS>(status));                              \
+    }                                                                                          
+
+
+#define DEFINE_NEEDED_EFFECTS(...)                              \
+    static inline EFFECTID::VALUE GetNeededEffect(int32 no)     \
+    {                                                           \
+        static EFFECTID::VALUE s_aNeededEffect[] = __VA_ARGS__; \
+                                                                \
+        if ((no >= 0) && (no < COUNT_OF(s_aNeededEffect)))      \
+            return s_aNeededEffect[no];                         \
+                                                                \
+        return EFFECTID::ID_UNKNOWN;                            \
+    }
+
+
+#define DEFINE_EMPTY_NEEDED_EFFECTS()                           \
+    static inline EFFECTID::VALUE GetNeededEffect(int32 no)     \
+    {                                                           \
+        return EFFECTID::ID_UNKNOWN;                            \
+    }
+
+
 #define DEFINE_NEEDED_EFFECTS_FOR(T, ...)                       \
     EFFECTID::VALUE T::GetNeededEffect(int32 no)                \
     {                                                           \
@@ -25,11 +53,6 @@
     }
 
 
-/**
- *  Defines that there is no effect required for specified enemy
- *
- *  USAGE example: DEFINE_EMPTY_NEEDED_EFFECTS_FOR(C002FootNinja);
- */
 #define DEFINE_EMPTY_NEEDED_EFFECTS_FOR(T)                      \
     EFFECTID::VALUE T::GetNeededEffect(int32 no)                \
     {                                                           \
@@ -170,6 +193,7 @@ public:
     void ClearFlag(ENEMYTYPES::FLAG flag);
     bool TestFlag(ENEMYTYPES::FLAG flag) const;
     void* SharedData(void) const;
+    bool IsAIModeratorExist(void) const;
     CAIModerator& AIModerator(void) const;
     CAIThinkOrder& AIThinkOrder(void) const;
     CStatusSubject& StatusSubject(void) const;

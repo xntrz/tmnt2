@@ -76,34 +76,7 @@ C048Rynokk::C048Rynokk(void)
     Initialize(&parameter, bReplace);
 
     /* init appear status */
-    uint8 appearType = FrequencyParameter(CEnemyParameter::FREQUENCY_COMMON_1);
-    switch (appearType)
-    {
-    case ENEMYTYPES::APPEARTYPE_WALK_SLOW:
-        AttachStatusObserver(ENEMYTYPES::STATUS_APPEAR, new CCommonEnemyObserver::CWalkingAppearStatus(8.5f));
-        break;
-
-    case ENEMYTYPES::APPEARTYPE_WALK_FAST:
-        AttachStatusObserver(ENEMYTYPES::STATUS_APPEAR, new CCommonEnemyObserver::CWalkingAppearStatus(3.0f));
-        break;
-
-    case ENEMYTYPES::APPEARTYPE_NONE:
-    case ENEMYTYPES::APPEARTYPE_FLY_UP:
-    case ENEMYTYPES::APPEARTYPE_FLY_DOWN:
-        AttachStatusObserver(ENEMYTYPES::STATUS_APPEAR, new CCommonEnemyObserver::CNoneAppearStatus);
-        break;
-
-    case ENEMYTYPES::APPEARTYPE_FALL:
-        AttachStatusObserver(ENEMYTYPES::STATUS_APPEAR, new CCommonEnemyObserver::CFallAppearStatus);
-        break;
-
-    case ENEMYTYPES::APPEARTYPE_MOTION:
-        AttachStatusObserver(ENEMYTYPES::STATUS_APPEAR, new CBaseStoneBiterChr::CAppearStatusObserver);
-        break;
-
-    default:
-        break;
-    };
+    AttachAppearStatusObserver();
 };
 
 

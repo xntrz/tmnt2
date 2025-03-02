@@ -1,6 +1,7 @@
 #include "BaseStoneBiterChr.hpp"
 
 #include "Game/Component/Effect/EffectGeneric.hpp"
+#include "Game/Component/Enemy/EnemyParameter.hpp"
 #include "Game/Component/Enemy/EnemyWatcher.hpp"
 #include "Game/Component/Enemy/ConcreteAIModerator/BaseStoneBiterAI.hpp"
 #include "Game/Component/GameMain/GameProperty.hpp"
@@ -332,9 +333,6 @@ CBaseStoneBiterChr::CDeathStatusObserver::Observing(void) /*override*/
 //
 
 
-DEFINE_EMPTY_NEEDED_EFFECTS_FOR(CBaseStoneBiterChr);
-
-
 CBaseStoneBiterChr::CBaseStoneBiterChr(ENEMYID::VALUE enemyId)
 : CEnemyCharacter(enemyId)
 {
@@ -364,7 +362,7 @@ CBaseStoneBiterChr::CBaseStoneBiterChr(ENEMYID::VALUE enemyId)
     /* CBaseChr6045 status */
     AttachStatusObserver(ENEMYTYPES::STATUS_JUMP_READY,             new CBaseChr6045::CJumpReadyStatusObserver);
 
-    /* CBaseMouserChr status */
+    /* CBaseStoneBiterChr status */
     AttachStatusObserver(ENEMYTYPES::STATUS_HIDE,                   new CBaseStoneBiterChr::CHideStatusObserver);
     AttachStatusObserver(ENEMYTYPES::STATUS_THINKING,               new CBaseStoneBiterChr::CThinkingStatusObserver);
     AttachStatusObserver(ENEMYTYPES::STATUS_WALK_RIGHT,             new CBaseStoneBiterChr::CSideMoveStatusObserver);
@@ -409,4 +407,37 @@ CBaseStoneBiterChr::CBaseStoneBiterChr(ENEMYID::VALUE enemyId)
     CEnemyCharacter::OnStart();
 
     CEnemyContainer::Instance().Attach(this);
+};
+
+
+void CBaseStoneBiterChr::AttachAppearStatusObserver(void)
+{
+    uint8 appearType = FrequencyParameter(CEnemyParameter::FREQUENCY_COMMON_1);
+    switch (appearType)
+    {
+    case ENEMYTYPES::APPEARTYPE_WALK_SLOW:
+        AttachStatusObserver(ENEMYTYPES::STATUS_APPEAR, new CCommonEnemyObserver::CWalkingAppearStatus(8.5f));
+        break;
+
+    case ENEMYTYPES::APPEARTYPE_WALK_FAST:
+        AttachStatusObserver(ENEMYTYPES::STATUS_APPEAR, new CCommonEnemyObserver::CWalkingAppearStatus(3.0f));
+        break;
+
+    case ENEMYTYPES::APPEARTYPE_NONE:
+    case ENEMYTYPES::APPEARTYPE_FLY_UP:
+    case ENEMYTYPES::APPEARTYPE_FLY_DOWN:
+        AttachStatusObserver(ENEMYTYPES::STATUS_APPEAR, new CCommonEnemyObserver::CNoneAppearStatus);
+        break;
+
+    case ENEMYTYPES::APPEARTYPE_FALL:
+        AttachStatusObserver(ENEMYTYPES::STATUS_APPEAR, new CCommonEnemyObserver::CFallAppearStatus);
+        break;
+
+    case ENEMYTYPES::APPEARTYPE_MOTION:
+        AttachStatusObserver(ENEMYTYPES::STATUS_APPEAR, new CBaseStoneBiterChr::CAppearStatusObserver);
+        break;
+
+    default:
+        break;
+    };
 };

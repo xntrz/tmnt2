@@ -79,10 +79,11 @@ public:
     };
 
 public:
-    static EFFECTID::VALUE GetNeededEffect(int32 no);
+    DEFINE_EMPTY_NEEDED_EFFECTS();
 
     CBaseStoneBiterChr(ENEMYID::VALUE enemyId);
     virtual ~CBaseStoneBiterChr(void);
     virtual void Run(void) override;
     virtual void OnStart(void) override;
+    void AttachAppearStatusObserver(void);
 };

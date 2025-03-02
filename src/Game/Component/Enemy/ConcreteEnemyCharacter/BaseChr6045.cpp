@@ -6,6 +6,7 @@
 #include "Game/Component/Enemy/CharacterCompositor.hpp"
 #include "Game/Component/Enemy/EnemyUtils.hpp"
 #include "Game/Component/Enemy/EnemyTracer.hpp"
+#include "Game/Component/Enemy/ConcreteAIModerator/BaseAI6045.hpp"
 #include "Game/Component/GameMain/GameProperty.hpp"
 #include "Game/Component/Player/PlayerCharacter.hpp"
 #include "Game/System/Sound/GameSound.hpp"
@@ -551,6 +552,93 @@ CBaseChr6045::CNothingStatusObserver::Observing(void) /*override*/
 /*virtual*/ ENEMYTYPES::STATUS CBaseChr6045::CNothingStatusObserver::OnEnd(void) /*override*/
 {
     return m_nextStatus;
+};
+
+
+//
+// *********************************************************************************
+//
+
+
+CBaseChr6045::CAttackSalivaShotStatusObserver::CAttackSalivaShotStatusObserver(const char* pszMotionName)
+: CBaseChr6045::COneShotMotionForAttack(pszMotionName)
+, m_bPlayerAimFlag(false)
+, m_bShotFlag(false)
+, m_eMagicID(MAGICID::ID_UNKNOWN)
+, m_iSEID(-1)
+, m_iBoneID(-1)
+, m_vecOffset(Math::VECTOR3_ZERO)
+, m_fScale(0.0f)
+, m_fAimArea(0.0f)
+, m_iAimRateFreqTableNo(-1)
+, m_iAttackPlayerNo(-1)
+, m_vecTargetPos(Math::VECTOR3_ZERO)
+{
+    ;
+};
+
+
+/*virtual*/ void CBaseChr6045::CAttackSalivaShotStatusObserver::OnStart(void) /*override*/
+{
+    COneShotMotionForAttack::OnStart();
+
+    m_bShotFlag = false;
+
+    if (m_bPlayerAimFlag)
+    {
+        m_iAttackPlayerNo = EnemyChr().AIThinkOrder().OrderAttack().m_iPlayerNo;
+
+        RwV3d vecDir = Math::VECTOR3_AXIS_Z;
+        EnemyChr().Compositor().RotateVectorByDirection(&m_vecTargetPos, &vecDir);
+    };
+};
+
+
+/*virtual*/ CBaseChr6045::CAttackSalivaShotStatusObserver::RESULT
+CBaseChr6045::CAttackSalivaShotStatusObserver::Observing(void) /*override*/
+{
+    if (EnemyChr().Compositor().TestCharacterFlag(CHARACTERTYPES::FLAG_OCCURED_TIMING))
+    {
+        uint8 freq = EnemyChr().FrequencyParameter(m_iAimRateFreqTableNo);
+        float fAimRate = static_cast<float>(freq) * 0.01f;
+
+        CEnemyUtils6045::EntrySalivaShotEffect(m_eMagicID,
+                                              &EnemyChr().Compositor(),
+                                              m_iBoneID,
+                                              &m_vecOffset,
+                                              m_fAimArea,
+                                              fAimRate,
+                                              m_fScale,
+                                              (m_bPlayerAimFlag ? &m_vecTargetPos : nullptr));
+
+        CGameSound::PlayObjectSE(&EnemyChr().Compositor(), SDCODE_SE(m_iSEID));
+
+        m_bMotionEnd = true;
+        m_bShotFlag = true;
+    };
+
+    if (m_bPlayerAimFlag)
+    {
+        if (!m_bShotFlag)
+        {
+            CPlayerCharacter* pPlayerChr = CAIUtils::GetActivePlayer(m_iAttackPlayerNo);
+            if (pPlayerChr)
+            {
+                pPlayerChr->GetBodyPosition(&m_vecTargetPos);
+
+                float fRotRate = EnemyChr().Feature().m_fRotateRate;
+                CEnemyUtils::RotateToPosition(&EnemyChr().Compositor(), &m_vecTargetPos, fRotRate, 0.0f);
+            };
+        };
+    };
+
+    return COneShotMotionForAttack::Observing();
+};
+
+
+/*virtual*/ ENEMYTYPES::STATUS CBaseChr6045::CAttackSalivaShotStatusObserver::OnEnd(void) /*override*/
+{
+    return COneShotMotionForAttack::OnEnd();
 };
 
 

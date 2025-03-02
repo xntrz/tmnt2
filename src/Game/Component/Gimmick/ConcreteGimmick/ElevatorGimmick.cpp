@@ -111,7 +111,7 @@ CElevatorGimmick::CElevatorGimmick(const char* pszName, void* pParam)
         RwV3d vVelocity     = { 0.0f, 1.6f, 0.0f };
 
         m_apParts[0] = new CElevatorPartsFloorGimmick;
-        m_apParts[0]->CreateModel("elevator", true);
+        m_apParts[0]->CreateModel("elevator", false);
         m_apParts[0]->SetPosition(&vPosition);
         m_apParts[0]->SetGoalPosition(&vGoalPosition);
         m_apParts[0]->SetVelocity(&vVelocity);

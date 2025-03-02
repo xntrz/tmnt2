@@ -49,7 +49,7 @@ namespace BASEKARAI
 
     static const float ATTACK_SPECIAL_CHARGETIME[] = { 1.75f, 1.25f, 0.75f,};
     static_assert(COUNT_OF(ATTACK_SPECIAL_CHARGETIME) == GAMETYPES::DIFFICULTY_NUM, "table incorrect");
-}; /* namespace KARAITYPES */
+}; /* namespace BASEKARAI */
 
 
 class CBaseKaraiChr : public CBaseChr6045
@@ -282,7 +282,12 @@ public:
     };
 
 public:
-    static EFFECTID::VALUE GetNeededEffect(int32 no);
+    DEFINE_EXTEND_STATUS_FN(BASEKARAI::STATUS, CBaseChr6045);
+
+    DEFINE_NEEDED_EFFECTS({ EFFECTID::ID_WIND_PRESS,
+                            EFFECTID::ID_SHRD_ELEC,
+                            EFFECTID::ID_WARP_START });
+
     static void GetDashMarkPosition(RwV3d* pvecPos,
                                     const CCharacterCompositor* pChrCompositor,
                                     int32 iPlayerNo,
@@ -297,12 +302,6 @@ public:
     bool IsModeWarning(void) const;
     bool IsModeFinal(void) const;
     void ClearModeEffects(void);
-
-    using CBaseChr6045::AttachStatusObserver;
-    bool AttachStatusObserver(BASEKARAI::STATUS status, CStatusObserver* pStatusObserver);
-
-    using CBaseChr6045::SetStatus;
-    bool SetStatus(BASEKARAI::STATUS status);
 
 private:
     bool m_bModeWarning;

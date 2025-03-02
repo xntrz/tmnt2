@@ -249,8 +249,7 @@ C084KaraiAI::CDecisionUnitAttackD::CDecisionUnitAttackD(void)
 C084KaraiAI::CDecisionUnitAttackCounter::CDecisionUnitAttackCounter(void)
 : CBaseAI6045::CDecisionUnitAttackCounter(BASEAI6045::AIDECISIONUNITNAME::ATTACK_COUNTER)
 {
-    m_fDistanceCondition = EnemyChr().AICharacteristic().m_fDistanceOfSuitable;
-    m_orderType          = BASEAI6045::ORDERTYPE_ATTACK_COUNTER;
+    ;
 };
 
 

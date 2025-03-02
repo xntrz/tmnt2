@@ -109,6 +109,11 @@ public:
     static void PlayTouchdownSE(const CCharacterCompositor* pChrCompositor);
     static void EntryTouchDownEffectAndSE(const CEnemyCharacter* pEnemyChr);
     static void EntryFlyawayBoundEffectAndSE(const CEnemyCharacter* pEnemyChr);
+    
+    static void GetWorldBonePosition(RwV3d* pvecWorldPos,
+                                     const CCharacterCompositor* pChrCompositor,
+                                     int32 iBoneID,
+                                     const RwV3d* pvecOffset = nullptr);
 };
 
 
@@ -175,4 +180,13 @@ public:
     static float RotateToTarget(CCharacterCompositor* pChrCompositor,
                                 RwV3d* pvecTargetPos,
                                 float fRotateRate);
+
+    static uint32 EntrySalivaShotEffect(MAGICID::VALUE magicId,
+                                        CCharacterCompositor* pChrCompositor,
+                                        int32 iBoneID,
+                                        const RwV3d* pvecOffset,
+                                        float fAimArea,
+                                        float fAimRate,
+                                        float fScale,
+                                        const RwV3d* pvecTargetPos = nullptr);
 };
