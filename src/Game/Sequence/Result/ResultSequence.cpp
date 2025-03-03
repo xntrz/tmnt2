@@ -190,7 +190,7 @@ void CResultWorkPool::CrystalPieceDraw(void)
     if (m_auAnimCnt[0] < uint32(fDuration))
         ++m_auAnimCnt[0];
 
-	uint8 uAlphaBasis = uint8(Math::LinearTween(0.0f, 255.0f, float(m_auAnimCnt[0]), fDuration));
+    uint8 uAlphaBasis = uint8(Math::LinearTween(0.0f, 255.0f, float(m_auAnimCnt[0]), fDuration));
     float wh = Math::LinearTween(128.0f, -64.0f, float(m_auAnimCnt[0]), fDuration);
 
     m_sprite.SetOffset(0.5f, 0.5f);
@@ -214,7 +214,7 @@ void CResultWorkPool::CrystalLvlUpDraw(void)
 {
     int32 nCryData = (GetCrystalData(m_nLvlupCryIndex) / 10) - 1;
 
-	float fDuration = (CScreen::Framerate() * 0.16f);
+    float fDuration = (CScreen::Framerate() * 0.16f);
 
     if (m_auAnimCnt[0] < static_cast<uint32>(fDuration))
         ++m_auAnimCnt[0];
@@ -300,7 +300,7 @@ void CResultWorkPool::CrystalLvlUpDraw(void)
 
 void CResultWorkPool::PersonalResultDraw(void)
 {
-	float fDuration = (CScreen::Framerate() * 0.26f);
+    float fDuration = (CScreen::Framerate() * 0.26f);
 
     if (m_auAnimCnt[0] < static_cast<uint32>(fDuration))
         ++m_auAnimCnt[0];
@@ -402,7 +402,7 @@ void CResultWorkPool::PersonalResultDraw(void)
             m_afRotate[0] = InvClamp(m_afRotate[0] + fRotSpeed, 0.0f, 360.0f);
             m_afRotate[1] = InvClamp(m_afRotate[1] - fRotSpeed, 0.0f, 360.0f);
 
-			uint8 uAlphaBasis = uint8(Math::LinearTween(0.0f, 255.0f, float(m_auAnimCnt[1]), fDurationSub));
+            uint8 uAlphaBasis = uint8(Math::LinearTween(0.0f, 255.0f, float(m_auAnimCnt[1]), fDurationSub));
 
             m_sprite.SetOffset(0.5f, 0.5f);
             m_sprite.SetTexture(m_apTexture[7]);
@@ -419,7 +419,7 @@ void CResultWorkPool::PersonalResultDraw(void)
                 m_sprite.SetRotate(m_afRotate[i]);
                 m_sprite.DrawRotate();
             };
-			
+            
             RENDERSTATE_POP(rwRENDERSTATEDESTBLEND);
             RENDERSTATE_POP(rwRENDERSTATESRCBLEND);
             RENDERSTATE_POP(rwRENDERSTATEZWRITEENABLE);
@@ -439,9 +439,9 @@ void CResultWorkPool::PersonalResultDraw(void)
         for (int32 i = 0; i < COLUMNS; ++i)
         {
             GAMETYPES::CLEARRANK personalrank = CGameData::PlayResult().GetPersonalRank(i);
-			
-			ASSERT(personalrank >= GAMETYPES::CLEARRANK_E);
-			ASSERT(personalrank < GAMETYPES::CLEARRANK_NUM);
+            
+            ASSERT(personalrank >= GAMETYPES::CLEARRANK_E);
+            ASSERT(personalrank < GAMETYPES::CLEARRANK_NUM);
             
             m_sprite.SetTexture(m_apTexture[personalrank - 1]);
             m_sprite.Move(float(i) * 106.0f - 92.0f, 141.0f);
@@ -468,10 +468,10 @@ void CResultWorkPool::PrizeCursorDraw(void)
     };
 
     uint8 uAlphaBasis = 0;
-	if (m_bAnimFlag)
-		uAlphaBasis = uint8(Math::LinearTween(0.0f, 255.0f, float(m_auAnimCnt[0]), fDuration));
-	else
-		uAlphaBasis = uint8(Math::LinearTween(255.0f, -255.0f, float(m_auAnimCnt[0]), fDuration));
+    if (m_bAnimFlag)
+        uAlphaBasis = uint8(Math::LinearTween(0.0f, 255.0f, float(m_auAnimCnt[0]), fDuration));
+    else
+        uAlphaBasis = uint8(Math::LinearTween(255.0f, -255.0f, float(m_auAnimCnt[0]), fDuration));
 
     RENDERSTATE_PUSH(rwRENDERSTATEZWRITEENABLE, false);
     RENDERSTATE_PUSH(rwRENDERSTATESRCBLEND, rwBLENDSRCALPHA);
@@ -481,7 +481,7 @@ void CResultWorkPool::PrizeCursorDraw(void)
     m_sprite.SetOffset(0.5f, 0.5f);
     m_sprite.Resize(float(CScreen::Width()), 32.0f);
     m_sprite.SetRGBA(0, 200, 20, uAlphaBasis);
-	m_sprite.Move(0.0f, m_nPrizeNo * 42.0f - 36.0f);
+    m_sprite.Move(0.0f, m_nPrizeNo * 42.0f - 36.0f);
     m_sprite.Draw();
     m_sprite.SetRGBA(255, 255, 255, 255);
 
@@ -499,7 +499,7 @@ void CResultWorkPool::CrystalGrowingDraw(void)
 
     CSystem2D::PushRenderState();
 
-	uint8 uAlphaBasis = uint8(Math::LinearTween(0.0f, 255.0f, float(m_auAnimCnt[0]), fDuration));
+    uint8 uAlphaBasis = uint8(Math::LinearTween(0.0f, 255.0f, float(m_auAnimCnt[0]), fDuration));
     float fOfsY = Math::LinearTween(0.0f, 10.0f, float(m_auAnimCnt[0]), fDuration);
 
     CGameFont::SetHeightScaled(2.0f);
@@ -527,7 +527,7 @@ void CResultWorkPool::CrystalGrowingDraw(void)
     int32 nCryData = GetCrystalData(m_nLvlupCryIndex);
     int32 nCryLevel = (nCryData / 10) - 1;
 
-	pwszText = CGameText::GetText(GAMETEXT(nCryLevel + aCryText[m_nLvlupCryIndex]));
+    pwszText = CGameText::GetText(GAMETEXT(nCryLevel + aCryText[m_nLvlupCryIndex]));
     CGameFont::Flow(pwszText, &bbox);
 
     CSystem2D::PopRenderState();
@@ -540,15 +540,15 @@ void CResultWorkPool::CrystalGrowingDraw(void)
         {
             if (m_nLvlupCryIndex == 1 && nCryData == 1)
             {
-				nComboIndex = 2;
+                nComboIndex = 2;
             }
             else if (m_nLvlupCryIndex == 2 && nCryData == 2)
             {
-				nComboIndex = 4;
+                nComboIndex = 4;
             }
             else if (m_nLvlupCryIndex == 3 && nCryData == 2)
             {
-				nComboIndex = 3;
+                nComboIndex = 3;
             };
         }
         else
@@ -577,7 +577,7 @@ void CResultWorkPool::CrystalGrowingDraw(void)
         
         m_sprite.SetOffset(0.5f, 0.5f);
         m_sprite.Resize(wh, wh);
-		m_sprite.SetRGBA(255, 255, 255, uAlphaBasis);
+        m_sprite.SetRGBA(255, 255, 255, uAlphaBasis);
 
         ASSERT(nComboIndex >= 0);
         ASSERT(nComboIndex < COUNT_OF(aComboTexIndex));
@@ -607,7 +607,7 @@ void CResultWorkPool::BattleNexusWinnerDraw(void)
 
     CSystem2D::PushRenderState();
 
-	uint8 uAlphaBasis = uint8(Math::LinearTween(0.0f, 255.0f, float(m_auAnimCnt[0]), fDuration));
+    uint8 uAlphaBasis = uint8(Math::LinearTween(0.0f, 255.0f, float(m_auAnimCnt[0]), fDuration));
 
     CGameFont::SetHeightScaled(2.5f);
     CGameFont::SetRGBA(255, 255, 255, uAlphaBasis);
@@ -1065,10 +1065,10 @@ void CResultSequence::BeginFadeIn(void)
             int32 prizeNo = 0;
             for (int32 i = 0; i < nNumPrize; ++i)
             {
-                if (CGameData::PlayParam().PrizeInfo(i).m_bTaken)
-                    continue;
+                bool bIsPrizeTaken = CGameData::PlayParam().PrizeInfo(i).m_bTaken;
+                bool bIsPrizeComeback = (CGameData::PlayParam().PrizeInfo(i).m_PrizeType == GAMETYPES::PRIZE_COMEBACK);
 
-                if (CGameData::PlayParam().PrizeInfo(i).m_PrizeType != GAMETYPES::PRIZE_COMEBACK)
+                if (bIsPrizeTaken && (!bIsPrizeComeback))
                     continue;
                 
                 const wchar* pwszPrizeName = nullptr;
