@@ -854,30 +854,29 @@ bool SdDrvSetSE(SdSetDriverCode_t* CodeBuff)
     ASSERT(BankNo >= 0);
     ASSERT(BankNo < COUNT_OF(SdSeCodeTable));
 
-    SdKdtTableData_t* TableDataArray = (SdKdtTableData_t*)SdSeCodeTable[BankNo].Table;
-    if (!TableDataArray)
+    SdKdtTableData_t* TableData = (SdKdtTableData_t*)SdSeCodeTable[BankNo].Table;
+    if (!TableData)
         return false;
     
     int32 Offset = SD_SE_BANK_OFFSET(CodeBuff->Code);
     if (SdSeCodeTable[BankNo].Count <= Offset)
         return false;
 
-    SdKdtTableData_t* TableData = &TableDataArray[Offset];
-    int32 Option = (int32)TableData->Option;
+    SdKdtTableData_t* CodeData = &TableData[Offset];
+    
+    int32 Option = (int32)CodeData->Option;
     if (!SdDrvAutoFadeout(Option, CodeBuff) && ((Option & SD_SEQ_OPT_0x4) != 0))
         return false;
 
-    int32 Channel = SdDrvSetChannelSECB(CodeBuff, TableData, Option);
+    int32 Channel = SdDrvSetChannelSECB(CodeBuff, CodeData, Option);
     if (!Channel)
     {
-        Channel = SdDrvFindChannel(
-            CodeBuff->Code,
-            (int32)TableData->SetMode,
-            (int32)TableData->Channel,
-            Option,
-            (int32)TableData->Priority,
-            (int32)TableData->Count
-        );
+        Channel = SdDrvFindChannel(CodeBuff->Code,
+                                   (int32)CodeData->SetMode,
+                                   (int32)CodeData->Channel,
+                                   Option,
+                                   (int32)CodeData->Priority,
+                                   (int32)CodeData->Count);
     };
 
     if (Channel < 0)
@@ -886,7 +885,7 @@ bool SdDrvSetSE(SdSetDriverCode_t* CodeBuff)
     CodeBuff->Channel = Channel;
     CodeBuff->Option = Option;
 
-    SdDrvSetSeqWork(CodeBuff, TableDataArray, Offset);
+    SdDrvSetSeqWork(CodeBuff, TableData, Offset);
 
     return true;
 };
@@ -927,19 +926,23 @@ bool SdDrvSetTRSE(SdSetDriverCode_t* CodeBuff)
     if (!TableData->TableAddress)
         return false;
 
-    if (TableData->Option & SD_SEQ_OPT_0x4)
+    SdKdtTableData_t* CodeData = &TableData[Offset];
+	if (CodeData->Count >= 52)
+		return false;
+
+    if (CodeData->Option & SD_SEQ_OPT_0x4)
     {
-        if ((TableData->Option & SD_SEQ_OPT_0x200) && SdDrvSameCodeFind(CodeBuff->Code, 0, COUNT_OF(SdSeqWork) - 1, 1) >= 0)
+        if ((CodeData->Option & SD_SEQ_OPT_0x200) && SdDrvSameCodeFind(CodeBuff->Code, 0, COUNT_OF(SdSeqWork) - 1, 1) >= 0)
             return false;
 
-        if (!SdDrvAutoFadeout((int32)TableData->Option, CodeBuff))
+        if (!SdDrvAutoFadeout((int32)CodeData->Option, CodeBuff))
             return false;
 
-        int32 Priority = (int32)TableData->Priority;
-        if (TableData->Option & SD_SEQ_OPT_0x10)
+        int32 Priority = (int32)CodeData->Priority;
+        if (CodeData->Option & SD_SEQ_OPT_0x10)
             --Priority;
 
-        int32 Channel = SdDrvSetChannelBGMCB(CodeBuff, TableData, (int32)TableData->Option, Priority);
+        int32 Channel = SdDrvSetChannelBGMCB(CodeBuff, CodeData, (int32)CodeData->Option, Priority);
         if (Channel < 0)
             return false;
 
@@ -947,25 +950,26 @@ bool SdDrvSetTRSE(SdSetDriverCode_t* CodeBuff)
     }
     else
     {
-        int32 Channel = SdDrvSetChannelSECB(CodeBuff, TableData, (int32)TableData->Option);
+        int32 Channel = SdDrvSetChannelSECB(CodeBuff, CodeData, (int32)CodeData->Option);
         if (!Channel)
         {
-            Channel = SdDrvFindChannel(
-                CodeBuff->Code,
-                (int32)TableData->SetMode,
-                (int32)TableData->Channel,
-                (int32)TableData->Option,
-                (int32)TableData->Priority,
-                (int32)TableData->Count
-            );
+            Channel = SdDrvFindChannel(CodeBuff->Code,
+                                       (int32)CodeData->SetMode,
+                                       (int32)CodeData->Channel,
+                                       (int32)CodeData->Option,
+                                       (int32)CodeData->Priority,
+                                       (int32)CodeData->Count);
         };
 
         if (Channel < 0)
             return false;
 
         CodeBuff->Channel = Channel;
-        CodeBuff->Option = (int32)TableData->Option;
+        CodeBuff->Option = (int32)CodeData->Option;
     };
+
+    if (!CodeData->TableAddress)
+        return false;
 
     SdDrvSetSeqWork(CodeBuff, TableData, Offset);
 
