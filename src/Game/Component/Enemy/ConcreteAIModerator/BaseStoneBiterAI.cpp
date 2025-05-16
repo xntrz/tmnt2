@@ -12,7 +12,6 @@ CBaseStoneBiterAI::CDecisionUnitBaseBiter::CDecisionUnitBaseBiter(CEnemyCharacte
 : CEnemyAIDecisionUnit(pszUnitName, type)
 , m_enemyWatcher()
 {
-    ASSERT(pEnemyChr != nullptr);
     m_enemyWatcher.Initialize(pEnemyChr, true);
 };
 
@@ -46,12 +45,8 @@ void CBaseStoneBiterAI::CDecisionUnitBaseBiter::SetAttackOrder(int32 iOrderTypeA
 {
     EnemyChr().AIThinkOrder().SetOrder(CAIThinkOrder::ORDER_ATTACK);
     EnemyChr().AIThinkOrder().OrderAttack().m_iAttackType = iOrderTypeAttack;
-    EnemyChr().AIThinkOrder().OrderAttack().m_iPlayerNo = DecisionUnitCommonParameter().PlayerWatcher().GetTargetTypeNo();
-
-    RwV3d vecPos = Math::VECTOR3_ZERO;
-    DecisionUnitCommonParameter().PlayerWatcher().GetTargetTypePosition(&vecPos);
-
-    EnemyChr().AIThinkOrder().OrderAttack().m_vAt = vecPos;
+    EnemyChr().AIThinkOrder().OrderAttack().m_iPlayerNo = DecisionUnitCommonParameter().PlayerWatcher().GetTargetPlayerData().no;
+    EnemyChr().AIThinkOrder().OrderAttack().m_vAt = DecisionUnitCommonParameter().PlayerWatcher().GetTargetPlayerData().position;
 };
 
 
@@ -59,12 +54,8 @@ void CBaseStoneBiterAI::CDecisionUnitBaseBiter::SetMoveOrder(int32 iOrderTypeMov
 {
     EnemyChr().AIThinkOrder().SetOrder(CAIThinkOrder::ORDER_MOVE);
     EnemyChr().AIThinkOrder().OrderMove().m_iMoveType = iOrderTypeMove;
-    EnemyChr().AIThinkOrder().OrderMove().m_iPlayerNo = DecisionUnitCommonParameter().PlayerWatcher().GetTargetTypeNo();
-
-    RwV3d vecPos = Math::VECTOR3_ZERO;
-    DecisionUnitCommonParameter().PlayerWatcher().GetTargetTypePosition(&vecPos);
-
-    EnemyChr().AIThinkOrder().OrderMove().m_vAt = vecPos;
+    EnemyChr().AIThinkOrder().OrderMove().m_iPlayerNo = DecisionUnitCommonParameter().PlayerWatcher().GetTargetPlayerData().no;
+    EnemyChr().AIThinkOrder().OrderMove().m_vAt = DecisionUnitCommonParameter().PlayerWatcher().GetTargetPlayerData().position;
 };
 
 
@@ -97,7 +88,7 @@ CBaseStoneBiterAI::CDecisionUnitAttackFar::CDecisionUnitAttackFar(CEnemyCharacte
     if (!DecisionUnitCommonParameter().PlayerWatcher().IsSuitableArea(MATH_DEG2RAD(60.0f)))
         return false;
 
-    int32 iNo = DecisionUnitCommonParameter().PlayerWatcher().GetTargetTypeNo();
+    int32 iNo = DecisionUnitCommonParameter().PlayerWatcher().GetTargetPlayerData().no;
     if (CAIUtils6045::CheckObstacleBetweenEnemyToPlayer(&EnemyChr().Compositor(), iNo, false))
         return false;
 
@@ -137,7 +128,7 @@ CBaseStoneBiterAI::CDecisionUnitAttackNear::CDecisionUnitAttackNear(CEnemyCharac
     if (!DecisionUnitCommonParameter().PlayerWatcher().IsSuitableArea(MATH_DEG2RAD(70.0f)))
         return false;
 
-    int32 iNo = DecisionUnitCommonParameter().PlayerWatcher().GetTargetTypeNo();
+    int32 iNo = DecisionUnitCommonParameter().PlayerWatcher().GetTargetPlayerData().no;
     if (CAIUtils6045::CheckObstacleBetweenEnemyToPlayer(&EnemyChr().Compositor(), iNo, false))
         return false;
 
@@ -224,7 +215,6 @@ CBaseStoneBiterAI::CDecisionUnitMoveSide::CDecisionUnitMoveSide(CEnemyCharacter*
 CBaseStoneBiterAI::CDecisionUnitMove::CDecisionUnitMove(CEnemyCharacter* pEnemyChr)
 : m_enemyWatcher()
 {
-    ASSERT(pEnemyChr != nullptr);
     m_enemyWatcher.Initialize(pEnemyChr, true);
 };
 

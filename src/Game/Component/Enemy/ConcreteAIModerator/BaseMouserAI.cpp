@@ -136,7 +136,7 @@ CBaseMouserAI::CBaseMouserAI(CEnemyCharacter* pEnemyChr)
     pUnit->SetFreqTable(CEnemyParameter::FREQUENCY_ATTACK_B);
     Attach(pUnit);
 
-    if (EnemyCharacter().GetID() == ENEMYID::ID_RAPTOR)
+    if (EnemyCharacter().GetID() != ENEMYID::ID_RAPTOR)
     {
         pUnit = new CBaseMouserAI::CDecisionUnitAttackC;
         pUnit->SetFreqTable(CEnemyParameter::FREQUENCY_ATTACK_C);

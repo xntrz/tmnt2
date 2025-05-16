@@ -30,7 +30,7 @@ void CAIFrequencyParam::Initialize(uint8* pParam, int32 nParam, int32 iLevelMax)
 
 void CAIFrequencyParam::DrawFreqTable(void)
 {
-    // TODO CBaseStoneBiterChr::Draw
+    ;
 };
 
 

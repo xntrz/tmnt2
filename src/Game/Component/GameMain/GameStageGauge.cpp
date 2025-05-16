@@ -87,14 +87,14 @@ void CBossExGauge::HandleEnemyDamaged(CEnemy* pEnemy, int32 nRemainHP)
 bool CBossExGauge::isBoss(ENEMYID::VALUE enemyId, int32 no) const
 {
     ENEMYID::VALUE bossId = getStageBoss(no);
-    if (!bossId)
+    if (bossId != enemyId)
         return false;
 
     /* ninja rats case - boss is first rat "A" */
     if ((bossId >= ENEMYID::ID_NINJA_RATS_A) &&
         (bossId <= ENEMYID::ID_NINJA_RATS_D))
     {
-        return (bossId == ENEMYID::ID_NINJA_RATS_A);
+		bossId = ENEMYID::ID_NINJA_RATS_A;
     };    
 
     return (bossId == enemyId);

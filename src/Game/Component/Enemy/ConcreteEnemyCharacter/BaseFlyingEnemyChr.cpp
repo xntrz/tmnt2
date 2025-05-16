@@ -163,7 +163,6 @@ CBaseFlyingEnemyChr::CAppearFlyStatusObserver::CAppearFlyStatusObserver(float fA
     EnemyChr().Compositor().GetPosition(&m_vecStartPos);
 
     EnemyChr().Compositor().SetAcceleration(&Math::VECTOR3_ZERO);
-    EnemyChr().Compositor().SetVelocity(&Math::VECTOR3_ZERO);
     EnemyChr().Compositor().ChangeMotion(ENEMYTYPES::MOTIONNAMES::IDLE);
     EnemyChr().Compositor().SetEnableCatchHit(false);
 
@@ -271,8 +270,9 @@ CBaseFlyingEnemyChr::CIdleStatusObserver::Observing(void) /*override*/
     CAIThinkOrder::ORDER order = EnemyChr().AIThinkOrder().GetOrder();
     if (order == CAIThinkOrder::ORDER_WAIT)
         return RESULT_CONTINUE;
-
-    EnemyChr().AIThinkOrder().SetAnswer(CAIThinkOrder::RESULT_ACCEPT);
+    
+    if (order == CAIThinkOrder::ORDER_NOTHING)
+        EnemyChr().AIThinkOrder().SetAnswer(CAIThinkOrder::RESULT_ACCEPT);
 
     return RESULT_END;
 };
@@ -355,11 +355,15 @@ CBaseFlyingEnemyChr::CMoveStatusObserver::Observing(void) /*override*/
 
 void CBaseFlyingEnemyChr::CMoveStatusObserver::Direction(const RwV3d* vecPos, const RwV3d* vecAt)
 {
-    float fDir = CEnemyUtils::GetDirection(vecPos, vecAt);
+    RwV3d vecPosXZ = *vecPos;
+    vecPosXZ.y = 0.0f;
 
-    if (Math::FEqual(vecPos->x, vecAt->x) &&
-        Math::FEqual(vecPos->z, vecAt->z))
-        fDir = EnemyChr().Compositor().GetDirection();
+    RwV3d vecAtXZ = *vecAt;
+    vecAtXZ.y = 0.0f;
+
+    float fDir = EnemyChr().Compositor().GetDirection();
+    if (!Math::Vec3_IsEqual(&vecPosXZ, &vecAtXZ))
+        fDir = CEnemyUtils::GetDirection(vecPos, vecAt);
 
     EnemyChr().Compositor().RotateDirection(fDir, m_fRotRate);
 
@@ -408,7 +412,6 @@ void CBaseFlyingEnemyChr::CMoveStatusObserver::Velocity(const RwV3d* vecPos, con
     float fRadius = EnemyChr().Compositor().GetCollisionParameter().m_fRadius;
 
     RwV3d vecStep = Math::VECTOR3_ZERO;
-
     Math::Vec3_Normalize(&vecStep, &vecVelocity);
     Math::Vec3_Scale(&vecStep, &vecStep, (fRadius * 2.0f));
 
@@ -446,9 +449,7 @@ void CBaseFlyingEnemyChr::CMoveStatusObserver::Velocity(const RwV3d* vecPos, con
 {
     CBaseFlyingStatusObserver::OnStart();
 
-    bool bForce = true;
-    EnemyChr().Compositor().ChangeMotion(ENEMYTYPES::MOTIONNAMES::ATTACK_A, bForce);
-
+    EnemyChr().Compositor().ChangeMotion(ENEMYTYPES::MOTIONNAMES::ATTACK_A, true);
     CGameSound::PlayAttackSE(&EnemyChr().Compositor());
 };
 

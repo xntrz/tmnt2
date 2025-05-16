@@ -64,22 +64,24 @@ namespace
 
 static const SHOTINFO s_aShotInfo[] =
 {
-    { "",           0,  0.0f,   0.0f, 0.0f, 0.0f, CHitAttackData::TARGET_NONE,              false,  EFFECTID::ID_UNKNOWN,           EFFECTID::ID_UNKNOWN,       EFFECTID::ID_UNKNOWN,     MAGICID::ID_UNKNOWN,    { 0 } },
-    { "arrow",      5,  72.0f,  0.1f, 0.1f, 0.1f, CHitAttackData::TARGET_PLAYER_GIMMICK,    true,   EFFECTID::ID_UNKNOWN,           EFFECTID::ID_UNKNOWN,       EFFECTID::ID_UNKNOWN,     MAGICID::ID_UNKNOWN,    { { 0xFF, 0xFF, 0xFF, 0xFF }, 0x40, 4 } },
-    { "arrow",      5,  72.0f,  0.1f, 0.1f, 0.1f, CHitAttackData::TARGET_PLAYER_GIMMICK,    true,   EFFECTID::ID_FIRE_ARROWSHOT,    EFFECTID::ID_UNKNOWN,       EFFECTID::ID_UNKNOWN,     MAGICID::ID_KO_EXPL,    { 0 } },
-    { "arrow",      5,  72.0f,  0.1f, 0.1f, 0.1f, CHitAttackData::TARGET_PLAYER_GIMMICK,    true,   EFFECTID::ID_SLEEP_ARROWSHOT,   EFFECTID::ID_UNKNOWN,       EFFECTID::ID_UNKNOWN,     MAGICID::ID_SLEEPGAS_2, { 0 } },
-    { "grenade",    20, 36.0f,  0.1f, 0.1f, 0.1f, CHitAttackData::TARGET_PLAYER_GIMMICK,    false,  EFFECTID::ID_UNKNOWN,           EFFECTID::ID_UNKNOWN,       EFFECTID::ID_UNKNOWN,     MAGICID::ID_EXPL_B1,    { 0 } },
-    { "bomb",       20, 0.0f,   0.1f, 0.1f, 0.1f, CHitAttackData::TARGET_PLAYER_GIMMICK,    false,  EFFECTID::ID_UNKNOWN,           EFFECTID::ID_UNKNOWN,       EFFECTID::ID_UNKNOWN,     MAGICID::ID_EXPL_B1,    { 0 } },
-    { "shuriken",   5,  54.0f,  0.2f, 0.2f, 0.1f, CHitAttackData::TARGET_ENEMY_GIMMICK,     true,   EFFECTID::ID_UNKNOWN,           EFFECTID::ID_UNKNOWN,       EFFECTID::ID_UNKNOWN,     MAGICID::ID_UNKNOWN,    { { 0x80, 0x80, 0xFF, 0xFF }, 0x40, 4 } },
-    { "shuriken",   5,  54.0f,  0.2f, 0.2f, 0.1f, CHitAttackData::TARGET_PLAYER,            true,   EFFECTID::ID_UNKNOWN,           EFFECTID::ID_UNKNOWN,       EFFECTID::ID_UNKNOWN,     MAGICID::ID_UNKNOWN,    { { 0x80, 0x80, 0xFF, 0xFF }, 0x40, 4 } },
-    { "kunai",      5,  54.0f,  0.1f, 0.1f, 0.1f, CHitAttackData::TARGET_ENEMY_GIMMICK,     true,   EFFECTID::ID_UNKNOWN,           EFFECTID::ID_UNKNOWN,       EFFECTID::ID_UNKNOWN,     MAGICID::ID_UNKNOWN,    { { 0x80, 0x80, 0xFF, 0xFF }, 0x40, 4 } },
-    { "kunai",      5,  54.0f,  0.1f, 0.1f, 0.1f, CHitAttackData::TARGET_PLAYER,            true,   EFFECTID::ID_UNKNOWN,           EFFECTID::ID_UNKNOWN,       EFFECTID::ID_UNKNOWN,     MAGICID::ID_UNKNOWN,    { { 0x80, 0x80, 0xFF, 0xFF }, 0x40, 4 } },
-    { "pack",       5,  54.0f,  0.1f, 0.1f, 0.1f, CHitAttackData::TARGET_ENEMY_GIMMICK,     false,  EFFECTID::ID_UNKNOWN,           EFFECTID::ID_UNKNOWN,       EFFECTID::ID_UNKNOWN,     MAGICID::ID_UNKNOWN,    { { 0x80, 0x80, 0xFF, 0xFF }, 0x40, 4 } },
-    { "shuriken",   5,  54.0f,  0.6f, 0.2f, 0.1f, CHitAttackData::TARGET_PLAYER_GIMMICK,    true,   EFFECTID::ID_UNKNOWN,           EFFECTID::ID_UNKNOWN,       EFFECTID::ID_UNKNOWN,     MAGICID::ID_UNKNOWN,    { { 0x80, 0x80, 0xFF, 0xFF }, 0x40, 4 } },
-    { "fundou",     5,  54.0f,  0.3f, 0.3f, 0.1f, CHitAttackData::TARGET_PLAYER_GIMMICK,    false,  EFFECTID::ID_UNKNOWN,           EFFECTID::ID_UNKNOWN,       EFFECTID::ID_UNKNOWN,     MAGICID::ID_UNKNOWN,    { 0 } },
-    { "scyth",      10, 0.0f,   0.6f, 0.4f, 0.0f, CHitAttackData::TARGET_PLAYER_GIMMICK,    false,  EFFECTID::ID_SICKLE_WARP,       EFFECTID::ID_UNKNOWN,       EFFECTID::ID_SICKLE_WARP, MAGICID::ID_UNKNOWN,    { 0 } },
-    { "spear",      5,  0.0f,   0.4f, 0.2f, 0.0f, CHitAttackData::TARGET_PLAYER_GIMMICK,    false,  EFFECTID::ID_UNKNOWN,           EFFECTID::ID_UNKNOWN,       EFFECTID::ID_UNKNOWN,     MAGICID::ID_UNKNOWN,    { 0 } },
-    { "ride_shot",  5,  120.0f, 0.4f, 0.2f, 0.0f, CHitAttackData::TARGET_ENEMY_GIMMICK,     false,  EFFECTID::ID_UNKNOWN,           EFFECTID::ID_LASER_HIT_ALL, EFFECTID::ID_UNKNOWN,     MAGICID::ID_UNKNOWN,    { 0 } },
+    /* model name |  power | speed | hit radius | radius | gravity | target                                  |  reflection    | effect trace                  | effect hit                | effect vanish           | hit magic             | locus */
+    /*----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------*/
+    {  "",           0,      0.0f,      0.0f,      0.0f,    0.0f,    CHitAttackData::TARGET_NONE,               false,          EFFECTID::ID_UNKNOWN,           EFFECTID::ID_UNKNOWN,       EFFECTID::ID_UNKNOWN,     MAGICID::ID_UNKNOWN,    { 0 } },
+    {  "arrow",      5,      72.0f,     0.1f,      0.1f,    0.1f,    CHitAttackData::TARGET_PLAYER_GIMMICK,     true,           EFFECTID::ID_UNKNOWN,           EFFECTID::ID_UNKNOWN,       EFFECTID::ID_UNKNOWN,     MAGICID::ID_UNKNOWN,    { { 0xFF, 0xFF, 0xFF, 0xFF }, 0x40, 4 } },
+    {  "arrow",      5,      72.0f,     0.1f,      0.1f,    0.1f,    CHitAttackData::TARGET_PLAYER_GIMMICK,     true,           EFFECTID::ID_FIRE_ARROWSHOT,    EFFECTID::ID_UNKNOWN,       EFFECTID::ID_UNKNOWN,     MAGICID::ID_KO_EXPL,    { 0 } },
+    {  "arrow",      5,      72.0f,     0.1f,      0.1f,    0.1f,    CHitAttackData::TARGET_PLAYER_GIMMICK,     true,           EFFECTID::ID_SLEEP_ARROWSHOT,   EFFECTID::ID_UNKNOWN,       EFFECTID::ID_UNKNOWN,     MAGICID::ID_SLEEPGAS_2, { 0 } },
+    {  "grenade",    20,     36.0f,     0.1f,      0.1f,    0.1f,    CHitAttackData::TARGET_PLAYER_GIMMICK,     false,          EFFECTID::ID_UNKNOWN,           EFFECTID::ID_UNKNOWN,       EFFECTID::ID_UNKNOWN,     MAGICID::ID_EXPL_B1,    { 0 } },
+    {  "bomb",       20,     0.0f,      0.1f,      0.1f,    0.1f,    CHitAttackData::TARGET_PLAYER_GIMMICK,     false,          EFFECTID::ID_UNKNOWN,           EFFECTID::ID_UNKNOWN,       EFFECTID::ID_UNKNOWN,     MAGICID::ID_EXPL_B1,    { 0 } },
+    {  "shuriken",   5,      54.0f,     0.2f,      0.2f,    0.1f,    CHitAttackData::TARGET_ENEMY_GIMMICK,      true,           EFFECTID::ID_UNKNOWN,           EFFECTID::ID_UNKNOWN,       EFFECTID::ID_UNKNOWN,     MAGICID::ID_UNKNOWN,    { { 0x80, 0x80, 0xFF, 0xFF }, 0x40, 4 } },
+    {  "shuriken",   5,      54.0f,     0.2f,      0.2f,    0.1f,    CHitAttackData::TARGET_PLAYER,             true,           EFFECTID::ID_UNKNOWN,           EFFECTID::ID_UNKNOWN,       EFFECTID::ID_UNKNOWN,     MAGICID::ID_UNKNOWN,    { { 0x80, 0x80, 0xFF, 0xFF }, 0x40, 4 } },
+    {  "kunai",      5,      54.0f,     0.1f,      0.1f,    0.1f,    CHitAttackData::TARGET_ENEMY_GIMMICK,      true,           EFFECTID::ID_UNKNOWN,           EFFECTID::ID_UNKNOWN,       EFFECTID::ID_UNKNOWN,     MAGICID::ID_UNKNOWN,    { { 0x80, 0x80, 0xFF, 0xFF }, 0x40, 4 } },
+    {  "kunai",      5,      54.0f,     0.1f,      0.1f,    0.1f,    CHitAttackData::TARGET_PLAYER,             true,           EFFECTID::ID_UNKNOWN,           EFFECTID::ID_UNKNOWN,       EFFECTID::ID_UNKNOWN,     MAGICID::ID_UNKNOWN,    { { 0x80, 0x80, 0xFF, 0xFF }, 0x40, 4 } },
+    {  "pack",       5,      54.0f,     0.1f,      0.1f,    0.1f,    CHitAttackData::TARGET_ENEMY_GIMMICK,      false,          EFFECTID::ID_UNKNOWN,           EFFECTID::ID_UNKNOWN,       EFFECTID::ID_UNKNOWN,     MAGICID::ID_UNKNOWN,    { { 0x80, 0x80, 0xFF, 0xFF }, 0x40, 4 } },
+    {  "shuriken",   5,      54.0f,     0.6f,      0.2f,    0.1f,    CHitAttackData::TARGET_PLAYER_GIMMICK,     true,           EFFECTID::ID_UNKNOWN,           EFFECTID::ID_UNKNOWN,       EFFECTID::ID_UNKNOWN,     MAGICID::ID_UNKNOWN,    { { 0x80, 0x80, 0xFF, 0xFF }, 0x40, 4 } },
+    {  "fundou",     5,      54.0f,     0.3f,      0.3f,    0.1f,    CHitAttackData::TARGET_PLAYER_GIMMICK,     false,          EFFECTID::ID_UNKNOWN,           EFFECTID::ID_UNKNOWN,       EFFECTID::ID_UNKNOWN,     MAGICID::ID_UNKNOWN,    { 0 } },
+    {  "scyth",      10,     0.0f,      0.6f,      0.4f,    0.0f,    CHitAttackData::TARGET_PLAYER_GIMMICK,     false,          EFFECTID::ID_SICKLE_WARP,       EFFECTID::ID_UNKNOWN,       EFFECTID::ID_SICKLE_WARP, MAGICID::ID_UNKNOWN,    { 0 } },
+    {  "spear",      5,      0.0f,      0.4f,      0.2f,    0.0f,    CHitAttackData::TARGET_PLAYER_GIMMICK,     false,          EFFECTID::ID_UNKNOWN,           EFFECTID::ID_UNKNOWN,       EFFECTID::ID_UNKNOWN,     MAGICID::ID_UNKNOWN,    { 0 } },
+    {  "ride_shot",  5,      120.0f,    0.4f,      0.2f,    0.0f,    CHitAttackData::TARGET_ENEMY_GIMMICK,      false,          EFFECTID::ID_UNKNOWN,           EFFECTID::ID_LASER_HIT_ALL, EFFECTID::ID_UNKNOWN,     MAGICID::ID_UNKNOWN,    { 0 } },
 };
 
 
@@ -553,65 +555,37 @@ void CShotRide::Draw(void)
 /*static*/ CShot* CShot::New(const PARAMETER* pParameter)
 {
     ASSERT(pParameter);
-    
-    CShot* pRet = nullptr;
-    
+
     switch (pParameter->m_idShot)
     {
-    case SHOTID::ID_ARROW:
-    case SHOTID::ID_ARROW_FIRE:
-    case SHOTID::ID_ARROW_SLEEP:
-    case SHOTID::ID_KUNAI_PLAYER:
-    case SHOTID::ID_KUNAI_ENEMY:
-        pRet = new CShotArrow(pParameter);
-        break;
-
-    case SHOTID::ID_GRENADE:
-        pRet = new CShotGrenade(pParameter);
-        break;
-
-    case SHOTID::ID_KNIFE_PLAYER:
-    case SHOTID::ID_KNIFE_ENEMY:
-        pRet = new CShotKnife(pParameter);
-        break;
-
-    case SHOTID::ID_SCATTER_KNIFE:
-        pRet = new CShotScatterKnife(pParameter);
-        break;
-
-    case SHOTID::ID_SPINNING_WEIGHT:
-        pRet = new CShotSpinningWeight(pParameter);
-        break;
-
-    case SHOTID::ID_SCYTHE:
-        pRet = new CShotScythe(pParameter);
-        break;
-
-    case SHOTID::ID_SPEAR:
-        pRet = new CShotSpear(pParameter);
-        break;
-
-    case SHOTID::ID_RIDE:
-        pRet = new CShotRide(pParameter);
-        break;
-
-    default:
-        pRet = new CShot(pParameter);
-        break;
+    case SHOTID::ID_ARROW:          return new CShotArrow(pParameter);
+    case SHOTID::ID_ARROW_FIRE:     return new CShotArrow(pParameter);
+    case SHOTID::ID_ARROW_SLEEP:    return new CShotArrow(pParameter);
+    case SHOTID::ID_KUNAI_PLAYER:   return new CShotArrow(pParameter);
+    case SHOTID::ID_KUNAI_ENEMY:    return new CShotArrow(pParameter);
+    case SHOTID::ID_GRENADE:        return new CShotGrenade(pParameter);
+    case SHOTID::ID_KNIFE_PLAYER:   return new CShotKnife(pParameter);
+    case SHOTID::ID_KNIFE_ENEMY:    return new CShotKnife(pParameter);
+    case SHOTID::ID_SCATTER_KNIFE:  return new CShotScatterKnife(pParameter);
+    case SHOTID::ID_SPINNING_WEIGHT:return new CShotSpinningWeight(pParameter);
+    case SHOTID::ID_SCYTHE:         return new CShotScythe(pParameter);
+    case SHOTID::ID_SPEAR:          return new CShotSpear(pParameter);
+    case SHOTID::ID_RIDE:           return new CShotRide(pParameter);
+    default:                        return new CShot(pParameter);
     };
-
-    return pRet;
 };
 
 
 CShot::CShot(const PARAMETER* pParameter)
 : CGameObject(ShotInfo(pParameter->m_idShot).m_pszModelName, GAMEOBJECTTYPE::SHOT)
+, m_hParentObj(0)
 , m_vPosition(Math::VECTOR3_ZERO)
 , m_vVelocity(Math::VECTOR3_ZERO)
 , m_vAcceleration(Math::VECTOR3_ZERO)
 , m_fTimer(0.0f)
 , m_fLife(0.0f)
 , m_pModel(nullptr)
+, m_apLocus()
 , m_fRadius(0.0f)
 , m_nPower(0)
 , m_uTarget(CHitAttackData::TARGET_NONE)
@@ -628,24 +602,21 @@ CShot::CShot(const PARAMETER* pParameter)
     ASSERT(pParameter->m_pObject);
 
     m_id = pParameter->m_idShot;
-
-    const SHOTINFO& shotInfo = ShotInfo(m_id);
-
     m_fLife = pParameter->m_fLifetime;
     m_vPosition = pParameter->m_vPosition;
     m_hParentObj = pParameter->m_pObject->GetHandle();
 
-    float dt = CGameProperty::GetElapsedTime();
-    float fGravity = (CGameProperty::GetGravity() * dt);
+    const SHOTINFO& shotInfo = ShotInfo(m_id);
 
+    float dt = CGameProperty::GetElapsedTime();
     Math::Vec3_Normalize(&m_vVelocity, &pParameter->m_vDirection);
     Math::Vec3_Scale(&m_vVelocity, &m_vVelocity, (dt * shotInfo.m_fSpeed) / 4.0f);
 
+    float fGravity = (CGameProperty::GetGravity() * dt);
     m_vAcceleration = { 0.0f, ((dt * fGravity) * shotInfo.m_fGravity), 0.0f };
 
     m_pModel = CModelManager::CreateModel(shotInfo.m_pszModelName);
     ASSERT(m_pModel);
-
     m_pModel->SetPosition(&m_vPosition);
     m_pModel->UpdateFrame();
 
@@ -654,7 +625,7 @@ CShot::CShot(const PARAMETER* pParameter)
 		for (int32 i = 0; i < COUNT_OF(m_apLocus); ++i)
 		{
 			CLocus* pLocus = new CLocus(shotInfo.m_locusinfo.m_nPointNum,
-				shotInfo.m_locusinfo.m_Color);
+				                        shotInfo.m_locusinfo.m_Color);
 
 			pLocus->SetAlphaBasis(shotInfo.m_locusinfo.m_uAlphaBasis);
 			pLocus->SetDrawEnable(true);
@@ -664,10 +635,7 @@ CShot::CShot(const PARAMETER* pParameter)
     };
 
     if (shotInfo.m_idEffectTrace)
-    {
-        RwV3d vOffset = Math::VECTOR3_ZERO;
-        m_hEffect = CEffectManager::PlayTrace(shotInfo.m_idEffectTrace, new CShotTracer(this), &vOffset);
-    };
+        m_hEffect = CEffectManager::PlayTrace(shotInfo.m_idEffectTrace, new CShotTracer(this), &Math::VECTOR3_ZERO);
 
     m_fRadius       = shotInfo.m_fRadius;
     m_nPower        = shotInfo.m_nPower;
@@ -909,13 +877,12 @@ void CShot::CheckAttack(void)
 
     if (m_bReflection)
     {
-        CHitCatchData Catch;
-        Catch.SetObject(GetHandle());
-        Catch.SetObjectType(GetType());
-
         RwSphere sphere = { 0 };
         SetHitSphere(&sphere);
 
+        CHitCatchData Catch;
+        Catch.SetObject(GetHandle());
+        Catch.SetObjectType(GetType());
         Catch.SetShape(CHitCatchData::SHAPE_SPHERE);
         Catch.SetSphere(&sphere);
 
@@ -991,7 +958,7 @@ void CShot::SetHitSphere(RwSphere* pSphere)
         pSphere->center = m_vPosition;
     };
 
-    pSphere->radius = ShotInfo(m_id).m_fRadius;
+    pSphere->radius = ShotInfo(m_id).m_fHitRadius;
 };
 
 
@@ -1001,18 +968,18 @@ void CShot::SetLocus(void)
         m_apLocus[LOCUSKIND_VER])
     {
         RwV3d vMove = Math::VECTOR3_ZERO;
+        Math::Vec3_Normalize(&vMove, &m_vVelocity);
+
         RwV3d vVer = Math::VECTOR3_ZERO;
         RwV3d vHor = Math::VECTOR3_ZERO;
-        RwV3d vPtHigh = Math::VECTOR3_ZERO;
-        RwV3d vPtLow = Math::VECTOR3_ZERO;
-
-        Math::Vec3_Normalize(&vMove, &m_vVelocity);
         Math::Vec3_Cross(&vHor, &Math::VECTOR3_AXIS_Y, &vMove);
         Math::Vec3_Cross(&vVer, &vHor, &vMove);
-
         Math::Vec3_Scale(&vHor, &vHor, m_fRadius);
         Math::Vec3_Scale(&vVer, &vVer, m_fRadius);
         
+        RwV3d vPtHigh = Math::VECTOR3_ZERO;
+        RwV3d vPtLow = Math::VECTOR3_ZERO;
+
         Math::Vec3_Add(&vPtHigh, &m_vPosition, &vHor);
         Math::Vec3_Sub(&vPtLow, &m_vPosition, &vHor);
         m_apLocus[LOCUSKIND_HOR]->SetPosition(&vPtHigh, &vPtLow);
@@ -1037,11 +1004,11 @@ void CShot::RotateModel(float fSpeed)
 
 
 float CShot::GetDirection(void) const
-{
+{    
     RwV3d vDirection = Math::VECTOR3_ZERO;
-    RwV3d vRotation = Math::VECTOR3_ZERO;
-    
     Math::Vec3_Normalize(&vDirection, &m_vVelocity);
+
+    RwV3d vRotation = Math::VECTOR3_ZERO;
     GetRotateFromVector(&vRotation, &vDirection);
     
     return vRotation.y;

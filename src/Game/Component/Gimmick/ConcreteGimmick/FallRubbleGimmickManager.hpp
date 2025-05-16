@@ -35,26 +35,16 @@ public:
         float m_fBaseHeight;
         float m_fRandom;
         float m_fBodyRadius;
-        TYPE m_type;
+        TYPE  m_type;
     };
     
     struct RUBBLEINFO
     {
-        float m_fTimer;
-        bool m_bUse;
-        uint32 m_hObj;
+        float    m_fTimer;
+        bool     m_bUse;
+        uint32   m_hObj;
         RwMatrix m_matrix;
-        STATE m_state;
-    };
-
-    struct RUBBLEPARAM
-    {
-        int32 m_nDamage;
-        int32 m_nRubbleNum;
-        float m_fInterval;
-        float m_fBaseHeight;
-        float m_fRandomHeight;
-        float m_fBodySphereRadius;
+        STATE    m_state;
     };
 
 public:
@@ -62,7 +52,8 @@ public:
     virtual ~CFallRubbleGimmickManager(void);
     virtual void Run(void) override;   
     virtual void OnReceiveEvent(const char* pszSender, GIMMICKTYPES::EVENTTYPE eventtype) override;
-    
+    void SetRubbleCreateParam(int32 numCreateSameTime, float fBaseHeight, float fTimerUntilFall);
+
 private:
     void rubbleGrandControl(void);
     void createRubble(void);

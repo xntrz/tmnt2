@@ -55,7 +55,7 @@ namespace KARAI_AI
 
     enum FREQUENCY_INDEX
     {
-        /**
+        /*
          *  _B - base mode
          *  _W - warning mode (red stars aura)
          *  _F - final mode (red circle aura)

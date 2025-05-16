@@ -2,6 +2,7 @@
 
 #include "Game/Component/Effect/Accumulate.hpp"
 #include "Game/Component/Effect/EffectManager.hpp"
+#include "Game/Component/Enemy/CharacterCompositor.hpp"
 #include "Game/Component/GameMain/GameProperty.hpp"
 #include "Game/Component/Player/PlayerCharacter.hpp"
 #include "Game/System/Character/Character.hpp"
@@ -104,60 +105,50 @@ static const RwRGBA STEP_THREE_COLOR = { 0xFF, 0xc8, 0xC8 ,0xFF };
 /*static*/  CAccumulateModule* CAccumulateModule::New(CCharacter* pCharacter)
 {
     ASSERT(pCharacter);
-    
-    CAccumulateModule* pRet = nullptr;
 
-    if (pCharacter->GetCharacterType() == CCharacter::TYPE_PLAYER)
+    switch (pCharacter->GetCharacterType())
     {
-        CPlayerCharacter* pPlayerChr = static_cast<CPlayerCharacter*>(pCharacter);
-        
-        switch (pPlayerChr->GetID())
+    case CCharacter::TYPE_PLAYER:
         {
-        case PLAYERID::ID_LEO:
-            pRet = new CLeonardoAccumulateModule(pCharacter);
-            break;
+            CPlayerCharacter* pPlayerChr = static_cast<CPlayerCharacter*>(pCharacter);
 
-        case PLAYERID::ID_RAP:
-            pRet = new CRaphaelAccumulateModule(pCharacter);
-            break;
+            switch (pPlayerChr->GetID())
+            {
+            case PLAYERID::ID_LEO: return new CLeonardoAccumulateModule(pCharacter);
+            case PLAYERID::ID_RAP: return new CRaphaelAccumulateModule(pCharacter);
+            case PLAYERID::ID_MIC: return new CMichelangeroAccumulateModule(pCharacter);
+            case PLAYERID::ID_DON: return new CDonatelloAccumulateModule(pCharacter);
+            case PLAYERID::ID_SLA: return new CSlashuurAccumulateModule(pCharacter);
+            case PLAYERID::ID_CAS: return new CCaseyAccumulateModule(pCharacter);
+            case PLAYERID::ID_KAR: return new CKaraiAccumulateModule(pCharacter);
+            case PLAYERID::ID_SPL: return new CSplinterAccumulateModule(pCharacter);
+            default: ASSERT(false); break;
+            };
+        }
+        break;
 
-        case PLAYERID::ID_MIC:
-            pRet = new CMichelangeroAccumulateModule(pCharacter);
-            break;
+    case CCharacter::TYPE_ENEMY:
+        {
+            CCharacterCompositor* pChrCompositor = static_cast<CCharacterCompositor*>(pCharacter);
 
-        case PLAYERID::ID_DON:
-            pRet = new CDonatelloAccumulateModule(pCharacter);
-            break;
+            switch (pChrCompositor->GetID())
+            {
+            case ENEMYID::ID_SLASSHUR: return new CEnemySlashuurAccumulateModule(pCharacter);
+            default: ASSERT(false); break;
+            };
+        }
+        break;
 
-        case PLAYERID::ID_SLA:
-            pRet = new CSlashuurAccumulateModule(pCharacter);
-            break;
-
-        case PLAYERID::ID_CAS:
-            pRet = new CCaseyAccumulateModule(pCharacter);
-            break;
-
-        case PLAYERID::ID_KAR:
-            pRet = new CKaraiAccumulateModule(pCharacter);
-            break;
-
-        case PLAYERID::ID_SPL:
-            pRet = new CSplinterAccumulateModule(pCharacter);
-            break;
-
-        default:
-            ASSERT(false);
-            break;
-        };
+    default:
+        ASSERT(false);
+        break;
     };
 
-    ASSERT(pRet);
-    
-    return pRet;
+    return nullptr;
 };
 
 
-/*static*/  void CAccumulateModule::DrawAllAccumulate(void)
+/*static*/ void CAccumulateModule::DrawAllAccumulate(void)
 {
     for (CAccumulateModule& it : m_listDraw)
         it.DrawAccumulate();    
@@ -179,14 +170,14 @@ CAccumulateModule::CAccumulateModule(CCharacter* pCharacter)
 };
 
 
-CAccumulateModule::~CAccumulateModule(void)
+/*virtual*/ CAccumulateModule::~CAccumulateModule(void)
 {
     ASSERT(!m_listDraw.empty());
     m_listDraw.erase(&m_nodeDraw);
 };
 
 
-void CAccumulateModule::Run(void)
+/*virtual*/ void CAccumulateModule::Run(void) /*override*/
 {
     for (CAccumulateUnit& it : m_listAccumulate)
         it.Run();
@@ -200,7 +191,7 @@ void CAccumulateModule::Run(void)
 };
 
 
-void CAccumulateModule::Draw(void)
+/*virtual*/ void CAccumulateModule::Draw(void) /*override*/
 {
     ;
 };
@@ -557,4 +548,139 @@ CSplinterAccumulateModule::CSplinterAccumulateModule(CCharacter* pCharacter)
     m_aAccumulateUnit[0].SetRadius(0.15f);
 
     RegistUnit(&m_aAccumulateUnit[0]);
+};
+
+
+//
+// *********************************************************************************
+//
+
+
+CEnemySlashuurAccumulateModule::CEnemySlashuurAccumulateModule(CCharacter* pCharacter)
+: CAccumulateModule(pCharacter)
+, m_color({ 0x64, 0x32, 0xFF, 0xFF })
+, m_fFadeTiming(0.0f)
+, m_fNowTime(0.0f)
+, m_step(STEP_IDLE)
+{
+    static const RwV3d SLASHUUR_STICK_TOP           = { -0.7f,   0.0f,  0.0f };
+    static const RwV3d SLASHUUR_STICK_BOTTOM        = {  1.3f,   0.0f,  0.0f };
+    static const RwV3d SLASHUUR_NECK_TOP            = {  1.23f,  0.0f,  0.0f };
+    static const RwV3d SLASHUUR_NECK_BOTTOM         = {  1.4f,  -0.25f, 0.0f };
+    static const RwV3d SLASHUUR_OCCIPITAL_TOP       = {  1.28f, -0.45f, 0.0f };
+    static const RwV3d SLASHUUR_OCCIPITAL_BOTTOM    = {  1.45f, -0.09f, 0.0f };
+    static const RwV3d SLASHUUR_BEAK_TOP            = {  1.45f, -0.09f, 0.0f };
+    static const RwV3d SLASHUUR_BEAK_BOTTOM         = {  1.38f,  0.47f, 0.0f };
+    static const RwV3d SLASHUUR_BEAK2_TOP           = {  1.38f,  0.47f, 0.0f };
+    static const RwV3d SLASHUUR_BEAK2_BOTTOM        = {  1.2f,   0.95f, 0.0f };
+
+    CModel* pModel = m_pCharacter->GetModel();
+    ASSERT(pModel);
+
+    m_aAccumulateUnit[0].Initialize(pModel, 7, &SLASHUUR_STICK_TOP, &SLASHUUR_STICK_BOTTOM);
+    m_aAccumulateUnit[0].SetRadius(0.2f);
+
+    m_aAccumulateUnit[1].Initialize(pModel, 7, &SLASHUUR_NECK_TOP, &SLASHUUR_NECK_BOTTOM);
+    m_aAccumulateUnit[1].SetRadius(0.31f);
+
+    m_aAccumulateUnit[2].Initialize(pModel, 7, &SLASHUUR_OCCIPITAL_TOP, &SLASHUUR_OCCIPITAL_BOTTOM);
+    m_aAccumulateUnit[2].SetRadius(0.31f);
+
+    m_aAccumulateUnit[3].Initialize(pModel, 7, &SLASHUUR_BEAK_TOP, &SLASHUUR_BEAK_BOTTOM);
+    m_aAccumulateUnit[3].SetRadius(0.31f);
+
+    m_aAccumulateUnit[4].Initialize(pModel, 7, &SLASHUUR_BEAK2_TOP, &SLASHUUR_BEAK2_BOTTOM);
+    m_aAccumulateUnit[4].SetRadius(0.31f);
+
+    RegistUnit(&m_aAccumulateUnit[0]);
+    RegistUnit(&m_aAccumulateUnit[1]);
+    RegistUnit(&m_aAccumulateUnit[2]);
+    RegistUnit(&m_aAccumulateUnit[3]);
+    RegistUnit(&m_aAccumulateUnit[4]);
+};
+
+
+/*virtual*/ void CEnemySlashuurAccumulateModule::Run(void) /*override*/
+{
+    if (m_step == STEP_IDLE)
+        return;
+    
+    for (CAccumulateUnit& it : m_listAccumulate)
+    {
+        it.Run();
+
+        if (m_step)
+            it.SetColor(m_color);
+    };
+
+    switch (m_step)
+    {
+    case STEP_FADE_IN:
+        {
+            if (m_fNowTime <= m_fFadeTiming)
+            {
+                m_color.alpha += static_cast<RwUInt8>((255.0f / m_fFadeTiming) * CGameProperty::GetElapsedTime());
+            }            
+            else
+            {
+                m_step = STEP_FADE_OUT;
+                m_color.alpha = 0xFF;
+            };
+        }
+        break;
+
+    case STEP_FADE_OUT:
+        {
+            if (m_fNowTime <= (m_fFadeTiming * 2.0f))
+            {
+                m_color.alpha -= static_cast<RwUInt8>((255.0f / m_fFadeTiming) * CGameProperty::GetElapsedTime());
+            }
+            else
+            {
+                m_step = STEP_IDLE;
+                m_color.alpha = 0x00;
+				SetDrawOff();
+            };
+        }
+        break;
+
+    default:
+        break;
+    };
+
+    m_fNowTime += CGameProperty::GetElapsedTime();
+};
+
+
+/*virtual*/ void CEnemySlashuurAccumulateModule::Draw(void) /*override*/
+{
+    ;
+};
+
+
+void CEnemySlashuurAccumulateModule::Fade(float fFadeTiming)
+{
+    m_fFadeTiming = fFadeTiming;
+    Fade();
+};
+
+
+void CEnemySlashuurAccumulateModule::Fade(void)
+{
+    m_step = STEP_FADE_IN;
+    m_fNowTime = 0.0f;
+    m_color.alpha = 0;
+	SetDrawOn();
+};
+
+
+void CEnemySlashuurAccumulateModule::SetColor(const RwRGBA& color)
+{
+    m_color = color;
+};
+
+
+void CEnemySlashuurAccumulateModule::SetColor(const RwRGBA* color)
+{
+    m_color = *color;
 };

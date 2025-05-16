@@ -465,11 +465,7 @@ namespace PlayerStatus
         Character().AttackParameter().m_direction = CHARACTERTYPES::ATTACKDIRECTIONTYPE_FRONT;
 
         /* init velocity */
-        RwV3d vVelocity = Math::VECTOR3_ZERO;
-        Character().GetVelocity(&vVelocity);
-        vVelocity.y = 0.0f;        
-
-        Character().AttackParameter().m_vVelocity = vVelocity;        
+        Character().GetVelocity(&Character().AttackParameter().m_vVelocity);
 
         /* init other */
         StateMachine().ChangeStatus(PLAYERTYPES::STATUS_FLYAWAY_FRONT);

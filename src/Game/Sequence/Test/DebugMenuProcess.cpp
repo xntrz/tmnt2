@@ -62,87 +62,23 @@ static inline bool IsMenuAvailableForSequence(int32 iSeqLabel)
 };
 
 
-static uint32 FindFirstObjectHandleExcept(uint32 hObjExcept)
-{
-    CGameObject* pObj = CGameObjectManager::GetNext();
-    while (pObj)
-    {
-        if (pObj->GetHandle() != hObjExcept)
-            return pObj->GetHandle();
-
-        pObj = CGameObjectManager::GetNext(pObj);
-    };
-
-    return 0;
-};
-
-
-static void MakeDummyHitAttack(int32 playerNo,
-                               CHitAttackData::STATUS status = CHitAttackData::STATUS_KNOCK,
-                               bool bConfusion = false)
-{
-    if (playerNo >= CGameProperty::GetPlayerNum())
-        return;
-
-    if (!CGameProperty::Player(playerNo)->IsAlive())
-        return;
-
-    //
-    //  attacker cannot attack himself so find any object on map that is not same PLAYER
-    //
-    uint32 hAttacker = FindFirstObjectHandleExcept(CGameProperty::Player(playerNo)->GetCurrentCharacter()->GetHandle());
-    if (!hAttacker)
-        return;
-
-    //
-    //	move hit pos infront of player
-    //
-    RwV3d vPlayerPos = Math::VECTOR3_ZERO;
-    CGameProperty::Player(playerNo)->GetPosition(&vPlayerPos);
-
-    RwV3d vPlayerDir = Math::VECTOR3_AXIS_Z;
-    CGameProperty::Player(playerNo)->GetCurrentCharacter()->RotateVectorByDirection(&vPlayerDir, &vPlayerDir);
-
-    Math::Vec3_Scale(&vPlayerDir, &vPlayerDir, 1.0f);
-    Math::Vec3_Add(&vPlayerPos, &vPlayerPos, &vPlayerDir);
-
-    //
-    //	regist dummy attack
-    //
-    RwSphere HitSphere = { vPlayerPos, 2.0f };
-
-    CHitAttackData AttackData;
-    AttackData.Cleanup();
-    AttackData.SetObject(hAttacker);
-    AttackData.SetObjectPos(&vPlayerPos);
-    AttackData.SetShape(CHitAttackData::SHAPE_SPHERE);
-    AttackData.SetSphere(&HitSphere);
-    AttackData.SetAntiguard(CHitAttackData::ANTIGUARD_BREAK);
-    AttackData.SetAttackNo(0);
-    AttackData.SetPower(30);
-    AttackData.SetStatus(status);
-    AttackData.SetTarget(CHitAttackData::TARGET_PLAYER);
-    AttackData.SetMotion("DUMMY");
-
-    if (status == CHitAttackData::STATUS_FLYAWAY)
-        AttackData.SetFlyawayParameter(12.0f, 10.0f);
-    else if ((status != CHitAttackData::STATUS_KNOCK) && (status != CHitAttackData::STATUS_THROW))
-        AttackData.SetTroubleParameter(8.0f);
-
-    if (bConfusion)
-        AttackData.SetFlagConfusion(true);
-
-    CHitAttackManager::RegistAttack(&AttackData);
-};
-
-
 class CDebugMenu
 {
-private:
+public:
     struct SEQMENUINFO
     {
         int32 iSeqLbl;
         CDebugMenuCtrl* pMenuCtrl;
+    };
+
+    struct MAILMSG
+    {
+        enum TYPE
+        {
+            TYPE_FRMBRK = 0,
+        };
+
+        TYPE type;
     };
 
 public:
@@ -154,12 +90,21 @@ public:
     void DrawMenu(void); // sames rules as for period
     void AddMenuForSequence(int32 iSeqLbl, CDebugMenuCtrl* pMenuCtrl);
     void InitMenu(void);
+    void InitMenu_Stage(CDebugMenuCtrl& menu);
+    void InitMenu_Gimmick(CDebugMenuCtrl& menu);
+    void InitMenu_Hit(CDebugMenuCtrl& menu);
+    void InitMenu_Module(CDebugMenuCtrl& menu);
+    void InitMenu_EnemyAndAI(CDebugMenuCtrl& menu);
+    void InitMenu_Common(CDebugMenuCtrl& menu);
+    uint32 FindFirstObjectHandleExcept(uint32 hObjExcept);
+    void MakeDummyHitAttack(int32 playerNo, CHitAttackData::STATUS status = CHitAttackData::STATUS_KNOCK, bool bConfusion = false);
     CDebugMenuCtrl& Menu(void);
+    void FrameBreak(void);
 
 private:
     static CDebugMenu*  m_pInstance;
     CProcessMail&       m_mail;
-    int32               m_menuDispMax;
+    int32               m_menuForceSelect;
     int32               m_iCurrentSeqLbl;
     SEQMENUINFO         m_aSeqMenuInfo[32];
     int32               m_nSeqMenuInfoCnt;
@@ -170,6 +115,7 @@ private:
     bool                m_bInSeqStep;
     int32               m_numFramesInStep;
     int32               m_inStepMakeScrShot;
+    int32               m_numFrameBreaksSent;
 };
 
 
@@ -178,7 +124,7 @@ private:
 
 CDebugMenu::CDebugMenu(CProcessMail& mail)
 : m_mail(mail)
-, m_menuDispMax(20)
+, m_menuForceSelect(0)
 , m_iCurrentSeqLbl(PROCESSTYPES::LABEL_EOL)
 , m_aSeqMenuInfo()
 , m_nSeqMenuInfoCnt(0)
@@ -203,9 +149,11 @@ CDebugMenu::~CDebugMenu(void)
 void CDebugMenu::PeriodSeq(void)
 {
     int32 iCurrentSeqLbl = CSequence::GetCurrently();
-    if (iCurrentSeqLbl != m_iCurrentSeqLbl)
+    if ((iCurrentSeqLbl != m_iCurrentSeqLbl) || (m_numFrameBreaksSent > 0))
     {
         InitMenu();
+
+        m_numFrameBreaksSent = 0;
 
         m_iCurrentSeqLbl = iCurrentSeqLbl;
         m_pCurrentMenu = nullptr;
@@ -288,36 +236,56 @@ void CDebugMenu::AddMenuForSequence(int32 iSeqLbl, CDebugMenuCtrl* pMenuCtrl)
 void CDebugMenu::InitMenu(void)
 {    
     m_nSeqMenuInfoCnt = 0;
-    m_menu.Reset();
-    m_menu.SetDispMax(m_menuDispMax);
+    m_menuForceSelect = -1;
 
-    /**
-     *  Init STAGE opts
-     */
-    m_menu.AddText("------- STAGE -------");
-    m_menu.AddTrigger("Set Game clear A", [](void*) {
+    m_menu.Reset();
+    m_menu.SetDispMax(20);
+    InitMenu_Stage(m_menu);
+    InitMenu_Gimmick(m_menu);
+    InitMenu_Hit(m_menu);
+    InitMenu_Module(m_menu);
+    InitMenu_EnemyAndAI(m_menu);
+    InitMenu_Common(m_menu);
+    m_menu.AddText("");    
+
+    if (m_menuForceSelect != -1)
+        m_menu.SetSelect(m_menuForceSelect);
+
+    for (int32 i = 0; i < COUNT_OF(s_aSequenceLabelListToAddMenu); ++i)
+        AddMenuForSequence(s_aSequenceLabelListToAddMenu[i], &m_menu);
+};
+
+
+void CDebugMenu::InitMenu_Stage(CDebugMenuCtrl& menu)
+{
+    menu.AddText("------- STAGE -------");
+    menu.AddTrigger("Set Game clear A", [](void*) {
         CGameStage::GetCurrent()->NotifyGameClear(CGamePlayResult::CLEARSUB_A);
     });
     
-    m_menu.AddTrigger("Set Game clear B", [](void*) {
+    menu.AddTrigger("Set Game clear B", [](void*) {
         CGameStage::GetCurrent()->NotifyGameClear(CGamePlayResult::CLEARSUB_B);
     });
     
-    m_menu.AddTrigger("Set Game over", [](void*) {
+    menu.AddTrigger("Set Game over", [](void*) {
         CGameStage::GetCurrent()->NotifyGameOver();
     });
 
-    m_menu.AddFloat("Stage camera zoom scale", 0.01f, 20.0f, 0.1f, 1.0f, [](float value, bool trigger) {
+    menu.AddFloat("Stage camera zoom scale", 0.01f, 20.0f, 0.1f, 1.0f, [](float value, bool trigger) {
         CGameStageDebug::CAMERA_ZOOM_SCALE = value;
     });
 
-    m_menu.AddFloat("Manual camera move speed", 1.0f, 200.0f, 1.0f, CGameStageDebug::CAMERA_MANUAL_SPEED, [](float value, bool trigger) {
+    menu.AddFloat("Manual camera move speed", 1.0f, 200.0f, 1.0f, CGameStageDebug::CAMERA_MANUAL_SPEED, [](float value, bool trigger) {
         CGameStageDebug::CAMERA_MANUAL_SPEED = value;
     });
 
-    m_menu.AddIntDisp("Stage tick", &CGameStageDebug::STAGE_TICK);
-    m_menu.SetLastItemEnable(false);
-    m_menu.AddInt("Step stage for", 1, 61, 1, 1, [](int32 value, bool trigger) {
+    if (m_numFrameBreaksSent > 0)
+        m_menuForceSelect = m_menu.GetSelectMax();
+    
+    menu.AddIntDisp("Stage tick", &CGameStageDebug::STAGE_TICK);
+    menu.SetLastItemEnable(false);
+
+    menu.AddInt("Step stage for", 1, 61, 1, 1, [](int32 value, bool trigger) {
         if (trigger)
         {
             if (!m_pInstance->m_bInSeqStep)
@@ -329,11 +297,11 @@ void CDebugMenu::InitMenu(void)
         };        
     });
 
-    m_menu.AddInt("Temp Counter", 0, 60, 1, 1, [](int32 value, bool trigger) {
+    menu.AddInt("Temp Counter", 0, 60, 1, 1, [](int32 value, bool trigger) {
         CGameStageDebug::COUNTER = value;        
     });
 
-    m_menu.AddBool("Godmode", [](bool bValue, bool bTrigger) {
+    menu.AddBool("Godmode", [](bool bValue, bool bTrigger) {
 
         if (bValue != CGameStageDebug::GODMODE)
         {
@@ -345,19 +313,19 @@ void CDebugMenu::InitMenu(void)
         };
     });
     
-    m_menu.AddInt("Add HP", -300, 300, 1, 0, [](int32 nVal, bool bTrigger) {
+    menu.AddInt("Add HP", -300, 300, 1, 0, [](int32 nVal, bool bTrigger) {
         if(bTrigger)
             CGameProperty::Player(0)->AddHP(nVal);
     });
     
-    m_menu.AddInt("Set camera mode", 0, CMapCamera::MODEMAX, 1, 0, { "manual", "auto", "intro" }, [](int32 nVal, bool bTrigger) {
+    menu.AddInt("Set camera mode", 0, CMapCamera::MODEMAX, 1, 0, { "manual", "auto", "intro" }, [](int32 nVal, bool bTrigger) {
         CGameStage* pGameStage = CGameStage::GetCurrent();
         CMapCamera* pMapCamera = pGameStage->GetMapCamera();
         if (bTrigger && pMapCamera)
             pMapCamera->SetCameraMode(CMapCamera::MODE(nVal));
     });
     
-    m_menu.AddInt("Replace PLAYERS to", 0, GAMETYPES::PLAYERS_MAX, 1, 0, { "player1", "player2", "player3", "player4" }, [](int32 nVal, bool bTrigger) {
+    menu.AddInt("Replace PLAYERS to", 0, GAMETYPES::PLAYERS_MAX, 1, 0, { "player1", "player2", "player3", "player4" }, [](int32 nVal, bool bTrigger) {
         if (bTrigger)
         {
             IGamePlayer* pGameplayer = CGameProperty::Player(nVal);
@@ -373,40 +341,42 @@ void CDebugMenu::InitMenu(void)
             };
         };
     });
-    
-    /**
-     *  Init GIMMICK debug opts
-     */
-    m_menu.AddText("");
-    m_menu.AddText("------- GIMMICK -------");
+};
 
-    m_menu.AddBool("Gimmick show model", CGimmickDebug::SHOW_MODEL, [](bool bValue, bool bTrigger) {
+
+void CDebugMenu::InitMenu_Gimmick(CDebugMenuCtrl& menu)
+{
+    menu.AddText("");
+    menu.AddText("------- GIMMICK -------");
+
+    menu.AddBool("Gimmick show model", CGimmickDebug::SHOW_MODEL, [](bool bValue, bool bTrigger) {
         CGimmickDebug::SHOW_MODEL = bValue;
     });
     
-    m_menu.AddBool("Gimmick show area", CGimmickDebug::SHOW_AREA, [](bool bValue, bool bTrigger) {
+    menu.AddBool("Gimmick show area", CGimmickDebug::SHOW_AREA, [](bool bValue, bool bTrigger) {
         CGimmickDebug::SHOW_AREA = bValue;
     });
     
-    m_menu.AddBool("Gimmick show me", CGimmickDebug::SHOW_ME, [](bool bValue, bool bTrigger) {
+    menu.AddBool("Gimmick show me", CGimmickDebug::SHOW_ME, [](bool bValue, bool bTrigger) {
         CGimmickDebug::SHOW_ME = bValue;
     });
+};
 
-    /**
-     *  Init HIT debug opts
-     */
-    m_menu.AddText("");
-    m_menu.AddText("------- HIT -------");
+
+void CDebugMenu::InitMenu_Hit(CDebugMenuCtrl& menu)
+{
+    menu.AddText("");
+    menu.AddText("------- HIT -------");
 
     static int32 s_targetPlayerNo = 0;
 
-    m_menu.AddInt("Hit target", 0, GAMETYPES::PLAYERS_MAX, 1, s_targetPlayerNo, { "player1", "player2", "player3", "player4" }, [](int32 nVal, bool bTrigger) {
+    menu.AddInt("Hit target", 0, GAMETYPES::PLAYERS_MAX, 1, s_targetPlayerNo, { "player1", "player2", "player3", "player4" }, [](int32 nVal, bool bTrigger) {
         s_targetPlayerNo = nVal;
     });
 
     static bool s_applyHitConfusion = false;
 
-    m_menu.AddBool("Apply hit confusion", s_applyHitConfusion, [](bool value, bool bTrigger) {
+    menu.AddBool("Apply hit confusion", s_applyHitConfusion, [](bool value, bool bTrigger) {
         s_applyHitConfusion = value;
     });
 
@@ -434,79 +404,142 @@ void CDebugMenu::InitMenu(void)
         CHitAttackData::STATUS_BIND,
     };
 
-    m_menu.AddInt("Make hit ", 0, COUNT_OF(s_aHitStatus), 1, 0, s_apszHitStatusName, [](int32 nVal, bool bTrigger) {
+    menu.AddInt("Make hit ", 0, COUNT_OF(s_aHitStatus), 1, 0, s_apszHitStatusName, [](int32 nVal, bool bTrigger) {
         if ((nVal == 2) && s_applyHitConfusion)
             return;
         
         if (bTrigger)
-            MakeDummyHitAttack(s_targetPlayerNo, s_aHitStatus[nVal], s_applyHitConfusion);
+            m_pInstance->MakeDummyHitAttack(s_targetPlayerNo, s_aHitStatus[nVal], s_applyHitConfusion);
     });
 
-    m_menu.AddBool("Show hit attack", CHitDebug::SHOW_HIT_ATTACK, [](bool bValue, bool bTrigger) {
+    menu.AddBool("Show hit attack", CHitDebug::SHOW_HIT_ATTACK, [](bool bValue, bool bTrigger) {
         CHitDebug::SHOW_HIT_ATTACK = bValue;
     });
     
-    m_menu.AddBool("Show hit catch", CHitDebug::SHOW_HIT_CATCH, [](bool bValue, bool bTrigger) {
+    menu.AddBool("Show hit catch", CHitDebug::SHOW_HIT_CATCH, [](bool bValue, bool bTrigger) {
         CHitDebug::SHOW_HIT_CATCH = bValue;
     });
     
-    m_menu.AddBool("Show body hit", CHitDebug::SHOW_HIT_BODY, [](bool bValue, bool bTrigger) {
+    menu.AddBool("Show body hit", CHitDebug::SHOW_HIT_BODY, [](bool bValue, bool bTrigger) {
         CHitDebug::SHOW_HIT_BODY = bValue;
     });
+};
 
-    /**
-     *  Init MODULE debug opts
-     */
-    m_menu.AddText("");
-    m_menu.AddText("------- MODULE -------");
 
-    m_menu.AddBool("Show EFFECT time", CModuleDebug::SHOW_CHR_STATUS_DURATION, [](bool bValue, bool bTrigger) {
+void CDebugMenu::InitMenu_Module(CDebugMenuCtrl& menu)
+{
+    menu.AddText("");
+    menu.AddText("------- MODULE -------");
+
+    menu.AddBool("Show EFFECT time", CModuleDebug::SHOW_CHR_STATUS_DURATION, [](bool bValue, bool bTrigger) {
         CModuleDebug::SHOW_CHR_STATUS_DURATION = bValue;
     });
+};
 
-    /**
-     *  Init ENEMY & AI debug opts
-     */
-    m_menu.AddText("");
-    m_menu.AddText("------- ENEMY & AI -------");
 
-    m_menu.AddBool("Show AI info", CEnemyDebug::SHOW_AI_INFO, [](bool bValue, bool bTrigger) {
+void CDebugMenu::InitMenu_EnemyAndAI(CDebugMenuCtrl& menu)
+{
+    menu.AddText("");
+    menu.AddText("------- ENEMY & AI -------");
+
+    menu.AddBool("Show AI info", CEnemyDebug::SHOW_AI_INFO, [](bool bValue, bool bTrigger) {
         CEnemyDebug::SHOW_AI_INFO = bValue;
     });
 
-    m_menu.AddBool("Show AI move point", CEnemyDebug::SHOW_AI_MOVE_POINT, [](bool bValue, bool bTrigger) {
+    menu.AddBool("Show AI move point", CEnemyDebug::SHOW_AI_MOVE_POINT, [](bool bValue, bool bTrigger) {
         CEnemyDebug::SHOW_AI_MOVE_POINT = bValue;
     });
 
-    m_menu.AddBool("Show AI patrol area", CEnemyDebug::SHOW_AI_PATROL_AREA, [](bool bValue, bool bTrigger) {
+    menu.AddBool("Show AI patrol area", CEnemyDebug::SHOW_AI_PATROL_AREA, [](bool bValue, bool bTrigger) {
         CEnemyDebug::SHOW_AI_PATROL_AREA = bValue;
     });
     
-    m_menu.AddBool("Show AI suitable area", CEnemyDebug::SHOW_AI_SUITABLE_AREA, [](bool bValue, bool bTrigger) {
+    menu.AddBool("Show AI suitable area", CEnemyDebug::SHOW_AI_SUITABLE_AREA, [](bool bValue, bool bTrigger) {
         CEnemyDebug::SHOW_AI_SUITABLE_AREA = bValue;
     });
     
-    m_menu.AddBool("Show ENEMY SPAWN info", CEnemyDebug::SHOW_ENEMY_SPAWN_INFO, [](bool bValue, bool bTrigger) {
+    menu.AddBool("Show ENEMY SPAWN info", CEnemyDebug::SHOW_ENEMY_SPAWN_INFO, [](bool bValue, bool bTrigger) {
         CEnemyDebug::SHOW_ENEMY_SPAWN_INFO = bValue;
     });
+};
 
-    /**
-     *  Init COMMON opts
-     */
-    m_menu.AddText("");
-    m_menu.AddText("------- OTHER -------");
 
-    m_menu.AddTrigger("Make WND screenshot to clipboard", [](void*) {
+void CDebugMenu::InitMenu_Common(CDebugMenuCtrl& menu)
+{
+    menu.AddText("");
+    menu.AddText("------- OTHER -------");
+
+    menu.AddTrigger("Make WND screenshot to clipboard", [](void*) {
         m_pInstance->m_inStepMakeScrShot = 3;
-    });
+    });  
+};
 
-    m_menu.AddText("");
 
-    /**
-     *  Regist menu for sequence label list
-     */
-    for (int32 i = 0; i < COUNT_OF(s_aSequenceLabelListToAddMenu); ++i)
-        AddMenuForSequence(s_aSequenceLabelListToAddMenu[i], &m_menu);
+uint32 CDebugMenu::FindFirstObjectHandleExcept(uint32 hObjExcept)
+{
+    CGameObject* pObj = CGameObjectManager::GetNext();
+    while (pObj)
+    {
+        if (pObj->GetHandle() != hObjExcept)
+            return pObj->GetHandle();
+
+        pObj = CGameObjectManager::GetNext(pObj);
+    };
+
+    return 0;
+};
+
+
+void CDebugMenu::MakeDummyHitAttack(int32 playerNo,
+                                    CHitAttackData::STATUS status /*= CHitAttackData::STATUS_KNOCK*/,
+                                    bool bConfusion /*= false*/)
+{
+    if (playerNo >= CGameProperty::GetPlayerNum())
+        return;
+
+    if (!CGameProperty::Player(playerNo)->IsAlive())
+        return;
+
+    /* attacker cannot attack himself so find any object on map that is not same PLAYER */
+    uint32 hAttacker = FindFirstObjectHandleExcept(CGameProperty::Player(playerNo)->GetCurrentCharacter()->GetHandle());
+    if (!hAttacker)
+        return;
+
+    /* move hit pos infront of player */
+    RwV3d vPlayerPos = Math::VECTOR3_ZERO;
+    CGameProperty::Player(playerNo)->GetPosition(&vPlayerPos);
+
+    RwV3d vPlayerDir = Math::VECTOR3_AXIS_Z;
+    CGameProperty::Player(playerNo)->GetCurrentCharacter()->RotateVectorByDirection(&vPlayerDir, &vPlayerDir);
+
+    Math::Vec3_Scale(&vPlayerDir, &vPlayerDir, 1.0f);
+    Math::Vec3_Add(&vPlayerPos, &vPlayerPos, &vPlayerDir);
+
+    /* regist dummy attack */
+    RwSphere HitSphere = { vPlayerPos, 2.0f };
+
+    CHitAttackData AttackData;
+    AttackData.Cleanup();
+    AttackData.SetObject(hAttacker);
+    AttackData.SetObjectPos(&vPlayerPos);
+    AttackData.SetShape(CHitAttackData::SHAPE_SPHERE);
+    AttackData.SetSphere(&HitSphere);
+    AttackData.SetAntiguard(CHitAttackData::ANTIGUARD_BREAK);
+    AttackData.SetAttackNo(0);
+    AttackData.SetPower(30);
+    AttackData.SetStatus(status);
+    AttackData.SetTarget(CHitAttackData::TARGET_PLAYER);
+    AttackData.SetMotion("DUMMY");
+
+    if (status == CHitAttackData::STATUS_FLYAWAY)
+        AttackData.SetFlyawayParameter(12.0f, 10.0f);
+    else if ((status != CHitAttackData::STATUS_KNOCK) && (status != CHitAttackData::STATUS_THROW))
+        AttackData.SetTroubleParameter(8.0f);
+
+    if (bConfusion)
+        AttackData.SetFlagConfusion(true);
+
+    CHitAttackManager::RegistAttack(&AttackData);
 };
 
 
@@ -514,6 +547,23 @@ CDebugMenuCtrl& CDebugMenu::Menu(void)
 {
     return m_menu;
 };
+
+
+void CDebugMenu::FrameBreak(void)
+{
+    if (m_numFrameBreaksSent++ < 1)
+    {
+        static MAILMSG s_mailMsg;
+        s_mailMsg.type = MAILMSG::TYPE_FRMBRK;
+
+        m_mail.Send(PROCLABEL_DBGMENU, PROCESSTYPES::MAIL::TYPE_MSG, &s_mailMsg);
+    };    
+};
+
+
+//
+// *********************************************************************************
+//
 
 
 static bool s_bDebugMenuEnable = false;
@@ -536,6 +586,13 @@ static CDebugFontCtrl* s_pDebugMenuHelpFont = nullptr;
 /*static*/ void CDebugMenuProcess::Terminate(CProcess* pSender)
 {
     pSender->Mail().Send(PROCLABEL_DBGMENU, PROCESSTYPES::MAIL::TYPE_DETACH);
+};
+
+
+/*static*/ void CDebugMenuProcess::FrameBreak(void)
+{
+    if (!s_bDebugMenuEnable)
+        s_pDebugMenu->FrameBreak();
 };
 
 
@@ -573,8 +630,29 @@ void CDebugMenuProcess::Detach(void)
 
 void CDebugMenuProcess::Move(void)
 {
+    /* message proc */
+    bool bDbgBrkRq = false;
+    
+    PROCESSTYPES::MAIL mail;
+    while (Mail().Recv(mail))
+    {
+        const CDebugMenu::MAILMSG* pMailMsg = static_cast<const CDebugMenu::MAILMSG*>(mail.m_param);
+        switch (pMailMsg->type)
+        {
+        case CDebugMenu::MAILMSG::TYPE_FRMBRK:
+            bDbgBrkRq = (s_bDebugMenuEnable ? false : true); // skip if already enabled
+            break;
+
+        default:
+            ASSERT(false);
+            break;
+        };
+    };
+
+    /* seq period */
     s_pDebugMenu->PeriodSeq();
 
+    /* menu period */
     if (s_bDebugMenuEnable)
     {
         if (s_pDebugMenu->PeriodMenu())
@@ -584,8 +662,9 @@ void CDebugMenuProcess::Move(void)
         };
     };
 
+    /* menu activation check */
 #ifdef TARGET_PC
-    if (CPCSpecific::IsKeyTrigger(MENU_ACTIVATE_KEY))
+    if (CPCSpecific::IsKeyTrigger(MENU_ACTIVATE_KEY) || bDbgBrkRq)
     {
         s_bDebugMenuEnable = !s_bDebugMenuEnable;
 

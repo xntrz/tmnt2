@@ -11,6 +11,10 @@
 #include "Game/System/GameObject/GameObject.hpp"
 #include "Game/System/GameObject/GameObjectManager.hpp"
 
+#ifdef _DEBUG
+#include "Game/System/Misc/DebugShape.hpp"
+#endif /* _DEBUG */
+
 
 static int32 s_iNearerPlayerDataNum = 0;
 static CAIUtils::NEARER_PLAYERDATA s_aPlayerDataList[GAMETYPES::PLAYERS_MAX];
@@ -149,13 +153,13 @@ CAIUtils::GetPlayerStateFlag(PLAYERTYPES::STATUS eStatus)
     {
         RwV3d vecPlayerPos = Math::VECTOR3_ZERO;
         apPlayerChr[i]->GetFootPosition(&vecPlayerPos);
-        vecPlayerPos.y = vecPos->y;
 
         float distance = CEnemyUtils::GetDistance(vecPos, &vecPlayerPos);
 
-        float angle = CEnemyUtils::GetDirection(vecPos, &vecPlayerPos);
-        if (Math::Vec3_IsEqual(vecPos, &vecPlayerPos))
-            angle = 0.0f;
+        float angle = 0.0f;
+        vecPlayerPos.y = vecPos->y;
+        if (!Math::Vec3_IsEqual(vecPos, &vecPlayerPos))
+            angle = CEnemyUtils::GetDirection(vecPos, &vecPlayerPos);
 
         NEARER_PLAYERDATA* pData = &s_aPlayerDataList[s_iNearerPlayerDataNum];
         pData->no       = i;
@@ -165,12 +169,13 @@ CAIUtils::GetPlayerStateFlag(PLAYERTYPES::STATUS eStatus)
         s_apNearerPlayerDataList[s_iNearerPlayerDataNum++] = pData;
     };
 
-    auto sortCallback = [](const NEARER_PLAYERDATA* pDataA, const NEARER_PLAYERDATA* pDataB) {
-        return (pDataA->distance < pDataB->distance);
-    };
+    NEARER_PLAYERDATA** itBegin = std::begin(s_apNearerPlayerDataList);
+    NEARER_PLAYERDATA** itEnd   = std::begin(s_apNearerPlayerDataList) + s_iNearerPlayerDataNum;
 
-    std::sort(s_apNearerPlayerDataList, s_apNearerPlayerDataList + s_iNearerPlayerDataNum, sortCallback);
-
+    std::sort(itBegin, itEnd, [](const NEARER_PLAYERDATA* a, const NEARER_PLAYERDATA* b) {
+        return (a->distance < b->distance);
+    });
+    
     return s_iNearerPlayerDataNum;
 };
 
@@ -461,10 +466,9 @@ CAIUtils::CheckObstacle(const CCharacterCompositor* pChrCompositor,
 
     float fDist = CEnemyUtils::GetDistance(&vecFootPos, &vecAt);
 
-    float fDir = CEnemyUtils::GetDirection(&vecFootPos, &vecAt);
-
-    if (Math::Vec3_IsEqual(&vecFootPos, &vecAt))
-        fDir = 0.0f;
+    float fDir = 0.0f;
+	if (!Math::Vec3_IsEqual(&vecFootPos, &vecAt))
+		fDir = CEnemyUtils::GetDirection(&vecFootPos, &vecAt);
 
     return IsObjectViewArea2(pEnemyChr, fDist, fDir);
 };
@@ -493,12 +497,6 @@ CAIUtils::CheckObstacle(const CCharacterCompositor* pChrCompositor,
     float fViewDistance = (fRadiusOfAction - fDistanceOfSuitable) * fViewRatio;
 
     return ((fDistanceOfSuitable + fViewDistance) > fDistance);
-};
-
-
-/*static*/ float CAIUtils::GetViewDistance(const CEnemyCharacter* pEnemyChr)
-{
-    return 0.0f;
 };
 
 
@@ -645,7 +643,7 @@ CAIUtils::CheckMoveLine(const RwV3d* ptStart,
             {
                 if (Math::Vec3_IsEqual(&avecCollisionResultNormal[j], &pCollisionResult->m_vNormal))
                 {
-                    bAlreadyEntryFlag =true;
+                    bAlreadyEntryFlag = true;
                     break;
                 };
             };
@@ -948,4 +946,47 @@ CAIUtils::CalcEscapePointForHitPlane(RwV3d* avecPos,
     };
     
     return CheckObstacleBetweenPosToPos(&vecFootPosEnemy, &vecFootPosPlayer);
+};
+
+
+//
+// *********************************************************************************
+//
+
+
+CRandNormal::CRandNormal(void)
+: m_generate(true)
+, m_r(0.0f)
+, m_theta(0.0f)
+{
+    ;
+};
+
+
+float CRandNormal::Generate(void)
+{
+    /*
+     *  Box–Muller transform (basic form)
+     */
+
+    if (m_generate)
+    {
+        m_generate = false;
+
+        float u = Math::RandFloat();
+        ASSERT(u >= 0.0f);
+        ASSERT(u <= 1.0f);
+
+        m_r = std::sqrt(-2.0f * std::logf(1.0f - u));
+        m_theta = Math::RandFloat() * MATH_PI2;
+    }
+    else
+    {
+        m_generate = true;
+    };
+
+    if (m_generate)
+        return std::sin(m_theta) * m_r;
+    else
+        return std::cos(m_theta) * m_r;
 };

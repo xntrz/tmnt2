@@ -220,7 +220,9 @@ void CCharacter::IncludeBasicModule(void)
 {
     m_pModuleMan->Include(new CAmbientLightModule(this));
     m_pModuleMan->Include(new CAtomicDisplayControlModule(this));
-	m_pModuleMan->Include(new CInkThicknessCtrlModule(this));
+	
+	if (m_pModel->GetType() == CModelManager::MODELTYPE_TOON)
+		m_pModuleMan->Include(new CInkThicknessCtrlModule(this));
 
 	CLocusModuleForCharacter* pLocusModule = CLocusModuleForCharacter::New(this);
 	if (pLocusModule)

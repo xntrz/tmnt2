@@ -185,7 +185,7 @@ void CCasey::ShootingKnife(void)
         Math::Vec3_Add(&vPosition, &vLocalPos, &m_vPosition);
     };
 
-    uint32 hShot = CShotManager::Shot(SHOTID::ID_PACK, &vPosition, m_fDirection, this, MATH_RAD2DEG(15.0f), 5.0f);
+    uint32 hShot = CShotManager::Shot(SHOTID::ID_PACK, &vPosition, m_fDirection, this, MATH_DEG2RAD(15.0f), 5.0f);
     ASSERT(hShot);
 
     if (!TestAttribute(PLAYERTYPES::ATTRIBUTE_INNUMERABLE_KNIFE))

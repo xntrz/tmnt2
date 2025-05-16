@@ -117,6 +117,7 @@ namespace PEFINFO
         int8 m_nType;
         int8 m_nBlend;
         int8 m_nKind;
+        int8 pad;
         RwV3d m_vPosition;
         RwRGBA m_Color;
         RwV2d m_vSize;

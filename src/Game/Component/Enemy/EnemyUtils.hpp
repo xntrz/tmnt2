@@ -18,7 +18,7 @@ class CEnemyUtils
 {
 public:
     static const float INVALID_WORLD_MAP_HEIGHT;
-    
+
     class CModelColorControl final
     {
     private:
@@ -85,8 +85,8 @@ public:
     static bool SetAmbientLightEnable(CCharacterCompositor* pChrCompositor, bool bEnable);
     static bool CheckInfoWater(const CCharacterCompositor* pChrCompositor);
     static int32 FindPlayerNo(uint32 hObject);
-    static void ProcAerialMotion(CCharacterCompositor* pChrCompositor, float fJumpInitSpeed);
-    static void GetJumpSpeedPosToPos(RwV3d* initSpeed, float fJumpInitSpeed, const RwV3d* jumpPos, const RwV3d* markPos, float fGravity);
+    static float ProcAerialMotion(CCharacterCompositor* pChrCompositor, float fJumpInitSpeed);
+    static void GetJumpSpeedPosToPos(RwV3d* vecJumpSpeed, float fJumpInitSpeed, const RwV3d* vecJumpPosSrc, const RwV3d* vecJumpPosDst, float fGravity);
     static float CalcJumpTouchdownTime(float fJumpInitSpeed, float fStartheight, float fEndHeight, float fGravity);
     static float GetJumpableHeight(float fJumpInitSpeed, float fGravity);
     static float GetDistance(const RwV3d* pos, const RwV3d* at);
@@ -114,6 +114,13 @@ public:
                                      const CCharacterCompositor* pChrCompositor,
                                      int32 iBoneID,
                                      const RwV3d* pvecOffset = nullptr);
+
+    /* returns velocity per second */
+    static void GetVelocityByPosDiff(RwV3d* vecVelocity,
+                                     const RwV3d* vecPosNow,
+                                     const RwV3d* vecPosPrev);
+
+    static void UpdateVelocityFromDirection(CCharacterCompositor* pChrCompositor);
 };
 
 
@@ -189,4 +196,12 @@ public:
                                         float fAimRate,
                                         float fScale,
                                         const RwV3d* pvecTargetPos = nullptr);
+
+    static bool CheckCrashWall(const CCharacterCompositor* pChrCompositor,
+                               float fCrashAngle,
+                               RwV3d* pvecHitPos = nullptr);
+
+    static uint32 EntryWaterDobonEffect(const CCharacterCompositor* pCompositor,
+                                        float fScale,
+                                        bool bPlaySound = true);
 };

@@ -61,20 +61,19 @@ CBaseBatAI::CBaseBatAI(CEnemyCharacter* pEnemyChr)
 {
     float fDistanceOfSuitable = Characteristic().m_fDistanceOfSuitable * -1.0f;
 
-    RwV3d vecDir = { Math::RandFloat() - 0.5f, 0.0f, 0.0f };
+    RwV3d vecStep = Math::VECTOR3_ZERO;
+    vecStep.x = (Math::RandFloat() - 0.5f);
+    vecStep.y = 0.0f;
+    vecStep.z = fDistanceOfSuitable;
 
     float fRand = (Math::RandFloat() * 0.5f);
-    vecDir.x *= fRand;
-    vecDir.y *= fRand;
-    vecDir.z = (fRand * fDistanceOfSuitable);
-
-    EnemyCharacter().Compositor().RotateVectorByDirection(&vecDir, &vecDir);
+    Math::Vec3_Scale(&vecStep, &vecStep, fRand);
+    EnemyCharacter().Compositor().RotateVectorByDirection(&vecStep, &vecStep);
 
     RwV3d vecPos = Math::VECTOR3_ZERO;
     EnemyCharacter().Compositor().GetPosition(&vecPos);
+    Math::Vec3_Add(&vecPos, &vecPos, &vecStep);
     vecPos.y = 0.0f;
-
-    Math::Vec3_Add(&vecPos, &vecPos, &vecDir);
 
     AIOT::SetMoveOrder(ThinkOrder(), AIOT::MoveWalk, 1.0f, &vecPos);
 
@@ -164,14 +163,13 @@ CBaseBatAI::CBaseBatAI(CEnemyCharacter* pEnemyChr)
         EnemyCharacter().Compositor().GetFootPosition(&vecFootPosEnemy);
         vecFootPosEnemy.y = 0.0f;
 
+        float fRadiusOfAction = Characteristic().m_fRadiusOfAction;
+        float fRand = Math::RandFloatRange(0.25f, 0.75f);
+
         RwV3d vec = Math::VECTOR3_ZERO;
         Math::Vec3_Sub(&vec, &vecFootPosPlayer, &vecFootPosEnemy);
         Math::Vec3_Normalize(&vec, &vec);
         Math::Vec3_Negate(&vec, &vec);
-
-        float fRadiusOfAction = Characteristic().m_fRadiusOfAction;
-        float fRand = Math::RandFloatRange(0.25f, 0.75f);
-
         Math::Vec3_Scale(&vec, &vec, fRand * fRadiusOfAction);
 
         Math::Vec3_Add(&vecMovePos, &vecFootPosEnemy, &vec);

@@ -13,7 +13,7 @@ C066MuralCarnivorousPlant::C066MuralCarnivorousPlant(void)
 
     parameter.m_pfnAIInstance   = CBaseCarnivorousPlantAI::Instance;
     parameter.m_bToon           = true;
-    parameter.m_fShadowRadius   = 1.0f;
+    parameter.m_fShadowRadius   = 1.8f;
 
     parameter.m_feature.m_fWalkMoveSpeed        = 0.0f;
     parameter.m_feature.m_fRunMoveSpeed         = 0.0f;

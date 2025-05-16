@@ -76,6 +76,16 @@ void CFallRubbleGimmickManager::OnReceiveEvent(const char* pszSender, GIMMICKTYP
 };
 
 
+void CFallRubbleGimmickManager::SetRubbleCreateParam(int32 numCreateSameTime,
+                                                     float fBaseHeight,
+                                                     float fTimerUntilFall)
+{
+    m_nCreateSameTime = numCreateSameTime;
+    m_fRubbleBaseHeight = fBaseHeight;
+    m_fTimerUntilFall = fTimerUntilFall;
+};
+
+
 void CFallRubbleGimmickManager::rubbleGrandControl(void)
 {
     if (m_type == TYPE_M58OB)
@@ -164,7 +174,7 @@ void CFallRubbleGimmickManager::initRubbleInfo(CGameObject* pObj, RUBBLEINFO* pI
     pInfo->m_bUse   = true;
     pInfo->m_hObj   = pObj->GetHandle();
     pInfo->m_state  = STATE_EXEC;
-    RwMatrixSetIdentity(&pInfo->m_matrix);
+    RwMatrixSetIdentityMacro(&pInfo->m_matrix);
 
     CPlayerCharacter* pPlayerChara = static_cast<CPlayerCharacter*>(pObj);
     

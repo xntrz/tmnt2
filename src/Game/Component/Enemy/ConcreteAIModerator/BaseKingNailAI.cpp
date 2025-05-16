@@ -88,12 +88,6 @@ CBaseKingNailAI::CDecisionUnitAttackCounter::CDecisionUnitAttackCounter(void)
 };
 
 
-void CBaseKingNailAI::CDecisionUnitAttackCounter::ResetTarget(void)
-{
-    m_orderTargetNo = -1;
-};
-
-
 //
 // *********************************************************************************
 //
@@ -179,6 +173,6 @@ CBaseKingNailAI::CBaseKingNailAI(CEnemyCharacter* pEnemyChr)
 
         CEnemyAIDecisionUnit* pUnit = GetDicisionUnitForName(BASEAI6045::AIDECISIONUNITNAME::ATTACK_COUNTER);
         if (pUnit)
-            static_cast<CDecisionUnitAttackCounter*>(pUnit)->ResetTarget();
+            static_cast<CBaseKingNailAI::CDecisionUnitAttackCounter*>(pUnit)->ResetTarget();
     };
 };

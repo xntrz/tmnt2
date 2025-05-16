@@ -33,10 +33,7 @@ public:
     static CAccumulateModule* New(CCharacter* pCharacter);
     static void DrawAllAccumulate(void);
     
-protected:
     CAccumulateModule(CCharacter* pCharacter);
-    
-public:
     virtual ~CAccumulateModule(void);
     virtual void Run(void) override;
     virtual void Draw(void) override;
@@ -151,4 +148,33 @@ public:
 
 private:
     CAccumulateUnit m_aAccumulateUnit[2];
+};
+
+
+class CEnemySlashuurAccumulateModule : public CAccumulateModule
+{
+private:
+    enum STEP
+    {
+        STEP_IDLE = 0,
+        STEP_FADE_IN,
+        STEP_FADE_OUT,
+    };
+
+public:
+    CEnemySlashuurAccumulateModule(CCharacter* pCharacter);
+    virtual ~CEnemySlashuurAccumulateModule(void) {};
+    virtual void Run(void) override;
+    virtual void Draw(void) override;
+    void Fade(float fFadeTiming);
+    void Fade(void);
+    void SetColor(const RwRGBA& color);
+    void SetColor(const RwRGBA* color);
+
+private:
+    CAccumulateUnit m_aAccumulateUnit[5];
+    RwRGBA m_color;
+    float m_fFadeTiming;
+    float m_fNowTime;
+    STEP  m_step;
 };

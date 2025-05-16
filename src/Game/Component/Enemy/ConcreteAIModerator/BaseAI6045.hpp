@@ -7,6 +7,23 @@
 
 namespace BASEAI6045
 {
+    enum FREQUENCY_MOVE_TYPE
+    {
+        FREQUENCY_MOVE_STRAIGHTLINE = 0,
+        FREQUENCY_MOVE_TURN,
+        FREQUENCY_MOVE_BACK,
+        FREQUENCY_MOVE_HITANDAWAY,
+    };
+
+    enum FREQUENCY_TRIGGER_TYPE
+    {
+        FREQUENCY_TRIGGER_ALWAYS = 0,
+        FREQUENCY_TRIGGER_DAMAGED,
+        FREQUENCY_TRIGGER_SUITDIST,
+        FREQUENCY_TRIGGER_IGNORE,
+        FREQUENCY_TRIGGER_PLRSTATUS,
+    };
+
     /* CAIThinkOrder wait order type */
     enum ORDERTYPE_WAIT
     {
@@ -23,6 +40,7 @@ namespace BASEAI6045
         ORDERTYPE_MOVE_RUN_POS,
         ORDERTYPE_MOVE_RUN_NO,
         ORDERTYPE_MOVE_JUMP,
+        ORDERTYPE_MOVE_DASH,
 
         ORDERTYPE_MOVE_EXTEND = 9,    
     };
@@ -30,7 +48,7 @@ namespace BASEAI6045
     /* CAIThinkOrder attack order type */
     enum ORDERTYPE_ATTACK
     {
-        ORDERTYPE_ATTACK_NONE = 0,
+        ORDERTYPE_ATTACK_NORMAL = 0,
         ORDERTYPE_ATTACK_TO_AIR,
         ORDERTYPE_ATTACK_THROW,
         ORDERTYPE_ATTACK_COUNTER,
@@ -40,6 +58,7 @@ namespace BASEAI6045
 
     enum SPECIAL_FLAG
     {
+        FLAG_NONE                       = 0,
         FLAG_COUNTERATTACK              = 0x1,
         FLAG_CHANGEDECISION             = 0x2,
         FLAG_MOVE_TURN                  = 0x4,
@@ -54,7 +73,7 @@ namespace BASEAI6045
         FLAG_TRIGGER_ESCAPE_PERMIT      = 0x800,
         FLAG_TRIGGER_REDUCTIONHP_PERMIT = 0x1000,
 
-        FLAG_DEFAULT                    = 0,
+        FLAG_DEFAULT                    = FLAG_NONE,
 
         FLAG_MOVE_ALL                   = FLAG_MOVE_TURN
                                         | FLAG_MOVE_BACK
@@ -81,10 +100,10 @@ namespace BASEAI6045
         static const char* MOVE_PATROLORIGIN   = "MovePatrolOrigin";
         static const char* MOVE_OBSTACLEJUMP   = "MoveObstacleJump";
         static const char* GUARD               = "Guard";
-        static const char* ATTACK_COUNTER      = "AttackCounter";
         static const char* ATTACK_NORMAL       = "AttackNormal";
         static const char* ATTACK_TOAIR        = "AttackToAir";
         static const char* ATTACK_THROW        = "AttackThrow";
+        static const char* ATTACK_COUNTER      = "AttackCounter";
     }; /* namespace AIDECISIONUNITNAME */
 }; /* namespace BASEAI6045 */
 
@@ -160,7 +179,7 @@ protected:
 
 
 /* NOTE: trigger is used only by NON-bosses enemies (mouser for example)
-         so standard frequency index is used here */
+         so default freq index is used here (see CEnemyParameter::FREQUENCY_INDEX) */
 class CEnemyAIDecisionUnitTrigger : public CEnemyAIDecisionUnit
 {
 public:
@@ -192,7 +211,6 @@ public:
     void SetHistoryProcess(CEnemyAIDecisionUnit* pDecisionUnit, int32* aHistory, int32 numHistory);
     int32 CheckHistoryProcess(CEnemyAIDecisionUnit* pDecisionUnit, int32* aHistory, int32 numHistory);
     void ClearHistoryProcess(int32* aHistory, int32 numHistory);
-    void SetChangeDicisionUnit(const char* pszDecisionUnitName);
     const char* GetChangeDicisionUnit(void) const;
     void ChangeDicisionUnit(const char* pszUnitName);
     void SetSpecialFlag(BASEAI6045::SPECIAL_FLAG flag);
@@ -335,11 +353,13 @@ public:
         void SetCheckObstacleDistance(float fDist);
         void SetCheckObstacleDistanceDivNum(int32 iDivNum);
         void SetCheckJump(bool bState);
+        void SetHeightCorrection(bool bHeightCorrection);
 
     protected:
         float m_fCheckObstacleDistane;
         int32 m_iCheckObstacleDistanceDivNum;
         bool m_bCheckJump;
+        bool m_bHeightCorrection;
     };
 
     class CDecisionUnitMoveBoss : public CDecisionUnitMove2
@@ -418,6 +438,8 @@ public:
         CDecisionUnitAttackToAir(void);
         virtual bool CheckTerm(void) override;
         virtual void OnStart(void) override;
+        void SetHeightLow(float fHeightLow);
+        void SetHeightHigh(float fHeightHigh);
 
     private:
         float m_fHeightLow;
@@ -441,9 +463,19 @@ public:
         CDecisionUnitAttackCounter(const char* pszUnitName);
         virtual bool CheckTerm(void) override;
         virtual void OnStart(void) override;
-
+        void ResetTarget(void);
+        
     private:
         int32 m_attackPermissionPlayerNum;
+    };
+
+    class CDecisionUnitAttackThrow : public CEnemyAIDecisionUnit
+    {
+    public:
+        CDecisionUnitAttackThrow(void);
+        CDecisionUnitAttackThrow(const char* pszUnitName);
+        virtual bool CheckTerm(void) override;
+        virtual void OnStart(void) override;
     };
 
 public:

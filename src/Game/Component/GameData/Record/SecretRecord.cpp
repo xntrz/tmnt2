@@ -226,7 +226,7 @@ bool CSecretRecord::IsDonLazerEnabled(void) const
 };
 
 
-float CSecretRecord::GetAttackEnchanceValue(void) const
+float CSecretRecord::GetAttackEnhanceValue(void) const
 {
 	if (IsUnlockedSecret(SECRETID::ID_CHEATCODE_SUPERATTACK))
 		return 2.0f;
@@ -235,7 +235,7 @@ float CSecretRecord::GetAttackEnchanceValue(void) const
 };
 
 
-float CSecretRecord::GetDefenceEnchanceValue(void) const
+float CSecretRecord::GetDefenceEnhanceValue(void) const
 {
 	if (IsUnlockedSecret(SECRETID::ID_CHEATCODE_SUPERDEFENCE))
         return 2.0f;

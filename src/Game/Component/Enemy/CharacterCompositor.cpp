@@ -19,15 +19,6 @@ CCharacterCompositor::CCharacterCompositor(const char* pszName, TYPE type, CEnem
 CCharacterCompositor::~CCharacterCompositor(void)
 {
     m_rEnemyChr.Delete();
-    
-    /*
-    TODO: double delete of CEnemy (first from CEnemyCharacter when it die and second here)
-    uint32 hOwner = m_rEnemyChr.GetOwner();
-
-    CGameObject* pObj = CGameObjectManager::GetObject(hOwner);
-    if (pObj && (pObj->GetType() == GAMEOBJECTTYPE::ENEMY))
-        CGameObjectManager::DeleteObject(pObj);
-	*/
 };
 
 

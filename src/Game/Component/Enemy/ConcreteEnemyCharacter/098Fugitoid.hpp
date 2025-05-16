@@ -12,7 +12,7 @@ public:
         virtual void OnStart(void) override;
     };
 
-    class CDeathStatusObserver : public CCommonEnemyObserver::CCrashWallStatus
+    class CDeathStatusObserver : public CEnemyCharacter::CStatusObserver
     {
     public:
         virtual void OnStart(void) override;
@@ -24,7 +24,7 @@ public:
     };
 
 public:
-    static EFFECTID::VALUE GetNeededEffect(int32 no);
+    DEFINE_EMPTY_NEEDED_EFFECTS();
 
     C098Fugitoid(void);
     virtual ~C098Fugitoid(void);

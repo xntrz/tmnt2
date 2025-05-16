@@ -222,7 +222,7 @@ static const AREAINFO& AreaInfo(AREAID::VALUE idArea)
         return MOVIEID::VALUE(37);
 
     case AREAID::ID_AREA40:
-        return MOVIEID::VALUE(4);
+        return MOVIEID::VALUE(40);
 
     case AREAID::ID_AREA42:
         return MOVIEID::VALUE(43);

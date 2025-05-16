@@ -52,6 +52,12 @@ CEnemyCharacter& CAIModerator::EnemyCharacter(void)
 };
 
 
+const CEnemyCharacter& CAIModerator::EnemyCharacter(void) const
+{
+    return *m_pEnemyChr;
+};
+
+
 const ENEMYTYPES::CHARACTERISTIC& CAIModerator::Characteristic(void)
 {
     return m_pEnemyChr->AICharacteristic();

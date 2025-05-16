@@ -7,7 +7,7 @@
 
 static float GetPower(void)
 {
-    float fPower = CGameData::Record().Secret().GetAttackEnchanceValue();
+    float fPower = CGameData::Record().Secret().GetAttackEnhanceValue();
     
     int32 nLevel = CGameData::Record().Secret().GetAttackLevel();
     if (nLevel >= 3)

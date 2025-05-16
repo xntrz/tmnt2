@@ -32,14 +32,19 @@
 /*static*/ float CEnemyUtils::CModelColorControl::CalcColorChange(float src, float dst, float change)
 {
     if (Math::FEqual(src, dst))
-        return dst;
+        return src;
 
-    float f = std::fabs(dst - src);
+    float changeTotal = dst - src;
+    if (changeTotal < 0.0f)
+        change = -change;
 
-    if (f < change)
-        change = f;
+    float result = (src + change);
+    
+    result = Clamp(result,
+                   (dst < src ? dst : src),
+                   (dst < src ? src : dst));
 
-    return (src + change);
+    return result;
 };
 
 
@@ -99,11 +104,10 @@ void CEnemyUtils::CModelColorControl::SetModelColorChange(float r, float g, floa
 
     m_colorDst = { r, g, b };
 
-    m_colorChange = {
-        std::fabs((m_colorDst.r - m_colorSrc.r) * (CGameProperty::GetElapsedTime() / fTime)),
-        std::fabs((m_colorDst.g - m_colorSrc.g) * (CGameProperty::GetElapsedTime() / fTime)),
-        std::fabs((m_colorDst.b - m_colorSrc.b) * (CGameProperty::GetElapsedTime() / fTime)),
-    };
+	float t = (CGameProperty::GetElapsedTime() / fTime);
+    m_colorChange = { std::fabs((m_colorDst.r - m_colorSrc.r) * t),
+                      std::fabs((m_colorDst.g - m_colorSrc.g) * t),
+                      std::fabs((m_colorDst.b - m_colorSrc.b) * t) };
 };
 
 
@@ -119,20 +123,35 @@ void CEnemyUtils::CModelColorControl::GetBaseModelColor(float* r, float* g, floa
 
 void CEnemyUtils::CModelColorControl::SetModelColorControlEnable(bool bEnable)
 {
-    if (!bEnable)
+    if (bEnable == m_bEnable)
         return;
 
-    if (m_bEnable)
-        return;
+    if (!m_bEnable)
+    {
+        CModel* pModel = m_pChrCompositor->GetModel();
+        if (pModel)
+            m_colorBase = pModel->GetColor();
 
-    CModel* pModel = m_pChrCompositor->GetModel();
-    if (pModel)
-        m_colorBase = pModel->GetColor();
+        float r = static_cast<float>(m_colorBase.red);
+        float g = static_cast<float>(m_colorBase.green);
+        float b = static_cast<float>(m_colorBase.blue);
 
-    m_colorSrc    = { 0.0f, 0.0f, 0.0f };
-    m_colorDst    = { 0.0f, 0.0f, 0.0f };
-    m_colorChange = { 0.0f, 0.0f, 0.0f };
+        m_colorSrc = { r, g, b };
+        m_colorDst = { r, g, b };
+        m_colorChange = { 0.0f, 0.0f, 0.0f };
 
+        SetAmbientLightEnable(false);
+    }
+    else
+    {
+        CModel* pModel = m_pChrCompositor->GetModel();
+        if (pModel)
+            pModel->SetColor(m_colorBase);
+
+        SetAmbientLightEnable(true);
+    };
+
+    m_bEnable = bEnable;
 };
 
 
@@ -393,7 +412,7 @@ float CEnemyUtils::CKnockBackControl::GetPlayerNumRate(void) const
         break;
 
     case GAMEOBJECTTYPE::EFFECT:
-        if (static_cast<const CEffect*>(pObj)->GetType() == CEffect::TYPE_WITHHIT)
+        if (static_cast<const CEffect*>(pObj)->GetEffectType() == CEffect::TYPE_WITHHIT)
             return static_cast<const CMagic*>(pObj)->GetParent();
         break;
 
@@ -472,7 +491,7 @@ float CEnemyUtils::CKnockBackControl::GetPlayerNumRate(void) const
 };
 
 
-/*static*/ void CEnemyUtils::ProcAerialMotion(CCharacterCompositor* pChrCompositor, float fJumpInitSpeed)
+/*static*/ float CEnemyUtils::ProcAerialMotion(CCharacterCompositor* pChrCompositor, float fJumpInitSpeed)
 {
     float fTime = 0.0f;
 
@@ -488,27 +507,29 @@ float CEnemyUtils::CKnockBackControl::GetPlayerNumRate(void) const
 
     fTime = pChrCompositor->GetMotionEndTime() * ((fTime * -0.5f) + 0.5f);
     pChrCompositor->SetMotionTime(fTime);
+
+    return fTime;
 };
 
 
-/*static*/ void CEnemyUtils::GetJumpSpeedPosToPos(RwV3d*        initSpeed,
+/*static*/ void CEnemyUtils::GetJumpSpeedPosToPos(RwV3d*        vecJumpSpeed,
                                                   float         fJumpInitSpeed,
-                                                  const RwV3d*  jumpPos,
-                                                  const RwV3d*  markPos,
+                                                  const RwV3d*  vecJumpPosSrc,
+                                                  const RwV3d*  vecJumpPosDst,
                                                   float         fGravity)
 {
-    float fTime = CalcJumpTouchdownTime(fJumpInitSpeed, jumpPos->y, markPos->y, fGravity);
+    float fTime = CalcJumpTouchdownTime(fJumpInitSpeed, vecJumpPosSrc->y, vecJumpPosDst->y, fGravity);
     if (!Math::FEqual(fTime, 0.0f))
     {
-        initSpeed->x = (markPos->x - jumpPos->x) * (1.0f / fTime);
-        initSpeed->y = fJumpInitSpeed;
-        initSpeed->z = (markPos->z - jumpPos->z) * (1.0f / fTime);
+        vecJumpSpeed->x = (vecJumpPosDst->x - vecJumpPosSrc->x) * (1.0f / fTime);
+        vecJumpSpeed->y = fJumpInitSpeed;
+        vecJumpSpeed->z = (vecJumpPosDst->z - vecJumpPosSrc->z) * (1.0f / fTime);
     }
     else
     {
-        initSpeed->x = 0.0f;
-        initSpeed->y = fJumpInitSpeed;
-        initSpeed->z = 0.0f;
+        vecJumpSpeed->x = 0.0f;
+        vecJumpSpeed->y = fJumpInitSpeed;
+        vecJumpSpeed->z = 0.0f;
     };
 };
 
@@ -834,6 +855,43 @@ float CEnemyUtils::CKnockBackControl::GetPlayerNumRate(void) const
 };
 
 
+/*static*/ void CEnemyUtils::GetVelocityByPosDiff(RwV3d* vecVelocity,
+                                                  const RwV3d* vecPosNow,
+                                                  const RwV3d* vecPosPrev)
+{
+    RwV3d vecPosDiff = Math::VECTOR3_ZERO;
+    Math::Vec3_Sub(&vecPosDiff, vecPosNow, vecPosPrev);
+
+    float dt = CGameProperty::GetElapsedTime();
+    float dtInv = (1.0f / dt);
+
+    Math::Vec3_Scale(vecVelocity, &vecPosDiff, dtInv);
+};
+
+
+/*static*/ void CEnemyUtils::UpdateVelocityFromDirection(CCharacterCompositor* pChrCompositor)
+{
+    RwV3d vecVelocity = Math::VECTOR3_ZERO;
+    pChrCompositor->GetVelocity(&vecVelocity);
+
+    /* cache up Y vel and clear it to get move speed */
+    float fBuffVelY = vecVelocity.y;
+    vecVelocity.y = 0.0f;
+
+    /* getting move speed */
+    float fMoveSpeed = Math::Vec3_Length(&vecVelocity);
+
+    /* make new velocity by direction */
+    vecVelocity = { 0.0f, 0.0f, fMoveSpeed };
+    pChrCompositor->RotateVectorByDirection(&vecVelocity, &vecVelocity);
+
+    /* restore Y vel */
+    vecVelocity.y = fBuffVelY;
+
+    pChrCompositor->SetVelocity(&vecVelocity);
+};
+
+
 //
 // *********************************************************************************
 //
@@ -913,7 +971,6 @@ CEnemyTracer6045::CEnemyTracer6045(const CCharacterCompositor* pChrCompositor, C
     else
         hEffect = CEffectManager::PlayTrace(effectId, new CEnemyTracer6045(pCompositor, traceType), &vecOffset);
 
-    ASSERT(hEffect);
     if (hEffect)
         CEffectManager::SetScale(hEffect, fScale);
 
@@ -927,10 +984,7 @@ CEnemyTracer6045::CEnemyTracer6045(const CCharacterCompositor* pChrCompositor, C
                                                      bool bPlaySound /*= true*/)
 {
     uint32 hEffect = CEffectManager::Play(effectId, pvecPos, bPlaySound);
-    ASSERT(hEffect);
-
-    if (hEffect)
-        CEffectManager::SetScale(hEffect, fScale);
+    CEffectManager::SetScale(hEffect, fScale);
 
     return hEffect;
 };
@@ -998,10 +1052,7 @@ CEnemyTracer6045::CEnemyTracer6045(const CCharacterCompositor* pChrCompositor, C
     const char* pszMagicName = MAGICID::GetNameFromID(magicId);
 
     uint32 hMagic = CMagicManager::Play(pszMagicName, pvecPos, nullptr, nullptr, bPlaySound);
-    ASSERT(hMagic);
-
-    if (hMagic)
-        CMagicManager::SetScale(hMagic, fScale);
+    CMagicManager::SetScale(hMagic, fScale);
 
     return hMagic;
 };
@@ -1016,7 +1067,6 @@ CEnemyTracer6045::CEnemyTracer6045(const CCharacterCompositor* pChrCompositor, C
                                                    bool bPlaySound /*= false*/)
 {
     uint32 hShot = CShotManager::Shot(shotId, pvecPos, pvecDir, pChrCompositor, fCorrectionRad, fLifetime);
-    ASSERT(hShot);
 
     if (bPlaySound)
         CGameSound::PlayObjectSE(pChrCompositor, SDCODE_SE(0x1020));
@@ -1131,13 +1181,112 @@ CEnemyTracer6045::CEnemyTracer6045(const CCharacterCompositor* pChrCompositor, C
     param.SetObject(pChrCompositor);
 
     uint32 hMagic = CMagicManager::Play(magicId, &param);
-    ASSERT(hMagic);
-
-    if (hMagic)
-    {
-        CMagicManager::SetSpeed(hMagic, fDirection, fSpeed);
-        CMagicManager::SetScale(hMagic, fScale);
-    };
+    CMagicManager::SetSpeed(hMagic, fDirection, fSpeed);
+    CMagicManager::SetScale(hMagic, fScale);
 
     return hMagic;
+};
+
+
+/*static*/ bool CEnemyUtils6045::CheckCrashWall(const CCharacterCompositor* pChrCompositor,
+                                                float fCrashAngle,
+                                                RwV3d* pvecHitPos /*= nullptr*/)
+{
+    const CCharacterCompositor::COLLISIONWALLINFO* pWallInfo = pChrCompositor->GetCollisionWall();
+    ASSERT(pWallInfo != nullptr);
+
+    if (!pWallInfo->m_bHit)
+        return false;
+
+    RwV3d vecWallNormal = pWallInfo->m_vNormal;
+    Math::Vec3_Negate(&vecWallNormal, &vecWallNormal);
+    vecWallNormal.y = 0.0f;
+    Math::Vec3_Normalize(&vecWallNormal, &vecWallNormal);
+
+    float fDir = 0.0f;
+    if (!CEnemyUtils6045::GetDirection(&fDir, &Math::VECTOR3_ZERO, &vecWallNormal))
+    {
+        if (pvecHitPos)
+            *pvecHitPos = pWallInfo->m_vPosition;
+        return true;
+    };
+
+    float fChrDir = pChrCompositor->GetDirection();
+    float fDirDiff = (fChrDir - fDir);
+    fDirDiff = CEnemyUtils::RadianCorrect(fDirDiff);
+
+    float fDirDiffAbs = std::fabs(fDirDiff);
+    if (fDirDiffAbs < fCrashAngle)
+    {
+        if (pvecHitPos)
+            *pvecHitPos = pWallInfo->m_vPosition;
+        return true;
+    };
+
+    float fRotY = (fDirDiff <= 0.0f ? -MATH_DEG2RAD(90.0f) : MATH_DEG2RAD(90.0f));
+
+    RwMatrix matRotY;
+    RwMatrixSetIdentityMacro(&matRotY);
+    Math::Matrix_RotateY(&matRotY, fRotY);
+
+    RwV3d vecExt = Math::VECTOR3_ZERO;
+    RwV3dTransformVector(&vecExt, &vecWallNormal, &matRotY);
+
+    RwV3d vecHitExt = Math::VECTOR3_ZERO;
+    float fCollRadius = pChrCompositor->GetCollisionParameter().m_fRadius;
+    Math::Vec3_Scale(&vecHitExt, &vecExt, (fCollRadius * 1.1f));
+
+    RwV3d vecBase = Math::VECTOR3_ZERO;
+    pChrCompositor->GetFootPosition(&vecBase);
+    vecBase.y += 0.1f;
+
+    for (int32 i = 0; i < 4; ++i)
+    {
+        float fCollHeight = pChrCompositor->GetCollisionParameter().m_fHeight;
+
+        RwV3d vecPtStart = vecBase;
+        vecPtStart.y += (static_cast<float>(i) * (1.0f / 3.0f)) * fCollHeight;
+
+        RwV3d vecPtEnd = vecPtStart;
+        Math::Vec3_Add(&vecPtEnd, &vecPtEnd, &vecHitExt);
+
+        float fThickSize = (fCollRadius * 0.95f);
+
+        if (CAIUtils::CheckMapCollisionThick(&vecPtStart, &vecPtEnd, fThickSize))
+        {
+            if (pvecHitPos)
+            {
+                RwV3d vecBodyPos = Math::VECTOR3_ZERO;
+                pChrCompositor->GetBodyPosition(&vecBodyPos);
+
+                Math::Vec3_Normalize(&vecExt, &vecExt);
+                Math::Vec3_Scale(&vecExt, &vecExt, fCollRadius);
+                Math::Vec3_Add(pvecHitPos, &vecBase, &vecExt);                
+            };
+
+            return true;
+        };
+    };
+
+    return false;
+};
+
+
+/*static*/ uint32
+CEnemyUtils6045::EntryWaterDobonEffect(const CCharacterCompositor* pCompositor,
+                                       float fScale,
+                                       bool bPlaySound /*= true*/)
+{
+    if (!CEnemyUtils::CheckInfoWater(pCompositor))
+        return 0;
+
+    RwV3d vecFootPos = Math::VECTOR3_ZERO;
+    pCompositor->GetFootPosition(&vecFootPos);
+
+    CWorldMap::GetWaterSurfacePosition(&vecFootPos);
+
+    uint32 hEffect = CEffectManager::Play(EFFECTID::ID_ALL_W_DOBON, &vecFootPos, bPlaySound);
+    CEffectManager::SetScale(hEffect, fScale);
+
+    return hEffect;
 };

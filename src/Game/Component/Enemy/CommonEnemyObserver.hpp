@@ -34,7 +34,6 @@ private:
 };
 
 
-/* TODO: most of this functional relate to 6045 & 6034 group, test it later */
 class CCommonEnemyObserver
 {
 public:
@@ -45,7 +44,7 @@ public:
         virtual RESULT Observing(void) override;
         virtual ENEMYTYPES::STATUS OnEnd(void) override;
 
-    private:
+	protected:
         float m_fTime;
     };
 
@@ -80,7 +79,7 @@ public:
         virtual RESULT Observing(void) override;
         virtual ENEMYTYPES::STATUS OnEnd(void) override;
 
-    private:
+    protected:
         ENEMYTYPES::STATUS m_nextStatus;
         float m_fMoveTime;
         float m_fMoveSpeed;
@@ -334,7 +333,6 @@ public:
         virtual ENEMYTYPES::STATUS OnEnd(void) override;
     };
 
-    /* TODO: 6045 & 6034 */
     class CBaseThrow : public CEnemyCharacter::CStatusObserver
     {
     public:
@@ -354,7 +352,7 @@ public:
         bool IsSendCatch(void) const;
         bool IsThrowHit(void) const;
 
-    private:
+    protected:
         int32 m_throwBoneID;
         RwV3d m_vBoneOffset;
         RwV3d m_vThrowDirection;

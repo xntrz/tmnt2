@@ -180,6 +180,6 @@ CBaseRazorfistAI::CBaseRazorfistAI(CEnemyCharacter* pEnemyChr)
 
         CEnemyAIDecisionUnit* pUnit = GetDicisionUnitForName(BASEAI6045::AIDECISIONUNITNAME::ATTACK_COUNTER);
         if (pUnit)
-            static_cast<CDecisionUnitAttackCounter*>(pUnit)->ResetTarget();
+            static_cast<CBaseRazorfistAI::CDecisionUnitAttackCounter*>(pUnit)->ResetTarget();
     };
 };

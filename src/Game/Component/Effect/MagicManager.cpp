@@ -471,6 +471,12 @@ void CMagicManager::CParameter::SetTarget(CTracer* pTarget)
 };
 
 
+void CMagicManager::CParameter::SetTracer(CTracer* pTracer)
+{
+    SetTarget(pTracer);
+};
+
+
 void CMagicManager::CParameter::SetSoundPlay(bool bSet)
 {
     m_bPlaySound = bSet;
@@ -564,7 +570,11 @@ void CMagicManager::CParameter::SetSoundPlay(bool bSet)
 };
 
 
-/*static*/ uint32 CMagicManager::Play(const char* pszMagicName, const RwV3d* pvPosition, const RwV3d* pvDirection, CGameObject* pParent, bool bPlaySound)
+/*static*/ uint32 CMagicManager::Play(const char* pszMagicName,
+                                      const RwV3d* pvPosition,
+                                      const RwV3d* pvDirection /*= nullptr*/,
+                                      CGameObject* pParent /*= nullptr*/,
+                                      bool bPlaySound /*= true */)
 {
     ASSERT(pszMagicName);
     ASSERT(pvPosition);
@@ -591,7 +601,12 @@ void CMagicManager::CParameter::SetSoundPlay(bool bSet)
 };
 
 
-/*static*/ uint32 CMagicManager::Play(const char* pszMagicName, const RwV3d* pvPosition, const RwV3d* pvDirection, CGameObject* pParent, CTracer* pTarget, bool bPlaySound)
+/*static*/ uint32 CMagicManager::Play(const char* pszMagicName,
+                                      const RwV3d* pvPosition,
+                                      const RwV3d* pvDirection,
+                                      CGameObject* pParent,
+                                      CTracer* pTarget,
+                                      bool bPlaySound)
 {
     ASSERT(pszMagicName);
     ASSERT(pvPosition);

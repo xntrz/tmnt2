@@ -574,14 +574,11 @@ C037TriceratonFlyingHarness::C037TriceratonFlyingHarness(void)
     SetAttackAltitude(1.2f);    
 
     /* init effect */
-    RwV3d vecOffset = Math::VECTOR3_ZERO; // unused (default)
-    float fDir = Compositor().GetDirection();
-
-    m_hEngineEffect = CEffectManager::PlayTrace(EFFECTID::ID_RIDE_ENGINE, new CBurnerTracer(this), &vecOffset, fDir);
-    ASSERT(m_hEngineEffect);
-
-    if (m_hEngineEffect)
-        CEffectManager::SetScale(m_hEngineEffect, 0.6f);
+    m_hEngineEffect = CEffectManager::PlayTrace(EFFECTID::ID_RIDE_ENGINE,
+                                                new CBurnerTracer(this),
+                                                &Math::VECTOR3_ZERO,
+                                                Compositor().GetDirection());
+    CEffectManager::SetScale(m_hEngineEffect, 0.6f);
 };
 
 

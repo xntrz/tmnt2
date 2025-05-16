@@ -42,8 +42,8 @@ public:
     int32 GetAerialLevel(void) const;
     int32 GetChargeLevel(void) const;
     bool IsDonLazerEnabled(void) const;
-    float GetAttackEnchanceValue(void) const;
-    float GetDefenceEnchanceValue(void) const;
+    float GetAttackEnhanceValue(void) const;
+    float GetDefenceEnhanceValue(void) const;
     SECRETID::VALUE GetUnnotifiedSecret(void);
 
 private:

@@ -10,7 +10,8 @@
 
 class CDebugShapeContainer
 {
-private:
+public:
+
     static const int32 SHAPEMAX     = 512;
     static const int32 TRINUM       = 256 * 256;
     static const int32 VERTEXNUM    = TRINUM * 4;
@@ -124,7 +125,9 @@ private:
 	int32 m_nIndexOffset;
 	int32 m_nIndexAccum;
     int32 m_nShapeNum;
-	float m_fLabelDiff;
+    float m_fLabelDiff;
+    bool m_bSync2D;
+    bool m_bSync3D;
 };
 
 
@@ -137,17 +140,16 @@ CDebugShapeContainer::CDebugShapeContainer(void)
 , m_nIndexAccum(0)
 , m_nShapeNum(0)
 , m_fLabelDiff(0.0f)
+, m_bSync2D(false)
+, m_bSync3D(false)
 {
     for (int32 i = 0; i < COUNT_OF(m_aShape); ++i)
         m_listShapePool.push_back(&m_aShape[i]);
 
     m_pVertexBuffer = new RwIm3DVertex[VERTEXNUM];
-    ASSERT(m_pVertexBuffer);
+    m_nVertexMax = VERTEXNUM;
     
     m_pIndexBuffer = new RwImVertexIndex[INDEXNUM];
-    ASSERT(m_pIndexBuffer);
-
-    m_nVertexMax = VERTEXNUM;
     m_nIndexMax = INDEXNUM;
 };
 
@@ -174,6 +176,9 @@ CDebugShapeContainer::~CDebugShapeContainer(void)
 
 void CDebugShapeContainer::Run(float dt)
 {
+    m_bSync2D = true;
+    m_bSync3D = true;
+
     for (SHAPE& it : m_listShapeAlloc3D)
         it.m_fTime += dt;
 
@@ -190,7 +195,7 @@ void CDebugShapeContainer::FrameBegin(void)
 
 void CDebugShapeContainer::FrameEnd(void)
 {
-    ClearPerFrameData();
+    ClearPerFrameData();    
 };
 
 
@@ -209,29 +214,34 @@ void CDebugShapeContainer::ClearPerFrameData(void)
 
 void CDebugShapeContainer::Draw3D(void)
 {
-    for (SHAPE& it : m_listShapeAlloc3D)
+    if (m_bSync3D)
     {
-        switch (it.m_type)
+        m_bSync3D = false;
+
+        for (SHAPE& it : m_listShapeAlloc3D)
         {
-        case SHAPE::TYPE_SPHERE:
-            DrawSphere(&it.m_data.sphere);
-            break;
+            switch (it.m_type)
+            {
+            case SHAPE::TYPE_SPHERE:
+                DrawSphere(&it.m_data.sphere);
+                break;
 
-        case SHAPE::TYPE_LINE:
-			DrawLine(&it.m_data.line);
-            break;
+            case SHAPE::TYPE_LINE:
+                DrawLine(&it.m_data.line);
+                break;
 
-        case SHAPE::TYPE_PLANE:
-            DrawPlane(&it.m_data.plane);
-            break;
+            case SHAPE::TYPE_PLANE:
+                DrawPlane(&it.m_data.plane);
+                break;
 
-        case SHAPE::TYPE_BOX:
-			DrawBox(&it.m_data.box);
-            break;
+            case SHAPE::TYPE_BOX:
+                DrawBox(&it.m_data.box);
+                break;
 
-        default:
-            ASSERT(false);
-            break;
+            default:
+                ASSERT(false);
+                break;
+            };
         };
     };
 
@@ -244,7 +254,7 @@ void CDebugShapeContainer::Draw3D(void)
 void CDebugShapeContainer::Draw2D(void)
 {
     RSPush2D();
-	m_fLabelDiff = 0.0f;
+    m_fLabelDiff = 0.0f;
     for (SHAPE& it : m_listShapeAlloc2D)
     {
         switch (it.m_type)
@@ -409,12 +419,12 @@ void CDebugShapeContainer::DrawSphere(SHAPE_SPHERE* pShapeSphere)
             RwIm3DVertex* pVertex = &aVertex[nVertexNum++];
 			ASSERT(nVertexNum <= COUNT_OF(aVertex));
 
-            float fDeltaX = (float(j) / float(SPHERE_DIV_X));
-            float fDeltaY = (float(i) / float(SPHERE_DIV_Y));
+            float fDeltaX = (static_cast<float>(j) / static_cast<float>(SPHERE_DIV_X));
+            float fDeltaY = (static_cast<float>(i) / static_cast<float>(SPHERE_DIV_Y));
 
-            pVertex->objVertex.x = fRadius * Math::Cos(fDeltaX * 2.0f * Math::PI) * Math::Sin(fDeltaY * Math::PI);
-            pVertex->objVertex.y = (fRadius * Math::Cos(fDeltaY * Math::PI)) * pShapeSphere->m_fScaleY;
-            pVertex->objVertex.z = fRadius * Math::Sin(fDeltaX * 2.0f * Math::PI) * Math::Sin(fDeltaY * Math::PI);    
+            pVertex->objVertex.x = fRadius * Math::Cos(fDeltaX * 2.0f * MATH_PI) * Math::Sin(fDeltaY * MATH_PI);
+            pVertex->objVertex.y = (fRadius * Math::Cos(fDeltaY * MATH_PI)) * pShapeSphere->m_fScaleY;
+            pVertex->objVertex.z = fRadius * Math::Sin(fDeltaX * 2.0f * MATH_PI) * Math::Sin(fDeltaY * MATH_PI);    
 
             Math::Vec3_Add(&pVertex->objVertex, &pVertex->objVertex, &vPosition);
 
@@ -760,7 +770,11 @@ bool CDebugShapeContainer::IsAnyPointOnScreen(const RwV3d* aPt, int32 nNumPt, Rw
 
 
 static const RwRGBA DEFAULT_COLOR = { 0xFF, 0xFF, 0xFF, 0xFF };
+static CDebugShapeContainer* s_pDebugShapeContainerForPeriod = nullptr;
+static CDebugShapeContainer* s_pDebugShapeContainerForDraw = nullptr;
 static CDebugShapeContainer* s_pDebugShapeContainer = nullptr;
+static float s_afPrevDurationStack[16] = { 0.0f };
+static int32 s_prevDurationStackDepth = 0;
 
 
 static inline CDebugShapeContainer& DebugShapeContainer(void)
@@ -779,50 +793,77 @@ static inline CDebugShapeContainer& DebugShapeContainer(void)
 
 /*static*/ void CDebugShape::Initialize(void)
 {
+    m_fLabelHeight = 12.0f;
+    m_fLabelOffsetY = 0.0f;
+    m_fDuration = 0.0f;
+    m_fLineThickness = 0.05f;
+    m_fSphereScaleY = 1.0f;
+
+    for (int32 i = 0; i < COUNT_OF(s_afPrevDurationStack); ++i)
+        s_afPrevDurationStack[i] = 0.0f;
+    s_prevDurationStackDepth = 0;
+
     if (!s_pDebugShapeContainer)
     {
-        s_pDebugShapeContainer = new CDebugShapeContainer;
+        s_pDebugShapeContainer = nullptr;
+        s_pDebugShapeContainerForPeriod = new CDebugShapeContainer;
+        s_pDebugShapeContainerForDraw = new CDebugShapeContainer;
     };
 };
 
 
 /*static*/ void CDebugShape::Terminate(void)
 {
-    if (s_pDebugShapeContainer)
+    if (s_pDebugShapeContainerForDraw)
     {
-        delete s_pDebugShapeContainer;
-        s_pDebugShapeContainer = nullptr;
+        delete s_pDebugShapeContainerForDraw;
+        s_pDebugShapeContainerForDraw = nullptr;
     };
+
+    if (s_pDebugShapeContainerForPeriod)
+    {
+        delete s_pDebugShapeContainerForPeriod;
+        s_pDebugShapeContainerForPeriod = nullptr;
+    };
+
+    s_pDebugShapeContainer = nullptr;
 };
 
 
 /*static*/ void CDebugShape::Period(float dt)
 {
-    DebugShapeContainer().Run(dt);
+    s_pDebugShapeContainerForPeriod->ClearPerFrameData();
+    s_pDebugShapeContainerForPeriod->Run(dt);
+
+    s_pDebugShapeContainerForDraw->Run(dt);
+
+    s_pDebugShapeContainer = s_pDebugShapeContainerForPeriod;
 };
 
 
 /*static*/ void CDebugShape::FrameBegin(void)
 {
-    DebugShapeContainer().FrameBegin();
+    s_pDebugShapeContainer = s_pDebugShapeContainerForDraw;
 };
 
 
 /*static*/ void CDebugShape::FrameEnd(void)
 {
-    DebugShapeContainer().FrameEnd();
+    s_pDebugShapeContainerForDraw->ClearPerFrameData();
 };
 
 
 /*static*/ void CDebugShape::Draw3D(void)
 {
-    DebugShapeContainer().Draw3D();
+    s_pDebugShapeContainerForPeriod->Draw3D();
+    s_pDebugShapeContainerForDraw->Draw3D();
 };
 
 
 /*static*/ void CDebugShape::Draw2D(void)
 {
-    DebugShapeContainer().Draw2D();
+    s_pDebugShapeContainerForPeriod->Draw2D();
+    s_pDebugShapeContainerForDraw->Draw2D();
 };
 
 
@@ -835,6 +876,37 @@ static inline CDebugShapeContainer& DebugShapeContainer(void)
 /*static*/ void CDebugShape::ShowSphere(const RwSphere* pSphere, const RwRGBA& rColor)
 {
     DebugShapeContainer().ShowSphere(pSphere, rColor);
+};
+
+
+/*static*/ void CDebugShape::ShowSphere(const RwV3d* pvecPos,
+                                        float fRadius /*= 0.5f*/,
+                                        const RwRGBA& color /*= { 255, 0, 0, 255 }*/)
+{
+    RwSphere sphere;
+    sphere.radius = fRadius;
+    sphere.center = *pvecPos;
+    CDebugShape::ShowSphere(&sphere, color);
+};
+
+
+/*static*/ void CDebugShape::ShowSphere(const RwV3d& rvecPos,
+                                        float fRadius /*= 0.5f*/,
+                                        const RwRGBA& color /*= { 255, 0, 0, 255 }*/)
+{
+    ShowSphere(&rvecPos, fRadius, color);
+};
+
+
+/*static*/ void CDebugShape::ShowSphere(const RwV3d* pvecPos, const RwRGBA& color)
+{
+    ShowSphere(pvecPos, 0.5f, color);
+};
+
+
+/*static*/ void CDebugShape::ShowSphere(const RwV3d& rvecPos, const RwRGBA& color)
+{
+    ShowSphere(rvecPos, 0.5f, color);
 };
 
 
@@ -883,4 +955,22 @@ static inline CDebugShapeContainer& DebugShapeContainer(void)
 /*static*/ void CDebugShape::ShowLabel(const RwV3d* pvPosition, const char* pszLabel, const RwRGBA& rColor)
 {
     DebugShapeContainer().ShowLabel(pvPosition, pszLabel, rColor, m_fLabelHeight);
+};
+
+
+/*static*/ void CDebugShape::DurationPush(float t)
+{
+    ASSERT(s_prevDurationStackDepth < COUNT_OF(s_afPrevDurationStack));
+
+    s_afPrevDurationStack[s_prevDurationStackDepth++] = m_fDuration;
+    m_fDuration = t;
+};
+
+
+/*static*/ void CDebugShape::DurationPop(void)
+{
+    ASSERT(s_prevDurationStackDepth > 0);
+
+    m_fDuration = s_afPrevDurationStack[s_prevDurationStackDepth];
+    s_afPrevDurationStack[s_prevDurationStackDepth--] = 0.0f;
 };

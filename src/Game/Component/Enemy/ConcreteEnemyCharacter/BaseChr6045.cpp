@@ -438,16 +438,14 @@ CBaseChr6045::CDeathStatusObserver::CDeathStatusObserver(const char* pszMotion,
     EnemyChr().Compositor().SetVelocity(&Math::VECTOR3_ZERO);
     EnemyChr().Compositor().SetAcceleration(&Math::VECTOR3_ZERO);
 
+    EnemyChr().SetFlag(ENEMYTYPES::FLAG_INVINCIBILITY);
+
     if (m_pszMotion)
-    {
-        bool bForce = true;
-        EnemyChr().Compositor().ChangeMotion(m_pszMotion, bForce);
-    };
+        EnemyChr().Compositor().ChangeMotion(m_pszMotion, true);
 
     if (m_deathKind == DEATHKIND_MOTION)
     {
-        bool bForce = true;
-        EnemyChr().Compositor().ChangeMotion(ENEMYTYPES::MOTIONNAMES::FLYAWAY_IDLING, bForce);
+        EnemyChr().Compositor().ChangeMotion(ENEMYTYPES::MOTIONNAMES::FLYAWAY_IDLING, true);
         EnemyChr().Compositor().StopMotion();
         EnemyChr().Compositor().SetEnableBodyHitSelfToOther(false);
     };
@@ -511,7 +509,9 @@ void CBaseChr6045::CDeathStatusObserver::EntryDeathEffect(void)
 };
 
 
-void CBaseChr6045::CDeathStatusObserver::SetParameter(DEATHKIND deathKind, const char* pszMotion, float fEffectScale)
+void CBaseChr6045::CDeathStatusObserver::SetParameter(DEATHKIND deathKind,
+                                                      const char* pszMotion,
+                                                      float fEffectScale)
 {
     m_deathKind = deathKind;
     m_pszMotion = pszMotion;
@@ -535,10 +535,7 @@ CBaseChr6045::CNothingStatusObserver::CNothingStatusObserver(const char* pszMoti
 /*virtual*/ void CBaseChr6045::CNothingStatusObserver::OnStart(void) /*override*/
 {
     if (m_pszMotion)
-    {
-        bool bForce = true;
-        EnemyChr().Compositor().ChangeMotion(m_pszMotion, bForce);
-    };
+        EnemyChr().Compositor().ChangeMotion(m_pszMotion, true);
 };
 
 
@@ -649,7 +646,7 @@ CBaseChr6045::CAttackSalivaShotStatusObserver::Observing(void) /*override*/
 
 CBaseChr6045::CBaseChr6045(ENEMYID::VALUE enemyId)
 : CEnemyCharacter(enemyId)
-, m_pThrowObserver(nullptr)
+, m_pThrow(nullptr)
 , m_knockBackCtrl()
 , m_bKnockBackCtrlActive(false)
 , m_pAIModerator(nullptr)
@@ -669,10 +666,7 @@ CBaseChr6045::CBaseChr6045(ENEMYID::VALUE enemyId)
 {
     bool bResult = CEnemyCharacter::Initialize(pParameter, bReplaceParameter);
     if (pParameter->m_pfnAIInstance)
-    {
-        CAIModerator& AIModerator = CEnemyCharacter::AIModerator();
-        m_pAIModerator = &((CBaseAI6045&)AIModerator);
-    };
+        m_pAIModerator = reinterpret_cast<CBaseAI6045*>(&CEnemyCharacter::AIModerator());
 	
 	return bResult;
 };
@@ -689,8 +683,8 @@ CBaseChr6045::CBaseChr6045(ENEMYID::VALUE enemyId)
 {
     CEnemyCharacter::OnMessageAttackResult(pCatch);
 
-    if (m_pThrowObserver)
-        m_pThrowObserver->SetAttackParam(pCatch);
+    if (m_pThrow)
+        m_pThrow->SetAttackParam(pCatch);
 };
 
 

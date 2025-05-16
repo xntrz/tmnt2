@@ -444,7 +444,6 @@ CBaseMouserChr::CBaseMouserChr(ENEMYID::VALUE enemyId)
     AttachStatusObserver(ENEMYTYPES::STATUS_THINKING,               new CBaseMouserChr::CThinkingStatusObserver);
     AttachStatusObserver(ENEMYTYPES::STATUS_ATTACK_A,               new CBaseMouserChr::CAttackAStatusObserver);
     AttachStatusObserver(ENEMYTYPES::STATUS_ATTACK_B,               new CBaseMouserChr::CAttackBStatusObserver);
-    AttachStatusObserver(ENEMYTYPES::STATUS_ATTACK_C,               new CBaseMouserChr::CAttackCStatusObserver(this));
     AttachStatusObserver(ENEMYTYPES::STATUS_WALK,                   new CBaseMouserChr::CMoveStatusObserver);
     AttachStatusObserver(ENEMYTYPES::STATUS_RUN,                    new CBaseMouserChr::CMoveStatusObserver);
     AttachStatusObserver(ENEMYTYPES::STATUS_FLYAWAY_FRONT,          new CBaseMouserChr::CFlyawayStatusObserver);
@@ -453,6 +452,9 @@ CBaseMouserChr::CBaseMouserChr(ENEMYID::VALUE enemyId)
     AttachStatusObserver(ENEMYTYPES::STATUS_FLYAWAY_BOUND_BACK,     new CBaseMouserChr::CFlyawayBoundStatusObserver);
     AttachStatusObserver(ENEMYTYPES::STATUS_GETUP,                  new CBaseMouserChr::CGetupStatusObserver);
     AttachStatusObserver(ENEMYTYPES::STATUS_DEATH,                  new CBaseMouserChr::CDeathStatusObserver(this));
+
+    if (GetID() != ENEMYID::ID_RAPTOR)
+        AttachStatusObserver(ENEMYTYPES::STATUS_ATTACK_C, new CBaseMouserChr::CAttackCStatusObserver(this));
 };
 
 

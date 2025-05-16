@@ -146,11 +146,10 @@ public:
     void SetTargetType(TARGET_TYPE type);
     void ClearTargetType(void);
     void SetPlayerData(int32 iPlayerIndex, PLAYER_DATA_TYPE type);
-    PLAYERDATA* GetPlayerData(PLAYER_DATA_TYPE type);
+    const PLAYERDATA& GetPlayerData(PLAYER_DATA_TYPE type) const;
+    const PLAYERDATA& GetTargetPlayerData(void) const;
     CEnemyCharacter& EnemyChara(void);
-    int32 PlayerIndexCorrection(int32 iPlayerIndex);
-    void GetTargetTypePosition(RwV3d* pvPos) const;
-    int32 GetTargetTypeNo(void) const;
+    int32 PlayerIndexCorrection(int32 iPlayerIndex) const;
 
 private:
     PLAYERDATA m_aPlayerData[PLAYER_DATA_MAX];

@@ -791,10 +791,13 @@ static void SdSetDamage(const SE_DAMAGE_PARAM* pParam)
                         };
 
                         static_assert(COUNT_OF(CodeArray) == PLAYERID::ID_MAX, "update me");
-                        ASSERT(pParam->DefenderId >= 0);
-                        ASSERT(pParam->DefenderId < COUNT_OF(CodeArray));
 
-                        Code = CodeArray[pParam->DefenderId];
+						if (pParam->DefenderType == CCharacter::TYPE_PLAYER)
+						{
+							ASSERT(pParam->DefenderId >= 0);
+							ASSERT(pParam->DefenderId < COUNT_OF(CodeArray));
+							Code = CodeArray[pParam->DefenderId];
+						};
                     }
                     else if (pParam->AttackResult == CHARACTERTYPES::ATTACKRESULTTYPE_DAMAGE_FLYAWAY)
                     {

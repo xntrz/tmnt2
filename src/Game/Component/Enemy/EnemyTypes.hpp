@@ -211,7 +211,7 @@ namespace ENEMYTYPES
         FLAG_AERIAL_STATUS  = 0x4,
         FLAG_GUARD_ALLRANGE = 0x8,
         FLAG_INVINCIBILITY  = 0x10,
-        FLAG_NOREACTION     = 0x20,
+        FLAG_NOREACTION     = 0x20, // if set enemy ignores all attack status effect
 
         FLAG_DEFAULT        = FLAG_NONE,
     };

@@ -69,7 +69,6 @@ private:
     public:
         CDecisionUnitAttackCounter(void);
         virtual bool CheckTerm(void) override;
-        void ResetTarget(void);
     };
 
 public:

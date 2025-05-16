@@ -138,10 +138,10 @@ float CCharacterAttackCalculator::CalcDamage(CHARACTERTYPES::ATTACKRESULTTYPE at
 
     if (m_rCharacter.GetAttackCharacterType() == CCharacter::TYPE_PLAYER)
     {
-        fPowerRatio /= CGameData::Record().Secret().GetDefenceEnchanceValue();
+        fPowerRatio /= CGameData::Record().Secret().GetDefenceEnhanceValue();
 
         if (CGameData::Record().Secret().IsUnlockedSecret(SECRETID::ID_CHALLENGE_NIGHTMARE))
-            fPowerRatio += fPowerRatio;
+            fPowerRatio *= 2.0f;
     };
 
     fDamage = static_cast<float>(m_rAttack.GetPower()) * fPowerRatio;
@@ -158,6 +158,8 @@ float CCharacterAttackCalculator::CalcDamage(CHARACTERTYPES::ATTACKRESULTTYPE at
                 CGameEvent::SetPlayerTechnicalAction(pAttackerPlayer->GetPlayerNo(), GAMETYPES::TECACT_GUARD_IMPACT);
             };
         };
+
+        fDamage *= 2.0f;
     };
 
     if (fDamage < 1.0f)
@@ -439,36 +441,60 @@ CHARACTERTYPES::ATTACKTYPE
 CCharacterAttackCalculator::MorphinAttackType(CHARACTERTYPES::ATTACKTYPE attacktype,
                                               CHARACTERTYPES::DEFENCERSTATUSFLAG defenceflag)
 {
-    CHARACTERTYPES::ATTACKTYPE result = attacktype;
-
     if ((defenceflag & CHARACTERTYPES::DEFENCERSTATUSFLAG_AERIAL) &&
         (IsTroubleAttack(attacktype) || IsDamageAttack(attacktype)))
     {
-        result = CHARACTERTYPES::ATTACKTYPE_DAMAGE_FLYAWAY;
+        attacktype = CHARACTERTYPES::ATTACKTYPE_DAMAGE_FLYAWAY;
     };
 
-    uint32 defenceStatusFlag = (defenceflag & CHARACTERTYPES::DEFENCERSTATUSFLAG_STATUS_MASK);
+    CHARACTERTYPES::DEFENCERSTATUSFLAG defenceStatusFlag = (defenceflag & CHARACTERTYPES::DEFENCERSTATUSFLAG_STATUS_MASK);
     if (defenceStatusFlag == CHARACTERTYPES::DEFENCERSTATUSFLAG_BIND)
     {
-        if (IsDamageAttack(attacktype))
-            result = CHARACTERTYPES::ATTACKTYPE_DAMAGE_NOREACTION;
+        switch (attacktype)
+        {
+        case CHARACTERTYPES::ATTACKTYPE_DAMAGE_KNOCK:
+        case CHARACTERTYPES::ATTACKTYPE_DAMAGE_FLYAWAY:
+            attacktype = CHARACTERTYPES::ATTACKTYPE_DAMAGE_NOREACTION;
+            break;
+
+        case CHARACTERTYPES::ATTACKTYPE_DINDLE:
+        case CHARACTERTYPES::ATTACKTYPE_STUN:
+        case CHARACTERTYPES::ATTACKTYPE_SLEEP:
+        case CHARACTERTYPES::ATTACKTYPE_FREEZE:
+            attacktype = CHARACTERTYPES::ATTACKTYPE_DAMAGE_FLYAWAY;
+            break;
+
+        case CHARACTERTYPES::ATTACKTYPE_BIND:
+            attacktype = CHARACTERTYPES::ATTACKTYPE_UNKNOWN;
+            break;
+
+        default:
+            break;
+        };
     }
     else if ((defenceStatusFlag == CHARACTERTYPES::DEFENCERSTATUSFLAG_FREEZE) ||
              (defenceStatusFlag == CHARACTERTYPES::DEFENCERSTATUSFLAG_SLEEP)  ||
              (defenceStatusFlag == CHARACTERTYPES::DEFENCERSTATUSFLAG_STUN)   ||
              (defenceStatusFlag == CHARACTERTYPES::DEFENCERSTATUSFLAG_DINDLE))
     {
-        if (IsTroubleAttack(attacktype))
-            result = CHARACTERTYPES::ATTACKTYPE_DAMAGE_FLYAWAY;
+        if ((attacktype == CHARACTERTYPES::ATTACKTYPE_DAMAGE_KNOCK)     ||
+            (attacktype == CHARACTERTYPES::ATTACKTYPE_DAMAGE_FLYAWAY)   ||
+            (attacktype == CHARACTERTYPES::ATTACKTYPE_DINDLE)           ||
+            (attacktype == CHARACTERTYPES::ATTACKTYPE_STUN)             ||
+            (attacktype == CHARACTERTYPES::ATTACKTYPE_SLEEP)            ||
+            (attacktype == CHARACTERTYPES::ATTACKTYPE_FREEZE))
+        {
+            attacktype = CHARACTERTYPES::ATTACKTYPE_DAMAGE_FLYAWAY;
+        };
     };
 
     if (IsThrowAttack(attacktype) && (defenceflag & CHARACTERTYPES::DEFENCERSTATUSFLAG_DISABLE_THROW))
-        result = CHARACTERTYPES::ATTACKTYPE_UNKNOWN;
+        attacktype = CHARACTERTYPES::ATTACKTYPE_UNKNOWN;
 
     if (IsTroubleAttack(attacktype) && (defenceflag & CHARACTERTYPES::DEFENCERSTATUSFLAG_CHEATCODE_HEALTH))
-        result = CHARACTERTYPES::ATTACKTYPE_DAMAGE_KNOCK;
+        attacktype = CHARACTERTYPES::ATTACKTYPE_DAMAGE_KNOCK;
 
-    return result;
+    return attacktype;
 };
 
 

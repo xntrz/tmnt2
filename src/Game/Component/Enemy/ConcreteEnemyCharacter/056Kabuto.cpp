@@ -5,6 +5,7 @@
 #include "Game/Component/Enemy/EnemyParameter.hpp"
 #include "Game/Component/Enemy/ConcreteAIModerator/056KabutoAI.hpp"
 #include "Game/Component/Enemy/ConcreteEnemyCharacter/BaseGunnerEnemyChr.hpp"
+#include "Game/System/Sound/GameSound.hpp"
 
 
 /*virtual*/ float C056Kabuto::CMoveStatusObserver::AltitudeNoise(void) /*override*/
@@ -158,6 +159,8 @@ C056Kabuto::C056Kabuto(void)
 
     /* init altitude */
     SetAttackAltitude(2.0f);
+
+    CGameSound::PlayObjectSE(&Compositor(), SDCODE_SE(4333));
 };
 
 

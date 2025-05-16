@@ -34,7 +34,7 @@ struct _underlying_type_uint { typedef typename _underlying_type_size<sizeof(T)>
     
 
 #define DEFINE_ENUM_FLAG_OPS(T, ...)                                        \
-	__VA_ARGS__ inline ENUM_FLAG_OP_CONSTEXPR T operator~ (T a)             \
+    __VA_ARGS__ inline ENUM_FLAG_OP_CONSTEXPR T operator~ (T a)             \
     {                                                                       \
         using type = typename _underlying_type_uint<T>::type;               \
         return T(~((type)a));                                               \

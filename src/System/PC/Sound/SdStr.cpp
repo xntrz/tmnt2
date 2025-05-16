@@ -9,9 +9,13 @@
 #include "SdLog.hpp"
 
 
-/**
- *  TODO: there is some really rare trouble when voice not stop playing and playing above loaded data (got it twice for long time)
+/*
+ *  TODO (rewrite this module) ultra rare problems that is impossible to reproduce purposefully:
+ *      1. voice not stop playing and plays data above
+ *      2. fade volume data sometimes overflows
+ *      3. pause request sometimes "stuck" and "hangs" whole stream server until exe restart
  */
+
 
 static SdStr_t* SdStrSrv[SDSTR_SRV_MAX];
 

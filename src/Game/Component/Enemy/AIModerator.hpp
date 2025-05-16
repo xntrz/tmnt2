@@ -17,6 +17,7 @@ public:
     virtual void Draw(void);
     CAIThinkOrder& ThinkOrder(void);
     CEnemyCharacter& EnemyCharacter(void);
+    const CEnemyCharacter& EnemyCharacter(void) const;
     const ENEMYTYPES::CHARACTERISTIC& Characteristic(void);
     CAIFrequencyParam& AIFreqParam(void);
     const CAIFrequencyParam& AIFreqParam(void) const;

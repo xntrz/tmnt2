@@ -638,23 +638,24 @@ void CHitAttackContainer::Dispatch(CHitAttackData* pAttack, CHitCatchData* pCatc
     ASSERT(pAttack);
     ASSERT(pCatch);
 
-    CHitAttackData AttackData;
-    CHitCatchData CatchData;
+    CHitAttackData hitAttack;
+    pAttack->CopyData(&hitAttack);
 
-    pAttack->CopyData(&AttackData);
-    pCatch->CopyData(&CatchData);
+    CHitCatchData hitCatch;
+    pCatch->CopyData(&hitCatch);
     
-    AttackData.SetCatch(&CatchData);
-    CatchData.SetAttack(&AttackData);
-    CatchData.SetFlagHitPosCalculated(false);
+    hitAttack.SetCatch(&hitCatch);
+    
+    hitCatch.SetAttack(&hitAttack);
+    hitCatch.SetFlagHitPosCalculated(false);
 
-    CGameObjectManager::SendMessage(CatchData.GetObject(),
+    CGameObjectManager::SendMessage(hitCatch.GetObject(),
                                     GAMEOBJECTTYPES::MESSAGEID_CATCHATTACK,
-                                    &AttackData);
+                                    &hitAttack);
 
-    CGameObjectManager::SendMessage(AttackData.GetObject(),
+    CGameObjectManager::SendMessage(hitAttack.GetObject(),
                                     GAMEOBJECTTYPES::MESSAGEID_ATTACKRESULT,
-                                    &CatchData);
+                                    &hitCatch);
 
     if (pCatch->GetObjectType() == GAMEOBJECTTYPE::SHOT)
     {
@@ -873,6 +874,20 @@ static inline CHitAttackContainer& HitAttackContainer(void)
         };
 
         CDebugShape::ShowSphere(&sphere, { 0xFF, 0x00, 0xFF, 0xFF });
+
+        if (CHitDebug::SHOW_HIT_CATCH_NO)
+        {
+            char szTmpBuff[16];
+            szTmpBuff[0] = '\0';
+
+            std::sprintf(szTmpBuff, "%" PRId32, pHitCatch->GetCatchNo());
+
+            sphere.center.y += (sphere.radius * 1.0f);
+
+            CDebugShape::m_fDuration = 0.0f;
+            CDebugShape::m_fLabelHeight = 17.7f;
+            CDebugShape::ShowLabel(&sphere.center, szTmpBuff, { 0xFF, 0xFF, 0xFF, 0xFF });
+        };
     };
 #endif /* _DEBUG */
     

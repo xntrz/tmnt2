@@ -3,8 +3,10 @@
 #include "EnemyTestMakeFileSequence.hpp"
 #include "Game/Component/Player/ConcretePlayerCharacter/Splinter.hpp"
 #include "Game/Component/Player/Manipulator.hpp"
+
 #ifdef _DEBUG
 
+#include "Game/Component/Effect/EffectManager.hpp"
 #include "Game/Component/GameData/GameData.hpp"
 #include "Game/Component/GameData/GamePlayParam.hpp"
 #include "Game/Component/GameMain/GameProperty.hpp"
@@ -13,10 +15,13 @@
 #include "Game/Component/GameMain/ItemID.hpp"
 #include "Game/Component/GameMain/GameLoader.hpp"
 #include "Game/Component/Enemy/Enemy.hpp"
+#include "Game/Component/Enemy/EnemyCharacter.hpp"
 #include "Game/Component/Gimmick/Gimmick.hpp"
 #include "Game/Component/Gimmick/GimmickManager.hpp"
 #include "Game/Component/Gimmick/GimmickInfo.hpp"
 #include "Game/Component/Gimmick/GimmickParam.hpp"
+#include "Game/Component/Gimmick/GimmickFactory.hpp"
+#include "Game/Component/Gimmick/ConcreteGimmick/FallRubbleGimmickManager.hpp"
 #include "Game/Sequence/Stage/StageBaseSequence.hpp"
 #include "Game/Sequence/Test/DebugMenuProcess.hpp"
 #include "Game/Sequence/Test/DebugUtils.hpp"
@@ -151,7 +156,13 @@ void CLoadEnemyTestStageSeqState::LoadData(void)
     if (m_testCtx.loadItemBoxFlag)
         LoadItems();
     LoadEnemy();
-    
+
+    if ((m_testCtx.enemyId[0] == ENEMYID::ID_HUN_A) ||
+        (m_testCtx.enemyId[0] == ENEMYID::ID_HUN_B))
+    {
+        CDataLoader::Regist(MakeFilepath("scrap.lpac"));
+    };
+
     Regist(FILEID::ID_SPLINTER);
 };
 
@@ -277,7 +288,7 @@ void CPlayEnemyTestStageSeqState::OnAttach(CStageBaseSequence* pSeq, const void*
 
     stage.AddPlayers();
     stage.AddGauge();
-    stage.AddStageObjects();
+    //stage.AddStageObjects();
     stage.SetCameraUpdater(CStageInfo::CAMERAUPDATE_NORMAL);
 
     m_step = STEP_PLAYING;
@@ -292,11 +303,7 @@ void CPlayEnemyTestStageSeqState::OnAttach(CStageBaseSequence* pSeq, const void*
     CScreenFade::BlackIn();
 
     InitMenu();
-
-    //CSplinter* p = new CSplinter(GAMETYPES::COSTUME_NONE);
-    //p->OnAttach(p, true);
-    //p->SetPlayerNo(3);
-    //CManipulator* m = CManipulator::New(p, 3);
+    CreateGimmicks();    
 };
 
 
@@ -322,6 +329,20 @@ bool CPlayEnemyTestStageSeqState::OnMove(CStageBaseSequence* pSeq)
         {
             UpdateItems(dt);
 
+            ///*
+            if (CController::GetDigitalTrigger(0, CController::DIGITAL_LUP))
+            {
+                static bool ok = false;
+                if (!ok)
+                {
+                    ok = true;
+                    RwV3d p = Math::VECTOR3_ZERO;
+                    p.y = 3.0f;
+                    auto h= CEffectManager::Play(EFFECTID::ID_SLA_SHADOW, &p);
+                    CEffectManager::SetPosition(h, &p);
+                };
+            };
+            //*/
             if (stage.CheckPauseMenu())
                 stage.StartPause(CGameStage::PAUSETYPE_MENU);
 
@@ -577,6 +598,44 @@ void CPlayEnemyTestStageSeqState::CreateEnemy(int32 index)
             pEnemy->StartAI();
         else
             pEnemy->StopAI();
+    };
+};
+
+
+void CPlayEnemyTestStageSeqState::CreateGimmicks(void)
+{
+    switch (m_testCtx.enemyId[0])
+    {
+    case ENEMYID::ID_HUN_A:
+        {
+            GIMMICKPARAM::GIMMICK_BASIC param;
+            std::memset(&param, 0, sizeof(param));
+
+            param.m_vPosition = Math::VECTOR3_ZERO;
+            param.m_id = GIMMICKID::ID_K_M28OBRM;
+            param.m_subid = CFallRubbleGimmickManager::TYPE_HUN;
+            CGimmickInfo::MakeName(param.m_szName, GIMMICKID::ID_K_M28OBRM, 0, 40);
+
+            CGimmickManager::Create(GIMMICKID::ID_K_M28OBRM, 0, &param);
+        }
+        break;
+
+    case ENEMYID::ID_HUN_B:
+        {
+            GIMMICKPARAM::GIMMICK_BASIC param;
+            std::memset(&param, 0, sizeof(param));
+
+            param.m_vPosition = Math::VECTOR3_ZERO;
+            param.m_id = GIMMICKID::ID_K_M28OBRM;
+            param.m_subid = CFallRubbleGimmickManager::TYPE_HUN2;
+            CGimmickInfo::MakeName(param.m_szName, GIMMICKID::ID_K_M28OBRM, 0, 40);
+
+            CGimmickManager::Create(GIMMICKID::ID_K_M28OBRM, 0, &param);
+        }
+        break;
+
+    default:
+        break;
     };
 };
 

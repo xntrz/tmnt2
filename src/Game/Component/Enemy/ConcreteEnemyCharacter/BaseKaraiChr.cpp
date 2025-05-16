@@ -769,7 +769,7 @@ void CBaseKaraiChr::CAttackCStatusObserver::ShotKunaiSameTime(void)
 CBaseKaraiChr::CAttackBStatusObserver::CAttackBStatusObserver(void)
 : CBaseChr6045::COneShotMotionForAttackPlayerAim(ENEMYTYPES::MOTIONNAMES::ATTACK_B)
 , m_step(STEP_BEGIN)
-, m_orderType(BASEAI6045::ORDERTYPE_ATTACK_NONE)
+, m_orderType(-1)
 {
     ;
 };
@@ -862,7 +862,7 @@ CBaseKaraiChr::CAttackBStatusObserver::Observing(void) /*override*/
 CBaseKaraiChr::CAttackAStatusObserver::CAttackAStatusObserver(void)
 : CBaseChr6045::COneShotMotionForAttackPlayerAim(ENEMYTYPES::MOTIONNAMES::ATTACK_A)
 , m_step(STEP_BEGIN)
-, m_orderType(BASEAI6045::ORDERTYPE_ATTACK_NONE)
+, m_orderType(-1)
 {
     ;
 };

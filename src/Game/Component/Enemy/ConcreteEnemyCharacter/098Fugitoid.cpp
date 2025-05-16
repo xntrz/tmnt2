@@ -52,9 +52,6 @@ C098Fugitoid::CDeathStatusObserver::Observing(void) /*override*/
 //
 
 
-DEFINE_EMPTY_NEEDED_EFFECTS_FOR(C098Fugitoid);
-
-
 C098Fugitoid::C098Fugitoid(void)
 : CBaseGeneralEnemyChr(ENEMYID::ID_FUGITOID)   
 {
@@ -95,7 +92,7 @@ C098Fugitoid::C098Fugitoid(void)
     AttachStatusObserver(ENEMYTYPES::STATUS_THROWN_FRONT,               new CCommonEnemyObserver::CThrownFrontStatusObserver(true, 1.0f));
     AttachStatusObserver(ENEMYTYPES::STATUS_THROWN_BACK,                new CCommonEnemyObserver::CThrownBackStatusObserver);
 
-         /* init charater parameters */
+    /* init charater parameters */
     PARAMETER parameter;
     std::memset(&parameter, 0, sizeof(parameter));
     

@@ -148,7 +148,7 @@ public:
     
 public:
     static void PreInitialize(const ENEMYTYPES::CREATEINFO* pCreateInfo);
-    
+
     CEnemyCharacter(ENEMYID::VALUE idEnemy);
     virtual ~CEnemyCharacter(void);
     virtual bool Initialize(PARAMETER* pParameter, bool bReplaceParameter);
@@ -181,8 +181,8 @@ public:
     virtual void SetDirection(float fDirection);
     virtual void SetSharedData(void* pSharedData);
     virtual CHRTYPE GetAttackCharacterType(void);
-    virtual ENEMYID::VALUE GetID(void);
-    virtual const char* GetName(void);
+    virtual ENEMYID::VALUE GetID(void) const;
+    virtual const char* GetName(void) const;
     virtual CHARACTERTYPES::DEFENCERSTATUSFLAG CheckDefenceStatusFlag(void);
     void Delete(void);
     void Start(void);
@@ -194,7 +194,8 @@ public:
     bool TestFlag(ENEMYTYPES::FLAG flag) const;
     void* SharedData(void) const;
     bool IsAIModeratorExist(void) const;
-    CAIModerator& AIModerator(void) const;
+    CAIModerator& AIModerator(void);
+    const CAIModerator& AIModerator(void) const;
     CAIThinkOrder& AIThinkOrder(void) const;
     CStatusSubject& StatusSubject(void) const;
     const ENEMYTYPES::CHARACTERISTIC& AICharacteristic(void) const;
@@ -205,6 +206,9 @@ public:
     CCharacterCompositor& Compositor(void);
     const CCharacterCompositor& Compositor(void) const;
     const ENEMYTYPES::FEATURE& Feature(void) const;
+    bool IsRunning(void) const;
+    bool IsRunningAI(void) const;
+    void SetHPMax(int32 iHPMax);
 
 private:
     static ENEMYTYPES::CREATEINFO   m_createinfo;

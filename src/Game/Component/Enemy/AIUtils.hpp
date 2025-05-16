@@ -153,8 +153,6 @@ public:
                                  float fDistance,
                                  float fDirection);
 
-    static float GetViewDistance(const CEnemyCharacter* pEnemyChr);
-
     static void GetLineForRange(RwV3d* start,
                                 RwV3d* end,
                                 const RwV3d* baseStart,
@@ -204,4 +202,17 @@ public:
                                                   int32 iPlayerNo,
                                                   bool bCheckThick,
                                                   float fCheckDistance = -1.0f);
+};
+
+
+class CRandNormal
+{
+public:
+    CRandNormal();
+    float Generate();
+
+private:
+    bool  m_generate;
+    float m_r;
+    float m_theta;
 };

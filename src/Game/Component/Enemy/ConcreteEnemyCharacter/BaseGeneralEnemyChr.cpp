@@ -658,7 +658,7 @@ CBaseGeneralEnemyChr::CDeathMechStatusObserver::Observing(void) /*override*/
         RwV3d vecPos = Math::VECTOR3_ZERO;
         EnemyChr().Compositor().GetPosition(&vecPos);
 
-        float fRadius = EnemyChr().Compositor().GetCollisionParameter().m_fRadius;
+        float fRadius = EnemyChr().Compositor().GetCollisionParameter().m_fRadius * 1.5f;
 
         float fLow  = -fRadius;
         float fHigh =  fRadius;
@@ -667,9 +667,8 @@ CBaseGeneralEnemyChr::CDeathMechStatusObserver::Observing(void) /*override*/
         vecPos.z += Math::RandFloatRange(fLow, fHigh);        
         vecPos.y += Math::RandFloatRange(0.0f, fHigh * 0.5f);
 
+        /* effect may be NULL here (for example at 4 round of nexus tournament (KITTY)) */
         uint32 hEffect = CEffectManager::Play(EFFECTID::ID_SPARKS, &vecPos);
-        ASSERT(hEffect);
-
         if (hEffect)
         {
             RwMatrix matRot;

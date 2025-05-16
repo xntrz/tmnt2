@@ -39,10 +39,10 @@ C060MouserRobot::C060MouserRobot(void)
 
     uint8 aFreqTable[][GAMETYPES::DIFFICULTY_NUM] =
     {
-        /* FREQUENCY_ATTACK_A               0  */    {   0,   0,   0 },
+        /* FREQUENCY_ATTACK_A               0  */    {  70,  70,  70 },
         /* FREQUENCY_ATTACK_AA              1  */    {   0,   0,   0 },
         /* FREQUENCY_ATTACK_AAA             2  */    {   0,   0,   0 },
-        /* FREQUENCY_ATTACK_B               3  */    {   0,   0,   0 },
+        /* FREQUENCY_ATTACK_B               3  */    {  50,  50,  50 },
         /* FREQUENCY_ATTACK_C               4  */    {  30,  30,  30 },
         /* FREQUENCY_ATTACK_RUN             5  */    {   0,   0,   0 },
         /* FREQUENCY_GUARD_A                6  */    {   0,   0,   0 },

@@ -489,8 +489,8 @@ void CPlayerCharacter::CalcAttackPower(CHitAttackData& rAttack)
     if (CGameData::Record().Secret().GetAttackLevel() >= 3)
         iPower += iPower;
 
-    float fAttackEnchance = CGameData::Record().Secret().GetAttackEnchanceValue();
-    iPower = static_cast<int32>(fAttackEnchance * static_cast<float>(iPower));
+    float fAttackEnhance = CGameData::Record().Secret().GetAttackEnhanceValue();
+    iPower = static_cast<int32>(fAttackEnhance * static_cast<float>(iPower));
     
     rAttack.SetPower(iPower);
 };
@@ -1259,7 +1259,7 @@ void CPlayerCharacter::CheckPartyAttack(CCharacterAttackCalculator& calculator)
 
 void CPlayerCharacter::RequestAttackA(void)
 {
-    if (!TestPlayerFlag(PLAYERTYPES::FLAG_REQUEST_ATTACK_MASK))
+    if (!CheckPlayerFlag(PLAYERTYPES::FLAG_REQUEST_ATTACK_MASK))
         SetPlayerFlag(PLAYERTYPES::FLAG_REQUEST_ATTACK_A);
 };
 

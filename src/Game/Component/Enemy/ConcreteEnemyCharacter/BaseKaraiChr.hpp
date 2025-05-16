@@ -40,7 +40,7 @@ namespace BASEKARAI
         STATUS_ATTACK_E,
         STATUS_ATTACK_F,
         STATUS_ATTACK_SPECIAL,
-        STATUS_ATTACKTODO,
+        STATUS_ATTACKTODO, // TOOD unknown (unused) karai attack status
         STATUS_ATTACK_COUNTER,
     }; /* enum STATUS */
 

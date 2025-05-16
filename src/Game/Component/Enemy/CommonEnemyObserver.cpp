@@ -416,18 +416,25 @@ CMotionManagedStatusObserver::CMotionManagedStatusObserver(void)
 
 /*virtual*/ CCommonEnemyObserver::CMoveStatus::RESULT CCommonEnemyObserver::CMoveStatus::Observing(void) /*override*/
 {
+    /* check for order changed */
     if (EnemyChr().AIThinkOrder().GetOrder() != CAIThinkOrder::ORDER_MOVE)
     {
         m_nextStatus = ENEMYTYPES::STATUS_THINKING;
         return RESULT_END;
     };
 
+    /* check for order timeout */
     float fMoveTime = EnemyChr().AIThinkOrder().OrderMove().m_fMoveTimer;
     if (m_fMoveTime < fMoveTime)
+    {
         m_fMoveTime += CGameProperty::GetElapsedTime();
+    }
     else
+    {
         EnemyChr().AIThinkOrder().SetAnswer(CAIThinkOrder::RESULT_ACCEPT);
+    };
 
+    /* check for valid order move type */
     if ((EnemyChr().AIThinkOrder().OrderMove().m_iMoveType < m_moveTypeJudgeBegin) ||
         (EnemyChr().AIThinkOrder().OrderMove().m_iMoveType > m_moveTypeJudgeEnd))
     {
@@ -435,11 +442,8 @@ CMotionManagedStatusObserver::CMotionManagedStatusObserver(void)
         return RESULT_END;
     };
 
-    RwV3d vMyPos = Math::VECTOR3_ZERO;
-    EnemyChr().Compositor().GetFootPosition(&vMyPos);
-
+    /* get order position */
     RwV3d vMarkPos = Math::VECTOR3_ZERO;
-
     if (EnemyChr().AIThinkOrder().OrderMove().m_iMoveType == m_moveTypeJudgeMovePos)
     {
         vMarkPos = EnemyChr().AIThinkOrder().OrderMove().m_vAt;
@@ -458,6 +462,10 @@ CMotionManagedStatusObserver::CMotionManagedStatusObserver(void)
         pPlayerChr->GetFootPosition(&vMarkPos);
     };
 
+    /* calc distance to order pos */
+    RwV3d vMyPos = Math::VECTOR3_ZERO;
+    EnemyChr().Compositor().GetFootPosition(&vMyPos);
+    
     RwV3d vDir = Math::VECTOR3_ZERO;
     Math::Vec3_Sub(&vDir, &vMarkPos, &vMyPos);
     vDir.y = 0.0f;
@@ -1595,9 +1603,102 @@ CCommonEnemyObserver::CBaseThrow::CBaseThrow(void)
 
 /*virtual*/ CCommonEnemyObserver::CBaseThrow::RESULT CCommonEnemyObserver::CBaseThrow::Observing(void) /*override*/
 {
-    RESULT result = RESULT_CONTINUE;
-    // TODO 6045 & 6043 group
-    return result;
+    switch (m_step)
+    {
+    case 0:        
+        {
+            float fMotionConnectT = EnemyChr().Compositor().GetNextChainMotionConnectTime();
+            float fMotionNowT = EnemyChr().Compositor().GetMotionTime();
+            if (fMotionNowT < fMotionConnectT)
+            {
+                if (m_bThrowHit)
+                {
+                    if (m_bSendCatch)
+                    {
+                        SendLiftMessage();
+                        break;
+                    };
+
+                    CPlayerCharacter* pPlrChr = CAIUtils::GetActivePlayer(m_throwTarget);
+                    if (!pPlrChr)
+                        break;
+
+                    CGameObjectManager::SendMessage(pPlrChr, CHARACTERTYPES::MESSAGEID_CATCH);
+                    pPlrChr->RequestDamage(m_throwDamage);
+
+                    m_bSendCatch = true;
+
+                    OnThrowHit();
+                }
+                else
+                {
+                    OnThrowStandby();
+                };
+            }
+            else
+            {
+                if (m_bSendCatch)
+                {
+                    SendLiftMessage();
+                    EnemyChr().Compositor().ChangeMotion(ENEMYTYPES::MOTIONNAMES::THROW_SUCCESS, true);
+                    m_step = 2;
+                }
+                else
+                {
+                    m_step = 1;
+                };
+            };
+        }
+        break;
+
+    case 1:
+        {
+            if (EnemyChr().Compositor().IsMotionEnd())
+            {
+                EnemyChr().AIThinkOrder().SetAnswer(CAIThinkOrder::RESULT_ACCEPT);
+                return RESULT_END;
+            };            
+        }
+        break;
+
+    case 2:
+        {
+            if (EnemyChr().Compositor().TestCharacterFlag(CHARACTERTYPES::FLAG_OCCURED_TIMING))
+            {
+                RwV3d vecThrow = Math::VECTOR3_ZERO;
+                EnemyChr().Compositor().RotateVectorByDirection(&vecThrow, &m_vThrowDirection);
+
+                CPlayerCharacter* pPlrChr = CAIUtils::GetActivePlayer(m_throwTarget);
+                if (pPlrChr)
+                    CGameObjectManager::SendMessage(pPlrChr, CHARACTERTYPES::MESSAGEID_THROW, &vecThrow);
+
+                ++m_step;
+                m_bThrowSuccess = true;
+                m_bSendCatch = false;
+                m_bThrowHit = false;
+            }
+            else
+            {
+                SendLiftMessage();
+            };
+        }
+        break;
+
+    case 3:
+        {
+            if (EnemyChr().Compositor().IsMotionEnd())
+            {
+                EnemyChr().AIThinkOrder().SetAnswer(CAIThinkOrder::RESULT_ACCEPT);
+                return RESULT_END;
+            };
+        }
+        break;
+
+    default:
+        break;
+    };
+
+    return RESULT_CONTINUE;    
 };
 
 
@@ -1619,19 +1720,19 @@ CCommonEnemyObserver::CBaseThrow::CBaseThrow(void)
 
 /*virtual*/ void CCommonEnemyObserver::CBaseThrow::OnThrowStandby(void)
 {
-    // TODO 6045 & 6043 group
+    ;
 };
 
 
 /*virtual*/ void CCommonEnemyObserver::CBaseThrow::OnLift(void)
 {
-    // TODO 6045 & 6043 group
+    ;
 };
 
 
 /*virtual*/ void CCommonEnemyObserver::CBaseThrow::OnThrowHit(void)
 {
-    // TODO 6045 & 6043 group
+    ;
 };
 
 
@@ -1690,11 +1791,10 @@ void CCommonEnemyObserver::CBaseThrow::GetLiftPosition(RwV3d* pvPos)
 {
     if (m_bSendCatch)
     {
-        float nowT = EnemyChr().Compositor().GetMotionTime();
-        float prevT = nowT;
-
-        float newT = CGameProperty::GetElapsedTime() + nowT;
-        EnemyChr().Compositor().SetMotionTime(newT);
+        float fMotionNowT = EnemyChr().Compositor().GetMotionTime();
+        float fMotionPreT = fMotionNowT;
+        float fMotionNewT = CGameProperty::GetElapsedTime() + fMotionNowT;
+        EnemyChr().Compositor().SetMotionTime(fMotionNewT);
         EnemyChr().Compositor().UpdateMatrices();
 
         EnemyChr().Compositor().GetBonePosition(pvPos, m_throwBoneID, &m_vBoneOffset);
@@ -1704,7 +1804,7 @@ void CCommonEnemyObserver::CBaseThrow::GetLiftPosition(RwV3d* pvPos)
 
         Math::Vec3_Add(pvPos, pvPos, &vPosition);
 
-        EnemyChr().Compositor().SetMotionTime(prevT);
+        EnemyChr().Compositor().SetMotionTime(fMotionPreT);
         EnemyChr().Compositor().UpdateMatrices();
     }
     else

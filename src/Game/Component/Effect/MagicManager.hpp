@@ -24,6 +24,7 @@ public:
         void SetDirection(float fDirection);
         void SetObject(CGameObject* pObj);
         void SetTarget(CTracer* pTarget);
+        void SetTracer(CTracer* pTracer);
         void SetSoundPlay(bool bset);
 
     private:
@@ -44,7 +45,7 @@ public:
     static uint32 RegistMagic(CMagic* pMagic);
     static uint32 Play(MAGICID::VALUE idMagic, const CParameter* pParameter);
     static uint32 Play(const char* pszMagicName, const CParameter* pParameter);
-    static uint32 Play(const char* pszMagicName, const RwV3d* pvPosition, const RwV3d* pvDirection, CGameObject* pParent, bool bPlaySound);
+    static uint32 Play(const char* pszMagicName, const RwV3d* pvPosition, const RwV3d* pvDirection = nullptr, CGameObject* pParent = nullptr, bool bPlaySound = true);
     static uint32 Play(const char* pszMagicName, const RwV3d* pvPosition, const RwV3d* pvDirection, CGameObject* pParent, CTracer* pTarget, bool bPlaySound);
     static void SetPosition(uint32 hMagic, const RwV3d* pvPosition);
     static void GetPosition(uint32 hMagic, RwV3d* pvPosition);

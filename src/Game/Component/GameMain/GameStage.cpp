@@ -217,6 +217,9 @@ void CGameStage::Period(void)
 		if (m_bPlayStarted && (m_systemstate == SYSTEMSTATE_NORMAL))
             m_fTimer += dt;
 
+#ifdef _DEBUG
+        CDebugShape::Period(dt);
+#endif /* _DEBUG */
         CGameProperty::Period();
         if (m_bCreatedRadar)
             CGameRadar::Update();
@@ -225,9 +228,6 @@ void CGameStage::Period(void)
 		CHitAttackManager::Period();
 		CShotManager::Period();
 		CGimmickManager::DispatchEvent();
-#ifdef _DEBUG
-        CDebugShape::Period(dt);  
-#endif /* _DEBUG */
 		CEffectManager::Period();
 		CGaugeInformation::MissionInfoPeriod();
         CMessageManager::Period();

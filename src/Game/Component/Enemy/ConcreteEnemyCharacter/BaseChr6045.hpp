@@ -183,7 +183,7 @@ public:
     bool IsKnockBackCtrlActive(void) const;
 
 protected:
-    CCommonEnemyObserver::CBaseThrow* m_pThrowObserver;
+    CCommonEnemyObserver::CBaseThrow* m_pThrow;
     CEnemyUtils::CKnockBackControl m_knockBackCtrl;
     bool m_bKnockBackCtrlActive;
     CBaseAI6045* m_pAIModerator;

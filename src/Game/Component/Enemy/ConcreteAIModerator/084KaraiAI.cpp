@@ -255,6 +255,13 @@ C084KaraiAI::CDecisionUnitAttackCounter::CDecisionUnitAttackCounter(void)
 
 /*virtual*/ bool C084KaraiAI::CDecisionUnitAttackCounter::CheckTerm(void) /*override*/
 {
+    /*
+     *  Return false to make it enable only by manual decision unit change.
+     *
+     *  For Karai this counter attack decision unit actually is unused because
+     *  counter attack is splitted to 4 different depending on their terms for guard
+     *  (see C084KaraiAI::CatchTriggerActionOrder branch for CATCHTRIGGER_COUNTER)
+     */
     return false;
 };
 
@@ -570,12 +577,6 @@ C084KaraiAI::C084KaraiAI(CEnemyCharacter* pEnemyChr)
     /* init decision units (attach order is important!) */
     CEnemyAIDecisionUnit* pUnit = nullptr;
 
-    bool bIsTournamentMap = false;
-
-    if (CEnemyUtils::CheckNowMapForMapID(MAPID::ID_M60X) ||
-        CEnemyUtils::CheckNowMapForMapID(MAPID::ID_M61X))
-        bIsTournamentMap = true;
-
     pUnit = new CBaseAI6045::CDecisionUnitGuard;
     pUnit->SetFreqTable(KARAI_AI::FREQUENCY_GUARD_B);
     Attach(pUnit);
@@ -588,7 +589,9 @@ C084KaraiAI::C084KaraiAI(CEnemyCharacter* pEnemyChr)
     pUnit->SetFreqTable(KARAI_AI::FREQUENCY_MOVE_ESCAPE);
     Attach(pUnit);
 
-    if (!bIsTournamentMap)
+    bool bIsNexusMap = CEnemyUtils::CheckNowMapForMapID(MAPID::ID_M60X) ||
+                       CEnemyUtils::CheckNowMapForMapID(MAPID::ID_M61X);
+    if (!bIsNexusMap)
     {
         pUnit = new C084KaraiAI::CDecisionUnitAttackC2;
         Attach(pUnit);
@@ -673,21 +676,18 @@ C084KaraiAI::C084KaraiAI(CEnemyCharacter* pEnemyChr)
     {
         DecisionUnitCommonParameter().UpdatePlayerPositionData();
 
-        const char* pszChangeDicisionUnit = nullptr;
-
         CEnemyAIDecisionUnit* pUnit = nullptr;
 
         pUnit = GetDicisionUnitForName(KARAI_AI::AIDECISIONUNITNAME::MOVE_ESCAPE);
-        ASSERT(pUnit != nullptr);
         C084KaraiAI::CDecisionUnitMoveEscape* pUnitMoveEscape = static_cast<C084KaraiAI::CDecisionUnitMoveEscape*>(pUnit);
 
         pUnit = GetDicisionUnitForName(KARAI_AI::AIDECISIONUNITNAME::ATTACK_SPECIAL);
-        ASSERT(pUnit != nullptr);
         C084KaraiAI::CDecisionUnitAttackSpecial* pUnitAttackSpecial = static_cast<C084KaraiAI::CDecisionUnitAttackSpecial*>(pUnit);
 
         pUnit = GetDicisionUnitForName(KARAI_AI::AIDECISIONUNITNAME::ATTACK_F);
-        ASSERT(pUnit != nullptr);
         C084KaraiAI::CDecisionUnitAttackF* pUnitAttackF = static_cast<C084KaraiAI::CDecisionUnitAttackF*>(pUnit);
+
+        const char* pszChangeDicisionUnit = nullptr;
 
         if (pUnitMoveEscape && pUnitMoveEscape->CheckTermForGuardReaction())
         {
@@ -717,15 +717,12 @@ C084KaraiAI::C084KaraiAI(CEnemyCharacter* pEnemyChr)
         CEnemyAIDecisionUnit* pUnit = nullptr;
 
         pUnit = GetDicisionUnitForName(BASEAI6045::AIDECISIONUNITNAME::GUARD);
-        ASSERT(pUnit != nullptr);
         pUnit->SetFreqTable(KARAI_AI::FREQUENCY_GUARD_W);
 
         pUnit = GetDicisionUnitForName(KARAI_AI::AIDECISIONUNITNAME::ATTACK_SPECIAL);
-        ASSERT(pUnit != nullptr);
         pUnit->SetFreqTable(KARAI_AI::FREQUENCY_ATTACK_SPECIAL_W);
 
         pUnit = GetDicisionUnitForName(BASEAI6045::AIDECISIONUNITNAME::MOVE);
-        ASSERT(pUnit != nullptr);
         static_cast<CBaseAI6045::CDecisionUnitMove*>(pUnit)->SetMoveStopDistance(KARAI_AI::MOVE_STOP_DISTANCE_WARNING);
     };
 
@@ -734,11 +731,9 @@ C084KaraiAI::C084KaraiAI(CEnemyCharacter* pEnemyChr)
         CEnemyAIDecisionUnit* pUnit = nullptr;
 
         pUnit = GetDicisionUnitForName(BASEAI6045::AIDECISIONUNITNAME::GUARD);
-        ASSERT(pUnit != nullptr);
         pUnit->SetFreqTable(KARAI_AI::FREQUENCY_GUARD_F);
 
         pUnit = GetDicisionUnitForName(KARAI_AI::AIDECISIONUNITNAME::ATTACK_SPECIAL);
-        ASSERT(pUnit != nullptr);
         pUnit->SetFreqTable(KARAI_AI::FREQUENCY_ATTACK_SPECIAL_F);
     };
 };

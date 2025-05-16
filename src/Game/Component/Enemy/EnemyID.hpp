@@ -1,7 +1,8 @@
 #pragma once
 
 
-/**
+/*
+ *
  *  List of implemented enemies ID by AI group, all groups use different AI implementation.
  *  (probably some of them were developing at the same time by different devs group back in 2004)
  *
@@ -50,20 +51,37 @@
  *  CBaseAI6045 list:
  *  - ID_STONE_BITER
  *  - ID_BERGOX
+ *  - ID_SPIDER_MONSTER
+ *  - ID_REDURION
+ *  - ID_KING_NAIL
+ *  - ID_GREENPUS
+ *  - ID_RAZORFIST
+ *  - ID_MAD_MUNCHER
  *  - ID_RYNOKK
  *  - ID_MOUSER_ROBOT
  *  - ID_MOUSER_ROBOT_B
  *  - ID_KROKODIL_MOUSER
  *  - ID_RAPTOR
+ *  - ID_CARNIVOROUS_PLANT
+ *  - ID_MURAL_CARNIVOROUS_PLANT
+ *  - ID_LEATHER_HEAD
+ *  - ID_HUN_A
+ *  - ID_HUN_B
  *  - ID_KARAI
  *
  *
- *  CBaseAI6043 enemy list:
+ *  CBaseAI6043 list:
  *    TODO
  *
  *
  *  Others (that not use any base) list:
- *    TODO
+ *  - ID_NINJA_RATS_A,
+ *  - ID_NINJA_RATS_B,
+ *  - ID_NINJA_RATS_C,
+ *  - ID_NINJA_RATS_D,
+ *  - ID_SPASMOSAUR
+ *  - ID_SLASSHUR
+ *  - ID_DORAKO
  *
  */
         

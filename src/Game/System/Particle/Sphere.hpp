@@ -4,15 +4,13 @@
 class CSphere
 {
 public:
-    CSphere(
-        float fRadius,
-        int32 nDivisionVer,
-        int32 nDivisionHor,
-        int32 nRepetationU,
-        int32 nRepetationV,
-        const RwRGBA& color,
-        bool bRandom = false
-    );
+    CSphere(float fRadius,
+            int32 nDivisionVer,
+            int32 nDivisionHor,
+            int32 nRepetationU,
+            int32 nRepetationV,
+            const RwRGBA& color,
+            bool bRandom = false);
     ~CSphere(void);
     void Run(float dt);
     void Draw(void);

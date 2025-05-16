@@ -892,19 +892,20 @@ bool CMagic::CheckAttack(void)
 void CMagic::Homing(void)
 {    
     RwV3d vTargetPosition = Math::VECTOR3_ZERO;
-    m_pTracer->GetPosition(&vTargetPosition);
+    m_pTarget->GetPosition(&vTargetPosition);
 
     RwV3d vMyPosition = Math::VECTOR3_ZERO;
     GetPosition(&vMyPosition);
     
     RwV3d vHomingVector = Math::VECTOR3_ZERO;
     Math::Vec3_Sub(&vHomingVector, &vTargetPosition, &vMyPosition);
+    Math::Vec3_Normalize(&vHomingVector, &vHomingVector);
 
-    float fLength = Math::Vec3_Length(&m_movement.m_vVelocity);
-    Math::Vec3_Scale(&m_movement.m_vVelocity, &vHomingVector, fLength);
+    float fVel = Math::Vec3_Length(&m_movement.m_vVelocity);
+    Math::Vec3_Scale(&m_movement.m_vVelocity, &vHomingVector, fVel);
 
-    float fLengthAccel = Math::Vec3_Length(&m_movement.m_vAcceleration);
-    Math::Vec3_Scale(&m_movement.m_vAcceleration, &vHomingVector, fLengthAccel);
+    float fAccel = Math::Vec3_Length(&m_movement.m_vAcceleration);
+    Math::Vec3_Scale(&m_movement.m_vAcceleration, &vHomingVector, fAccel);
 };
 
 

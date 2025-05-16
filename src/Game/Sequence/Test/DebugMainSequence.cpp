@@ -73,8 +73,8 @@ static void CallArea(void* param)
     uint32 AreaParam = uint32(param);
 
     AREAID::VALUE idArea = AREAID::VALUE(CallAreaParamGetAreaId(AreaParam));
-    ASSERT(idArea >= AREAID::NORMALSTART);
-    ASSERT(idArea < AREAID::NORMALMAX);
+    //ASSERT(idArea >= AREAID::NORMALSTART);
+    //ASSERT(idArea < AREAID::NORMALMAX);
 
     int32 StageNo = CallAreaParamGetStageNo(AreaParam);
     ASSERT(StageNo >= 0);
@@ -84,7 +84,10 @@ static void CallArea(void* param)
     CGameData::PlayParam().Clear();
     int32 SecretChar = 0;//(Math::Rand() % 100) >= 50 ? 4 : 0;
     for (int32 i = 0; i < GAMETYPES::PLAYERS_MAX; ++i)
+    {
         CGameData::PlayParam().AddPlayerCharacter(0, PLAYERID::VALUE(SecretChar + i));
+        CGameData::PlayParam().PlayerContext(0).m_iShurikenNum = 30;
+    };
     CGameData::PlayParam().SetStartArea(idArea, StageNo);
     CGameData::Record().Item().ForceSetCrystalNum(GAMETYPES::CRYSTAL_MAX);
     CGameData::Record().Item().SetItemTaken(ITEMID::ID_DON_LASER);
@@ -186,29 +189,43 @@ bool CDebugMainSequence::OnAttach(const void* pParam)
             s_pDebugMainSeq->Call(PROCLABEL_SEQ_AREA, (const void*)idAreaOfWorld[nValue]);
     });
     m_menu.AddSeparator();
-    //m_menu.AddBool("ENABLE player AI", s_bNormalGamePAI, [](bool value, bool trigger) {
-    //    if (value != s_bNormalGamePAI)
-    //    {
-    //        s_bNormalGamePAI = value;
-    //        if (s_bNormalGamePAI)
-    //            EnemyTestPlayerAILaunch(s_pDebugMainSeq);
-    //        else
-    //            EnemyTestPlayerAIKill(s_pDebugMainSeq);
-    //    };
-    //});
-    m_menu.AddTrigger("SNOW ride test",         CallArea,       AREAID::ID_AREA13);
-    m_menu.AddTrigger("TRICERATOR ride test",   CallArea,       AREAID::ID_AREA32);
-    m_menu.AddTrigger("japan shred camera test",CallArea,       AREAID::ID_AREA38);
-    m_menu.AddTrigger("RAIN test",              CallArea,       AREAID::ID_AREA49);
-    m_menu.AddTrigger("switch pillar test",     CallArea,       AREAID::ID_AREA04);
-    m_menu.AddTrigger("gs machine test",        CallArea,       AREAID::ID_AREA17);
+//    m_menu.AddBool("ENABLE player AI", s_bNormalGamePAI, [](bool value, bool trigger) {
+//        if (value != s_bNormalGamePAI)
+//        {
+//            s_bNormalGamePAI = value;
+//            if (s_bNormalGamePAI)
+//                EnemyTestPlayerAILaunch(s_pDebugMainSeq);
+//            else
+//                EnemyTestPlayerAIKill(s_pDebugMainSeq);
+//        };
+//    });
+    m_menu.AddTrigger("leatherhead test 1",     CallArea,       CallAreaParamMake(AREAID::ID_AREA42, 0, 0)); // turtles old lair
+    m_menu.AddTrigger("leatherhead test 2",     CallArea,       CallAreaParamMake(AREAID::ID_AREA60_B, 9, 0)); // tourney
+    m_menu.AddTrigger("hun 1 test",             CallArea,       CallAreaParamMake(AREAID::ID_AREA02, 1, 0)); // palace
+    m_menu.AddTrigger("hun 2 test",             CallArea,       CallAreaParamMake(AREAID::ID_AREA56, 0, 0)); // weapon depot
+    m_menu.AddTrigger("hun 3 test",             CallArea,       CallAreaParamMake(AREAID::ID_AREA60_C, 5, 0)); // tourney
+    m_menu.AddTrigger("rats 1 test",            CallArea,       CallAreaParamMake(AREAID::ID_AREA18, 1, 0)); // sewers
+    m_menu.AddTrigger("rats 2 test",            CallArea,       CallAreaParamMake(AREAID::ID_AREA60_D, 3, 0)); // tourney
+    m_menu.AddTrigger("spasmosaur test",        CallArea,       AREAID::ID_AREA31); // tri arena
+    m_menu.AddTrigger("drako test",             CallArea,       CallAreaParamMake(AREAID::ID_AREA60_D, 9, 0));
+    m_menu.AddTrigger("slashuur 1 test",        CallArea,       CallAreaParamMake(AREAID::ID_AREA20, 1, 0));    // factory
+    m_menu.AddTrigger("slashuur 2 test",        CallArea,       AREAID::ID_AREA50); // air
+    m_menu.AddTrigger("slashuur 3 test",        CallArea,       CallAreaParamMake(AREAID::ID_AREA60_D, 7, 0)); // tourney
+    m_menu.AddTrigger("karai 1 test",           CallArea,       AREAID::ID_AREA57); // ship
+    m_menu.AddTrigger("karai 2 test",           CallArea,       CallAreaParamMake(AREAID::ID_AREA60_C, 8, 0)); // tourney
+    //m_menu.AddTrigger("SNOW ride test",         CallArea,       AREAID::ID_AREA13);
+    //m_menu.AddTrigger("TRICERATOR ride test",   CallArea,       AREAID::ID_AREA32);
+    //m_menu.AddTrigger("japan shred camera test",CallArea,       AREAID::ID_AREA38);
+    //m_menu.AddTrigger("RAIN test",              CallArea,       AREAID::ID_AREA49);
+    //m_menu.AddTrigger("switch pillar test",     CallArea,       AREAID::ID_AREA04);
+    //m_menu.AddTrigger("gs machine test",        CallArea,       AREAID::ID_AREA17);
     m_menu.AddTrigger("fall rubble test",       CallArea,       CallAreaParamMake(AREAID::ID_AREA58, 1, CALLAREA_FLAG_GMKGEN_DISABLE));
-    m_menu.AddTrigger("trailer chase test",     CallArea,       AREAID::ID_AREA43);
-    m_menu.AddTrigger("karai test",             CallArea,       AREAID::ID_AREA57);
-    m_menu.AddTrigger("fugitoid demo",          CallArea,       AREAID::ID_AREA15);
-    m_menu.AddTrigger("fps drop test",          CallArea,       AREAID::ID_AREA54);
-    m_menu.AddTrigger("demo sync test",         CallSeq,        PROCLABEL_SEQ_PLAYDEMO);
-    m_menu.AddTrigger("roof",                   CallArea,       AREAID::ID_AREA02);
+    m_menu.AddTrigger("space ship SE test",     CallArea,       AREAID::ID_AREA28);
+    //m_menu.AddTrigger("trailer chase test",     CallArea,       AREAID::ID_AREA43);
+    //m_menu.AddTrigger("fugitoid demo",          CallArea,       AREAID::ID_AREA15);
+    //m_menu.AddTrigger("fps drop test",          CallArea,       AREAID::ID_AREA54);
+    //m_menu.AddTrigger("demo sync test",         CallSeq,        PROCLABEL_SEQ_PLAYDEMO);
+    //m_menu.AddTrigger("roof",                   CallArea,       AREAID::ID_AREA02);
     m_menu.AddSeparator();
     m_menu.AddTrigger("Start NORMAL game!", CallSeq, 0);
     m_menu.AddTrigger("Start UNLOCK game!", CallSeq, -1);

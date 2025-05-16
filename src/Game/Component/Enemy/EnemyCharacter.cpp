@@ -183,10 +183,10 @@ CEnemyCharacter::CEnemyCharacter(ENEMYID::VALUE idEnemy)
     std::sprintf(szName, "%s_%04d", ENEMYID::GetExtName(m_ID), CEnemy::m_iUniqueCount);
     ASSERT(std::strlen(szName) < GAMEOBJECTTYPES::NAME_MAX);
 
-    CCharacterCompositor* pCharacter = new CCharacterCompositor(szName, CCharacter::TYPE_ENEMY, *this);
+    CCharacterCompositor* pChrCompositor = new CCharacterCompositor(szName, CCharacter::TYPE_ENEMY, *this);
 
-    m_hCharacter = pCharacter->GetHandle();
-    CGameObjectManager::SendMessage(pCharacter, GAMEOBJECTTYPES::MESSAGEID_SLEEP);
+    m_hCharacter = pChrCompositor->GetHandle();
+    CGameObjectManager::SendMessage(pChrCompositor, GAMEOBJECTTYPES::MESSAGEID_SLEEP);
 
     m_pStatusSubject = new CStatusSubject(this);
 
@@ -1039,13 +1039,13 @@ CEnemyCharacter::CHRTYPE CEnemyCharacter::GetAttackCharacterType(void)
 };
 
 
-ENEMYID::VALUE CEnemyCharacter::GetID(void)
+ENEMYID::VALUE CEnemyCharacter::GetID(void) const
 {
     return m_ID;
 };
 
 
-const char* CEnemyCharacter::GetName(void)
+const char* CEnemyCharacter::GetName(void) const
 {
     return Compositor().GetName();
 };
@@ -1249,7 +1249,14 @@ bool CEnemyCharacter::IsAIModeratorExist(void) const
 };
 
 
-CAIModerator& CEnemyCharacter::AIModerator(void) const
+CAIModerator& CEnemyCharacter::AIModerator(void)
+{
+    ASSERT(m_pAIModerator);
+    return *m_pAIModerator;
+};
+
+
+const CAIModerator& CEnemyCharacter::AIModerator(void) const
 {
     ASSERT(m_pAIModerator);
     return *m_pAIModerator;
@@ -1329,4 +1336,23 @@ const CCharacterCompositor& CEnemyCharacter::Compositor(void) const
 const ENEMYTYPES::FEATURE& CEnemyCharacter::Feature(void) const
 {
     return CharacterParameter().m_feature;
+};
+
+
+bool CEnemyCharacter::IsRunning(void) const
+{
+    return m_bRunning;
+};
+
+
+bool CEnemyCharacter::IsRunningAI(void) const
+{
+    return m_bRunningAI;
+};
+
+
+void CEnemyCharacter::SetHPMax(int32 iHPMax)
+{
+    CharacterParameter().m_feature.m_iHPMax = iHPMax;
+    CharacterParameter().m_feature.m_iHP = CharacterParameter().m_feature.m_iHPMax;
 };

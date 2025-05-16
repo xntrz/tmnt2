@@ -48,7 +48,8 @@ CParticle::CParticle(void)
     m_vAxisY = Math::VECTOR3_ZERO;
     m_vAxisZ = Math::VECTOR3_ZERO;    
     std::memset(&m_InitTransition, 0x00, sizeof(m_InitTransition));
-    m_InitTransition.data = &m_InitTransition;    
+    RwMatrixSetIdentityMacro(&m_InitTransition.m_matrix);
+    m_InitTransition.data = &m_InitTransition;
     m_type = PEFINFO::PARTICLETYPE_BILLBOARD;
     m_blend = PEFINFO::BLENDTYPE_ADD;
     m_kind = PEFINFO::PARTICLEKIND_NORMAL;
@@ -326,14 +327,14 @@ void CParticle::Run(float dt)
         {
             int32 nAppearNum = static_cast<int32>((m_fCounter - m_fAppearStart) / m_InitTransition.m_fOccurTiming);
 
-            for (m_InitTransition.m_nDisplayNum;
-                nAppearNum >= m_InitTransition.m_nDisplayNum;
-                ++m_InitTransition.m_nDisplayNum)
+            while (m_InitTransition.m_nDisplayNum <= nAppearNum)
             {
                 for (int32 i = 0; i < m_InitTransition.m_nOccurNum; ++i)
                     CreateParticle(&m_InitTransition);
-            };
 
+                ++m_InitTransition.m_nDisplayNum;
+            };
+            
             m_bSimple = true;
         }
         else if ((m_fAppearStart == m_fAppearEnd) && (!m_bSimple) && (m_fAppearEnd < m_fCounter))
@@ -360,7 +361,8 @@ void CParticle::Run(float dt)
         pTransition->m_vRotation.y = (pTransition->m_fCounterNow * (pTransition->m_vRotSpeed.y + m_vAccelRotationBuffer.y));
         pTransition->m_vRotation.z = (pTransition->m_fCounterNow * (pTransition->m_vRotSpeed.z + m_vAccelRotationBuffer.z));
 
-        pTransition->m_fRotationBillboard = (pTransition->m_fCounterNow * (pTransition->m_fRotSpeedBillboard + m_fAccelRotationBillboardBuffer));
+        pTransition->m_fRotationBillboard =
+            (pTransition->m_fCounterNow * (pTransition->m_fRotSpeedBillboard + m_fAccelRotationBillboardBuffer));
 
         if (pTransition->m_fLiveCount < pTransition->m_fCounterNow)
         {
@@ -405,16 +407,15 @@ void CParticle::Draw(RwCamera* pCamera)
     RenderStatePush();
     SortZ(pCamera);
 
-    RwMatrix matrixBillboard;
-    RwMatrixSetIdentityMacro(&matrixBillboard);
-
     RwMatrix* pMatModeling = RwFrameGetMatrixMacro(RwCameraGetFrameMacro(pCamera));
     ASSERT(pMatModeling);
 
     RwMatrix* pMatView = RwCameraGetViewMatrixMacro(pCamera);
     ASSERT(pMatView);
 
-    Math::Matrix_Invert(&matrixBillboard, pMatView);
+    RwMatrix matBillboard;
+    RwMatrixSetIdentityMacro(&matBillboard);
+    Math::Matrix_Invert(&matBillboard, pMatView);
     
     for (TRANSITION& it : m_listTransitionAlloc)
     {
@@ -424,8 +425,8 @@ void CParticle::Draw(RwCamera* pCamera)
         {
         case PEFINFO::PARTICLETYPE_BILLBOARD:
             {			
-                std::memcpy(&pTransition->m_matrix, &matrixBillboard, sizeof(pTransition->m_matrix));
-				TransitionRotation(pTransition, &pMatModeling->pos);
+                std::memcpy(&pTransition->m_matrix, &matBillboard, sizeof(pTransition->m_matrix));
+                TransitionRotation(pTransition, &pMatModeling->pos);
                 pTransition->m_matrix.pos = pTransition->m_vPositionNow;
             }
             break;
@@ -527,17 +528,17 @@ void CParticle::SetScale(float fScale)
     m_InitTransition.m_vPosition.y *= fScale;
     m_InitTransition.m_vPosition.z *= fScale;
 
-    if (m_type == PEFINFO::PARTICLETYPE_BILLBOARD ||
-        m_type == PEFINFO::PARTICLETYPE_NORMALBOARD)
+    if ((m_type == PEFINFO::PARTICLETYPE_BILLBOARD) ||
+        (m_type == PEFINFO::PARTICLETYPE_NORMALBOARD))
     {
         m_InitTransition.m_vSize.x *= fScale;
         m_InitTransition.m_vSize.y *= fScale;
     }
     else if (m_type == PEFINFO::PARTICLETYPE_CYLINDER)
     {
-        m_InitTransition.m_vScale.x = fScale;
-        m_InitTransition.m_vScale.y = fScale;
-        m_InitTransition.m_vScale.z = fScale;
+        m_InitTransition.m_vScale.x *= fScale;
+        m_InitTransition.m_vScale.y *= fScale;
+        m_InitTransition.m_vScale.z *= fScale;
     };
     
     m_InitTransition.m_fSpeedFirst *= fScale;
@@ -624,30 +625,33 @@ void CParticle::RenderStatePush(void)
 {
     switch (m_blend)
     {
+    case PEFINFO::BLENDTYPE_ADD:
+        RENDERSTATE_PUSH(rwRENDERSTATESRCBLEND,  rwBLENDSRCALPHA);
+        RENDERSTATE_PUSH(rwRENDERSTATEDESTBLEND, rwBLENDONE);
+        break;
+
     case PEFINFO::BLENDTYPE_SUB:
-        RENDERSTATE_PUSH(rwRENDERSTATESRCBLEND, rwBLENDZERO);
+        RENDERSTATE_PUSH(rwRENDERSTATESRCBLEND,  rwBLENDZERO);
         RENDERSTATE_PUSH(rwRENDERSTATEDESTBLEND, rwBLENDINVSRCALPHA);
         break;
 
     case PEFINFO::BLENDTYPE_ALPHA:
-        RENDERSTATE_PUSH(rwRENDERSTATESRCBLEND, rwBLENDSRCALPHA);
+        RENDERSTATE_PUSH(rwRENDERSTATESRCBLEND,  rwBLENDSRCALPHA);
         RENDERSTATE_PUSH(rwRENDERSTATEDESTBLEND, rwBLENDINVSRCALPHA);
         break;
         
-    case PEFINFO::BLENDTYPE_ADD:
     default:
-        RENDERSTATE_PUSH(rwRENDERSTATESRCBLEND, rwBLENDSRCALPHA);
-        RENDERSTATE_PUSH(rwRENDERSTATEDESTBLEND, rwBLENDONE);
+        ASSERT(false);
         break;
     };
-
+    
     RENDERSTATE_PUSH(rwRENDERSTATEZWRITEENABLE, false);
     RENDERSTATE_PUSH(rwRENDERSTATEFOGENABLE, false);
     RENDERSTATE_PUSH(rwRENDERSTATEVERTEXALPHAENABLE, true);
     RENDERSTATE_PUSH(rwRENDERSTATECULLMODE, rwCULLMODECULLNONE);
 
     if (m_pMyTexture)
-        RENDERSTATE_PUSH(rwRENDERSTATETEXTURERASTER, RwTextureGetRaster(m_pMyTexture));
+        RENDERSTATE_PUSH(rwRENDERSTATETEXTURERASTER, RwTextureGetRasterMacro(m_pMyTexture));
     else
         RENDERSTATE_PUSH(rwRENDERSTATETEXTURERASTER, 0);
 };
@@ -655,6 +659,8 @@ void CParticle::RenderStatePush(void)
 
 void CParticle::RenderStatePop(void)
 {
+    RENDERSTATE_POP(rwRENDERSTATETEXTURERASTER);
+
     RENDERSTATE_POP(rwRENDERSTATECULLMODE);
     RENDERSTATE_POP(rwRENDERSTATEVERTEXALPHAENABLE);
     RENDERSTATE_POP(rwRENDERSTATEFOGENABLE);
@@ -670,17 +676,23 @@ void CParticle::SetMatrixDirection(RwMatrix* pMatrix, const RwV3d* pvLookVec)
     ASSERT(pvLookVec);
     
     RwV3d vMatPos = Math::VECTOR3_ZERO;
-    RwV2d vRot = Math::VECTOR2_ZERO;
-    RwV2d vXZ = Math::VECTOR2_ZERO;
-
     vMatPos = pMatrix->pos;
+    
+    RwV2d vXZ = Math::VECTOR2_ZERO;
     vXZ.x = pvLookVec->x;
     vXZ.y = pvLookVec->z;
 
-    vRot.y = MATH_RAD2DEG(Math::ATan2(vXZ.x, vXZ.y));
-    vRot.x = MATH_RAD2DEG(Math::ATan2(Math::Vec2_Length(&vXZ), pvLookVec->y)) - 90.0f;
+    const float fAngle = 90.0f;
 
-    vRot.x = InvClamp(vRot.x, -90.0f, 90.0f);
+    RwV2d vRot = Math::VECTOR2_ZERO;
+    vRot.y = MATH_RAD2DEG(Math::ATan2(vXZ.x, vXZ.y));
+    vRot.x = MATH_RAD2DEG(Math::ATan2(Math::Vec2_Length(&vXZ), pvLookVec->y)) - fAngle;
+
+    while (vRot.x < -fAngle)
+        vRot.x += fAngle;
+
+    while (vRot.x > fAngle)
+        vRot.x -= fAngle;
 
     RwMatrixRotate(pMatrix, &Math::VECTOR3_AXIS_Y, vRot.y, rwCOMBINEREPLACE);
     RwMatrixRotate(pMatrix, &pMatrix->right, vRot.x, rwCOMBINEPOSTCONCAT);
@@ -711,12 +723,12 @@ void CParticle::SetColorToVertex(const RwRGBA& color)
     if (m_nPointNum == -1)
         return;
     
-	for (int32 i = 0, j = 0; i < m_nPointNum + 1; ++i, j += 2)
-	{
-		ASSERT(j <= m_nVertexNum);
+    for (int32 i = 0, j = 0; i < m_nPointNum + 1; ++i, j += 2)
+    {
+        ASSERT(j <= m_nVertexNum);
         s_aVertexForCylinder[j + 0].color = RWRGBALONGEX(color);
-		s_aVertexForCylinder[j + 1].color = RWRGBALONGEX(color);
-	};
+        s_aVertexForCylinder[j + 1].color = RWRGBALONGEX(color);
+    };
 };
 
 
@@ -751,11 +763,13 @@ void CParticle::SetVertexInfo(RwIm3DVertex* aVertexList, RwCamera* pCamera, TRAN
         {
             RwMatrix* pMatModeling = RwFrameGetMatrixMacro(RwCameraGetFrameMacro(pCamera));            
             ASSERT(pMatModeling);
-            
-            RwV3d vNowVec = Math::VECTOR3_ZERO;
-            Math::Vec3_Sub(&vNowVec, &pMatModeling->pos, &pTransition->m_vPositionNow);
-            float fDist = Math::Vec3_Length(&vNowVec);
-            
+
+            RwV3d vCameraPos = pMatModeling->pos;
+
+            RwV3d vDist = Math::VECTOR3_ZERO;
+            Math::Vec3_Sub(&vDist, &vCameraPos, &pTransition->m_vPositionNow);
+
+            float fDist = Math::Vec3_Length(&vDist);
             if (fDist > m_fClippingParameter)
                 return;
         }
@@ -763,27 +777,31 @@ void CParticle::SetVertexInfo(RwIm3DVertex* aVertexList, RwCamera* pCamera, TRAN
         
     case PEFINFO::CLIPPINGTYPE_INCLUDEDCAMERA:
         {
-            RwV3d vScrPos = Math::VECTOR3_ZERO;
             float fFar = RwCameraGetFarClipPlaneMacro(pCamera);
             float fNear = RwCameraGetNearClipPlaneMacro(pCamera);
             
-            RwV3dTransformPoint(&vScrPos, &pTransition->m_vPositionNow, RwCameraGetViewMatrixMacro(pCamera));
-			
-            if (vScrPos.z > 0.0f)
-            {
-                vScrPos.x *= (1.0f / vScrPos.z);
-                vScrPos.y *= (1.0f / vScrPos.z);
+            RwV3d vScreenPos = Math::VECTOR3_ZERO;
+            RwV3dTransformPoint(&vScreenPos, &pTransition->m_vPositionNow, RwCameraGetViewMatrixMacro(pCamera));
+            
+            if (vScreenPos.z > 0.0f)
+            {          
+                vScreenPos.x *= (1.0f / vScreenPos.z);
+                vScreenPos.y *= (1.0f / vScreenPos.z);
 
-                if ((vScrPos.z < fNear) ||
-                    (vScrPos.z > fFar) ||
-                    (vScrPos.x < 0.0f) ||
-                    (vScrPos.x > 1.0f) ||
-                    (vScrPos.y < 0.0f) ||
-                    (vScrPos.y > 1.0f))
+                if ((vScreenPos.z < fNear) ||
+                    (vScreenPos.z > fFar) ||
+                    (vScreenPos.x < 0.0f) ||
+                    (vScreenPos.x > 1.0f) ||
+                    (vScreenPos.y < 0.0f) ||
+                    (vScreenPos.y > 1.0f))
                 {
                     return;
                 };
-            };            
+            }
+            else
+            {
+                return;
+            };
         }
         break;
 
@@ -801,18 +819,16 @@ void CParticle::SetVertexInfo(RwIm3DVertex* aVertexList, RwCamera* pCamera, TRAN
     }
     else
     {
-        RwRaster* pFrameBuffer = pCamera->frameBuffer;
+        RwRaster* pFrameBuffer = RwCameraGetRasterMacro(pCamera);
         ASSERT(pFrameBuffer);
 
-        float fWidth = float(pFrameBuffer->width);
-        float fHeight = float(pFrameBuffer->height);
+        float fWidth  = static_cast<float>(pFrameBuffer->width);
+        float fHeight = static_cast<float>(pFrameBuffer->height);
         float fViewRatio = CMapCamera::m_fDefaultViewSize / RwCameraGetViewWindowMacro(pCamera)->x;
         
         w = fViewRatio * pTransition->m_vSizeNow.x;
-        h = (fWidth / fHeight) * (fViewRatio * pTransition->m_vSizeNow.y);        
+        h = (fWidth / fHeight) * (fViewRatio * pTransition->m_vSizeNow.y);
     };
-
-    RwIm3DVertex* pVertex = &aVertexList[uStartPos];
 
     RwV3d aPos[4] = { Math::VECTOR3_ZERO };
 
@@ -838,6 +854,8 @@ void CParticle::SetVertexInfo(RwIm3DVertex* aVertexList, RwCamera* pCamera, TRAN
     Math::Vec3_Add(&aPos[1], &aPos[1], &pTransition->m_vPositionNow);
     Math::Vec3_Add(&aPos[2], &aPos[2], &pTransition->m_vPositionNow);
     Math::Vec3_Add(&aPos[3], &aPos[3], &pTransition->m_vPositionNow);
+
+    RwIm3DVertex* pVertex = &aVertexList[uStartPos];
 
     pVertex[0].objVertex.x = aPos[1].x;
     pVertex[0].objVertex.y = aPos[1].y;
@@ -895,7 +913,7 @@ void CParticle::DrawVertex(RwCamera* pCamera)
     if (m_nNowUseNum >= 6)
     {
         const uint32 uFlags = rwIM3D_VERTEXRGBA | rwIM3D_VERTEXXYZ | rwIM3D_VERTEXUV;
-        
+
         if (RwIm3DTransform(s_aVertex, m_nNowUseNum, nullptr, uFlags))
         {
             RwIm3DRenderPrimitive(rwPRIMTYPETRILIST);
@@ -983,72 +1001,55 @@ void CParticle::DrawModel(RwMatrix* pMatrix)
 
 void CParticle::UpdateTransition(TRANSITION* pTransition)
 {
-    RwV3d vSpeed = Math::VECTOR3_ZERO;
-    RwV3d vSpeedNow = Math::VECTOR3_ZERO;
-    RwV3d vAccel = Math::VECTOR3_ZERO;
-
     pTransition->m_vPositionNow = pTransition->m_vPositionBasis;
 
-    Math::Vec3_Scale(
-        &vSpeed,
-        &pTransition->m_vVecFirst,
-        pTransition->m_fSpeedFirst
-    );
+    RwV3d vSpeed = Math::VECTOR3_ZERO;
+    Math::Vec3_Scale(&vSpeed, &pTransition->m_vVecFirst, pTransition->m_fSpeedFirst);
     
-    Math::Vec3_Scale(
-        &vAccel,
-        &pTransition->m_vAcceleration,
-        (pTransition->m_fAccelSpeed * pTransition->m_fCounterNow)
-    );
+    RwV3d vAccel = Math::VECTOR3_ZERO;
+    Math::Vec3_Scale(&vAccel, &pTransition->m_vAcceleration, (pTransition->m_fAccelSpeed * pTransition->m_fCounterNow));
 
     TransitionNatureFall(pTransition, &vAccel);
     TransitionNatureRise(pTransition, &vAccel);
     
+    RwV3d vSpeedNow = Math::VECTOR3_ZERO;
     Math::Vec3_Add(&vSpeedNow, &vAccel, &vSpeed);
     Math::Vec3_Scale(&vSpeedNow, &vSpeedNow, pTransition->m_fCounterNow);
 
-    Math::Vec3_Add(
-        &pTransition->m_vPositionNow,
-        &pTransition->m_vPositionNow,
-        &pTransition->m_vPositionRand
-    );
+    Math::Vec3_Add(&pTransition->m_vPositionNow,
+                   &pTransition->m_vPositionNow,
+                   &pTransition->m_vPositionRand);
 
-    Math::Vec3_Add(
-        &pTransition->m_vPositionNow,
-        &pTransition->m_vPositionNow,
-        &pTransition->m_vPositionCircle
-    );
+    Math::Vec3_Add(&pTransition->m_vPositionNow,
+                   &pTransition->m_vPositionNow,
+                   &pTransition->m_vPositionCircle);
 
-    Math::Vec3_Add(
-        &pTransition->m_vPositionNow,
-        &pTransition->m_vPositionNow,
-        &vSpeedNow
-    );
+    Math::Vec3_Add(&pTransition->m_vPositionNow,
+                   &pTransition->m_vPositionNow,
+                   &vSpeedNow);
 
-    Math::Vec3_Add(
-        &pTransition->m_vPositionNow,
-        &pTransition->m_vPositionNow,
-        &pTransition->m_vPosition
-    );
+    Math::Vec3_Add(&pTransition->m_vPositionNow,
+                   &pTransition->m_vPositionNow,
+                   &pTransition->m_vPosition);
 };
 
 
 void CParticle::CreateParticle(TRANSITION* pInitTransition)
 {
     TRANSITION transition;
-    
     std::memcpy(&transition, pInitTransition, sizeof(transition));
 
-    transition.m_fCounter = 0.0;
-    transition.m_vPositionBasis.x = m_vBasisPositionForAll.x;
-    transition.m_vPositionBasis.y = m_vBasisPositionForAll.y;
-    transition.m_vPositionBasis.z = m_vBasisPositionForAll.z;
-    m_fColorDecayBuffer[0] = 0.01f * (m_InitTransition.m_Color.red  * m_fColorDecayR);
-    m_fColorDecayBuffer[1] = 0.01f * (m_InitTransition.m_Color.green* m_fColorDecayG);
-    m_fColorDecayBuffer[2] = 0.01f * (m_InitTransition.m_Color.blue * m_fColorDecayB);
-    m_fColorDecayBuffer[3] = 0.01f * (m_InitTransition.m_Color.alpha* m_fColorDecayA);
+    transition.m_fCounter = 0.0f;
+    transition.m_vPositionBasis = m_vBasisPositionForAll;
+    
+    m_fColorDecayBuffer[0] = 0.01f * (static_cast<float>(m_InitTransition.m_Color.red)   * m_fColorDecayR);
+    m_fColorDecayBuffer[1] = 0.01f * (static_cast<float>(m_InitTransition.m_Color.green) * m_fColorDecayG);
+    m_fColorDecayBuffer[2] = 0.01f * (static_cast<float>(m_InitTransition.m_Color.blue)  * m_fColorDecayB);
+    m_fColorDecayBuffer[3] = 0.01f * (static_cast<float>(m_InitTransition.m_Color.alpha) * m_fColorDecayA);
+    
     m_fSizeDecayBuffer[0] = 0.01f * (m_InitTransition.m_vSize.x * m_fSizeDecayWidth);
     m_fSizeDecayBuffer[1] = 0.01f * (m_InitTransition.m_vSize.y * m_fSizeDecayHeight);
+
     m_vScaleDecayBuffer = m_vScaleDecay;
     
     CircleMove(&transition.m_vPositionCircle, m_fCircleRadius, m_fCircleSpeed, m_fCounter, m_uLinearFlag);
@@ -1064,7 +1065,6 @@ void CParticle::CreateParticle(TRANSITION* pInitTransition)
     transition.m_fInitRotationBillboard = RandomAngle(m_fRandAngle, m_uRandCheckFlag);
 
     ASSERT(m_nTransitionNum < m_nTransitionMax);
-
     if (m_nTransitionNum < m_nTransitionMax)
     {
         ASSERT(!m_listTransitionPool.empty());
@@ -1076,7 +1076,7 @@ void CParticle::CreateParticle(TRANSITION* pInitTransition)
         CopyTransition(pNode, &transition);
 
         ++m_nTransitionNum;
-    }
+    };
 };
 
 
@@ -1096,20 +1096,25 @@ void CParticle::TransitionNatureRise(TRANSITION* pTransition, RwV3d* pvVec)
 
 void CParticle::TransitionColor(TRANSITION* pTransition)
 {
-    int32 nBuffR = int32(pTransition->m_Color.red)    + int32(m_fColorDecayBuffer[0] * pTransition->m_fCounterNow);
-    int32 nBuffG = int32(pTransition->m_Color.green)  + int32(m_fColorDecayBuffer[1] * pTransition->m_fCounterNow);
-    int32 nBuffB = int32(pTransition->m_Color.blue)   + int32(m_fColorDecayBuffer[2] * pTransition->m_fCounterNow);
-    int32 nBuffA = int32(pTransition->m_Color.alpha)  + int32(m_fColorDecayBuffer[3] * pTransition->m_fCounterNow);
+    int32 r = static_cast<int32>(pTransition->m_Color.red);
+    int32 g = static_cast<int32>(pTransition->m_Color.green);
+    int32 b = static_cast<int32>(pTransition->m_Color.blue);
+    int32 a = static_cast<int32>(pTransition->m_Color.alpha);
+   
+    r += static_cast<int32>(m_fColorDecayBuffer[0] * pTransition->m_fCounterNow);
+    g += static_cast<int32>(m_fColorDecayBuffer[1] * pTransition->m_fCounterNow);
+    b += static_cast<int32>(m_fColorDecayBuffer[2] * pTransition->m_fCounterNow);
+    a += static_cast<int32>(m_fColorDecayBuffer[3] * pTransition->m_fCounterNow);
 
-    nBuffR = Clamp(nBuffR, 0, 255);
-    nBuffG = Clamp(nBuffG, 0, 255);
-    nBuffB = Clamp(nBuffB, 0, 255);
-    nBuffA = Clamp(nBuffA, 0, 255);
+    r = Clamp(r, 0, 255);
+    g = Clamp(g, 0, 255);
+    b = Clamp(b, 0, 255);
+    a = Clamp(a, 0, 255);
 
-    pTransition->m_ColorNow.red     = RwUInt8(nBuffR);
-    pTransition->m_ColorNow.green   = RwUInt8(nBuffG);
-    pTransition->m_ColorNow.blue    = RwUInt8(nBuffB);
-    pTransition->m_ColorNow.alpha   = RwUInt8(nBuffA);
+    pTransition->m_ColorNow.red   = static_cast<RwUInt8>(r);
+    pTransition->m_ColorNow.green = static_cast<RwUInt8>(g);
+    pTransition->m_ColorNow.blue  = static_cast<RwUInt8>(b);
+    pTransition->m_ColorNow.alpha = static_cast<RwUInt8>(a);
 };
 
 
@@ -1187,39 +1192,33 @@ void CParticle::TransitionRotation(TRANSITION* pTransition, const RwV3d* pCamera
 {
     if (m_uPatternFlag & PEFINFO::PATTERNFLAG_ROT_X)
     {
-        RwMatrixRotate(
-            &pTransition->m_matrix,
-            &Math::VECTOR3_AXIS_X,
-            pTransition->m_vRotation.x,
-            rwCOMBINEPOSTCONCAT
-        );
+        RwMatrixRotate(&pTransition->m_matrix,
+                       &Math::VECTOR3_AXIS_X,
+                       pTransition->m_vRotation.x,
+                       rwCOMBINEPOSTCONCAT);
     };
 
     if (m_uPatternFlag & PEFINFO::PATTERNFLAG_ROT_Y)
     {
-        RwMatrixRotate(
-            &pTransition->m_matrix,
-            &Math::VECTOR3_AXIS_Y,
-            pTransition->m_vRotation.y,
-            rwCOMBINEPOSTCONCAT
-        );
+        RwMatrixRotate(&pTransition->m_matrix,
+                       &Math::VECTOR3_AXIS_Y,
+                       pTransition->m_vRotation.y,
+                       rwCOMBINEPOSTCONCAT);
     };
 
     if (m_uPatternFlag & PEFINFO::PATTERNFLAG_ROT_Z)
     {
-        RwMatrixRotate(
-            &pTransition->m_matrix,
-            &Math::VECTOR3_AXIS_Z,
-            pTransition->m_vRotation.z,
-            rwCOMBINEPOSTCONCAT
-        );
+        RwMatrixRotate(&pTransition->m_matrix,
+                       &Math::VECTOR3_AXIS_Z,
+                       pTransition->m_vRotation.z,
+                       rwCOMBINEPOSTCONCAT);
     };
 
     if ((m_uPatternFlag & PEFINFO::PATTERNFLAG_BILLBOARD) ||
         (m_uRandCheckFlag & PEFINFO::RANDFLAG_RANDANGLE))
     {
         float fAngle = pTransition->m_fInitRotationBillboard + pTransition->m_fRotationBillboard;
-		
+        
         RwV3d vAxis = Math::VECTOR3_ZERO;
         Math::Vec3_Sub(&vAxis, &pTransition->m_vPositionNow, pCameraPos);
         Math::Vec3_Normalize(&vAxis, &vAxis);
@@ -1235,47 +1234,51 @@ float CParticle::GetSortZ(RwCamera* pCamera, RwV3d* pvPosition)
     ASSERT(pCamera);
     ASSERT(pvPosition);
 
-    RwV3d vResult = Math::VECTOR3_ZERO;
+    RwV3d vScreenPos = Math::VECTOR3_ZERO;
+    RwV3dTransformPoint(&vScreenPos, pvPosition, RwCameraGetViewMatrixMacro(pCamera));
 
-    RwV3dTransformPoint(&vResult, pvPosition, RwCameraGetViewMatrix(pCamera));
-
-    return vResult.z;
+    return vScreenPos.z;
 };
 
 
 void CParticle::SortZ(RwCamera* pCamera)
 {
     ASSERT(pCamera);
-    
+
     if (m_blend != PEFINFO::BLENDTYPE_ALPHA)
         return;
 
     for (TRANSITION& it : m_listTransitionAlloc)
         it.m_fSortZ = GetSortZ(pCamera, &it.m_vPositionNow);
-
-    for (TRANSITION& itA : m_listTransitionAlloc)
-    {        
-        TRANSITION* pTransition = &itA;
+    
+    auto itEnd = m_listTransitionAlloc.end();
+    auto itA = m_listTransitionAlloc.begin();
+    while (itA != itEnd)
+    {
+        TRANSITION* pTransition = &*itA;
         TRANSITION* pExchangeTransition = nullptr;
-        float fMaxScrnZ = pTransition->m_fSortZ;
-        
-        for (TRANSITION& itB : m_listTransitionAlloc)
+        float fMaxScreenZ = pTransition->m_fSortZ;
+
+        auto itB = ++itA;
+        while (itB != itEnd)
         {
-            if (fMaxScrnZ < itB.m_fSortZ)
+            if (fMaxScreenZ < (*itB).m_fSortZ)
             {
-                fMaxScrnZ = itB.m_fSortZ;
-                pExchangeTransition = &itB;
+                fMaxScreenZ = (*itB).m_fSortZ;
+                pExchangeTransition = &*itB;
             };
+
+            ++itB;
         };
 
         if (pExchangeTransition)
         {
-            TRANSITION BufferTransition;
+            TRANSITION bufferTransition;
 
-            CopyTransition(&BufferTransition, pTransition);
+            CopyTransition(&bufferTransition, pTransition);
             CopyTransition(pTransition, pExchangeTransition);
-            CopyTransition(pExchangeTransition, &BufferTransition);
-            
+            CopyTransition(pExchangeTransition, &bufferTransition);
+
             pExchangeTransition = nullptr;
         };
     };
@@ -1286,7 +1289,7 @@ void CParticle::AddRandomStartPos(RwV3d* pvStartPos, RwV3d* pvRandElement, uint3
 {
     if (uRandomFlag & PEFINFO::RANDFLAG_STARTPOS_X)
     {
-        float fRand = Randomize() * pvRandElement->x;
+        float fRand = (Randomize() * pvRandElement->x);
 
         pvStartPos->x += (m_vAxisX.x * fRand);
         pvStartPos->y += (m_vAxisX.y * fRand);
@@ -1295,7 +1298,7 @@ void CParticle::AddRandomStartPos(RwV3d* pvStartPos, RwV3d* pvRandElement, uint3
 
     if (uRandomFlag & PEFINFO::RANDFLAG_STARTPOS_Y)
     {
-        float fRand = Randomize() * pvRandElement->y;
+        float fRand = (Randomize() * pvRandElement->y);
 
         pvStartPos->x += (m_vAxisY.x * fRand);
         pvStartPos->y += (m_vAxisY.y * fRand);
@@ -1304,7 +1307,7 @@ void CParticle::AddRandomStartPos(RwV3d* pvStartPos, RwV3d* pvRandElement, uint3
 
     if (uRandomFlag & PEFINFO::RANDFLAG_STARTPOS_Z)
     {
-        float fRand = Randomize() * pvRandElement->z;
+        float fRand = (Randomize() * pvRandElement->z);
 
         pvStartPos->x += (m_vAxisZ.x * fRand);
         pvStartPos->y += (m_vAxisZ.y * fRand);
@@ -1338,7 +1341,7 @@ void CParticle::AddRandomFirstVec(RwV3d* pvFirstVec, RwV3d* pvRandomElement, uin
 {
     if (uRandomFlag & PEFINFO::RANDFLAG_FIRSTVEC_X)
     {
-        float fRand = Randomize() * pvRandomElement->x;
+        float fRand = (Randomize() * pvRandomElement->x);
 
         pvFirstVec->x += (m_vAxisX.x * fRand);
         pvFirstVec->y += (m_vAxisX.y * fRand);
@@ -1347,7 +1350,7 @@ void CParticle::AddRandomFirstVec(RwV3d* pvFirstVec, RwV3d* pvRandomElement, uin
 
     if (uRandomFlag & PEFINFO::RANDFLAG_FIRSTVEC_Y)
     {
-        float fRand = Randomize() * pvRandomElement->y;
+        float fRand = (Randomize() * pvRandomElement->y);
 
         pvFirstVec->x += (m_vAxisY.x * fRand);
         pvFirstVec->y += (m_vAxisY.y * fRand);
@@ -1356,7 +1359,7 @@ void CParticle::AddRandomFirstVec(RwV3d* pvFirstVec, RwV3d* pvRandomElement, uin
 
     if (uRandomFlag & PEFINFO::RANDFLAG_FIRSTVEC_Z)
     {
-        float fRand = Randomize() * pvRandomElement->z;
+        float fRand = (Randomize() * pvRandomElement->z);
 
         pvFirstVec->x += (m_vAxisZ.x * fRand);
         pvFirstVec->y += (m_vAxisZ.y * fRand);
@@ -1387,7 +1390,7 @@ void CParticle::AddRandomAccelVec(RwV3d* pvAccelVec, RwV3d* pvRandomElement, uin
 {
     if (uRandomFlag & PEFINFO::RANDFLAG_ACCELVEC_X)
     {
-        float fRand = Randomize() * pvRandomElement->x;
+        float fRand = (Randomize() * pvRandomElement->x);
 
         pvAccelVec->x += (m_vAxisX.x * fRand);
         pvAccelVec->y += (m_vAxisX.y * fRand);
@@ -1396,7 +1399,7 @@ void CParticle::AddRandomAccelVec(RwV3d* pvAccelVec, RwV3d* pvRandomElement, uin
 
     if (uRandomFlag & PEFINFO::RANDFLAG_ACCELVEC_Y)
     {
-        float fRand = Randomize() * pvRandomElement->y;
+        float fRand = (Randomize() * pvRandomElement->y);
 
         pvAccelVec->x += (m_vAxisY.x * fRand);
         pvAccelVec->y += (m_vAxisY.y * fRand);
@@ -1405,7 +1408,7 @@ void CParticle::AddRandomAccelVec(RwV3d* pvAccelVec, RwV3d* pvRandomElement, uin
 
     if (uRandomFlag & PEFINFO::RANDFLAG_ACCELVEC_Z)
     {
-        float fRand = Randomize() * pvRandomElement->z;
+        float fRand = (Randomize() * pvRandomElement->z);
 
         pvAccelVec->x += (m_vAxisZ.x * fRand);
         pvAccelVec->y += (m_vAxisZ.y * fRand);
@@ -1436,8 +1439,8 @@ void CParticle::RandomScale(RwV2d* pvStartSize, float fScaleMin, float fScaleMax
 {
     if (uRandomFlag & PEFINFO::RANDFLAG_SCALESIZE2D)
     {
-        float fValue = (Randomize() * (fScaleMin + (fScaleMax - fScaleMin))) * 0.01f;
-        
+        float fValue = (Randomize() * (fScaleMax - fScaleMin) + fScaleMin) * 0.01f;
+
         pvStartSize->x *= fValue;
         pvStartSize->y *= fValue;
     };
@@ -1462,7 +1465,7 @@ float CParticle::RandomAngle(float fRandElement, uint32 uRandomFlag)
     float fRet = 0.0f;
     
     if (uRandomFlag & PEFINFO::RANDFLAG_RANDANGLE)
-        fRet = Randomize() * fRandElement;
+        fRet = (Randomize() * fRandElement);
 
     return fRet;
 };
@@ -1472,7 +1475,7 @@ void CParticle::CircleMove(RwV3d* pvDest, float fRadius, float fSpeed, float fTi
 {
     if (uFlag & PEFINFO::MOVEFLAG_CIRCLE)
     {
-        float fBasis = fSpeed * (1.0F / 360.0f) * fTime * MATH_PI2 + m_fCircleBaseRotation;
+        float fBasis = fSpeed * (1.0f / 360.0f) * fTime * MATH_PI2 + m_fCircleBaseRotation;
 
         pvDest->x = Math::Sin(fBasis) * fRadius;
         pvDest->y = 0.0f;
@@ -1494,7 +1497,7 @@ void CParticle::CopyTransition(TRANSITION* pDst, TRANSITION* pOrg)
     pDst->m_vPosition               = pOrg->m_vPosition;
     pDst->m_Color                   = pOrg->m_Color;
     pDst->m_ColorNow                = pOrg->m_ColorNow;
-    std::memcpy(&pDst->m_matrix, &pOrg->m_matrix, sizeof(pDst->m_matrix));
+    pDst->m_matrix                  = pOrg->m_matrix;
     pDst->m_vSize                   = pOrg->m_vSize;
     pDst->m_vSizeNow                = pOrg->m_vSizeNow;
     pDst->m_vScale                  = pOrg->m_vScale;
@@ -1520,5 +1523,5 @@ void CParticle::CopyTransition(TRANSITION* pDst, TRANSITION* pOrg)
 
 float CParticle::Randomize(void) const
 {
-    return (static_cast<float>(Math::Rand() % RANDSEED) * 0.001f);
+    return (static_cast<float>(Math::Rand() % RANDSEED) / static_cast<float>(RANDSEED));
 };

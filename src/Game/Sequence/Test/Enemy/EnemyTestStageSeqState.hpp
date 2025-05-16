@@ -64,6 +64,7 @@ public:
     void InitMenu(void);
     void ControlAI(bool bEnable);
     void CreateEnemy(int32 index);
+    void CreateGimmicks(void);
 
 private:
     static CPlayEnemyTestStageSeqState* m_pPlaySeqState;
