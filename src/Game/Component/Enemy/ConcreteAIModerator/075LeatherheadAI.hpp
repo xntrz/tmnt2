@@ -11,12 +11,12 @@ namespace LEATHERHEAD_AI
     enum ORDERTYPE_MOVE
     {
         ORDERTYPE_MOVE_SWIM = BASEAI6045::ORDERTYPE_MOVE_EXTEND,
-    }; /* enum ORDERTYPE_MOVE */
+    };
 
     enum ORDERTYPE_ATTACK
     {
         ORDERTYPE_ATTACK_E = BASEAI6045::ORDERTYPE_ATTACK_EXTEND,
-    }; /* enum ORDERTYPE_ATTACK */
+    };
 
     enum CATCHTRIGGER : uint32
     {
@@ -24,7 +24,7 @@ namespace LEATHERHEAD_AI
         CATCHTRIGGER_SWIM_IDLE = (1 << 1),
         CATCHTRIGGER_SWIM_MOVE = (1 << 2),
         CATCHTRIGGER_SWIM_MODE = (1 << 3),
-    }; /* enum CATCHTRIGGER */
+    };
 
     DEFINE_ENUM_FLAG_OPS(CATCHTRIGGER);
 
@@ -34,7 +34,7 @@ namespace LEATHERHEAD_AI
         static const char* SWIM_MOVE     = "SwimMove";
         static const char* SWIM_ATTACK   = "SwimAttack";
         static const char* SWIM_IDLE     = "SwimIdle";
-    }; /* namespace AIDECISIONUNITNAME */
+    };
 
     enum FREQUENCY_INDEX
     {
@@ -47,7 +47,7 @@ namespace LEATHERHEAD_AI
         /* 6 */ FREQUENCY_GUARD_S,  // swim mode (when hp < 40%) guard freq
         
         /* 7 */ FREQUENCY_MAX,
-    }; /* enum FREQUENCY_INDEX */
+    };
 
     static float ATTACK_INTERVAL[] = { 2.0f, 1.5f, 0.75f };
     static_assert(COUNT_OF(ATTACK_INTERVAL) == GAMETYPES::DIFFICULTY_NUM, "table incorrect");
@@ -73,7 +73,7 @@ namespace LEATHERHEAD_AI
     static float MOVE_STOP_DINSTANCE = 2.85f;
     static float MOVE_TIME = 0.125f;
     static float MOVE_CONDITION_DISTANCE = 5.5f;
-}; /* namespace LEATHERHEAD_AI */
+};
 
 
 class C075LeatherheadAI : public CBaseAI6045

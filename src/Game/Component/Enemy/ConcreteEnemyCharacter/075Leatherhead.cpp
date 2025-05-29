@@ -53,9 +53,6 @@ C075Leatherhead::C075Leatherhead(void)
 
     bool bReplace = false;
     Initialize(&parameter, bReplace);
-
-    Compositor().AttackParameter().m_vDirection = Math::VECTOR3_ZERO;
-    Compositor().AttackParameter().m_vVelocity = Math::VECTOR3_ZERO;
 };
 
 

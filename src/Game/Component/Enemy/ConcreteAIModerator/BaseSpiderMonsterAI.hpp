@@ -11,12 +11,12 @@ namespace BASESPIDERMONSTER_AI
         ORDERTYPE_ATTACK_B,
         ORDERTYPE_ATTACK_C,
         ORDERTYPE_ATTACK_D,        
-    }; /* enum ORDERTYPE_ATTACK */
+    };
 
     enum CATCHTRIGGER : uint32
     {
         CATCHTRIGGER_COUNTER        = (1 << 0),
-    }; /* enum CATCHTRIGGER */
+    };
     
     DEFINE_ENUM_FLAG_OPS(CATCHTRIGGER);
 
@@ -26,8 +26,8 @@ namespace BASESPIDERMONSTER_AI
         static const char* ATTACK_B = "AttackB";
         static const char* ATTACK_C = "AttackC";
         static const char* ATTACK_D = "AttackD";
-    }; /* namespace AIDECISIONUNITNAME */
-}; /* namespace BASESPIDERMONSTER_AI */
+    };
+};
 
 
 class CBaseSpiderMonsterAI : public CBaseAI6045

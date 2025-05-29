@@ -41,5 +41,5 @@ public:
 
 private:
     CEnemyCharacter& m_rEnemyChr;
-    CHARACTERTYPES::ATTACKPARAMETER m_attackparameter;    
+    CHARACTERTYPES::ATTACKPARAMETER m_attackParameter;    
 };

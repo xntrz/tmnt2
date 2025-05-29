@@ -264,7 +264,12 @@ static void CorrectDirection(RwV3d* pvPosition, RwV3d* pvVector, float fRadian)
 };
 
 
-/*static*/ uint32 CShotManager::Shot(SHOTID::VALUE idShot, const RwV3d* pvPos, float fDirection, CGameObject* pObject, float fRadian, float fLife)
+/*static*/ uint32 CShotManager::Shot(SHOTID::VALUE idShot,
+                                     const RwV3d* pvPos,
+                                     float fDirection,
+                                     CGameObject* pObject,
+                                     float fRadian /*= MATH_DEG2RAD(15.0f)*/,
+                                     float fLife /*= 5.0f*/)
 {
     ASSERT(pvPos);
     ASSERT(pObject);
@@ -280,7 +285,12 @@ static void CorrectDirection(RwV3d* pvPosition, RwV3d* pvVector, float fRadian)
 };
 
 
-/*static*/ uint32 CShotManager::Shot(SHOTID::VALUE idShot, const RwV3d* pvPos, const RwV3d* pvVec, CGameObject* pObject, float fRadian, float fLife)
+/*static*/ uint32 CShotManager::Shot(SHOTID::VALUE idShot,
+                                     const RwV3d* pvPos,
+                                     const RwV3d* pvVec,
+                                     CGameObject* pObject,
+                                     float fRadian /*= MATH_DEG2RAD(15.0f)*/,
+                                     float fLife /*= 5.0f*/)
 {
     ASSERT(pvPos);
     ASSERT(pvVec);

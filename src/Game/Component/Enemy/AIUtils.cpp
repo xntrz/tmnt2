@@ -271,7 +271,7 @@ CAIUtils::CheckObstacle(const RwV3d* vecPos,
 
     float fToMapHeight = (fMapHeight - fBaseHeight);
 
-    if (*pfObstacleHeight)
+    if (pfObstacleHeight)
         *pfObstacleHeight = fToMapHeight;
 
     if (fToMapHeight > fSafetyHeight)

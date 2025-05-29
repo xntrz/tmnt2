@@ -524,6 +524,8 @@ void CMagic::SetScale(float fScale)
     Math::Vec3_Scale(&m_collisionAttack.m_vPosition, &m_collisionAttack.m_vPosition, fScale);
     m_collisionAttack.m_fRadius *= fScale;
     
+	m_locusinfo.m_fRadius *= fScale;
+
     CEffect::SetScale(fScale);
 };
 

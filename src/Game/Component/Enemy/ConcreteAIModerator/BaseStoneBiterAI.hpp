@@ -19,15 +19,15 @@ namespace BASESTONEBITER_AI
         ORDERTYPE_ATTACK_B,
         ORDERTYPE_ATTACK_C,
         ORDERTYPE_ATTACK_RUN,
-    }; /* enum ORDERTYPE_ATTACK */
+    };
 
     namespace AIDECISIONUNITNAME
     {
         static const char* ATTACK_NEAR = "NearAttack";
         static const char* ATTACK_FAR  = "FarAttack";
         static const char* MOVE_SIDE   = "Yokoaruki";
-    }; /* namespace AIDECISIONUNITNAME */
-}; /* namespace BASESTONEBITER_AI */
+    };
+};
 
 
 class CBaseStoneBiterAI : public CBaseAI6045

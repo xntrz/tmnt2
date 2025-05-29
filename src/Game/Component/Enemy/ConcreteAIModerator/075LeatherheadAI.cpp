@@ -19,7 +19,7 @@ C075LeatherheadAI::CDecisionUnitSwimAttack::CDecisionUnitSwimAttack(CBaseLeather
 
 /*virtual*/ bool C075LeatherheadAI::CDecisionUnitSwimAttack::CheckTerm(void) /*override*/
 {
-    if (!m_pAIDecisionUnitCommonParameter->IsAttack())
+    if (!m_pAIDecisionUnitCommonParameter->IsAttackPermission())
         return false;
 
     if (!m_pBaseLeatherheadChr->IsSwimming())
@@ -152,7 +152,7 @@ C075LeatherheadAI::CDecisionUnitAttackTackle::CDecisionUnitAttackTackle(void)
 
 /*virtual*/ bool C075LeatherheadAI::CDecisionUnitAttackTackle::CheckTerm(void) /*override*/
 {
-    if (!m_pAIDecisionUnitCommonParameter->IsAttack())
+    if (!m_pAIDecisionUnitCommonParameter->IsAttackPermission())
         return false;
 
     int32 numViewData = m_pAIDecisionUnitCommonParameter->GetViewDataNum();

@@ -17,13 +17,13 @@ namespace BASEHUN_AI
         ORDERTYPE_ATTACK_F,
         ORDERTYPE_ATTACK_F_RUN,
         ORDERTYPE_ATTACK_F_TALL,
-    }; /* enum ORDERTYPE_ATTACK */
+    };
 
     enum CATCHTRIGGER : uint32
     {
         CATCHTRIGGER_COUNTER = (1 << 0),
         CATCHTRIGGER_BURST   = (1 << 1),
-    }; /* enum CATCHTRIGGER */
+    };
 
     DEFINE_ENUM_FLAG_OPS(CATCHTRIGGER);
 
@@ -38,8 +38,8 @@ namespace BASEHUN_AI
         static const char* ATTACK_F_CONNECT_FROM_RUN = "AttackFRun";
         static const char* ATTACK_F_ON_TALL_OBJ      = "AttackFOnTallObj";
         static const char* ATTACK_REVENGE            = "AttackRevenge";
-    }; /* namespace AIDECISIONUNITNAME */
-}; /* namespace BASEHUN_AI */
+    };
+};
 
 
 class CBaseHunAI : public CBaseAI6045

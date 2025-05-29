@@ -12,9 +12,6 @@
 struct TMNT2_SAVE_DATA;
 
 
-/**
- *  TODO: character result counts right when no enemies but required tests when all enemies done
- */
 class CGameData
 {
 public:

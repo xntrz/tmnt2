@@ -13,7 +13,7 @@ Reverse engineering PC version of Teenage Mutant Ninja Turtles 2: Battle Nexus
 > # Current project status:
 ✔️ Basic gameplay\
 ✔️ Sound\
-🔨 Enemies & Bosses (60/76)
+🔨 Enemies & Bosses (71/76)
 
 &nbsp;
 > # Building & Run

@@ -31,6 +31,8 @@ namespace ENEMYTYPES
         static const char* ATTACK_A                  = "A";
         static const char* ATTACK_AA                 = "AA";
         static const char* ATTACK_AAA                = "AAA";
+        static const char* ATTACK_AAB                = "AAB";
+        static const char* ATTACK_AAC                = "AAC";
         static const char* ATTACK_B                  = "B";
         static const char* ATTACK_C                  = "C";
         static const char* ATTACK_C1                 = "C1";
@@ -43,6 +45,10 @@ namespace ENEMYTYPES
         static const char* GUARD_3                   = "G3";
         static const char* DASH1                     = "Dash1";
         static const char* DASH2                     = "Dash2";
+        static const char* DASH_LEFT_1               = "DashL1";
+        static const char* DASH_LEFT_2               = "DashL2";
+        static const char* DASH_RIGHT_1              = "DashR1";
+        static const char* DASH_RIGHT_2              = "DashR2";
         static const char* KNOCK                     = "Yarare";
         static const char* KNOCK_BACK                = "YBack";
         static const char* KNOCK_FRONT               = "YFront";

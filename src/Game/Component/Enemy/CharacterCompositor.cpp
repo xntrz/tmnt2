@@ -11,8 +11,13 @@
 CCharacterCompositor::CCharacterCompositor(const char* pszName, TYPE type, CEnemyCharacter& rEnemyChr)
 : CCharacter(pszName, type)
 , m_rEnemyChr(rEnemyChr)
+, m_attackParameter()
 {
-    ;
+    std::memset(&m_attackParameter, 0, sizeof(m_attackParameter));
+    m_attackParameter.m_vPosition = Math::VECTOR3_ZERO;
+    m_attackParameter.m_vVelocity = Math::VECTOR3_ZERO;
+    m_attackParameter.m_vDirection = Math::VECTOR3_ZERO;
+    m_attackParameter.m_pHitAttackData = nullptr;
 };
 
 
@@ -189,7 +194,7 @@ ENEMYID::VALUE CCharacterCompositor::GetID(void) const
 
 CHARACTERTYPES::ATTACKPARAMETER& CCharacterCompositor::AttackParameter(void)
 {
-    return m_attackparameter;
+    return m_attackParameter;
 };
 
 

@@ -22,7 +22,7 @@ namespace HUN_AI_083
         /* 12 */ FREQUENCY_GUARD_B, // burst mode guard
 
         /* 13 */ FREQUENCY_MAX,
-    }; /* enum FREQUENCY_INDEX */
+    };
 
     static float ATTACK_INTERVAL[] = { 1.5f, 1.0f, 0.5f };
     static_assert(COUNT_OF(ATTACK_INTERVAL) == GAMETYPES::DIFFICULTY_NUM, "table incorrect");
@@ -41,7 +41,7 @@ namespace HUN_AI_083
     static float MOVE_CONDITION_DISTANCE = 2.85f;
     static float MOVE_TIME = 0.125f;
     static float MOVE_STOP_DINSTANCE = 2.85f;
-}; /* namespace HUN_AI_083 */
+};
 
 
 class C083HunAI : public CBaseHunAI

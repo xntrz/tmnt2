@@ -11,14 +11,14 @@ namespace BASEKINGNAIL
         static const char* ATTACK_D2 = "D2";
         static const char* ATTACK_D3 = "D3";
         static const char* ATTACK_D4 = "D4";
-    }; /* namespace MOTIONNAMES */
+    };
 
     enum STATUS
     {
         STATUS_ATTACK_D = ENEMYTYPES::STATUS_SPECIAL,
         STATUS_ATTACK_COUNTER,
-    }; /* enum STATUS */
-}; /* namespace BASEKINGNAIL */
+    };
+};
 
 
 class CBaseKingNailChr : public CBaseChr6045

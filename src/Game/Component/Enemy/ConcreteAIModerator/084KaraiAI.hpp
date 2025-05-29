@@ -26,14 +26,14 @@ namespace KARAI_AI
         ORDERTYPE_ATTACK_E,
         ORDERTYPE_ATTACK_F,
         ORDERTYPE_ATTACK_SPECIAL,
-    }; /* enum ORDERTYPE_ATTACK */
+    };
 
     enum CATCHTRIGGER : uint32
     {
         CATCHTRIGGER_COUNTER        = (1 << 0),
         CATCHTRIGGER_MODE_WARNING   = (1 << 1),
         CATCHTRIGGER_MODE_FINAL     = (1 << 2),
-    }; /* enum CATCHTRIGGER */
+    };
     
     DEFINE_ENUM_FLAG_OPS(CATCHTRIGGER);
 
@@ -51,7 +51,7 @@ namespace KARAI_AI
         static const char* ATTACK_F                         = "AttackF";
         static const char* ATTACK_SPECIAL                   = "AttackSpecial";
         static const char* ATTACK_SPECIAL_FORUNUSUALSTATUS  = "AttackSpecialUnusual";
-    }; /* namespace AIDECISIONUNITNAME */
+    };
 
     enum FREQUENCY_INDEX
     {
@@ -85,7 +85,7 @@ namespace KARAI_AI
         /* 21 */ FREQUENCY_MOVE_ESCAPE,
 
         /* 22 */ FREQUENCY_MAX,
-    }; /* enum FREQUENCY_INDEX */
+    };
 
     static float ATTACK_INTERVAL_FORWARNINGMODE[] = { 0.4f, 0.25f, 0.125f };
     static_assert(COUNT_OF(ATTACK_INTERVAL_FORWARNINGMODE) == GAMETYPES::DIFFICULTY_NUM, "table incorrect");
@@ -111,7 +111,7 @@ namespace KARAI_AI
     static float MOVE_STOP_DISTANCE_WARNING = 6.5f;
     static int32 MOVE_ESCAPE_PERMIT_INALLTYPEHISTORYNUM = 2;
     static int32 ATTACK_C_PERMIT_INATTACKHISTORYNUM = 2;
-}; /* namespace KARAI_AI */
+};
 
 
 class CBaseKaraiChr;

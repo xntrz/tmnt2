@@ -157,7 +157,7 @@ void CEnbuSequence::OnMove(bool bRet, const void* pReturnValue)
                 ASSERT(pFrame);
 
                 RwFrameRotate(pFrame, &Math::VECTOR3_AXIS_X, 150.0f, rwCOMBINEREPLACE);
-                RwFrameRotate(pFrame, &Math::VECTOR3_AXIS_Y,0.0f, rwCOMBINEPOSTCONCAT);
+                RwFrameRotate(pFrame, &Math::VECTOR3_AXIS_Y, 0.0f, rwCOMBINEPOSTCONCAT);
                 RpLightSetFrameMacro(m_pLight, pFrame);
                 
                 m_pCamera = CCamera::GetCamera();
@@ -572,18 +572,18 @@ int32 CEnbuSequence::GetEnbuCameraType(void) const
 {
     static int32 s_aCameraTypeList[PLAYERID::ID_MAX][GAMETYPES::CLEARRANK_NUM - 1] =
     {
-        //E  D   C   B   A   S   SS
-        { 0, 0,  19, 12, 0,  7,  7, },  // leo
-        { 0, 17, 0,  0,  13, 0,  9, },  // rap
-        { 0, 0,  0,  0,  7,  0,  7, },  // mic
-        { 0, 0,  0,  0,  18, 0,  10,},  // don
-        { 0, 15, 15, 0,  16, 7,  8, },  // sla
-        { 0, 0,  0,  0,  7,  11, 0, },  // cas
-        { 0, 0,  0,  14, 7,  7,  7, },  // kar
-        { 0, 0,  0,  2,  0,  2,  0, },  // spl
+        //  E    D    C    B    A    S   SS
+        {   0,   0,  19,  12,   0,   7,   7  },  // leo
+        {   0,  17,   0,   0,  13,   0,   9  },  // rap
+        {   0,   0,   0,   0,   7,   0,   7  },  // mic
+        {   0,   0,   0,   0,  18,   0,  10  },  // don
+        {   0,   0,   0,   2,   0,   2,   0  },  // sla
+        {   0,   0,   0,   0,   7,  11,   0  },  // cas
+        {   0,   0,   0,  14,   7,   7,   7  },  // kar
+        {   0,  15,  15,   0,  16,   7,   8  },  // spl
     };
 
-    int32 mvp = CEnbuProc::GetEnbuMvp();    
+    int32 mvp = CEnbuProc::GetEnbuMvp();
     ASSERT(mvp >= 0);
     ASSERT(mvp < COUNT_OF(s_aCameraTypeList));
 

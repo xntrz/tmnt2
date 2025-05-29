@@ -21,7 +21,7 @@ C084KaraiAI::CDecisionUnitMoveEscape::CDecisionUnitMoveEscape(CBaseKaraiChr* pBa
     if (DecisionUnitCommonParameter().CheckAllTypeHistory(this) >= KARAI_AI::MOVE_ESCAPE_PERMIT_INALLTYPEHISTORYNUM)
         return false;
 
-    if (!DecisionUnitCommonParameter().IsMove())
+    if (!DecisionUnitCommonParameter().IsMovePermission())
         return false;
 
     int32 numEnablePlayer = DecisionUnitCommonParameter().GetEnableDataNum();
@@ -119,11 +119,9 @@ bool C084KaraiAI::CDecisionUnitMoveEscape::CheckTermForGuardReaction(void)
     if (!IsSatisfyFrequency(m_frequencyTableNo))
         return false;
 
-    const CAIUtils::NEARER_PLAYERDATA* pNearerPlayerData = CAIUtils::GetNearerPlayerData(0);
-    if (!pNearerPlayerData)
-        return false;
+    const CAIUtils::NEARER_PLAYERDATA& nearerPlayerData = DecisionUnitCommonParameter().GetEnableData(0);
 
-    CPlayerCharacter* pPlayerChr = CAIUtils::GetActivePlayer(pNearerPlayerData->no);
+    CPlayerCharacter* pPlayerChr = CAIUtils::GetActivePlayer(nearerPlayerData.no);
     if (!pPlayerChr)
         return false;
 
@@ -154,14 +152,15 @@ bool C084KaraiAI::CDecisionUnitAttackSpecial::CheckTermForGuardReaction(void)
     if (!m_pBaseKaraiChr->IsModeFinal())
         return false;
 
-    const CAIUtils::NEARER_PLAYERDATA* pNearerPlayerData = CAIUtils::GetNearerPlayerData(0);
-    if (!pNearerPlayerData)
+    if (!DecisionUnitCommonParameter().IsEnableDataValid())
         return false;
 
-    if (pNearerPlayerData->distance > m_fDistanceCondition)
+    const CAIUtils::NEARER_PLAYERDATA& nearerPlayerData = DecisionUnitCommonParameter().GetEnableData(0);
+
+    if (nearerPlayerData.distance > m_fDistanceCondition)
         return false;
 
-    m_orderTargetNo = pNearerPlayerData->no;
+    m_orderTargetNo = nearerPlayerData.no;
     return true;
 };
 
@@ -196,14 +195,15 @@ C084KaraiAI::CDecisionUnitAttackF::CDecisionUnitAttackF(void)
 
 bool C084KaraiAI::CDecisionUnitAttackF::CheckTermForGuardReaction(void)
 {
-    const CAIUtils::NEARER_PLAYERDATA* pNearerPlayerData = CAIUtils::GetNearerPlayerData(0);
-    if (!pNearerPlayerData)
+    if (!DecisionUnitCommonParameter().IsEnableDataValid())
         return false;
 
-    if (pNearerPlayerData->distance > m_fDistanceCondition)
+    const CAIUtils::NEARER_PLAYERDATA& nearerPlayerData = DecisionUnitCommonParameter().GetEnableData(0);
+
+    if (nearerPlayerData.distance > m_fDistanceCondition)
         return false;
 
-    m_orderTargetNo = pNearerPlayerData->no;
+    m_orderTargetNo = nearerPlayerData.no;
     return true;
 };
 
@@ -338,7 +338,7 @@ C084KaraiAI::CDecisionUnitAttackC2::CDecisionUnitAttackC2(void)
     if (CEnemyUtils::IsDownState(enemyStatus))
         return false;
 
-    if (!DecisionUnitCommonParameter().IsAttack())
+    if (!DecisionUnitCommonParameter().IsAttackPermission())
         return false;
 
     if (!DecisionUnitCommonParameter().IsEnableDataValid())
@@ -352,9 +352,9 @@ C084KaraiAI::CDecisionUnitAttackC2::CDecisionUnitAttackC2(void)
     int32 numEnabledPlayer = DecisionUnitCommonParameter().GetEnableDataNum();
     for (int32 i = 0; i < numEnabledPlayer; ++i)
     {
-        const CAIUtils::NEARER_PLAYERDATA* pNearerPlayerData = CAIUtils::GetNearerPlayerData(i);
+        const CAIUtils::NEARER_PLAYERDATA& nearerPlayerData = DecisionUnitCommonParameter().GetEnableData(i);
 
-        CPlayerCharacter* pPlayerChr = CAIUtils::GetActivePlayer(pNearerPlayerData->no);
+        CPlayerCharacter* pPlayerChr = CAIUtils::GetActivePlayer(nearerPlayerData.no);
         if (!pPlayerChr)
             continue;
 
@@ -387,10 +387,9 @@ C084KaraiAI::CDecisionUnitAttackC2::CDecisionUnitAttackC2(void)
     if (!IsSatisfyFrequency(m_frequencyTableNo))
         return false;
 
-    const CAIUtils::NEARER_PLAYERDATA* pNearerPlayerData = CAIUtils::GetNearerPlayerData(0);
-    ASSERT(pNearerPlayerData != nullptr);
+    const CAIUtils::NEARER_PLAYERDATA& nearerPlayerData = DecisionUnitCommonParameter().GetEnableData(0);
+    m_orderTargetNo = nearerPlayerData.no;
 
-    m_orderTargetNo = pNearerPlayerData->no;
     return true;
 };
 

@@ -1,9 +1,11 @@
 #pragma once
 
+#include "AIUtils.hpp"
+
 #include "Game/Component/GameMain/GameTypes.hpp"
 #include "Game/Component/Player/PlayerID.hpp"
 #include "Game/Component/Player/PlayerTypes.hpp"
-#include "AIUtils.hpp"
+#include "Game/System/GameObject/GameObjectType.hpp"
 
 
 class CEnemyCharacter;
@@ -139,7 +141,8 @@ public:
     bool IsPlayerStop(int32 iPlayerIndex);
     bool IsDonBarrier(float fLength);
     bool IsLeoDash(float fLength);
-    int32 GetPlayerNumThere(RwV3d* pvCenter, float fRadius);
+    bool IsPlayerGuardState(int32 iPlayerIndex = -1);
+    int32 GetPlayerNumThere(float fRadius, RwV3d* pvCenter = nullptr);
     bool IsTogether(int32 iPlayerNum, float fRadius);
     int32 GetPlayerNoFromID(PLAYERID::VALUE id);
     int32 GetNearPlayer(RwV3d* pvCenter, float* pfDistNearest, RwV3d* pvPosNearest, CAIUtils::PLAYER_STATE_FLAG state);
@@ -150,10 +153,12 @@ public:
     const PLAYERDATA& GetTargetPlayerData(void) const;
     CEnemyCharacter& EnemyChara(void);
     int32 PlayerIndexCorrection(int32 iPlayerIndex) const;
-
+    void SetLastAttackerType(GAMEOBJECTTYPE::VALUE goType);
+    GAMEOBJECTTYPE::VALUE GetLastAttackerType(void) const;
+    
 private:
     PLAYERDATA m_aPlayerData[PLAYER_DATA_MAX];
-    int32 m_LastAttackType;
+    GAMEOBJECTTYPE::VALUE m_lastAttackerType;
     RwV3d m_vMyPos;
     RwV3d m_vMyPosOld;
     float m_fMyAngle;

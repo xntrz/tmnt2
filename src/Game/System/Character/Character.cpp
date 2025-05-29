@@ -1102,6 +1102,20 @@ void CCharacter::SetMotionTime(float fTime)
 };
 
 
+void CCharacter::SetMotionCtrlTime(float fTime)
+{
+	SetMotionSpeed(fTime);
+    SetCharacterFlag(CHARACTERTYPES::FLAG_MOTION_SPEED_CTRL);
+};
+
+
+void CCharacter::ClearMotionCtrlTime(void)
+{
+    ClearCharacterFlag(CHARACTERTYPES::FLAG_MOTION_SPEED_CTRL);
+	SetMotionSpeed(1.0f);
+};
+
+
 float CCharacter::GetMotionTime(void) const
 {
     ASSERT(m_pMotionController);
@@ -1240,6 +1254,12 @@ void CCharacter::GetVelocity(RwV3d* pvVelocity) const
     ASSERT(pvVelocity);
 
     *pvVelocity = m_vVelocity;
+};
+
+
+const RwV3d& CCharacter::GetVelocity(void) const
+{
+    return m_vVelocity;
 };
 
 

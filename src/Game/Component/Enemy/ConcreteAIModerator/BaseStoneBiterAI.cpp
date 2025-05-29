@@ -82,7 +82,7 @@ CBaseStoneBiterAI::CDecisionUnitAttackFar::CDecisionUnitAttackFar(CEnemyCharacte
 
 /*virtual*/ bool CBaseStoneBiterAI::CDecisionUnitAttackFar::CheckTerm(void) /*override*/
 {
-    if (!DecisionUnitCommonParameter().IsAttack())
+    if (!DecisionUnitCommonParameter().IsAttackPermission())
         return false;
 
     if (!DecisionUnitCommonParameter().PlayerWatcher().IsSuitableArea(MATH_DEG2RAD(60.0f)))
@@ -122,7 +122,7 @@ CBaseStoneBiterAI::CDecisionUnitAttackNear::CDecisionUnitAttackNear(CEnemyCharac
 
 /*virtual*/ bool CBaseStoneBiterAI::CDecisionUnitAttackNear::CheckTerm(void) /*override*/
 {
-    if (!DecisionUnitCommonParameter().IsAttack())
+    if (!DecisionUnitCommonParameter().IsAttackPermission())
         return false;
 
     if (!DecisionUnitCommonParameter().PlayerWatcher().IsSuitableArea(MATH_DEG2RAD(70.0f)))

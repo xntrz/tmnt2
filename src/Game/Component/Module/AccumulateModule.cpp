@@ -133,7 +133,9 @@ static const RwRGBA STEP_THREE_COLOR = { 0xFF, 0xc8, 0xC8 ,0xFF };
 
             switch (pChrCompositor->GetID())
             {
-            case ENEMYID::ID_SLASSHUR: return new CEnemySlashuurAccumulateModule(pCharacter);
+            case ENEMYID::ID_SLASSHUR:           return new CEnemySlashuurAccumulateModule(pCharacter);
+            case ENEMYID::ID_FOOT_MECH_SPLINTER: return new CSplinterAccumulateModule(pCharacter);
+            case ENEMYID::ID_SPLINTER:           return new CSplinterAccumulateModule(pCharacter);
             default: ASSERT(false); break;
             };
         }

@@ -34,7 +34,7 @@ namespace MOTIONNAMES
     static const char* ATTACK_STUN   = "B";
 
     static const char* BACKAWAY      = "Backaway";
-}; /* namespace MOTIONNAMES */
+};
 
 
 //
@@ -903,10 +903,6 @@ CBaseNinjaRatsChr::CBaseNinjaRatsChr(ENEMYID::VALUE enemyId)
 
 	bool bReplace = false;
 	Initialize(&parameter, bReplace);
-
-    /* init attack param */
-    Compositor().AttackParameter().m_vDirection = Math::VECTOR3_ZERO;
-    Compositor().AttackParameter().m_vVelocity = Math::VECTOR3_ZERO;
 };
 
 

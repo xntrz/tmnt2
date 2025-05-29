@@ -45,7 +45,17 @@
  *
  *
  *  CBaseEliteAI list:
- *    TODO
+ *  - ID_ELITE_FOOT_A
+ *  - ID_ELITE_FOOT_B
+ *  - ID_ELITE_FOOT_C
+ *  - ID_ELITE_FOOT_D
+ *  - ID_MIYAMOTO_USAGI
+ *  - ID_FOOT_MECH_SPLINTER
+ *  - ID_ELITE_FOOT_DUMMY_A
+ *  - ID_ELITE_FOOT_DUMMY_B
+ *  - ID_ELITE_FOOT_DUMMY_C
+ *  - ID_ELITE_FOOT_DUMMY_D
+ *  - ID_SPLINTER
  *
  *
  *  CBaseAI6045 list:

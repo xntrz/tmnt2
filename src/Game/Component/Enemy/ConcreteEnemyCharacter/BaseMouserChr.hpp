@@ -15,8 +15,8 @@ namespace BASEMOUSER
         static const char* FLYAWAY_BOUND_BACK   = "YBackFuttobi3";
         static const char* GETUP_FRONT          = "YFrontFuttobi4";
         static const char* GETUP_BACK           = "YBackFuttobi4";
-    }; /* namespace MOTIONNAMES */
-}; /* namespace BASEMOUSER */
+    };
+};
 
 
 class CBaseMouserChr : public CEnemyCharacter

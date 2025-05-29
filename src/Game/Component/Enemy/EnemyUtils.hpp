@@ -97,6 +97,8 @@ public:
     static int32 RotateToPlayer(CCharacterCompositor* pChrCompositor, int32 playerNo, float fRotSpeed, float fRad);
     static int32 RotateToPosition(CCharacterCompositor* pChrCompositor, const RwV3d* pos, float fRotSpeed, float fRad);
     static bool IsAttackState(ENEMYTYPES::STATUS status);
+    static bool IsAttackStateNormal(ENEMYTYPES::STATUS status);
+    static bool IsAttackStateFire(ENEMYTYPES::STATUS status);
     static bool IsStunState(ENEMYTYPES::STATUS status);
     static bool IsKnockState(ENEMYTYPES::STATUS status);
     static bool IsFlyawayState(ENEMYTYPES::STATUS status);
@@ -121,6 +123,8 @@ public:
                                      const RwV3d* vecPosPrev);
 
     static void UpdateVelocityFromDirection(CCharacterCompositor* pChrCompositor);
+
+    static void RotateVectorByDirection(RwV3d* vec, float fDir);
 };
 
 
@@ -204,4 +208,30 @@ public:
     static uint32 EntryWaterDobonEffect(const CCharacterCompositor* pCompositor,
                                         float fScale,
                                         bool bPlaySound = true);
+};
+
+
+class CEnemyUtilsElite
+{
+public:
+    static float RotateToTarget(CCharacterCompositor* pChrCompositor,
+                                RwV3d* pvecTargetPos,
+                                float fRotateRate = -1.0f);
+                                    
+
+    static float RotateToPlayer(CCharacterCompositor* pChrCompositor,
+                                int32 playerNo,
+                                float fRotateRate = -1.0f);
+
+    static void MoveTo(CCharacterCompositor* pChrCompositor,
+                       const RwV3d* pvecToPos,
+                       float fMoveSpeed,
+                       float fRotRate,
+                       float* pfDistance = nullptr);
+
+    static void MovePursuit(CCharacterCompositor* pChrCompositor, int32 playerNo, float fMoveSpeed);
+
+    static bool IsCrashWallPossible(const CCharacterCompositor* pChrCompositor);
+
+    static float GetDistance(const CCharacterCompositor* pChrCompositor, const RwV3d* pvecAt);
 };

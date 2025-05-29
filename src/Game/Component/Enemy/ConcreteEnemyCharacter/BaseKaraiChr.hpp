@@ -29,7 +29,7 @@ namespace BASEKARAI
         static const char* ATTACK_SPECIAL1     = "C1";
         static const char* ATTACK_SPECIAL2     = "C2";
         static const char* ATTACK_SPECIAL3     = "C3";
-    }; /* namespace MOTIONNAMES */
+    };
 
     enum STATUS
     {
@@ -42,14 +42,14 @@ namespace BASEKARAI
         STATUS_ATTACK_SPECIAL,
         STATUS_ATTACKTODO, // TOOD unknown (unused) karai attack status
         STATUS_ATTACK_COUNTER,
-    }; /* enum STATUS */
+    };
 
     static const float GUARD_COUNTERACTION_TIME[] = { 0.5f, 0.5f, 0.35f };
     static_assert(COUNT_OF(GUARD_COUNTERACTION_TIME) == GAMETYPES::DIFFICULTY_NUM, "table incorrect");
 
     static const float ATTACK_SPECIAL_CHARGETIME[] = { 1.75f, 1.25f, 0.75f,};
     static_assert(COUNT_OF(ATTACK_SPECIAL_CHARGETIME) == GAMETYPES::DIFFICULTY_NUM, "table incorrect");
-}; /* namespace BASEKARAI */
+};
 
 
 class CBaseKaraiChr : public CBaseChr6045

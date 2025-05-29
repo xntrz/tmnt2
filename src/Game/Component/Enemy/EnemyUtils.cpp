@@ -651,6 +651,20 @@ float CEnemyUtils::CKnockBackControl::GetPlayerNumRate(void) const
 };
 
 
+/*static*/ bool CEnemyUtils::IsAttackStateNormal(ENEMYTYPES::STATUS status)
+{
+    return (status >= ENEMYTYPES::STATUS_ATTACK_A) &&
+           (status <= ENEMYTYPES::STATUS_ATTACK_RUN);
+};
+
+
+/*static*/ bool CEnemyUtils::IsAttackStateFire(ENEMYTYPES::STATUS status)
+{
+    return (status >= ENEMYTYPES::STATUS_FIRE_A) &&
+           (status <= ENEMYTYPES::STATUS_FIRE_CC);
+};
+
+
 /*static*/ bool CEnemyUtils::IsStunState(ENEMYTYPES::STATUS status)
 {
     return ((status >= ENEMYTYPES::STATUS_DINDLE) &&
@@ -889,6 +903,15 @@ float CEnemyUtils::CKnockBackControl::GetPlayerNumRate(void) const
     vecVelocity.y = fBuffVelY;
 
     pChrCompositor->SetVelocity(&vecVelocity);
+};
+
+
+/*static*/ void CEnemyUtils::RotateVectorByDirection(RwV3d* vec, float fDir)
+{
+    RwMatrix matRotY;
+    RwMatrixSetIdentityMacro(&matRotY);
+    Math::Matrix_RotateY(&matRotY, fDir);
+    RwV3dTransformVector(vec, vec, &matRotY);
 };
 
 
@@ -1289,4 +1312,132 @@ CEnemyUtils6045::EntryWaterDobonEffect(const CCharacterCompositor* pCompositor,
     CEffectManager::SetScale(hEffect, fScale);
 
     return hEffect;
+};
+
+
+//
+// *********************************************************************************
+//
+
+
+/*static*/ float CEnemyUtilsElite::RotateToTarget(CCharacterCompositor* pChrCompositor,
+                                                  RwV3d* pvecTargetPos,
+                                                  float fRotateRate /*= -1.0f*/)
+{
+    return CEnemyUtils6045::RotateToTarget(pChrCompositor, pvecTargetPos, fRotateRate);
+};
+
+
+/*static*/ float CEnemyUtilsElite::RotateToPlayer(CCharacterCompositor* pChrCompositor,
+                                                  int32 playerNo,
+                                                  float fRotateRate /*= -1.0f*/)
+{
+    CPlayerCharacter* pPlrChr = CAIUtils::GetActivePlayer(playerNo);
+    if (pPlrChr)
+    {
+        RwV3d vecFootPos = Math::VECTOR3_ZERO;
+        pPlrChr->GetFootPosition(&vecFootPos);
+
+        return RotateToTarget(pChrCompositor, &vecFootPos, fRotateRate);
+    };
+
+    return 0.0f;
+};
+
+
+/*static*/ void CEnemyUtilsElite::MoveTo(CCharacterCompositor* pChrCompositor,
+                                         const RwV3d* pvecToPos,
+                                         float fMoveSpeed,
+                                         float fRotRate,
+                                         float* pfDistance /*= nullptr*/)
+{
+    /* calc dist */
+    RwV3d vecMyFootPos = Math::VECTOR3_ZERO;
+    pChrCompositor->GetFootPosition(&vecMyFootPos);
+
+    RwV3d vecDist = Math::VECTOR3_ZERO;
+    Math::Vec3_Sub(&vecDist, &vecMyFootPos, pvecToPos);
+
+    float fDist = Math::Vec3_Length(&vecDist);
+    if (pfDistance)
+        *pfDistance = fDist;
+
+    vecDist.y = 0.0f;
+
+    /* cald dir to rot */
+    RwV3d vecDir = Math::VECTOR3_ZERO;
+    Math::Vec3_Normalize(&vecDir, &vecDist);
+
+    pChrCompositor->RotateDirection(std::atan2(-vecDir.x, -vecDir.z), fRotRate);
+
+    /* cache up Y speed */
+    RwV3d vecVelocity = Math::VECTOR3_ZERO;
+    pChrCompositor->GetVelocity(&vecVelocity);
+
+    float fBuffYVel = vecVelocity.y;
+
+    /* make new velocity */
+    vecVelocity = { 0.0f, 0.0f, fMoveSpeed };
+    pChrCompositor->RotateVectorByDirection(&vecVelocity, &vecVelocity);
+
+    /* restrore Y vel and update chr velocity */
+    vecVelocity.y = fBuffYVel;
+
+    pChrCompositor->SetVelocity(&vecVelocity);
+};
+
+
+/*static*/ void CEnemyUtilsElite::MovePursuit(CCharacterCompositor* pChrCompositor,
+                                              int32 playerNo,
+                                              float fMoveSpeed)
+{
+    CCharacter* pPlrChr = CAIUtils::GetActivePlayer(playerNo);
+    if (pPlrChr == nullptr)
+        pPlrChr = pChrCompositor;
+
+    RwV3d vecTargetPos = Math::VECTOR3_ZERO;
+    pPlrChr->GetFootPosition(&vecTargetPos);
+
+    float fDistToTarget = 0.0f;
+    CEnemyUtilsElite::MoveTo(pChrCompositor, &vecTargetPos,
+                             fMoveSpeed,
+                             pChrCompositor->EnemyChr().Feature().m_fRotateRate,
+                             &fDistToTarget);
+
+    float fDistOfSuit = pChrCompositor->EnemyChr().AICharacteristic().m_fDistanceOfSuitable;
+    if (fDistToTarget < (fDistOfSuit / 2.0f))
+        pChrCompositor->SetVelocity(&Math::VECTOR3_ZERO);
+};
+
+
+/*static*/ bool CEnemyUtilsElite::IsCrashWallPossible(const CCharacterCompositor* pChrCompositor)
+{
+    RwV3d vecFootPos = Math::VECTOR3_ZERO;
+    pChrCompositor->GetFootPosition(&vecFootPos);
+    vecFootPos.y += 0.3f;
+
+    RwV3d vecVelocity = Math::VECTOR3_ZERO;
+    pChrCompositor->GetVelocity(&vecVelocity);
+    vecVelocity.y = 0.0f;
+
+    Math::Vec3_Scale(&vecVelocity, &vecVelocity, CGameProperty::GetElapsedTime());
+    Math::Vec3_Add(&vecFootPos, &vecFootPos, &vecVelocity);
+    
+    if (CWorldMap::GetMapHeight(&vecFootPos) <= CWorldMap::INVALID_MAP_HEIGHT)
+        return true;
+
+    return false;
+};
+
+
+/*static*/float CEnemyUtilsElite::GetDistance(const CCharacterCompositor* pChrCompositor, const RwV3d* pvecAt)
+{
+    RwV3d vecFootPos = Math::VECTOR3_ZERO;
+    pChrCompositor->GetFootPosition(&vecFootPos);
+
+    RwV3d vecDist = Math::VECTOR3_ZERO;
+    Math::Vec3_Sub(&vecDist, &vecFootPos, pvecAt);
+
+    float fDist = Math::Vec3_Length(&vecDist);
+    return fDist;
 };

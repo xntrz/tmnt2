@@ -20,8 +20,12 @@
 
 /*static*/ void CBarrierModule::DrawAll(void)
 {
+    RENDERSTATE_PUSH(rwRENDERSTATEZTESTENABLE, false);
+
     for (CBarrierModule& it : m_listDraw)
         it.DrawBarrier();
+
+    RENDERSTATE_POP(rwRENDERSTATEZTESTENABLE);
 };
 
 
@@ -47,10 +51,7 @@ CBarrierModule::CBarrierModule(CTracer* pTracer, CGameObject* pObject, float fRa
     m_fRadius = fRadius;
     m_pTracer = pTracer;
     m_pObject = pObject;
-
     m_pBarrierSphere = new CSphere(m_fRadius, 16, 16, 4, 6, { 0xFF, 0xFF, 0xFF, 0x80 });
-    ASSERT(m_pBarrierSphere);
-
     m_state = STATE_SLEEP;
 
     CTextureManager::SetCurrentTextureSet("common_ef");
@@ -59,8 +60,7 @@ CBarrierModule::CBarrierModule(CTracer* pTracer, CGameObject* pObject, float fRa
     m_pBarrierSphere->SetTexture(m_pTexture);
 
     m_pDummy = new CGameObject("Dummy", GAMEOBJECTTYPE::EFFECT);
-    ASSERT(m_pDummy);
-
+    
     m_fTime = 0.0f;
     m_nPower = 5;
     m_fLivetime = 2.0f;
@@ -139,9 +139,6 @@ void CBarrierModule::Run(void)
         break;
 
     case STATE_SLEEP:
-        {
-            ;
-        }
         break;
 
     default:
@@ -163,18 +160,16 @@ void CBarrierModule::Run(void)
         sphere.radius = (m_fRadius * m_fScale);
 
         {
-            ASSERT(m_pObject);
-            
-            CHitAttackData Attack;
-            Attack.SetObject(m_pObject->GetHandle());
-            Attack.SetShape(CHitAttackData::SHAPE_SPHERE);
-            Attack.SetSphere(&sphere);
-            Attack.SetObjectPos(&vPosition);
-            Attack.SetPower(m_nPower);
-            Attack.SetTarget(m_target);
-            Attack.SetAntiguard(CHitAttackData::ANTIGUARD_INVALID);
-            Attack.SetMotion(BARRIER_MOTIONNAME);
-            Attack.SetStatus(CHitAttackData::STATUS_FLYAWAY);
+            CHitAttackData hitAttack;
+            hitAttack.SetObject(m_pObject->GetHandle());
+            hitAttack.SetShape(CHitAttackData::SHAPE_SPHERE);
+            hitAttack.SetSphere(&sphere);
+            hitAttack.SetObjectPos(&vPosition);
+            hitAttack.SetPower(m_nPower);
+            hitAttack.SetTarget(m_target);
+            hitAttack.SetAntiguard(CHitAttackData::ANTIGUARD_INVALID);
+            hitAttack.SetMotion(BARRIER_MOTIONNAME);
+            hitAttack.SetStatus(CHitAttackData::STATUS_FLYAWAY);
 
             if (m_pObject->GetType() == GAMEOBJECTTYPE::CHARACTER)
             {
@@ -185,23 +180,21 @@ void CBarrierModule::Run(void)
                     CPlayerCharacter* pPlayerCharacter = static_cast<CPlayerCharacter*>(pCharacter);
                     
                     if (pPlayerCharacter->GetID() == PLAYERID::ID_SPL)
-                        Attack.SetFlyawayParameter(0.0f, 8.0f);
+                        hitAttack.SetFlyawayParameter(0.0f, 8.0f);
                 };
             };
 
-            CHitAttackManager::RegistAttack(&Attack);
+            CHitAttackManager::RegistAttack(&hitAttack);
         }
 
         {
-            ASSERT(m_pDummy);
+            CHitCatchData hitCatch;
+            hitCatch.SetObject(m_pDummy->GetHandle());
+            hitCatch.SetObjectType(m_pDummy->GetType());
+            hitCatch.SetShape(CHitCatchData::SHAPE_SPHERE);
+            hitCatch.SetSphere(&sphere);
             
-            CHitCatchData Catch;
-            Catch.SetObject(m_pDummy->GetHandle());
-            Catch.SetObjectType(m_pDummy->GetType());
-            Catch.SetShape(CHitCatchData::SHAPE_SPHERE);
-            Catch.SetSphere(&sphere);
-            
-            CHitAttackManager::RegistCatch(&Catch);
+            CHitAttackManager::RegistCatch(&hitCatch);
         }
 
         m_pBarrierSphere->Run(CGameProperty::GetElapsedTime());
@@ -217,15 +210,8 @@ void CBarrierModule::Draw(void)
 
 void CBarrierModule::DrawBarrier(void)
 {
-    if (!m_bDisplay)
-        return;
-
-    RENDERSTATE_PUSH(rwRENDERSTATEZTESTENABLE, false);
-    
-    ASSERT(m_pBarrierSphere);
-    m_pBarrierSphere->Draw();
-    
-    RENDERSTATE_POP(rwRENDERSTATEZTESTENABLE);
+    if (m_bDisplay)
+        m_pBarrierSphere->Draw();
 };
 
 
@@ -272,8 +258,7 @@ void CBarrierModule::Appear(void)
     RwV3d vPosition = Math::VECTOR3_ZERO;
     m_pTracer->GetPosition(&vPosition);
 
-    uint32 hEffect = CEffectManager::Play(EFFECTID::ID_BARRIER_START, &vPosition);
-    ASSERT(hEffect);
+    CEffectManager::Play(EFFECTID::ID_BARRIER_START, &vPosition);
 };
 
 
@@ -281,7 +266,7 @@ void CBarrierModule::Disappear(void)
 {
     if (m_state != STATE_SLEEP)
     {
-        m_state = STATE_SLEEP;
+        m_state = STATE_DISAPPEAR;
         m_fScale = 0.0f;
         m_bDisplay = true;
     };

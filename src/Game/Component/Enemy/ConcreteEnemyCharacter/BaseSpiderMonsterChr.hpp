@@ -8,14 +8,14 @@ namespace BASESPIDERMONSTER
     namespace MOTIONNAMES
     {
         static const char* ATTACK_D = "D";
-    }; /* namespace MOTIONNAMES */
+    };
 
     enum STATUS
     {
         STATUS_ATTACK_D = ENEMYTYPES::STATUS_SPECIAL,
         STATUS_ATTACK_COUNTER,
-    }; /* enum STATUS */
-}; /* namespace BASESPIDERMONSTER */
+    };
+};
 
 
 class CBaseSpiderMonsterChr : public CBaseChr6045

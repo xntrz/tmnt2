@@ -19,6 +19,14 @@ public:
         CAMERAUPDATE_RIDE,
     };
 
+    enum IMPLEMENT
+    {
+        IMPLEMENT_NOIMPL = 0,
+        IMPLEMENT_EXISTDATA,
+        IMPLEMENT_ENABLEPLAY,
+        IMPLEMENT_COMPLETED,
+    };
+
 public:
     static int32 GetFileID(STAGEID::VALUE idStage);
     static MAPID::VALUE GetMapID(STAGEID::VALUE idStage);
@@ -34,4 +42,5 @@ public:
     static bool IsPlayMovieOfStageIn(STAGEID::VALUE idStage);
     static MOVIEID::VALUE GetStageOutMovieID(STAGEID::VALUE idStage);
     static bool IsPlayMovieOfStageOut(STAGEID::VALUE idStage);
+    static IMPLEMENT GetImplementProgress(STAGEID::VALUE idStage);
 };

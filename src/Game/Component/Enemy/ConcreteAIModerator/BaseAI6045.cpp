@@ -391,16 +391,11 @@ CEnemyAIDecisionUnitCommonParameter::CEnemyAIDecisionUnitCommonParameter(CEnemyC
 , m_playerWatcher()
 , m_pEnemyChr(pEnemyChr)
 {
-    ASSERT(pEnemyChr != nullptr);
-
     for (int32 i = 0; i < COUNT_OF(m_apDataViewArea); ++i)
         m_apDataViewArea[i] = nullptr;
 
-    for (int32 i = 0; i < COUNT_OF(m_aAIDecisionUnitAllTypeHistory); ++i)
-        m_aAIDecisionUnitAllTypeHistory[i] = -1;
-
-    for (int32 i = 0;i < COUNT_OF(m_aAIDecisionUnitAttackHistory); ++i)
-        m_aAIDecisionUnitAttackHistory[i] = -1;
+    ClearHistoryProcess(m_aAIDecisionUnitAllTypeHistory, COUNT_OF(m_aAIDecisionUnitAllTypeHistory));
+    ClearHistoryProcess(m_aAIDecisionUnitAttackHistory, COUNT_OF(m_aAIDecisionUnitAttackHistory));
 
     m_playerWatcher.Initialize(pEnemyChr);
 };
@@ -672,7 +667,7 @@ bool CEnemyAIDecisionUnitCommonParameter::IsAttackTime(void) const
 };
 
 
-bool CEnemyAIDecisionUnitCommonParameter::IsAttack(void) const
+bool CEnemyAIDecisionUnitCommonParameter::IsAttackPermission(void) const
 {
     if (m_pEnemyChr->AICharacteristic().m_fRatioOfActivity <= m_fRatioOfActivity)
         return false;
@@ -700,7 +695,7 @@ bool CEnemyAIDecisionUnitCommonParameter::IsMoveTime(void) const
 };
 
 
-bool CEnemyAIDecisionUnitCommonParameter::IsMove(void) const
+bool CEnemyAIDecisionUnitCommonParameter::IsMovePermission(void) const
 {
     if (m_pEnemyChr->AICharacteristic().m_fRatioOfMove <= m_fRatioOfMove)
         return false;
@@ -753,8 +748,8 @@ CPlayerWatcher& CEnemyAIDecisionUnitCommonParameter::PlayerWatcher(void)
 
 bool CEnemyAIDecisionUnitCommonParameter::IsViewDataValid(void) const
 {
-    return  (m_numDataViewArea > 0) &&
-            (m_numDataViewArea <= CAIUtils::GetPlayerNum());
+    return (m_numDataViewArea > 0) &&
+           (m_numDataViewArea <= CAIUtils::GetPlayerNum());
 };
 
 
@@ -800,20 +795,14 @@ int32 CEnemyAIDecisionUnitCommonParameter::GetEnableDataNum(void) const
 const CAIUtils::NEARER_PLAYERDATA&
 CEnemyAIDecisionUnitCommonParameter::GetEnableData(int32 index)
 {
-    ASSERT(index >= 0);
-    ASSERT(index < m_numPlayerEnable);
-
-    return *m_apDataViewArea[index];
+    return *CAIUtils::GetNearerPlayerData(index);
 };
 
 
 const CAIUtils::NEARER_PLAYERDATA&
 CEnemyAIDecisionUnitCommonParameter::GetEnableData(int32 index) const
 {
-    ASSERT(index >= 0);
-    ASSERT(index < m_numPlayerEnable);
-
-    return *m_apDataViewArea[index];
+    return *CAIUtils::GetNearerPlayerData(index);
 };
 
 
@@ -998,7 +987,7 @@ bool CEnemyAIDecisionUnitManager::ProcThinkingFrequency(void)
     if (EnemyChr().AIThinkOrder().GetOrder() != CAIThinkOrder::ORDER_WAIT)
     {
         EnemyChr().AIThinkOrder().SetOrder(CAIThinkOrder::ORDER_WAIT);
-        EnemyChr().AIThinkOrder().OrderWait().m_iWaitType = 0;
+        EnemyChr().AIThinkOrder().OrderWait().m_iWaitType = BASEAI6045::ORDERTYPE_WAIT_IDLE;
         EnemyChr().AIThinkOrder().OrderWait().m_fWaitTimer = 0.0f;
     };
 
@@ -1017,7 +1006,6 @@ bool CEnemyAIDecisionUnitManager::ProcAIThinkOrderResult(void)
         m_pAIDecisionUnitCommonParameter->UpdatePlayerStatusData();
 
         CEnemyAIDecisionUnit* pDecisionUnit = CheckRunnableUnit();
-
         if (pDecisionUnit)
             SetNowDecisionUnit(pDecisionUnit);
 
@@ -1050,7 +1038,6 @@ void CEnemyAIDecisionUnitManager::ProcUpdateUnit(void)
     case CEnemyAIDecisionUnit::RESULT_END:
         {
             CEnemyAIDecisionUnit* pDecisionUnit = CheckRunnableUnit();
-
             if (pDecisionUnit && (pDecisionUnit->GetID() != m_pNowDecisionUnit->GetID()))
                 SetNowDecisionUnit(pDecisionUnit);
         }
@@ -1059,7 +1046,6 @@ void CEnemyAIDecisionUnitManager::ProcUpdateUnit(void)
     case CEnemyAIDecisionUnit::RESULT_STOP:
         {
             CEnemyAIDecisionUnit* pDecisionUnit = CheckRunnableUnit();
-
             if (pDecisionUnit)
                 SetNowDecisionUnit(pDecisionUnit);
         }
@@ -2070,18 +2056,17 @@ bool CBaseAI6045::CDecisionUnitMoveBoss::ThinkMoveOrderStraightLineForBoss(void)
     int32 numPlayerEnable = DecisionUnitCommonParameter().GetEnableDataNum();
     for (int32 i = 0; i < numPlayerEnable; ++i)
     {
-        const CAIUtils::NEARER_PLAYERDATA* pNearerPlayerData = CAIUtils::GetNearerPlayerData(i);
-        ASSERT(pNearerPlayerData != nullptr);
+        const CAIUtils::NEARER_PLAYERDATA& nearerPlayerData = DecisionUnitCommonParameter().GetEnableData(i);
 
-        if (pNearerPlayerData->distance < m_fMoveStopDistance)
+        if (nearerPlayerData.distance < m_fMoveStopDistance)
         {
-            if (!CAIUtils6045::CheckObstacleBetweenEnemyToPlayer(&EnemyChr().Compositor(), pNearerPlayerData->no, false))
+            if (!CAIUtils6045::CheckObstacleBetweenEnemyToPlayer(&EnemyChr().Compositor(), nearerPlayerData.no, false))
                 break;
         };
 
         RwV3d vecStart = Math::VECTOR3_ZERO;
         RwV3d vecEnd = Math::VECTOR3_ZERO;
-        if (GetCheckObstacleLine(pNearerPlayerData->no, &vecStart, &vecEnd))
+        if (GetCheckObstacleLine(nearerPlayerData.no, &vecStart, &vecEnd))
         {
             float fJumpInitSpeed = EnemyChr().Feature().m_fJumpInitializeSpeed;
             float fMapHitRadius = CAIUtils::GetMapHitRadius(&EnemyChr().Compositor());            
@@ -2094,8 +2079,8 @@ bool CBaseAI6045::CDecisionUnitMoveBoss::ThinkMoveOrderStraightLineForBoss(void)
 
             if (checkMoveLineResult == CAIUtils::CHECKMOVELINE_RESULT_PERMISSION)
             {
-                m_orderTargetNo = pNearerPlayerData->no;
-                m_orderType = (IsMoveToRun(pNearerPlayerData->distance) ?
+                m_orderTargetNo = nearerPlayerData.no;
+                m_orderType = (IsMoveToRun(nearerPlayerData.distance) ?
                                 BASEAI6045::ORDERTYPE_MOVE_RUN_NO :
                                 BASEAI6045::ORDERTYPE_MOVE_WALK_NO);
 
@@ -2544,7 +2529,7 @@ CBaseAI6045::CDecisionUnitAttackNormal::CDecisionUnitAttackNormal(const char* ps
 
 /*virtual*/ bool CBaseAI6045::CDecisionUnitAttackNormal::CheckTerm(void) /*override*/
 {
-    if (!DecisionUnitCommonParameter().IsAttack())
+    if (!DecisionUnitCommonParameter().IsAttackPermission())
         return false;
 
     if (!DecisionUnitCommonParameter().IsViewDataValid())
@@ -2600,7 +2585,7 @@ CBaseAI6045::CDecisionUnitAttackNormalForUnusualStatus::CDecisionUnitAttackNorma
 
 /*virtual*/ bool CBaseAI6045::CDecisionUnitAttackNormalForUnusualStatus::CheckTerm(void) /*override*/
 {
-    if (!DecisionUnitCommonParameter().IsAttack())
+    if (!DecisionUnitCommonParameter().IsAttackPermission())
         return false;
 
     if (!DecisionUnitCommonParameter().IsViewDataValid())
@@ -2655,7 +2640,7 @@ CBaseAI6045::CDecisionUnitAttackToAir::CDecisionUnitAttackToAir(void)
 
 /*virtual*/ bool CBaseAI6045::CDecisionUnitAttackToAir::CheckTerm(void) /*override*/
 {
-    if (!DecisionUnitCommonParameter().IsAttack())
+    if (!DecisionUnitCommonParameter().IsAttackPermission())
         return false;
 
     if (!DecisionUnitCommonParameter().PlayerWatcher().IsHighAttack(m_fDistanceCondition, m_fHeightLow, m_fHeightHigh))
@@ -2669,7 +2654,7 @@ CBaseAI6045::CDecisionUnitAttackToAir::CDecisionUnitAttackToAir(void)
     int32 numEnableData = DecisionUnitCommonParameter().GetEnableDataNum();
     for (int32 i = 0; i < numEnableData; ++i)
     {
-        const CAIUtils::NEARER_PLAYERDATA& nearerPlrDataEnable = *CAIUtils::GetNearerPlayerData(i);
+        const CAIUtils::NEARER_PLAYERDATA& nearerPlrDataEnable = DecisionUnitCommonParameter().GetEnableData(i);
 
         if (nearerPlrDataEnable.no == nearerPlrDataWatch.no)
         {
@@ -2727,7 +2712,7 @@ CBaseAI6045::CDecisionUnitAttackOverInterval::CDecisionUnitAttackOverInterval(co
 
 /*virtual*/ bool CBaseAI6045::CDecisionUnitAttackOverInterval::CheckTerm(void) /*override*/
 {
-    if (!DecisionUnitCommonParameter().IsAttack())
+    if (!DecisionUnitCommonParameter().IsAttackPermission())
         return false;
 
     if (!DecisionUnitCommonParameter().IsEnableDataValid())
@@ -2789,7 +2774,7 @@ CBaseAI6045::CDecisionUnitAttackCounter::CDecisionUnitAttackCounter(const char* 
 
 /*virtual*/ bool CBaseAI6045::CDecisionUnitAttackCounter::CheckTerm(void) /*override*/
 {
-    if (!DecisionUnitCommonParameter().IsAttack())
+    if (!DecisionUnitCommonParameter().IsAttackPermission())
         return false;
 
     if (!DecisionUnitCommonParameter().IsViewDataValid())
@@ -2846,7 +2831,7 @@ CBaseAI6045::CDecisionUnitAttackThrow::CDecisionUnitAttackThrow(const char* pszU
 
 /*virtual*/ bool CBaseAI6045::CDecisionUnitAttackThrow::CheckTerm(void) /*override*/
 {
-    if (!m_pAIDecisionUnitCommonParameter->IsAttack())
+    if (!m_pAIDecisionUnitCommonParameter->IsAttackPermission())
         return false;
 
     int32 numViewData = m_pAIDecisionUnitCommonParameter->GetViewDataNum();

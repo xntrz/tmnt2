@@ -60,7 +60,7 @@ namespace BASELEATHERHEAD
         static const char* ATTACK_E2    = "E2";
         static const char* ATTACK_E3    = "E3";
         static const char* KNOCK_SWIM   = "YSwim";
-    }; /* namespace MOTIONNAMES */
+    };
 
     enum STATUS
     {
@@ -70,8 +70,8 @@ namespace BASELEATHERHEAD
         STATUS_ATTACK_E,
         STATUS_ATTACK_E_STUN,
         STATUS_ATTACK_COUNTER,
-    }; /* enum STATUS */
-}; /* namespace BASELEATHERHEAD */
+    };
+};
 
 
 class CBaseLeatherheadChr : public CBaseChr6045

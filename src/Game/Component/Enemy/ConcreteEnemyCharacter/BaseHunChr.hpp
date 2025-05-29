@@ -10,11 +10,11 @@ namespace BASEHUN
 
     namespace MOTIONNAMES
     {
-        static const char* ATTACK_D = "D";
+        static const char* ATTACK_D  = "D";
         static const char* ATTACK_F1 = "JAttack1";
         static const char* ATTACK_F2 = "JAttack2";
         static const char* ATTACK_F3 = "JAttack3";
-    }; /* namespace MOTIONNAMES */
+    };
 
     enum STATUS
     {
@@ -23,8 +23,8 @@ namespace BASEHUN
         STATUS_ATTACK_F_CONNECT,
         STATUS_BURST_FLYAWAY,
         STATUS_BURST_FLYAWAY_BOUND,
-    }; /* enum STATUS */
-}; /* namespace BASEKARAI */
+    };
+};
 
 
 class CBaseHunChr : public CBaseChr6045

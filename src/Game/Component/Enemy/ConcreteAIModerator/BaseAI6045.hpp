@@ -24,7 +24,6 @@ namespace BASEAI6045
         FREQUENCY_TRIGGER_PLRSTATUS,
     };
 
-    /* CAIThinkOrder wait order type */
     enum ORDERTYPE_WAIT
     {
         ORDERTYPE_WAIT_IDLE = 0,
@@ -32,7 +31,6 @@ namespace BASEAI6045
         ORDERTYPE_WAIT_TURN_NO,
     };
 
-    /* CAIThinkOrder move order type */
     enum ORDERTYPE_MOVE
     {
         ORDERTYPE_MOVE_WALK_POS = 0,
@@ -45,7 +43,6 @@ namespace BASEAI6045
         ORDERTYPE_MOVE_EXTEND = 9,    
     };
 
-    /* CAIThinkOrder attack order type */
     enum ORDERTYPE_ATTACK
     {
         ORDERTYPE_ATTACK_NORMAL = 0,
@@ -88,7 +85,7 @@ namespace BASEAI6045
                                         | FLAG_TRIGGER_ATTACK_PERMIT
                                         | FLAG_TRIGGER_ESCAPE_PERMIT
                                         | FLAG_TRIGGER_REDUCTIONHP_PERMIT,
-    }; /* enum SPECIAL_FLAG */
+    };
 
     DEFINE_ENUM_FLAG_OPS(SPECIAL_FLAG);
 
@@ -104,8 +101,8 @@ namespace BASEAI6045
         static const char* ATTACK_TOAIR        = "AttackToAir";
         static const char* ATTACK_THROW        = "AttackThrow";
         static const char* ATTACK_COUNTER      = "AttackCounter";
-    }; /* namespace AIDECISIONUNITNAME */
-}; /* namespace BASEAI6045 */
+    };
+};
 
 
 class CEnemyAIDecisionUnitCommonParameter;
@@ -225,9 +222,9 @@ public:
     void SetAttackWaitTime(float fTimer);
     void SetWaitTimerAllPlayerDown(float fTimer);
     bool IsAttackTime(void) const;
-    bool IsAttack(void) const;
+    bool IsAttackPermission(void) const;
     bool IsMoveTime(void) const;
-    bool IsMove(void) const;
+    bool IsMovePermission(void) const;
     float GetAttackInterval(void) const;
     float GetRatioOfActivity(void) const;
     float GetRatioOfMove(void) const;

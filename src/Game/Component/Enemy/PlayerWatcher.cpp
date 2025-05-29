@@ -300,16 +300,23 @@ uint32 CPlayerStateWatcher::Sub_GetStateFlag(PLAYERTYPES::STATUS eStatus) const
 
 
 CPlayerWatcher::CPlayerWatcher(void)
-: m_LastAttackType(0)
+: m_aPlayerData()
+, m_lastAttackerType(GAMEOBJECTTYPE::MAX)
 , m_vMyPos(Math::VECTOR3_ZERO)
 , m_vMyPosOld(Math::VECTOR3_ZERO)
+, m_fMyAngle(0.0f)
 , m_eTargetType(TARGET_TYPE_TEMP)
-, m_pEnemyChara(nullptr)    
+, m_pEnemyChara(nullptr)
+, m_aPlayerJump()
+, m_aPlayerKnife()
+, m_aPlayerStatusCurr()
+, m_aPlayerStatusPrev()
 {
-    std::memset(m_aPlayerJump, 0x00, sizeof(m_aPlayerJump));
-    std::memset(m_aPlayerData, 0x00, sizeof(m_aPlayerData));
-    std::memset(m_aPlayerStatusCurr, 0x00, sizeof(m_aPlayerStatusCurr));
-    std::memset(m_aPlayerStatusPrev, 0x00, sizeof(m_aPlayerStatusPrev));
+    std::memset(m_aPlayerJump, 0, sizeof(m_aPlayerJump));
+    std::memset(m_aPlayerData, 0, sizeof(m_aPlayerData));
+    std::memset(m_aPlayerStatusCurr, 0, sizeof(m_aPlayerStatusCurr));
+    std::memset(m_aPlayerStatusPrev, 0, sizeof(m_aPlayerStatusPrev));
+
     ClearTargetType();
 };
 
@@ -860,7 +867,20 @@ bool CPlayerWatcher::IsLeoDash(float fLength)
 };
 
 
-int32 CPlayerWatcher::GetPlayerNumThere(RwV3d* pvCenter, float fRadius)
+bool CPlayerWatcher::IsPlayerGuardState(int32 iPlayerIndex /*= -1*/)
+{
+    iPlayerIndex = PlayerIndexCorrection(iPlayerIndex);
+    if (iPlayerIndex == -1)
+        return false;
+    
+    if (!IsGuardState(iPlayerIndex))
+        return false;
+
+    return true;
+};
+
+
+int32 CPlayerWatcher::GetPlayerNumThere(float fRadius, RwV3d* pvCenter /*= nullptr*/)
 {
     int32 numPlayersInPos = 0;
     int32 numPlayersDown = 0;
@@ -919,7 +939,7 @@ bool CPlayerWatcher::IsTogether(int32 iPlayerNum, float fRadius)
         RwV3d vecFootPosPlr = Math::VECTOR3_ZERO;
         pPlayerChr->GetFootPosition(&vecFootPosPlr);
 
-        if (GetPlayerNumThere(&vecFootPosPlr, fRadius) >= iPlayerNum)
+        if (GetPlayerNumThere(fRadius, &vecFootPosPlr) >= iPlayerNum)
         {
             float fDist = GetDistanceFromPlayer(i, &m_vMyPos);
             if (fDist < fDistNearest)
@@ -1069,4 +1089,16 @@ int32 CPlayerWatcher::PlayerIndexCorrection(int32 iPlayerIndex) const
         return GetPlayerData(PLAYER_DATA_TEMP).no;
     
     return iPlayerIndex;
+};
+
+
+void CPlayerWatcher::SetLastAttackerType(GAMEOBJECTTYPE::VALUE goType)
+{
+    m_lastAttackerType = goType;
+};
+
+
+GAMEOBJECTTYPE::VALUE CPlayerWatcher::GetLastAttackerType(void) const
+{
+    return m_lastAttackerType;
 };

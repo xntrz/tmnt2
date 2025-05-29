@@ -11,12 +11,12 @@ namespace BASERAZORFIST_AI
         ORDERTYPE_ATTACK_B,
         ORDERTYPE_ATTACK_C,
         ORDERTYPE_ATTACK_D,
-    }; /* enum ORDERTYPE_ATTACK */
+    };
 
     enum CATCHTRIGGER : uint32
     {
         CATCHTRIGGER_COUNTER = (1 << 0),
-    }; /* enum CATCHTRIGGER */
+    };
 
     DEFINE_ENUM_FLAG_OPS(CATCHTRIGGER);
 
@@ -26,8 +26,8 @@ namespace BASERAZORFIST_AI
         static const char* ATTACK_B = "AttackB";
         static const char* ATTACK_C = "AttackC";
         static const char* ATTACK_D = "AttackD";
-    }; /* namespace AIDECISIONUNITNAME */
-}; /* namespace BASERAZORFIST_AI */
+    };
+};
 
 
 class CBaseRazorfistAI : public CBaseAI6045

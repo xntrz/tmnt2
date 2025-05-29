@@ -69,7 +69,16 @@ bool CEnemyTestStageSequence::OnAttach(const void* pParam)
 
     ENEMYID::VALUE enemyId = static_cast<ENEMYID::VALUE>(reinterpret_cast<int32>(pParam));
     PushEnemy(enemyId);
-    PushEnemy(ENEMYID::ID_FOOT_NINJA_SWORD);
+    if (enemyId == ENEMYID::ID_ELITE_FOOT_A)
+    {
+        PushEnemy(ENEMYID::ID_ELITE_FOOT_B);
+        PushEnemy(ENEMYID::ID_ELITE_FOOT_C);
+        PushEnemy(ENEMYID::ID_ELITE_FOOT_D);
+        PushEnemy(ENEMYID::ID_ELITE_FOOT_DUMMY_A);
+        PushEnemy(ENEMYID::ID_ELITE_FOOT_DUMMY_B);
+        PushEnemy(ENEMYID::ID_ELITE_FOOT_DUMMY_C);
+        PushEnemy(ENEMYID::ID_ELITE_FOOT_DUMMY_D);
+    };
 
     /* init attribute */
     CGameData::Attribute().SetGamemode(GAMETYPES::GAMEMODE_NORMAL);

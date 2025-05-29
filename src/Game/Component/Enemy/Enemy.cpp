@@ -58,12 +58,19 @@
 #include "ConcreteEnemyCharacter/072NinjaRatsC.hpp"
 #include "ConcreteEnemyCharacter/073NinjaRatsD.hpp"
 #include "ConcreteEnemyCharacter/075Leatherhead.hpp"
+#include "ConcreteEnemyCharacter/076EliteFootA.hpp"
+#include "ConcreteEnemyCharacter/077EliteFootB.hpp"
+#include "ConcreteEnemyCharacter/078EliteFootC.hpp"
+#include "ConcreteEnemyCharacter/079EliteFootD.hpp"
 #include "ConcreteEnemyCharacter/081Spasmosaur.hpp"
 #include "ConcreteEnemyCharacter/082Hun.hpp"
 #include "ConcreteEnemyCharacter/083Hun.hpp"
 #include "ConcreteEnemyCharacter/084Karai.hpp"
+#include "ConcreteEnemyCharacter/085MiyamotoUsagi.hpp"
+#include "ConcreteEnemyCharacter/086FootMechSplinter.hpp"
 #include "ConcreteEnemyCharacter/087Slashuur.hpp"
 #include "ConcreteEnemyCharacter/091Drako.hpp"
+#include "ConcreteEnemyCharacter/096Splinter.hpp"
 #include "ConcreteEnemyCharacter/098Fugitoid.hpp"
 
 #include "Game/Component/GameData/GameData.hpp"
@@ -114,7 +121,7 @@ static CEnemyCharacter* CreateEnemyCharacter(ENEMYID::VALUE id)
 
     switch (id)
     {
-    case ENEMYID::ID_DUMMY:                         return nullptr;
+    case ENEMYID::ID_DUMMY:                         return new C000Dummy;
     case ENEMYID::ID_PURPLE_DRAGON_GANG:            return new C001PurpleDragonGang;
     case ENEMYID::ID_FOOT_NINJA_SWORD:              return new C002FootNinja;
     case ENEMYID::ID_FOOT_NINJA_STAFF:              return new C003FootNinja;
@@ -167,12 +174,23 @@ static CEnemyCharacter* CreateEnemyCharacter(ENEMYID::VALUE id)
     case ENEMYID::ID_NINJA_RATS_C:                  return new C072NinjaRatsC;
     case ENEMYID::ID_NINJA_RATS_D:                  return new C073NinjaRatsD;
     case ENEMYID::ID_LEATHER_HEAD:                  return new C075Leatherhead;
+    case ENEMYID::ID_ELITE_FOOT_A:                  return new C076EliteFootA;
+    case ENEMYID::ID_ELITE_FOOT_DUMMY_A:            return new C076EliteFootDummyA;
+    case ENEMYID::ID_ELITE_FOOT_B:                  return new C077EliteFootB;
+    case ENEMYID::ID_ELITE_FOOT_DUMMY_B:            return new C077EliteFootDummyB;
+    case ENEMYID::ID_ELITE_FOOT_C:                  return new C078EliteFootC;
+    case ENEMYID::ID_ELITE_FOOT_DUMMY_C:            return new C078EliteFootDummyC;
+    case ENEMYID::ID_ELITE_FOOT_D:                  return new C079EliteFootD;
+    case ENEMYID::ID_ELITE_FOOT_DUMMY_D:            return new C079EliteFootDummyD;
     case ENEMYID::ID_SPASMOSAUR:                    return new C081Spasmosaur;
     case ENEMYID::ID_HUN_A:                         return new C082Hun;
     case ENEMYID::ID_HUN_B:                         return new C083Hun;
     case ENEMYID::ID_KARAI:                         return new C084Karai;
+    case ENEMYID::ID_MIYAMOTO_USAGI:                return new C085MiyamotoUsagi;
+    case ENEMYID::ID_FOOT_MECH_SPLINTER:            return new C086FootMechSplinter;
     case ENEMYID::ID_SLASSHUR:                      return new C087Slashuur;
     case ENEMYID::ID_DORAKO:                        return new C091Drako;
+    case ENEMYID::ID_SPLINTER:                      return new C096Splinter;
     case ENEMYID::ID_FUGITOID:                      return new C098Fugitoid;
     default: break;
     };
@@ -185,7 +203,7 @@ static EFFECTID::VALUE GetEnemyCharacterNeededEffect(ENEMYID::VALUE enemyId, int
 {
     switch (enemyId)
     {
-    case ENEMYID::ID_DUMMY:                         return EFFECTID::ID_UNKNOWN;
+    case ENEMYID::ID_DUMMY:                         return C000Dummy::GetNeededEffect(no);
     case ENEMYID::ID_PURPLE_DRAGON_GANG:            return C001PurpleDragonGang::GetNeededEffect(no);
     case ENEMYID::ID_FOOT_NINJA_SWORD:              return C002FootNinja::GetNeededEffect(no);
     case ENEMYID::ID_FOOT_NINJA_STAFF:              return C003FootNinja::GetNeededEffect(no);
@@ -238,12 +256,23 @@ static EFFECTID::VALUE GetEnemyCharacterNeededEffect(ENEMYID::VALUE enemyId, int
     case ENEMYID::ID_NINJA_RATS_C:                  return C072NinjaRatsC::GetNeededEffect(no);
     case ENEMYID::ID_NINJA_RATS_D:                  return C073NinjaRatsD::GetNeededEffect(no);
     case ENEMYID::ID_LEATHER_HEAD:                  return C075Leatherhead::GetNeededEffect(no);
+    case ENEMYID::ID_ELITE_FOOT_A:                  return C076EliteFootA::GetNeededEffect(no);
+    case ENEMYID::ID_ELITE_FOOT_DUMMY_A:            return C076EliteFootDummyA::GetNeededEffect(no);
+    case ENEMYID::ID_ELITE_FOOT_B:                  return C077EliteFootB::GetNeededEffect(no);
+    case ENEMYID::ID_ELITE_FOOT_DUMMY_B:            return C077EliteFootDummyB::GetNeededEffect(no);
+    case ENEMYID::ID_ELITE_FOOT_C:                  return C078EliteFootC::GetNeededEffect(no);
+    case ENEMYID::ID_ELITE_FOOT_DUMMY_C:            return C078EliteFootDummyC::GetNeededEffect(no);
+    case ENEMYID::ID_ELITE_FOOT_D:                  return C079EliteFootD::GetNeededEffect(no);
+    case ENEMYID::ID_ELITE_FOOT_DUMMY_D:            return C079EliteFootDummyD::GetNeededEffect(no);
     case ENEMYID::ID_SPASMOSAUR:                    return C081Spasmosaur::GetNeededEffect(no);
     case ENEMYID::ID_HUN_A:                         return C082Hun::GetNeededEffect(no);
     case ENEMYID::ID_HUN_B:                         return C083Hun::GetNeededEffect(no);
     case ENEMYID::ID_KARAI:                         return C084Karai::GetNeededEffect(no);
+    case ENEMYID::ID_MIYAMOTO_USAGI:                return C085MiyamotoUsagi::GetNeededEffect(no);
+    case ENEMYID::ID_FOOT_MECH_SPLINTER:            return C086FootMechSplinter::GetNeededEffect(no);
     case ENEMYID::ID_SLASSHUR:                      return C087Slashuur::GetNeededEffect(no);
     case ENEMYID::ID_DORAKO:                        return C091Drako::GetNeededEffect(no);
+    case ENEMYID::ID_SPLINTER:                      return C096Splinter::GetNeededEffect(no);
     case ENEMYID::ID_FUGITOID:                      return C098Fugitoid::GetNeededEffect(no);
     default: break;
     };
@@ -256,12 +285,15 @@ static STAGEID::VALUE GetEnemyCharacterStageId(ENEMYID::VALUE enemyId)
 {
     switch (enemyId)
     {
-    case ENEMYID::ID_LEATHER_HEAD:  return STAGEID::ID_ST44NB;
-    case ENEMYID::ID_HUN_A:         return STAGEID::ID_ST02NB;
-    case ENEMYID::ID_HUN_B:         return STAGEID::ID_ST56NB;
-    case ENEMYID::ID_KARAI:         return STAGEID::ID_ST57NB;
-    case ENEMYID::ID_SLASSHUR:      return STAGEID::ID_ST50NB;
-    case ENEMYID::ID_DORAKO:        return STAGEID::ID_ST60X_D10;
+    case ENEMYID::ID_LEATHER_HEAD:          return STAGEID::ID_ST44NB;
+    case ENEMYID::ID_HUN_A:                 return STAGEID::ID_ST02NB;
+    case ENEMYID::ID_HUN_B:                 return STAGEID::ID_ST56NB;
+    case ENEMYID::ID_KARAI:                 return STAGEID::ID_ST57NB;
+    case ENEMYID::ID_MIYAMOTO_USAGI:        return STAGEID::ID_ST60X_D09;
+    case ENEMYID::ID_FOOT_MECH_SPLINTER:    return STAGEID::ID_ST47OB;
+    case ENEMYID::ID_SLASSHUR:              return STAGEID::ID_ST50NB;
+    case ENEMYID::ID_DORAKO:                return STAGEID::ID_ST60X_D10;
+    case ENEMYID::ID_SPLINTER:              return STAGEID::ID_ST60X_D07;
     default: break;
     };
 
@@ -425,4 +457,10 @@ const CEnemyCharacter& CEnemy::Character(void) const
 {
     ASSERT(m_pEnemyCharacter);
     return *m_pEnemyCharacter;
+};
+
+
+ENEMYID::VALUE CEnemy::GetID(void) const
+{
+    return Character().GetID();
 };

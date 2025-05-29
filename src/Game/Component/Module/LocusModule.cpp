@@ -8,6 +8,10 @@
 #include "Game/System/Texture/TextureManager.hpp"
 
 
+static const char* LOCUSMODULE_TXD_NAME = "common_ef";
+static const char* LOCUSMODULE_TEXTURE_NAME = "sword";
+
+
 CLocusModule::CLocusModule(CModel* pModel, LOCUSPARAMETER* pLocusParameter, int32 nNumLocus)
 : IModule(MODULETYPE::LOCUS)
 , m_pModel(pModel)
@@ -15,27 +19,26 @@ CLocusModule::CLocusModule(CModel* pModel, LOCUSPARAMETER* pLocusParameter, int3
 , m_vPositionHigh(Math::VECTOR3_ZERO)
 , m_vPositionLow(Math::VECTOR3_ZERO)
 {
-    std::memset(m_apLocus, 0x00, sizeof(m_apLocus));
+    for (int32 i = 0; i < COUNT_OF(m_apLocus); ++i)
+        m_apLocus[i] = nullptr;
+
     std::memset(m_aLocusParameter, 0x00, sizeof(m_aLocusParameter));
 
     ASSERT(m_pModel);
     ASSERT(m_nNumLocus <= LOCUS_NUM_MAX);
 
-    CTextureManager::SetCurrentTextureSet("common_ef");
-    RwTexture* pTexture = CTextureManager::GetRwTexture("sword");
+    CTextureManager::SetCurrentTextureSet(LOCUSMODULE_TXD_NAME);
+    RwTexture* pTexture = CTextureManager::GetRwTexture(LOCUSMODULE_TEXTURE_NAME);
     ASSERT(pTexture);
 
     for (int32 i = 0; i < m_nNumLocus; ++i)
     {
-        CLocus* pLocus = new CLocus(20, { 0xFF, 0xFF,0xFF,0xFF });
-        ASSERT(pLocus);
-        m_apLocus[i] = pLocus;
-
         LOCUSPARAMETER* pParameter = &pLocusParameter[i];
-        
-        pLocus->SetTexture(pTexture);
-        pLocus->SetColor(pParameter->m_Color);
-        pLocus->SetAlphaBasis(pParameter->m_Color.alpha);
+
+        m_apLocus[i] = new CLocus(20, { 0xFF, 0xFF,0xFF,0xFF });
+        m_apLocus[i]->SetTexture(pTexture);
+        m_apLocus[i]->SetColor(pParameter->m_Color);
+        m_apLocus[i]->SetAlphaBasis(pParameter->m_Color.alpha);
 
         m_aLocusParameter[i].m_Color = pParameter->m_Color;
         m_aLocusParameter[i].m_nBoneID = pParameter->m_nBoneID;
@@ -152,6 +155,11 @@ void CLocusModule::DrawLocus(void)
 };
 
 
+//
+// *********************************************************************************
+//
+
+
 /*static*/ CLocusModuleForCharacter* CLocusModuleForCharacter::New(CCharacter* pCharacter)
 {    
     ASSERT(pCharacter);
@@ -159,12 +167,10 @@ void CLocusModule::DrawLocus(void)
     CMotionParameterController* pMPController = pCharacter->GetMotionParameterController();
     ASSERT(pMPController);
 
-    CLocusModuleForCharacter* pResult = nullptr;
-    
     int32 nNumLocus = pMPController->GetNumLocus();
     if (!nNumLocus)
-        return pResult;
-
+        return nullptr;
+    
     ASSERT(nNumLocus <= LOCUS_NUM_MAX);
 
     LOCUSPARAMETER aLocusParameter[LOCUS_NUM_MAX] = { 0 };
@@ -181,16 +187,9 @@ void CLocusModule::DrawLocus(void)
         aLocusParameter[i].m_vPositionLow = MPLocusParameter.m_vPositionLow;
     };
 
-    pResult = new CLocusModuleForCharacter(pCharacter, aLocusParameter, nNumLocus);
-    ASSERT(pResult);
-
-    return pResult;
+    CLocusModuleForCharacter* pModule = new CLocusModuleForCharacter(pCharacter, aLocusParameter, nNumLocus);
+    return pModule;
 };
-
-
-//
-// *********************************************************************************
-//
 
 
 CLocusModuleForCharacter::CLocusModuleForCharacter(CCharacter* pCharacter, LOCUSPARAMETER* pLocusParameter, int32 nNumLocus)
@@ -291,10 +290,7 @@ void CLocusModuleContainer::Run(void)
 void CLocusModuleContainer::Draw(void)
 {
     for (LOCUSWORK& it : m_listWorkAlloc)
-    {
-        ASSERT(it.m_pModule);
         it.m_pModule->DrawLocus();
-    };
 };
 
 
@@ -303,9 +299,7 @@ void CLocusModuleContainer::Regist(CLocusModule* pLocusModule)
     ASSERT(pLocusModule);
     ASSERT(!m_listWorkPool.empty());
 
-    LOCUSWORK* pNode = m_listWorkPool.front();
-    ASSERT(!pNode->m_pModule);
-    
+    LOCUSWORK* pNode = m_listWorkPool.front();    
     m_listWorkPool.erase(pNode);
     m_listWorkAlloc.push_back(pNode);
 
@@ -322,22 +316,16 @@ void CLocusModuleContainer::Remove(CLocusModule* pLocusModule)
     
     for (LOCUSWORK& it : m_listWorkAlloc)
     {
-        ASSERT(it.m_pModule);
-        
         if (it.m_pModule == pLocusModule)
         {
             pWork = &it;
-            break;
-        };
-    };
+            pWork->m_pModule = nullptr;
 
-    ASSERT(pWork);
-    if (pWork)
-    {
-        pWork->m_pModule = nullptr;
-        
-        m_listWorkAlloc.erase(pWork);
-        m_listWorkPool.push_back(pWork);
+            m_listWorkAlloc.erase(pWork);
+            m_listWorkPool.push_back(pWork);
+
+            return;
+        };
     };
 };
 

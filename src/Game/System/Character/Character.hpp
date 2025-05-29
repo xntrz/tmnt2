@@ -144,6 +144,8 @@ public:
     void StopMotion(void);
     bool IsMotionEnd(void) const;
     void SetMotionTime(float fTime);
+    void SetMotionCtrlTime(float fTime);
+    void ClearMotionCtrlTime(void);
     float GetMotionTime(void) const;
     float GetMotionEndTime(void) const;
     const char* GetMotionName(void) const;
@@ -158,6 +160,7 @@ public:
     void SetGimmickInfo(COLLISION_GIMMICK_INFO* pCollGimmickInfo, MAPTYPES::HITTYPE hittype);
     void GetPosition(RwV3d* pvPosition) const;
     void GetVelocity(RwV3d* pvVelocity) const;
+    const RwV3d& GetVelocity(void) const;
     void GetAcceleration(RwV3d* pvAcceleration) const;
     float GetDirection(void) const;
     CModel* GetModel(void) const;

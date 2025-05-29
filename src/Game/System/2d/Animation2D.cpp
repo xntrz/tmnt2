@@ -544,7 +544,9 @@ void CAnimation2D::SetTexture(const char* pszOrgTexture, const char* pszNewTextu
     Rt2dObject* pScene = Rt2dMaestroGetScene(m_pMaestro);
     ASSERT(pScene);
 
+	/* NOTE: its fine that org tex may be NULL */
     RwTexture* pTextureOrg = CTextureManager::GetRwTexture(pszOrgTexture);    
+
     RwTexture* pTextureNew = CTextureManager::GetRwTexture(pszNewTexture);
     
     ReplaceTexture(pScene, pTextureOrg, pTextureNew);
@@ -554,7 +556,6 @@ void CAnimation2D::SetTexture(const char* pszOrgTexture, const char* pszNewTextu
 void CAnimation2D::ReplaceTexture(Rt2dObject* pScene, RwTexture* pOrgTexture, RwTexture* pNewTexture)
 {
     ASSERT(pScene);
-    ASSERT(pOrgTexture);
     ASSERT(pNewTexture);
 
     int32 childCount = Rt2dSceneGetChildCount(pScene);

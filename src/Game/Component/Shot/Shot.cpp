@@ -17,6 +17,7 @@
 #include "Game/System/Particle/Locus.hpp"
 #include "Game/System/Map/WorldMap.hpp"
 #include "System/Common/RenderState.hpp"
+#include "System/Common/Screen.hpp"
 
 
 namespace
@@ -445,8 +446,7 @@ CShotSpear::~CShotSpear(void)
 
 void CShotSpear::SetModel(void)
 {
-    RwV3d vRot = { -Math::PI05, 0.0f, 0.0f };
-    
+    RwV3d vRot = { -MATH_DEG2RAD(90.0f), 0.0f, 0.0f };    
     m_pModel->SetRotation(&vRot);
     m_pModel->UpdateFrame();
 };
@@ -455,18 +455,27 @@ void CShotSpear::SetModel(void)
 void CShotSpear::Move(void)
 {
     float dt = CGameProperty::GetElapsedTime();
-    
+    const float fSpeed = 7.2f;
+    const float t = (60.0f / fSpeed);
+
     switch (m_step)
     {
     case STEP_FLY:
         {
-            m_vPosition.y -= -1.5f;
-
-            m_vVelocity.x = 0.0f;
-            m_vVelocity.y = (dt * 8.33f);
-            m_vVelocity.z = 0.0f;
-
+            m_vPosition.y -= 1.5f;
+            m_vVelocity = { 0.0f, (dt * t), 0.0f, };
             m_step = STEP_UP;
+        }
+        break;
+
+    case STEP_UP:
+        {
+            if (m_fTimer >= 0.3f)
+            {
+                m_vVelocity = Math::VECTOR3_ZERO;
+                m_fTimer = 0.0f;
+                m_step = STEP_STOP;
+            };
         }
         break;
 
@@ -474,24 +483,9 @@ void CShotSpear::Move(void)
         {
             if (m_fTimer >= 0.2f)
             {
-                m_vVelocity.x = 0.0f;
-                m_vVelocity.y = (dt * -8.33f);
-                m_vVelocity.z = 0.0f;
-                
+                m_vVelocity = { 0.0f, -(dt * t), 0.0f, };                
                 m_fTimer = 0.0f;
                 m_step = STEP_DOWN;
-            };
-        }
-        break;
-        
-    case STEP_UP:
-        {
-            if (m_fTimer >= 0.3f)
-            {
-                m_vVelocity = Math::VECTOR3_ZERO;
-                
-                m_fTimer = 0.0f;
-                m_step = STEP_STOP;
             };
         }
         break;

@@ -37,6 +37,7 @@ public:
     int32 GetHP(void);
     CEnemyCharacter& Character(void);
     const CEnemyCharacter& Character(void) const;
+    ENEMYID::VALUE GetID(void) const;
 
 private:
     CEnemyCharacter* m_pEnemyCharacter;

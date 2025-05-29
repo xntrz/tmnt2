@@ -25,7 +25,7 @@ CBaseHunAI::CDecisionUnitMove::Update(void) /*override*/
     if (m_pBaseHunChr->IsInBurstMode())
         return result;
 
-    if (!m_pAIDecisionUnitCommonParameter->IsAttack())
+    if (!m_pAIDecisionUnitCommonParameter->IsAttackPermission())
         return result;
 
     int32 orderTargetNo = EnemyChr().AIThinkOrder().OrderMove().m_iPlayerNo;
@@ -104,7 +104,7 @@ CBaseHunAI::CDecisionUnitAttackB::CDecisionUnitAttackB(CEnemyCharacter* pEnemyCh
     if (m_pBaseHunChr->IsInBurstMode())
         return false;
 
-    if (!m_pAIDecisionUnitCommonParameter->IsAttack())
+    if (!m_pAIDecisionUnitCommonParameter->IsAttackPermission())
         return false;
 
     int32 numViewData = m_pAIDecisionUnitCommonParameter->GetViewDataNum();
@@ -186,7 +186,7 @@ CBaseHunAI::CDecisionUnitAttackF::CDecisionUnitAttackF(CEnemyCharacter* pEnemyCh
     if (m_pBaseHunChr->GetStatus() == ENEMYTYPES::STATUS_RUN)
         return false;
 
-    if (!m_pAIDecisionUnitCommonParameter->IsAttack())
+    if (!m_pAIDecisionUnitCommonParameter->IsAttackPermission())
         return false;
 
     int32 numViewData = m_pAIDecisionUnitCommonParameter->GetViewDataNum();
@@ -257,7 +257,7 @@ CBaseHunAI::CDecisionUnitAttackFOnTallObject::CDecisionUnitAttackFOnTallObject(v
 
 /*virtual*/ bool CBaseHunAI::CDecisionUnitAttackFOnTallObject::CheckTerm(void) /*override*/
 {
-    if (!m_pAIDecisionUnitCommonParameter->IsAttack())
+    if (!m_pAIDecisionUnitCommonParameter->IsAttackPermission())
         return false;
 
     ENEMYTYPES::STATUS statusNow = EnemyChr().GetStatus();

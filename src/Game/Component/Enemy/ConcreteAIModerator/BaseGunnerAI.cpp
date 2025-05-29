@@ -11,6 +11,9 @@
 #include "Game/System/Map/WorldMap.hpp"
 
 
+#define TMNT2_GUNNER_OPTIMIZE (1)
+
+
 /*static*/ CAIModerator* CBaseGunnerAI::Instance(CEnemyCharacter* pEnemyChr)
 {
     return new CBaseGunnerAI(pEnemyChr);
@@ -131,6 +134,7 @@ CBaseGunnerAI::CBaseGunnerAI(CEnemyCharacter* pEnemyChr)
     if (!pPlayerChr)
         return false;
 
+#if defined(TMNT2_GUNNER_OPTIMIZE)
     float fRatioOfMove = Characteristic().m_fRatioOfMove;
     float fRand = Math::RandFloat();
     if (fRand > fRatioOfMove)
@@ -138,6 +142,7 @@ CBaseGunnerAI::CBaseGunnerAI(CEnemyCharacter* pEnemyChr)
         AIOT::SetMoveOrder(ThinkOrder(), AIOT::MoveTurn, 1.0f, iNo);
         return true;
     };
+#endif /* defined(TMNT2_GUNNER_OPTIMIZE) */
 
     RwV3d vecFootPosPlayer = Math::VECTOR3_ZERO;
     pPlayerChr->GetFootPosition(&vecFootPosPlayer);
@@ -154,6 +159,16 @@ CBaseGunnerAI::CBaseGunnerAI(CEnemyCharacter* pEnemyChr)
     if (fDist >= fRadiusOfAction)
         return false;
 
+#if !defined(TMNT2_GUNNER_OPTIMIZE)
+    float fRatioOfMove = Characteristic().m_fRatioOfMove;
+    float fRand = Math::RandFloat();
+    if (fRand > fRatioOfMove)
+    {
+        AIOT::SetMoveOrder(ThinkOrder(), AIOT::MoveTurn, 1.0f, iNo);
+        return true;
+    };
+#endif /* !defined(TMNT2_GUNNER_OPTIMIZE) */
+
     float fDistanceOfSuitable = Characteristic().m_fDistanceOfSuitable;
     float fTargetDist = m_targetInfo.GetDistance();
     if (fTargetDist > fDistanceOfSuitable)
@@ -163,6 +178,7 @@ CBaseGunnerAI::CBaseGunnerAI(CEnemyCharacter* pEnemyChr)
         if (((fRadiusOfAction * 0.5f) <= fDist) || (Math::RandFloat() < fRatioOfAcitivity))
         {
             AIOT::SetMoveOrder(ThinkOrder(), AIOT::MoveRun, 1.0f, iNo);
+            return true;
         }
         else
         {
@@ -172,11 +188,15 @@ CBaseGunnerAI::CBaseGunnerAI(CEnemyCharacter* pEnemyChr)
             else
                 AIOT::SetMoveOrder(ThinkOrder(), AIOT::MoveWalk, 1.0f, iNo);
         };
-
-        return true;
+    }
+    else
+    {
+        AIOT::TYPE sidewalk = IsTakeSideWalk();
+        if (sidewalk != AIOT::Null)
+            AIOT::SetMoveOrder(ThinkOrder(), sidewalk, 1.0f, iNo);
+        else
+            AIOT::SetMoveOrder(ThinkOrder(), AIOT::MoveTurn, 1.0f, iNo);
     };
-
-    AIOT::SetMoveOrder(ThinkOrder(), AIOT::MoveTurn, 1.0f, iNo);
 
     return true;
 };
@@ -213,7 +233,7 @@ CBaseGunnerAI::CBaseGunnerAI(CEnemyCharacter* pEnemyChr)
     if (fDist < 0.0f)
         return false;
 
-    if (fDist > fRadiusOfAction)
+    if (fDist >= fRadiusOfAction)
         return false;
     
     AIOT::SetMoveOrder(ThinkOrder(), AIOT::MoveRun, 1.0f, &vecPos);
@@ -265,7 +285,7 @@ CBaseGunnerAI::CBaseGunnerAI(CEnemyCharacter* pEnemyChr)
     };
 
     RwV3d vec = Math::VECTOR3_ZERO;
-    Math::Vec3_Sub(&vec, &vecBodyPosEnemy, &vecBodyPosPlayer);
+	Math::Vec3_Sub(&vec, &vecBodyPosPlayer, &vecBodyPosEnemy);
 
     RwMatrix mat;
     RwMatrixSetIdentityMacro(&mat);
@@ -273,11 +293,11 @@ CBaseGunnerAI::CBaseGunnerAI(CEnemyCharacter* pEnemyChr)
 
     RwV3dTransformVector(&vec, &vec, &mat);
 
-    float fAngle = std::atan2(vec.y, vec.z);
+    float fPitchAngle = std::atan2(vec.y, vec.z);
     int32 attackId = AIOT::Null;
 
-    if ((fAngle > -MATH_DEG2RAD(15.0f)) &&
-        (fAngle <  MATH_DEG2RAD(15.0f)))
+    if ((fPitchAngle > -MATH_DEG2RAD(15.0f)) &&
+        (fPitchAngle <  MATH_DEG2RAD(15.0f)))
     {
         // middle
         if (IsSatifyFrequency(CEnemyParameter::FREQUENCY_FIRE_RANGE_RATE))
@@ -289,8 +309,8 @@ CBaseGunnerAI::CBaseGunnerAI(CEnemyCharacter* pEnemyChr)
             attackId = AIOT::FireRepeatB;
         };
     }
-    else if ((fAngle > MATH_DEG2RAD(0.0f)) &&
-             (fAngle < MATH_DEG2RAD(45.0f)))
+    else if ((fPitchAngle > MATH_DEG2RAD(0.0f)) &&
+             (fPitchAngle < MATH_DEG2RAD(45.0f)))
     {
         // down
         if (IsSatifyFrequency(CEnemyParameter::FREQUENCY_FIRE_RANGE_RATE))
@@ -302,8 +322,8 @@ CBaseGunnerAI::CBaseGunnerAI(CEnemyCharacter* pEnemyChr)
             attackId = AIOT::FireRepeatC;
         };
     }
-    else if ((fAngle > -MATH_DEG2RAD(45.0f)) &&
-             (fAngle <  MATH_DEG2RAD(0.0f)))
+    else if ((fPitchAngle > -MATH_DEG2RAD(45.0f)) &&
+             (fPitchAngle <  MATH_DEG2RAD(0.0f)))
     {
         // up
         if (IsSatifyFrequency(CEnemyParameter::FREQUENCY_FIRE_RANGE_RATE))
@@ -333,7 +353,7 @@ CBaseGunnerAI::CBaseGunnerAI(CEnemyCharacter* pEnemyChr)
 
     if (RwCameraFrustumTestSphere(pCamera, &sphere) || (Math::RandFloat() <= fRatioOfActivity))
     {
-        RwV3d vecAt = { 0.0f, 0.0f, -fAngle };
+        RwV3d vecAt = { 0.0f, 0.0f, -fPitchAngle };
         AIOT::SetFireOrder(ThinkOrder(), attackId, iNo, &vecAt);
 
         float fFireInterval = GetFrequency(CEnemyParameter::FREQUENCY_COMMON_ATTACKINTERVAL);

@@ -10,15 +10,15 @@ namespace BASEMOUSER_AI
         ORDERTYPE_ATTACK_A = BASEAI6045::ORDERTYPE_ATTACK_EXTEND,
         ORDERTYPE_ATTACK_B,
         ORDERTYPE_ATTACK_C,
-    }; /* enum ORDERTYPE_ATTACK */
+    };
 
     namespace AIDECISIONUNITNAME
     {
         static const char* ATTACK_A = "AttackA";
         static const char* ATTACK_B = "AttackB";
         static const char* ATTACK_C = "AttackC";
-    }; /* namespace AIDECISIONUNITNAME */
-}; /* namespace BASEMOUSER_AI */
+    };
+};
 
 
 class CBaseMouserAI : public CBaseAI6045
