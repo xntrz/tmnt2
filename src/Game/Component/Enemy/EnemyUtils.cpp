@@ -335,10 +335,6 @@ float CEnemyUtils::CKnockBackControl::GetPlayerNumRate(void) const
     if (stageMapId)
         return (stageMapId == idMap);
 
-    /**
-     * compare map names if stage map invalid
-     */
-
     /* extract world map name */
     const CWorldMap::MAPINFO* pMapInfo = CWorldMap::GetMapInfo();
     if (!pMapInfo)

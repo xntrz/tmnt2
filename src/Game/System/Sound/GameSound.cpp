@@ -1229,10 +1229,6 @@ static void SdSetAttackEnemy(const SE_ATTACK_PARAM* pParam)
     }
     else
 	{
-		/**
-		 *	Tables of character SE that should be supressed before voice play
-		 */
-
 		// leo
 		static uint32 SdSeFadeTblLeo[] =
 		{

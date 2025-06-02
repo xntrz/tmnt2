@@ -2,14 +2,6 @@
 
 #ifdef _DEBUG
 
-/**
- *  Since retail game files are packed into LPAC containers this sequence allows to
- *  print it or extract specified file (and then load it from disk for tests separately e.g enemies, gimmicks and so on)
- *
- *  NOTE: This process works as sequence in single request mode due CDataLoader completion intercept
- *        Posting request via Print or Extract funcs will call sequence and returns to your sequence on completion
- */
-
 void ExtractLPACFile(class CSequence* pCaller, int32 fileId, const char* pszFilename);
 void PrintLPACFile(class CSequence* pCaller, int32 fileId);
 

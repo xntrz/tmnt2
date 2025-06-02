@@ -30,7 +30,7 @@ do 															\
 #define SDFATAL(reason, ...)	SdFatal(reason, ##__VA_ARGS__)
 
 
-/**
+/*
  * All function that should exist but not implemented(or some may be implemented) due of unusing in PC version of game
  * is marked with this macro in their bodies, mostly of this functions is: seq, seq ctrl or drv ctrl module
  */

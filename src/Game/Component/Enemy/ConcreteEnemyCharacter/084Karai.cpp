@@ -43,7 +43,7 @@ C084Karai::C084Karai(void)
 
     uint8 aFreqTable[][GAMETYPES::DIFFICULTY_NUM] =
     {
-        /**
+        /*
          *  _B - base mode
          *  _W - warning mode (red stars aura)
          *  _F - final mode (red circle aura)

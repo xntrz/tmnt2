@@ -66,7 +66,7 @@ static inline bool IsDuplicateCharacterExist(const char* pszName)
 
 static const char* CorrectNameFromDuplicate(const char* pszName)
 {
-    /**
+    /*
      *  There is able to create multiple characters of same type but it should have different name
      *  to avoid broke some mechanics that relate on object find by name (e.g. party throw)
      */

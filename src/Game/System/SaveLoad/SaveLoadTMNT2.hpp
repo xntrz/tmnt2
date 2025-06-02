@@ -15,7 +15,7 @@ struct TMNT2_SAVE_DATA
 static_assert(std::is_pod<TMNT2_SAVE_DATA>::value, "TMNT2_SAVE_DATA should be POD type");
 
 
-/**
+/*
  *  data size checkouts for retail game saveload compatibility
  */
 

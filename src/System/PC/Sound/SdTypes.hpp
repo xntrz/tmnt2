@@ -110,7 +110,7 @@
 #define SD_MASTERCODE_MASK		(0xFF000000)
 #define SD_SOUNDCODE_MASK		(0x00FFFFFF)
 
-/**
+/*
  *	Sd set tone status
  */
 

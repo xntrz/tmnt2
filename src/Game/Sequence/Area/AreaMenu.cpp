@@ -339,7 +339,7 @@ AREATYPES::NEXTSEQUENCE CAreaMenu_Container::AreaMenuSelect_Sub(void)
                     return AREATYPES::NEXTSEQUENCE_TITLE;
                     
 				case MAIN_BACK:
-					/**
+					/*
 					 *	NOTE:
 					 *	in retail game there is call for playing CANCEL SE when back is pressed
 					 *	that overlaps OK SE (see before switch case) and they are playing together

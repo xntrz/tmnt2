@@ -336,7 +336,7 @@ CBaseGrapplerAI::CBaseGrapplerAI(CEnemyCharacter* pEnemyChr)
 
 /*virtual*/ CBaseGrapplerAI::UNDERACTION CBaseGrapplerAI::OnUnderWait(void) /*override*/
 {
-    /**
+    /*
      *  TODO rework to custom code or leave it as in retail game next three lines.
      *
      *  Next 3 lines of code makes enemy "jitter" on the edge of patrol radius.

@@ -33,7 +33,7 @@ struct CREDITINFO
 
 static const CREDITINFO s_aStaffRollText[] =
 {
-    /**
+    /*
      *  A Kengo Nakamura GAME
      */
     {   GAMETEXT_CREDIT_0,      18.0f,      CREDITINFO::TYPE_TEXT       },
@@ -63,7 +63,7 @@ static const CREDITINFO s_aStaffRollText[] =
     {   GAMETEXT_EMPTY,         16.0f,      CREDITINFO::TYPE_EMPTYLINE  },
 
 
-    /**
+    /*
      *  Konami Computer Entertainment Studios, Inc.
      */
     {   GAMETEXT_CREDIT_1,      16.0f,      CREDITINFO::TYPE_TEAM       },
@@ -320,7 +320,7 @@ static const CREDITINFO s_aStaffRollText[] =
 
     
 #ifdef TMNT2_BUILD_EU
-    /**
+    /*
      *  Konami of Europe
      */
     {   GAMETEXT_EU_CREDIT_0,   18.0f,      CREDITINFO::TYPE_TEAM       },
@@ -370,7 +370,7 @@ static const CREDITINFO s_aStaffRollText[] =
     {   GAMETEXT_EMPTY,         16.0f,      CREDITINFO::TYPE_EMPTYLINE  },
     {   GAMETEXT_EMPTY,         16.0f,      CREDITINFO::TYPE_EMPTYLINE  },
 #else /* TMNT2_BUILD_EU */
-    /**
+    /*
      *  Konami Digital Entertainment, Inc.
      */
     {   GAMETEXT_CREDIT_189,    18.0f,      CREDITINFO::TYPE_TEAM       },
@@ -447,7 +447,7 @@ static const CREDITINFO s_aStaffRollText[] =
 #endif /* TMNT2_BUILD_EU */
 
     
-    /**
+    /*
      *  KONAMI CORPORATION
      */
     {   GAMETEXT_CREDIT_254,    18.0f,      CREDITINFO::TYPE_TEAM       },
@@ -497,7 +497,7 @@ static const CREDITINFO s_aStaffRollText[] =
     {   GAMETEXT_EMPTY,         16.0f,      CREDITINFO::TYPE_EMPTYLINE  },
     
     
-    /**
+    /*
      *  4Kids Entertainment, Inc.
      */
     {   GAMETEXT_CREDIT_291,    18.0f,      CREDITINFO::TYPE_TEAM       },
@@ -515,7 +515,7 @@ static const CREDITINFO s_aStaffRollText[] =
     {   GAMETEXT_EMPTY,         16.0f,      CREDITINFO::TYPE_EMPTYLINE  },
     
     
-    /**
+    /*
      *  4Kids Productions, Inc.
      */
     {   GAMETEXT_CREDIT_298,    18.0f,      CREDITINFO::TYPE_TEAM       },
@@ -545,7 +545,7 @@ static const CREDITINFO s_aStaffRollText[] =
     {   GAMETEXT_EMPTY,         16.0f,      CREDITINFO::TYPE_EMPTYLINE  },
 
     
-    /**
+    /*
      *  Mirage Studious, Inc
      */
     {   GAMETEXT_CREDIT_317,    18.0f,      CREDITINFO::TYPE_TEAM       },

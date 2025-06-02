@@ -69,7 +69,7 @@ static DWORD WINAPI SdLoadThreadProc(void* pParam)
 
 bool SdLoadTaskInit(void)
 {
-    /**
+    /*
      *	Init sd loader queues
      */
     SdLoadTaskQueueR = SdQueueCreate(COUNT_OF(SdLoadTask), sizeof(SdLoadTask_t*));
@@ -82,7 +82,7 @@ bool SdLoadTaskInit(void)
 
     InitializeCriticalSection(&SdLoadTaskQueueCS);
 
-    /**
+    /*
      *	Start sd loader thread
      */
     SdLoadThreadHandle = CreateThread(NULL, 0, SdLoadThreadProc, NULL, NULL, NULL);
@@ -95,7 +95,7 @@ bool SdLoadTaskInit(void)
 
 void SdLoadTaskTerm(void)
 {
-    /**
+    /*
      *	Stop sd loader thread & cleanup tasks
      */
     if (SdLoadThreadHandle)
@@ -122,7 +122,7 @@ void SdLoadTaskTerm(void)
         };
     };
 
-    /**
+    /*
      *	Terminate sd loader queues
      */
     DeleteCriticalSection(&SdLoadTaskQueueCS);

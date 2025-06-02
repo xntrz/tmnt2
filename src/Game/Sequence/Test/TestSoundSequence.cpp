@@ -290,7 +290,7 @@ void CTestSoundSequence::OnMove(bool bRet, const void* pReturnValue)
 
         switch (request.id)
         {
-        /**
+        /*
         *	BGM request handling
         */
         case REQTYPE_BGM_PLAY:
@@ -308,7 +308,7 @@ void CTestSoundSequence::OnMove(bool bRet, const void* pReturnValue)
             CGameData::Option().Sound().Apply();
             break;
 
-        /**
+        /*
          *	VOICE request handling
          */
         case REQTYPE_VOICE_BANK:
@@ -325,7 +325,7 @@ void CTestSoundSequence::OnMove(bool bRet, const void* pReturnValue)
             CGameData::Option().Sound().Apply();
             break;
             
-        /**
+        /*
          *	SE & TRANS SE request handling
          */
         case REQTYPE_SE_PLAY:
@@ -392,7 +392,7 @@ void CTestSoundSequence::OnMove(bool bRet, const void* pReturnValue)
             CGameData::Option().Sound().Apply();
             break;
 
-        /**
+        /*
          *	Stereo test req handling
          */
         case REQTYPE_TEST_START:
@@ -413,7 +413,7 @@ void CTestSoundSequence::OnMove(bool bRet, const void* pReturnValue)
             CGameSound::SetMode(CGameSound::MODE(request.value));
             break;
 
-        /**
+        /*
          *	Common SOUND request handling
          */
         case REQTYPE_SOUND_PAUSE:
@@ -424,7 +424,7 @@ void CTestSoundSequence::OnMove(bool bRet, const void* pReturnValue)
             CGameSound::Resume();
             break;
 
-        /**
+        /*
          *	Menu request handling
          */
         case REQTYPE_MENU:

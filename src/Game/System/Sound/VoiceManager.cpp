@@ -61,10 +61,6 @@ public:
 
 /*static*/ void CVoiceChooseTool::MakeExistListFromVoiceList(int32* VoiceListSize, PLAYERID::VALUE idPlayer, VOICELIST* VoiceList)
 {
-    /**
-     *  TODO: review that sometimes it gives wrong voice id (got it on race map with SE group id 157 got kar voice instead don)
-     */
-
     PLAYERID::VALUE idExistPlayerArray[GAMETYPES::PLAYERS_MAX];
     int32 ExistPlayerNum = 0;
 

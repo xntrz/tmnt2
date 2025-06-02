@@ -135,7 +135,7 @@ DECLARE_READER(CItemMovieTextReader,            "MOVIETEXT",                READ
 #endif /* TMNT2_BUILD_EU */
 
 
-/**
+/*
  ********************************************************************************
  */
 
@@ -158,7 +158,7 @@ void CItemModelReader::Eval(CDataLoaderFromBinary::CChunkHeader* pChunkHeader, v
 };
 
 
-/**
+/*
  ********************************************************************************
  */
 
@@ -181,7 +181,7 @@ void CItemModelToonReader::Eval(CDataLoaderFromBinary::CChunkHeader* pChunkHeade
 };
 
 
-/**
+/*
  ********************************************************************************
  */
 
@@ -201,7 +201,7 @@ void CItemMotionSetReader::Eval(CDataLoaderFromBinary::CChunkHeader* pChunkHeade
 };
 
 
-/**
+/*
  ********************************************************************************
  */
 
@@ -214,7 +214,7 @@ void CItemMotionReader::Eval(CDataLoaderFromBinary::CChunkHeader* pChunkHeader, 
 };
 
 
-/**
+/*
  ********************************************************************************
  */
 
@@ -227,7 +227,7 @@ void CItemMotionParameterReader::Eval(CDataLoaderFromBinary::CChunkHeader* pChun
 };
 
 
-/**
+/*
  ********************************************************************************
  */
 
@@ -240,7 +240,7 @@ void CItemTextureDictionaryReader::Eval(CDataLoaderFromBinary::CChunkHeader* pCh
 };
 
 
-/**
+/*
  ********************************************************************************
  */
 
@@ -253,7 +253,7 @@ void CItemAddTextureDictionaryReader::Eval(CDataLoaderFromBinary::CChunkHeader* 
 };
 
 
-/**
+/*
  ********************************************************************************
  */
 
@@ -266,7 +266,7 @@ void CItemModelBspReader::Eval(CDataLoaderFromBinary::CChunkHeader* pChunkHeader
 };
 
 
-/**
+/*
  ********************************************************************************
  */
 
@@ -277,7 +277,7 @@ void CItemCameraReader::Eval(CDataLoaderFromBinary::CChunkHeader* pChunkHeader, 
 };
 
 
-/**
+/*
  ********************************************************************************
  */
 
@@ -290,7 +290,7 @@ void CItemEffectReader::Eval(CDataLoaderFromBinary::CChunkHeader* pChunkHeader, 
 };
 
 
-/**
+/*
  ********************************************************************************
  */
 
@@ -303,7 +303,7 @@ void CItemAnimation2DReader::Eval(CDataLoaderFromBinary::CChunkHeader* pChunkHea
 };
 
 
-/**
+/*
  ********************************************************************************
  */
 
@@ -316,7 +316,7 @@ void CItemUVAnimReader::Eval(CDataLoaderFromBinary::CChunkHeader* pChunkHeader, 
 };
 
 
-/**
+/*
  ********************************************************************************
  */
 
@@ -329,7 +329,7 @@ void CItemFontReader::Eval(CDataLoaderFromBinary::CChunkHeader* pChunkHeader, vo
 };
 
 
-/**
+/*
  ********************************************************************************
  */
 
@@ -356,7 +356,7 @@ void CItemMapModelReader::Eval(CDataLoaderFromBinary::CChunkHeader* pChunkHeader
 };
 
 
-/**
+/*
  ********************************************************************************
  */
 
@@ -367,7 +367,7 @@ void CItemMapInfoReader::Eval(CDataLoaderFromBinary::CChunkHeader* pChunkHeader,
 };
 
 
-/**
+/*
  ********************************************************************************
  */
 
@@ -380,7 +380,7 @@ void CItemGimmickReader::Eval(CDataLoaderFromBinary::CChunkHeader* pChunkHeader,
 };
 
 
-/**
+/*
  ********************************************************************************
  */
 
@@ -394,7 +394,7 @@ void CItemStringsReader::Eval(CDataLoaderFromBinary::CChunkHeader* pChunkHeader,
 };
 
 
-/**
+/*
  ********************************************************************************
  */
 
@@ -405,7 +405,7 @@ void CItemEnemyParameterReader::Eval(CDataLoaderFromBinary::CChunkHeader* pChunk
 };
 
 
-/**
+/*
  ********************************************************************************
  */
 
@@ -416,7 +416,7 @@ void CItemIconsPS2Reader::Eval(CDataLoaderFromBinary::CChunkHeader* pChunkHeader
 };
 
 
-/**
+/*
  ********************************************************************************
  */
 
@@ -427,7 +427,7 @@ void CItemIconsNGCReader::Eval(CDataLoaderFromBinary::CChunkHeader* pChunkHeader
 };
 
 
-/**
+/*
  ********************************************************************************
  */
 
@@ -442,7 +442,7 @@ void CItemMovieTextReader::Eval(CDataLoaderFromBinary::CChunkHeader* pChunkHeade
 #endif /* TMNT2_BUILD_EU */
 
 
-/**
+/*
  ********************************************************************************
  */
 
