@@ -107,7 +107,7 @@ public:
     static bool IsMoveState(ENEMYTYPES::STATUS status);
     static void EntryTouchDownEffect(const CCharacterCompositor* pChrCompositor, float fScale, bool bPlayerSound = true);
     static void EntryTouchDownEffect(const CEnemyCharacter* pEnemyChr, bool bPlaySound = true);
-    static void EntryNexusDeathEffect(const CEnemyCharacter* pEnemyChr, float fScale);
+    static void EntryNexusDeathEffect(const CEnemyCharacter* pEnemyChr, float fScale = -1.0f);
     static void PlayTouchdownSE(const CCharacterCompositor* pChrCompositor);
     static void EntryTouchDownEffectAndSE(const CEnemyCharacter* pEnemyChr);
     static void EntryFlyawayBoundEffectAndSE(const CEnemyCharacter* pEnemyChr);

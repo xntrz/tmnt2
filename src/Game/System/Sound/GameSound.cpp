@@ -1575,11 +1575,9 @@ static void SdSetAttackEnemy(const SE_ATTACK_PARAM* pParam)
 
 /*static*/ void CGameSound::PlayPositionSE(const RwV3d* pPos, int32 nSE, int32 id /*= 0*/)
 {
-	ASSERT((nSE == SD_NOCODE) || ((nSE >= 0x1000) && (nSE <= 0x2FFF)));
-
 	if (!pPos)
 	{
-		SoundSetEx(nSE | SD_MASTERCODE_SURCTRL, 0, 0, id);
+		PlaySE(nSE);
 		return;
 	};
 

@@ -28,6 +28,7 @@ public:
     };
     
 public:
+    CBandanaModule(CCharacter* pCharacter, int32 nBoneID, const RwV3d* pvOffset, BANDANACOLOR color);
     CBandanaModule(CCharacter* pCharacter, CModel* pModel, int32 nBoneID, const RwV3d* pvOffset, BANDANACOLOR color);
     virtual ~CBandanaModule(void);
     virtual void Run(void) override;

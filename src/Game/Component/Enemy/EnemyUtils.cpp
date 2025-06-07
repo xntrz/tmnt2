@@ -732,7 +732,7 @@ float CEnemyUtils::CKnockBackControl::GetPlayerNumRate(void) const
 };
 
 
-/*static*/ void CEnemyUtils::EntryNexusDeathEffect(const CEnemyCharacter* pEnemyChr, float fScale)
+/*static*/ void CEnemyUtils::EntryNexusDeathEffect(const CEnemyCharacter* pEnemyChr, float fScale /*= -1.0f*/)
 {
     RwV3d pos = Math::VECTOR3_ZERO;
     pEnemyChr->Compositor().GetFootPosition(&pos);

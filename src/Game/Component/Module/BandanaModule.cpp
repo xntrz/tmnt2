@@ -23,6 +23,13 @@ static RwRGBA s_aBandanaColor[] =
 };
 
 
+CBandanaModule::CBandanaModule(CCharacter* pCharacter, int32 nBoneID, const RwV3d* pvOffset, BANDANACOLOR color)
+: CBandanaModule(pCharacter, pCharacter->GetModel(), nBoneID, pvOffset, color)
+{
+    ;
+};
+
+
 CBandanaModule::CBandanaModule(CCharacter* pCharacter,
                                CModel* pModel,
                                int32 nBoneID,

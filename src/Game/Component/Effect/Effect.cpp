@@ -175,7 +175,7 @@ void CEffect::RunFinish(void)
 {
     ASSERT(m_pParticleSet);
     
-    if (m_bFinishStart && m_pParticleSet->IsDrawing())
+    if (m_bFinishStart && !m_pParticleSet->IsDrawing())
         m_bFinish = true;
 };
 

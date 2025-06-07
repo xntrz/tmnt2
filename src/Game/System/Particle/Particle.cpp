@@ -98,7 +98,7 @@ CParticle::~CParticle(void)
 {
     if (m_paTransition)
     {
-        delete m_paTransition;
+        delete[] m_paTransition;
         m_paTransition = nullptr;
     };
 };
