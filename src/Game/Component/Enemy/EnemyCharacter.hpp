@@ -203,6 +203,7 @@ public:
     const PARAMETER& CharacterParameter(void) const;
     uint8* FrequencyParameter(void) const;
     uint8 FrequencyParameter(int32 idx) const;
+    bool IsFrequencyParameterValid(void) const;
     CCharacterCompositor& Compositor(void);
     const CCharacterCompositor& Compositor(void) const;
     const ENEMYTYPES::FEATURE& Feature(void) const;

@@ -45,7 +45,7 @@ CFallRubbleGimmick::CFallRubbleGimmick(const char* pszName, void* pParam)
     ASSERT(pBasicParam->m_subid >= 0);
     ASSERT(pBasicParam->m_subid < KINDNUM);
     
-    m_eKind         = KIND(pBasicParam->m_subid);
+    m_eKind         = static_cast<KIND>(pBasicParam->m_subid);
     m_nDamage       = 5;
     m_eState        = STATE_FALL;
     m_bErase        = false;
@@ -77,13 +77,12 @@ CFallRubbleGimmick::CFallRubbleGimmick(const char* pszName, void* pParam)
 
     //
     //  init pos & rot
-    //
-    RwV3d vRotation = Math::VECTOR3_ZERO;
-    
+    //    
     RwMatrix matRot;
     RwMatrixSetIdentityMacro(&matRot);
-    
     CGimmickUtils::QuaternionToRotationMatrix(&matRot, &pBasicParam->m_quat);
+    
+    RwV3d vRotation = Math::VECTOR3_ZERO;
     CGimmickUtils::MatrixToRotation(&matRot, &vRotation);
 
     m_pFallRubbleMove->SetPosition(&pBasicParam->m_vPosition);
@@ -93,16 +92,15 @@ CFallRubbleGimmick::CFallRubbleGimmick(const char* pszName, void* pParam)
     m_pModel->SetRotation(&vRotation);
 
     //
-    //  init fall velocity
+    //  init fall move & rot velocity
     //
     m_pFallRubbleMove->SetVelocity(&Math::VECTOR3_ZERO);
     
-    RwV3d vVelocity = Math::VECTOR3_ZERO;
-    vVelocity.x = Math::RandFloatRange(-1.0f, 1.0f) * (Math::PI / 3.0f);
-    vVelocity.y = Math::RandFloatRange(-1.0f, 1.0f) * (Math::PI / 3.0f);
-    vVelocity.z = Math::RandFloatRange(-1.0f, 1.0f) * (Math::PI / 3.0f);
+    RwV3d vecRotVelocity = { Math::RandFloatRange(-1.0f, 1.0f) * MATH_DEG2RAD(60.0f),
+                             Math::RandFloatRange(-1.0f, 1.0f) * MATH_DEG2RAD(60.0f),
+                             Math::RandFloatRange(-1.0f, 1.0f) * MATH_DEG2RAD(60.0f), };
     
-    m_pFallRubbleMove->SetVelocity(&vVelocity);
+    m_pFallRubbleMove->SetVelocity(&vecRotVelocity);
     
     //
     //  setup model & move strategy
@@ -112,7 +110,7 @@ CFallRubbleGimmick::CFallRubbleGimmick(const char* pszName, void* pParam)
 };
 
 
-CFallRubbleGimmick::~CFallRubbleGimmick(void)
+/*virtual*/ CFallRubbleGimmick::~CFallRubbleGimmick(void)
 {
     if (m_pModel)
     {
@@ -134,19 +132,19 @@ CFallRubbleGimmick::~CFallRubbleGimmick(void)
 };
 
 
-void CFallRubbleGimmick::Run(void)
+/*virtual*/ void CFallRubbleGimmick::Run(void) /*override*/
 {
     PreMove();
     
     if (m_pMoveStrategy)
     {
-        CGimmickMove::MOVESTATE state = m_pMoveStrategy->Move(CGameProperty::GetElapsedTime());
-        if ((state == CGimmickMove::MOVESTATE_TOUCHDOWN) ||
-            (state == CGimmickMove::MOVESTATE_ON_GROUND))
+        CGimmickMove::MOVESTATE moveState = m_pMoveStrategy->Move(CGameProperty::GetElapsedTime());
+        if ((moveState == CGimmickMove::MOVESTATE_TOUCHDOWN) ||
+            (moveState == CGimmickMove::MOVESTATE_ON_GROUND))
         {
             OnTouchedDown();
             
-            if (state == CGimmickMove::MOVESTATE_ON_GROUND)
+            if (moveState == CGimmickMove::MOVESTATE_ON_GROUND)
                 onOnGround();
         };
 
@@ -163,25 +161,21 @@ void CFallRubbleGimmick::Run(void)
 };
 
 
-void CFallRubbleGimmick::Draw(void) const
+/*virtual*/ void CFallRubbleGimmick::Draw(void) const /*override*/
 {
     CGimmick::Draw();
-
-    if (m_pModuleMan)
-        m_pModuleMan->Draw();
+    m_pModuleMan->Draw();
 };
 
 
-void CFallRubbleGimmick::PreMove(void)
+/*virtual*/ void CFallRubbleGimmick::PreMove(void) /*override*/
 {
     m_pFallRubbleMove->GetPosition(&m_vPreMovePosition);
-
-    if (m_pModuleMan)
-        m_pModuleMan->Run();
+    m_pModuleMan->Run();
 };
 
 
-void CFallRubbleGimmick::PostMove(void)
+/*virtual*/ void CFallRubbleGimmick::PostMove(void) /*override*/
 {
     RwV3d vRotation = Math::VECTOR3_ZERO;
     m_pFallRubbleMove->GetRotation(&vRotation);
@@ -215,66 +209,65 @@ void CFallRubbleGimmick::PostMove(void)
 };
 
 
-void CFallRubbleGimmick::OnTouchedDown(void)
+/*virtual*/ void CFallRubbleGimmick::OnTouchedDown(void) /*override*/
 {
     if (m_bErase)
         return;
     
-    const EFFECTID::VALUE aIdEffect[] =
+    const EFFECTID::VALUE aEffectId[] =
     {
+        EFFECTID::ID_ROCK,
         EFFECTID::ID_METAL,
-        EFFECTID::ID_METAL,
-        EFFECTID::ID_ROCK
+        EFFECTID::ID_METAL
     };
 
-    static_assert(COUNT_OF(aIdEffect) == KINDNUM, "should equal");
+    static_assert(COUNT_OF(aEffectId) == KINDNUM, "should equal");
 
-    bool bSoundCall = true;
+    m_pFallRubbleMove->SetRotVelocity(&Math::VECTOR3_ZERO);
+
     RwV3d vPosition = Math::VECTOR3_ZERO;
     m_pFallRubbleMove->GetPosition(&vPosition);
 
-    uint32 hEffect = CEffectManager::Play(aIdEffect[m_eKind], &vPosition, bSoundCall);
-    ASSERT(hEffect);
-
-    m_pFallRubbleMove->SetRotVelocity(&Math::VECTOR3_ZERO);
+    CEffectManager::Play(aEffectId[m_eKind], &vPosition);
 };
 
 
 bool CFallRubbleGimmick::decreaseMaterialAlpha(void)
 {
-    uint8 decValue = uint8(255.0f / CScreen::Framerate());
+    RwUInt8 decValue = static_cast<RwUInt8>(255.0f / (CScreen::Framerate() * 0.5f));
 
-    CModel* pMdl = m_pModel->GetModel(CNormalGimmickModel::MODELTYPE_DRAW_BREAK);
+    CModel* pMdl = m_pModel->GetModel(CNormalGimmickModel::MODELTYPE_DRAW_NORMAL);
     ASSERT(pMdl);
 
-    RwRGBA MaterialColor = pMdl->GetColor();
-    MaterialColor.alpha -= decValue;
-    pMdl->SetColor(MaterialColor);
+    RwRGBA materialColor = pMdl->GetColor();
+    if (materialColor.alpha >= decValue)
+        materialColor.alpha -= decValue;
+    pMdl->SetColor(materialColor);
 
-    return (MaterialColor.alpha < decValue);
+    return (materialColor.alpha < decValue);
 };
 
 
 void CFallRubbleGimmick::setHitAttack(void)
 {
-    RwSphere HitSphere = { Math::VECTOR3_ZERO, 1.5f };
-    m_pFallRubbleMove->GetPosition(&HitSphere.center);
+    RwSphere hitSphere = { Math::VECTOR3_ZERO, 1.5f };
+    m_pFallRubbleMove->GetPosition(&hitSphere.center);
 
-    CHitAttackData AttackData;
-    AttackData.Cleanup();
+    CHitAttackData hitAttack;
+    hitAttack.Cleanup();
 #ifdef _DEBUG
-    AttackData.SetMotion("FallRubble");
+    hitAttack.SetMotion("FallRubble");
 #endif
-    AttackData.SetObject(GetHandle());
-    AttackData.SetObjectPos(&m_vPreMovePosition);
-    AttackData.SetPower(m_nDamage);
-    AttackData.SetTarget(CHitAttackData::TARGET_PLAYER);
-    AttackData.SetAntiguard(CHitAttackData::ANTIGUARD_INVALID);
-    AttackData.SetStatus(CHitAttackData::STATUS_KNOCK);
-    AttackData.SetShape(CHitAttackData::SHAPE_SPHERE);
-    AttackData.SetSphere(&HitSphere);
+    hitAttack.SetObject(GetHandle());
+    hitAttack.SetObjectPos(&m_vPreMovePosition);
+    hitAttack.SetPower(m_nDamage);
+    hitAttack.SetTarget(CHitAttackData::TARGET_PLAYER);
+    hitAttack.SetAntiguard(CHitAttackData::ANTIGUARD_INVALID);
+    hitAttack.SetStatus(CHitAttackData::STATUS_KNOCK);
+    hitAttack.SetShape(CHitAttackData::SHAPE_SPHERE);
+    hitAttack.SetSphere(&hitSphere);
 
-    CHitAttackManager::RegistAttack(&AttackData);
+    CHitAttackManager::RegistAttack(&hitAttack);
 };
 
 
@@ -284,10 +277,11 @@ void CFallRubbleGimmick::onOnGround(void)
     m_pFallRubbleMove->GetVelocity(&vVelocity);
     
     float fSpeed = Math::Vec3_Length(&vVelocity);
-
-    if (!Math::FEqual(fSpeed, 0.0f))
+    if (fSpeed != 0.0f)
     {
-        Math::Vec3_Scale(&vVelocity, &vVelocity, 0.2f);
+        const float fFriction = 0.2f;
+
+        Math::Vec3_Scale(&vVelocity, &vVelocity, fFriction);
         m_pFallRubbleMove->SetVelocity(&vVelocity);
 
         fSpeed = Math::Vec3_Length(&vVelocity);

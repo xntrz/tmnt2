@@ -602,11 +602,11 @@ private:
     class CCreditText
     {
     public:
-        float            m_fOfsX;
-        float            m_fOfsY;
-        float            m_fHeight;
-        const wchar*     m_pwszText;
-        CREDITINFO::TYPE m_credittype;
+        float            fOfsX;
+        float            fOfsY;
+        float            fHeight;
+        const wchar*     pwszText;
+        CREDITINFO::TYPE creditType;
     };
 
     enum PHASE
@@ -697,8 +697,6 @@ void CStaffRoll::Detach(void)
 
 bool CStaffRoll::Move(void)
 {
-    bool bResult = false;
-
     switch (m_ePhase)
     {
     case PHASE_LOAD:
@@ -742,15 +740,12 @@ bool CStaffRoll::Move(void)
             };
         }
         break;
-        
-    case PHASE_EOL:
-        {
-            bResult = true;
-        }
+
+    default:
         break;
     };
 
-    return bResult;
+    return (m_ePhase == PHASE_EOL ? true : false);
 };
 
 
@@ -759,15 +754,14 @@ void CStaffRoll::Draw(void)
     switch (m_ePhase)
     {
     case PHASE_STAFF_STEP:
-        {
-            StaffRollDraw();
-        }
+        StaffRollDraw();
         break;
 
     case PHASE_RW_STEP:
-        {
-            RwLogoDraw();
-        }
+        RwLogoDraw();
+        break;
+
+    default:
         break;
     };
 };
@@ -780,8 +774,8 @@ void CStaffRoll::StaffRollStart(void)
     CGameFont::SetRGBA(COLOR_WHITE);
     for (int32 i = 0; i < COUNT_OF(m_aCreditDrawList); ++i)
     {
-        m_aCreditDrawList[i].m_pwszText = nullptr;
-        m_aCreditDrawList[i].m_fHeight = 1.0f;
+        m_aCreditDrawList[i].pwszText = nullptr;
+        m_aCreditDrawList[i].fHeight = 1.0f;
         
         if (s_aStaffRollText[i].textId == GAMETEXT(-1))
             break;
@@ -790,12 +784,12 @@ void CStaffRoll::StaffRollStart(void)
         
         if (i)
         {
-            m_aCreditDrawList[i].m_fOfsY =
-                (m_aCreditDrawList[i - 1].m_fOfsY + m_aCreditDrawList[i - 1].m_fHeight) + 8.0f;
+            m_aCreditDrawList[i].fOfsY =
+                (m_aCreditDrawList[i - 1].fOfsY + m_aCreditDrawList[i - 1].fHeight) + 8.0f;
         }
         else
         {
-            m_aCreditDrawList[0].m_fOfsY = (m_fVSH * 0.5f);
+            m_aCreditDrawList[0].fOfsY = (m_fVSH * 0.5f);
         };
         
         m_iStaffRollCur = i;
@@ -892,7 +886,7 @@ void CStaffRoll::StaffRollUpdate(void)
     for (int32 i = 0; i < COUNT_OF(m_aCreditDrawList); ++i)
     {
         if (!m_bStaffRollFinishFlag)
-            m_aCreditDrawList[i].m_fOfsY -= fRollSpeed;
+            m_aCreditDrawList[i].fOfsY -= fRollSpeed;
 
         if (m_bStaffRollRunFlag)
         {
@@ -902,7 +896,7 @@ void CStaffRoll::StaffRollUpdate(void)
                 idx = (i - 1);
             };
             
-            if (m_aCreditDrawList[i].m_fOfsY <= -(m_fVSH * 0.5f))
+            if (m_aCreditDrawList[i].fOfsY <= -(m_fVSH * 0.5f))
             {
                 ++m_iStaffRollCur;
                 if (s_aStaffRollText[m_iStaffRollCur].textId == GAMETEXT(-1))
@@ -913,11 +907,11 @@ void CStaffRoll::StaffRollUpdate(void)
                 else
                 {
                     SetTextToDrawList(i, m_iStaffRollCur);
-                    m_aCreditDrawList[i].m_fOfsY = (m_aCreditDrawList[idx].m_fOfsY + m_aCreditDrawList[idx].m_fHeight) + 8.0f;
+                    m_aCreditDrawList[i].fOfsY = (m_aCreditDrawList[idx].fOfsY + m_aCreditDrawList[idx].fHeight) + 8.0f;
                 };
             };
         }
-        else if (m_aCreditDrawList[m_iStaffRollFinishNodeIndex].m_fOfsY <= 0.0f)
+        else if (m_aCreditDrawList[m_iStaffRollFinishNodeIndex].fOfsY <= 0.0f)
         {
             m_bStaffRollFinishFlag = true;
         };
@@ -933,8 +927,8 @@ void CStaffRoll::RwLogoStart(void)
     m_iStep = 0;
     m_fTimer = 2.2f;
 
-    float sw = float(CScreen::Width());
-    float sh = float(CScreen::Height());
+    float sw = static_cast<float>(CScreen::Width());
+    float sh = static_cast<float>(CScreen::Height());
 
     m_logoSprite.SetPositionAndSizeRealScreen(sw * 0.5f, sh * 0.5f, sw, sh);
     m_logoSprite.SetTexture(CTextureManager::GetRwTexture("tit_rendlogo"));
@@ -1015,11 +1009,11 @@ bool CStaffRoll::RwLogoStep(void)
 void CStaffRoll::DrawCredit(int32 iNodeIndex)
 {
     CCreditText* pCreditText = &m_aCreditDrawList[iNodeIndex];
-    if (pCreditText->m_fOfsY > -(m_fVSH * 0.5f))
+    if (pCreditText->fOfsY > -(m_fVSH * 0.5f))
     {
-        if ((pCreditText->m_fHeight + (m_fVSH * 0.5f)) >= pCreditText->m_fOfsY)
+        if ((pCreditText->fHeight + (m_fVSH * 0.5f)) >= pCreditText->fOfsY)
         {
-            switch (pCreditText->m_credittype)
+            switch (pCreditText->creditType)
             {
             case CREDITINFO::TYPE_TEXT:
                 CGameFont::SetRGBA(COLOR_WHITE);
@@ -1037,8 +1031,8 @@ void CStaffRoll::DrawCredit(int32 iNodeIndex)
                 break;
             };
 
-			CGameFont::SetHeight(pCreditText->m_fHeight);
-            CGameFont::Show(pCreditText->m_pwszText, pCreditText->m_fOfsX, pCreditText->m_fOfsY);            
+			CGameFont::SetHeight(pCreditText->fHeight);
+            CGameFont::Show(pCreditText->pwszText, pCreditText->fOfsX, pCreditText->fOfsY);            
         };
     };
 };
@@ -1046,11 +1040,11 @@ void CStaffRoll::DrawCredit(int32 iNodeIndex)
 
 void CStaffRoll::SetTextToDrawList(int32 iNodeIndex, int32 iCreditIndex)
 {
-    m_aCreditDrawList[iNodeIndex].m_fHeight     = s_aStaffRollText[iCreditIndex].height;
-    m_aCreditDrawList[iNodeIndex].m_pwszText    = CGameText::GetText(s_aStaffRollText[iCreditIndex].textId);
-    m_aCreditDrawList[iNodeIndex].m_credittype  = s_aStaffRollText[iCreditIndex].type;
-	CGameFont::SetHeight(m_aCreditDrawList[iNodeIndex].m_fHeight);
-    m_aCreditDrawList[iNodeIndex].m_fOfsX       = (CGameFont::GetStringWidth(m_aCreditDrawList[iNodeIndex].m_pwszText) * -0.5f);
+    m_aCreditDrawList[iNodeIndex].fHeight     = s_aStaffRollText[iCreditIndex].height;
+    m_aCreditDrawList[iNodeIndex].pwszText    = CGameText::GetText(s_aStaffRollText[iCreditIndex].textId);
+    m_aCreditDrawList[iNodeIndex].creditType  = s_aStaffRollText[iCreditIndex].type;
+	CGameFont::SetHeight(m_aCreditDrawList[iNodeIndex].fHeight);
+    m_aCreditDrawList[iNodeIndex].fOfsX       = (CGameFont::GetStringWidth(m_aCreditDrawList[iNodeIndex].pwszText) * -0.5f);
 };
 
 
@@ -1091,6 +1085,7 @@ void CStaffRollSequence::OnDetach(void)
     if (s_pStaffRoll)
     {
         s_pStaffRoll->Detach();
+
         delete s_pStaffRoll;
         s_pStaffRoll = nullptr;
     };
@@ -1099,8 +1094,6 @@ void CStaffRollSequence::OnDetach(void)
 
 void CStaffRollSequence::OnMove(bool bRet, const void* pReturnValue)
 {
-    Ret();
-    
     if (s_pStaffRoll->Move())
         Ret();
 };

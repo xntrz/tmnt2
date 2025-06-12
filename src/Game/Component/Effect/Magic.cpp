@@ -57,6 +57,12 @@ CMagic::CMagic(const char* pszName)
 
 CMagic::~CMagic(void)
 {
+    if (m_pTarget)
+    {
+        delete m_pTarget;
+        m_pTarget = nullptr;
+    };
+
     for (int32 i = 0; i < COUNT_OF(m_apLocus); ++i)
     {
         if (m_apLocus[i])

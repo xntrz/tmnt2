@@ -1315,6 +1315,12 @@ uint8 CEnemyCharacter::FrequencyParameter(int32 idx) const
 };
 
 
+bool CEnemyCharacter::IsFrequencyParameterValid(void) const
+{
+    return (m_pParameter->m_iFrequencyMax > 0);
+};
+
+
 CCharacterCompositor& CEnemyCharacter::Compositor(void)
 {
     CGameObject* pObj = CGameObjectManager::GetObject(m_hCharacter);

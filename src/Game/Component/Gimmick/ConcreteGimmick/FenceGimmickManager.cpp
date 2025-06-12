@@ -5,10 +5,13 @@
 #include "Game/Component/Player/PlayerCharacter.hpp"
 #include "Game/System/GameObject/GameObjectManager.hpp"
 #include "Game/System/Hit/HitAttackData.hpp"
+#include "System/Common/Screen.hpp"
 
 
 /*static*/ CFenceGimmickManager* CFenceGimmickManager::m_pInstance = nullptr;
-/*static*/ CFenceGimmickManager::ATTACKERINFO* CFenceGimmickManager::m_paPlayerInfo[GAMETYPES::PLAYERS_MAX] = { 0 };
+
+/*static*/ CFenceGimmickManager::ATTACKERINFO*
+CFenceGimmickManager::m_paPlayerInfo[GAMETYPES::PLAYERS_MAX] = { 0 };
 
 
 /*static*/ void CFenceGimmickManager::Initialize(void)
@@ -55,7 +58,7 @@
         ASSERT(m_paPlayerInfo[i]);
 
         m_paPlayerInfo[i]->m_nPlayerNo = i;
-        m_paPlayerInfo[i]->m_fBrokenTime = -1.0f;
+        m_paPlayerInfo[i]->m_fAttackTime = -1.0f;
     };
 };
 
@@ -65,22 +68,21 @@
     ASSERT(m_pInstance);
     ASSERT(pAttack);
 
-    CGameObject* pObj = CGameObjectManager::GetObject(pAttack->GetObjectHandle());
-    if (!pObj)
+    CGameObject* pAttacker = pAttack->GetObject();
+    if (pAttacker->GetType() != GAMEOBJECTTYPE::CHARACTER)
         return false;
 
-    if (pObj->GetType() != GAMEOBJECTTYPE::CHARACTER)
+    if (static_cast<CCharacter*>(pAttacker)->GetCharacterType() != CCharacter::TYPE_PLAYER)
         return false;
 
-    if (static_cast<CCharacter*>(pObj)->GetCharacterType() != CCharacter::TYPE_PLAYER)
-        return false;
+    int32 nPlayerNo = static_cast<CPlayerCharacter*>(pAttacker)->GetPlayerNo();
 
-    int32 nPlayerNo = static_cast<CPlayerCharacter*>(pObj)->GetPlayerNo();
+    ASSERT(nPlayerNo >= 0);
+    ASSERT(nPlayerNo < COUNT_OF(m_paPlayerInfo));
+    ASSERT(m_paPlayerInfo[nPlayerNo] != nullptr);
 
     ATTACKERINFO* pInfo = m_paPlayerInfo[nPlayerNo];
-    ASSERT(pInfo);
-
-    pInfo->m_fBrokenTime = CGameProperty::GetTotalElapsedTime(); // CScreen::Timer()
+    pInfo->m_fAttackTime = CScreen::TimeElapsed();
     pInfo->m_nPlayerNo = nPlayerNo;
 
     return true;
@@ -102,10 +104,10 @@
         if (!pInfo)
             continue;
 
-        if (fRecentTime < pInfo->m_fBrokenTime)
+        if (fRecentTime < pInfo->m_fAttackTime)
         {
             nLastAttacker = i;
-            fRecentTime = pInfo->m_fBrokenTime;
+            fRecentTime = pInfo->m_fAttackTime;
         };
     };
 
@@ -113,7 +115,8 @@
 };
 
 
-/*static*/ const CFenceGimmickManager::ATTACKERINFO* CFenceGimmickManager::GetInfo(int32 nPlayerNo)
+/*static*/ const CFenceGimmickManager::ATTACKERINFO*
+CFenceGimmickManager::GetInfo(int32 nPlayerNo)
 {
     ASSERT(m_pInstance);
     ASSERT(nPlayerNo >= 0);
@@ -123,13 +126,14 @@
 };
 
 
-/*static*/ CFenceGimmickManager::ATTACKERINFO* CFenceGimmickManager::AllocNewFenceInfo(void)
+/*static*/ CFenceGimmickManager::ATTACKERINFO*
+CFenceGimmickManager::AllocNewFenceInfo(void)
 {
     ASSERT(m_pInstance);
 
     ATTACKERINFO* pInfo = new ATTACKERINFO;
     pInfo->m_nPlayerNo = 0;
-    pInfo->m_fBrokenTime = 0.0f;
+    pInfo->m_fAttackTime = 0.0f;
 
     return pInfo;
 };
@@ -146,7 +150,7 @@ CFenceGimmickManager::CFenceGimmickManager(const char* pszName, void* pParam)
 };
 
 
-CFenceGimmickManager::~CFenceGimmickManager(void)
+/*virtual*/ CFenceGimmickManager::~CFenceGimmickManager(void)
 {
     ASSERT(m_pInstance);
     ASSERT(m_pInstance == this);
@@ -157,14 +161,14 @@ CFenceGimmickManager::~CFenceGimmickManager(void)
 };
 
 
-void CFenceGimmickManager::Run(void)
+/*virtual*/ void CFenceGimmickManager::Run(void) /*override*/
 {
     CGimmick::Run();
     IntrudeObservation();
 };
 
 
-void CFenceGimmickManager::Draw(void) const
+/*virtual*/ void CFenceGimmickManager::Draw(void) const /*override*/
 {
     CGimmick::Draw();
 };

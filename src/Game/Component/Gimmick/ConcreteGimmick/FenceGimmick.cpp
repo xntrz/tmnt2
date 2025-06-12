@@ -17,11 +17,14 @@
 #include "System/Common/Screen.hpp"
 
 
+static const int32 FENCE_LIFE = 120;
+
+
 CFenceGimmick::CFenceGimmick(const char* pszName, void* pParam)
 : CGimmick(pszName, pParam)
 , m_move()
 , m_model()
-, m_nLife(LIFE)
+, m_nLife(FENCE_LIFE)
 , m_eState(STATE_IDLE)
 , m_hAtari(0)
 {
@@ -77,7 +80,7 @@ CFenceGimmick::CFenceGimmick(const char* pszName, void* pParam)
 };
 
 
-CFenceGimmick::~CFenceGimmick(void)
+/*virtual*/ CFenceGimmick::~CFenceGimmick(void)
 {
     if (m_hAtari)
     {
@@ -87,7 +90,7 @@ CFenceGimmick::~CFenceGimmick(void)
 };
 
 
-void CFenceGimmick::PostMove(void)
+/*virtual*/ void CFenceGimmick::PostMove(void) /*override*/
 {
     RwV3d vRotation = Math::VECTOR3_ZERO;
     m_move.GetRotation(&vRotation);
@@ -100,18 +103,18 @@ void CFenceGimmick::PostMove(void)
         {
             CModel* pMdl = m_model.GetModel(CNormalGimmickModel::MODELTYPE_DRAW_NORMAL);
 
-            RwSphere HitSphere;
-            pMdl->GetPosition(&HitSphere.center);
-            HitSphere.radius = 2.0f;
+            RwSphere hitSphere;
+            pMdl->GetPosition(&hitSphere.center);
+            hitSphere.radius = 2.0f;
 
-            CHitCatchData CatchData;
-            CatchData.Cleanup();
-            CatchData.SetObject(GetHandle());
-            CatchData.SetObjectType(GetType());
-            CatchData.SetShape(CHitCatchData::SHAPE_SPHERE);
-            CatchData.SetSphere(&HitSphere);
+            CHitCatchData hitCatch;
+            hitCatch.Cleanup();
+            hitCatch.SetObject(GetHandle());
+            hitCatch.SetObjectType(GetType());
+            hitCatch.SetShape(CHitCatchData::SHAPE_SPHERE);
+            hitCatch.SetSphere(&hitSphere);
 
-            CHitAttackManager::RegistCatch(&CatchData);
+            CHitAttackManager::RegistCatch(&hitCatch);
         }
         break;
 
@@ -129,18 +132,18 @@ void CFenceGimmick::PostMove(void)
 };
 
 
-void CFenceGimmick::OnCatchAttack(CHitAttackData* pAttack)
+/*virtual*/ void CFenceGimmick::OnCatchAttack(CHitAttackData* pAttack) /*override*/
 {
     if (m_eState != STATE_IDLE)
         return;
 
     CGameObject* pAttacker = CGameObjectManager::GetObject(pAttack->GetObjectHandle());
-    if (pAttacker->GetType() != GAMEOBJECTTYPE::CHARACTER)
-        return;
-
-    CCharacter* pAttackerChr = static_cast<CCharacter*>(pAttacker);
-    if (pAttackerChr->GetCharacterType() != CCharacter::TYPE_PLAYER)
-        return;
+    if (pAttacker->GetType() == GAMEOBJECTTYPE::CHARACTER)
+    {
+        CCharacter* pAttackerChr = static_cast<CCharacter*>(pAttacker);
+        if (pAttackerChr->GetCharacterType() != CCharacter::TYPE_PLAYER)
+            return;
+    };
 
     CGimmickUtils::PlayHitEffect(pAttack);
     CFenceGimmickManager::DispatchInformation(pAttack);
@@ -148,11 +151,10 @@ void CFenceGimmick::OnCatchAttack(CHitAttackData* pAttack)
     m_nLife -= pAttack->GetPower();
     if (m_nLife < 0)
     {
-        m_eState = STATE_BREAK;
-        
         EffectCallAtBreak();
         SetVelocityAtBreak(pAttacker);
 
+        m_eState = STATE_BREAK;
         m_move.Start();
 
         if (m_hAtari)
@@ -168,12 +170,12 @@ void CFenceGimmick::EffectCallAtBreak(void)
 {
     RwV3d avBreakPos[] =
     {
-        { -0.8f,    2.3f,   0.0f    },
-        { 0.8f,     2.3f,   0.0f    },
-        { -1.0f,    1.5f,   0.0f    },
-        { 1.0f,     1.5f,   0.0f    },
-        { -1.0f,    0.6f,   0.0f    },
-        { 1.0f,     0.6f,   0.0f    },
+        { -0.8f, 2.3f, 0.0f  },
+        {  0.8f, 2.3f, 0.0f  },
+        { -1.0f, 1.5f, 0.0f  },
+        {  1.0f, 1.5f, 0.0f  },
+        { -1.0f, 0.6f, 0.0f  },
+        {  1.0f, 0.6f, 0.0f  },
     };
 
     CModel* pMdl = m_model.GetModel(CNormalGimmickModel::MODELTYPE_DRAW_NORMAL);
@@ -185,13 +187,8 @@ void CFenceGimmick::EffectCallAtBreak(void)
 
     for (int32 i = 0; i < COUNT_OF(avBreakPos); ++i)
     {
-        bool bSoundCall = true;
-
-        uint32 hEffect = CEffectManager::Play(EFFECTID::ID_ALL_DOWNSMOKE, &avBreakPos[i], bSoundCall);
-        ASSERT(hEffect);
-
-        hEffect = CEffectManager::Play(EFFECTID::ID_WOOD, &avBreakPos[i], bSoundCall);
-        ASSERT(hEffect);
+        CEffectManager::Play(EFFECTID::ID_ALL_DOWNSMOKE, &avBreakPos[i]);
+        CEffectManager::Play(EFFECTID::ID_WOOD, &avBreakPos[i]);
     };
 };
 
@@ -199,31 +196,31 @@ void CFenceGimmick::EffectCallAtBreak(void)
 void CFenceGimmick::SetVelocityAtBreak(const CGameObject* pObj)
 {
     RwMatrix matRotY;
-    RwMatrixSetIdentity(&matRotY);
+    RwMatrixSetIdentityMacro(&matRotY);
     
     switch (pObj->GetType())
     {
     case GAMEOBJECTTYPE::CHARACTER:
         {
-            const CCharacter* pAttackerChar = static_cast<const CCharacter*>(pObj);
+            const CCharacter* pChr = static_cast<const CCharacter*>(pObj);
+            ASSERT(pChr->GetCharacterType() == CCharacter::TYPE_PLAYER, "only player chr can attack fence");
 
-            Math::Matrix_RotateY(&matRotY, pAttackerChar->GetDirection());
+            Math::Matrix_RotateY(&matRotY, pChr->GetDirection());
         }
         break;
 
     case GAMEOBJECTTYPE::SHOT:
         {
-            const CShot* pAttackerShot = static_cast<const CShot*>(pObj);
+            const CShot* pShot = static_cast<const CShot*>(pObj);
 
-            Math::Matrix_RotateY(&matRotY, pAttackerShot->GetDirection());
+            Math::Matrix_RotateY(&matRotY, pShot->GetDirection());
         }
         break;
 
     case GAMEOBJECTTYPE::EFFECT:
         {
-            const CEffect* pAttackerEffx = static_cast<const CEffect*>(pObj);
-
-            ASSERT(pAttackerEffx->GetEffectType() == CEffect::TYPE_WITHHIT);
+            const CEffect* pEffect = static_cast<const CEffect*>(pObj);
+            ASSERT(pEffect->GetEffectType() == CEffect::TYPE_WITHHIT, "only magic effect can attack fence");
 
             RwV3d vRot = Math::VECTOR3_ZERO;
             m_move.GetRotation(&vRot);
@@ -237,36 +234,36 @@ void CFenceGimmick::SetVelocityAtBreak(const CGameObject* pObj)
         break;
     };
 
-    RwV3d vMoveDir = { 0.0f, 1.0f, 1.0f };
-    RwV3dTransformVector(&vMoveDir, &vMoveDir, &matRotY);
+    RwV3d vecRotation = { 0.0f, 1.0f, 1.0f };
+    RwV3dTransformVector(&vecRotation, &vecRotation, &matRotY);
+    Math::Vec3_Normalize(&vecRotation, &vecRotation);
 
-    RwV3d vPosVelocity = Math::VECTOR3_ZERO;
-    RwV3d vRotVelocity = Math::VECTOR3_ZERO;
+    RwV3d vecVelocity = Math::VECTOR3_ZERO;
+    Math::Vec3_Scale(&vecVelocity, &vecRotation, 8.0f);
 
-    Math::Vec3_Normalize(&vMoveDir, &vMoveDir);
-    Math::Vec3_Scale(&vPosVelocity, &vMoveDir, 8.0f);
-
-    float k = float((Math::Rand() % TYPEDEF::UINT32_MAX) / TYPEDEF::UINT32_MAX);
+    float fRandRotRatioY = static_cast<float>((Math::Rand() % TYPEDEF::UINT32_MAX) / TYPEDEF::UINT32_MAX);
     
-    vRotVelocity.x = MATH_DEG2RAD(vPosVelocity.z * 20.0f);
-    vRotVelocity.y = MATH_DEG2RAD(k * 200.0f - 100.0f);
-    vRotVelocity.z = MATH_DEG2RAD(vPosVelocity.x);
+    RwV3d vecVelocityRotation = Math::VECTOR3_ZERO;
+    vecVelocityRotation.x = MATH_DEG2RAD(vecVelocity.z * 20.0f);
+    vecVelocityRotation.y = MATH_DEG2RAD((fRandRotRatioY * 200.0f) - 100.0f);
+    vecVelocityRotation.z = MATH_DEG2RAD(vecVelocity.x);
 
-    m_move.SetRotVelocity(&vRotVelocity);
-    m_move.SetVelocity(&vPosVelocity);
+    m_move.SetRotVelocity(&vecVelocityRotation);
+    m_move.SetVelocity(&vecVelocity);
 };
 
 
 bool CFenceGimmick::DecreaseMatAlpha(void)
 {
-    uint8 decValue = uint8(255.0f / CScreen::Framerate());
+    RwUInt8 decValue = static_cast<RwUInt8>(255.0f / CScreen::Framerate());
 
     CModel* pMdl = m_model.GetModel(CNormalGimmickModel::MODELTYPE_DRAW_NORMAL);
     ASSERT(pMdl);
 
-    RwRGBA MaterialColor = pMdl->GetColor();
-    MaterialColor.alpha -= decValue;
-    pMdl->SetColor(MaterialColor);
+    RwRGBA materialColor = pMdl->GetColor();
+    if (materialColor.alpha >= decValue)
+        materialColor.alpha -= decValue;
+    pMdl->SetColor(materialColor);
 
-    return (MaterialColor.alpha < decValue);
+    return (materialColor.alpha < decValue);
 };

@@ -48,7 +48,7 @@ CFallGimmick::CFallGimmick(const char* pszName, void* pParam)
     GIMMICKPARAM::GIMMICK_BASIC* pInitParam = static_cast<GIMMICKPARAM::GIMMICK_BASIC*>(pParam);
     ASSERT(pInitParam);
 
-    m_eSubid = SUBID(pInitParam->m_subid);
+    m_eSubid = static_cast<SUBID>(pInitParam->m_subid);
     
     ASSERT(m_eSubid >= 0);
     ASSERT(m_eSubid < COUNT_OF(m_aSubInfo));
@@ -88,12 +88,9 @@ CFallGimmick::CFallGimmick(const char* pszName, void* pParam)
 
     if (m_eSubid && (m_eSubid != SUBID_STALACTITE))
     {
-        RwV3d vRotationVelocity =
-        {
-            Math::RandFloatRange(-1.0f, 1.0f) * Math::PI,
-            Math::RandFloatRange(-1.0f, 1.0f) * Math::PI,
-            Math::RandFloatRange(-1.0f, 1.0f) * Math::PI,
-        };
+        RwV3d vRotationVelocity = { Math::RandFloatRange(-1.0f, 1.0f) * MATH_DEG2RAD(180.0f),
+                                    Math::RandFloatRange(-1.0f, 1.0f) * MATH_DEG2RAD(180.0f),
+                                    Math::RandFloatRange(-1.0f, 1.0f) * MATH_DEG2RAD(180.0f), };
 
         m_pFallMove->SetRotationVelocity(&vRotationVelocity);
     };
@@ -102,7 +99,7 @@ CFallGimmick::CFallGimmick(const char* pszName, void* pParam)
     //  init module man
     //
     m_pModuleManager = new CModuleManager;
-    m_pModuleManager->Include(CCircleShadowModule::New(this, 1.5f, 1.5f, false));
+    m_pModuleManager->Include(CCircleShadowModule::New(this, 1.5f, 1.5f, true));
     
     //
     //  setup model & movement strat
@@ -112,7 +109,7 @@ CFallGimmick::CFallGimmick(const char* pszName, void* pParam)
 };
 
 
-CFallGimmick::~CFallGimmick(void)
+/*virtual*/ CFallGimmick::~CFallGimmick(void)
 {
     if (m_pModuleManager)
     {
@@ -128,7 +125,7 @@ CFallGimmick::~CFallGimmick(void)
 };
 
 
-void CFallGimmick::Run(void)
+/*virtual*/ void CFallGimmick::Run(void) /*override*/
 {
     PreMove();
     
@@ -139,26 +136,40 @@ void CFallGimmick::Run(void)
 };
 
 
-void CFallGimmick::Draw(void) const
+/*virtual*/ void CFallGimmick::Draw(void) const /*override*/
 {
-    if ((m_eState > STATE_WAIT) && (m_eState != STATE_END))
-        CGimmick::Draw();
+    switch (m_eState)
+    {
+    case STATE_SIGN:
+    case STATE_WAIT_TIMER:
+    case STATE_FALL:
+    case STATE_FALL_END:
+        {
+            CGimmick::Draw();
+            m_pModuleManager->Draw();
+        }
+        break;
+
+    default:
+        break;
+    };
 };
 
 
-void CFallGimmick::PreMove(void)
+/*virtual*/ void CFallGimmick::PreMove(void) /*override*/
 {
     m_pFallMove->GetPosition(&m_vPreMovePosition);
 };
 
 
-void CFallGimmick::PostMove(void)
+/*virtual*/ void CFallGimmick::PostMove(void) /*override*/
 {
     m_pModuleManager->Run();
 };
 
 
-void CFallGimmick::OnReceiveEvent(const char* pszSender, GIMMICKTYPES::EVENTTYPE eventtype)
+/*virtual*/ void CFallGimmick::OnReceiveEvent(const char* pszSender,
+                                              GIMMICKTYPES::EVENTTYPE eventtype) /*override*/
 {
     if (m_eState == STATE_WAIT)
     {
@@ -168,7 +179,7 @@ void CFallGimmick::OnReceiveEvent(const char* pszSender, GIMMICKTYPES::EVENTTYPE
 };
 
 
-void CFallGimmick::OnTouchedDown(void)
+/*virtual*/ void CFallGimmick::OnTouchedDown(void) /*override*/
 {
     if (m_bAttack)
         m_bAttack = false;
@@ -188,7 +199,7 @@ void CFallGimmick::OnTouchedDown(void)
 };
 
 
-void CFallGimmick::OnAttackResult(CHitCatchData* pCatch)
+/*virtual*/ void CFallGimmick::OnAttackResult(CHitCatchData* pCatch) /*override*/
 {
     if (!m_bTouched)
     {
@@ -209,46 +220,43 @@ void CFallGimmick::SetBodyHitRadiusAutoChangeEnable(bool bEnable)
 
 void CFallGimmick::move(void)
 {
-    if (m_pFallMove)
+    CGimmickMove::MOVESTATE moveState = m_pFallMove->Move(CGameProperty::GetElapsedTime());
+    switch (moveState)
     {
-        CGimmickMove::MOVESTATE eResult = m_pFallMove->Move(CGameProperty::GetElapsedTime());        
-        switch (eResult)
+    case CGimmickMove::MOVESTATE_ON_GROUND:
         {
-        case CGimmickMove::MOVESTATE_ON_GROUND:
-            {
-                if (!m_bTouched)
-                    OnTouchedDown();
+            if (!m_bTouched)
+                OnTouchedDown();
 
+            onGround();
+        }
+        break;
+
+    case CGimmickMove::MOVESTATE_TOUCHDOWN:
+        {
+            if (m_aSubInfo[m_eSubid].m_eMovetype == MOVETYPE_BOUND)
+            {
+                OnTouchedDown();
+            }
+            else
+            {
+                OnTouchedDown();
                 onGround();
-            }
-            break;
+            };
+        }
+        break;
 
-        case CGimmickMove::MOVESTATE_TOUCHDOWN:
-            {
-                if (m_aSubInfo[m_eSubid].m_eMovetype == MOVETYPE_BOUND)
-                {
-                    OnTouchedDown();
-                }
-                else
-                {
-                    OnTouchedDown();
-                    onGround();
-                };
-            }
-            break;
-
-        default:
-            break;
-        };
-
-        RwV3d vRotation = Math::VECTOR3_ZERO;
-        m_pFallMove->GetRotation(&vRotation);
-        m_model.SetRotation(&vRotation);
-
-        RwV3d vPosition = Math::VECTOR3_ZERO;
-        m_pFallMove->GetPosition(&vPosition);
-        m_model.SetPosition(&vPosition);
+    default:
+        break;
     };
+
+    RwV3d vRotation = Math::VECTOR3_ZERO;
+    m_pFallMove->GetRotation(&vRotation);
+    m_model.SetRotation(&vRotation);
+
+    RwV3d vPosition = Math::VECTOR3_ZERO;
+    m_pFallMove->GetPosition(&vPosition);
+    m_model.SetPosition(&vPosition);
 };
 
 
@@ -276,13 +284,9 @@ void CFallGimmick::fallGimmickCtrl(void)
             if (m_fTimer > m_fInterval)
             {
                 changeStatus(STATE_FALL);
+
                 m_pFallMove->Start();
                 m_bAttack = true;
-                
-                CCircleShadowModule* pModule = static_cast<CCircleShadowModule*>(m_pModuleManager->GetModule(MODULETYPE::CIRCLE_SHADOW));
-                ASSERT(pModule);
-                
-                pModule->SetEnable(true);
             };
         }
         break;
@@ -329,13 +333,13 @@ void CFallGimmick::onGround(void)
     m_pFallMove->GetVelocity(&vVelocity);
 
     float fSpeed = Math::Vec3_Length(&vVelocity);
-    if (fSpeed > 0.0f)
+    if (fSpeed != 0.0f)
     {
         Math::Vec3_Scale(&vVelocity, &vVelocity, m_fFriction);
         m_pFallMove->SetVelocity(&vVelocity);
 
         fSpeed = Math::Vec3_Length(&vVelocity);
-        if (fSpeed < Math::EPSILON)
+        if (fSpeed < 0.0001f)
             m_pFallMove->SetVelocity(&Math::VECTOR3_ZERO);
     };
 };
@@ -346,41 +350,40 @@ void CFallGimmick::setHitAttack(void)
     if (!m_bAttack)
         return;
     
-    RwSphere AttackSphere = { 0 };
-    AttackSphere.radius = m_aSubInfo[m_eSubid].m_fAttackRadius;
-    m_pFallMove->GetPosition(&AttackSphere.center);
+    RwSphere hitSphere = { 0 };
+    hitSphere.radius = m_aSubInfo[m_eSubid].m_fAttackRadius;
+    m_pFallMove->GetPosition(&hitSphere.center);
 
-    CHitAttackData Attack;
-    Attack.SetObject(GetHandle());
-    Attack.SetObjectPos(&m_vPreMovePosition);
-    Attack.SetShape(CHitAttackData::SHAPE_SPHERE);
-    Attack.SetSphere(&AttackSphere);
-    Attack.SetPower(m_nPower);
-    Attack.SetTarget(CHitAttackData::TARGET(m_target));
-    Attack.SetAntiguard(CHitAttackData::ANTIGUARD_INVALID);
-    Attack.SetStatus(CHitAttackData::STATUS_KNOCK);
+    CHitAttackData hitAttack;
+    hitAttack.SetObject(GetHandle());
+    hitAttack.SetObjectPos(&m_vPreMovePosition);
+    hitAttack.SetShape(CHitAttackData::SHAPE_SPHERE);
+    hitAttack.SetSphere(&hitSphere);
+    hitAttack.SetPower(m_nPower);
+    hitAttack.SetTarget(CHitAttackData::TARGET(m_target));
+    hitAttack.SetAntiguard(CHitAttackData::ANTIGUARD_INVALID);
+    hitAttack.SetStatus(CHitAttackData::STATUS_KNOCK);
 #ifdef _DEBUG    
-    Attack.SetMotion("FallGimmick");
+    hitAttack.SetMotion("FallGimmick");
 #endif    
 
-    CHitAttackManager::RegistAttack(&Attack);    
+    CHitAttackManager::RegistAttack(&hitAttack);    
 };
 
 
 bool CFallGimmick::changeMaterialAlpha(void)
 {
-    float fStep = (255.0f / CScreen::Framerate());
-    
-    CModel* pModel = m_model.GetModel(CNormalGimmickModel::MODELTYPE_DRAW_NORMAL);
-    RwRGBA MaterialColor = pModel->GetColor();
-    
-    int32 Alpha = int32(float(MaterialColor.alpha) - fStep);
-    Alpha = Clamp(Alpha, 0, 255);
-    MaterialColor.alpha = uint8(Alpha);;
-    
-    pModel->SetColor(MaterialColor);
-    
-    return (MaterialColor.alpha == 0);
+    RwUInt8 decValue = static_cast<RwUInt8>(255.0f / CScreen::Framerate());
+
+    CModel* pMdl = m_model.GetModel(CNormalGimmickModel::MODELTYPE_DRAW_NORMAL);
+    ASSERT(pMdl);
+
+    RwRGBA materialColor = pMdl->GetColor();
+    if (materialColor.alpha >= decValue)
+        materialColor.alpha -= decValue;
+    pMdl->SetColor(materialColor);
+
+    return (materialColor.alpha < decValue);
 };
 
 
@@ -388,7 +391,6 @@ void CFallGimmick::breakSign(void)
 {
     RwV3d vPosition = Math::VECTOR3_ZERO;
     m_pFallMove->GetPosition(&vPosition);
-
     vPosition.y = CWorldMap::GetMapHeight(&vPosition) + 7.0f;
 
     CEffectManager::Play(EFFECTID::ID_BREAKSIGN, &vPosition);
@@ -402,7 +404,7 @@ bool CFallGimmick::heightCheck(void)
     RwV3d vPosition = Math::VECTOR3_ZERO;
     m_pFallMove->GetPosition(&vPosition);
 
-    return (vPosition.y < -200.0f);
+    return (vPosition.y < (CWorldMap::INVALID_MAP_HEIGHT * 2.0f));
 };
 
 

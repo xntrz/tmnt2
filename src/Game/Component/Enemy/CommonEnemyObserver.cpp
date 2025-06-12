@@ -503,30 +503,6 @@ CMotionManagedStatusObserver::CMotionManagedStatusObserver(void)
 //
 
 
-/*virtual*/ void CCommonEnemyObserver::CDashStatus::OnStart(void) /*override*/
-{
-    // TODO
-};
-
-
-/*virtual*/ CCommonEnemyObserver::CDashStatus::RESULT CCommonEnemyObserver::CDashStatus::Observing(void) /*override*/
-{
-    return RESULT_END;
-};
-
-
-/*virtual*/ ENEMYTYPES::STATUS CCommonEnemyObserver::CDashStatus::OnEnd(void) /*override*/
-{
-    EnemyChr().ClearFlag(ENEMYTYPES::FLAG_INVINCIBILITY);
-    return ENEMYTYPES::STATUS_THINKING;
-};
-
-
-//
-// *********************************************************************************
-//
-
-
 /*virtual*/ void CCommonEnemyObserver::CGuardStatus::OnStart(void) /*override*/
 {
     EnemyChr().Compositor().SetVelocity(&Math::VECTOR3_ZERO);

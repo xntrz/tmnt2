@@ -15,7 +15,7 @@ CAIModerator::CAIModerator(CEnemyCharacter* pEnemyChr)
 : m_fTimer(0.0f)
 , m_pEnemyChr(pEnemyChr)
 {
-    if (pEnemyChr->FrequencyParameter())
+    if (pEnemyChr->IsFrequencyParameterValid())
     {
         m_AIFreqParam.Initialize(pEnemyChr->FrequencyParameter(),
                                  pEnemyChr->CharacterParameter().m_iFrequencyMax,

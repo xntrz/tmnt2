@@ -14,8 +14,6 @@ private:
         STATE_BREAK,
     };
 
-    static const int32 LIFE = 120;
-
 public:
     CFenceGimmick(const char* pszName, void* pParam);
     virtual ~CFenceGimmick(void);
@@ -24,11 +22,11 @@ public:
     void EffectCallAtBreak(void);
     void SetVelocityAtBreak(const CGameObject* pObj);
     bool DecreaseMatAlpha(void);
-    
+
 private:
-    CFenceGimmickMove m_move;
+    CFenceGimmickMove   m_move;
     CNormalGimmickModel m_model;
-    int32 m_nLife;
-    STATE m_eState;
-    uint32 m_hAtari;
+    int32               m_nLife;
+    STATE               m_eState;
+    uint32              m_hAtari;
 };

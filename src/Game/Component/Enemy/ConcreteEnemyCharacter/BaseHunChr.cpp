@@ -406,7 +406,7 @@ CBaseHunChr::CAttackCStatusObserver::Observing(void) /*override*/
             RwV3d vecVelocityPlr = Math::VECTOR3_ZERO;
             pPlrChr->GetVelocity(&vecVelocityPlr);
 
-            Math::Vec3_Scale(&vecVelocityPlr, &vecFootPosPlr, fDist * 0.06f);
+            Math::Vec3_Scale(&vecVelocityPlr, &vecVelocityPlr, fDist * 0.06f);
             Math::Vec3_Add(&m_vecAimPos, &vecFootPosPlr, &vecVelocityPlr);
 
             CEnemyUtils::RotateToPosition(&EnemyChr().Compositor(), &m_vecAimPos, 1.0f, 0.0f);

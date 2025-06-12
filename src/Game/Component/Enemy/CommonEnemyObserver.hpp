@@ -88,18 +88,6 @@ public:
         int32 m_moveTypeJudgeMovePos;
     };
 
-    class CDashStatus : public CEnemyCharacter::CStatusObserver
-    {
-    public:
-        virtual void OnStart(void) override;
-        virtual RESULT Observing(void) override;
-        virtual ENEMYTYPES::STATUS OnEnd(void) override;
-
-    private:
-        int32 m_step;
-        float m_fDashSpeed;
-    };
-
     class CGuardStatus : public CEnemyCharacter::CStatusObserver
     {
     protected:

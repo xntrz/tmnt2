@@ -15,7 +15,7 @@
 
 static const CFallRubbleGimmickManager::INITPARAM s_aInitParam[] =
 {
-    { 1.0f, 5, 0.0f,  6.0f, 1.0f, CFallRubbleGimmickManager::TYPE_M58OB },
+    { 1.0f, 5,  0.0f, 6.0f, 1.0f, CFallRubbleGimmickManager::TYPE_M58OB },
     { 0.0f, 5, 10.0f, 6.0f, 0.4f, CFallRubbleGimmickManager::TYPE_HUN   },
     { 0.0f, 7, 10.0f, 6.0f, 0.4f, CFallRubbleGimmickManager::TYPE_HUN2  },
 };
@@ -57,19 +57,20 @@ CFallRubbleGimmickManager::CFallRubbleGimmickManager(const char* pszName, void* 
 };
 
 
-CFallRubbleGimmickManager::~CFallRubbleGimmickManager(void)
+/*virtual*/ CFallRubbleGimmickManager::~CFallRubbleGimmickManager(void)
 {
     ;
 };
 
 
-void CFallRubbleGimmickManager::Run(void)
+/*virtual*/ void CFallRubbleGimmickManager::Run(void) /*override*/
 {
     rubbleGrandControl();
 };
 
 
-void CFallRubbleGimmickManager::OnReceiveEvent(const char* pszSender, GIMMICKTYPES::EVENTTYPE eventtype)
+/*virtual*/ void CFallRubbleGimmickManager::OnReceiveEvent(const char* pszSender,
+                                                           GIMMICKTYPES::EVENTTYPE eventtype) /*override*/
 {
     if (eventtype == GIMMICKTYPES::EVENTTYPE_ACTIVATE)
         createRubble();
@@ -188,7 +189,7 @@ void CFallRubbleGimmickManager::initRubbleInfo(CGameObject* pObj, RUBBLEINFO* pI
     if (pPlayerChara->GetStatus() == PLAYERTYPES::STATUS_CRASH_WALL_TOUCHDOWN_BACK)
     {
 		vRotation.y += Math::PI;
-		vRotation.y = Math::RadianInvClamp(vRotation.y);
+		vRotation.y = Math::RadianInvClamp(vRotation.y); // TODO rework to radian correct light
     };
 
     Math::Matrix_AffineTransformation(&pInfo->m_matrix, nullptr, &vRotation, &vPosition);
@@ -237,7 +238,7 @@ void CFallRubbleGimmickManager::createRubbleGimmick(RUBBLEINFO* pInfo, int32 nCo
         //  init rotation
         //
         RwV3d vAxis = { 1.0f, 1.0f, 1.0f };
-        float fAngle = MATH_DEG2RAD(Math::RandFloat() * 180.0f);
+        float fAngle = Math::RandFloat() * MATH_DEG2RAD(180.0f);
         CGimmickUtils::QuaternionFromAxisAngle(&param.m_quat, &vAxis, fAngle);
 
         //

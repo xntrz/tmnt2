@@ -11,7 +11,7 @@ class CFenceGimmickManager final : public CGimmick
 public:
     struct ATTACKERINFO
     {
-        float m_fBrokenTime;
+        float m_fAttackTime;
         int32 m_nPlayerNo;
     };
     
@@ -31,5 +31,5 @@ public:
 
 private:
     static CFenceGimmickManager* m_pInstance;
-    static ATTACKERINFO* m_paPlayerInfo[GAMETYPES::PLAYERS_MAX];
+    static ATTACKERINFO*         m_paPlayerInfo[GAMETYPES::PLAYERS_MAX];
 };
