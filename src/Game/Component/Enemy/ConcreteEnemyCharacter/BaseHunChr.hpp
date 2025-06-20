@@ -46,6 +46,7 @@ public:
     {
     public:
         CThinkingStatusObserver(CBaseHunChr* pBaseHunChr);
+        virtual ~CThinkingStatusObserver(void);
         virtual void OnStart(void) override;
         virtual RESULT Observing(void) override;
         virtual ENEMYTYPES::STATUS OnEnd(void) override;

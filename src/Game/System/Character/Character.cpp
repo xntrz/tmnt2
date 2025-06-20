@@ -311,12 +311,12 @@ void CCharacter::CheckCollisionForWall(RwV3d& rvVelocityPerFrame, bool bPeriod)
     RwV3d vBodyCheckPosition = Math::VECTOR3_ZERO;    
     Math::Vec3_Add(&vBodyCheckPosition, &m_vPosition, &vBonePosition);
 
-    uint32 uHitFlag = 0;
+    CWorldMap::MOVE_HIT_FLAG hitFlag = CWorldMap::MOVE_HIT_FLAG_NONE;
     RwV3d vReplacePosition = Math::VECTOR3_ZERO;
     bool bCollision = CWorldMap::CheckCollisionCharacterMove(&vBodyCheckPosition,
                                                              &vReplacePosition,
                                                              &rvVelocityPerFrame,
-                                                             &uHitFlag,
+                                                             &hitFlag,
                                                              m_collision.m_fRadius,
                                                              m_collision.m_fHeight);
     
@@ -333,7 +333,7 @@ void CCharacter::CheckCollisionForWall(RwV3d& rvVelocityPerFrame, bool bPeriod)
         Math::Vec3_Sub(&vPosition, &vReplacePosition, &vBonePosition);
         SetPosition(&vPosition);
 
-        if (uHitFlag == 1)
+        if (hitFlag == CWorldMap::MOVE_HIT_FLAG_XZ)
         {
             const CWorldMap::COLLISIONRESULT* pCollisionResult = CWorldMap::GetCollisionResult();
             ASSERT(pCollisionResult);
@@ -887,7 +887,7 @@ void CCharacter::SetDirection(float fDir)
     if (TestCharacterFlag(CHARACTERTYPES::FLAG_FIXED_DIRECTION))
         return;
 
-    fDir = Math::RadianCorrect(fDir);
+    fDir = Math::RadianNormalize(fDir);
 
     RwV3d vBodyPosition = Math::VECTOR3_ZERO;
     GetBonePositionOfPositionCheck(&vBodyPosition);

@@ -65,19 +65,16 @@ bool CBodyHitContainer::Check(CBodyHitData* pBodyHitData, const RwV3d* pMoveVelo
     
     for (CBodyHitData& it : m_listHitAlloc)
     {
-        bool b1 = (pBodyHitData->GetHitID() != CBodyHitData::INVALID_HIT_ID);
-        bool b2 = (it.GetHitID() == pBodyHitData->GetHitID());
+        bool bIsSame = (&it == pBodyHitData);
+        bool bIsValidID = (pBodyHitData->GetHitID() != CBodyHitData::INVALID_HIT_ID);
+        bool bIsSameID = (it.GetHitID() == pBodyHitData->GetHitID());
+        bool bIsEnabled = it.IsEnableState(CBodyHitData::STATE_ENABLE);
 
-        // TODO
+        bool bIsStateValid = (!pBodyHitData->IsEnableState(CBodyHitData::STATE_SELF_TO_OTHER) && !it.IsEnableState(CBodyHitData::STATE_SELF_TO_OTHER))
+                          || (!pBodyHitData->IsEnableState(CBodyHitData::STATE_TODO_0x2) && !it.IsEnableState(CBodyHitData::STATE_TODO_0x2))
+                          || (pBodyHitData->IsEnableState(CBodyHitData::STATE_SELF_TO_OTHER) && it.IsEnableState(CBodyHitData::STATE_TODO_0x2));
 
-        if (
-            (&it != pBodyHitData) &&
-            (!b1 || !b2) &&
-            it.IsEnableState(CBodyHitData::STATE_ENABLE) &&
-            (!pBodyHitData->IsEnableState(CBodyHitData::STATE_SELF_TO_OTHER) && !it.IsEnableState(CBodyHitData::STATE_SELF_TO_OTHER)
-            || !pBodyHitData->IsEnableState(CBodyHitData::STATE_TODO_0x2) && !it.IsEnableState(CBodyHitData::STATE_TODO_0x2)
-            || pBodyHitData->IsEnableState(CBodyHitData::STATE_SELF_TO_OTHER) && it.IsEnableState(CBodyHitData::STATE_TODO_0x2))
-            )
+        if (!bIsSame && (!bIsValidID || !bIsSameID) && bIsEnabled && bIsStateValid)
         {
             RwV3d vHit = Math::VECTOR3_ZERO;
             bool bIntersect = Intersection::SphereAndSphereGetAwayVelocity(pBodyHitData->GetCurrentPos(),

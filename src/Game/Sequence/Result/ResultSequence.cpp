@@ -186,7 +186,7 @@ void CResultWorkPool::ResultAnimAnit(ANIMTYPE animtype)
 
 void CResultWorkPool::CrystalPieceDraw(void)
 {
-    float fDuration = CScreen::Framerate() * 0.5f;
+    float fDuration = ANIM_DURATION_FRAMES(30);
     if (m_auAnimCnt[0] < uint32(fDuration))
         ++m_auAnimCnt[0];
 
@@ -214,7 +214,7 @@ void CResultWorkPool::CrystalLvlUpDraw(void)
 {
     int32 nCryData = (GetCrystalData(m_nLvlupCryIndex) / 10) - 1;
 
-    float fDuration = (CScreen::Framerate() * 0.16f);
+    float fDuration = ANIM_DURATION_FRAMES(10);
 
     if (m_auAnimCnt[0] < static_cast<uint32>(fDuration))
         ++m_auAnimCnt[0];
@@ -239,7 +239,7 @@ void CResultWorkPool::CrystalLvlUpDraw(void)
 
     if (m_auAnimCnt[0] >= uint32(fDuration))
     {
-        float fDurationSub0 = CScreen::Framerate() * 0.4f;
+        float fDurationSub0 = ANIM_DURATION_FRAMES(24);
 
         if (m_auAnimCnt[1] < uint32(fDurationSub0))
             ++m_auAnimCnt[1];
@@ -256,7 +256,7 @@ void CResultWorkPool::CrystalLvlUpDraw(void)
 
         if (m_auAnimCnt[1] >= uint32(fDurationSub0))
         {
-            float fDurationSub1 = CScreen::Framerate() * 0.4f;
+            float fDurationSub1 = ANIM_DURATION_FRAMES(24);
 
             if (m_auAnimCnt[2] < uint32(fDurationSub1))
                 ++m_auAnimCnt[2];
@@ -272,7 +272,7 @@ void CResultWorkPool::CrystalLvlUpDraw(void)
 
             if (m_auAnimCnt[2] >= uint32(fDurationSub1))
             {
-                float fDurationSub2 = CScreen::Framerate() * 0.4f;
+                float fDurationSub2 = ANIM_DURATION_FRAMES(24);
 
                 if (m_auAnimCnt[3] < uint32(fDurationSub1))
                     ++m_auAnimCnt[3];
@@ -300,7 +300,7 @@ void CResultWorkPool::CrystalLvlUpDraw(void)
 
 void CResultWorkPool::PersonalResultDraw(void)
 {
-    float fDuration = (CScreen::Framerate() * 0.26f);
+    float fDuration = ANIM_DURATION_FRAMES(16);
 
     if (m_auAnimCnt[0] < static_cast<uint32>(fDuration))
         ++m_auAnimCnt[0];
@@ -388,7 +388,7 @@ void CResultWorkPool::PersonalResultDraw(void)
         if (!m_auAnimCnt[1])
             CGameSound::PlaySE(SDCODE_SE(4111));
 
-        float fDurationSub = CScreen::Framerate() * 0.4f;
+        float fDurationSub = ANIM_DURATION_FRAMES(24);
 
         if (m_auAnimCnt[1] >= uint32(fDurationSub))
         {
@@ -456,7 +456,7 @@ void CResultWorkPool::PrizeCursorDraw(void)
     if (m_nPrizeNo == -1)
         return;
 
-    float fDuration = CScreen::Framerate() * 0.5f;
+    float fDuration = ANIM_DURATION_FRAMES(30);
     if (m_auAnimCnt[0] < uint32(fDuration))
     {
         ++m_auAnimCnt[0];
@@ -493,7 +493,7 @@ void CResultWorkPool::PrizeCursorDraw(void)
 
 void CResultWorkPool::CrystalGrowingDraw(void)
 {
-    float fDuration = CScreen::Framerate() * 0.4f;
+    float fDuration = ANIM_DURATION_FRAMES(24);
     if (m_auAnimCnt[0] < uint32(fDuration))
         ++m_auAnimCnt[0];
 
@@ -601,7 +601,7 @@ void CResultWorkPool::CrystalGrowingDraw(void)
 
 void CResultWorkPool::BattleNexusWinnerDraw(void)
 {
-    float fDuration = CScreen::Framerate() * 0.4f;
+    float fDuration = ANIM_DURATION_FRAMES(24);
     if (m_auAnimCnt[0] < uint32(fDuration))
         ++m_auAnimCnt[0];
 
@@ -754,6 +754,11 @@ void CResultWorkPool::SetPrizeNo(int32 nPrizeNo)
 {
     m_nPrizeNo = nPrizeNo;
 };
+
+
+//
+// *********************************************************************************
+//
 
 
 /*static*/ CProcess* CResultSequence::Instance(void)
@@ -1415,8 +1420,8 @@ void CResultSequence::BeginFadeIn(void)
             Animation2D().SetText("ERB_N_00", szNewStr);
 
             GAMETYPES::CLEARRANK aClearRank[2] = { GAMETYPES::CLEARRANK_NONE };
-            aClearRank[0] = CGameData::Record().Area().CalcTotalClearRank();
-            aClearRank[1] = CGameData::Record().Area().CalcTotalClearTimeRank();
+            aClearRank[0] = CGameData::Record().Area().CalcTotalClearTimeRank();
+            aClearRank[1] = CGameData::Record().Area().CalcTotalClearRank();
             
             const char* apszClearRankTexName[2] = { nullptr };
 
@@ -1436,11 +1441,11 @@ void CResultSequence::BeginFadeIn(void)
             };
 
 #ifdef TMNT2_BUILD_EU
-            Animation2D().SetTexture("result_e_041", apszClearRankTexName[1]);
-            Animation2D().SetTexture("result_e_044", apszClearRankTexName[0]);
+            Animation2D().SetTexture("result_e_041", apszClearRankTexName[0]);
+            Animation2D().SetTexture("result_e_044", apszClearRankTexName[1]);
 #else /* TMNT2_BUILD_EU */
-            Animation2D().SetTexture("result_e_042", apszClearRankTexName[1]);
-            Animation2D().SetTexture("result_e_045", apszClearRankTexName[0]);
+            Animation2D().SetTexture("result_e_042", apszClearRankTexName[0]);
+            Animation2D().SetTexture("result_e_045", apszClearRankTexName[1]);
 #endif /* TMNT2_BUILD_EU */
 
             int32 points = CGameData::Record().GetAchievedPoint();

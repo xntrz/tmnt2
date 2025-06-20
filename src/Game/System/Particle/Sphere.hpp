@@ -11,7 +11,7 @@ public:
             int32 nRepetationV,
             const RwRGBA& color,
             bool bRandom = false);
-    ~CSphere(void);
+    virtual ~CSphere(void);
     void Run(float dt);
     void Draw(void);
     void SetPosition(const RwV3d* pvPosition);

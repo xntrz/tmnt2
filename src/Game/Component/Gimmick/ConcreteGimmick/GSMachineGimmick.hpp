@@ -22,7 +22,15 @@ private:
         STATE_SLEEP,
         STATE_STOP,
     };
-    
+
+    enum SUBID
+    {
+        SUBID_FLOOR_1 = 0,
+        SUBID_FLOOR_2,
+        SUBID_FLOOR_3,
+        SUBID_DUMMY,
+    };
+
 public:
     CGSMachineGimmick(const char* pszName, void* pParam);
     virtual ~CGSMachineGimmick(void);
@@ -41,26 +49,26 @@ public:
     void EffectStart(void);
     void EffectStop(void);
     void EffectUpdate(void);
-    void SetGSState(STATE eState);
+    void SetState(STATE eState);
     float RateControl(float fCur, float fAim, float dt) const;
     float GetPathTimerateByMPS(float fMPS) const;
     
 private:
-    CGSMachineGimmickMove* m_pGSMachineGimmickMove;
-    CBodyHitData* m_pBodyHitData;
-    CNormalGimmickModel m_model;
-    CGimmickMotion* m_pGimmickMotion;
-    char m_szPathName[8];
-    RwV3d m_vNearestPlayerPosition;
-    float m_fDistance;
-    float m_fNearestPathT;
-    float m_fAimPlayrate;
-    float m_fAimPathTimerate;
-    float m_fPlayrate;
-    float m_fPathTimerate;
-    uint32 m_hEffectWaterSplash;
-    STATE m_eState;
-    float m_fStepTimer;
-    int32 m_subid;
-    bool m_bIsVib;
+    CGSMachineGimmickMove*  m_pGSMachineGimmickMove;
+    CBodyHitData*           m_pBodyHitData;
+    CNormalGimmickModel     m_model;
+    CGimmickMotion*         m_pGimmickMotion;
+    char                    m_szPathName[8];
+    RwV3d                   m_vNearestPlayerPosition;
+    float                   m_fDistance;
+    float                   m_fNearestPathT;
+    float                   m_fAimPlayrate;
+    float                   m_fAimPathTimerate;
+    float                   m_fPlayrate;
+    float                   m_fPathTimerate;
+    uint32                  m_hEffectWaterSplash;
+    STATE                   m_eState;
+    float                   m_fStepTimer;
+    int32                   m_subid;
+    bool                    m_bIsVib;
 };

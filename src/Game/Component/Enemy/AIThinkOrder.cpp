@@ -54,6 +54,7 @@ CAIThinkOrder::ORDERMOVE& CAIThinkOrder::OrderMove(void)
 };
 
 
+
 CAIThinkOrder::ORDERRUN& CAIThinkOrder::OrderRun(void)
 {
     ASSERT(m_eOrder == ORDER_RUN);
@@ -66,6 +67,7 @@ CAIThinkOrder::ORDERATTACK& CAIThinkOrder::OrderAttack(void)
     ASSERT(m_eOrder == ORDER_ATTACK);
     return m_order.m_attack;
 };
+
 
 
 CAIThinkOrder::ORDERDEFENCE& CAIThinkOrder::OrderDefence(void)

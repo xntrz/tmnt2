@@ -62,6 +62,8 @@ static void CallSeq(void* param)
 #define CallAreaParamGetFlag(Param)                 (((Param) >> 8)  & 0xFFFF)
 
 #define CALLAREA_FLAG_GMKGEN_DISABLE                 (1 << 0)
+#define CALLAREA_FLAG_STAGE_SERIES                   (1 << 1)
+
 
 //
 //	Calls specified area play sequence
@@ -93,10 +95,18 @@ static void CallArea(void* param)
     CGameData::Record().Item().SetItemTaken(ITEMID::ID_DON_LASER);
     CGameData::Option().Display().SetEnableFontEffect(true);
     CGameData::Option().Play().SetDifficulty(GAMETYPES::DIFFICULTY_HARD);
-    CGameData::PlayParam().SetAreaPlaymode(CGamePlayParam::AREAPLAYMODE_ONE_STAGE);
 
-    uint32 Flag = CallAreaParamGetFlag(AreaParam);
-    CGimmickDebug::DISABLE_GENERERATOR = bool(Flag & CALLAREA_FLAG_GMKGEN_DISABLE);
+    uint32 callAreaFlag = CallAreaParamGetFlag(AreaParam);
+
+    if (callAreaFlag & CALLAREA_FLAG_STAGE_SERIES)
+        CGameData::PlayParam().SetAreaPlaymode(CGamePlayParam::AREAPLAYMODE_SERIES);
+    else
+        CGameData::PlayParam().SetAreaPlaymode(CGamePlayParam::AREAPLAYMODE_ONE_STAGE);
+
+    if (callAreaFlag & CALLAREA_FLAG_GMKGEN_DISABLE)
+        CGimmickDebug::DISABLE_GENERERATOR = true;
+    else
+        CGimmickDebug::DISABLE_GENERERATOR = false;
 
     bool bSkipIntroOutroMovies = true;
     s_pDebugMainSeq->Call(PROCLABEL_SEQ_AREAPLAY, reinterpret_cast<const void*>(bSkipIntroOutroMovies));
@@ -115,7 +125,7 @@ static void CallPrintText(void* param)
 };
 
 
-/**
+/*
  *  All tests (except enemy) runs in singleplayer mode so we need to have keyboard as main controller (first)
  */
 static void LockControllersWithKeyboardPriority(void)
@@ -189,24 +199,33 @@ bool CDebugMainSequence::OnAttach(const void* pParam)
             s_pDebugMainSeq->Call(PROCLABEL_SEQ_AREA, (const void*)idAreaOfWorld[nValue]);
     });
     m_menu.AddSeparator();
-    //m_menu.AddBool("ENABLE player AI", s_bNormalGamePAI, [](bool value, bool trigger) {
-    //    if (value != s_bNormalGamePAI)
-    //    {
-    //        s_bNormalGamePAI = value;
-    //        if (s_bNormalGamePAI)
-    //            EnemyTestPlayerAILaunch(s_pDebugMainSeq);
-    //        else
-    //            EnemyTestPlayerAIKill(s_pDebugMainSeq);
-    //    };
-    //});
-    m_menu.AddTrigger("usagi",                    CallArea,       CallAreaParamMake(AREAID::ID_AREA60_D, 8, 0)); // tourney
-    m_menu.AddTrigger("foot mech splinter 1",     CallArea,       CallAreaParamMake(AREAID::ID_AREA47, 1, 0)); // sewers
-    m_menu.AddTrigger("foot mech splinter 2",     CallArea,       CallAreaParamMake(AREAID::ID_AREA60_C, 7, 0)); // tourney
-    m_menu.AddTrigger("splinter",                 CallArea,       CallAreaParamMake(AREAID::ID_AREA60_D, 6, 0)); // tourney
-    m_menu.AddTrigger("elite guard A",            CallArea,       CallAreaParamMake(AREAID::ID_AREA52, 1, 0)); // docks
-    m_menu.AddTrigger("elite guard B",            CallArea,       CallAreaParamMake(AREAID::ID_AREA53, 1, 0)); // storage
-    m_menu.AddTrigger("elite guard C",            CallArea,       CallAreaParamMake(AREAID::ID_AREA54, 1, 0)); // lab
-    m_menu.AddTrigger("elite guard D",            CallArea,       CallAreaParamMake(AREAID::ID_AREA55, 1, 0)); // engine room
+//    m_menu.AddBool("ENABLE player AI", s_bNormalGamePAI, [](bool value, bool trigger) {
+//        if (value != s_bNormalGamePAI)
+//        {
+//            s_bNormalGamePAI = value;
+//            if (s_bNormalGamePAI)
+//                EnemyTestPlayerAILaunch(s_pDebugMainSeq);
+//            else
+//                EnemyTestPlayerAIKill(s_pDebugMainSeq);
+//        };
+//    });
+    m_menu.AddTrigger("ultimate ninja nexus",     CallArea,       CallAreaParamMake(AREAID::ID_AREA60_D, 4, 0)); // tourney
+    m_menu.AddTrigger("ultimate ninja bridge p",  CallArea,       CallAreaParamMake(AREAID::ID_AREA44, 1, 0)); // bridge pillar
+    m_menu.AddTrigger("ultimate ninja bridge",    CallArea,       CallAreaParamMake(AREAID::ID_AREA44, 0, CALLAREA_FLAG_STAGE_SERIES)); // bridge
+    m_menu.AddTrigger("ultimate ninja park",      CallArea,       CallAreaParamMake(AREAID::ID_AREA43, 0, 0)); // park
+    m_menu.AddTrigger("shredder ultimate nexus",  CallArea,       CallAreaParamMake(AREAID::ID_AREA60_C, 9, 0)); // tourney
+    m_menu.AddTrigger("shredder ultimate",        CallArea,       CallAreaParamMake(AREAID::ID_AREA58, 0, CALLAREA_FLAG_STAGE_SERIES)); // deck
+    m_menu.AddTrigger("shredder japan",           CallArea,       CallAreaParamMake(AREAID::ID_AREA38, 0, 0)); // cliff
+    m_menu.AddTrigger("shredder",                 CallArea,       CallAreaParamMake(AREAID::ID_AREA40, 0, 0)); // transmat
+    m_menu.AddTrigger("traximus",                 CallArea,       CallAreaParamMake(AREAID::ID_AREA30, 1, 0)); // prison
+    //m_menu.AddTrigger("usagi",                    CallArea,       CallAreaParamMake(AREAID::ID_AREA60_D, 8, 0)); // tourney
+    //m_menu.AddTrigger("foot mech splinter 1",     CallArea,       CallAreaParamMake(AREAID::ID_AREA47, 1, 0)); // sewers
+    //m_menu.AddTrigger("foot mech splinter 2",     CallArea,       CallAreaParamMake(AREAID::ID_AREA60_C, 7, 0)); // tourney
+    //m_menu.AddTrigger("splinter",                 CallArea,       CallAreaParamMake(AREAID::ID_AREA60_D, 6, 0)); // tourney
+    //m_menu.AddTrigger("elite guard A",            CallArea,       CallAreaParamMake(AREAID::ID_AREA52, 1, 0)); // docks
+    //m_menu.AddTrigger("elite guard B",            CallArea,       CallAreaParamMake(AREAID::ID_AREA53, 1, 0)); // storage
+    //m_menu.AddTrigger("elite guard C",            CallArea,       CallAreaParamMake(AREAID::ID_AREA54, 1, 0)); // lab
+    //m_menu.AddTrigger("elite guard D",            CallArea,       CallAreaParamMake(AREAID::ID_AREA55, 1, 0)); // engine room
     //m_menu.AddTrigger("leatherhead test 1",     CallArea,       CallAreaParamMake(AREAID::ID_AREA42, 0, 0)); // turtles old lair
     //m_menu.AddTrigger("leatherhead test 2",     CallArea,       CallAreaParamMake(AREAID::ID_AREA60_B, 9, 0)); // tourney
     //m_menu.AddTrigger("hun 1 test",             CallArea,       CallAreaParamMake(AREAID::ID_AREA02, 1, 0)); // palace
@@ -225,10 +244,10 @@ bool CDebugMainSequence::OnAttach(const void* pParam)
     //m_menu.AddTrigger("TRICERATOR ride test",   CallArea,       AREAID::ID_AREA32);
     //m_menu.AddTrigger("japan shred camera test",CallArea,       AREAID::ID_AREA38);
     //m_menu.AddTrigger("RAIN test",              CallArea,       AREAID::ID_AREA49);
-    //m_menu.AddTrigger("switch pillar test",     CallArea,       AREAID::ID_AREA04);
-    //m_menu.AddTrigger("gs machine test",        CallArea,       AREAID::ID_AREA17);
-    //m_menu.AddTrigger("fall rubble test",       CallArea,       CallAreaParamMake(AREAID::ID_AREA58, 1, CALLAREA_FLAG_GMKGEN_DISABLE));
-    //m_menu.AddTrigger("space ship SE test",     CallArea,       AREAID::ID_AREA28);
+    m_menu.AddTrigger("switch pillar test",     CallArea,       AREAID::ID_AREA04);
+    m_menu.AddTrigger("gs machine test",        CallArea,       AREAID::ID_AREA17);
+    m_menu.AddTrigger("fall rubble test",       CallArea,       CallAreaParamMake(AREAID::ID_AREA58, 1, CALLAREA_FLAG_GMKGEN_DISABLE));
+    m_menu.AddTrigger("space ship SE test",     CallArea,       AREAID::ID_AREA28);
     //m_menu.AddTrigger("trailer chase test",     CallArea,       AREAID::ID_AREA43);
     //m_menu.AddTrigger("fugitoid demo",          CallArea,       AREAID::ID_AREA15);
     //m_menu.AddTrigger("fps drop test",          CallArea,       AREAID::ID_AREA54);

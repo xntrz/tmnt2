@@ -27,29 +27,29 @@ CPipeGimmick::CPipeGimmick(const char* pszName, void* pParam)
 };
 
 
-CPipeGimmick::~CPipeGimmick(void)
+/*virtual*/ CPipeGimmick::~CPipeGimmick(void)
 {
     if (m_hMagic)
     {
-        CMagicManager::Finish(m_hMagic);
+        CMagicManager::End(m_hMagic);
         m_hMagic = 0;
     };
 };
 
 
-void CPipeGimmick::GetPosition(RwV3d* pvPosition) const
+/*virtual*/ void CPipeGimmick::GetPosition(RwV3d* pvPosition) const /*override*/
 {
     *pvPosition = m_vPosition;
 };
 
 
-GIMMICKTYPES::FEATURE CPipeGimmick::GetFeatures(void) const
+/*virtual*/ GIMMICKTYPES::FEATURE CPipeGimmick::GetFeatures(void) const /*override*/
 {
     return GIMMICKTYPES::FEATURE_ABLE_SLEEP;
 };
 
 
-void CPipeGimmick::PostMove(void)
+/*virtual*/ void CPipeGimmick::PostMove(void) /*override*/
 {
     switch (m_state)
     {
@@ -80,7 +80,7 @@ void CPipeGimmick::PostMove(void)
 };
 
 
-void CPipeGimmick::OnCatchAttack(CHitAttackData* pAttack)
+/*virtual*/ void CPipeGimmick::OnCatchAttack(CHitAttackData* pAttack) /*override*/
 {
     ASSERT(pAttack);
     
@@ -102,7 +102,7 @@ void CPipeGimmick::init(void* pParam)
 {
     ASSERT(pParam);
     
-    GIMMICKPARAM::GIMMICK_AREA_BOX* pAreaBoxParam = (GIMMICKPARAM::GIMMICK_AREA_BOX*)pParam;
+    GIMMICKPARAM::GIMMICK_AREA_BOX* pAreaBoxParam = static_cast<GIMMICKPARAM::GIMMICK_AREA_BOX*>(pParam);
     m_subid = pAreaBoxParam->m_subid;
     
     RwV3d box = pAreaBoxParam->m_box;
@@ -130,24 +130,28 @@ void CPipeGimmick::init(void* pParam)
     };
 
     pt *= 0.5f;
-    RwV3d start, end;
-    start = end = Math::VECTOR3_ZERO;
+
+    RwV3d vStart = Math::VECTOR3_ZERO;
+    RwV3d vEnd = Math::VECTOR3_ZERO;
 
     switch (no)
     {
     case 0:
-        start = { 0.0f, 0.0f, -pt };
-        end = { 0.0f, 0.0f, pt };
+        vStart = { 0.0f, 0.0f, -pt };
+        vEnd   = { 0.0f, 0.0f,  pt };
         break;
 
     case 1:
-        start = { 0.0f, pt * 2.0f, 0.0f };
-        end = { 0.0f, 0.0f,	0.0f };
+        vStart = { 0.0f, (pt * 2.0f), 0.0f };
+        vEnd   = { 0.0f,     0.0f,	  0.0f };
         break;
 
     case 2:
-        start = { -pt, 0.0f, 0.0f };
-        end = { pt, 0.0f, 0.0f };
+        vStart = { -pt, 0.0f, 0.0f };
+        vEnd   = {  pt, 0.0f, 0.0f };
+        break;
+
+    default:
         break;
     };
 
@@ -163,8 +167,8 @@ void CPipeGimmick::init(void* pParam)
     RwMatrixSetIdentityMacro(&matrix);
     Math::Matrix_Multiply(&matrix, &matrixRotation, &matrixTranslation);
     
-    RwV3dTransformPoint(&m_line.start, &start, &matrix);
-    RwV3dTransformPoint(&m_line.end, &end, &matrix);
+    RwV3dTransformPoint(&m_line.start, &vStart, &matrix);
+    RwV3dTransformPoint(&m_line.end, &vEnd, &matrix);
     Math::Vec3_Normalize(&m_vDirection, &matrixRotation.at);
     
     m_vPosition = pAreaBoxParam->m_vPosition;
@@ -173,28 +177,29 @@ void CPipeGimmick::init(void* pParam)
 
 void CPipeGimmick::waiting(void)
 {
-    RwV3d vTmp = Math::VECTOR3_ZERO;
-    Math::Vec3_Sub(&vTmp, &m_line.end, &m_line.start);
-    float fLineLength = Math::Vec3_Length(&vTmp);
-    Math::Vec3_Normalize(&vTmp, &vTmp);
+    RwV3d vHeight = Math::VECTOR3_ZERO;
+    Math::Vec3_Sub(&vHeight, &m_line.end, &m_line.start);
 
-    int32 nCheckNum = int32(fLineLength) + 1;
+    float fHeight = Math::Vec3_Length(&vHeight);
+    Math::Vec3_Normalize(&vHeight, &vHeight);
+
+    int32 nCheckNum = static_cast<int32>(fHeight) + 1;
     RwV3d vPosition = m_line.start;
     for (int32 i = 0; i < nCheckNum; ++i)
     {
-        RwSphere sphere = { 0 };
-        sphere.center = vPosition;
-        sphere.radius = 0.5f;
+        RwSphere hitSphere = { 0 };
+        hitSphere.center = vPosition;
+        hitSphere.radius = 0.5f;
 
-        Math::Vec3_Add(&vPosition, &vPosition, &vTmp);
+        Math::Vec3_Add(&vPosition, &vPosition, &vHeight);
 
-        CHitCatchData Catch;
-        Catch.SetObject(GetHandle());
-        Catch.SetObjectType(GetType());
-        Catch.SetSphere(&sphere);
-        Catch.SetCatchNo(i);
+        CHitCatchData hitCatch;
+        hitCatch.SetObject(GetHandle());
+        hitCatch.SetObjectType(GetType());
+        hitCatch.SetSphere(&hitSphere);
+        hitCatch.SetCatchNo(i);
 
-        CHitAttackManager::RegistCatch(&Catch);
+        CHitAttackManager::RegistCatch(&hitCatch);
     };
 };
 
@@ -213,7 +218,7 @@ void CPipeGimmick::spray(void)
     {
         if (m_hMagic)
         {
-            CMagicManager::Finish(m_hMagic);
+            CMagicManager::End(m_hMagic);
             m_hMagic = 0;
         };
 
@@ -250,7 +255,6 @@ void CPipeGimmick::setSprayEffect(const RwV3d* pvPosition)
     param.SetObject(this);
     
     m_hMagic = CMagicManager::Play(idMagic, &param);
-    ASSERT(m_hMagic);
     if (m_hMagic)
         CMagicManager::SetScale(m_hMagic, 1.5f);
 };

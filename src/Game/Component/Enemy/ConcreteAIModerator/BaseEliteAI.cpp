@@ -1524,7 +1524,7 @@ CBaseEliteAI::CBaseEliteAI(CEnemyCharacter* pEnemyChr)
 };
 
 
-/*virtual*/ void CBaseEliteAI::CatchAttack(uint32 hAttacker)
+/*virtual*/ void CBaseEliteAI::CatchAttack(uint32 hObj, GAMEOBJECTTYPE::VALUE objType)
 {
     ;
 };

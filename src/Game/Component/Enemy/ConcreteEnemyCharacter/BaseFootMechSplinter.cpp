@@ -1008,13 +1008,12 @@ CBaseFootMechSplinter::OnDamage(CCharacterAttackCalculator& rCalc) /*override*/
 
     CHitAttackData* pAttack = &rCalc.GetAttack();
 
-    CGameObject* pAttacker = pAttack->GetObject();
-    uint32 hAttacker = CEnemyUtils::GetHandleFromHitObj(pAttacker);
-    AIModerator().CatchAttack(hAttacker);
+    uint32 hObj = CEnemyUtils::GetHandleFromHitObj(pAttack->GetObject());
+    AIModerator().CatchAttack(hObj, pAttack->GetObject()->GetType());
 
     bool bIsAttackHit = (attackResult == CHARACTERTYPES::ATTACKRESULTTYPE_DAMAGE_KNOCK) ||
                         (attackResult == CHARACTERTYPES::ATTACKRESULTTYPE_DAMAGE_FLYAWAY);
-    bool bIsAttackerChr = (pAttacker->GetType() == GAMEOBJECTTYPE::CHARACTER);
+    bool bIsAttackerChr = (pAttack->GetObject()->GetType() == GAMEOBJECTTYPE::CHARACTER);
     if (bIsAttackHit && bIsAttackerChr)
         AIModerator().AttackCountInc();
 

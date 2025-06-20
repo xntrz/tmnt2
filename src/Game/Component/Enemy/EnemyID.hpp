@@ -80,8 +80,12 @@
  *  - ID_KARAI
  *
  *
- *  CBaseAI6043 list:
- *    TODO
+ *  Utils6034::IBaseAIModerator list:
+ *  - ID_TRAXIMUS
+ *  - ID_ULTIMATE_NINJA
+ *  - ID_SHREDDER
+ *  - ID_FEUDAL_JAPAN_SHREDDER
+ *  - ID_ULTIMATE_SHREDDER
  *
  *
  *  Others (that not use any base) list:

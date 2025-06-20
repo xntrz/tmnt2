@@ -377,7 +377,7 @@ public:
     virtual void Draw(void) override;
     virtual void AttackCountInc(void);
     virtual void AttackCountDamage(int32 iAmount);
-    virtual void CatchAttack(uint32 hAttacker);
+    virtual void CatchAttack(uint32 hObj, GAMEOBJECTTYPE::VALUE objType);
     virtual void OnStatusEnd(ENEMYTYPES::STATUS statusEnd);
     void SetTerritory(ENEMYID::VALUE enemyId);
     bool WaitAIStartProc(void);

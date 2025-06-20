@@ -188,8 +188,8 @@ void CFallRubbleGimmickManager::initRubbleInfo(CGameObject* pObj, RUBBLEINFO* pI
 
     if (pPlayerChara->GetStatus() == PLAYERTYPES::STATUS_CRASH_WALL_TOUCHDOWN_BACK)
     {
-		vRotation.y += Math::PI;
-		vRotation.y = Math::RadianInvClamp(vRotation.y); // TODO rework to radian correct light
+        vRotation.y += MATH_PI;
+		vRotation.y = Math::RadianCorrection(vRotation.y);
     };
 
     Math::Matrix_AffineTransformation(&pInfo->m_matrix, nullptr, &vRotation, &vPosition);

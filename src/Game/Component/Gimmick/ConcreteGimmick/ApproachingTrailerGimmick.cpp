@@ -27,39 +27,35 @@
 #include "Game/System/Sound/MessageManager.hpp"
 
 
-class CAppTrailerAttackBase
+class CApproachingTrailerGimmick::CAttackBase
 {
 public:
-    CAppTrailerAttackBase(CApproachingTrailerGimmick* pTrailer);
-    virtual ~CAppTrailerAttackBase(void) {};
-    virtual bool Attach(void) = 0;
-    virtual bool Detach(void) = 0;
-    virtual bool Move(void) = 0;
+    CAttackBase(CApproachingTrailerGimmick* pTrailer);
+    virtual ~CAttackBase(void) {};
+    virtual bool Attach(void) { return true; };
+    virtual bool Detach(void) { return true; };
+    virtual bool Move(void) { return true; };
     bool Run(void);
     bool Charge(void);
     void ShotEnergyBall(const RwV3d* pvPos, const RwV3d* pvDir, float fScale);
-
-    inline const RwV3d* GetShotPos(void) const { return &m_vShotPos; };
-    inline void SetShotPos(const RwV3d* pvPos) { m_vShotPos = *pvPos; };
-
-    inline CApproachingTrailerGimmick& Trailer(void) const { return *m_pTrailer; };
-    inline float GetSpeed(void) const { return m_fSpeed; };
+    void SetShotPos(const RwV3d* pvPos);
+    float GetSpeed(void) const;
     
 protected:
     CApproachingTrailerGimmick* m_pTrailer;
     RwV3d m_vShotPos;
     int32 m_iPlayerNum;
     float m_fSpeed;
-    int32 m_eState;
+    int32 m_iStep;
 };
 
 
-class CAppTrailerAttackAimingShot final : public CAppTrailerAttackBase
+class CApproachingTrailerGimmick::CAttackAimingShot final : public CApproachingTrailerGimmick::CAttackBase
 {
 public:
-    CAppTrailerAttackAimingShot(CApproachingTrailerGimmick* pTrailer, int32 iShotCnt);
+    CAttackAimingShot(CApproachingTrailerGimmick* pTrailer, int32 iShotCnt);
+    virtual ~CAttackAimingShot(void) {};
     virtual bool Attach(void) override;
-    virtual bool Detach(void) override { return true; };
     virtual bool Move(void) override;
 
 private:
@@ -70,12 +66,12 @@ private:
 };
 
 
-class CAppTrailerAttackAreaShot final : public CAppTrailerAttackBase
+class CApproachingTrailerGimmick::CAttackAreaShot final : public CApproachingTrailerGimmick::CAttackBase
 {
 public:
-    CAppTrailerAttackAreaShot(CApproachingTrailerGimmick* pTrailer, float fOfsX);
+    CAttackAreaShot(CApproachingTrailerGimmick* pTrailer, float fOfsX);
+    virtual ~CAttackAreaShot(void) {};
     virtual bool Attach(void) override;
-    virtual bool Detach(void) override { return true; };
     virtual bool Move(void) override;
     
 private:
@@ -83,30 +79,30 @@ private:
 };
 
 
-class CAppTrailerAttackCenterLinearShot final : public CAppTrailerAttackBase
+class CApproachingTrailerGimmick::CAttackCenterLinearShot final : public CApproachingTrailerGimmick::CAttackBase
 {
 public:
-    CAppTrailerAttackCenterLinearShot(CApproachingTrailerGimmick* pTrailer);
+    CAttackCenterLinearShot(CApproachingTrailerGimmick* pTrailer);
+    virtual ~CAttackCenterLinearShot(void) {};
     virtual bool Attach(void) override;
-    virtual bool Detach(void) override { return true; };
     virtual bool Move(void) override;
 
 private:
-    int32 m_iTargetPlayerNo;
-    int32 m_iShotCnt;
-    int32 m_iShotNum;
-    float m_fTimerCounter;
+    int32  m_iTargetPlayerNo;
+    int32  m_iShotCnt;
+    int32  m_iShotNum;
+    float  m_fTimerCounter;
     RwV3d* m_pvPos;
-    RwV3d m_avShotPoint[3];
+    RwV3d  m_avShotPoint[3];
 };
 
 
-class CAppTrailerAttackSurroundShot final : public CAppTrailerAttackBase
+class CApproachingTrailerGimmick::CAttackSurroundShot final : public CApproachingTrailerGimmick::CAttackBase
 {
 public:
-    CAppTrailerAttackSurroundShot(CApproachingTrailerGimmick* pTrailer);
+    CAttackSurroundShot(CApproachingTrailerGimmick* pTrailer);
+    virtual ~CAttackSurroundShot(void) {};
     virtual bool Attach(void) override;
-    virtual bool Detach(void) override { return true; };
     virtual bool Move(void) override;
     
 private:
@@ -114,53 +110,57 @@ private:
 };
 
 
-class CAppTrailerAttackThreePointShot final : public CAppTrailerAttackBase
+class CApproachingTrailerGimmick::CAttackThreePointShot final : public CApproachingTrailerGimmick::CAttackBase
 {
 public:
-    CAppTrailerAttackThreePointShot(CApproachingTrailerGimmick* pTrailer, float fOfsX);
+    CAttackThreePointShot(CApproachingTrailerGimmick* pTrailer, float fOfsX);
+    virtual ~CAttackThreePointShot(void) {};
     virtual bool Attach(void) override;
-    virtual bool Detach(void) override { return true; };
     virtual bool Move(void) override;
     
 private:
-    int32 m_iTargetPlayerNo;
-    int32 m_iShotCnt;
-    int32 m_iShotNum;
-    float m_fTimerCounter;
+    int32  m_iTargetPlayerNo;
+    int32  m_iShotCnt;
+    int32  m_iShotNum;
+    float  m_fTimerCounter;
     RwV3d* m_pvPos;
-    RwV3d m_avShotPoint[3];
-    float m_fOfsX;
+    RwV3d  m_avShotPoint[3];
+    float  m_fOfsX;
 };
 
 
-CAppTrailerAttackBase::CAppTrailerAttackBase(CApproachingTrailerGimmick* pTrailer)
+//
+// *********************************************************************************
+//
+
+
+CApproachingTrailerGimmick::CAttackBase::CAttackBase(CApproachingTrailerGimmick* pTrailer)
 : m_pTrailer(pTrailer)
 , m_vShotPos(Math::VECTOR3_ZERO)
 , m_iPlayerNum(0)
 , m_fSpeed(0.0f)
-, m_eState(0)
+, m_iStep(0)
 {
-    ASSERT(m_pTrailer);
+    ;
 };
 
 
-bool CAppTrailerAttackBase::Run(void)
+bool CApproachingTrailerGimmick::CAttackBase::Run(void)
 {
     bool bResult = false;
     
-    switch (m_eState)
+    switch (m_iStep)
     {
     case 0:
-        {
-            if (Charge())
-                m_eState = 1;
-        }
+        if (Charge())
+            m_iStep = 1;
         break;
 
     case 1:
-        {
-            bResult = Move();
-        }
+        bResult = Move();
+        break;
+
+    default:
         break;
     };
     
@@ -168,9 +168,9 @@ bool CAppTrailerAttackBase::Run(void)
 };
 
 
-bool CAppTrailerAttackBase::Charge(void)
+bool CApproachingTrailerGimmick::CAttackBase::Charge(void)
 {
-    float fPathT = m_pTrailer->GetMovement()->GetPathT();
+    float fPathT = m_pTrailer->m_pApproachingTrailerGimmickMove->GetPathT();
     float fAimAttackPathT = m_pTrailer->GetAimAttackPathTime();
     
     if (fAimAttackPathT < fPathT)
@@ -183,22 +183,34 @@ bool CAppTrailerAttackBase::Charge(void)
 };
 
 
-void CAppTrailerAttackBase::ShotEnergyBall(const RwV3d* pvPos, const RwV3d* pvDir, float fSpeed)
+void CApproachingTrailerGimmick::CAttackBase::ShotEnergyBall(const RwV3d* pvPos,
+                                                             const RwV3d* pvDir,
+                                                             float fSpeed)
 {
-    CMagicManager::CParameter MagicParam;
-    MagicParam.SetPositon(pvPos);
-    MagicParam.SetDirection(pvDir);
-    MagicParam.SetObject(m_pTrailer);
-    MagicParam.SetSoundPlay(false);
-
-    uint32 hMagic = CMagicManager::Play(MAGICID::ID_GUNBALL, &MagicParam);
-    ASSERT(hMagic);
+    CMagicManager::CParameter param;
+    param.SetPositon(pvPos);
+    param.SetDirection(pvDir);
+    param.SetObject(m_pTrailer);
+    param.SetSoundPlay(false);
 
     RwV3d vVelocity = Math::VECTOR3_ZERO;
     Math::Vec3_Normalize(&vVelocity, pvDir);
     Math::Vec3_Scale(&vVelocity, &vVelocity, Clamp(fSpeed, 15.0f, 22.0f));
 
+    uint32 hMagic = CMagicManager::Play(MAGICID::ID_GUNBALL, &param);
     CMagicManager::SetSpeed(hMagic, &vVelocity);
+};
+
+
+void CApproachingTrailerGimmick::CAttackBase::SetShotPos(const RwV3d* pvPos)
+{
+    m_vShotPos = *pvPos;
+};
+
+
+float CApproachingTrailerGimmick::CAttackBase::GetSpeed(void) const
+{
+    return m_fSpeed;
 };
 
 
@@ -207,8 +219,8 @@ void CAppTrailerAttackBase::ShotEnergyBall(const RwV3d* pvPos, const RwV3d* pvDi
 //
 
 
-CAppTrailerAttackAimingShot::CAppTrailerAttackAimingShot(CApproachingTrailerGimmick* pTrailer, int32 iShotCnt)
-: CAppTrailerAttackBase(pTrailer)
+CApproachingTrailerGimmick::CAttackAimingShot::CAttackAimingShot(CApproachingTrailerGimmick* pTrailer, int32 iShotCnt)
+: CApproachingTrailerGimmick::CAttackBase(pTrailer)
 , m_iTargetPlayerNo(0)
 , m_iShotCnt(iShotCnt)
 , m_iShotNum(0)
@@ -218,19 +230,19 @@ CAppTrailerAttackAimingShot::CAppTrailerAttackAimingShot(CApproachingTrailerGimm
 };
 
 
-bool CAppTrailerAttackAimingShot::Attach(void)
+/*virtual*/ bool CApproachingTrailerGimmick::CAttackAimingShot::Attach(void) /*override*/
 {
     m_iTargetPlayerNo = 0;
     m_iShotNum = m_iShotCnt;
     m_fTimerCounter = 0.0f;
     m_fSpeed = 10.0f;
-    m_eState = 0;
+    m_iStep = 0;
 
     return true;
 };
 
 
-bool CAppTrailerAttackAimingShot::Move(void)
+/*virtual*/ bool CApproachingTrailerGimmick::CAttackAimingShot::Move(void) /*override*/
 {
     if (m_fTimerCounter >= 0.0f)
     {
@@ -267,6 +279,7 @@ bool CAppTrailerAttackAimingShot::Move(void)
 
         --m_iShotNum;
         m_fTimerCounter = 0.5f;
+
         return false;
     };
 
@@ -279,24 +292,24 @@ bool CAppTrailerAttackAimingShot::Move(void)
 //
 
 
-CAppTrailerAttackAreaShot::CAppTrailerAttackAreaShot(CApproachingTrailerGimmick* pTrailer, float fOfsX)
-: CAppTrailerAttackBase(pTrailer)
+CApproachingTrailerGimmick::CAttackAreaShot::CAttackAreaShot(CApproachingTrailerGimmick* pTrailer, float fOfsX)
+: CApproachingTrailerGimmick::CAttackBase(pTrailer)
 , m_fOfsX(fOfsX)
 {
     ;
 };
 
 
-bool CAppTrailerAttackAreaShot::Attach(void)
+/*virtual*/ bool CApproachingTrailerGimmick::CAttackAreaShot::Attach(void) /*override*/
 {
     m_fSpeed = 10.0f;
-    m_eState = 0;
+    m_iStep = 0;
 
     return true;
 };
 
 
-bool CAppTrailerAttackAreaShot::Move(void)
+/*virtual*/ bool CApproachingTrailerGimmick::CAttackAreaShot::Move(void) /*override*/
 {
     RwV3d avLocal[] =
     {
@@ -327,8 +340,8 @@ bool CAppTrailerAttackAreaShot::Move(void)
 //
 
 
-CAppTrailerAttackCenterLinearShot::CAppTrailerAttackCenterLinearShot(CApproachingTrailerGimmick* pTrailer)
-: CAppTrailerAttackBase(pTrailer)
+CApproachingTrailerGimmick::CAttackCenterLinearShot::CAttackCenterLinearShot(CApproachingTrailerGimmick* pTrailer)
+: CApproachingTrailerGimmick::CAttackBase(pTrailer)
 , m_iTargetPlayerNo(0)
 , m_iShotCnt(0)
 , m_iShotNum(0)
@@ -340,7 +353,7 @@ CAppTrailerAttackCenterLinearShot::CAppTrailerAttackCenterLinearShot(CApproachin
 };
 
 
-bool CAppTrailerAttackCenterLinearShot::Attach(void)
+/*virtual*/ bool CApproachingTrailerGimmick::CAttackCenterLinearShot::Attach(void) /*override*/
 {
     m_iTargetPlayerNo += Math::RandRange(0, (GAMETYPES::PLAYERS_MAX * 2));
     m_iTargetPlayerNo %= CGameProperty::GetPlayerNum();
@@ -354,13 +367,13 @@ bool CAppTrailerAttackCenterLinearShot::Attach(void)
     m_fTimerCounter = 0.5f;
     
     m_fSpeed = 10.0f;
-    m_eState = 0;
+    m_iStep = 0;
 
     return true;
 };
 
 
-bool CAppTrailerAttackCenterLinearShot::Move(void)
+/*virtual*/ bool CApproachingTrailerGimmick::CAttackCenterLinearShot::Move(void) /*override*/
 {
     if (!m_pvPos)
     {
@@ -406,6 +419,7 @@ bool CAppTrailerAttackCenterLinearShot::Move(void)
 
         --m_iShotNum;
         m_fTimerCounter = 0.1f;
+
         return false;
     };
 
@@ -418,15 +432,15 @@ bool CAppTrailerAttackCenterLinearShot::Move(void)
 //
 
 
-CAppTrailerAttackSurroundShot::CAppTrailerAttackSurroundShot(CApproachingTrailerGimmick* pTrailer)
-: CAppTrailerAttackBase(pTrailer)
+CApproachingTrailerGimmick::CAttackSurroundShot::CAttackSurroundShot(CApproachingTrailerGimmick* pTrailer)
+: CApproachingTrailerGimmick::CAttackBase(pTrailer)
 , m_iTargetPlayerNo(0)
 {
     ;
 };
 
 
-bool CAppTrailerAttackSurroundShot::Attach(void)
+/*virtual*/ bool CApproachingTrailerGimmick::CAttackSurroundShot::Attach(void) /*override*/
 {
     m_iTargetPlayerNo += Math::RandRange(0, (GAMETYPES::PLAYERS_MAX * 2));
     m_iTargetPlayerNo %= CGameProperty::GetPlayerNum();
@@ -435,13 +449,13 @@ bool CAppTrailerAttackSurroundShot::Attach(void)
         m_iTargetPlayerNo = GAMETYPES::PLAYERS_MAX;
 
     m_fSpeed = 10.0f;
-    m_eState = 0;
+    m_iStep = 0;
 
     return true;
 };
 
 
-bool CAppTrailerAttackSurroundShot::Move(void)
+/*virtual*/ bool CApproachingTrailerGimmick::CAttackSurroundShot::Move(void) /*override*/
 {
     RwV3d* pvPos = m_pTrailer->GetPlayerPos(m_iTargetPlayerNo);
 
@@ -464,18 +478,18 @@ bool CAppTrailerAttackSurroundShot::Move(void)
         float fOfsX;
     } static const s_aShotInfo[] =
     {
-        { -(MATH_PI / 8.0f),     0.0f },
-        { -(MATH_PI / 16.0f),   -1.0f },
-        {  (MATH_PI / 16.0f),    1.0f },
-        {  (MATH_PI / 8.0f),     0.0f },
+        { -MATH_DEG2RAD(22.5f),   0.0f },
+        { -MATH_DEG2RAD(11.25f), -1.0f },
+        {  MATH_DEG2RAD(11.25f),  1.0f },
+        {  MATH_DEG2RAD(22.5f),   0.0f },
     };
 
     for (int32 i = 0; i < COUNT_OF(s_aShotInfo); ++i)
     {        
         RwV3d vShotPoint = Math::VECTOR3_ZERO;
-        vShotPoint.x = vWorld.x + Math::Sin(s_aShotInfo[i].fTheta) * 12.0f + s_aShotInfo[i].fOfsX;
+        vShotPoint.x = vWorld.x + std::sin(s_aShotInfo[i].fTheta) * 12.0f + s_aShotInfo[i].fOfsX;
         vShotPoint.y = vWorld.y;
-        vShotPoint.z = vWorld.z + Math::Cos(s_aShotInfo[i].fTheta) * 12.0f;
+        vShotPoint.z = vWorld.z + std::cos(s_aShotInfo[i].fTheta) * 12.0f;
 
         RwV3d vShotDir = Math::VECTOR3_ZERO;
         Math::Vec3_Sub(&vShotDir, &vShotPoint, &m_vShotPos);
@@ -492,8 +506,9 @@ bool CAppTrailerAttackSurroundShot::Move(void)
 //
 
 
-CAppTrailerAttackThreePointShot::CAppTrailerAttackThreePointShot(CApproachingTrailerGimmick* pTrailer, float fOfsX)
-: CAppTrailerAttackBase(pTrailer)
+CApproachingTrailerGimmick::CAttackThreePointShot::CAttackThreePointShot(CApproachingTrailerGimmick* pTrailer,
+                                                                         float fOfsX)
+: CApproachingTrailerGimmick::CAttackBase(pTrailer)
 , m_iTargetPlayerNo(0)
 , m_iShotCnt(0)
 , m_iShotNum(0)
@@ -506,7 +521,7 @@ CAppTrailerAttackThreePointShot::CAppTrailerAttackThreePointShot(CApproachingTra
 };
 
 
-bool CAppTrailerAttackThreePointShot::Attach(void)
+/*virtual*/ bool CApproachingTrailerGimmick::CAttackThreePointShot::Attach(void) /*override*/
 {
     m_iTargetPlayerNo += Math::RandRange(0, (GAMETYPES::PLAYERS_MAX * 2));
     m_iTargetPlayerNo %= CGameProperty::GetPlayerNum();
@@ -520,13 +535,13 @@ bool CAppTrailerAttackThreePointShot::Attach(void)
     m_fTimerCounter = -1.0f;
 
     m_fSpeed = 10.0f;
-    m_eState = 0;
+    m_iStep = 0;
 
     return true;
 };
 
 
-bool CAppTrailerAttackThreePointShot::Move(void)
+/*virtual*/ bool CApproachingTrailerGimmick::CAttackThreePointShot::Move(void) /*override*/
 {
     if (!m_pvPos)
     {
@@ -544,9 +559,10 @@ bool CAppTrailerAttackThreePointShot::Move(void)
         for (int32 i = 0; i < COUNT_OF(m_avShotPoint); ++i)
         {
             RwV3d vLocalPoint = Math::VECTOR3_ZERO;
-            vLocalPoint.x = (m_fOfsX + m_fOfsX) * float(i);
+            vLocalPoint.x = (m_fOfsX * 2.0f) * static_cast<float>(i);
             vLocalPoint.y = vLocal.y;
             vLocalPoint.z = vLocal.z + 12.0f;
+
             RwV3dTransformPoint(&m_avShotPoint[i], &vLocalPoint, pModeling);
         };
     };
@@ -566,6 +582,7 @@ bool CAppTrailerAttackThreePointShot::Move(void)
 
         --m_iShotNum;
         m_fTimerCounter = 0.2f;
+
         return false;
     };
 
@@ -581,8 +598,8 @@ static const RwV3d s_avATEffectOffset[] =
 {
     {  3.87f,   12.43f, -10.88f },
     { -3.87f,   12.43f, -10.88f },
-    {  4.527f,  0.0f,   -3.96f  },
-    { -4.527f,  0.0f,   -3.96f  },
+    {  4.527f,    0.0f,  -3.96f  },
+    { -4.527f,    0.0f,  -3.96f  },
 };
 
 
@@ -603,20 +620,27 @@ static const char* s_apszUVAnimModel[] =
 };
 
 
+static const char* s_apszPathName[] =
+{
+    "truckpath1",
+    "truckpath2",
+};
+
+
 static float s_afPathLength[] = { 0.0f, 0.0f };
 static const float s_fHitRadius = 151.0f;
-static const RwV3d s_vOffset = { 0.0f, 0.0f, -150.0f };
+static const RwV3d s_vHitLocalPos = { 0.0f, 0.0f, -150.0f };
 
 
 CApproachingTrailerGimmick::CApproachingTrailerGimmick(const char* pszName, void* pParam)
 : CGimmick(pszName, pParam)
 , m_fFlyawayNearestPathT(0.0f)
-, m_bFlyawayRq(false)
+, m_bFlyaway(false)
 , m_pApproachingTrailerGimmickMove(nullptr)
 , m_pApproachingTrailerHeadGimmickMove(nullptr)
 , m_pBodyHitData(nullptr)
 , m_model()
-, m_szPathName()
+, m_bChanged(false)
 , m_nPower(0)
 , m_fFlyawayVelXZ(0.0f)
 , m_fFlyawayVelY(0.0f)
@@ -642,12 +666,13 @@ CApproachingTrailerGimmick::CApproachingTrailerGimmick(const char* pszName, void
 , m_pMotion(nullptr)
 , m_vHitOffset(Math::VECTOR3_ZERO)
 , m_bSEPlay(false)
-, m_bSEBeep(false)
+, m_bSERun(false)
 , m_bSEStop(false)
 {
     static_assert(COUNT_OF(m_ahEffect)  == COUNT_OF(s_avATEffectOffset), "should equal");
     static_assert(COUNT_OF(m_aLight)    == COUNT_OF(s_avATLightOffset), "should equal");
     static_assert(COUNT_OF(s_afPathLength) == SUBIDNUM, "should equal");
+    static_assert(COUNT_OF(s_apszPathName) == SUBIDNUM, "should equal");
 
     GIMMICKPARAM::GIMMICK_BASIC* pInitParam = static_cast<GIMMICKPARAM::GIMMICK_BASIC*>(pParam);
 
@@ -685,16 +710,8 @@ CApproachingTrailerGimmick::CApproachingTrailerGimmick(const char* pszName, void
     //
     //  init trailer movement
     //
-	m_pApproachingTrailerGimmickMove = new CApproachingTrailerGimmickMove;
-
-    static const char* s_apszPathName[] =
-    {
-        "truckpath1",
-        "truckpath2",
-    };
-
-    static_assert(COUNT_OF(s_apszPathName) == SUBIDNUM, "should equal");
-
+    m_pApproachingTrailerGimmickMove = new CApproachingTrailerGimmickMove;
+    
     switch (m_subid)
     {
     case SUBID_NORMAL:
@@ -713,7 +730,7 @@ CApproachingTrailerGimmick::CApproachingTrailerGimmick(const char* pszName, void
 
     m_pApproachingTrailerGimmickMove->InitPath(s_apszPathName[m_subid], 0.0f);
     m_pApproachingTrailerGimmickMove->SetPathLength(s_afPathLength[m_subid]);
-    m_pApproachingTrailerGimmickMove->SetRotation(&vRotation);    
+    m_pApproachingTrailerGimmickMove->SetRotation(&vRotation);
 
     //
     //  init head movement
@@ -736,7 +753,7 @@ CApproachingTrailerGimmick::CApproachingTrailerGimmick(const char* pszName, void
     RwMatrix* pModeling = m_model.GetMatrix(CNormalGimmickModel::MODELTYPE_DRAW_NORMAL);
 
     RwV3d vBodyPos = Math::VECTOR3_ZERO;
-    RwV3dTransformPoint(&vBodyPos, &s_vOffset, pModeling);
+    RwV3dTransformPoint(&vBodyPos, &s_vHitLocalPos, pModeling);
 
     m_pBodyHitData = CBodyHitManager::AllocData();
     ASSERT(m_pBodyHitData);
@@ -752,19 +769,19 @@ CApproachingTrailerGimmick::CApproachingTrailerGimmick(const char* pszName, void
     //
     //  init attack
     //
-    m_apAttackVariation[ATTACKTYPE_THREE_L]  = new CAppTrailerAttackThreePointShot(this, -1.0f);
-    m_apAttackVariation[ATTACKTYPE_THREE_R]  = new CAppTrailerAttackThreePointShot(this, 1.0f);
-    m_apAttackVariation[ATTACKTYPE_SURROUND] = new CAppTrailerAttackSurroundShot(this);
-    m_apAttackVariation[ATTACKTYPE_CENTER]   = new CAppTrailerAttackCenterLinearShot(this);
-    m_apAttackVariation[ATTACKTYPE_AREA_L]   = new CAppTrailerAttackAreaShot(this, -1.0f);
-    m_apAttackVariation[ATTACKTYPE_AREA_R]   = new CAppTrailerAttackAreaShot(this, 1.0f);
-    m_apAttackVariation[ATTACKTYPE_AIMING_1] = new CAppTrailerAttackAimingShot(this, 1);
-    m_apAttackVariation[ATTACKTYPE_AIMING_3] = new CAppTrailerAttackAimingShot(this, 3);
-    m_apAttackVariation[ATTACKTYPE_AIMING_5] = new CAppTrailerAttackAimingShot(this, 5);
+    m_apAttackVariation[ATTACKTYPE_THREE_L]  = new CApproachingTrailerGimmick::CAttackThreePointShot(this, -1.0f);
+    m_apAttackVariation[ATTACKTYPE_THREE_R]  = new CApproachingTrailerGimmick::CAttackThreePointShot(this, 1.0f);
+    m_apAttackVariation[ATTACKTYPE_SURROUND] = new CApproachingTrailerGimmick::CAttackSurroundShot(this);
+    m_apAttackVariation[ATTACKTYPE_CENTER]   = new CApproachingTrailerGimmick::CAttackCenterLinearShot(this);
+    m_apAttackVariation[ATTACKTYPE_AREA_L]   = new CApproachingTrailerGimmick::CAttackAreaShot(this, -1.0f);
+    m_apAttackVariation[ATTACKTYPE_AREA_R]   = new CApproachingTrailerGimmick::CAttackAreaShot(this, 1.0f);
+    m_apAttackVariation[ATTACKTYPE_AIMING_1] = new CApproachingTrailerGimmick::CAttackAimingShot(this, 1);
+    m_apAttackVariation[ATTACKTYPE_AIMING_3] = new CApproachingTrailerGimmick::CAttackAimingShot(this, 3);
+    m_apAttackVariation[ATTACKTYPE_AIMING_5] = new CApproachingTrailerGimmick::CAttackAimingShot(this, 5);
 
     m_pAttack = m_apAttackVariation[ATTACKTYPE_THREE_L];
 
-    m_nNumAttackVariation = ATTACKTYPENUM + 1;
+    m_nNumAttackVariation = ATTACKTYPENUM_ALL;
 
     //
     //  init effect
@@ -793,9 +810,9 @@ CApproachingTrailerGimmick::CApproachingTrailerGimmick(const char* pszName, void
 };
 
 
-CApproachingTrailerGimmick::~CApproachingTrailerGimmick(void)
+/*virtual*/ CApproachingTrailerGimmick::~CApproachingTrailerGimmick(void)
 {
-    if(m_pMotion)
+    if (m_pMotion)
     {
         delete m_pMotion;
         m_pMotion = nullptr;
@@ -833,7 +850,7 @@ CApproachingTrailerGimmick::~CApproachingTrailerGimmick(void)
 };
 
 
-void CApproachingTrailerGimmick::PostMove(void)
+/*virtual*/ void CApproachingTrailerGimmick::PostMove(void) /*override*/
 {
     SetPlayerInfo();
 
@@ -913,21 +930,25 @@ void CApproachingTrailerGimmick::PostMove(void)
 
     if (m_subid == SUBID_NORMAL)
     {
-        PLAYERTYPES::STATUS eNearestStatus = m_aPlayerInfo[m_iNearestPlayerNo].m_eStatus;
+        PLAYERTYPES::STATUS eNearestStatus = m_aPlayerInfo[m_iNearestPlayerNo].eStatus;
         if ((eNearestStatus == PLAYERTYPES::STATUS_DOWN_FRONT) ||
             (eNearestStatus == PLAYERTYPES::STATUS_DOWN_BACK))
         {
-            LightSet(0.0f, true);
+            bool bIsIdle = (m_eState == STATE_WAIT) ||
+                           (m_eState == STATE_SLEEP);
 
-            if (m_aPlayerInfo[m_iNearestPlayerNo].m_eDistance == DISTANCE_SHORT)
+            if (!IsDestroyed() && !bIsIdle)
+                SetState(STATE_SLEEP);
+
+            if (m_aPlayerInfo[m_iNearestPlayerNo].eDistance == DISTANCE_SHORT)
             {
-                m_fPathTimerate = 0.00001f;
+                m_fPathTimerate = 0.0001f;
                 m_fAimPathTimerate = 0.0f;
             };
         };
     };
 
-    if (m_pApproachingTrailerGimmickMove->IsPathEnd() && (m_eState < STATE_EXPLOSE))
+    if (m_pApproachingTrailerGimmickMove->IsPathEnd() && !IsDestroyed())
     {
         switch (m_subid)
         {
@@ -962,7 +983,8 @@ void CApproachingTrailerGimmick::PostMove(void)
 };
 
 
-void CApproachingTrailerGimmick::OnReceiveEvent(const char* pszSender, GIMMICKTYPES::EVENTTYPE eventtype)
+/*virtual*/ void CApproachingTrailerGimmick::OnReceiveEvent(const char* pszSender,
+                                                            GIMMICKTYPES::EVENTTYPE eventtype) /*override*/
 {
     if (eventtype != GIMMICKTYPES::EVENTTYPE_ACTIVATE)
         return;
@@ -975,7 +997,7 @@ void CApproachingTrailerGimmick::OnReceiveEvent(const char* pszSender, GIMMICKTY
 };
 
 
-void CApproachingTrailerGimmick::OnAttackResult(CHitCatchData* pCatch)
+/*virtual*/ void CApproachingTrailerGimmick::OnAttackResult(CHitCatchData* pCatch) /*override*/
 {
     CGameObject* pGameObj = CGameObjectManager::GetObject(pCatch->GetObjectHandle());
     ASSERT(pGameObj);
@@ -1003,21 +1025,10 @@ void CApproachingTrailerGimmick::OnAttackResult(CHitCatchData* pCatch)
 
         RwV3d vFlyawayPos = Math::VECTOR3_ZERO;
         GetFlyawayPosition(&vFlyawayPos, &vPos, &vDir);
-
-#ifdef _DEBUG
-        if (CGimmickDebug::SHOW_AREA)
-        {
-            RwSphere HitSphere = { vFlyawayPos, 3.0f };
-
-            CDebugShape::m_fDuration = 5.0f;
-            CDebugShape::ShowSphere(&HitSphere, CGimmickDebug::COLOR_AREA_SPHERE);
-            CDebugShape::ShowLabel(&vFlyawayPos, "FLYAWAY POS");
-            CDebugShape::m_fDuration = 0.0f;
-        };
-#endif        
+      
 		vFlyawayPos.z -= 8.0f;
         m_fFlyawayNearestPathT = m_pApproachingTrailerGimmickMove->GetNearestPathT(&vFlyawayPos);
-        m_bFlyawayRq = true;
+        m_bFlyaway = true;
     };
 
     SetState(STATE_SLEEP);
@@ -1033,7 +1044,9 @@ void CApproachingTrailerGimmick::Wait(void)
         GetMoveStrategy()->Start();
         m_bSEPlay = true;
 
-        if ((m_playerInfoCenter.m_fDistance > 60.0f) || (m_fStepTimer > 10.0f) || (m_pApproachingTrailerGimmickMove->GetPathT() > 0.2f))
+        if ((m_fStepTimer > 10.0f) ||
+            (m_playerInfoCenter.fDistance > 60.0f) ||
+            (m_pApproachingTrailerGimmickMove->GetPathT() > 0.2f))
         {
             SetState(STATE_CHARGE);
             m_fNearestPathT = 1.5f;
@@ -1051,32 +1064,28 @@ void CApproachingTrailerGimmick::Cruise(void)
 {
     if (m_fStepTimer < 0.3f)
         return;
-
-    float fMPS = 3.5f;
-
-    switch (m_playerInfoCenter.m_eDistance)
+    
+    switch (m_playerInfoCenter.eDistance)
     {
     case DISTANCE_SHORT:
         {
-            if (m_nNumAttackVariation == ATTACKTYPENUM)
+            if (m_nNumAttackVariation == ATTACKTYPENUM_SHOT)
             {
-                fMPS = 1.75f;
                 if (m_fStepTimer > 2.0f)
-                    m_nNumAttackVariation = ATTACKTYPENUM + 1;
-                m_fAimPathTimerate = GetPathTimerateByMPS(fMPS);
-            };
-
-            if (Math::RandRange(0, 100) >= 25)
+                    m_nNumAttackVariation = ATTACKTYPENUM_ALL;
+                
+                m_fAimPathTimerate = GetPathTimerateByMPS(1.75f);
+            }
+            else if (Math::RandRange(0, 100) >= 25)
             {
-                fMPS = 3.5f;
                 SetState(STATE_CRUISE);
-                m_fAimPathTimerate = GetPathTimerateByMPS(fMPS);
+                m_fAimPathTimerate = GetPathTimerateByMPS(3.5f);
             }
             else
             {
                 SetState(STATE_PRE_CHARGE);
-                m_nNumAttackVariation = ATTACKTYPENUM;
-                m_fAimPathTimerate = GetPathTimerateByMPS(fMPS);
+                m_nNumAttackVariation = ATTACKTYPENUM_SHOT;
+                m_fAimPathTimerate = GetPathTimerateByMPS(3.5f);
             };
         }
         break;
@@ -1084,27 +1093,30 @@ void CApproachingTrailerGimmick::Cruise(void)
     case DISTANCE_MIDDLE:
         {
             uint32 rnd = Math::RandRange(0, m_nNumAttackVariation);
-            if (rnd != ATTACKTYPENUM)
+            if (rnd != ATTACKTYPENUM_SHOT)
             {
+                ASSERT(rnd >= 0);
+                ASSERT(rnd < COUNT_OF(m_apAttackVariation));
+
                 m_pAttack = m_apAttackVariation[rnd];
+                
+                m_nNumAttackVariation = ATTACKTYPENUM_ALL;
                 SetState(STATE_PRE_ATTACK);
-                m_nNumAttackVariation = ATTACKTYPENUM + 1;
-                m_fAimPathTimerate = GetPathTimerateByMPS(fMPS);
+                m_fAimPathTimerate = GetPathTimerateByMPS(3.5f);
             }
             else
             {
+                m_nNumAttackVariation = ATTACKTYPENUM_SHOT;
                 SetState(STATE_PRE_CHARGE);
-                m_nNumAttackVariation = ATTACKTYPENUM;
-                m_fAimPathTimerate = GetPathTimerateByMPS(fMPS);
+                m_fAimPathTimerate = GetPathTimerateByMPS(3.5f);
             };
         }
         break;
 
     case DISTANCE_LONG:
         {
-            fMPS = 40.0f;
             SetState(STATE_CRUISE);
-            m_fAimPathTimerate = GetPathTimerateByMPS(fMPS);
+            m_fAimPathTimerate = GetPathTimerateByMPS(40.0f);
         }
         break;
 
@@ -1119,9 +1131,14 @@ void CApproachingTrailerGimmick::PreCharge(void)
 {
     if (m_fStepTimer <= 3.0f)
     {
-        //
-        //  TODO lights blinking
-        //
+        if (IsTimingProc(0.2f) || IsTimingProc(1.0f))
+        {
+            LightSet(0.5f, true);
+        }
+        else if (IsTimingProc(1.8f))
+        {
+            LightSet(0.5f, false);
+        };
     }
     else
     {
@@ -1135,12 +1152,13 @@ void CApproachingTrailerGimmick::Charge(void)
     if (m_subid == SUBID_DESTROYED)
         return;
 
-    float interval = CGameProperty::GetElapsedTime();
-    float interval_step = interval * 0.02f;
-    float aimpath = m_fNearestPathT;
-    float aimtimerate = GetPathTimerateByMPS(5.0f);
+    float dt = CGameProperty::GetElapsedTime();
+    
+    float fIntervalStep = dt * 0.02f;
+    float fAimPathT = m_fNearestPathT;
+    float fAimTimerate = GetPathTimerateByMPS(5.0f);
 
-    if (m_pApproachingTrailerGimmickMove->IsAccelerationToAimPathT(aimpath, aimtimerate, interval_step, interval))
+    if (m_pApproachingTrailerGimmickMove->IsAccelerationToAimPathT(fAimPathT, fAimTimerate, fIntervalStep, dt))
         SetState(STATE_POST_CHARGE);
 };
 
@@ -1165,21 +1183,23 @@ void CApproachingTrailerGimmick::Sleep(void)
 
     static_assert(COUNT_OF(s_afAwakeTime) == DISTANCENUM, "should equal");
 
-    if (m_fStepTimer > s_afAwakeTime[m_aPlayerInfo[m_iNearestPlayerNo].m_eDistance])
+    if (m_fStepTimer > s_afAwakeTime[m_aPlayerInfo[m_iNearestPlayerNo].eDistance])
     {
+        m_bFlyaway = false;
         SetState(STATE_CRUISE);
+        LightSet(0.0001f, false);
     };
 
-    if (m_bFlyawayRq)
+    if (m_bFlyaway)
     {
-        float interval = CGameProperty::GetElapsedTime();
-        float interval_step = interval * 0.02f;
-        float aimpath = m_fFlyawayNearestPathT;
-        float aimtimerate = 0.0f;
+        float dt = CGameProperty::GetElapsedTime();
+        float fIntervalStep = dt * 0.02f;
+        float fAimPathT = m_fFlyawayNearestPathT;
+        float fAimTimerate = 0.0f;
         
-        if (m_pApproachingTrailerGimmickMove->IsAccelerationToAimPathT(aimpath, aimtimerate, interval_step, interval))
+        if (m_pApproachingTrailerGimmickMove->IsAccelerationToAimPathT(fAimPathT, fAimTimerate, fIntervalStep, dt))
         {
-            m_bFlyawayRq = false;
+            m_bFlyaway = false;
             m_fAimPathTimerate = GetPathTimerateByMPS(0.0f);
         };
     }
@@ -1199,11 +1219,11 @@ void CApproachingTrailerGimmick::PreAttack(void)
 
 void CApproachingTrailerGimmick::Attack(void)
 {
-    RwV3d vShotPos = Math::VECTOR3_ZERO;
-    m_pApproachingTrailerGimmickMove->GetPosition(&vShotPos);
+    RwV3d vShotPos = Math::VECTOR3_ZERO;    
+    GetMovePosition(&vShotPos);
     vShotPos.y += 7.6f;
 
-    m_pAttack->SetShotPos(&vShotPos);
+    m_pAttack->SetShotPos(&vShotPos);    
     m_fAimPathTimerate = GetPathTimerateByMPS(m_pAttack->GetSpeed());
 
     if (m_pAttack->Run())
@@ -1223,7 +1243,7 @@ void CApproachingTrailerGimmick::Explose(void)
     float fScale = 1.0f;
     
     RwV3d vEffectPos = Math::VECTOR3_ZERO;
-    m_pApproachingTrailerGimmickMove->GetPosition(&vEffectPos);
+    GetMovePosition(&vEffectPos);
     
     if (m_fStepTimer <= 0.71428573f)
     {
@@ -1264,8 +1284,11 @@ void CApproachingTrailerGimmick::Change(void)
 
     m_pApproachingTrailerHeadGimmickMove->SetRotation(&vRotation);
     m_pApproachingTrailerHeadGimmickMove->SetPosition(&vPosition);
+    SetMoveStrategy(m_pApproachingTrailerHeadGimmickMove);
 
     SetState(STATE_HEAD_PRE_CHARGE);
+
+    m_bChanged = true;
 };
 
 
@@ -1301,6 +1324,14 @@ void CApproachingTrailerGimmick::HeadCharge(void)
     {
         m_vHitOffset.z += (CGameProperty::GetElapsedTime() / fEndT * 33.5f);
     };
+
+    if (IsTimingProc(fEndT * 0.8f))
+    {
+        CGameSound::StopSE(SDCODE_SE(4259));
+        CGameSound::StopSE(SDCODE_SE(4243));
+        CGameSound::StopSE(SDCODE_SE(4236));
+        CGameSound::StopSE(SDCODE_SE(4235));
+    };
 };
 
 
@@ -1328,7 +1359,7 @@ void CApproachingTrailerGimmick::CommonUpdate(void)
     RwMatrix* pModeling = m_model.GetMatrix(m_model.GetDrawType());
 
     RwV3d vPosition = Math::VECTOR3_ZERO;
-    RwV3dTransformPoint(&vPosition, &s_vOffset, pModeling);
+    RwV3dTransformPoint(&vPosition, &s_vHitLocalPos, pModeling);
 
     Math::Vec3_Add(&vPosition, &vPosition, &m_vHitOffset);
 
@@ -1336,48 +1367,48 @@ void CApproachingTrailerGimmick::CommonUpdate(void)
     //  regist catch
     //
     {
-        RwSphere HitSphere = { vPosition, s_fHitRadius };
+        RwSphere hitSphere = { vPosition, s_fHitRadius };
 
-        CHitCatchData CatchData;
-        CatchData.Cleanup();
-        CatchData.SetObject(GetHandle());
-        CatchData.SetObjectType(GetType());
-        CatchData.SetShape(CHitCatchData::SHAPE_SPHERE);
-        CatchData.SetSphere(&HitSphere);
+        CHitCatchData hitCatch;
+        hitCatch.Cleanup();
+        hitCatch.SetObject(GetHandle());
+        hitCatch.SetObjectType(GetType());
+        hitCatch.SetShape(CHitCatchData::SHAPE_SPHERE);
+        hitCatch.SetSphere(&hitSphere);
 
-        CHitAttackManager::RegistCatch(&CatchData);
+        CHitAttackManager::RegistCatch(&hitCatch);
     }
     
     //
     //  regist attack
     //
     {
-        RwSphere HitSphere = { vPosition, (s_fHitRadius + 0.25f) };
+        RwSphere hitSphere = { vPosition, (s_fHitRadius + 0.25f) };
 
-        CHitAttackData AttackData;
-        AttackData.Cleanup();
-        AttackData.SetObject(GetHandle());
-        AttackData.SetShape(CHitAttackData::SHAPE_SPHERE);
-        AttackData.SetSphere(&HitSphere);
-        AttackData.SetObjectPos(&vPosition);
-        AttackData.SetPower(m_nPower);
-        AttackData.SetTarget(CHitAttackData::TARGET_ALL_EXCEPT_SELF);
-        AttackData.SetAntiguard(CHitAttackData::ANTIGUARD_INVALID);
-        AttackData.SetStatus(CHitAttackData::STATUS_FLYAWAY);
-        AttackData.SetStatusParameter(m_fFlyawayVelXZ, m_fFlyawayVelY);
+        CHitAttackData hitAttack;
+        hitAttack.Cleanup();
+        hitAttack.SetObject(GetHandle());
+        hitAttack.SetShape(CHitAttackData::SHAPE_SPHERE);
+        hitAttack.SetSphere(&hitSphere);
+        hitAttack.SetObjectPos(&vPosition);
+        hitAttack.SetPower(m_nPower);
+        hitAttack.SetTarget(CHitAttackData::TARGET_ALL_EXCEPT_SELF);
+        hitAttack.SetAntiguard(CHitAttackData::ANTIGUARD_INVALID);
+        hitAttack.SetStatus(CHitAttackData::STATUS_FLYAWAY);
+        hitAttack.SetStatusParameter(m_fFlyawayVelXZ, m_fFlyawayVelY);
 
         if (GetPathTimerateByMPS(3.325f) < m_fPathTimerate)
-            CHitAttackManager::RegistAttack(&AttackData);
+            CHitAttackManager::RegistAttack(&hitAttack);
     }
 
     //
     //  update model
     //
     RwV3d vMovPos = Math::VECTOR3_ZERO;
-    m_pApproachingTrailerGimmickMove->GetPosition(&vMovPos);
-    
+    GetMovePosition(&vMovPos);
+
     RwV3d vMovRot = Math::VECTOR3_ZERO;
-    m_pApproachingTrailerGimmickMove->GetRotation(&vMovRot);
+    GetMoveRotation(&vMovRot);
 
     m_model.SetRotation(&vMovRot);
     m_model.SetPosition(&vMovPos);
@@ -1435,20 +1466,20 @@ void CApproachingTrailerGimmick::SetPlayerInfo(void)
         RwV3d vDist = Math::VECTOR3_ZERO;
         Math::Vec3_Sub(&vDist, &vPlayerPos, &vTrailerPos);
 
-        pPlayerInfo->m_vPosition = vPlayerPos;
-        pPlayerInfo->m_eStatus = CGameProperty::Player(i)->GetStatus();
-        pPlayerInfo->m_fDistance = Math::Vec3_Length(&vDist);
+        pPlayerInfo->vPosition = vPlayerPos;
+        pPlayerInfo->eStatus = CGameProperty::Player(i)->GetStatus();
+        pPlayerInfo->fDistance = Math::Vec3_Length(&vDist);
 
-        if (pPlayerInfo->m_fDistance >= 25.0f)
-            pPlayerInfo->m_eDistance = DISTANCE_LONG;
-        else if (pPlayerInfo->m_fDistance >= 10.0f)
-            pPlayerInfo->m_eDistance = DISTANCE_MIDDLE;
+        if (pPlayerInfo->fDistance >= 25.0f)
+            pPlayerInfo->eDistance = DISTANCE_LONG;
+        else if (pPlayerInfo->fDistance >= 10.0f)
+            pPlayerInfo->eDistance = DISTANCE_MIDDLE;
         else
-            pPlayerInfo->m_eDistance = DISTANCE_SHORT;
+            pPlayerInfo->eDistance = DISTANCE_SHORT;
 
-        if (pPlayerInfo->m_fDistance < fNearestDist)
+        if (pPlayerInfo->fDistance < fNearestDist)
         {
-            fNearestDist = pPlayerInfo->m_fDistance;
+            fNearestDist = pPlayerInfo->fDistance;
             m_iNearestPlayerNo = i;
         };
     };
@@ -1457,29 +1488,70 @@ void CApproachingTrailerGimmick::SetPlayerInfo(void)
     {
         std::memset(&m_playerInfoCenter, 0, sizeof(m_playerInfoCenter));
 
-        Math::Vec3_Scale(&m_playerInfoCenter.m_vPosition, &vPosition, (1.0f / float(iAlivePlayerNum)));
+        Math::Vec3_Scale(&m_playerInfoCenter.vPosition, &vPosition, (1.0f / static_cast<float>(iAlivePlayerNum)));
 
         RwV3d vDist = Math::VECTOR3_ZERO;
-        Math::Vec3_Sub(&vDist, &m_playerInfoCenter.m_vPosition, &vTrailerPos);
+        Math::Vec3_Sub(&vDist, &m_playerInfoCenter.vPosition, &vTrailerPos);
 
-        m_playerInfoCenter.m_eStatus = PLAYERTYPES::STATUS_IDLE;
-        m_playerInfoCenter.m_fDistance = Math::Vec3_Length(&vDist);
+        m_playerInfoCenter.eStatus = PLAYERTYPES::STATUS_IDLE;
+        m_playerInfoCenter.fDistance = Math::Vec3_Length(&vDist);
 
-        if (m_playerInfoCenter.m_fDistance >= 25.0f)
-            m_playerInfoCenter.m_eDistance = DISTANCE_LONG;
-        else if (m_playerInfoCenter.m_fDistance >= 10.0f)
-            m_playerInfoCenter.m_eDistance = DISTANCE_MIDDLE;
+        if (m_playerInfoCenter.fDistance >= 25.0f)
+            m_playerInfoCenter.eDistance = DISTANCE_LONG;
+        else if (m_playerInfoCenter.fDistance >= 10.0f)
+            m_playerInfoCenter.eDistance = DISTANCE_MIDDLE;
         else
-            m_playerInfoCenter.m_eDistance = DISTANCE_SHORT;
+            m_playerInfoCenter.eDistance = DISTANCE_SHORT;
     };
 };
 
 
 void CApproachingTrailerGimmick::SEControl(void)
 {
-    //
-    //  TODO app trailer SE ctrl
-    //
+    if (IsDestroyed())
+        return;
+
+    if (m_bSEPlay)
+    {
+        float fAheadPathTimerate = GetPathTimerateByMPS(2.0f);
+
+        if ((fAheadPathTimerate + m_fPathTimerate) < m_fAimPathTimerate)
+        {
+            m_bSERun = false;
+            if (!m_bSEStop)
+            {
+                // engine on
+                CGameSound::PlayObjectSE(this, SDCODE_SE(4236));
+                m_bSEStop = true;
+            };
+        }
+        else if ((m_fPathTimerate - fAheadPathTimerate) > m_fAimPathTimerate)
+        {
+            m_bSERun = false;
+            if (!m_bSEStop)
+            {
+                // engine off
+                CGameSound::PlayObjectSE(this, SDCODE_SE(4235));
+                m_bSEStop = true;
+            };
+        }
+        else
+        {
+            m_bSEStop = false;
+            if (!m_bSERun)
+            {
+                // engine run
+                CGameSound::PlayObjectSE(this, SDCODE_SE(4243));
+                m_bSERun = true;
+            };
+        };
+    }
+    else
+    {
+        CGameSound::StopSE(SDCODE_SE(4236));
+        CGameSound::StopSE(SDCODE_SE(4235));
+        CGameSound::StopSE(SDCODE_SE(4243));
+    };
 };
 
 
@@ -1511,8 +1583,8 @@ void CApproachingTrailerGimmick::SetState(STATE eState)
 
             static_assert(COUNT_OF(s_afDistOfsZ) == DISTANCENUM, "should equal");
 
-            RwV3d vPosition = m_playerInfoCenter.m_vPosition;
-            vPosition.z += s_afDistOfsZ[m_playerInfoCenter.m_eDistance];
+            RwV3d vPosition = m_playerInfoCenter.vPosition;
+            vPosition.z += s_afDistOfsZ[m_playerInfoCenter.eDistance];
 
             m_fNearestPathT = m_pApproachingTrailerGimmickMove->GetNearestPathT(&vPosition);
             m_fAimPathTimerate = GetPathTimerateByMPS(20.0f);
@@ -1526,11 +1598,11 @@ void CApproachingTrailerGimmick::SetState(STATE eState)
         break;
 
     case STATE_SLEEP:
-        LightSet(0.0f, true);
+        LightSet(0.0001f, true);
         break;
 
     case STATE_PRE_ATTACK:
-        m_fAimAttackPathT = m_pApproachingTrailerGimmickMove->GetNearestPathT(&m_playerInfoCenter.m_vPosition);
+        m_fAimAttackPathT = m_pApproachingTrailerGimmickMove->GetNearestPathT(&m_playerInfoCenter.vPosition);
         break;
 
     case STATE_ATTACK:
@@ -1611,7 +1683,7 @@ void CApproachingTrailerGimmick::EffectDestroy(void)
     {
         if (m_ahEffect[i])
         {
-            CEffectManager::Finish(m_ahEffect[i]);
+            CEffectManager::End(m_ahEffect[i]);
             m_ahEffect[i] = 0;
         };
     };
@@ -1639,13 +1711,16 @@ void CApproachingTrailerGimmick::EffectUpdate(void)
     //
     //  wheel smoke effect
     //
-    if ((m_subid == SUBID_DESTROYED) || (m_eState > STATE_WAIT))
+    if ((m_subid == SUBID_DESTROYED) || (m_eState != STATE_WAIT))
     {
-        m_fEffectTimer += CGameProperty::GetElapsedTime();
         if (m_fEffectTimer > 0.1f)
         {
+            m_fEffectTimer += CGameProperty::GetElapsedTime();
+        }
+        else
+        {
             m_fEffectTimer = 0.0f;
-            
+
             for (int32 i = 2; i < COUNT_OF(m_ahEffect); ++i)
             {
                 RwV3d vEffectPos = Math::VECTOR3_ZERO;
@@ -1662,16 +1737,20 @@ void CApproachingTrailerGimmick::EffectUpdate(void)
 void CApproachingTrailerGimmick::LightCreate(void)
 {
     RwV3d vPosition = Math::VECTOR3_ZERO;
-    m_pApproachingTrailerGimmickMove->GetPosition(&vPosition);
+    GetMovePosition(&vPosition);
 
     for (int32 i = 0; i < COUNT_OF(m_aLight); ++i)
     {
-        m_aLight[i].m_hLight = CEffectLightManager::Regist(&vPosition, 2.0f, { 0xFF, 0xFF, 0xFF, 0xFF });
-        ASSERT(m_aLight[i].m_hLight);
+        m_aLight[i].hLight = CEffectLightManager::Regist(&vPosition, 2.0f, { 0xFF, 0xFF, 0xFF, 0xFF });
+        ASSERT(m_aLight[i].hLight);
+
+        m_aLight[i].bUpdate = false;
+        m_aLight[i].fTime = 0.0f;
+        m_aLight[i].fTimerCounter = 0.0f;
     };
 
 	if (m_subid == SUBID_NORMAL)
-		LightSet(0.5f, true);
+        LightSet(0.5f, true);
 };
 
 
@@ -1679,9 +1758,9 @@ void CApproachingTrailerGimmick::LightDestroy(void)
 {
     for (int32 i = 0; i < COUNT_OF(m_aLight); ++i)
     {
-        ASSERT(m_aLight[i].m_hLight);
-        CEffectLightManager::Remove(m_aLight[i].m_hLight);
-        m_aLight[i].m_hLight = 0;
+        ASSERT(m_aLight[i].hLight);
+        CEffectLightManager::Remove(m_aLight[i].hLight);
+        m_aLight[i].hLight = 0;
     };
 };
 
@@ -1692,32 +1771,25 @@ void CApproachingTrailerGimmick::LightUpdate(void)
     {
         LIGHT* pLight = &m_aLight[i];
 
-        //
-        //  update light pos
-        //
         RwV3d vLightPos = Math::VECTOR3_ZERO;
         RwV3dTransformPoint(&vLightPos, &s_avATLightOffset[i], m_model.GetMatrix(CNormalGimmickModel::MODELTYPE_DRAW_NORMAL));
+        CEffectLightManager::SetPosition(pLight->hLight, &vLightPos);
 
-        CEffectLightManager::SetPosition(pLight->m_hLight, &vLightPos);
-
-		if (!pLight->m_bRqUpd)
-			continue;
-
-        //
-        //  update light color
-        //
-        if (pLight->m_fTimerCounter >= 0.0f)
+        if (pLight->bUpdate)
         {
-            pLight->m_fTimerCounter -= CGameProperty::GetElapsedTime();
-            float progress = Clamp(pLight->m_fTimerCounter / pLight->m_fTime, 0.0f, 1.0f);
-            CEffectLightManager::SetColor(pLight->m_hLight, { 0xFF, 0xFF, 0xFF, RwUInt8(progress * 255.0f) });
-        }
-        else
-        {
-            CEffectLightManager::SetColor(pLight->m_hLight, { 0xFF, 0xFF, 0xFF, RwUInt8(pLight->m_bRqOff ? 0x00 : 0xFF) });
-            pLight->m_bRqUpd = false;
-            pLight->m_fTime = 0.0f;
-            pLight->m_fTimerCounter = 0.0f;
+            if (pLight->fTimerCounter >= 0.0f)
+            {
+                pLight->fTimerCounter -= CGameProperty::GetElapsedTime();
+                float fAlphaRatio = Clamp(pLight->fTimerCounter / pLight->fTime, 0.0f, 1.0f);
+                CEffectLightManager::SetColor(pLight->hLight, { 0xFF, 0xFF, 0xFF, static_cast<RwUInt8>(fAlphaRatio * 255.0f) });
+            }
+            else
+            {
+                CEffectLightManager::SetColor(pLight->hLight, { 0xFF, 0xFF, 0xFF, static_cast<RwUInt8>(pLight->bOff ? 0x00 : 0xFF) });
+                pLight->bUpdate = false;
+                pLight->fTime = 0.0f;
+                pLight->fTimerCounter = 0.0f;
+            };
         };
     };
 };
@@ -1727,17 +1799,20 @@ void CApproachingTrailerGimmick::LightSet(float fTime, bool bOff)
 {
     for (int32 i = 0; i < COUNT_OF(m_aLight); ++i)
     {
-        m_aLight[i].m_fTime = fTime;
-        m_aLight[i].m_fTimerCounter = fTime;
-        m_aLight[i].m_bRqUpd = true;
-        m_aLight[i].m_bRqOff = bOff;
+        m_aLight[i].fTime = fTime;
+        m_aLight[i].fTimerCounter = fTime;
+        m_aLight[i].bUpdate = true;
+        m_aLight[i].bOff = bOff;
     };
 };
 
 
 RwV3d* CApproachingTrailerGimmick::GetPlayerPos(int32 iPlayerNo)
 {
-    return (iPlayerNo >= COUNT_OF(m_aPlayerInfo) ? &m_playerInfoCenter.m_vPosition : &m_aPlayerInfo[iPlayerNo].m_vPosition);
+    if (iPlayerNo >= COUNT_OF(m_aPlayerInfo))
+        return &m_playerInfoCenter.vPosition;
+    
+    return &m_aPlayerInfo[iPlayerNo].vPosition;
 };
 
 
@@ -1747,15 +1822,20 @@ float CApproachingTrailerGimmick::RateControl(float fCur, float fAim, float dt) 
     
     if (fDlt >= dt)
         return (fCur >= fAim ? (fCur - dt) : (fCur + dt));
-    else
-        return fAim;
+    
+    return fAim;
 };
 
 
 float CApproachingTrailerGimmick::GetPathTimerateByMPS(float fMPS) const
 {
-    float fDlt = m_pApproachingTrailerGimmickMove->GetPathTByMeterPerSecond(fMPS) - m_pApproachingTrailerGimmickMove->GetPathT();
-    return (fDlt / CGameProperty::GetElapsedTime());
+    float dt = CGameProperty::GetElapsedTime();
+    
+    float fAheadPathT = m_pApproachingTrailerGimmickMove->GetPathTByMeterPerSecond(fMPS);
+    float fNowPathT = m_pApproachingTrailerGimmickMove->GetPathT();
+    float fDeltaPathT = (fAheadPathT - fNowPathT);
+
+    return (fDeltaPathT / dt);    
 };
 
 
@@ -1778,9 +1858,65 @@ void CApproachingTrailerGimmick::GetFlyawayPosition(RwV3d* pvResult, const RwV3d
     };
 
     RwV3d vDir = *pvDir;
+    Math::Vec3_Normalize(&vDir, &vDir);
     vDir.y = 0.0f;
 
     pvResult->x = (vPos.x + (vDir.x * (t * m_fFlyawayVelXZ)));
     pvResult->y = (vDir.y - 16.0f);
     pvResult->z = (vPos.z + (vDir.z * (t * m_fFlyawayVelXZ)));
+};
+
+
+bool CApproachingTrailerGimmick::IsDestroyed(void) const
+{
+    return (m_eState == STATE_EXPLOSE)
+        || (m_eState == STATE_CHANGE)
+        || (m_eState == STATE_HEAD_PRE_CHARGE)
+        || (m_eState == STATE_HEAD_CHARGE)
+        || (m_eState == STATE_HEAD_POST_CHARGE)
+        || (m_eState == STATE_STOP);
+};
+
+
+bool CApproachingTrailerGimmick::IsTimingProc(float fTime) const
+{
+    float dt = CGameProperty::GetElapsedTime();
+
+    return ((m_fStepTimer - fTime) * ((m_fStepTimer - fTime) - dt)) < 0.0f;
+};
+
+
+float CApproachingTrailerGimmick::GetAimAttackPathTime(void) const
+{
+    return m_fAimAttackPathT;
+};
+
+
+void CApproachingTrailerGimmick::GetMovePosition(RwV3d* pvPos) const
+{
+    if (m_bChanged)
+        m_pApproachingTrailerHeadGimmickMove->GetPosition(pvPos);
+    else
+        m_pApproachingTrailerGimmickMove->GetPosition(pvPos);
+};
+
+
+void CApproachingTrailerGimmick::GetMoveRotation(RwV3d* pvRot) const
+{
+    if (m_bChanged)
+        m_pApproachingTrailerHeadGimmickMove->GetRotation(pvRot);
+    else
+        m_pApproachingTrailerGimmickMove->GetRotation(pvRot);
+};
+
+
+float CApproachingTrailerGimmick::GetPathT(void) const
+{
+    return m_pApproachingTrailerGimmickMove->GetPathT();
+};
+
+
+const CNormalGimmickModel* CApproachingTrailerGimmick::GetNormalModel(void) const
+{
+    return &m_model;
 };

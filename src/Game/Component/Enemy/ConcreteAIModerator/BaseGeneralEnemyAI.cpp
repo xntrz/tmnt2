@@ -1386,6 +1386,11 @@ void CBaseGeneralEnemyAIModerator::DebugDrawPatrolArea(void)
 
     RwV3d vecPatrolOrigin = EnemyCharacter().Feature().m_vPatrolOrigin;
     float fPatrolRadius = EnemyCharacter().Feature().m_fPatrolRadius;
+	if (fPatrolRadius <= 0.0f)
+	{
+		fPatrolRadius = EnemyCharacter().AICharacteristic().m_fDistanceOfSuitable;
+		EnemyCharacter().Compositor().GetPosition(&vecPatrolOrigin);
+	};
 
     RwSphere sphere;
     sphere.center = vecPatrolOrigin;

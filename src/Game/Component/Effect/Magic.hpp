@@ -106,4 +106,6 @@ private:
     CLocus* m_apLocus[LOCUSKINDNUM];
     float m_fInitBodyRadius;
     float m_fInitAttackRadius;
+    bool m_bFinish;
+    bool m_bFinishStart;
 };

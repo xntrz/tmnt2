@@ -296,8 +296,8 @@ CBaseGunnerAI::CBaseGunnerAI(CEnemyCharacter* pEnemyChr)
     float fPitchAngle = std::atan2(vec.y, vec.z);
     int32 attackId = AIOT::Null;
 
-    if ((fPitchAngle > -MATH_DEG2RAD(15.0f)) &&
-        (fPitchAngle <  MATH_DEG2RAD(15.0f)))
+    if ((fPitchAngle >= -MATH_DEG2RAD(15.0f)) &&
+        (fPitchAngle <=  MATH_DEG2RAD(15.0f)))
     {
         // middle
         if (IsSatifyFrequency(CEnemyParameter::FREQUENCY_FIRE_RANGE_RATE))
@@ -315,11 +315,11 @@ CBaseGunnerAI::CBaseGunnerAI(CEnemyCharacter* pEnemyChr)
         // down
         if (IsSatifyFrequency(CEnemyParameter::FREQUENCY_FIRE_RANGE_RATE))
         {
-            attackId = AIOT::FireC;
+            attackId = AIOT::FireA;
         }
         else if (IsSatifyFrequency(CEnemyParameter::FREQUENCY_FIRE_REPEATABLE))
         {
-            attackId = AIOT::FireRepeatC;
+            attackId = AIOT::FireRepeatA;
         };
     }
     else if ((fPitchAngle > -MATH_DEG2RAD(45.0f)) &&
@@ -328,11 +328,11 @@ CBaseGunnerAI::CBaseGunnerAI(CEnemyCharacter* pEnemyChr)
         // up
         if (IsSatifyFrequency(CEnemyParameter::FREQUENCY_FIRE_RANGE_RATE))
         {
-            attackId = AIOT::FireA;
+            attackId = AIOT::FireC;
         }
         else if (IsSatifyFrequency(CEnemyParameter::FREQUENCY_FIRE_REPEATABLE))
         {
-            attackId = AIOT::FireRepeatA;
+            attackId = AIOT::FireRepeatC;
         };
     };
 

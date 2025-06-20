@@ -563,9 +563,7 @@ void CBaseEliteChr::CWarpBaseStatusObserver::SetTargetPos(const RwV3d* pvecTarge
 float CBaseEliteChr::CWarpBaseStatusObserver::GetThetaVec2Vec(const RwV3d* v1, const RwV3d* v2) const
 {
     float cos = Math::Vec3_Dot(v1, v2) / (Math::Vec3_Length(v1) * Math::Vec3_Length(v2));
-    cos = Clamp(cos, -1.0f, 1.0f);
-    
-    return std::acos(cos);
+    return Math::ACos(cos);
 };
 
 

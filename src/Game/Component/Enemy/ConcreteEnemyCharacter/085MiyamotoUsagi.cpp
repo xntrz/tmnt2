@@ -906,11 +906,10 @@ C085MiyamotoUsagi::C085MiyamotoUsagi(void)
 
     if (GetStatus() == C085MiyamotoUsagi::STATUS_MUTEKI)
     {
-        CGameObject* pObj = pCatch->GetObject();
-        uint32 hObj = CEnemyUtils::GetHandleFromHitObj(pObj);
-        AIModerator().CatchAttack(hObj);
+        uint32 hObj = CEnemyUtils::GetHandleFromHitObj(pCatch->GetObject());
+        AIModerator().CatchAttack(hObj, pCatch->GetObject()->GetType());
 
-        if (pObj->GetType() == GAMEOBJECTTYPE::SHOT)
+        if (pCatch->GetObject()->GetType() == GAMEOBJECTTYPE::SHOT)
         {
             AIModerator().AttackCountInc();
 
@@ -937,15 +936,14 @@ C085MiyamotoUsagi::OnDamage(CCharacterAttackCalculator& rCalc) /*override*/
 
     CHitAttackData* pAttack = &rCalc.GetAttack();
 
-    CGameObject* pAttacker = pAttack->GetObject();
-    uint32 hAttacker = CEnemyUtils::GetHandleFromHitObj(pAttacker);
-    AIModerator().CatchAttack(hAttacker);
+    uint32 hObj = CEnemyUtils::GetHandleFromHitObj(pAttack->GetObject());
+    AIModerator().CatchAttack(hObj, pAttack->GetObject()->GetType());
 
     if ((GetStatus() != ENEMYTYPES::STATUS_FLYAWAY_BOUND_BACK) &&
         (GetStatus() != ENEMYTYPES::STATUS_FLYAWAY_BOUND_FRONT))
     {
-        if ((pAttacker->GetType() == GAMEOBJECTTYPE::EFFECT) ||
-            (pAttacker->GetType() == GAMEOBJECTTYPE::SHOT))
+        if ((pAttack->GetObject()->GetType() == GAMEOBJECTTYPE::EFFECT) ||
+            (pAttack->GetObject()->GetType() == GAMEOBJECTTYPE::SHOT))
             return CHARACTERTYPES::ATTACKRESULTTYPE_INEFFECTIVE;
     };
 

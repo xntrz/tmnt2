@@ -290,7 +290,7 @@ C012FeudalFootArcherNinja::C012FeudalFootArcherNinja(void)
     {
         if (!CEffectManager::IsEnd(m_hArrowEffect))
         {
-            CEffectManager::End(m_hArrowEffect);
+            CEffectManager::Finish(m_hArrowEffect);
             m_hArrowEffect = 0;
         };
     };

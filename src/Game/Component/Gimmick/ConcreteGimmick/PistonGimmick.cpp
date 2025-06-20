@@ -39,7 +39,7 @@ CPistonGimmick::CPistonGimmick(const char* pszName, void* pParam)
     ASSERT(pInitParam->m_subid >= SUBID_START);
     ASSERT(pInitParam->m_subid < SUBID_NUM);
 
-    m_subid         = SUBID(pInitParam->m_subid);
+    m_subid         = static_cast<SUBID>(pInitParam->m_subid);
     m_vPos          = pInitParam->m_vPosition;
     m_vInitPos      = pInitParam->m_vPosition;
     m_fRotation     = m_aSubInfo[m_subid].fInitRot;
@@ -76,7 +76,7 @@ CPistonGimmick::CPistonGimmick(const char* pszName, void* pParam)
 };
 
 
-CPistonGimmick::~CPistonGimmick(void)
+/*virtual*/ CPistonGimmick::~CPistonGimmick(void)
 {
     if (m_hAtari)
     {
@@ -86,20 +86,20 @@ CPistonGimmick::~CPistonGimmick(void)
 };
 
 
-void CPistonGimmick::PreMove(void)
+/*virtual*/ void CPistonGimmick::PreMove(void) /*override*/
 {
     m_vPrePos = m_vPos;
 };
 
 
-void CPistonGimmick::PostMove(void)
+/*virtual*/ void CPistonGimmick::PostMove(void) /*override*/
 {
-    float fDltRot = (CGameProperty::GetElapsedTime() * m_fRotVelocity);
+    float fPrevRotation = m_fRotation;
 
-    m_fRotation += fDltRot;
-    m_fRotation = Math::RadianInvClamp(m_fRotation);
+    m_fRotation += (CGameProperty::GetElapsedTime() * m_fRotVelocity);
+    m_fRotation = Math::RadianCorrection(m_fRotation);
 
-    m_vPos.y = m_vInitPos.y + (Math::Sin(m_fRotation) * 2.5f);
+    m_vPos.y = (m_vInitPos.y + (std::sin(m_fRotation) * 2.5f));
     m_model.SetPosition(&m_vPos);
 
     switch (m_eState)
@@ -107,8 +107,9 @@ void CPistonGimmick::PostMove(void)
     case STATE_RUN:
         {
             const float fAngle = MATH_DEG2RAD(86.4f);
-            if ((m_fRotation <  fAngle && m_fRotation >=  fAngle) ||
-                (m_fRotation < -fAngle && m_fRotation >= -fAngle))
+
+            if (((fPrevRotation <  fAngle) && (m_fRotation >=  fAngle)) ||
+                ((fPrevRotation < -fAngle) && (m_fRotation >= -fAngle)))
                 CGameSound::PlayObjectSE(this, SDCODE_SE(4219));
 
             if (!m_hAtari && m_model.GetCollisionModelClump())
@@ -116,8 +117,6 @@ void CPistonGimmick::PostMove(void)
                 RpClump* pClump = m_model.GetCollisionModelClump();
 
                 m_hAtari = CMapCollisionModel::RegistCollisionModel(pClump, GetName(), MAPTYPES::GIMMICKTYPE_NORMAL);
-                ASSERT(m_hAtari);
-
                 if (m_hAtari)
                     CMapCollisionModel::SetBoundingSphereRadius(m_hAtari, 20.0f);
             };
@@ -140,14 +139,13 @@ void CPistonGimmick::PostMove(void)
 
     if (m_hAtari)
     {
-        fDltRot = (m_vPos.y - m_vPrePos.y);
-        RwV3d vVelocity = { 0.0f, fDltRot, 0.0f };
+        RwV3d vVelocity = { 0.0f,  (m_vPos.y - m_vPrePos.y), 0.0f };
         CMapCollisionModel::UpdateCollisionModel(m_hAtari, &vVelocity);
     };
 };
 
 
-void CPistonGimmick::OnReceiveEvent(const char* pszSender, GIMMICKTYPES::EVENTTYPE eventtype)
+/*virtual*/ void CPistonGimmick::OnReceiveEvent(const char* pszSender, GIMMICKTYPES::EVENTTYPE eventtype) /*override*/
 {
     if (eventtype != GIMMICKTYPES::EVENTTYPE_ACTIVATE)
         return;

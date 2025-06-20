@@ -556,7 +556,6 @@ void CAnimation2D::SetTexture(const char* pszOrgTexture, const char* pszNewTextu
 void CAnimation2D::ReplaceTexture(Rt2dObject* pScene, RwTexture* pOrgTexture, RwTexture* pNewTexture)
 {
     ASSERT(pScene);
-    ASSERT(pNewTexture);
 
     int32 childCount = Rt2dSceneGetChildCount(pScene);
     for (int32 i = 0; i < childCount; ++i)

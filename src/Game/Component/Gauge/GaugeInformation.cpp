@@ -1,5 +1,4 @@
 #include "GaugeInformation.hpp"
-#include "GaugeAnim.hpp"
 
 #include "Game/Component/GameData/GameData.hpp"
 #include "Game/Component/GameMain/MapInfo.hpp"
@@ -301,7 +300,7 @@ void CGaugeInformation_Container::PauseDrawSub(void)
     CGameFont::SetRGBA(255, 170, 0, 255);
     CGameFont::Show(CGameText::GetText(GAMETEXT_GG_PAUSE), -220.0f, -100.0f);
 
-    float fDuration = GAUGE_ANIM_DURATION_FRAMES(30);
+    float fDuration = ANIM_DURATION_FRAMES(30);
     float fStartValue = (m_bCursorAnimFlag ? 255.0f : 0.0f);
     float fEndValue = (m_bCursorAnimFlag ? -255.0f : 255.0f);
     uint8 uAlphaBasis = uint8(Math::LinearTween(fStartValue, fEndValue, float(m_uCursorAnimCount), fDuration));
@@ -766,7 +765,7 @@ void CGaugeInformation_Container::DispBattleNexusInfoSub(void)
     {
     case NEXUSSTEP_ENEMY_IN:
         {
-            float fDuration = GAUGE_ANIM_DURATION_FRAMES(15);
+            float fDuration = ANIM_DURATION_FRAMES(15);
 
             Alpha = uint8(Math::LinearTween(0.0f, 255.0f, float(m_uNexusAnimCnt), fDuration));
 
@@ -784,7 +783,7 @@ void CGaugeInformation_Container::DispBattleNexusInfoSub(void)
 
     case NEXUSSTEP_ENEMY_WAIT:
         {
-            float fDuration = GAUGE_ANIM_DURATION_FRAMES(30);
+            float fDuration = ANIM_DURATION_FRAMES(30);
 
             if (float(m_uNexusAnimCnt) >= fDuration)
             {
@@ -800,7 +799,7 @@ void CGaugeInformation_Container::DispBattleNexusInfoSub(void)
 
     case NEXUSSTEP_ENEMY_OUT:
         {
-            float fDuration = GAUGE_ANIM_DURATION_FRAMES(15);
+            float fDuration = ANIM_DURATION_FRAMES(15);
 
             Alpha = uint8(Math::LinearTween(255.0f, -255.0f, float(m_uNexusAnimCnt), fDuration));
 
@@ -818,7 +817,7 @@ void CGaugeInformation_Container::DispBattleNexusInfoSub(void)
 
     case NEXUSSTEP_STEADY:
         {
-            float fDuration = GAUGE_ANIM_DURATION_FRAMES(30);
+            float fDuration = ANIM_DURATION_FRAMES(30);
 
             Alpha = uint8(Math::LinearTween(255.0f, -255.0f, float(m_uNexusAnimCnt), fDuration));
             SpriteW = Math::LinearTween(512.0f, -512.0f, float(m_uNexusAnimCnt), fDuration);
@@ -990,7 +989,7 @@ void CGaugeInformation_Container::BossGaugeDrawSub(int32 no)
         pBossGaugeInfo->m_eState = BOSSGAUGEINFO::STATE_IDLE;        
 	};
 
-    float fDuration = GAUGE_ANIM_DURATION_FRAMES(8);
+    float fDuration = ANIM_DURATION_FRAMES(8);
 
     float fAnimStep = (static_cast<float>(pBossGaugeInfo->m_uAnimCnt) / fDuration);
     float fHpMove = static_cast<float>(pBossGaugeInfo->m_nHpMove);

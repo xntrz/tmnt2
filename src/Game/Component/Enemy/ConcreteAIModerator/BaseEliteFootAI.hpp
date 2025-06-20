@@ -135,7 +135,7 @@ public:
     virtual ~CBaseEliteFootAI(void);
     virtual void Run(void) override;
     virtual void AttackCountDamage(int32 iAmount) override;
-    virtual void CatchAttack(uint32 hAttacker) override;
+    virtual void CatchAttack(uint32 hObj, GAMEOBJECTTYPE::VALUE objType) override;
     virtual void OnStatusEnd(ENEMYTYPES::STATUS statusEnd) override;
 
 private:

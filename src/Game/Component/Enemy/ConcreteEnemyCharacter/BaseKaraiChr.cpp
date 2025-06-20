@@ -672,7 +672,7 @@ void CBaseKaraiChr::CAttackCStatusObserver::ShotKunaiContinual(void)
             Math::Vec3_Sub(&vecBuf, &vecBodyPosPlayer, &vecBodyPosEnemy);
             Math::Vec3_Normalize(&vecBuf, &vecBuf);
 
-            fPitch = std::asin(-vecBuf.y);
+            fPitch = Math::ASin(-vecBuf.y);
         };
 
         RwMatrix matRot;

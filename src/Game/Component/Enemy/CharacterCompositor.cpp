@@ -174,11 +174,11 @@ ENEMYTYPES::STATUS CCharacterCompositor::GetStatus(void) const
 
 void CCharacterCompositor::RotateDirection(float fDirection, float fRotateRate)
 {
-    float fRotateDirectionMax = CGameProperty::GetElapsedTime() * (fRotateRate * Math::PI);
+    float fRotateDirectionMax = CGameProperty::GetElapsedTime() * (fRotateRate * MATH_PI);
     float fDirectionDiff = fDirection - m_fDirection;
 
-	fDirectionDiff = Math::RadianCorrect(fDirectionDiff);
-    ASSERT(std::fabs(fDirectionDiff) <= Math::PI);
+	fDirectionDiff = Math::RadianNormalize(fDirectionDiff);
+    ASSERT(std::fabs(fDirectionDiff) <= MATH_PI);
     
     fDirectionDiff = Clamp(fDirectionDiff, -fRotateDirectionMax, fRotateDirectionMax);
 

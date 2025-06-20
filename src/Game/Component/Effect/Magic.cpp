@@ -41,6 +41,8 @@ CMagic::CMagic(const char* pszName)
 , m_fChangeSize(0.0f)
 , m_fInitBodyRadius(0.0f)
 , m_fInitAttackRadius(0.0f)
+, m_bFinish(false)
+, m_bFinishStart(false)
 {
     m_apLocus[LOCUSKIND_HOR] = nullptr;
     m_apLocus[LOCUSKIND_VER] = nullptr;
@@ -290,13 +292,20 @@ void CMagic::End(void)
 
 bool CMagic::IsEnd(void) const
 {
-    return CEffect::IsEnd();
+    if (!m_pParticleSet || !m_bPlay)
+        return false;
+
+    if (m_bFinish)
+        return true;
+
+    return m_pParticleSet->IsEnd();
 };
 
 
 void CMagic::Finish(void)
 {
-    CEffect::Finish();
+    m_bFinishStart = true;
+    m_pParticleSet->SetEmitter(false);
 
     if (CheckFeature(MAGICTYPES::FEATURE_LOST_IMMEDIATE))
         m_bFinish = true;
@@ -305,7 +314,8 @@ void CMagic::Finish(void)
 
 void CMagic::RunFinish(void)
 {
-    CEffect::RunFinish();
+    if (m_bFinishStart && !m_pParticleSet->IsDrawing())
+        m_bFinish = true;
 };
 
 

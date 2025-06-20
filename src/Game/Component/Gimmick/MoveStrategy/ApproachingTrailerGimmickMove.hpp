@@ -7,7 +7,7 @@ class CApproachingTrailerGimmickMove final : public CPathMoveGimmickMove
 {
 public:
     CApproachingTrailerGimmickMove(void);
-    virtual ~CApproachingTrailerGimmickMove(void);
+    virtual ~CApproachingTrailerGimmickMove(void) {};
     virtual void UpdateRotation(float dt) override;
 
 private:
@@ -20,11 +20,10 @@ class CApproachingTrailerHeadGimmickMove final : public CGimmickMove
 {
 public:
     CApproachingTrailerHeadGimmickMove(void);
-    virtual ~CApproachingTrailerHeadGimmickMove(void);
+    virtual ~CApproachingTrailerHeadGimmickMove(void) {};
     virtual RESULT OnMove(float dt) override;
-
-    inline void GetRotation(RwV3d* pvRot) const { *pvRot = m_vRotation; };
-    inline void SetRotation(const RwV3d* pvRot) { m_vRotation = *pvRot; };
+    void GetRotation(RwV3d* pvRot) const;
+    void SetRotation(const RwV3d* pvRot);
 
 private:
     RwV3d m_vVelocity;

@@ -253,15 +253,15 @@ bool CParticleSet::IsEnd(void) const
 
 bool CParticleSet::IsDrawing(void) const
 {
-    int32 nNumDrawing = 0;
+    int32 nNumDrawEnd = 0;
     
     for (int32 i = 0; i < m_nParticleNum; ++i)
     {
-        if (m_apParticle[i]->IsDrawingParticle())
-            ++nNumDrawing;
+        if (!m_apParticle[i]->IsDrawingParticle())
+            ++nNumDrawEnd;
     };
 
-    return (nNumDrawing == m_nParticleNum);
+    return (nNumDrawEnd != m_nParticleNum);
 };
 
 

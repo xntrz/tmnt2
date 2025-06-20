@@ -375,6 +375,17 @@ bool CItemRecord::IsAreaCrystalTaken(GAMETYPES::CRYSTALTYPE crytype, AREAID::VAL
 };
 
 
+bool CItemRecord::IsAreaHasCrystal(GAMETYPES::CRYSTALTYPE crytype, AREAID::VALUE idArea) const
+{
+    int32 iCryNo = 0;
+
+    if (getAreaCrystalInfo(crytype, idArea, &iCryNo))
+        return true;
+    
+    return false;
+};
+
+
 bool CItemRecord::IsComebackProcessed(void) const
 {
     return (m_iComebackNum > 0);

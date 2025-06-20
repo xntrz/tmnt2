@@ -63,16 +63,16 @@ public:
 
 public:
     CAIThinkOrder(void);
-    virtual ~CAIThinkOrder(void);
-    virtual ORDER GetOrder(void) const;
-    virtual RESULT GetAnswer(void) const;
-    virtual void SetAnswer(RESULT eResult);
-    virtual ORDERNOTHING& OrderNothing(void);
-    virtual ORDERWAIT& OrderWait(void);
-    virtual ORDERMOVE& OrderMove(void);
-    virtual ORDERRUN& OrderRun(void);
-    virtual ORDERATTACK& OrderAttack(void);
-    virtual ORDERDEFENCE& OrderDefence(void);
+    ~CAIThinkOrder(void);
+    ORDER GetOrder(void) const;
+    RESULT GetAnswer(void) const;
+    void SetAnswer(RESULT eResult);
+    ORDERNOTHING& OrderNothing(void);
+    ORDERWAIT& OrderWait(void);
+    ORDERMOVE& OrderMove(void);
+    ORDERRUN& OrderRun(void);
+    ORDERATTACK& OrderAttack(void);
+    ORDERDEFENCE& OrderDefence(void);
     void Clear(void);
     void SetOrder(ORDER eOrder);
 

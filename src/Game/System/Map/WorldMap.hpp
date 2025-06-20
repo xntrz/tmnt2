@@ -32,6 +32,13 @@ public:
 
     DEFINE_ENUM_FLAG_OPS(CHECKFLAG, friend);
 
+    enum MOVE_HIT_FLAG
+    {  
+        MOVE_HIT_FLAG_NONE  = 0,
+        MOVE_HIT_FLAG_XZ,   // wall
+        MOVE_HIT_FLAG_Y,    // ceiling
+    };
+    
     enum COLLISIONTYPE
     {
         COLLISIONTYPE_NONE = 0,
@@ -136,6 +143,6 @@ public:
     static const RwV3d* GetCollisionResultClosestPoint(void);
     static const RwV3d* GetCollisionResultNormal(void);
     static MAPTYPES::ATTRIBUTE GetCollisionResultAttribute(void);    
-    static bool CheckCollisionCharacterMove(RwV3d* pPos, RwV3d* pNewPos, RwV3d* pVel, uint32* puHitFlag, float fRadius, float fHeight);
+    static bool CheckCollisionCharacterMove(RwV3d* pPos, RwV3d* pNewPos, RwV3d* pVel, MOVE_HIT_FLAG* hitFlag, float fRadius, float fHeight);
     static bool CheckCollisionCharacterHeight(RwV3d* pPos, RwV3d* pNewPos, float* pfRotY, float fRadius, float fHeight);
 };

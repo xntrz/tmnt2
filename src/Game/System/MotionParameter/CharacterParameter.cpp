@@ -347,6 +347,12 @@ bool CCharacterParameter::IsReverseAtomicNo(void) const
 };
 
 
+void CCharacterParameter::SetAtomicNum(int32 nAtomicNum)
+{
+    m_nAtomicNum = nAtomicNum;
+};
+
+
 int32 CCharacterParameter::GetAtomicNum(void) const
 {
     return m_nAtomicNum;

@@ -40,6 +40,7 @@ public:
     class CIdleStatus : public CEnemyCharacter::CStatusObserver
     {
     public:
+        virtual ~CIdleStatus(void) {};
         virtual void OnStart(void) override;
         virtual RESULT Observing(void) override;
         virtual ENEMYTYPES::STATUS OnEnd(void) override;
@@ -51,6 +52,7 @@ public:
     class CJumpReadyStatus : public CEnemyCharacter::CStatusObserver
     {
     public:
+        virtual ~CJumpReadyStatus(void) {};
         virtual void OnStart(void) override;
         virtual RESULT Observing(void) override;
         virtual ENEMYTYPES::STATUS OnEnd(void) override;
@@ -59,6 +61,7 @@ public:
     class CAerialStatus : public CEnemyCharacter::CStatusObserver
     {
     public:
+        virtual ~CAerialStatus(void) {};
         virtual void OnStart(void) override;
         virtual RESULT Observing(void) override;
         virtual ENEMYTYPES::STATUS OnEnd(void) override;
@@ -67,6 +70,7 @@ public:
     class CTouchdownStatus : public CEnemyCharacter::CStatusObserver
     {
     public:
+        virtual ~CTouchdownStatus(void) {};
         virtual void OnStart(void) override;
         virtual RESULT Observing(void) override;
         virtual ENEMYTYPES::STATUS OnEnd(void) override;
@@ -75,6 +79,7 @@ public:
     class CMoveStatus : public CEnemyCharacter::CStatusObserver
     {
     public:
+        virtual ~CMoveStatus(void) {};
         virtual void OnStart(void) override;
         virtual RESULT Observing(void) override;
         virtual ENEMYTYPES::STATUS OnEnd(void) override;
@@ -102,6 +107,7 @@ public:
         };
 
     public:
+        virtual ~CGuardStatus(void) {};
         virtual void OnStart(void) override;
         virtual RESULT Observing(void) override;
         virtual ENEMYTYPES::STATUS OnEnd(void) override;
@@ -114,6 +120,7 @@ public:
     class CKnockStatus : public CEnemyCharacter::CStatusObserver
     {
     public:
+        virtual ~CKnockStatus(void) {};
         virtual void OnStart(void) override;
         virtual RESULT Observing(void) override;
         virtual ENEMYTYPES::STATUS OnEnd(void) override;
@@ -126,6 +133,7 @@ public:
     {
     public:
         CFlyawayStatus(bool bHandleCrashWallFlag);
+        virtual ~CFlyawayStatus(void) {};
         virtual void OnStart(void) override;
         virtual RESULT Observing(void) override;
         virtual ENEMYTYPES::STATUS OnEnd(void) override;
@@ -142,6 +150,7 @@ public:
     class CFlyawayBoundStatus : public CEnemyCharacter::CStatusObserver
     {
     public:
+        virtual ~CFlyawayBoundStatus(void) {};
         virtual void OnStart(void) override;
         virtual RESULT Observing(void) override;
         virtual ENEMYTYPES::STATUS OnEnd(void) override;
@@ -158,6 +167,7 @@ public:
     class CCrashWallStatus : public CEnemyCharacter::CStatusObserver
     {
     public:
+        virtual ~CCrashWallStatus(void) {};
         virtual void OnStart(void) override;
         virtual RESULT Observing(void) override;
         virtual ENEMYTYPES::STATUS OnEnd(void) override;
@@ -172,6 +182,7 @@ public:
     class CCrashWallFallStatus : public CEnemyCharacter::CStatusObserver
     {
     public:
+        virtual ~CCrashWallFallStatus(void) {};
         virtual void OnStart(void) override;
         virtual RESULT Observing(void) override;
         virtual ENEMYTYPES::STATUS OnEnd(void) override;
@@ -183,6 +194,7 @@ public:
     class CCrashWallTouchdownStatus : public CEnemyCharacter::CStatusObserver
     {
     public:
+        virtual ~CCrashWallTouchdownStatus(void) {};
         virtual void OnStart(void) override;
         virtual RESULT Observing(void) override;
         virtual ENEMYTYPES::STATUS OnEnd(void) override;
@@ -194,6 +206,7 @@ public:
     class CGetupStatus : public CEnemyCharacter::CStatusObserver
     {
     public:
+        virtual ~CGetupStatus(void) {};
         virtual void OnStart(void) override;
         virtual RESULT Observing(void) override;
         virtual ENEMYTYPES::STATUS OnEnd(void) override;
@@ -205,6 +218,7 @@ public:
     class CCharacterEffectStatusObserver : public CEnemyCharacter::CStatusObserver
     {
     public:
+        virtual ~CCharacterEffectStatusObserver(void) {};
         virtual void OnStart(void) override;
         virtual RESULT Observing(void) override;
         virtual ENEMYTYPES::STATUS OnEnd(void) override;
@@ -224,6 +238,7 @@ public:
     class CCounteractStatusObserver : public CEnemyCharacter::CStatusObserver
     {
     public:
+        virtual ~CCounteractStatusObserver(void) {};
         virtual void OnStart(void) override;
         virtual RESULT Observing(void) override;
         virtual ENEMYTYPES::STATUS OnEnd(void) override;
@@ -232,6 +247,7 @@ public:
     class CCaughtStatusObserver : public CEnemyCharacter::CStatusObserver
     {
     public:
+        virtual ~CCaughtStatusObserver(void) {};
         virtual void OnStart(void) override;
         virtual RESULT Observing(void) override;
         virtual ENEMYTYPES::STATUS OnEnd(void) override;
@@ -240,6 +256,7 @@ public:
     class CLiftedStatusObserver : public CEnemyCharacter::CStatusObserver
     {
     public:
+        virtual ~CLiftedStatusObserver(void) {};
         virtual void OnStart(void) override;
         virtual RESULT Observing(void) override;
         virtual ENEMYTYPES::STATUS OnEnd(void) override;
@@ -248,6 +265,7 @@ public:
     class CLiftedWalkStatusObserver : public CEnemyCharacter::CStatusObserver
     {
     public:
+        virtual ~CLiftedWalkStatusObserver(void) {};
         virtual void OnStart(void) override;
         virtual RESULT Observing(void) override;
         virtual ENEMYTYPES::STATUS OnEnd(void) override;
@@ -257,6 +275,7 @@ public:
     {
     public:
         CThrownFrontStatusObserver(bool bHandleCrashWallFlag, float fForce);
+        virtual ~CThrownFrontStatusObserver(void) {};
         virtual void OnStart(void) override;
 
     private:
@@ -266,6 +285,7 @@ public:
     class CThrownBackStatusObserver : public CEnemyCharacter::CStatusObserver
     {
     public:
+        virtual ~CThrownBackStatusObserver(void) {};
         virtual void OnStart(void) override;
         virtual RESULT Observing(void) override;
         virtual ENEMYTYPES::STATUS OnEnd(void) override;
@@ -275,6 +295,7 @@ public:
     {
     public:
         COneShotMotion(const char* pszMotion);
+        virtual ~COneShotMotion(void) {};
         virtual void OnStart(void) override;
         virtual RESULT Observing(void) override;
         virtual ENEMYTYPES::STATUS OnEnd(void) override;
@@ -287,6 +308,7 @@ public:
     {
     public:
         CWalkingAppearStatus(float fAppearDistance);
+        virtual ~CWalkingAppearStatus(void) {};
         virtual void OnStart(void) override;
         virtual RESULT Observing(void) override;
         virtual ENEMYTYPES::STATUS OnEnd(void) override;
@@ -300,6 +322,7 @@ public:
     class CNoneAppearStatus : public CEnemyCharacter::CStatusObserver
     {
     public:
+        virtual ~CNoneAppearStatus(void) {};
         virtual void OnStart(void) override;
         virtual RESULT Observing(void) override;
         virtual ENEMYTYPES::STATUS OnEnd(void) override;
@@ -308,6 +331,7 @@ public:
     class CFallAppearStatus : public CEnemyCharacter::CStatusObserver
     {
     public:
+        virtual ~CFallAppearStatus(void) {};
         virtual void OnStart(void) override;
         virtual RESULT Observing(void) override;
         virtual ENEMYTYPES::STATUS OnEnd(void) override;
@@ -316,6 +340,7 @@ public:
     class CMotionAppearStatus : public CEnemyCharacter::CStatusObserver
     {
     public:
+        virtual ~CMotionAppearStatus(void) {};
         virtual void OnStart(void) override;
         virtual RESULT Observing(void) override;
         virtual ENEMYTYPES::STATUS OnEnd(void) override;
@@ -325,6 +350,7 @@ public:
     {
     public:
         CBaseThrow(void);
+        virtual ~CBaseThrow(void) {};
         virtual void OnStart(void) override;
         virtual RESULT Observing(void) override;
         virtual ENEMYTYPES::STATUS OnEnd(void) override;
@@ -345,10 +371,10 @@ public:
         RwV3d m_vBoneOffset;
         RwV3d m_vThrowDirection;
         float m_fLiftPlayerDirection;
-        int8 m_step;
-        bool m_bThrowHit;
-        bool m_bSendCatch;
-        bool m_bThrowSuccess;
+        int8  m_step;
+        bool  m_bThrowHit;
+        bool  m_bSendCatch;
+        bool  m_bThrowSuccess;
         int32 m_throwDamage;
         int32 m_throwTarget;
         CCharacter::MSG_LIFT_INFO m_liftInfo;

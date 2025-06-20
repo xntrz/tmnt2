@@ -170,6 +170,16 @@ int32 CMotionParameterController::GetNumDrawAtomicData(float fPrevTime, float fN
 void CMotionParameterController::GetDrawAtomicData(int32 no, DRAW_ATOMIC* pData)
 {
     CurrentMotionParam().GetDrawAtomicData(no, pData);
+
+    if (CharacterParam().IsReverseAtomicNo())
+    {
+        int32 nAtomicNum = CharacterParam().GetAtomicNum();
+        int32 nAtomic = (nAtomicNum - pData->m_nAtomic - 1);
+
+        pData->m_nAtomic = nAtomic;
+
+        ASSERT(pData->m_nAtomic >= 0);
+    };
 };
 
 
@@ -200,7 +210,9 @@ bool CMotionParameterController::IsInvincibleTime(float fNowTime)
 bool CMotionParameterController::IsDrawAtomic(int32 nAtomicNo)
 {
     if (CharacterParam().IsReverseAtomicNo())
-        nAtomicNo = ((CharacterParam().GetAtomicNum() - nAtomicNo) - 1);
+        nAtomicNo = (CharacterParam().GetAtomicNum() - 1 - nAtomicNo);
+
+	ASSERT(nAtomicNo >= 0);
 
     return CharacterParam().IsDrawAtomic(nAtomicNo);
 };

@@ -563,11 +563,29 @@ void CAreaMenu_Container::AreaInfoMenuDraw_Sub(void)
             if (CGameData::Record().Secret().IsUnlockedSecret(SECRETID::ID_SEARCH_ANTIQUE))
             {
                 ANTIQUEID::VALUE idAntique = CAreaInfo::GetAntiqueID(idAreaCur);
-                
-                if (!CGameData::Record().Antique().IsAntiqueTaken(idAntique))
+
+                RwUInt8 alphaBasis = 255;
+                bool bIsAreaHasUntakenAntiq = !CGameData::Record().Antique().IsAntiqueTaken(idAntique);
+
+#ifdef _TEST
+                /* test walkthrough only */
+                for (int32 i = GAMETYPES::CRYSTALTYPE_NONE + 1; i < GAMETYPES::CRYSTALTYPE_NUM; ++i)
+                {
+                    GAMETYPES::CRYSTALTYPE cry = static_cast<GAMETYPES::CRYSTALTYPE>(i);
+
+                    if (CGameData::Record().Item().IsAreaHasCrystal(cry, idAreaCur) &&
+                        !CGameData::Record().Item().IsAreaCrystalTaken(cry, idAreaCur))
+                    {
+                        bIsAreaHasUntakenAntiq |= true;
+                        alphaBasis = 128;
+                    };                
+                };                
+#endif /* _TEST */
+
+                if (bIsAreaHasUntakenAntiq)
                 {
                     m_sprite.ResetUV();
-                    m_sprite.SetRGBA(255, 255, 255, 255);
+                    m_sprite.SetRGBA(255, 255, 255, alphaBasis);
                     m_sprite.SetOffset(0.0f, 0.0f);
                     m_sprite.SetTexture(m_AreaMenuTexture[3]);
                     m_sprite.Resize(64.0f, 64.0f);

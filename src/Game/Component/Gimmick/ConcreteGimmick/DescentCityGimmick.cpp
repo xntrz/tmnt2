@@ -9,8 +9,8 @@
 #include "System/Common/Screen.hpp"
 
 
-static const float s_fTotalRotation = 43.9823f; // 2pi * 7.0f
-
+static const float s_fTotalRotation = MATH_DEG2RAD(2520.0f);
+ 
 
 CDescentCityGimmick::CDescentCityGimmick(const char* pszName, void* pParam)
 : CGimmick(pszName, pParam)
@@ -40,7 +40,7 @@ CDescentCityGimmick::CDescentCityGimmick(const char* pszName, void* pParam)
 };
 
 
-CDescentCityGimmick::~CDescentCityGimmick(void)
+/*virtual*/ CDescentCityGimmick::~CDescentCityGimmick(void) /*override*/
 {
     for (int32 i = 0; i < 4; ++i)
     {
@@ -62,7 +62,7 @@ CDescentCityGimmick::~CDescentCityGimmick(void)
 };
 
 
-void CDescentCityGimmick::GetCenterPosition(RwV3d* pvPosition) const
+/*virtual*/ void CDescentCityGimmick::GetCenterPosition(RwV3d* pvPosition) const /*override*/
 {
 #ifdef _DEBUG
     *pvPosition = m_vPosition;
@@ -70,7 +70,7 @@ void CDescentCityGimmick::GetCenterPosition(RwV3d* pvPosition) const
 };
 
 
-void CDescentCityGimmick::Draw(void) const
+/*virtual*/ void CDescentCityGimmick::Draw(void) const
 {
     CRenderStateManager::SetForDrawBeginning();
 
@@ -95,7 +95,7 @@ void CDescentCityGimmick::Draw(void) const
 };
 
 
-void CDescentCityGimmick::PostMove(void)
+/*virtual*/ void CDescentCityGimmick::PostMove(void) /*override*/
 {
     uvAnimUpdate();
     cityMoveControl();
@@ -193,7 +193,7 @@ void CDescentCityGimmick::cityRise(void)
 void CDescentCityGimmick::cityRotation(void)
 {
     m_vRotation.y += m_fAddRotateAtFrame;
-    m_vRotation.y = Math::RadianCorrect(m_vRotation.y);
+    m_vRotation.y = Math::RadianNormalize(m_vRotation.y);
 };
 
 

@@ -34,7 +34,7 @@ bool CNexusRetrySequence::OnAttach(const void* pParam)
 
     m_pDlg = new CDialog;
     m_pDlg->Set(0.0f, 0.0f, 640.0f, 128.0f);
-    m_pDlg->SetStatus(CDialog::STATUS_NO);
+    m_pDlg->SetStatus(CDialog::STATUS_YES);
     m_pDlg->SetOpenAction(false);
     m_pDlg->SetText(CGameText::GetText(GAMETEXT_GG_TOURNEY_RETRY),
                     16.0f,

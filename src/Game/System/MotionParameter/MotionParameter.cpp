@@ -155,27 +155,20 @@ void CMotionParameter::CreateTimingParameter(CTimingParameter::INIT_PARAMETER* p
 
 void CMotionParameter::InsertTimingByTime(CList<CTimingParameter>& rList, CTimingParameter* pTiming)
 {
-    if (rList.empty())
+    auto it = rList.begin();
+    auto itEnd = rList.end();
+    while (it != itEnd)
     {
-        rList.push_back(pTiming);
-    }
-    else
-    {
-        auto it = rList.begin();
-        auto itEnd = rList.end();
-        while (it != itEnd)
-        {
-            if (pTiming->GetTime() < (*it).GetTime())
-                break;
+        if (pTiming->GetTime() < (*it).GetTime())
+            break;
 
-            ++it;
-        };
-
-        if (it)
-            rList.insert(it, pTiming);
-        else
-            rList.push_back(pTiming);
+        ++it;
     };
+
+    if (it)
+        rList.insert(it, pTiming);
+    else
+        rList.push_back(pTiming);
 };
 
 
@@ -196,7 +189,7 @@ int32 CMotionParameter::GetNumDrawAtomicData(float fPrevTime, float fNowTime)
     {
         ASSERT(it.IsAtomic());
 
-        if (TIMING(fPrevTime) <= TIMING(it.GetTime()))
+        if (TIMING(fPrevTime) < TIMING(it.GetTime()))
         {
             if (TIMING(fNowTime) < TIMING(it.GetTime()))
                 break;
@@ -215,7 +208,7 @@ int32 CMotionParameter::GetNumDrawAtomicData(float fPrevTime, float fNowTime)
 
 void CMotionParameter::GetDrawAtomicData(int32 nIndex, CMotionParameterController::DRAW_ATOMIC* pData)
 {
-    nIndex = m_nAtomicOffset;
+    nIndex += m_nAtomicOffset;
 
     ASSERT(pData);
     ASSERT(nIndex >= 0);
@@ -262,7 +255,7 @@ int32 CMotionParameter::GetNumDrawLocusData(float fPrevTime, float fNowTime)
     {
         ASSERT(it.IsLocus());
 
-        if (TIMING(fPrevTime) <= TIMING(it.GetTime()))
+        if (TIMING(fPrevTime) < TIMING(it.GetTime()))
         {
             if (TIMING(fNowTime) < TIMING(it.GetTime()))
                 break;
@@ -281,7 +274,7 @@ int32 CMotionParameter::GetNumDrawLocusData(float fPrevTime, float fNowTime)
 
 void CMotionParameter::GetDrawLocusData(int32 nIndex, CMotionParameterController::DRAW_LOCUS* pData)
 {
-    nIndex = m_nLocusOffset;
+    nIndex += m_nLocusOffset;
     
     ASSERT(pData);
     ASSERT(nIndex >= 0);

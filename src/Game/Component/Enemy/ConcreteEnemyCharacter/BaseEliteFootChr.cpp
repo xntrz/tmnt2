@@ -975,9 +975,8 @@ CBaseEliteFootChr::OnDamage(CCharacterAttackCalculator& rCalc) /*override*/
         };
     };
 
-    CGameObject* pAttacker = pAttack->GetObject();
-    uint32 hAttacker = CEnemyUtils::GetHandleFromHitObj(pAttacker);
-    AIModerator().CatchAttack(hAttacker);
+    uint32 hObj = CEnemyUtils::GetHandleFromHitObj(pAttack->GetObject());
+    AIModerator().CatchAttack(hObj, pAttack->GetObject()->GetType());
 
 	return CBaseEliteChr::OnDamage(rCalc);
 };

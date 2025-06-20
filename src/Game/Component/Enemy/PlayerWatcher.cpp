@@ -29,6 +29,7 @@ CPlayerStateWatcher::~CPlayerStateWatcher(void)
 
 void CPlayerStateWatcher::Reset(void)
 {
+    /* doing it twice to reset prev state */
     Update();
     Update();
 };
@@ -60,18 +61,16 @@ bool CPlayerStateWatcher::IsAttack(int32 iPlayerIndex) const
 
 bool CPlayerStateWatcher::IsAttackTrigger(int32 iPlayerIndex) const
 {
-    bool bResult = false;
-    
     if (IsValidIndex(iPlayerIndex))
     {
-        uint32 uAttackFlagCurr = (m_aCurrentStateFlag[iPlayerIndex] & PLAYER_WATCH_ATTACK_ALL);
-        uint32 uAttackFlagPrev = (m_aPrevStateFlag[iPlayerIndex] & PLAYER_WATCH_ATTACK_ALL);
+        uint32 attackFlagCurr = (m_aCurrentStateFlag[iPlayerIndex] & PLAYER_WATCH_ATTACK_ALL);
+        uint32 attackFlagPrev = (m_aPrevStateFlag[iPlayerIndex] & PLAYER_WATCH_ATTACK_ALL);
 
-        if (IsAttack(iPlayerIndex) && (uAttackFlagCurr != uAttackFlagPrev))
-            bResult = true;
+        if (IsAttack(iPlayerIndex) && (attackFlagCurr != attackFlagPrev))
+            return true;
     };
 
-    return bResult;
+    return false;
 };
 
 
@@ -179,7 +178,7 @@ uint32 CPlayerStateWatcher::Sub_GetAttackFlag(PLAYERTYPES::STATUS eStatus, PLAYE
 
     if (((eStatus >= PLAYERTYPES::STATUS_ATTACK_A) && (eStatus < PLAYERTYPES::STATUS_ATTACK_JUMP))
         && (eStatus != PLAYERTYPES::STATUS_ATTACK_B_CHARGE)
-        || (eStatus == PLAYERTYPES::STATUS_THROW_COMBINATION))
+        || (eStatus == PLAYERTYPES::STATUS_THROWN_COMBINATION))
     {
         uFlag |= PLAYER_WATCH_ATTACK;
     };
@@ -214,7 +213,6 @@ uint32 CPlayerStateWatcher::Sub_GetShootFlag(PLAYERTYPES::STATUS eStatus) const
         uFlag |= PLAYER_WATCH_SHOOT_KNIFE;
     };
 
-    /* TODO: STATUS_ATTACK_B_CHARGE ? (not checked there in retail game) */
     if ((eStatus == PLAYERTYPES::STATUS_ATTACK_B) ||
         (eStatus == PLAYERTYPES::STATUS_ATTACK_AABBC))
     {

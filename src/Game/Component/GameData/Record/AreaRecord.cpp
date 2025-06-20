@@ -17,7 +17,7 @@ static const uint32 CLEARTIME_RANK_S  = GAMETIME_HMS(2, 11, 00);
 static const uint32 CLEARTIME_RANK_SS = GAMETIME_HMS(0, 00, 00);
 
 
-static const int32 POINT_BORDERLINE[] =
+static const int32 RANK_BORDERLINE[] =
 {
     0,  //  none
     0,  //  e
@@ -41,7 +41,8 @@ static const int32 POINT_PER_RANK[] =
     6,  //  ss
 };
 
-static_assert(COUNT_OF(POINT_BORDERLINE) == GAMETYPES::CLEARRANK_NUM, "update me");
+
+static_assert(COUNT_OF(RANK_BORDERLINE) == GAMETYPES::CLEARRANK_NUM, "update me");
 static_assert(COUNT_OF(POINT_PER_RANK) == GAMETYPES::CLEARRANK_NUM, "update me");
 
 
@@ -571,7 +572,6 @@ int32 CAreaRecord::CountRankedArea(GAMETYPES::CLEARRANK clearrank) const
 
 GAMETYPES::CLEARRANK CAreaRecord::CalcTotalClearRank(void) const
 {
-    int32 iResult = GAMETYPES::CLEARRANK_NONE;
     int32 iTotalPoints = 0;
     
     for (int32 i = 0; i < AREAID::NORMALMAX; ++i)
@@ -580,19 +580,16 @@ GAMETYPES::CLEARRANK CAreaRecord::CalcTotalClearRank(void) const
         ASSERT(m_aNodeArea[i].m_clearrank >= GAMETYPES::CLEARRANK_NONE &&
                m_aNodeArea[i].m_clearrank < GAMETYPES::CLEARRANK_NUM);
         
-        iTotalPoints += POINT_PER_RANK[m_aNodeArea[i].m_clearrank];
+        iTotalPoints += POINT_PER_RANK[GetAreaClearRank(static_cast<AREAID::VALUE>(i))];
     };
 
-	for (int32 i = GAMETYPES::CLEARRANK_SS; i > 0; --i)
+	for (int32 i = GAMETYPES::CLEARRANK_SS; i > GAMETYPES::CLEARRANK_NONE; --i)
 	{
-		if (iTotalPoints >= POINT_BORDERLINE[i])
-		{
-			iResult = i;
-			break;
-		};
+        if (iTotalPoints >= RANK_BORDERLINE[i])
+            return static_cast<GAMETYPES::CLEARRANK>(i);
 	};
 
-    return GAMETYPES::CLEARRANK(iResult);
+    return GAMETYPES::CLEARRANK_NONE;
 };
 
 

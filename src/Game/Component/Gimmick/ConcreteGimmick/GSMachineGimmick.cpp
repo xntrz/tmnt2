@@ -109,7 +109,7 @@ CGSMachineGimmick::CGSMachineGimmick(const char* pszName, void* pParam)
     //
     //  init body hit
     //
-    if (m_subid == 3)
+    if (m_subid == SUBID_DUMMY)
     {
         m_pBodyHitData = nullptr;
     }
@@ -133,7 +133,7 @@ CGSMachineGimmick::CGSMachineGimmick(const char* pszName, void* pParam)
 };
 
 
-CGSMachineGimmick::~CGSMachineGimmick(void)
+/*virtual*/ CGSMachineGimmick::~CGSMachineGimmick(void)
 {
     EffectStop();
 
@@ -157,7 +157,7 @@ CGSMachineGimmick::~CGSMachineGimmick(void)
 };
 
 
-void CGSMachineGimmick::MessageProc(int32 nMessageID, void* pParam)
+/*virtual*/ void CGSMachineGimmick::MessageProc(int32 nMessageID, void* pParam) /*override*/
 {
     switch (nMessageID)
     {
@@ -170,10 +170,8 @@ void CGSMachineGimmick::MessageProc(int32 nMessageID, void* pParam)
         break;
 
     case GIMMICKTYPES::MESSAGEID_RECVEVENT:
-        OnReceiveEvent(
-            static_cast<GIMMICKTYPES::EVENT_ARGS*>(pParam)->m_szSender,
-            static_cast<GIMMICKTYPES::EVENT_ARGS*>(pParam)->m_type
-        );
+        OnReceiveEvent(static_cast<GIMMICKTYPES::EVENT_ARGS*>(pParam)->m_szSender,
+                       static_cast<GIMMICKTYPES::EVENT_ARGS*>(pParam)->m_type);
         break;
 
     default:
@@ -182,7 +180,7 @@ void CGSMachineGimmick::MessageProc(int32 nMessageID, void* pParam)
 };
 
 
-void CGSMachineGimmick::PostMove(void)
+/*virtual*/ void CGSMachineGimmick::PostMove(void) /*override*/
 {
     float dt = CGameProperty::GetElapsedTime();
 
@@ -233,7 +231,7 @@ void CGSMachineGimmick::PostMove(void)
     m_fPathTimerate = RateControl(m_fPathTimerate, m_fAimPathTimerate, dt * 0.1f);
     m_pGSMachineGimmickMove->SetPathTimeRate(m_fPathTimerate);
 
-    if (m_eState > STATE_WAIT)
+    if (m_eState != STATE_WAIT)
     {
         CommonUpdate();
         EffectUpdate();
@@ -245,7 +243,8 @@ void CGSMachineGimmick::PostMove(void)
         {
             CGameProperty::SetCameraVibration(0.5f, 0.5f, 5);
             CGameSound::PlayObjectSE(this, SDCODE_SE(4384));
-            if (m_subid == 3)
+
+            if (m_subid == SUBID_DUMMY)
             {
                 CGameSound::PlayObjectSE(this, SDCODE_SE(4139));
                 CGameSound::PlayObjectSE(this, SDCODE_SE(4385));
@@ -256,7 +255,7 @@ void CGSMachineGimmick::PostMove(void)
         };
 
         if (m_fDistance > 15.0f)
-            SetGSState(STATE_STOP);
+            SetState(STATE_STOP);
     }
     else
     {
@@ -265,7 +264,8 @@ void CGSMachineGimmick::PostMove(void)
 };
 
 
-void CGSMachineGimmick::OnReceiveEvent(const char* pszSender, GIMMICKTYPES::EVENTTYPE eventtype)
+/*virtual*/ void CGSMachineGimmick::OnReceiveEvent(const char* pszSender,
+                                                   GIMMICKTYPES::EVENTTYPE eventtype) /*override*/
 {
     if (eventtype != GIMMICKTYPES::EVENTTYPE_ACTIVATE)
         return;
@@ -275,14 +275,14 @@ void CGSMachineGimmick::OnReceiveEvent(const char* pszSender, GIMMICKTYPES::EVEN
     if (m_pBodyHitData)
         m_pBodyHitData->SetState(CBodyHitData::STATE_SELF_TO_OTHER, true);
     
-    SetGSState(STATE_CRUISE);
+    SetState(STATE_CRUISE);
     EffectStart();
 
     CGameProperty::SetCameraVibration(0.05f, 2.5f, 10);
 };
 
 
-void CGSMachineGimmick::OnAttackResult(CHitCatchData* pCatch)
+/*virtual*/ void CGSMachineGimmick::OnAttackResult(CHitCatchData* pCatch) /*override*/
 {
     CGameObject* pGameObj = CGameObjectManager::GetObject(pCatch->GetObjectHandle());
     ASSERT(pGameObj);
@@ -293,7 +293,7 @@ void CGSMachineGimmick::OnAttackResult(CHitCatchData* pCatch)
     if (static_cast<CCharacter*>(pGameObj)->GetCharacterType() != CCharacter::TYPE_PLAYER)
         return;
 
-    SetGSState(STATE_SLEEP);
+    SetState(STATE_SLEEP);
     
     CGameProperty::SetCameraVibration(0.5f, 0.5f, 5);
 };
@@ -308,54 +308,74 @@ void CGSMachineGimmick::Wait(void)
 
 void CGSMachineGimmick::Cruise(void)
 {
-    m_fAimPlayrate = 1.0f;
-    m_fAimPathTimerate = (m_fPlayrate <= 0.5f ? 0.0f : GetPathTimerateByMPS(float(m_subid) * 0.8f + 5.0f));
-
     if (m_fDistance > 15.0f)
-        SetGSState(STATE_PRECHARGE);
+        SetState(STATE_PRECHARGE);
 
     if (m_fStepTimer > 10.0f)
-        SetGSState(STATE_PRECHARGE);
+        SetState(STATE_PRECHARGE);
+
+    m_fAimPlayrate = 1.0f;
+
+    if (m_fPlayrate <= 0.5f)
+    {
+        m_fAimPathTimerate = 0.0f;
+    }
+    else
+    {
+        float fMPS = (static_cast<float>(m_subid) * 0.8f) + 5.0f;
+        m_fAimPathTimerate = GetPathTimerateByMPS(fMPS);
+    };
 };
 
 
 void CGSMachineGimmick::PreCharge(void)
 {
+    if (m_fStepTimer > 1.0f)
+        SetState(STATE_CHARGE);
+
     m_fAimPlayrate = 0.0f;
     m_fAimPathTimerate = 0.0f;
-
-    if (m_fStepTimer > 1.0f)
-        SetGSState(STATE_CHARGE);
 };
 
 
 void CGSMachineGimmick::Charge(void)
 {
-    m_fAimPlayrate = 2.0f;
-    m_fAimPathTimerate = GetPathTimerateByMPS(float(m_subid) * 3.0f + 14.0f);    
-
     if (m_fNearestPathT < m_pGSMachineGimmickMove->GetPathT())
-        SetGSState(STATE_POSTCHARGE);
+        SetState(STATE_POSTCHARGE);
+
+    float fMPS = static_cast<float>(m_subid) * 3.0f + 14.0f;
+    m_fAimPathTimerate = GetPathTimerateByMPS(fMPS);
+
+    m_fAimPlayrate = 2.0f;
 };
 
 
 void CGSMachineGimmick::PostCharge(void)
 {
+    if (m_fStepTimer > 3.0f)
+        SetState(STATE_CRUISE);
+
     m_fAimPlayrate = 0.5f;
     m_fAimPathTimerate = 0.0f;
-
-    if (m_fStepTimer > 3.0f)
-        SetGSState(STATE_CRUISE);
 };
 
 
 void CGSMachineGimmick::Sleep(void)
 {
-    m_fAimPlayrate = 0.1f;
-    m_fAimPathTimerate = (m_fDistance >= 8.0f ? 0.0f : GetPathTimerateByMPS(float(m_subid) + -2.5f));
-
     if (m_fStepTimer > 3.0f)
-        SetGSState(STATE_CRUISE);
+        SetState(STATE_CRUISE);
+    
+    m_fAimPlayrate = 0.1f;
+
+    if (m_fDistance >= 8.0f)
+    {
+        m_fAimPathTimerate = 0.0f;
+    }
+    else
+    {
+        float fMPS = static_cast<float>(m_subid) + (-2.5f);
+        m_fAimPathTimerate = GetPathTimerateByMPS(fMPS);
+    };
 };
 
 
@@ -377,43 +397,40 @@ void CGSMachineGimmick::CommonUpdate(void)
     //  update catch
     //
     {
-        RwSphere HitSphere = { vHitPos, s_fHitRadius };
+        RwSphere hitSphere = { vHitPos, s_fHitRadius };
         
-        CHitCatchData CatchData;
-        CatchData.Cleanup();
-        CatchData.SetObject(GetHandle());
-        CatchData.SetObjectType(GetType());
-        CatchData.SetShape(CHitCatchData::SHAPE_SPHERE);
-        CatchData.SetSphere(&HitSphere);
+        CHitCatchData hitCatch;
+        hitCatch.Cleanup();
+        hitCatch.SetObject(GetHandle());
+        hitCatch.SetObjectType(GetType());
+        hitCatch.SetShape(CHitCatchData::SHAPE_SPHERE);
+        hitCatch.SetSphere(&hitSphere);
 
-        CHitAttackManager::RegistCatch(&CatchData);
+        CHitAttackManager::RegistCatch(&hitCatch);
     }
 
     //
     //  update attack
     //
     {
-        RwSphere HitSphere =
-        {
-            vHitPos,
-            s_fHitRadius * (m_pGSMachineGimmickMove->IsPathEnd() ? 0.95f : 1.0f)
-        };
+        float fHitRadius = s_fHitRadius * (m_pGSMachineGimmickMove->IsPathEnd() ? 0.95f : 1.0f);
+        RwSphere hitSphere = { vHitPos, fHitRadius };
 
         RwV3d vObjPos = Math::VECTOR3_ZERO;
         m_pGSMachineGimmickMove->GetPosition(&vObjPos);
 
-        CHitAttackData AttackData;
-        AttackData.Cleanup();
-        AttackData.SetObject(GetHandle());
-        AttackData.SetShape(CHitAttackData::SHAPE_SPHERE);
-        AttackData.SetSphere(&HitSphere);
-        AttackData.SetObjectPos(&vObjPos);
-        AttackData.SetPower(s_nPower);
-        AttackData.SetTarget(CHitAttackData::TARGET_ALL_EXCEPT_SELF);
-        AttackData.SetAntiguard(CHitAttackData::ANTIGUARD_INVALID);
-        AttackData.SetStatus(CHitAttackData::STATUS_FLYAWAY);
+        CHitAttackData hitAttack;
+        hitAttack.Cleanup();
+        hitAttack.SetObject(GetHandle());
+        hitAttack.SetShape(CHitAttackData::SHAPE_SPHERE);
+        hitAttack.SetSphere(&hitSphere);
+        hitAttack.SetObjectPos(&vObjPos);
+        hitAttack.SetPower(s_nPower);
+        hitAttack.SetTarget(CHitAttackData::TARGET_ALL_EXCEPT_SELF);
+        hitAttack.SetAntiguard(CHitAttackData::ANTIGUARD_INVALID);
+        hitAttack.SetStatus(CHitAttackData::STATUS_FLYAWAY);
 
-        CHitAttackManager::RegistAttack(&AttackData);
+        CHitAttackManager::RegistAttack(&hitAttack);
     }
 
     //
@@ -421,7 +438,7 @@ void CGSMachineGimmick::CommonUpdate(void)
     //
     RwV3d vPos = Math::VECTOR3_ZERO;
     m_pGSMachineGimmickMove->GetPosition(&vPos);
-
+	
     RwV3d vRot = Math::VECTOR3_ZERO;
     m_pGSMachineGimmickMove->GetRotation(&vRot);
 
@@ -446,11 +463,12 @@ void CGSMachineGimmick::EffectStart(void)
 {
     RwV3d vRotation = Math::VECTOR3_ZERO;
     m_pGSMachineGimmickMove->GetRotation(&vRotation);
+    vRotation.y += MATH_PI;
 
     RwV3d vPosition = Math::VECTOR3_ZERO;
     m_pGSMachineGimmickMove->GetPosition(&vPosition);
 
-    m_hEffectWaterSplash = CEffectManager::Play(EFFECTID::ID_SWEEP_SPLASH, &vPosition, vRotation.y + Math::PI);
+    m_hEffectWaterSplash = CEffectManager::Play(EFFECTID::ID_SWEEP_SPLASH, &vPosition, vRotation.y);
     ASSERT(m_hEffectWaterSplash);
 };
 
@@ -477,7 +495,7 @@ void CGSMachineGimmick::EffectUpdate(void)
 };
 
 
-void CGSMachineGimmick::SetGSState(STATE eState)
+void CGSMachineGimmick::SetState(STATE eState)
 {
     switch (eState)
     {
@@ -523,12 +541,18 @@ float CGSMachineGimmick::RateControl(float fCur, float fAim, float dt) const
 
     if (fDlt >= dt)
         return (fCur >= fAim ? (fCur - dt) : (fCur + dt));
-    else
-        return fAim;
+    
+    return fAim;
 };
 
 
 float CGSMachineGimmick::GetPathTimerateByMPS(float fMPS) const
 {
-    return (m_pGSMachineGimmickMove->GetPathTByMeterPerSecond(fMPS) - m_pGSMachineGimmickMove->GetPathT()) / CGameProperty::GetElapsedTime();
+    float dt = CGameProperty::GetElapsedTime();
+    
+    float fAheadPathT = m_pGSMachineGimmickMove->GetPathTByMeterPerSecond(fMPS);
+    float fNowPathT = m_pGSMachineGimmickMove->GetPathT();
+    float fDeltaPathT = (fAheadPathT - fNowPathT);
+
+    return (fDeltaPathT / dt);
 };

@@ -1,5 +1,4 @@
 #include "GaugeResult.hpp"
-#include "GaugeAnim.hpp"
 
 #include "Game/Component/GameData/GameData.hpp"
 #include "Game/Component/GameMain/GameProperty.hpp"
@@ -184,7 +183,7 @@ void CGaugeResult_Container::DrawNormal(void)
             {
             case 0:
                 {
-                    float fDuration = GAUGE_ANIM_DURATION_FRAMES(19);
+                    float fDuration = ANIM_DURATION_FRAMES(19);
                     
                     fWidth = Math::LinearTween(1228.8f, -716.8f, fT, fDuration);
                     fHeight = Math::LinearTween(614.4f, -358.4f, fT, fDuration);
@@ -204,7 +203,7 @@ void CGaugeResult_Container::DrawNormal(void)
 
             case 1:
                 {
-                    float fDuration = GAUGE_ANIM_DURATION_FRAMES(2);
+                    float fDuration = ANIM_DURATION_FRAMES(2);
 
                     fWidth = Math::LinearTween(512.0f, 25.6f, fT, fDuration);
                     fHeight = Math::LinearTween(256.0f, 12.8f, fT, fDuration);
@@ -223,7 +222,7 @@ void CGaugeResult_Container::DrawNormal(void)
 
             case 2:
                 {
-                    float fDuration = GAUGE_ANIM_DURATION_FRAMES(2);
+                    float fDuration = ANIM_DURATION_FRAMES(2);
 
                     fWidth = Math::LinearTween(512.0f, -25.6f, fT, fDuration);
                     fHeight = Math::LinearTween(256.8f, -12.8f, fT, fDuration);
@@ -242,7 +241,7 @@ void CGaugeResult_Container::DrawNormal(void)
                 
             case 3:
                 {
-                    float fDuration = GAUGE_ANIM_DURATION_FRAMES(120);
+                    float fDuration = ANIM_DURATION_FRAMES(120);
                     
                     if (m_uAnimCnt >= uint32(fDuration))
                     {
@@ -299,7 +298,7 @@ void CGaugeResult_Container::DrawNormal(void)
             {
             case 0:
                 {
-                    float fDuration = GAUGE_ANIM_DURATION_FRAMES(19);
+                    float fDuration = ANIM_DURATION_FRAMES(19);
 
                     fWidth = Math::LinearTween(1228.8f, -716.8f, fT, fDuration);
                     fHeight = Math::LinearTween(307.2f, -179.2f, fT, fDuration);
@@ -321,7 +320,7 @@ void CGaugeResult_Container::DrawNormal(void)
 
             case 1:
                 {
-                    float fDuration = GAUGE_ANIM_DURATION_FRAMES(2);
+                    float fDuration = ANIM_DURATION_FRAMES(2);
 
                     fWidth = Math::LinearTween(512.0f, 25.6f, fT, fDuration);
                     fHeight = Math::LinearTween(128.0f, 6.4f, fT, fDuration);
@@ -340,7 +339,7 @@ void CGaugeResult_Container::DrawNormal(void)
 
             case 2:
                 {
-                    float fDuration = GAUGE_ANIM_DURATION_FRAMES(2);
+                    float fDuration = ANIM_DURATION_FRAMES(2);
 
                     fWidth = Math::LinearTween(537.6f, -25.6f, fT, fDuration);
                     fHeight = Math::LinearTween(134.4f, -6.4f, fT, fDuration);
@@ -359,7 +358,7 @@ void CGaugeResult_Container::DrawNormal(void)
 
             case 3:
                 {
-                    float fDuration = GAUGE_ANIM_DURATION_FRAMES(19);
+                    float fDuration = ANIM_DURATION_FRAMES(19);
 
                     fWidth_f = Math::LinearTween(614.4f, -358.4f, fT, fDuration);
                     fHeight_f = Math::LinearTween(307.2f, -179.2f, fT, fDuration);
@@ -379,7 +378,7 @@ void CGaugeResult_Container::DrawNormal(void)
 
             case 4:
                 {
-                    float fDuration = GAUGE_ANIM_DURATION_FRAMES(2);
+                    float fDuration = ANIM_DURATION_FRAMES(2);
 
                     fWidth_f = Math::LinearTween(256.0f, 12.8f, fT, fDuration);
                     fHeight_f = Math::LinearTween(128.0f, 6.4f, fT, fDuration);
@@ -399,7 +398,7 @@ void CGaugeResult_Container::DrawNormal(void)
 
             case 5:
                 {
-                    float fDuration = GAUGE_ANIM_DURATION_FRAMES(2);
+                    float fDuration = ANIM_DURATION_FRAMES(2);
 
                     fWidth_f = Math::LinearTween(256.8f, -12.8f, fT, fDuration);
                     fHeight_f = Math::LinearTween(128.4f, -6.4f, fT, fDuration);
@@ -419,7 +418,7 @@ void CGaugeResult_Container::DrawNormal(void)
 
             case 6:
                 {
-                    float fDuration = GAUGE_ANIM_DURATION_FRAMES(120);
+                    float fDuration = ANIM_DURATION_FRAMES(120);
 
 					uAlphaBasis_f = 255;
 
@@ -479,7 +478,7 @@ void CGaugeResult_Container::DrawNexus(void)
     {
     case 0:
         {
-            float fDuration = GAUGE_ANIM_DURATION_FRAMES(60);
+            float fDuration = ANIM_DURATION_FRAMES(60);
             
             fWidth = Math::LinearTween(0.0f, 563.2f, fT, fDuration);
             fHeight = Math::LinearTween(0.0f, 140.8f, fT, fDuration);
@@ -500,7 +499,7 @@ void CGaugeResult_Container::DrawNexus(void)
 
     case 1:
         {
-            float fDuration = GAUGE_ANIM_DURATION_FRAMES(2);
+            float fDuration = ANIM_DURATION_FRAMES(2);
 
             fWidth = Math::LinearTween(563.2f, -51.2f, fT, fDuration);
             fHeight = Math::LinearTween(140.8f, -12.8f, fT, fDuration);
@@ -519,7 +518,7 @@ void CGaugeResult_Container::DrawNexus(void)
 
     case 2:
         {
-            float fDuration = GAUGE_ANIM_DURATION_FRAMES(120);
+            float fDuration = ANIM_DURATION_FRAMES(120);
             
             if (m_uAnimCnt >= uint32(fDuration))
                 m_resultReq = CGaugeResult::RESULTREQ_NONE;

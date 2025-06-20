@@ -13,15 +13,13 @@ class CEffectLight
 private:
     struct LIGHTWORK
     {
-        RwV3d        m_vPosition;
-        RwRGBA       m_color;
-        float        m_fRadius;
-        RwIm3DVertex m_aVertices[4];        
-        bool         m_bVisible;
-        bool         m_bUse;
+        RwV3d        vPosition;
+        RwRGBA       color;
+        float        fRadius;
+        RwIm3DVertex aVertices[4];        
+        bool         bVisible;
+        bool         bUse;
     };
-
-    static const int32 LIGHTWORKNUM = 128;
 
 public:
     CEffectLight(void);
@@ -33,25 +31,24 @@ public:
     void SetColor(uint32 hLight, const RwRGBA& color);
     void SetPosition(uint32 hLight, const RwV3d* pvPosition);
     void SetRadius(uint32 hLight, float fRadius);
+    LIGHTWORK* WorkAlloc(void);
+    void WorkFree(LIGHTWORK* pWork);
+    LIGHTWORK* WorkFromHandle(uint32 hLight) const;
+    void SetVertex(LIGHTWORK* pWork, float fRadius, const RwRGBA& color) const;
 
 private:
-    LIGHTWORK* workAlloc(void);
-    void workFree(LIGHTWORK* pWork);
-    LIGHTWORK* workFromHandle(uint32 hLight) const;
-    void setVertex(LIGHTWORK* pWork, float fRadius, const RwRGBA& color) const;
-
-private:
-    LIGHTWORK   m_aLightWork[LIGHTWORKNUM];
+    LIGHTWORK   m_aLightWork[120];
     int32       m_nNumActiveLights;
     RwTexture*  m_pTexture;
 };
 
 
 CEffectLight::CEffectLight(void)
-: m_nNumActiveLights(0)
+: m_aLightWork()
+, m_nNumActiveLights(0)
 , m_pTexture(nullptr)
 {
-    std::memset(m_aLightWork, 0x00, sizeof(m_aLightWork));    
+    std::memset(m_aLightWork, 0, sizeof(m_aLightWork));    
 };
 
 
@@ -67,8 +64,11 @@ void CEffectLight::Run(void)
     {
         LIGHTWORK* pWork = &m_aLightWork[i];
 
-        if (pWork->m_bUse)
-            pWork->m_bVisible = CGimmickUtils::IsPositionVisible(&pWork->m_vPosition, pWork->m_fRadius, true);
+        if (pWork->bUse)
+        {
+            pWork->bVisible = CGimmickUtils::IsPositionVisible(&pWork->vPosition, pWork->fRadius, true);
+            ++m_nNumActiveLights;
+        };
     };
 };
 
@@ -77,6 +77,8 @@ void CEffectLight::Draw(void)
 {
     if (!m_nNumActiveLights)
         return;
+
+    m_nNumActiveLights = 0;
 
     RwMatrix matrixView;
     RwMatrixSetIdentityMacro(&matrixView);
@@ -99,29 +101,28 @@ void CEffectLight::Draw(void)
     RENDERSTATE_PUSH(rwRENDERSTATEDESTBLEND, rwBLENDONE);
     RENDERSTATE_PUSH(rwRENDERSTATEFOGENABLE, false);
 
-    for (int32 i = 0; i < m_nNumActiveLights; ++i)
+    for (int32 i = 0; i < COUNT_OF(m_aLightWork); ++i)
     {
         LIGHTWORK* pWork = &m_aLightWork[i];
 
-        if (!pWork->m_bUse)
+        if (!pWork->bUse)
             continue;
 
-        if (pWork->m_bVisible)
+        if (pWork->bVisible)
         {
             RwV3d vTmp = Math::VECTOR3_ZERO;
-            Math::Vec3_Sub(&vTmp, &vEyePos, &pWork->m_vPosition);
+            Math::Vec3_Sub(&vTmp, &vEyePos, &pWork->vPosition);
             Math::Vec3_Normalize(&vTmp, &vTmp);
             Math::Vec3_Scale(&vTmp, &vTmp, 1.0f);
-
-            Math::Vec3_Add(&matrixBillboard.pos, &pWork->m_vPosition, &vTmp);
+            Math::Vec3_Add(&matrixBillboard.pos, &pWork->vPosition, &vTmp);
             
-            setVertex(pWork, pWork->m_fRadius, pWork->m_color);
+            SetVertex(pWork, pWork->fRadius, pWork->color);
             
             uint32 flags  = rwIM3D_VERTEXRGBA
                           | rwIM3D_VERTEXXYZ
                           | rwIM3D_VERTEXUV;
 
-            if (RwIm3DTransform(pWork->m_aVertices, COUNT_OF(pWork->m_aVertices), &matrixBillboard, flags))
+            if (RwIm3DTransform(pWork->aVertices, COUNT_OF(pWork->aVertices), &matrixBillboard, flags))
             {
                 RwIm3DRenderPrimitive(rwPRIMTYPETRISTRIP);
                 RwIm3DEnd();
@@ -139,15 +140,15 @@ void CEffectLight::Draw(void)
 
 uint32 CEffectLight::Regist(const RwV3d* pvPosition, float fRadius, const RwRGBA& color)
 {
-    LIGHTWORK* pWork = workAlloc();
+    LIGHTWORK* pWork = WorkAlloc();
     ASSERT(pWork);
 
     if (pWork)
     {
-        pWork->m_vPosition  = *pvPosition;
-        pWork->m_fRadius    = fRadius;
-        pWork->m_color      = color;
-        pWork->m_bVisible   = true;
+        pWork->vPosition  = *pvPosition;
+        pWork->fRadius    = fRadius;
+        pWork->color      = color;
+        pWork->bVisible   = true;
     };
 
     if (!m_pTexture)
@@ -164,20 +165,20 @@ uint32 CEffectLight::Regist(const RwV3d* pvPosition, float fRadius, const RwRGBA
 
 void CEffectLight::Remove(uint32 hLight)
 {
-    LIGHTWORK* pWork = workFromHandle(hLight);
+    LIGHTWORK* pWork = WorkFromHandle(hLight);
     ASSERT(pWork);
 
     if (pWork)
-        workFree(pWork);
+        WorkFree(pWork);
 };
 
 
 void CEffectLight::SetColor(uint32 hLight, const RwRGBA& color)
 {
-    LIGHTWORK* pWork = workFromHandle(hLight);
+    LIGHTWORK* pWork = WorkFromHandle(hLight);
     ASSERT(pWork);
 
-    pWork->m_color = color;
+    pWork->color = color;
 };
 
 
@@ -185,30 +186,29 @@ void CEffectLight::SetPosition(uint32 hLight, const RwV3d* pvPosition)
 {
     ASSERT(pvPosition);
     
-    LIGHTWORK* pWork = workFromHandle(hLight);
-    ASSERT(pWork);
+    LIGHTWORK* pWork = WorkFromHandle(hLight);
+    ASSERT(pWork);    
 
-    pWork->m_vPosition = *pvPosition;
+    pWork->vPosition = *pvPosition;
 };
 
 
 void CEffectLight::SetRadius(uint32 hLight, float fRadius)
 {
-    LIGHTWORK* pWork = workFromHandle(hLight);
+    LIGHTWORK* pWork = WorkFromHandle(hLight);
     ASSERT(pWork);
 
-    pWork->m_fRadius = fRadius;
+    pWork->fRadius = fRadius;
 };
 
 
-CEffectLight::LIGHTWORK* CEffectLight::workAlloc(void)
+CEffectLight::LIGHTWORK* CEffectLight::WorkAlloc(void)
 {
     for (int32 i = 0; i < COUNT_OF(m_aLightWork); ++i)
     {
-        if (!m_aLightWork[i].m_bUse)
+        if (!m_aLightWork[i].bUse)
         {
-            ++m_nNumActiveLights;
-            m_aLightWork[i].m_bUse = true;
+            m_aLightWork[i].bUse = true;
             return &m_aLightWork[i];
         };
     };
@@ -217,30 +217,29 @@ CEffectLight::LIGHTWORK* CEffectLight::workAlloc(void)
 };
 
 
-void CEffectLight::workFree(LIGHTWORK* pWork)
+void CEffectLight::WorkFree(LIGHTWORK* pWork)
 {
     ASSERT(pWork);
 
-    pWork->m_bUse = false;
-    --m_nNumActiveLights;
+    pWork->bUse = false;
 };
 
 
-CEffectLight::LIGHTWORK* CEffectLight::workFromHandle(uint32 hLight) const
+CEffectLight::LIGHTWORK* CEffectLight::WorkFromHandle(uint32 hLight) const
 {
     LIGHTWORK* pWork = reinterpret_cast<LIGHTWORK*>(hLight);
 
     if (!pWork)
         return nullptr;
 
-    if (!pWork->m_bUse)
+    if (!pWork->bUse)
         return nullptr;
 
     return pWork;
 };
 
 
-void CEffectLight::setVertex(LIGHTWORK* pWork, float fRadius, const RwRGBA& color) const
+void CEffectLight::SetVertex(LIGHTWORK* pWork, float fRadius, const RwRGBA& color) const
 {
     ASSERT(pWork);
     
@@ -253,7 +252,7 @@ void CEffectLight::setVertex(LIGHTWORK* pWork, float fRadius, const RwRGBA& colo
     float x = fViewRatio * fRadius;
     float y = (fWidth / fHeight) * fViewRatio * fRadius;
 
-    RwIm3DVertex* pVertex = pWork->m_aVertices;
+    RwIm3DVertex* pVertex = pWork->aVertices;
 
     pVertex[0].objVertex.x = x;
     pVertex[0].objVertex.y = y;

@@ -94,8 +94,8 @@ public:
     static float GetDirection(const RwV3d* pos, const RwV3d* at);
     static float GetDirection(const CCharacterCompositor* pChrCompositor, const RwV3d* at);
     static float GetDirection(const RwV3d* at);
-    static int32 RotateToPlayer(CCharacterCompositor* pChrCompositor, int32 playerNo, float fRotSpeed, float fRad);
-    static int32 RotateToPosition(CCharacterCompositor* pChrCompositor, const RwV3d* pos, float fRotSpeed, float fRad);
+    static int32 RotateToPlayer(CCharacterCompositor* pChrCompositor, int32 playerNo, float fRotSpeed, float fRad = 0.0f);
+    static int32 RotateToPosition(CCharacterCompositor* pChrCompositor, const RwV3d* pos, float fRotSpeed, float fRad = 0.0f);
     static bool IsAttackState(ENEMYTYPES::STATUS status);
     static bool IsAttackStateNormal(ENEMYTYPES::STATUS status);
     static bool IsAttackStateFire(ENEMYTYPES::STATUS status);

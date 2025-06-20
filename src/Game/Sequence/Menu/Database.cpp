@@ -518,8 +518,8 @@ void CDatabase_Container::DB_DrawText(WNDTYPE windowType)
         int32 dbItem  = pTextInfo->startDBItem;
         for (int32 i = 0; i < pTextInfo->numItem; ++i)
         {
-            float x = (float(colNo) * 161.0f) + pTextInfo->position.x;
-            float y = (61.0f * float(colItem)) + pTextInfo->position.y;
+            float x = pTextInfo->position.x + (float(colNo) * 161.0f);
+            float y = pTextInfo->position.y + (float(colItem) * 61.0f);
             
             if (IsDbViewerUnlocked(DBITEMID::VALUE(dbItem)))
             {
@@ -550,12 +550,10 @@ void CDatabase_Container::DB_DrawText(WNDTYPE windowType)
                 CGameFont::SetRGBA(255, 180, 0, 64);
                 CGameFont::Show(pwszHatena, x, y);
             };
-		
+
             colNo = InvClamp(colNo + 1, 0, colMax);
-
-            ++dbItem;
-
             colItem = ((i + 1) / pTextInfo->numColumns);
+            ++dbItem;
         };
 #endif /* TMNT2_BUILD_EU */
     };
@@ -1022,105 +1020,104 @@ void CDatabase::BeginFadeIn(void)
             Animation2D().SetTexture(s_apszCdOrgTex[i], "DB_Cd02");
     };
 
-    /* order is important and should be match to DBITEMID::VALUE */
-    static const char* s_apszItemOrgTex[] =
+    struct ITEMINFO
+    {
+        DBITEMID::VALUE id;
+        const char* textureOrg;
+        const char* textureNew;
+    };
+    
+    static const ITEMINFO s_aItemInfo[] =
     {
 #ifdef TMNT2_BUILD_EU
-        "database_237",
-        "database_239",
-        "database_241",
-        "database_243",
-        "database_245",
-        "database_247",
-        "database_249",
-        "database_251",
-        "database_253",
-        "database_255",
-        "database_257",
-        "database_259",
-        "database_261",
-        "database_263",
-        "database_277",
-        "database_279",
-        "database_281",
-        "database_283",
-        "database_285",
-        "database_287",
-        "database_289",
-        "database_291",
-        "database_293",
-        "database_295",
-        "database_297",
-        "database_299",
-        "database_304",
-        "database_306",
-        "database_308",
-        "database_310",
-        "database_312",
-        "database_314",
-        "database_316",
-        "database_318",
-        "database_321",
-        "database_323",
-        "database_325",
-        "database_327",
-        "database_329",
+        { DBITEMID::ID_FIRST,                   "database_237", "DB_01" },
+        { DBITEMID::ID_CHARACTER_LEO_B,         "database_239", "DB_02" },
+        { DBITEMID::ID_CHARACTER_SLASHUUR,      "database_241", "DB_03" },
+        { DBITEMID::ID_CHARACTER_RAP_A,         "database_243", "DB_04" },
+        { DBITEMID::ID_CHARACTER_RAP_B,         "database_245", "DB_05" },
+        { DBITEMID::ID_CHARACTER_CASEY,         "database_247", "DB_06" },
+        { DBITEMID::ID_CHARACTER_MIC_A,         "database_249", "DB_07" },
+        { DBITEMID::ID_CHARACTER_MIC_B,         "database_251", "DB_08" },
+        { DBITEMID::ID_CHARACTER_KARAI,         "database_253", "DB_09" },
+        { DBITEMID::ID_CHARACTER_DON_A,         "database_255", "DB_10" },
+        { DBITEMID::ID_CHARACTER_DON_B,         "database_257", "DB_11" },
+        { DBITEMID::ID_CHARACTER_SPLINTER,      "database_259", "DB_12" },
+        { DBITEMID::ID_CHARACTER_APRIL,         "database_261", "DB_13" },
+        { DBITEMID::ID_CHARACTER_USAGI,         "database_263", "DB_23" },
+        { DBITEMID::ID_ENEMY_SHREDDER,          "database_277", "DB_14" },
+        { DBITEMID::ID_ENEMY_ENEMYDORAKO,       "database_279", "DB_15" },
+        { DBITEMID::ID_ENEMY_NINJA_RATS,        "database_281", "DB_16" },
+        { DBITEMID::ID_ENEMY_TRAXIMUS,          "database_283", "DB_17" },
+        { DBITEMID::ID_ENEMY_LEATHERHEAD,       "database_285", "DB_18" },
+        { DBITEMID::ID_ENEMY_ELITE_FOOT,        "database_287", "DB_19" },
+        { DBITEMID::ID_ENEMY_SPASMOSAUR,        "database_289", "DB_20" },
+        { DBITEMID::ID_ENEMY_HUN,               "database_291", "DB_21" },
+        { DBITEMID::ID_ENEMY_ULTIMATE_NINJA,    "database_293", "DB_22" },
+        { DBITEMID::ID_ENEMY_ZAKO_A,            "database_295", "DB_24" },
+        { DBITEMID::ID_ENEMY_ZAKO_B,            "database_297", "DB_25" },
+        { DBITEMID::ID_ENEMY_OTHERS,            "database_299", "DB_26" },
+        { DBITEMID::ID_ART_NY,                  "database_304", "DB_27" },
+        { DBITEMID::ID_ART_DHOONNIB,            "database_306", "DB_28" },
+        { DBITEMID::ID_ART_JAPAN,               "database_308", "DB_29" },
+        { DBITEMID::ID_ART_KURAIYAMA,           "database_310", "DB_30" },
+        { DBITEMID::ID_ART_TRANS_DIMENSION,     "database_312", "DB_31" },
+        { DBITEMID::ID_ART_MACHINE,             "database_314", "DB_32" },
+        { DBITEMID::ID_ART_ANIME,               "database_316", "DB_33" },
+        { DBITEMID::ID_ART_CG,                  "database_318", "DB_34" },
+        { DBITEMID::ID_ETC_PLAYMATES_A,         "database_321", "DB_35" },
+        { DBITEMID::ID_ETC_PLAYMATES_B,         "database_323", "DB_36" },
+        { DBITEMID::ID_ETC_PLAYMATES_C,         "database_325", "DB_37" },
+        { DBITEMID::ID_ETC_PLAYMATES_D,         "database_327", "DB_38" },
+        { DBITEMID::ID_ETC_GALLERY,             "database_329", "DB_39" },
 #else /* TMNT2_BUILD_EU */
-        "database_276",
-        "database_286",
-        "database_300",
-        "database_278",
-        "database_288",
-        "database_294",
-        "database_280",
-        "database_290",
-        "database_298",
-        "database_282",
-        "database_292",
-        "database_296",
-        "database_284",
-        "database_311",
-        "database_323",
-        "database_325",
-        "database_327",
-        "database_329",
-        "database_331",
-        "database_333",
-        "database_335",
-        "database_337",
-        "database_339",
-        "database_341",
-        "database_343",
-        "database_345",
-        "database_354",
-        "database_350",
-        "database_356",
-        "database_352",
-        "database_358",
-        "database_360",
-        "database_362",
-        "database_364",
-        "database_367",
-        "database_375",
-        "database_369",
-        "database_373",
-        "database_371",
+        { DBITEMID::ID_CHARACTER_LEO_A,         "database_276", "DB_01" },
+        { DBITEMID::ID_CHARACTER_LEO_B,         "database_286", "DB_02" },
+        { DBITEMID::ID_CHARACTER_SLASHUUR,      "database_300", "DB_03" },
+        { DBITEMID::ID_CHARACTER_RAP_A,         "database_278", "DB_04" },
+        { DBITEMID::ID_CHARACTER_RAP_B,         "database_288", "DB_05" },
+        { DBITEMID::ID_CHARACTER_CASEY,         "database_294", "DB_06" },
+        { DBITEMID::ID_CHARACTER_MIC_A,         "database_280", "DB_07" },
+        { DBITEMID::ID_CHARACTER_MIC_B,         "database_290", "DB_08" },
+        { DBITEMID::ID_CHARACTER_KARAI,         "database_298", "DB_09" },
+        { DBITEMID::ID_CHARACTER_DON_A,         "database_282", "DB_10" },
+        { DBITEMID::ID_CHARACTER_DON_B,         "database_292", "DB_11" },
+        { DBITEMID::ID_CHARACTER_SPLINTER,      "database_296", "DB_12" },
+        { DBITEMID::ID_CHARACTER_APRIL,         "database_284", "DB_13" },
+        { DBITEMID::ID_CHARACTER_USAGI,         "database_311", "DB_23" },
+        { DBITEMID::ID_ENEMY_SHREDDER,          "database_323", "DB_14" },
+        { DBITEMID::ID_ENEMY_ENEMYDORAKO,       "database_325", "DB_15" },
+        { DBITEMID::ID_ENEMY_NINJA_RATS,        "database_327", "DB_16" },
+        { DBITEMID::ID_ENEMY_TRAXIMUS,          "database_329", "DB_17" },
+        { DBITEMID::ID_ENEMY_LEATHERHEAD,       "database_331", "DB_18" },
+        { DBITEMID::ID_ENEMY_ELITE_FOOT,        "database_333", "DB_19" },
+        { DBITEMID::ID_ENEMY_SPASMOSAUR,        "database_335", "DB_20" },
+        { DBITEMID::ID_ENEMY_HUN,               "database_337", "DB_21" },
+        { DBITEMID::ID_ENEMY_ULTIMATE_NINJA,    "database_339", "DB_22" },
+        { DBITEMID::ID_ENEMY_ZAKO_A,            "database_341", "DB_24" },
+        { DBITEMID::ID_ENEMY_ZAKO_B,            "database_343", "DB_25" },
+        { DBITEMID::ID_ENEMY_OTHERS,            "database_345", "DB_26" },
+        { DBITEMID::ID_ART_NY,                  "database_354", "DB_27" },
+        { DBITEMID::ID_ART_DHOONNIB,            "database_350", "DB_28" },
+        { DBITEMID::ID_ART_JAPAN,               "database_356", "DB_29" },
+        { DBITEMID::ID_ART_KURAIYAMA,           "database_352", "DB_30" },
+        { DBITEMID::ID_ART_TRANS_DIMENSION,     "database_358", "DB_31" },
+        { DBITEMID::ID_ART_MACHINE,             "database_360", "DB_32" },
+        { DBITEMID::ID_ART_ANIME,               "database_362", "DB_33" },
+        { DBITEMID::ID_ART_CG,                  "database_364", "DB_34" },
+        { DBITEMID::ID_ETC_PLAYMATES_A,         "database_367", "DB_35" },
+        { DBITEMID::ID_ETC_PLAYMATES_B,         "database_375", "DB_36" },
+        { DBITEMID::ID_ETC_PLAYMATES_C,         "database_369", "DB_37" },
+        { DBITEMID::ID_ETC_PLAYMATES_D,         "database_373", "DB_38" },
+        { DBITEMID::ID_ETC_GALLERY,             "database_371", "DB_39" },
 #endif /* TMNT2_BUILD_EU */
     };
 
-    static_assert(COUNT_OF(s_apszItemOrgTex) == DBITEMID::NUM, "table incorrect");
+    static_assert(COUNT_OF(s_aItemInfo) == DBITEMID::NUM, "table incorrect");
 
     for (int32 i = DBITEMID::ID_FIRST; i < DBITEMID::NUM; ++i)
     {
-        char szItemNewTex[64];
-        szItemNewTex[0] = '\0';
-
-        std::sprintf(szItemNewTex, "DB_%02" PRId32, i);
-
-        DBITEMID::VALUE itemId = static_cast<DBITEMID::VALUE>(i);
-
-        if (!CGameData::Record().Database().IsItemUnlocked(itemId))
-            Animation2D().SetTexture(s_apszItemOrgTex[i], szItemNewTex);
+        if (!CGameData::Record().Database().IsItemUnlocked(s_aItemInfo[i].id))
+            Animation2D().SetTexture(s_aItemInfo[i].textureOrg, s_aItemInfo[i].textureNew);
     };
     
     CGameSound::PlayBGM(SDCODE_BGM(0x3024));

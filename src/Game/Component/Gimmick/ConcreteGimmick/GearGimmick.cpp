@@ -50,7 +50,7 @@ CGearGimmick::CGearGimmick(const char* pszName, void* pParam)
     ASSERT(pInitParam->m_subid >= SUBID_START);
     ASSERT(pInitParam->m_subid <  SUBID_NUM);
 
-    m_subid = SUBID(pInitParam->m_subid);
+    m_subid = static_cast<SUBID>(pInitParam->m_subid);
     m_fRotVelocity = m_aSubInfo[m_subid].fRotVelocity[0];
     m_eState = STATE_NONE;
 
@@ -87,7 +87,7 @@ CGearGimmick::CGearGimmick(const char* pszName, void* pParam)
 };
 
 
-CGearGimmick::~CGearGimmick(void)
+/*virtual*/ CGearGimmick::~CGearGimmick(void)
 {
     CGameSound::FadeOutSE(SDCODE_SE(4244), CGameSound::FADESPEED_NORMAL);
     CGameSound::FadeOutSE(SDCODE_SE(4222), CGameSound::FADESPEED_NORMAL);
@@ -100,7 +100,7 @@ CGearGimmick::~CGearGimmick(void)
 };
 
 
-void CGearGimmick::Draw(void) const
+/*virtual*/ void CGearGimmick::Draw(void) const /*override*/
 {
     if (!m_aSubInfo[m_subid].bOwnerDraw)
     {
@@ -128,7 +128,7 @@ void CGearGimmick::Draw(void) const
 };
 
 
-void CGearGimmick::PreMove(void)
+/*virtual*/ void CGearGimmick::PreMove(void) /*override*/
 {
     float fRotVel = m_aSubInfo[m_subid].fRotVelocity[m_eState == STATE_SLOW ? 1 : 0];
 
@@ -147,25 +147,24 @@ void CGearGimmick::PreMove(void)
 };
 
 
-void CGearGimmick::PostMove(void)
+/*virtual*/ void CGearGimmick::PostMove(void) /*override*/
 {
     float fDltRot = (CGameProperty::GetElapsedTime() * m_fRotVelocity);
     
     m_fRotation += fDltRot;
-    m_fRotation = Math::RadianInvClamp(m_fRotation);
+    m_fRotation = Math::RadianCorrection(m_fRotation);
 
     RwV3d vRotation = { m_fRotation, 0.0f, 0.0f };
     m_model.SetRotation(&vRotation);
 
-    if (m_eState >= STATE_FAST)
+    if ((m_eState == STATE_FAST) ||
+        (m_eState == STATE_SLOW))
     {
-		if (!m_hAtari &&  m_model.GetCollisionModelClump())
+        RpClump* pClump = m_model.GetCollisionModelClump();
+
+        if (!m_hAtari && pClump)
 		{
-			RpClump* pClump = m_model.GetCollisionModelClump();
-
 			m_hAtari = CMapCollisionModel::RegistCollisionModel(pClump, GetName(), MAPTYPES::GIMMICKTYPE_NORMAL);
-			ASSERT(m_hAtari);
-
 			if (m_hAtari)
 				CMapCollisionModel::SetBoundingSphereRadius(m_hAtari, m_aSubInfo[m_subid].fBSphereRadius);
 		};
@@ -179,7 +178,7 @@ void CGearGimmick::PostMove(void)
 };
 
 
-void CGearGimmick::OnReceiveEvent(const char* pszSender, GIMMICKTYPES::EVENTTYPE eventtype)
+/*virtual*/ void CGearGimmick::OnReceiveEvent(const char* pszSender, GIMMICKTYPES::EVENTTYPE eventtype) /*override*/
 {
     if (eventtype != GIMMICKTYPES::EVENTTYPE_ACTIVATE)
         return;

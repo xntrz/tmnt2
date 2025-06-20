@@ -1,6 +1,5 @@
 #include "GaugeMeter.hpp"
 #include "GaugeManager.hpp"
-#include "GaugeAnim.hpp"
 
 #include "Game/Component/GameData/GameData.hpp"
 #include "Game/Component/GameMain/GamePlayer.hpp"
@@ -416,7 +415,7 @@ void CGaugeMeter_Container::AnimGaugeFont_Period(void)
             {
             case GAUGETYPE_KATSU:
                 {
-                    float fDuration = GAUGE_ANIM_DURATION_FRAMES(9);
+                    float fDuration = ANIM_DURATION_FRAMES(9);
 
                     w = Math::LinearTween(64.0f, 32.0f, float(m_aGaugeCnt[0]), fDuration);
                     h = Math::LinearTween(64.0f, 32.0f, float(m_aGaugeCnt[0]), fDuration);
@@ -436,7 +435,7 @@ void CGaugeMeter_Container::AnimGaugeFont_Period(void)
 
             case GAUGETYPE_CHU:
                 {
-                    float fDuration = GAUGE_ANIM_DURATION_FRAMES(23);
+                    float fDuration = ANIM_DURATION_FRAMES(23);
 
                     uAlpha = uint8(Math::LinearTween(0.0f, 255.0f, float(m_aGaugeCnt[0]), fDuration));
 
@@ -454,7 +453,7 @@ void CGaugeMeter_Container::AnimGaugeFont_Period(void)
 
             case GAUGETYPE_KI:
                 {
-                    float fDuration = GAUGE_ANIM_DURATION_FRAMES(10);
+                    float fDuration = ANIM_DURATION_FRAMES(10);
 
                     w = Math::LinearTween(96.0f, -32.0f, float(m_aGaugeCnt[0]), fDuration);
                     h = Math::LinearTween(96.0f, -32.0f, float(m_aGaugeCnt[0]), fDuration);
@@ -483,7 +482,7 @@ void CGaugeMeter_Container::AnimGaugeFont_Period(void)
         {
             if (m_GaugeType == GAUGETYPE_CHU)
             {
-                float fDuration = GAUGE_ANIM_DURATION_FRAMES(23);
+                float fDuration = ANIM_DURATION_FRAMES(23);
 
                 uAlpha = uint8(Math::LinearTween(255.0f, -255.0f, float(m_aGaugeCnt[0]), fDuration));
 
@@ -502,7 +501,7 @@ void CGaugeMeter_Container::AnimGaugeFont_Period(void)
 
     case 2:
         {
-            float fDuration = GAUGE_ANIM_DURATION_FRAMES(60);
+            float fDuration = ANIM_DURATION_FRAMES(60);
 
             uAlpha = 0;
 
@@ -560,7 +559,7 @@ void CGaugeMeter_Container::LifeRecover_Period(void)
     {
     case 0:
         {
-            float fDuration = GAUGE_ANIM_DURATION_FRAMES(6);
+            float fDuration = ANIM_DURATION_FRAMES(6);
 
             w0 = Math::LinearTween(140.8f, -76.8f, float(m_aGaugeCnt[0]), fDuration);
             h0 = Math::LinearTween(140.8f, -76.8f, float(m_aGaugeCnt[0]), fDuration);
@@ -576,7 +575,7 @@ void CGaugeMeter_Container::LifeRecover_Period(void)
     {
     case 0:
         {
-            float fDuration = GAUGE_ANIM_DURATION_FRAMES(3);
+            float fDuration = ANIM_DURATION_FRAMES(3);
 
             w1 = 64.0f;
             h1 = 64.0f;
@@ -596,7 +595,7 @@ void CGaugeMeter_Container::LifeRecover_Period(void)
 
     case 1:
         {
-            float fDuration = GAUGE_ANIM_DURATION_FRAMES(10);
+            float fDuration = ANIM_DURATION_FRAMES(10);
 
             w1 = Math::LinearTween(64.0f, 32.0f, float(m_aGaugeCnt[1]), fDuration);
             h1 = Math::LinearTween(64.0f, 32.0f, float(m_aGaugeCnt[1]), fDuration);
@@ -615,7 +614,7 @@ void CGaugeMeter_Container::LifeRecover_Period(void)
     {
     case 0:
         {
-            float fDuration = GAUGE_ANIM_DURATION_FRAMES(4);
+            float fDuration = ANIM_DURATION_FRAMES(4);
 
             uAlpha2 = 255;
 
@@ -633,7 +632,7 @@ void CGaugeMeter_Container::LifeRecover_Period(void)
 
     case 1:
         {
-            float fDuration = GAUGE_ANIM_DURATION_FRAMES(22);
+            float fDuration = ANIM_DURATION_FRAMES(22);
 
             uAlpha2 = 255;
 
@@ -651,7 +650,7 @@ void CGaugeMeter_Container::LifeRecover_Period(void)
 
     case 2:
         {
-            float fDuration = GAUGE_ANIM_DURATION_FRAMES(17);
+            float fDuration = ANIM_DURATION_FRAMES(17);
 
             uAlpha2 = uint8(Math::LinearTween(255.0f, -255.0f, float(m_aGaugeCnt[2]), fDuration));
 
@@ -668,7 +667,7 @@ void CGaugeMeter_Container::LifeRecover_Period(void)
     {
     case 0:
         {
-            float fDuration = GAUGE_ANIM_DURATION_FRAMES(6);
+            float fDuration = ANIM_DURATION_FRAMES(6);
 
             uAlpha3 = uint8(Math::LinearTween(255.0f, -255.0f, float(m_aGaugeCnt[3]), fDuration));
 
@@ -681,7 +680,7 @@ void CGaugeMeter_Container::LifeRecover_Period(void)
         break;
     };
 
-    float fAnimDur = GAUGE_ANIM_DURATION_FRAMES(40);
+    float fAnimDur = ANIM_DURATION_FRAMES(40);
 
     if (m_uLifeAnimCnt >= uint32(fAnimDur))
     {
@@ -753,7 +752,7 @@ void CGaugeMeter_Container::LifeDamage_Period(void)
     {
     case 0:
         {
-            float fDuration = GAUGE_ANIM_DURATION_FRAMES(10);
+            float fDuration = ANIM_DURATION_FRAMES(10);
 
             if (m_aGaugeCnt[1] >= uint32(fDuration))
             {
@@ -821,7 +820,7 @@ void CGaugeMeter_Container::DekuDraw(void)
 
     case DEKUSTATE_CONSUME:
         {
-            float fDuration = GAUGE_ANIM_DURATION_FRAMES(40);
+            float fDuration = ANIM_DURATION_FRAMES(40);
 
             w = Math::LinearTween(64.0f, 32.0f, float(m_uDekuAnimCnt), fDuration);
             h = Math::LinearTween(64.0f, 32.0f, float(m_uDekuAnimCnt), fDuration);

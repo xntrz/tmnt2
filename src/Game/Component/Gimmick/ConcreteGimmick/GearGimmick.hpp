@@ -11,9 +11,9 @@ public:
     {
         const char* pszModelName;
         const char* pszAtariName;
-        float fBSphereRadius;
-        bool bOwnerDraw;
-        float fRotVelocity[2];
+        float       fBSphereRadius;
+        bool        bOwnerDraw;
+        float       fRotVelocity[2];
     };
 
     enum SUBID
@@ -58,11 +58,11 @@ public:
     virtual void OnReceiveEvent(const char* pszSender, GIMMICKTYPES::EVENTTYPE eventtype) override;
     
 private:
-    static STATE m_eState;
-    static const SUBINFO m_aSubInfo[];
-    CNormalGimmickModel m_model;
-    uint32 m_hAtari;
-    SUBID m_subid;
-    float m_fRotation;
-    float m_fRotVelocity;
+    static STATE            m_eState;
+    static const SUBINFO    m_aSubInfo[];
+    CNormalGimmickModel     m_model;
+    uint32                  m_hAtari;
+    SUBID                   m_subid;
+    float                   m_fRotation;
+    float                   m_fRotVelocity;
 };

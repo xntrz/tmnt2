@@ -6,6 +6,11 @@
 #include "Game/System/Utils/List.hpp"
 
 
+#define ANIM_FRAMERATE                  (60.0f)
+
+#define ANIM_DURATION_FRAMES(frames)    ( (CScreen::Framerate()) * ((static_cast<float>(frames)) / ANIM_FRAMERATE) )
+
+
 /* copy of DEFINE_ENUM_FLAG_OPERATORS macro from winnt header - that allows to use bit operations whith enums */
 template<size_t sz>
 struct _underlying_type_size;

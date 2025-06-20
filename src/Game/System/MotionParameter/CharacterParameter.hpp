@@ -48,6 +48,7 @@ public:
     bool IsDrawAtomic(int32 nAtomicNo) const;
     void SetReverseAtomicNo(bool bSet);
     bool IsReverseAtomicNo(void) const;
+    void SetAtomicNum(int32 nAtomicNum);
     int32 GetAtomicNum(void) const;
     void DestroyHitList(CList<CHitSphereParameter>& rList);
     void DestroyLocusList(CList<CLocusParameter>& rList);

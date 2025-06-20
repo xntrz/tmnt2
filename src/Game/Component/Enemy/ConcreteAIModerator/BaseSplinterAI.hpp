@@ -150,5 +150,5 @@ public:
     CBaseSplinterAI(CEnemyCharacter* pEnemyChr);
     virtual ~CBaseSplinterAI(void);
     virtual void AttackCountInc(void) override;
-    virtual void CatchAttack(uint32 hAttacker) override;
+    virtual void CatchAttack(uint32 hObj, GAMEOBJECTTYPE::VALUE objType) override;
 };

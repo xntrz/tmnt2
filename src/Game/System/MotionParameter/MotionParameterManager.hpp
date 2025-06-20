@@ -13,6 +13,6 @@ public:
 public:
     static void Initialize(void);
     static void Terminate(void);
-    static void Read(const char* pszName, const void* pBuffer, uint32 uBufferSize);
+    static void Read(const char* pszName, void* pBuffer, uint32 uBufferSize);
     static CCharacterParameter* GetCharacterParameter(const char* pszName, int32 nPartsNum);
 };

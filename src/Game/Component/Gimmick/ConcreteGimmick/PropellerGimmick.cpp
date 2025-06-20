@@ -35,7 +35,7 @@ CPropellerGimmick::CPropellerGimmick(const char* pszName, void* pParam)
     ASSERT(pInitParam->m_subid >= SUBID_START);
     ASSERT(pInitParam->m_subid < SUBID_NUM);
 
-    m_subid         = SUBID(pInitParam->m_subid);
+    m_subid         = static_cast<SUBID>(pInitParam->m_subid);
     m_vPos          = pInitParam->m_vPosition;
     m_fRotation     = 0.0f;
     m_fRotVelocity  = m_aSubInfo[m_subid].fRotVelocity;
@@ -63,37 +63,40 @@ CPropellerGimmick::CPropellerGimmick(const char* pszName, void* pParam)
 };
 
 
-CPropellerGimmick::~CPropellerGimmick(void)
+/*virtual*/ CPropellerGimmick::~CPropellerGimmick(void)
 {
     ;
 };
 
 
-void CPropellerGimmick::PostMove(void)
+/*virtual*/ void CPropellerGimmick::PostMove(void) /*override*/
 {
-    float fDltRot = (CGameProperty::GetElapsedTime() * m_fRotVelocity);
-    float fPreRot = m_fRotation;
+    float fPrevRotation = m_fRotation;
 
-    m_fRotation += fDltRot;
-    m_fRotation = Math::RadianInvClamp(m_fRotation);
+    m_fRotation += (CGameProperty::GetElapsedTime() * m_fRotVelocity);
+    m_fRotation = Math::RadianCorrection(m_fRotation);
 
     RwV3d vRotation = { 0.0f, 0.0f, m_fRotation };
     m_model.SetRotation(&vRotation);
 
     if (m_bHitAttack)
     {
-        CHitAttackData AttackData;
-        AttackData.Cleanup();
-        AttackData.SetObject(GetHandle());
-        AttackData.SetTarget(CHitAttackData::TARGET_PLAYER);
-        AttackData.SetStatus(CHitAttackData::STATUS_FLYAWAY);
-        AttackData.SetPower(10);
-        AttackData.SetAntiguard(CHitAttackData::ANTIGUARD_INVALID);
-        AttackData.SetFlyawayParameter(10.0f, 0.0f);
-        AttackData.SetMotion("PropellerMotion");
-        AttackData.SetShape(CHitAttackData::SHAPE_SPHERE);
+        //
+        //  regist attack for each wing
+        //
+        CHitAttackData hitAttack;
+        hitAttack.Cleanup();
+        hitAttack.SetObject(GetHandle());
+        hitAttack.SetTarget(CHitAttackData::TARGET_PLAYER);
+        hitAttack.SetStatus(CHitAttackData::STATUS_FLYAWAY);
+        hitAttack.SetPower(10);
+        hitAttack.SetAntiguard(CHitAttackData::ANTIGUARD_INVALID);
+        hitAttack.SetFlyawayParameter(10.0f, 0.0f);
+        hitAttack.SetMotion("PropellerMotion");
+        hitAttack.SetShape(CHitAttackData::SHAPE_SPHERE);
 
-        for (int32 i = 0; i < SUBID_NUM; ++i)
+        const int32 nWingNum = 3;
+        for (int32 i = 0; i < nWingNum; ++i)
         {
             static const RwV3d s_avWingLocalPos[] =
             {
@@ -102,26 +105,23 @@ void CPropellerGimmick::PostMove(void)
                 { -1.5588f, -0.9f, 0.0f },
             };
 
-            static_assert(COUNT_OF(s_avWingLocalPos) == SUBID_NUM, "should equal");
+            static_assert(COUNT_OF(s_avWingLocalPos) == nWingNum, "should equal");
 
-            //
-            //  regist attack for wing
-            //
-            RwMatrix rotMat;
-            RwMatrixSetIdentityMacro(&rotMat);
-            Math::Matrix_RotateZ(&rotMat, m_fRotation);
+            RwMatrix matRotZ;
+            RwMatrixSetIdentityMacro(&matRotZ);
+            Math::Matrix_RotateZ(&matRotZ, m_fRotation);
 
             RwV3d vWing = Math::VECTOR3_ZERO;
-            RwV3dTransformPoint(&vWing, &s_avWingLocalPos[i], &rotMat);
+            RwV3dTransformPoint(&vWing, &s_avWingLocalPos[i], &matRotZ);
             Math::Vec3_Add(&vWing, &vWing, &m_vPos);
 
             RwV3d vObjPos = { vWing.x, vWing.y, vWing.z + 1.0f };
-            AttackData.SetObjectPos(&vObjPos);
+            hitAttack.SetObjectPos(&vObjPos);
             
-            RwSphere HitSphereWing = { vWing, 0.5f };
-            AttackData.SetSphere(&HitSphereWing);
+            RwSphere hitSphere = { vWing, 0.5f };
+            hitAttack.SetSphere(&hitSphere);
 
-            CHitAttackManager::RegistAttack(&AttackData);
+            CHitAttackManager::RegistAttack(&hitAttack);
 
             //
             //  play wing se
@@ -129,47 +129,46 @@ void CPropellerGimmick::PostMove(void)
             if (CGimmickManager::IsPlayStarted() && (m_subid == SUBID_PROPELLER_C))
             {
                 //
-                //  pre rotation
+                //  calc local pre rotation
                 //
-                RwMatrixSetIdentityMacro(&rotMat);
-                Math::Matrix_RotateZ(&rotMat, fPreRot);
+                RwMatrixSetIdentityMacro(&matRotZ);
+                Math::Matrix_RotateZ(&matRotZ, fPrevRotation);
 
                 RwV3d vWingPre = Math::VECTOR3_ZERO;
-                RwV3dTransformPoint(&vWingPre, &s_avWingLocalPos[i], &rotMat);
+                RwV3dTransformPoint(&vWingPre, &s_avWingLocalPos[i], &matRotZ);
 
                 //
-                //  post rotation
+                //  calc local post rotation
                 //
-                RwMatrixSetIdentityMacro(&rotMat);
-                Math::Matrix_RotateZ(&rotMat, m_fRotation);
+                RwMatrixSetIdentityMacro(&matRotZ);
+                Math::Matrix_RotateZ(&matRotZ, m_fRotation);
 
                 RwV3d vWingPost = Math::VECTOR3_ZERO;
-                RwV3dTransformPoint(&vWingPost, &s_avWingLocalPos[i], &rotMat);
+                RwV3dTransformPoint(&vWingPost, &s_avWingLocalPos[i], &matRotZ);
 
+                //
+                //  Play se
+                //
                 if ((vWingPost.x >= 0.0f) && (vWingPre.x < 0.0f))
-                {
-                    //
-                    //  TODO test this when SE subsystem ready
-                    //
                     CGameSound::PlayObjectSE(this, SDCODE_SE(4220));
-                };
             };
         };
 
         //
         //  regist attack for center
         //
-        RwSphere HitSphereCenter = { m_vPos, 0.7f };
+        RwSphere hitSphere = { m_vPos, 0.7f };
         
-        AttackData.SetObjectPos(&m_vPos);
-        AttackData.SetSphere(&HitSphereCenter);
+        hitAttack.SetObjectPos(&m_vPos);
+        hitAttack.SetSphere(&hitSphere);
 
-        CHitAttackManager::RegistAttack(&AttackData);
+        CHitAttackManager::RegistAttack(&hitAttack);
     };
 };
 
 
-void CPropellerGimmick::OnReceiveEvent(const char* pszSender, GIMMICKTYPES::EVENTTYPE eventtype)
+/*virtual*/ void CPropellerGimmick::OnReceiveEvent(const char* pszSender,
+                                                   GIMMICKTYPES::EVENTTYPE eventtype) /*override*/
 {
     if (eventtype == GIMMICKTYPES::EVENTTYPE_ACTIVATE)
         m_bHitAttack = false;    

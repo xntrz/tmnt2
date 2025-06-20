@@ -12,7 +12,6 @@ class CApproachingTrailerGimmickMove;
 class CApproachingTrailerHeadGimmickMove;
 class CGimmickMotion;
 class CBodyHitData;
-class CAppTrailerAttackBase;
 
 
 class CApproachingTrailerGimmick final : public CGimmick
@@ -57,9 +56,13 @@ public:
         ATTACKTYPE_AREA_R,
         ATTACKTYPE_AIMING_1,
         ATTACKTYPE_AIMING_3,
-        ATTACKTYPE_AIMING_5,
+        ATTACKTYPE_AIMING_5,        
 
-        ATTACKTYPENUM,
+        ATTACKTYPENUM_SHOT, // number of available shot attack types
+
+        ATTACKTYPE_CHARGE = ATTACKTYPENUM_SHOT,
+
+        ATTACKTYPENUM_ALL, // number of available all attacks types
     };
 
     enum DISTANCE
@@ -78,20 +81,27 @@ public:
 
     struct PLAYERINFO
     {
-        RwV3d m_vPosition;
-        float m_fDistance;
-        DISTANCE m_eDistance;
-        PLAYERTYPES::STATUS m_eStatus;
+        RwV3d               vPosition;
+        float               fDistance;
+        DISTANCE            eDistance;
+        PLAYERTYPES::STATUS eStatus;
     };
 
     struct LIGHT
     {
-        uint32 m_hLight;
-        float m_fTimerCounter;
-        float m_fTime;
-        bool m_bRqUpd;
-        bool m_bRqOff;
+        uint32  hLight;
+        float   fTimerCounter;
+        float   fTime;
+        bool    bUpdate;
+        bool    bOff;
     };
+
+    class CAttackBase;
+    class CAttackAimingShot;
+    class CAttackAreaShot;
+    class CAttackCenterLinearShot;
+    class CAttackSurroundShot;
+    class CAttackThreePointShot;
 
 public:
     CApproachingTrailerGimmick(const char* pszName, void* pParam);
@@ -125,49 +135,54 @@ public:
     void LightDestroy(void);
     void LightUpdate(void);
     void LightSet(float fTime, bool bOff);
-    RwV3d* GetPlayerPos(int32 iPlayerNo);
+    RwV3d* GetPlayerPos(int32 iPlayerNo = GAMETYPES::PLAYERS_MAX);
     float RateControl(float fCur, float fAim, float dt) const;
     float GetPathTimerateByMPS(float fMPS) const;
     void GetFlyawayPosition(RwV3d* pvResult, const RwV3d* pvPlayerPos, const RwV3d* pvDir) const;
-    
-    inline CApproachingTrailerGimmickMove* GetMovement(void) const { return m_pApproachingTrailerGimmickMove; };
-    inline CApproachingTrailerHeadGimmickMove* GetHeadMovement(void) const { return m_pApproachingTrailerHeadGimmickMove; };
-    inline float GetAimAttackPathTime(void) const { return m_fAimAttackPathT; };
-    inline const CNormalGimmickModel* GetNormalModel(void) const { return &m_model; };
+    bool IsDestroyed(void) const;
+    bool IsTimingProc(float fTime) const;
+    float GetAimAttackPathTime(void) const;
+    void GetMovePosition(RwV3d* pvPos) const;
+    void GetMoveRotation(RwV3d* pvRot) const;
+    float GetPathT(void) const;
+    const CNormalGimmickModel* GetNormalModel(void) const;
 
 private:
-    float m_fFlyawayNearestPathT;
-    bool m_bFlyawayRq;
-    CApproachingTrailerGimmickMove* m_pApproachingTrailerGimmickMove;
-    CApproachingTrailerHeadGimmickMove* m_pApproachingTrailerHeadGimmickMove;
-    CBodyHitData* m_pBodyHitData;
+    using CMove = CApproachingTrailerGimmickMove;
+    using CHeadMove = CApproachingTrailerHeadGimmickMove;
+
+    float               m_fFlyawayNearestPathT;
+    bool                m_bFlyaway;
+    CMove*              m_pApproachingTrailerGimmickMove;
+    CHeadMove*          m_pApproachingTrailerHeadGimmickMove;
+    CBodyHitData*       m_pBodyHitData;
     CNormalGimmickModel m_model;
-    char m_szPathName[16];
-    int32 m_nPower;
-    float m_fFlyawayVelXZ;
-    float m_fFlyawayVelY;
-    float m_fAimAttackPathT;
-    float m_fNearestPathT;
-    float m_fAimPathTimerate;
-    float m_fPathTimerate;
-    RwV3d* m_pPos;
-    RwV3d* m_pRot;
-    STATE m_eState;
-    float m_fStepTimer;
-    CAppTrailerAttackBase* m_pAttack;
-    CAppTrailerAttackBase* m_apAttackVariation[ATTACKTYPENUM];
-    int32 m_nNumAttackVariation;
-    int32 m_subid;
-    uint32 m_ahEffect[4];
-    float m_fEffectTimer;
-    LIGHT m_aLight[2];
-    PLAYERINFO m_aPlayerInfo[GAMETYPES::PLAYERS_MAX];
-    PLAYERINFO m_playerInfoCenter;    
-    int32 m_iNearestPlayerNo;
-    int32 m_iPlayerNum;
-    CGimmickMotion* m_pMotion;
-    RwV3d m_vHitOffset;
-    bool m_bSEPlay;
-    bool m_bSEBeep;
-    bool m_bSEStop;
+    bool                m_bChanged;
+    int32               m_nPower;
+    float               m_fFlyawayVelXZ;
+    float               m_fFlyawayVelY;
+    float               m_fAimAttackPathT;
+    float               m_fNearestPathT;
+    float               m_fAimPathTimerate;
+    float               m_fPathTimerate;
+    RwV3d*              m_pPos;
+    RwV3d*              m_pRot;
+    STATE               m_eState;
+    float               m_fStepTimer;
+    CAttackBase*        m_pAttack;
+    CAttackBase*        m_apAttackVariation[ATTACKTYPENUM_SHOT];
+    int32               m_nNumAttackVariation;
+    int32               m_subid;
+    uint32              m_ahEffect[4];
+    float               m_fEffectTimer;
+    LIGHT               m_aLight[2];
+    PLAYERINFO          m_aPlayerInfo[GAMETYPES::PLAYERS_MAX];
+    PLAYERINFO          m_playerInfoCenter;
+    int32               m_iNearestPlayerNo;
+    int32               m_iPlayerNum;
+    CGimmickMotion*     m_pMotion;
+    RwV3d               m_vHitOffset;
+    bool                m_bSEPlay;
+    bool                m_bSERun;
+    bool                m_bSEStop;
 };

@@ -501,11 +501,11 @@ void CBaseNinjaRatsAI::ExecutePatternStrategy(void)
     if (m_state.fDegForRotRad >= MATH_PI2)
         ChangeStrategy(STRATEGY_MAN_TO_MAN);
     
-    m_state.fDegForRotRad = std::fmod(m_state.fDegForRotRad, MATH_PI2);
+    m_state.fDegForRotRad = Math::Fmod(m_state.fDegForRotRad, MATH_PI2);
 
     float c = (6.5f - (std::cos(m_state.fDegForRotRad) * 4.5f));
     m_state.fRotRad += (((m_state.fRotDir * 9.0f) / c) * dt);
-    m_state.fRotRad = std::fmod(m_state.fRotRad, MATH_PI2);
+    m_state.fRotRad = Math::Fmod(m_state.fRotRad, MATH_PI2);
 
     float x = std::sin(m_state.fRotRad) * c;
     float y = MAP_HEIGHT;
@@ -540,11 +540,11 @@ void CBaseNinjaRatsAI::ExecuteFollowStrategy(void)
     if (m_state.fDegForRotRad >= (MATH_PI2 * 2.0f))
         ChangeStrategy(STRATEGY_PATTERN);
     
-    m_state.fDegForRotRad = std::fmod(m_state.fDegForRotRad, MATH_PI2 * 2.0f);
+    m_state.fDegForRotRad = Math::Fmod(m_state.fDegForRotRad, MATH_PI2 * 2.0f);
 
     float c = (6.5f - (std::cos(m_state.fDegForRotRad) * 4.5f));
     m_state.fRotRad += (((m_state.fRotDir * 9.0f) / c) * dt);
-    m_state.fRotRad = std::fmod(m_state.fRotRad, MATH_PI2);
+    m_state.fRotRad = Math::Fmod(m_state.fRotRad, MATH_PI2);
 
     float s = m_state.fDegForRotRad;
     float d = m_state.fRotRad;
@@ -821,7 +821,7 @@ void CBaseNinjaRatsAI::ExecuteManToManTactics(void)
             {
                 fRotRad = m_fRotRad;
                 fRotRad += CGameProperty::GetElapsedTime() * 3.0f * m_fRotDir;
-                fRotRad = std::fmod(fRotRad, MATH_PI2);
+                fRotRad = Math::Fmod(fRotRad, MATH_PI2);
 
                 vecTargetPos = m_state.avecTargetPos[m_ratNo];
                 vecTargetPos.x += (std::sin(fRotRad) * 3.0f);
@@ -880,7 +880,7 @@ void CBaseNinjaRatsAI::InitHappyStrategy(void)
 void CBaseNinjaRatsAI::ExecuteHappyStrategy(void)
 {
     m_state.fRotRad += (((m_state.fRotDir * 3.0f) / 2.0f) * CGameProperty::GetElapsedTime());
-    m_state.fRotRad = std::fmod(m_state.fRotRad, MATH_PI2);
+    m_state.fRotRad = Math::Fmod(m_state.fRotRad, MATH_PI2);
 
     float x = std::sin(m_state.fRotRad) * 2.0f;
     float y = MAP_HEIGHT;

@@ -190,6 +190,9 @@ void CUtromGimmick::MessageProc(int32 nMessageID, void* pParam)
     case CHARACTERTYPES::MESSAGEID_MISSTHROW:
         OnMissThrow(static_cast<RwV3d*>(pParam));
         break;
+
+    default:
+        break;
     };
 };
 
@@ -488,6 +491,9 @@ void CUtromAreaCheckGimmick::PostMove(void)
 
     case STATE_ON:
         AreaCheckOn();
+        break;
+
+    default:
         break;
     };
 };

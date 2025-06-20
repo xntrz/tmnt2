@@ -28,8 +28,9 @@ namespace Math
     uint32 RandRange(uint32 nLow, uint32 nHigh);
     float  RandFloatRange(float fLow, float fHigh);
 
-    float RadianInvClamp(float x);
-    float RadianCorrect(float fRadian);
+    float Fmod(float x, float y);
+    float RadianCorrection(float fRadian);
+    float RadianNormalize(float fRadian);
     float Sqrt(float x);
     float ACos(float x);
     float ASin(float x);

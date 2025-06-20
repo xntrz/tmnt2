@@ -49,25 +49,34 @@ namespace Math
     };
 
 
-    float RadianInvClamp(float x)
+    float Fmod(float x, float y)
     {
-        if (x >= Math::PI)
-            x -= Math::PI2;
+        if (y == 0.0f)
+            return 0.0f;
 
-        if (x <= -Math::PI2)
-            x += Math::PI2;
+        return std::fmod(x, y);
+    };
 
-        return x;
+
+    float RadianCorrection(float fRadian)
+    {
+        if (fRadian > MATH_PI)
+            fRadian -= MATH_PI2;
+
+        if (fRadian < -MATH_PI)
+            fRadian += MATH_PI2;
+
+        return fRadian;
     };
     
 
-    float RadianCorrect(float fRadian)
+    float RadianNormalize(float fRadian)
     {
-        while (fRadian > PI)
-            fRadian -= PI2;
+        while (fRadian > MATH_PI)
+            fRadian -= MATH_PI2;
         
-        while (fRadian < -PI)
-            fRadian += PI2;
+        while (fRadian < -MATH_PI)
+            fRadian += MATH_PI2;
         
         return fRadian;
     };
@@ -78,15 +87,6 @@ namespace Math
         return std::sqrt(x);
     };
 
-    
-    float Fmod(float x, float y)
-    {
-        if (y == 0.0f)
-            return 0.0f;
-        
-        return std::fmod(x, y);
-    };
-    
 
     float ACos(float x)
     {
@@ -226,7 +226,7 @@ namespace Math
     void Vec3_Normalize(RwV3d* pvOut, const RwV3d* pvIn)
     {
         if ((pvIn->x == 0.0f && pvIn->y == 0.0f && pvIn->z == 0.0f) ||
-            (RwV3dLength(pvIn) <= EPSILON))
+            (RwV3dLength(pvIn) <= 0.000001f))
         {
             pvOut->x = pvOut->y = pvOut->z = 0.0f;
         }

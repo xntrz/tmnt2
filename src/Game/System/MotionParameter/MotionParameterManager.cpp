@@ -14,7 +14,7 @@
 class CBinaryReader final
 {
 public:
-    CBinaryReader(const void* pBuffer, uint32 uBufferSize);
+    CBinaryReader(void* pBuffer, uint32 uBufferSize);
     ~CBinaryReader(void);
     char* PosCurrent(void) const;
     char* PosOriginal(void) const;
@@ -45,7 +45,7 @@ public:
     public:
         CPackage(void);
         virtual ~CPackage(void);
-        void Initialize(const char* pszName, const void* pBuffer, uint32 uBufferSize, int32 iGeneration);
+        void Initialize(const char* pszName, void* pBuffer, uint32 uBufferSize, int32 iGeneration);
         void ReadMotionName(CBinaryReader& br, char* pszName);
         int32 GetGeneration(void) const;
         
@@ -56,7 +56,7 @@ public:
 public:
     CCharacterParameterContainer(void);
     virtual ~CCharacterParameterContainer(void);
-    void Read(const char* pszName, const void* pBuffer, uint32 uBufferSize);
+    void Read(const char* pszName, void* pBuffer, uint32 uBufferSize);
     CPackage* GetPackage(const char* pszName);
     CPackage* FindPackage(const char* pszName);
     CPackage* AllocPackage(void);
@@ -74,8 +74,8 @@ private:
 //
 
 
-CBinaryReader::CBinaryReader(const void* pBuffer, uint32 uBufferSize)
-: m_pBuffOrg((char*)pBuffer)
+CBinaryReader::CBinaryReader(void* pBuffer, uint32 uBufferSize)
+: m_pBuffOrg(reinterpret_cast<char*>(pBuffer))
 , m_pBuffPos(m_pBuffOrg)
 , m_uBuffSize(uBufferSize)
 {
@@ -128,7 +128,7 @@ T CBinaryReader::buff_io(bool peek)
 {
     static_assert(std::is_fundamental<T>::value, "not fundamental type");
     
-    T result = static_cast<T>(*(T*)m_pBuffPos);
+    T result = *reinterpret_cast<T*>(m_pBuffPos);
     if (!peek)
         m_pBuffPos += sizeof(T);
     
@@ -154,7 +154,7 @@ CCharacterParameterContainer::CPackage::~CPackage(void)
 };
 
 
-void CCharacterParameterContainer::CPackage::Initialize(const char* pszName, const void* pBuffer, uint32 uBufferSize, int32 iGeneration)
+void CCharacterParameterContainer::CPackage::Initialize(const char* pszName, void* pBuffer, uint32 uBufferSize, int32 iGeneration)
 {
     struct HEADER
     { 
@@ -163,7 +163,7 @@ void CCharacterParameterContainer::CPackage::Initialize(const char* pszName, con
         uint32 unknow[5];
     };
     
-    enum
+    enum : uint8
     {
         ID_FILE_END = 0,
         ID_CATEGORY_END = 0,
@@ -190,7 +190,7 @@ void CCharacterParameterContainer::CPackage::Initialize(const char* pszName, con
 
     m_iGeneration = iGeneration;
 
-    const HEADER* pHeader = reinterpret_cast<const HEADER*>(pBuffer);
+    HEADER* pHeader = reinterpret_cast<HEADER*>(pBuffer);
     if (pHeader->flags < 7)
         m_bReverseAtomicNo = true;
     
@@ -230,7 +230,6 @@ void CCharacterParameterContainer::CPackage::Initialize(const char* pszName, con
             CCharacterParameter::CreatePosition(&InitParam);
 
             id = br.read<uint8>();
-
             ASSERT(id == ID_CATEGORY_END);
         };
     };
@@ -254,7 +253,6 @@ void CCharacterParameterContainer::CPackage::Initialize(const char* pszName, con
         CCharacterParameter::CreateHitBody(&BodyParam);
 
         id = br.read<uint8>();
-
         ASSERT(id == ID_CATEGORY_END);
     };
 
@@ -277,7 +275,6 @@ void CCharacterParameterContainer::CPackage::Initialize(const char* pszName, con
         CCharacterParameter::CreateHitCatch(&CatchParam);
 
         id = br.read<uint8>();
-
         ASSERT(id == ID_CATEGORY_END);
     };
 
@@ -310,6 +307,7 @@ void CCharacterParameterContainer::CPackage::Initialize(const char* pszName, con
 
         id = br.read<uint8>();
         ASSERT(id == ID_PLAYMODE);
+
         MotionParam.m_playmode = static_cast<int32>(br.read<uint8>());
         CCharacterParameter::CreateMotion(&MotionParam);
 
@@ -336,7 +334,6 @@ void CCharacterParameterContainer::CPackage::Initialize(const char* pszName, con
                 CCharacterParameter::CreateAttack(&AttackParam);
 
                 id = br.read<uint8>();
-                
                 ASSERT(id == ID_CATEGORY_END);
             };
         };
@@ -365,7 +362,6 @@ void CCharacterParameterContainer::CPackage::Initialize(const char* pszName, con
             };
 
             id = br.read<uint8>();
-            
             ASSERT(id == ID_CATEGORY_END);
         };
 
@@ -387,20 +383,17 @@ void CCharacterParameterContainer::CPackage::Initialize(const char* pszName, con
                 CCharacterParameter::CreateTiming(&timingParameter);
 
                 id = br.read<uint8>();
-
                 ASSERT(id == ID_CATEGORY_END);
             };
         };
 
         id = br.read<uint8>();
-        
         ASSERT(id == ID_CATEGORY_END);
     };
 
     //
     //  Read locus para
     //
-    //id = br.read<uint8>();
     if (br.peek<uint8>() == ID_LOCUS)
     {
 		br.read<uint8>();
@@ -428,7 +421,6 @@ void CCharacterParameterContainer::CPackage::Initialize(const char* pszName, con
             CCharacterParameter::CreateLocus(&LocusParam);
 
             id = br.read<uint8>();
-            
             ASSERT(id == ID_CATEGORY_END);
         };
     };
@@ -461,7 +453,7 @@ void CCharacterParameterContainer::CPackage::Initialize(const char* pszName, con
     ASSERT(id == ID_CATEGORY_END);
 
     id = br.read<uint8>();
-    while (id)	// 1
+    while (id == 1)
     {
         char szMotionName[CMotionParameterManager::MOTION_NAME_MAX];
         szMotionName[0] = '\0';
@@ -625,7 +617,7 @@ CCharacterParameterContainer::~CCharacterParameterContainer(void)
 };
 
 
-void CCharacterParameterContainer::Read(const char* pszName, const void* pBuffer, uint32 uBufferSize)
+void CCharacterParameterContainer::Read(const char* pszName, void* pBuffer, uint32 uBufferSize)
 {
     ASSERT(pszName);
     ASSERT(pBuffer);
@@ -698,7 +690,7 @@ static inline CCharacterParameterContainer& CharacterParamContainer(void)
 };
 
 
-/*static*/ void CMotionParameterManager::Read(const char* pszName, const void* pBuffer, uint32 uBufferSize)
+/*static*/ void CMotionParameterManager::Read(const char* pszName, void* pBuffer, uint32 uBufferSize)
 {
     CharacterParamContainer().Read(pszName, pBuffer, uBufferSize);
 };
@@ -706,5 +698,7 @@ static inline CCharacterParameterContainer& CharacterParamContainer(void)
 
 /*static*/ CCharacterParameter* CMotionParameterManager::GetCharacterParameter(const char* pszName, int32 nPartsNum)
 {
-    return CharacterParamContainer().GetPackage(pszName);
+    CCharacterParameter* pPackage = CharacterParamContainer().GetPackage(pszName);
+    pPackage->SetAtomicNum(nPartsNum);
+    return pPackage;
 };

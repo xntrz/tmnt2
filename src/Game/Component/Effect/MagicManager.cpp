@@ -419,7 +419,8 @@ static inline CMagic* MagicFromHandle(uint32 hMagic)
     if (pGameObject)
     {
         ASSERT(pGameObject->GetType() == GAMEOBJECTTYPE::EFFECT);
-
+        ASSERT(static_cast<CEffect*>(pGameObject)->GetEffectType() == CEffect::TYPE_WITHHIT);
+        
         return static_cast<CMagic*>(pGameObject);
     };
 

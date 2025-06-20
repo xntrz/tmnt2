@@ -4,25 +4,25 @@
 #include "Game/System/Texture/TextureManager.hpp"
 
 
-class CIceBlock : public CListNode<CIceBlock>
+static const RwV3d ICE_BLOCK_SCALE = { 1.0f, 2.0f, 1.0f };
+
+
+class CIceBlock : public CSphere
 {
 public:
-    CIceBlock(void);
-    ~CIceBlock(void);
-    void Draw(void);
-    void SetPosition(const RwV3d* pvPosition);
-    void SetScaling(const RwV3d* pvScaling);
-    void SetTexture(RwTexture* pTexture);
-
-private:
-    RwV3d m_vScaling;
-    RwV3d m_vPosition;
-    CSphere m_shape;
+    inline CIceBlock(void) : CSphere(1.0f, 5, 5, 1, 1, { 0xFF, 0xFF, 0xFF, 0xFF }, true) {};
+    inline virtual ~CIceBlock(void) {};
 };
 
 
 class CIceBlockList
 {
+public:
+    struct WORK : public CListNode<WORK>
+    {
+        CIceBlock iceBlock;
+    };
+
 public:
     CIceBlockList(void);
     ~CIceBlockList(void);
@@ -32,66 +32,15 @@ public:
     void Finish(uint32 hIceBlock);
     void SetPosition(uint32 hIceBlock, const RwV3d* pvPosition);
     void SetScale(uint32 hIceBlock, const RwV3d* pvScaling);
+    WORK* WorkAlloc(void);
+    void WorkFree(WORK* pWork);
+    WORK* WorkFromHandle(uint32 hIceblock) const;
 
 private:
-    CIceBlock* workAlloc(void);
-    void workFree(CIceBlock* pWork);
-    CIceBlock* workFromHandle(uint32 hIceblock) const;
-
-private:
-    CIceBlock m_aWork[10];
-    CList<CIceBlock> m_listWorkPool;
-    CList<CIceBlock> m_listWorkAlloc;
-    RwTexture* m_pTexture;
-};
-
-
-//
-// *********************************************************************************
-//
-
-
-CIceBlock::CIceBlock(void)
-: m_shape(1.0f, 5, 5, 1, 1, { 0xFF, 0xFF, 0xFF, 0xFF }, true)
-, m_vPosition(Math::VECTOR3_ZERO)
-, m_vScaling({ 1.0f, 2.0f, 1.0f })
-{
-    SetPosition(&m_vPosition);
-    SetScaling(&m_vScaling);
-};
-
-
-CIceBlock::~CIceBlock(void)
-{
-    ;
-};
-
-
-void CIceBlock::Draw(void)
-{
-    m_shape.Draw();
-};
-
-
-void CIceBlock::SetPosition(const RwV3d* pvPosition)
-{
-    ASSERT(pvPosition);
-    
-    m_shape.SetPosition(pvPosition);
-};
-
-
-void CIceBlock::SetScaling(const RwV3d* pvScaling)
-{
-    ASSERT(pvScaling);
-
-    m_shape.SetScale(pvScaling);
-};
-
-
-void CIceBlock::SetTexture(RwTexture* pTexture)
-{
-    m_shape.SetTexture(pTexture);
+    WORK        m_aWork[10];
+    CList<WORK> m_listWorkFree;
+    CList<WORK> m_listWorkAlloc;
+    RwTexture*  m_pTexture;
 };
 
 
@@ -101,10 +50,16 @@ void CIceBlock::SetTexture(RwTexture* pTexture)
 
 
 CIceBlockList::CIceBlockList(void)
-: m_pTexture(nullptr)
+: m_aWork()
+, m_listWorkFree()
+, m_listWorkAlloc()
+, m_pTexture(nullptr)
 {
     for (int32 i = 0; i < COUNT_OF(m_aWork); ++i)
-        m_listWorkPool.push_back(&m_aWork[i]);
+    {
+        m_aWork[i].iceBlock.SetScale(&ICE_BLOCK_SCALE);
+        m_listWorkFree.push_back(&m_aWork[i]);
+    };
 };
 
 
@@ -124,87 +79,90 @@ void CIceBlockList::Run(void)
         ASSERT(m_pTexture);
 
         for (int32 i = 0; i < COUNT_OF(m_aWork); ++i)
-            m_aWork[i].SetTexture(m_pTexture);
+            m_aWork[i].iceBlock.SetTexture(m_pTexture);
     };
 };
 
 
 void CIceBlockList::Draw(void)
 {
-    for (CIceBlock& it : m_listWorkAlloc)
-        it.Draw();
+    for (WORK& it : m_listWorkAlloc)
+        it.iceBlock.Draw();
 };
 
 
 uint32 CIceBlockList::Play(const RwV3d* pvPosition)
 {
-    CIceBlock* pWork = workAlloc();
+    WORK* pWork = WorkAlloc();
     ASSERT(pWork);
 
     if (pWork)
-        pWork->SetPosition(pvPosition);
+        pWork->iceBlock.SetPosition(pvPosition);
 
-    return uint32(pWork);
+    return reinterpret_cast<uint32>(pWork);
 };
 
 
 void CIceBlockList::Finish(uint32 hIceBlock)
 {
-    CIceBlock* pWork = workFromHandle(hIceBlock);
+    WORK* pWork = WorkFromHandle(hIceBlock);
     ASSERT(pWork);
+
     if (pWork)
-        workFree(pWork);
+    {
+        pWork->iceBlock.Reset();
+        pWork->iceBlock.SetScale(&ICE_BLOCK_SCALE);
+
+        WorkFree(pWork);
+    };
 };
 
 
 void CIceBlockList::SetPosition(uint32 hIceBlock, const RwV3d* pvPosition)
 {
-    CIceBlock* pWork = workFromHandle(hIceBlock);
+    WORK* pWork = WorkFromHandle(hIceBlock);
     ASSERT(pWork);
 
     if (pWork)
-        pWork->SetPosition(pvPosition);
+        pWork->iceBlock.SetPosition(pvPosition);
 };
 
 
 void CIceBlockList::SetScale(uint32 hIceBlock, const RwV3d* pvScaling)
 {
-    CIceBlock* pWork = workFromHandle(hIceBlock);
+    WORK* pWork = WorkFromHandle(hIceBlock);
     ASSERT(pWork);
     
     if (pWork)
-        pWork->SetScaling(pvScaling);
+        pWork->iceBlock.SetScale(pvScaling);
 };
 
 
-CIceBlock* CIceBlockList::workAlloc(void)
+CIceBlockList::WORK* CIceBlockList::WorkAlloc(void)
 {
-    ASSERT(!m_listWorkPool.empty());
-
-    if (m_listWorkPool.empty())
+    if (m_listWorkFree.empty())
         return nullptr;
 
-    CIceBlock* pNode = m_listWorkPool.front();
-    m_listWorkPool.erase(pNode);
-    m_listWorkAlloc.push_back(pNode);
+    WORK* pWork = m_listWorkFree.front();
+    m_listWorkFree.erase(pWork);
+    m_listWorkAlloc.push_back(pWork);
 
-    return pNode;
+    return pWork;
 };
 
 
-void CIceBlockList::workFree(CIceBlock* pWork)
+void CIceBlockList::WorkFree(WORK* pWork)
 {
     ASSERT(pWork);
 
     m_listWorkAlloc.erase(pWork);
-    m_listWorkPool.push_back(pWork);
+    m_listWorkFree.push_front(pWork);
 };
 
 
-CIceBlock* CIceBlockList::workFromHandle(uint32 hIceblock) const
+CIceBlockList::WORK* CIceBlockList::WorkFromHandle(uint32 hIceblock) const
 {
-    ASSERT(hIceblock);
-    return reinterpret_cast<CIceBlock*>(hIceblock);
+    return reinterpret_cast<WORK*>(hIceblock);
 };
 
 
@@ -221,9 +179,7 @@ static CIceBlockList& IceBlockList(void)
 /*static*/ void CIceBlockManager::Initialize(void)
 {
     if (!s_pIceBlockList)
-    {
         s_pIceBlockList = new CIceBlockList;
-    };
 };
 
 

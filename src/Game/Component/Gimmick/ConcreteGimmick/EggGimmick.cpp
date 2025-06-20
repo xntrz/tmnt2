@@ -76,15 +76,13 @@ CEggGimmick::CEggGimmick(const char* pszName, void* pParam)
 , m_model()
 , m_move()
 , m_pModuleMan(nullptr)
-, m_fNearestPlayerDist(0.0f)
+, m_fNearestPlayerDist(-1.0f)
 , m_fTimer(0.0f)
 , m_state(STATE_SHAKE)
 , m_shakeState(SHAKESTATE_IDLE)
 , m_nShake(0)
 {
     GIMMICKPARAM::GIMMICK_ENEMY_APPEARANCE_SINGLE* pAppearParam = static_cast<GIMMICKPARAM::GIMMICK_ENEMY_APPEARANCE_SINGLE*>(pParam);
-
-    m_fNearestPlayerDist = -1.0;
 
     //
     //  init model
@@ -126,7 +124,7 @@ CEggGimmick::CEggGimmick(const char* pszName, void* pParam)
 };
 
 
-CEggGimmick::~CEggGimmick(void)
+/*virtual*/ CEggGimmick::~CEggGimmick(void)
 {
     if (m_pModuleMan)
     {
@@ -136,7 +134,7 @@ CEggGimmick::~CEggGimmick(void)
 };
 
 
-void CEggGimmick::Run(void)
+/*virtual*/ void CEggGimmick::Run(void) /*override*/
 {
     eggCtrl();
 
@@ -145,7 +143,7 @@ void CEggGimmick::Run(void)
 };
 
 
-void CEggGimmick::Draw(void) const
+/*virtual*/ void CEggGimmick::Draw(void) const /*override*/
 {
     CGimmick::Draw();
     
@@ -154,7 +152,7 @@ void CEggGimmick::Draw(void) const
 };
 
 
-void CEggGimmick::OnReceiveEvent(const char* pszSender, GIMMICKTYPES::EVENTTYPE eventtype)
+/*virtual*/ void CEggGimmick::OnReceiveEvent(const char* pszSender, GIMMICKTYPES::EVENTTYPE eventtype) /*override*/
 {
     m_generator.HandleEvent(pszSender, eventtype);
 
@@ -163,7 +161,7 @@ void CEggGimmick::OnReceiveEvent(const char* pszSender, GIMMICKTYPES::EVENTTYPE 
 };
 
 
-void CEggGimmick::OnCatchAttack(CHitAttackData* pAttack)
+/*virtual*/ void CEggGimmick::OnCatchAttack(CHitAttackData* pAttack) /*override*/
 {
     if (m_state != STATE_SHAKE)
         return;
@@ -206,6 +204,9 @@ void CEggGimmick::OnCatchAttack(CHitAttackData* pAttack)
             if (pAttack->GetTarget() == CHitAttackData::TARGET_ENEMY_GIMMICK)
                 birthForce();
         }
+        break;
+
+    default:
         break;
     };
 };
@@ -351,12 +352,14 @@ void CEggGimmick::shakeMoveCtrl(void)
         }
         else
         {
-            fRotX = MATH_DEG2RAD(Math::RandFloatRange(s_aShakeMin[m_shakeState], s_aShakeMax[m_shakeState]));
+            float fAngle = Math::RandFloatRange(s_aShakeMin[m_shakeState], s_aShakeMax[m_shakeState]);
+
+            fRotX = MATH_DEG2RAD(fAngle);
             if (vRotation.x > 0.0f)
                 fRotX *= -1.0f;
         };
 
-        vRotation.x = Math::RadianInvClamp(vRotation.x + fRotX);
+        vRotation.x = Math::RadianCorrection(vRotation.x + fRotX);
         
         m_model.SetRotation(&vRotation);
         m_model.UpdateFrame();
@@ -380,17 +383,17 @@ void CEggGimmick::changeShakeState(SHAKESTATE shakeState)
 
 void CEggGimmick::setHitAttack(void)
 {
-    RwSphere HitSphere = { { 0.0f, 0.5f, 0.0f }, 0.7f };
-    RwV3dTransformPoint(&HitSphere.center, &HitSphere.center, m_model.GetMatrix(CNormalGimmickModel::MODELTYPE_DRAW_NORMAL));
+    RwSphere hitSphere = { { 0.0f, 0.5f, 0.0f }, 0.7f };
+    RwV3dTransformPoint(&hitSphere.center, &hitSphere.center, m_model.GetMatrix(CNormalGimmickModel::MODELTYPE_DRAW_NORMAL));
 
-    CHitCatchData CatchData;
-    CatchData.Cleanup();
-    CatchData.SetObject(GetHandle());
-    CatchData.SetObjectType(GetType());
-    CatchData.SetShape(CHitCatchData::SHAPE_SPHERE);
-    CatchData.SetSphere(&HitSphere);
+    CHitCatchData hitCatch;
+    hitCatch.Cleanup();
+    hitCatch.SetObject(GetHandle());
+    hitCatch.SetObjectType(GetType());
+    hitCatch.SetShape(CHitCatchData::SHAPE_SPHERE);
+    hitCatch.SetSphere(&hitSphere);
 
-    CHitAttackManager::RegistCatch(&CatchData);
+    CHitAttackManager::RegistCatch(&hitCatch);
 };
 
 
@@ -434,8 +437,7 @@ bool CEggGimmick::eraseEgg(void)
     RwV3d vPosition = Math::VECTOR3_ZERO;
     m_model.GetPosition(&vPosition);
 
-    uint32 hEffect = CEffectManager::Play(EFFECTID::ID_CERAMICS, &vPosition);
-    ASSERT(hEffect);
+    CEffectManager::Play(EFFECTID::ID_CERAMICS, &vPosition);
 
     CGameSound::PlayObjectSE(this, SDCODE_SE(4341));
 

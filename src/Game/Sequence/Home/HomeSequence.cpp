@@ -58,11 +58,10 @@ void CHomeSequence::OnMove(bool bRet, const void* pReturnValue)
         }
         else if (iNextSequenceLabel == PROCESSTYPES::LABEL_EOL)
         {
-            //
-            //  Returning to GameMainSequence
-            //
-            if (m_iCallLabel == PROCLABEL_SEQ_AREAPLAY ||
-                m_iCallLabel == PROCLABEL_SEQ_ENDING)
+            /* returning to GameMainSequence and call TitleSequence
+               if exit from tournament play or ending */
+            if ((m_iCallLabel == PROCLABEL_SEQ_AREAPLAY) ||
+                (m_iCallLabel == PROCLABEL_SEQ_ENDING))
                 iCallParam = PROCLABEL_SEQ_TITLE;
         };
 
@@ -191,8 +190,9 @@ int32 CHomeSequence::Branch(int32 iLabel, const void* param)
             
             if (bRetryFlag)
             {
+                AREAID::VALUE areaId = CGameData::PlayParam().GetArea();
                 CGameData::PlayParam().ClearArea();
-                CGameData::PlayParam().SetStartArea(CGameData::PlayParam().GetArea(), 0);
+                CGameData::PlayParam().SetStartArea(areaId, 0);
                 iNextSequenceLabel = PROCLABEL_SEQ_AREAPLAY;
             }
             else
@@ -248,9 +248,7 @@ int32 CHomeSequence::Branch(int32 iLabel, const void* param)
                         break;
 
                     default:
-                        {
-                            ASSERT(false);
-                        }
+                        ASSERT(false);
                         break;
                     };
                 }

@@ -38,13 +38,12 @@ CGuillotineGimmick::CGuillotineGimmick(const char* pszName, void* pParam)
     GIMMICKPARAM::GIMMICK_GUILLOTINE* pGuilloParam = static_cast<GIMMICKPARAM::GIMMICK_GUILLOTINE*>(pParam);
     ASSERT(pGuilloParam);
 
-
     ASSERT(pGuilloParam->m_subid >= 0);
     ASSERT(pGuilloParam->m_subid < KINDNUM);
 
     const PENDULUMPARAM* pPendulumParam = &s_aPendulumParam[pGuilloParam->m_subid];
 
-    m_kind          = KIND(pGuilloParam->m_subid);
+    m_kind          = static_cast<KIND>(pGuilloParam->m_subid);
     m_vHitSpherePos = pPendulumParam->m_vHitPos;
     m_fHitRadius    = pPendulumParam->m_fHitRadius;
     m_vFulcrumVector= { 0.0f, pGuilloParam->m_fRadius, 0.0f };
@@ -60,15 +59,15 @@ CGuillotineGimmick::CGuillotineGimmick(const char* pszName, void* pParam)
     //
     //  init movement
     //
-    CGuillotineGimmickMove::INITPARAM InitParam = { 0 };
-    InitParam.m_fTheta          = 0.0f;
-    InitParam.m_fOnceTheta      = MATH_DEG2RAD(pGuilloParam->m_fAmplitude);
-    InitParam.m_fMaxMove        = pGuilloParam->m_fRoundTime;
-    InitParam.m_fHitRadius      = pPendulumParam->m_fHitRadius;
-    InitParam.m_vFulcrumVector  = { 0.0f, pGuilloParam->m_fRadius, 0.0f };
-    InitParam.m_vHitSpherePos   = pPendulumParam->m_vHitPos;
+    CGuillotineGimmickMove::INITPARAM moveParam = { 0 };
+    moveParam.m_fTheta          = 0.0f;
+    moveParam.m_fOnceTheta      = MATH_DEG2RAD(pGuilloParam->m_fAmplitude);
+    moveParam.m_fMaxMove        = pGuilloParam->m_fRoundTime;
+    moveParam.m_fHitRadius      = pPendulumParam->m_fHitRadius;
+    moveParam.m_vFulcrumVector  = { 0.0f, pGuilloParam->m_fRadius, 0.0f };
+    moveParam.m_vHitSpherePos   = pPendulumParam->m_vHitPos;
     
-    m_pGuillotineMove = new CGuillotineGimmickMove(&InitParam);
+    m_pGuillotineMove = new CGuillotineGimmickMove(&moveParam);
     
     //
     //  init pos & rot
@@ -101,7 +100,7 @@ CGuillotineGimmick::CGuillotineGimmick(const char* pszName, void* pParam)
 };
 
 
-CGuillotineGimmick::~CGuillotineGimmick(void)
+/*virtual*/ CGuillotineGimmick::~CGuillotineGimmick(void)
 {
     if (m_pModuleMan)
     {
@@ -117,17 +116,17 @@ CGuillotineGimmick::~CGuillotineGimmick(void)
 };
 
 
-void CGuillotineGimmick::Run(void)
+/*virtual*/ void CGuillotineGimmick::Run(void) /*override*/
 {
     PreMove();
 
     if (m_pMoveStrategy)
     {
         float dt = CGameProperty::GetElapsedTime();
-        CGimmickMove::MOVESTATE MoveState = m_pMoveStrategy->Move(dt);
+        CGimmickMove::MOVESTATE moveState = m_pMoveStrategy->Move(dt);
         
-        if ((MoveState == CGimmickMove::MOVESTATE_TOUCHDOWN) ||
-            (MoveState == CGimmickMove::MOVESTATE_ON_GROUND))
+        if ((moveState == CGimmickMove::MOVESTATE_TOUCHDOWN) ||
+            (moveState == CGimmickMove::MOVESTATE_ON_GROUND))
             OnTouchedDown();
 
         if (m_pModelStrategy)
@@ -143,7 +142,7 @@ void CGuillotineGimmick::Run(void)
 };
 
 
-void CGuillotineGimmick::Draw(void) const
+/*virtual*/ void CGuillotineGimmick::Draw(void) const /*override*/
 {
     CGimmick::Draw();
 
@@ -152,7 +151,7 @@ void CGuillotineGimmick::Draw(void) const
 };
 
 
-void CGuillotineGimmick::PreMove(void)
+/*virtual*/ void CGuillotineGimmick::PreMove(void) /*override*/
 {
     m_pGuillotineMove->GetPosition(&m_vPrePos);
 
@@ -161,7 +160,7 @@ void CGuillotineGimmick::PreMove(void)
 };
 
 
-void CGuillotineGimmick::PostMove(void)
+/*virtual*/ void CGuillotineGimmick::PostMove(void) /*override*/
 {
     setHitAttack();
 
@@ -176,7 +175,7 @@ void CGuillotineGimmick::PostMove(void)
 };
 
 
-void CGuillotineGimmick::OnTouchedDown(void)
+/*virtual*/ void CGuillotineGimmick::OnTouchedDown(void) /*override*/
 {
     RwV3d vRotation = Math::VECTOR3_ZERO;
     m_pGuillotineMove->GetRotation(&vRotation);
@@ -185,17 +184,13 @@ void CGuillotineGimmick::OnTouchedDown(void)
 
     float fDirection = Math::RandFloatRange(-1.0f, 1.0f) * MATH_DEG2RAD(45.0f) + (vRotation.y + MATH_DEG2RAD(90.0f));
 
-	if ((m_pGuillotineMove->GetPendulumState() == 0) ||
-		(m_pGuillotineMove->GetPendulumState() == 3))
-		fDirection += Math::PI;
+    if ((m_pGuillotineMove->GetPendulumState() == CGuillotineGimmickMove::PENDULUMSTATE_RIGHT) ||
+        (m_pGuillotineMove->GetPendulumState() == CGuillotineGimmickMove::PENDULUMSTATE_CENTER_TO_RIGHT))
+        fDirection += MATH_PI;
 
-    fDirection = Math::RadianInvClamp(fDirection);
+    fDirection = Math::RadianCorrection(fDirection);
 
-    bool bSoundCall = true;
-
-    uint32 hEffect = CEffectManager::Play(EFFECTID::ID_SPARKS, &vPosition, fDirection, bSoundCall);
-    ASSERT(hEffect);
-
+    uint32 hEffect = CEffectManager::Play(EFFECTID::ID_SPARKS, &vPosition, fDirection);
 	if (hEffect && (m_kind == KIND_CRANE))
 		CEffectManager::SetScale(hEffect, 0.5f);
 };
@@ -204,7 +199,11 @@ void CGuillotineGimmick::OnTouchedDown(void)
 void CGuillotineGimmick::setHitAttack(void)
 {
     setHitAttackChain();
-    (m_kind == KIND_GUILLOTINE ? setHitAttackGuillotine() : setHitAttackCrane());
+
+    if (m_kind == KIND_GUILLOTINE)
+        setHitAttackGuillotine();
+    else
+        setHitAttackCrane();
 };
 
 
@@ -224,14 +223,14 @@ void CGuillotineGimmick::setHitAttackChain(void)
     RwV3d vHitPos = m_vHitSpherePos;
     vHitPos.y += (m_fHitRadius + 0.5f);
 
-    int32 numAttack = int32((m_vFulcrumVector.y * 0.5f) - m_fHitRadius);
+    int32 numAttack = static_cast<int32>((m_vFulcrumVector.y * 0.5f) - m_fHitRadius);
     for (int32 i = 0; i < numAttack; ++i)
     {
-        RwSphere HitSphere = { 0 };
-        RwV3dTransformPoint(&HitSphere.center, &vHitPos, pMatrix);
-        HitSphere.radius = 0.5f;
+        RwSphere hitSphere = { 0 };
+        RwV3dTransformPoint(&hitSphere.center, &vHitPos, pMatrix);
+        hitSphere.radius = 0.5f;
 
-        registHitAttack(&HitSphere, 3 + i);
+        registHitAttack(&hitSphere, 3 + i);
 
         vHitPos.y += 1.0f;
     };
@@ -245,10 +244,10 @@ void CGuillotineGimmick::setHitAttackCrane(void)
     RwFrame* pFrame = RpClumpGetFrameMacro(pClump);
     RwMatrix* pMatrix = RwFrameGetMatrixMacro(pFrame);
 
-    RwSphere HitSphere = { Math::VECTOR3_ZERO, m_fHitRadius };
-    RwV3dTransformPoint(&HitSphere.center, &m_vHitSpherePos, pMatrix);
+    RwSphere hitSphere = { Math::VECTOR3_ZERO, m_fHitRadius };
+    RwV3dTransformPoint(&hitSphere.center, &m_vHitSpherePos, pMatrix);
 
-    registHitAttack(&HitSphere, 0);
+    registHitAttack(&hitSphere, 0);
 };
 
 
@@ -257,8 +256,8 @@ void CGuillotineGimmick::setHitAttackGuillotine(void)
     static const RwSphere s_aHitSphere[] =
     {
         { { m_vHitSpherePos     }, m_fHitRadius },
-        { { -2.0f,  1.0f, 0.0f  }, 1.0f         },
-        { { 2.0f,   1.8f, 0.0f  }, 1.0f         },
+        { { -2.0f,  1.8f, 0.0f  }, 1.0f         },
+        { {  2.0f,  1.8f, 0.0f  }, 1.0f         },
     };
 
     CModel* pModel = m_model.GetModel(CNormalGimmickModel::MODELTYPE_DRAW_NORMAL);
@@ -268,31 +267,34 @@ void CGuillotineGimmick::setHitAttackGuillotine(void)
 
     for (int32 i = 0; i < COUNT_OF(s_aHitSphere); ++i)
     {
-        RwSphere HitSphere = { 0 };
-        RwV3dTransformPoint(&HitSphere.center, &s_aHitSphere[i].center, pMatrix);
-        HitSphere.radius = s_aHitSphere[i].radius;
+        RwSphere hitSphere = { 0 };
+        RwV3dTransformPoint(&hitSphere.center, &s_aHitSphere[i].center, pMatrix);
+        hitSphere.radius = s_aHitSphere[i].radius;
 
-        registHitAttack(&HitSphere, 0);
+        registHitAttack(&hitSphere, 0);
     };
 };
 
 
 void CGuillotineGimmick::registHitAttack(const RwSphere* pHitSphere, int32 No)
 {
-    ASSERT(pHitSphere);
-    ASSERT(pHitSphere->radius > 0.0f);
+    if (!pHitSphere)
+        return;
 
-    CHitAttackData AttackData;
-    AttackData.Cleanup();
-    AttackData.SetObject(GetHandle());
-    AttackData.SetShape(CHitAttackData::SHAPE_SPHERE);
-    AttackData.SetSphere(pHitSphere);
-    AttackData.SetObjectPos(&m_vPrePos);
-    AttackData.SetPower(30);
-    AttackData.SetTarget(CHitAttackData::TARGET_CHARACTER_GIMMICK);
-    AttackData.SetAntiguard(CHitAttackData::ANTIGUARD_INVALID);
-    AttackData.SetStatus(CHitAttackData::STATUS_FLYAWAY);
-    AttackData.SetAttackNo(0);
+    if (pHitSphere->radius <= 0.0f)
+        return;
 
-    CHitAttackManager::RegistAttack(&AttackData);
+    CHitAttackData hitAttack;
+    hitAttack.Cleanup();
+    hitAttack.SetObject(GetHandle());
+    hitAttack.SetShape(CHitAttackData::SHAPE_SPHERE);
+    hitAttack.SetSphere(pHitSphere);
+    hitAttack.SetObjectPos(&m_vPrePos);
+    hitAttack.SetPower(30);
+    hitAttack.SetTarget(CHitAttackData::TARGET_CHARACTER_GIMMICK);
+    hitAttack.SetAntiguard(CHitAttackData::ANTIGUARD_INVALID);
+    hitAttack.SetStatus(CHitAttackData::STATUS_FLYAWAY);
+    hitAttack.SetAttackNo(No);
+
+    CHitAttackManager::RegistAttack(&hitAttack);
 };

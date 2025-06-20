@@ -176,7 +176,7 @@ static const RwRGBA s_ColorWhite    = { 0xFF, 0xFF, 0xFF, 0xFF };
 #define FONT_PAD_X_POS(itemNo)          (FONT_PAD_X)
 #define FONT_PAD_Y_POS(itemNo)          (FONT_Y_POS(FONT_PAD_Y, FONT_PAD_HEIGHT, itemNo))
 
-/* pad button font */ // TODO
+/* pad button font */
 #define FONT_PAD_BTN_X                  (202.0f)
 #define FONT_PAD_BTN_Y                  (-144.0f)
 #define FONT_PAD_BTN_HEIGHT             (28.0f)

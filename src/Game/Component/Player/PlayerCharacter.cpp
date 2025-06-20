@@ -925,7 +925,7 @@ void CPlayerCharacter::RotateDirection(float fDirection)
     float fRotateDirectionMax = CGameProperty::GetElapsedTime() * Math::PI05;
     float fDirectionDiff = fDirection - m_fDirection;
 
-    fDirectionDiff = Math::RadianCorrect(fDirectionDiff);
+    fDirectionDiff = Math::RadianNormalize(fDirectionDiff);
     
     ASSERT(std::fabs(fDirectionDiff) <= Math::PI);
     fDirectionDiff = Clamp(fDirectionDiff, -fRotateDirectionMax, fRotateDirectionMax);

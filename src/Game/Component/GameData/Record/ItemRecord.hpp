@@ -33,6 +33,7 @@ public:
     int32 GetCrystalNum(GAMETYPES::CRYSTALTYPE crytype) const;
     GAMETYPES::CRYSTALTYPE FindAreaCrystal(AREAID::VALUE idArea) const;
     bool IsAreaCrystalTaken(GAMETYPES::CRYSTALTYPE crytype, AREAID::VALUE idArea) const;
+    bool IsAreaHasCrystal(GAMETYPES::CRYSTALTYPE crytype, AREAID::VALUE idArea) const;
     bool IsComebackProcessed(void) const;
     void ForceSetCrystalNum(GAMETYPES::CRYSTALTYPE crytype, int32 num);
     void ForceSetCrystalNum(int32 num);

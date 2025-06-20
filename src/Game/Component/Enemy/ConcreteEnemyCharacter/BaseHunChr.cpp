@@ -60,6 +60,16 @@ CBaseHunChr::CThinkingStatusObserver::CThinkingStatusObserver(CBaseHunChr* pBase
 };
 
 
+/*virtual*/ CBaseHunChr::CThinkingStatusObserver::~CThinkingStatusObserver(void)
+{
+    if (m_hBurstEffect)
+    {
+        CEffectManager::End(m_hBurstEffect);
+        m_hBurstEffect = 0;
+    };
+};
+
+
 /*virtual*/ void CBaseHunChr::CThinkingStatusObserver::OnStart(void) /*override*/
 {
     m_fBurstThinkWaitTimer = 0.0f;

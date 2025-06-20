@@ -627,18 +627,13 @@ CBaseEliteFootAI::CBaseEliteFootAI(CEnemyCharacter* pEnemyChr)
 };
 
 
-/*virtual*/ void CBaseEliteFootAI::CatchAttack(uint32 hAttacker) /*override*/
+/*virtual*/ void CBaseEliteFootAI::CatchAttack(uint32 hObj, GAMEOBJECTTYPE::VALUE objType) /*override*/
 {
-    if (!hAttacker)
-        return;
-    
-    CGameObject* pAttackerObj = CGameObjectManager::GetObject(hAttacker);
-    GAMEOBJECTTYPE::VALUE attackerObjType = pAttackerObj->GetType();
-
-    int32 attackerPlayerNo = CEnemyUtils::FindPlayerNo(hAttacker);
-
-    AIParam().PlayerWatcher().SetLastAttackerType(attackerObjType);
-    AIParam().PlayerWatcher().SetPlayerData(attackerPlayerNo, CPlayerWatcher::PLAYER_DATA_ATTACK);
+    if (hObj)
+    {
+        AIParam().PlayerWatcher().SetLastAttackerType(objType);
+        AIParam().PlayerWatcher().SetPlayerData(CEnemyUtils::FindPlayerNo(hObj), CPlayerWatcher::PLAYER_DATA_ATTACK);
+    };
 };
 
 

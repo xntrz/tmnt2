@@ -389,7 +389,7 @@ float CEnemyUtils::CKnockBackControl::GetPlayerNumRate(void) const
 
 /*static*/ float CEnemyUtils::RadianCorrect(float rad)
 {
-    return Math::RadianCorrect(rad);
+    return Math::RadianNormalize(rad);
 };
 
 
@@ -602,7 +602,7 @@ float CEnemyUtils::CKnockBackControl::GetPlayerNumRate(void) const
 };
 
 
-/*static*/ int32 CEnemyUtils::RotateToPlayer(CCharacterCompositor* pChrCompositor, int32 playerNo, float fRotSpeed, float fRad)
+/*static*/ int32 CEnemyUtils::RotateToPlayer(CCharacterCompositor* pChrCompositor, int32 playerNo, float fRotSpeed, float fRad /*= 0.0f*/)
 {
     CPlayerCharacter* pPlayerChr = CAIUtils::GetActivePlayer(playerNo);
     if (!pPlayerChr)
@@ -615,7 +615,7 @@ float CEnemyUtils::CKnockBackControl::GetPlayerNumRate(void) const
 };
 
 
-/*static*/ int32 CEnemyUtils::RotateToPosition(CCharacterCompositor* pChrCompositor, const RwV3d* pos, float fRotSpeed, float fRad)
+/*static*/ int32 CEnemyUtils::RotateToPosition(CCharacterCompositor* pChrCompositor, const RwV3d* pos, float fRotSpeed, float fRad /*= 0.0f*/)
 {
     RwV3d vecFootPos = Math::VECTOR3_ZERO;
     pChrCompositor->GetFootPosition(&vecFootPos);

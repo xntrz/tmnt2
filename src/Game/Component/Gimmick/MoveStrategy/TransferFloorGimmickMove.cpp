@@ -244,13 +244,13 @@ CRotateTransferFloorGimmickMove::RESULT CRotateTransferFloorGimmickMove::OnMove(
     if (m_fRoundTime <= 0.0f)
         return ret;
 
-    float fStep = Math::PI2 / m_fRoundTime;
+    float fStep = MATH_PI2 / m_fRoundTime;
 
     if (!m_bTurnRight)
         fStep *= -1.0f;
 
     m_vRotation.y += fStep * dt;
-    m_vRotation.y = Math::RadianCorrect(m_vRotation.y);
+    m_vRotation.y = Math::RadianNormalize(m_vRotation.y);
     
     return ret;
 };

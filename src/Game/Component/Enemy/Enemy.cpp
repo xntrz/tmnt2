@@ -3,6 +3,7 @@
 
 #ifdef _DEBUG
 #include "EnemyDebug.hpp"
+#include "Game/System/Misc/DebugShape.hpp"
 #endif /* _DEBUG */
 
 #include "ConcreteEnemyCharacter/000Dummy.hpp"
@@ -57,11 +58,13 @@
 #include "ConcreteEnemyCharacter/071NinjaRatsB.hpp"
 #include "ConcreteEnemyCharacter/072NinjaRatsC.hpp"
 #include "ConcreteEnemyCharacter/073NinjaRatsD.hpp"
+#include "ConcreteEnemyCharacter/074Traximus.hpp"
 #include "ConcreteEnemyCharacter/075Leatherhead.hpp"
 #include "ConcreteEnemyCharacter/076EliteFootA.hpp"
 #include "ConcreteEnemyCharacter/077EliteFootB.hpp"
 #include "ConcreteEnemyCharacter/078EliteFootC.hpp"
 #include "ConcreteEnemyCharacter/079EliteFootD.hpp"
+#include "ConcreteEnemyCharacter/080UltimateNinja.hpp"
 #include "ConcreteEnemyCharacter/081Spasmosaur.hpp"
 #include "ConcreteEnemyCharacter/082Hun.hpp"
 #include "ConcreteEnemyCharacter/083Hun.hpp"
@@ -69,6 +72,9 @@
 #include "ConcreteEnemyCharacter/085MiyamotoUsagi.hpp"
 #include "ConcreteEnemyCharacter/086FootMechSplinter.hpp"
 #include "ConcreteEnemyCharacter/087Slashuur.hpp"
+#include "ConcreteEnemyCharacter/088Shredder.hpp"
+#include "ConcreteEnemyCharacter/089FeudalJapanShredder.hpp"
+#include "ConcreteEnemyCharacter/090UltimateShredder.hpp"
 #include "ConcreteEnemyCharacter/091Drako.hpp"
 #include "ConcreteEnemyCharacter/096Splinter.hpp"
 #include "ConcreteEnemyCharacter/098Fugitoid.hpp"
@@ -76,10 +82,6 @@
 #include "Game/Component/GameData/GameData.hpp"
 #include "Game/Component/GameMain/GameProperty.hpp"
 #include "Game/Component/GameMain/GameEvent.hpp"
-
-#ifdef _DEBUG
-#include "Game/System/Misc/DebugShape.hpp"
-#endif /* _DEBUG */
 
 
 static void PostCreateEvent(CEnemyCharacter* pEnemyChr)
@@ -173,6 +175,7 @@ static CEnemyCharacter* CreateEnemyCharacter(ENEMYID::VALUE id)
     case ENEMYID::ID_NINJA_RATS_B:                  return new C071NinjaRatsB;
     case ENEMYID::ID_NINJA_RATS_C:                  return new C072NinjaRatsC;
     case ENEMYID::ID_NINJA_RATS_D:                  return new C073NinjaRatsD;
+    case ENEMYID::ID_TRAXIMUS:                      return new C074Traximus;
     case ENEMYID::ID_LEATHER_HEAD:                  return new C075Leatherhead;
     case ENEMYID::ID_ELITE_FOOT_A:                  return new C076EliteFootA;
     case ENEMYID::ID_ELITE_FOOT_DUMMY_A:            return new C076EliteFootDummyA;
@@ -182,6 +185,7 @@ static CEnemyCharacter* CreateEnemyCharacter(ENEMYID::VALUE id)
     case ENEMYID::ID_ELITE_FOOT_DUMMY_C:            return new C078EliteFootDummyC;
     case ENEMYID::ID_ELITE_FOOT_D:                  return new C079EliteFootD;
     case ENEMYID::ID_ELITE_FOOT_DUMMY_D:            return new C079EliteFootDummyD;
+    case ENEMYID::ID_ULTIMATE_NINJA:                return new C080UltimateNinja;
     case ENEMYID::ID_SPASMOSAUR:                    return new C081Spasmosaur;
     case ENEMYID::ID_HUN_A:                         return new C082Hun;
     case ENEMYID::ID_HUN_B:                         return new C083Hun;
@@ -189,6 +193,9 @@ static CEnemyCharacter* CreateEnemyCharacter(ENEMYID::VALUE id)
     case ENEMYID::ID_MIYAMOTO_USAGI:                return new C085MiyamotoUsagi;
     case ENEMYID::ID_FOOT_MECH_SPLINTER:            return new C086FootMechSplinter;
     case ENEMYID::ID_SLASSHUR:                      return new C087Slashuur;
+    case ENEMYID::ID_SHREDDER:                      return new C088Shredder;
+    case ENEMYID::ID_FEUDAL_JAPAN_SHREDDER:         return new C089FeudalJapanShredder;
+    case ENEMYID::ID_ULTIMATE_SHREDDER:             return new C090UltimateShredder;
     case ENEMYID::ID_DORAKO:                        return new C091Drako;
     case ENEMYID::ID_SPLINTER:                      return new C096Splinter;
     case ENEMYID::ID_FUGITOID:                      return new C098Fugitoid;
@@ -255,6 +262,7 @@ static EFFECTID::VALUE GetEnemyCharacterNeededEffect(ENEMYID::VALUE enemyId, int
     case ENEMYID::ID_NINJA_RATS_B:                  return C071NinjaRatsB::GetNeededEffect(no);
     case ENEMYID::ID_NINJA_RATS_C:                  return C072NinjaRatsC::GetNeededEffect(no);
     case ENEMYID::ID_NINJA_RATS_D:                  return C073NinjaRatsD::GetNeededEffect(no);
+    case ENEMYID::ID_TRAXIMUS:                      return C074Traximus::GetNeededEffect(no);
     case ENEMYID::ID_LEATHER_HEAD:                  return C075Leatherhead::GetNeededEffect(no);
     case ENEMYID::ID_ELITE_FOOT_A:                  return C076EliteFootA::GetNeededEffect(no);
     case ENEMYID::ID_ELITE_FOOT_DUMMY_A:            return C076EliteFootDummyA::GetNeededEffect(no);
@@ -264,6 +272,7 @@ static EFFECTID::VALUE GetEnemyCharacterNeededEffect(ENEMYID::VALUE enemyId, int
     case ENEMYID::ID_ELITE_FOOT_DUMMY_C:            return C078EliteFootDummyC::GetNeededEffect(no);
     case ENEMYID::ID_ELITE_FOOT_D:                  return C079EliteFootD::GetNeededEffect(no);
     case ENEMYID::ID_ELITE_FOOT_DUMMY_D:            return C079EliteFootDummyD::GetNeededEffect(no);
+    case ENEMYID::ID_ULTIMATE_NINJA:                return C080UltimateNinja::GetNeededEffect(no);
     case ENEMYID::ID_SPASMOSAUR:                    return C081Spasmosaur::GetNeededEffect(no);
     case ENEMYID::ID_HUN_A:                         return C082Hun::GetNeededEffect(no);
     case ENEMYID::ID_HUN_B:                         return C083Hun::GetNeededEffect(no);
@@ -271,6 +280,9 @@ static EFFECTID::VALUE GetEnemyCharacterNeededEffect(ENEMYID::VALUE enemyId, int
     case ENEMYID::ID_MIYAMOTO_USAGI:                return C085MiyamotoUsagi::GetNeededEffect(no);
     case ENEMYID::ID_FOOT_MECH_SPLINTER:            return C086FootMechSplinter::GetNeededEffect(no);
     case ENEMYID::ID_SLASSHUR:                      return C087Slashuur::GetNeededEffect(no);
+    case ENEMYID::ID_SHREDDER:                      return C088Shredder::GetNeededEffect(no);
+    case ENEMYID::ID_FEUDAL_JAPAN_SHREDDER:         return C089FeudalJapanShredder::GetNeededEffect(no);
+    case ENEMYID::ID_ULTIMATE_SHREDDER:             return C090UltimateShredder::GetNeededEffect(no);
     case ENEMYID::ID_DORAKO:                        return C091Drako::GetNeededEffect(no);
     case ENEMYID::ID_SPLINTER:                      return C096Splinter::GetNeededEffect(no);
     case ENEMYID::ID_FUGITOID:                      return C098Fugitoid::GetNeededEffect(no);
@@ -285,13 +297,18 @@ static STAGEID::VALUE GetEnemyCharacterStageId(ENEMYID::VALUE enemyId)
 {
     switch (enemyId)
     {
+    case ENEMYID::ID_TRAXIMUS:              return STAGEID::ID_NONE;
     case ENEMYID::ID_LEATHER_HEAD:          return STAGEID::ID_ST44NB;
+    case ENEMYID::ID_ULTIMATE_NINJA:        return STAGEID::ID_ST43N;
     case ENEMYID::ID_HUN_A:                 return STAGEID::ID_ST02NB;
     case ENEMYID::ID_HUN_B:                 return STAGEID::ID_ST56NB;
     case ENEMYID::ID_KARAI:                 return STAGEID::ID_ST57NB;
     case ENEMYID::ID_MIYAMOTO_USAGI:        return STAGEID::ID_ST60X_D09;
     case ENEMYID::ID_FOOT_MECH_SPLINTER:    return STAGEID::ID_ST47OB;
     case ENEMYID::ID_SLASSHUR:              return STAGEID::ID_ST50NB;
+    case ENEMYID::ID_SHREDDER:              return STAGEID::ID_NONE;
+    case ENEMYID::ID_FEUDAL_JAPAN_SHREDDER: return STAGEID::ID_NONE;
+    case ENEMYID::ID_ULTIMATE_SHREDDER:     return STAGEID::ID_ST58OB1;
     case ENEMYID::ID_DORAKO:                return STAGEID::ID_ST60X_D10;
     case ENEMYID::ID_SPLINTER:              return STAGEID::ID_ST60X_D07;
     default: break;

@@ -1,6 +1,5 @@
 #include "GaugeStatus.hpp"
 #include "GaugeManager.hpp"
-#include "GaugeAnim.hpp"
 
 #include "Game/Component/GameData/GameData.hpp"
 #include "Game/Component/GameMain/GamePlayer.hpp"
@@ -735,7 +734,7 @@ void CGaugeStatus_Container::ZakoGaugeDisp(int32 nZakoNo, float fX, float fY)
         pZakoInfo->m_eState = ZAKOINFO::STATE_IDLE;
     };
 
-    float fAnimDuration = GAUGE_ANIM_DURATION_FRAMES(4);
+    float fAnimDuration = ANIM_DURATION_FRAMES(4);
     float fAnimStep = (float(pZakoInfo->m_uAnimCnt) / fAnimDuration);
     float hpMove = float(pZakoInfo->m_nHpMove);
 

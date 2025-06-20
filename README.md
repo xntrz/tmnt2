@@ -10,12 +10,6 @@ Reverse engineering PC version of Teenage Mutant Ninja Turtles 2: Battle Nexus
 </p>
 
 &nbsp;
-> # Current project status:
-✔️ Basic gameplay\
-✔️ Sound\
-🔨 Enemies & Bosses (71/76)
-
-&nbsp;
 > # Building & Run
 Currently building available only via premake5 & visual studio.\
 This is simplified instruction, more detailed process you can see [here](https://github.com/xntrz/tmnt2/issues/1#issuecomment-2637289859).

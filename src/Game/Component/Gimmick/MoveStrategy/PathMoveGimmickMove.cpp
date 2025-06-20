@@ -15,21 +15,9 @@ CPathMoveGimmickMove::CPathMoveGimmickMove(void)
 };
 
 
-CPathMoveGimmickMove::~CPathMoveGimmickMove(void)
+/*virtual*/ CPathMoveGimmickMove::RESULT CPathMoveGimmickMove::OnMove(float dt) /*override*/
 {
-    ;
-};
-
-
-CPathMoveGimmickMove::RESULT CPathMoveGimmickMove::OnMove(float dt)
-{
-    ASSERT(m_pszPathName);
-    
-    int32 PathId = CCameraDataManager::GetPathIDFromName(m_pszPathName);
-    ASSERT(PathId >= 0);
-
-    ASSERT((m_fPathT >= 0.0f) && (m_fPathT <= 1.0f));
-    CCameraDataManager::GetSplinePos(&m_vPosition, PathId, m_fPathT);
+    GetSplinePos(&m_vPosition, m_fPathT);
 
     UpdatePathTime(dt);
     UpdateRotation(dt);
@@ -38,13 +26,13 @@ CPathMoveGimmickMove::RESULT CPathMoveGimmickMove::OnMove(float dt)
 };
 
 
-void CPathMoveGimmickMove::SetPathTimeRate(float fTimeRate)
+/*virtual*/ void CPathMoveGimmickMove::SetPathTimeRate(float fTimeRate) /*override*/
 {
     m_fPathTimeRate = fTimeRate;
 };
 
 
-void CPathMoveGimmickMove::UpdatePathTime(float dt)
+/*virtual*/ void CPathMoveGimmickMove::UpdatePathTime(float dt) /*override*/
 {
     m_fPathT += (m_fPathTimeRate * dt);
     if (m_fPathT > 1.0f)
@@ -52,27 +40,22 @@ void CPathMoveGimmickMove::UpdatePathTime(float dt)
 };
 
 
-void CPathMoveGimmickMove::UpdateRotation(float dt)
+/*virtual*/ void CPathMoveGimmickMove::UpdateRotation(float dt) /*override*/
 {
     if ((m_fPathT > 0.0f) && (m_fPathT < 1.0f))
     {
-        ASSERT(m_pszPathName);
-
-        int32 PathId = CCameraDataManager::GetPathIDFromName(m_pszPathName);
-        ASSERT(PathId >= 0);
-
-        ASSERT((m_fPathT >= 0.0f) && (m_fPathT <= 1.0f));
         RwV3d vNextPosition = Math::VECTOR3_ZERO;
-        CCameraDataManager::GetSplinePos(&vNextPosition, PathId, m_fPathT);
+        GetSplinePos(&vNextPosition, m_fPathT);
 
         RwV3d vVelocity = Math::VECTOR3_ZERO;
         Math::Vec3_Sub(&vVelocity, &vNextPosition, &m_vPosition);
         vVelocity.y = 0.0f;
+
         Math::Vec3_Normalize(&vVelocity, &vVelocity);
         
-        if (!Math::FEqual(vVelocity.x, 0.0f) ||
-            !Math::FEqual(vVelocity.y, 0.0f) ||
-            !Math::FEqual(vVelocity.z, 0.0f))
+        if ((vVelocity.x != 0.0f) ||
+            (vVelocity.y != 0.0f) ||
+            (vVelocity.z != 0.0f))
         {
             if (vVelocity.x <= 0.0f)
                 m_vRotation.y = -Math::ACos(vVelocity.z);
@@ -88,42 +71,46 @@ void CPathMoveGimmickMove::InitPath(const char* pszPathName, float fPathT)
     ASSERT(pszPathName);
     m_pszPathName = pszPathName;
 
-    int32 PathId = CCameraDataManager::GetPathIDFromName(m_pszPathName);
-    ASSERT(PathId >= 0);
-
-    ASSERT((fPathT >= 0.0f) && (fPathT <= 1.0f));
-    CCameraDataManager::GetSplinePos(&m_vPosition, PathId, fPathT);
+    GetSplinePos(&m_vPosition, fPathT);
 };
 
 
 float CPathMoveGimmickMove::GetPathLength(const char* pszPathName)
 {
-    float fResult = 0.0f;
-
     ASSERT(pszPathName);
 
-    int32 PathId = CCameraDataManager::GetPathIDFromName(pszPathName);
-    ASSERT(PathId >= 0);
-
-    RwV3d vPosPost = Math::VECTOR3_ZERO;
-    CCameraDataManager::GetSplinePos(&vPosPost, PathId, 0.0f);
+    int32 iPathID = CCameraDataManager::GetPathIDFromName(pszPathName);
+    ASSERT(iPathID >= 0);
 
     SetPathLength(0.0f);
 
     const float fStep = (1.0f / 100000.0f);
+
     float fPathT = 0.0f;
-    
-    while (fPathT <= 1.0f)
+    float fResult = 0.0f;
+
+    RwV3d vPosPost = Math::VECTOR3_ZERO;
+    GetSplinePos(&vPosPost, iPathID, 0.0f);
+
+    while (fPathT < 1.0f)
     {
         RwV3d vPosPre = vPosPost;
-        CCameraDataManager::GetSplinePos(&vPosPost, PathId, fPathT);
+        GetSplinePos(&vPosPost, iPathID, fPathT);
 
         RwV3d vPosDlt = Math::VECTOR3_ZERO;
         Math::Vec3_Sub(&vPosDlt, &vPosPost, &vPosPre);
         
         fResult += Math::Vec3_Length(&vPosDlt);
-        fPathT += fStep;
+        fPathT  += fStep;
     };
+
+    RwV3d vPosPre = vPosPost;
+    GetSplinePos(&vPosPost, iPathID, 1.0f);
+
+    RwV3d vPosDlt = Math::VECTOR3_ZERO;
+    Math::Vec3_Sub(&vPosDlt, &vPosPost, &vPosPre);
+
+    fResult += Math::Vec3_Length(&vPosDlt);
 
     return fResult;
 };
@@ -133,24 +120,24 @@ float CPathMoveGimmickMove::GetPathTByMeterPerSecond(float fMps)
 {
     ASSERT(m_pszPathName);
 
-    int32 PathId = CCameraDataManager::GetPathIDFromName(m_pszPathName);
-    ASSERT(PathId >= 0);
-
+    int32 iPathID = CCameraDataManager::GetPathIDFromName(m_pszPathName);
+    ASSERT(iPathID >= 0);
+    
     float fDistance = fMps * CGameProperty::GetElapsedTime();
     float fDelta = 0.0f;
 
-    float fDeltaPath = CGameProperty::GetElapsedTime() * (fMps / m_fPathLength) * 0.04f;
+	float fDeltaPath = std::fabs((fDistance * 0.04f) / m_fPathLength);
     float fPathT = m_fPathT;
 
     RwV3d vPosPost = Math::VECTOR3_ZERO;
-    CCameraDataManager::GetSplinePos(&vPosPost, PathId, fPathT);
+    CCameraDataManager::GetSplinePos(&vPosPost, iPathID, fPathT);
 
     if (fDistance <= 0.0f)
     {
         while (true)
         {
             RwV3d vPosPre = vPosPost;
-            CCameraDataManager::GetSplinePos(&vPosPost, PathId, fPathT);
+            CCameraDataManager::GetSplinePos(&vPosPost, iPathID, fPathT);
 
             RwV3d vPosDlt = Math::VECTOR3_ZERO;
             Math::Vec3_Sub(&vPosDlt, &vPosPost, &vPosPre);
@@ -170,7 +157,7 @@ float CPathMoveGimmickMove::GetPathTByMeterPerSecond(float fMps)
         while (true)
         {
             RwV3d vPosPre = vPosPost;
-            CCameraDataManager::GetSplinePos(&vPosPost, PathId, fPathT);
+            CCameraDataManager::GetSplinePos(&vPosPost, iPathID, fPathT);
 
             RwV3d vPosDlt = Math::VECTOR3_ZERO;
             Math::Vec3_Sub(&vPosDlt, &vPosPost, &vPosPre);
@@ -194,8 +181,8 @@ float CPathMoveGimmickMove::GetNearestPathT(RwV3d* pvPosition)
 {
     ASSERT(m_pszPathName);
     
-    int32 PathId = CCameraDataManager::GetPathIDFromName(m_pszPathName);
-    ASSERT(PathId >= 0);
+    int32 iPathID = CCameraDataManager::GetPathIDFromName(m_pszPathName);
+    ASSERT(iPathID >= 0);
 
     float fPrePathT = TYPEDEF::FLOAT_MAX;
 	float fPathT = m_fPathT;
@@ -207,7 +194,7 @@ float CPathMoveGimmickMove::GetNearestPathT(RwV3d* pvPosition)
             break;
 
         fPrePathT = fPathT;
-        fPathT = CCameraDataManager::FindNearestPosValueLight(pvPosition, PathId, fPathT);
+        fPathT = CCameraDataManager::FindNearestPosValueLight(pvPosition, iPathID, fPathT);
 
         if (fPathT >= 1.0f)
             return 1.0f;
@@ -221,18 +208,19 @@ float CPathMoveGimmickMove::GetNearestPathT(RwV3d* pvPosition)
 
 
 bool
-CPathMoveGimmickMove::IsAccelerationToAimPathT(
-    float fAimPathT,
-    float fAimPathTimerate,
-    float fAimPathTimerateIntervalStep,
-    float fAimPathTimerateInterval
-)
+CPathMoveGimmickMove::IsAccelerationToAimPathT(float fAimPathT,
+                                               float fAimPathTimerate,
+                                               float fAimPathTimerateIntervalStep,
+                                               float fAimPathTimerateInterval)
 {
     fAimPathTimerateIntervalStep = std::fabs(fAimPathTimerateIntervalStep);
     
     float fDir = (fAimPathTimerate < m_fPathTimeRate ? -1.0f : 1.0f);
     float fDlt = std::fabs(m_fPathTimeRate - fAimPathTimerate);
-    int32 nDiv = int32(fDlt / fAimPathTimerateIntervalStep);
+
+    int32 nDiv = static_cast<int32>(fDlt / fAimPathTimerateIntervalStep);
+    ASSERT(nDiv < 300);
+
     if (nDiv >= 300)
         nDiv = 300;
     
@@ -246,4 +234,58 @@ CPathMoveGimmickMove::IsAccelerationToAimPathT(
     };
 
     return (fPathT > fAimPathT);
+};
+
+
+void CPathMoveGimmickMove::GetSplinePos(RwV3d* pvPos, float fPathT) const
+{
+    GetSplinePos(pvPos, m_pszPathName, fPathT);
+};
+
+
+void CPathMoveGimmickMove::GetSplinePos(RwV3d* pvPos, const char* pszPathName, float fPathT) const
+{    
+    ASSERT(pszPathName != nullptr);
+
+    GetSplinePos(pvPos, CCameraDataManager::GetPathIDFromName(pszPathName), fPathT);
+};
+
+
+void CPathMoveGimmickMove::GetSplinePos(RwV3d* pvPos, int32 iPathID, float fPathT) const
+{
+    ASSERT(iPathID != -1);
+    ASSERT(fPathT >= 0.0f);
+    ASSERT(fPathT <= 1.0f);
+
+    CCameraDataManager::GetSplinePos(pvPos, iPathID, fPathT);
+};
+
+
+void CPathMoveGimmickMove::SetPathLength(float fPathLen)
+{
+    m_fPathLength = fPathLen;
+};
+
+
+void CPathMoveGimmickMove::SetRotation(const RwV3d* pvRot)
+{
+    m_vRotation = *pvRot;
+};
+
+
+void CPathMoveGimmickMove::GetRotation(RwV3d* pvRot) const
+{
+    *pvRot = m_vRotation;
+};
+
+
+bool CPathMoveGimmickMove::IsPathEnd(void) const
+{
+    return (m_fPathT >= 1.0f);
+};
+
+
+float CPathMoveGimmickMove::GetPathT(void) const
+{
+    return m_fPathT;
 };
