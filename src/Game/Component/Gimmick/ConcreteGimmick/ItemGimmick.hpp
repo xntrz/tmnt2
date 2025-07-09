@@ -24,8 +24,6 @@ public:
     virtual void GetPosition(RwV3d* pvPosition) const override;
     virtual void PostMove(void) override;
     virtual void OnReceiveEvent(const char* pszSender, GIMMICKTYPES::EVENTTYPE eventtype) override;
-
-protected:
     void init(void* pParam);
     void setVertex(float fRadius, const RwRGBA& rColor);
     void getItem(int32 nPlayerNo);
@@ -35,16 +33,16 @@ protected:
     bool isTimelimitEnable(void) const;
 
 protected:
-    int32 m_nItemID;
-    RwV3d m_vPosition;
-    RwV3d m_vVelocity;
-    RwIm3DVertex m_aVertex[4];
-    RwTexture* m_pTexture;
+    int32           m_nItemID;
+    RwV3d           m_vPosition;
+    RwV3d           m_vVelocity;
+    RwIm3DVertex    m_aVertex[4];
+    RwTexture*      m_pTexture;
     CModuleManager* m_pModuleManager;
-    float m_fTimer;
-    float m_fRadian;
-    float m_fOffsetY;
-    float m_fDeathHeight;
-    STATE m_state;
-    uint32 m_hAppearEffect;
+    float           m_fTimer;
+    float           m_fRadian;
+    float           m_fOffsetY;
+    float           m_fDeathHeight;
+    STATE           m_state;
+    uint32          m_hAppearEffect;
 };

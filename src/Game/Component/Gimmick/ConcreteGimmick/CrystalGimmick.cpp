@@ -35,7 +35,7 @@ CCrystalGimmick::CCrystalEffect::~CCrystalEffect(void)
 };
 
 
-void CCrystalGimmick::CCrystalEffect::Start(EFFECTID::VALUE id, const RwV3d* pvPos)
+void CCrystalGimmick::CCrystalEffect::Start(EFFECTID::VALUE id, const RwV3d* pvPos, float fScale)
 {
     m_fTimer = 0.0f;
     m_fTargetTime = 1.5f;
@@ -43,10 +43,8 @@ void CCrystalGimmick::CCrystalEffect::Start(EFFECTID::VALUE id, const RwV3d* pvP
     End();
     
     m_hEffect = CEffectManager::Play(id, pvPos);
-    ASSERT(m_hEffect);
-
     if (m_hEffect)
-        CEffectManager::SetScale(m_hEffect, 1.6f);
+        CEffectManager::SetScale(m_hEffect, fScale);
 };
 
 
@@ -76,6 +74,11 @@ void CCrystalGimmick::CCrystalEffect::Run(void)
         m_fTargetTime = 0.0f;
     };
 };
+
+
+//
+// *********************************************************************************
+//
 
 
 CCrystalGimmick::CCrystalGimmick(const char* pszName, void* pParam)
@@ -116,7 +119,7 @@ CCrystalGimmick::CCrystalGimmick(const char* pszName, void* pParam)
     //
     //  init movement
     //
-    RwV3d vRotatePerSec = { 0.0f, Math::PI, 0.0 };
+    RwV3d vRotatePerSec = { 0.0f, MATH_PI, 0.0 };
 
     if ((Math::Rand() % 10) <= 4)
         Math::Vec3_Negate(&vRotatePerSec, &vRotatePerSec);
@@ -209,7 +212,7 @@ void CCrystalGimmick::OnCatchAttack(CHitAttackData* pAttack)
     RwV3d vEffectPos = Math::VECTOR3_ZERO;
     m_pCryMove->GetPosition(&vEffectPos);
 
-    m_effectObj.Start(EFFECTID::ID_SHRD_ELEC, &vEffectPos);
+    m_effectObj.Start(EFFECTID::ID_SHRD_ELEC, &vEffectPos, 1.6f);
 };
 
 
@@ -219,7 +222,7 @@ void CCrystalGimmick::crystalCtrl(void)
     {
     case STATE_NORMAL:
         {
-            if (m_nLife > 0)
+            if (m_nLife >= 0)
             {
                 setHitAttack();
             }
@@ -230,7 +233,7 @@ void CCrystalGimmick::crystalCtrl(void)
                 RwV3d vEffectPos = Math::VECTOR3_ZERO;
                 m_pCryMove->GetPosition(&vEffectPos);
 
-                m_effectObj.Start(EFFECTID::ID_SHRD_ELEC, &vEffectPos);
+                m_effectObj.Start(EFFECTID::ID_SHRD_ELEC, &vEffectPos, 1.6f);
                 m_state = STATE_DESTROYED;
             };
         }
@@ -246,7 +249,7 @@ void CCrystalGimmick::crystalCtrl(void)
                 RwV3d vEffectPos = Math::VECTOR3_ZERO;
                 m_pCryMove->GetPosition(&vEffectPos);
 
-                m_effectObj.Start(EFFECTID::ID_EXPL_B1, &vEffectPos);
+                m_effectObj.Start(EFFECTID::ID_EXPL_B1, &vEffectPos, 1.5f);
                 m_state = STATE_END;
             };
         }
@@ -274,35 +277,33 @@ void CCrystalGimmick::setHitAttack(void)
     RwFrame* pFrame = RpClumpGetFrameMacro(pClump);
     RwMatrix* pMatrix = RwFrameGetMatrixMacro(pFrame);
 
-    RwSphere HitSphere = { { 0.0f, 0.0f, 0.0f }, 1.0f };
-    RwV3dTransformPoint(&HitSphere.center, &HitSphere.center, pMatrix);
+    RwSphere hitSphere = { Math::VECTOR3_ZERO, 1.0f };
+    RwV3dTransformPoint(&hitSphere.center, &hitSphere.center, pMatrix);
 
-    CHitCatchData CatchData;
-    CatchData.Cleanup();
-    CatchData.SetObject(GetHandle());
-    CatchData.SetObjectType(GetType());
-    CatchData.SetShape(CHitCatchData::SHAPE_SPHERE);
-    CatchData.SetSphere(&HitSphere);
+    CHitCatchData hitCatch;
+    hitCatch.Cleanup();
+    hitCatch.SetObject(GetHandle());
+    hitCatch.SetObjectType(GetType());
+    hitCatch.SetShape(CHitCatchData::SHAPE_SPHERE);
+    hitCatch.SetSphere(&hitSphere);
 
-    CHitAttackManager::RegistCatch(&CatchData);
+    CHitAttackManager::RegistCatch(&hitCatch);
 };
 
 
 bool CCrystalGimmick::isValidAttack(CHitAttackData* pAttack)
 {
-    CGameObject* pGameObj = CGameObjectManager::GetObject(pAttack->GetObjectHandle());
-    ASSERT(pGameObj);
-
-    switch (pGameObj->GetType())
+    CGameObject* pAttacker = pAttack->GetObject();
+    switch (pAttacker->GetType())
     {
     case GAMEOBJECTTYPE::CHARACTER:
         {
-            CCharacter* pChara = static_cast<CCharacter*>(pGameObj);
+            CCharacter* pChara = static_cast<CCharacter*>(pAttacker);
 
             bool bIsPlayer  = (pChara->GetCharacterType() == CCharacter::TYPE_PLAYER);
             bool bIsBarrier = (std::strcmp(pAttack->GetMotion(), CBarrierModule::BARRIER_MOTIONNAME) == 0);
-            bool bIsDon     = (std::strcmp(pGameObj->GetName(), "donatello") == 0);
-            bool bIsSpl     = (std::strcmp(pGameObj->GetName(), "splinter") == 0);
+            bool bIsDon     = (std::strcmp(pAttacker->GetName(), "donatello") == 0);
+            bool bIsSpl     = (std::strcmp(pAttacker->GetName(), "splinter") == 0);
 
             if (bIsPlayer && bIsBarrier && (bIsDon || bIsSpl))
                 return true;
@@ -311,11 +312,14 @@ bool CCrystalGimmick::isValidAttack(CHitAttackData* pAttack)
 
     case GAMEOBJECTTYPE::EFFECT:
         {
-            CMagic* pMagic = static_cast<CMagic*>(pGameObj);
+            CMagic* pMagic = static_cast<CMagic*>(pAttacker);
 
             if (pMagic->GetID() == MAGICID::ID_DON_LASER_BEAM)
                 return true;
         }
+        break;
+
+    default:
         break;
     };
 

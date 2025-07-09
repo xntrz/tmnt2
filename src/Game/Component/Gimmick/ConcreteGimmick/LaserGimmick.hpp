@@ -7,19 +7,27 @@
 class CLaserGimmickModel : public CGimmickModel
 {
 public:
+    enum TYPE
+    {
+        TYPE_RED = 0,
+        TYPE_PINK,
+        TYPE_TRANSPARENT,
+    };
+
+public:
     CLaserGimmickModel(void);
     virtual ~CLaserGimmickModel(void);
     virtual void Draw(void) const override;
     void SetLaserForm(const RwV3d* pvPos, const RwV3d* pvDir, float fNorm);
     void SetDraw(bool bEnable);
-    void SetType(int32 type);
+    void SetType(TYPE type);
     
 protected:
     RwV3d m_vPosition;
     RwV3d m_vDirection;
     float m_fNorm;
-    int32 m_type;
-    bool m_bDraw;
+    TYPE  m_type;
+    bool  m_bDraw;
 };
 
 
@@ -34,11 +42,11 @@ public:
     void SetLasertForm(const RwV3d* pvPos, const RwV3d* pvDir);
     
 protected:
-    RwV3d m_vPosition;
-    RwV3d m_vDirection;
-    float m_fNorm;
-    bool m_bSwitch;
-    CLaserGimmickModel m_model;
-    RwLine m_line;
-    int32 m_type;
+    RwV3d               m_vPosition;
+    RwV3d               m_vDirection;
+    float               m_fNorm;
+    bool                m_bSwitch;
+    CLaserGimmickModel  m_model;
+    RwLine              m_line;
+    int32               m_type;
 };

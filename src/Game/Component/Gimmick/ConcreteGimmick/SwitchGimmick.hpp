@@ -12,7 +12,7 @@ protected:
         SWITCHTYPE_SLOTMACHINE_LEVER = 0,
         SWITCHTYPE_TOGGLE,
         SWITCHTYPE_ONCE,
-        SWITCHTYPE_UNK, // TODO unknown SwitchGimmick type
+        SWITCHTYPE_BUTTON,
 
         SWITCHTYPENUM,
     };
@@ -31,15 +31,13 @@ public:
     virtual void PostMove(void) override;
     virtual void OnReceiveEvent(const char* pszSender, GIMMICKTYPES::EVENTTYPE eventtype) override;
     virtual void OnCatchAttack(CHitAttackData* pAttack) override;
-
-protected:
     void onSwitchChange(void);
 
 protected:
-    char m_szTargetGimmickName[GAMEOBJECTTYPES::NAME_MAX];
-    SWITCHTYPE m_switchtype;
-    SWITCHSTATE m_switchstate;
+    char                m_szTargetGimmickName[GAMEOBJECTTYPES::NAME_MAX];
+    SWITCHTYPE          m_switchtype;
+    SWITCHSTATE         m_switchstate;
     CNormalGimmickModel m_model;
-    float m_fTimer;
-    bool m_bEnable;
+    float               m_fTimer;
+    bool                m_bEnable;
 };

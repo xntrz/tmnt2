@@ -100,9 +100,9 @@ void CLoadingDisplay::Move(void)
 
     if (m_state == STATE_DISPLAY)
     {
-        m_fPhase += (CScreen::TimerStride() * Math::PI);
-        if (m_fPhase >= Math::PI2)
-            m_fPhase -= Math::PI2;
+        m_fPhase += (CScreen::TimerStride() * MATH_PI);
+        if (m_fPhase >= MATH_PI2)
+            m_fPhase -= MATH_PI2;
     };
 };
 
@@ -117,11 +117,11 @@ void CLoadingDisplay::Draw(void) const
     
     wszBuffer[0] = UTEXT('\0');
 
-    if (m_fPhase >= (Math::PI * 1.5f))
+    if (m_fPhase >= (MATH_PI * 1.5f))
         pwszPhase = UTEXT("...");
-    else if (m_fPhase >= Math::PI)
+    else if (m_fPhase >= MATH_PI)
         pwszPhase = UTEXT("..");
-    else if (m_fPhase >= (Math::PI * 0.5f))
+    else if (m_fPhase >= (MATH_PI * 0.5f))
         pwszPhase = UTEXT(".");
     else
         pwszPhase = UTEXT("");

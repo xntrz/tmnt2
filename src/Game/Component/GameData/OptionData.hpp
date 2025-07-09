@@ -18,7 +18,7 @@ public:
         CGamepadOptionData::RAWDATA  m_aGamepad[6];
 #ifdef TARGET_PC
         CKeyboardOptionData::RAWDATA m_keyboard;
-#endif
+#endif /* TARGET_PC */
     };
 
     static_assert(std::is_pod<RAWDATA>::value, "option RAWDATA should be POD type");

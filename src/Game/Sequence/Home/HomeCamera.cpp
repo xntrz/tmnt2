@@ -17,7 +17,7 @@
     { 2.0f, 22.0f   },
     { 0.5f, 0.5f    },
     { 0.5f, 0.5f    },
-    { 1.0f, Math::PI},
+    { 1.0f, MATH_PI},
 };
 
 
@@ -411,7 +411,7 @@ void CHomeCamera::GetCameraPosInfo(RwV3d* pvPos, HOMETYPES::CAMERAKIND camerakin
 
 float CHomeCamera::GetRadian(int32 doorkind) const
 {
-    return (float(doorkind) * Math::PI2) / 4.0f;
+    return (float(doorkind) * MATH_PI2) / 4.0f;
 };
 
 

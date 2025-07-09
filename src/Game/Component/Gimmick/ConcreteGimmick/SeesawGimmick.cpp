@@ -92,8 +92,6 @@ CSeesawGimmick::CSeesawGimmick(const char* pszName, void* pParam)
         RpClump* pClump = m_model.GetCollisionModelClump();
 
         m_hAtari = CMapCollisionModel::RegistCollisionModel(pClump, GetName(), MAPTYPES::GIMMICKTYPE_SEESAW);
-        ASSERT(m_hAtari);
-
         if (m_hAtari)
             CMapCollisionModel::SetBoundingSphereRadius(m_hAtari, 6.0f);
     };

@@ -19,27 +19,32 @@
 
 CConsoleGimmick::CConsoleGimmick(const char* pszName, void* pParam)
 : CGimmick(pszName, pParam)
+, m_model()
 , m_hAtari(0)
 , m_bFlashFlag(false)
 , m_state(STATE_WAIT)
 , m_fTimer(0.0f)
 , m_vPosition(Math::VECTOR3_ZERO)
 , m_vDirection(Math::VECTOR3_ZERO)
+, m_szTargetGimmickName()
 , m_nHitNum(0)
 , m_fInvinT(0.0f)
 {
     m_szTargetGimmickName[0] = '\0';
 
-    ASSERT(pParam);
-    
-    GIMMICKPARAM::GIMMICK_TERMS* pInitParam = (GIMMICKPARAM::GIMMICK_TERMS*)pParam;
+    GIMMICKPARAM::GIMMICK_TERMS* pInitParam = static_cast<GIMMICKPARAM::GIMMICK_TERMS*>(pParam);
+    ASSERT(pInitParam);
 
+    //
+    //  Init model
+    //
     CModel* pModelOn = CModelManager::CreateModel("console_on");
-    CModel* pModelOff = CModelManager::CreateModel("console_off");
-    CModel* pModelAtari = CModelManager::CreateModel("console_a");
-
     ASSERT(pModelOn);
+
+    CModel* pModelOff = CModelManager::CreateModel("console_off");
     ASSERT(pModelOff);
+
+    CModel* pModelAtari = CModelManager::CreateModel("console_a");
     ASSERT(pModelAtari);
 
     m_model.SetModel(CNormalGimmickModel::MODELTYPE_DRAW_NORMAL, pModelOn);
@@ -47,22 +52,29 @@ CConsoleGimmick::CConsoleGimmick(const char* pszName, void* pParam)
     m_model.SetModel(CNormalGimmickModel::MODELTYPE_ATARI_NORMAL, pModelAtari);
     
     m_vPosition = pInitParam->m_vPosition;
+    m_model.SetPosition(&m_vPosition);
+
     RwV3d vRotation = Math::VECTOR3_ZERO;
     vRotation.y = CGimmickUtils::QuaternionToRotationY(&pInitParam->m_quat);
-    
-    m_model.SetPosition(&m_vPosition);
     m_model.SetRotation(&vRotation);
+    
     m_model.UpdateFrame();
     SetModelStrategy(&m_model);
 
-    RwV3d vDirection = { 0.0f, 0.0f, -1.0f };
-
+    //
+    //  Init dir
+    //
     RwMatrix matrix;
     RwMatrixSetIdentityMacro(&matrix);
     Math::Matrix_RotateY(&matrix, vRotation.y);
-    RwV3dTransformPoint(&vDirection, &vDirection, &matrix);    
-    m_vDirection = vDirection;
 
+    RwV3d vDirection = { 0.0f, 0.0f, -1.0f };
+    RwV3dTransformPoint(&vDirection, &vDirection, &matrix);
+    m_vDirection = vDirection;    
+
+    //
+    //  Init other
+    //
     collisionCreate(COLLTYPE_ON);
     m_bFlashFlag = false;
     
@@ -89,84 +101,78 @@ void CConsoleGimmick::GetPosition(RwV3d* pvPosition) const
 
 void CConsoleGimmick::PostMove(void)
 {
+    m_fTimer += CGameProperty::GetElapsedTime();
+
     switch (m_state)
     {
     case STATE_WAIT:
         {
             if (m_fInvinT <= 0.0f)
             {
-                RwSphere sphere = { 0 };
-                sphere.center = m_vPosition;
-                sphere.center.y += 0.75f;
-                sphere.radius = 0.25f;
+                RwSphere hitSphere = { 0 };
+                hitSphere.center = m_vPosition;
+                hitSphere.center.y += 0.75f;
+                hitSphere.radius = 0.0005f;
 
-                CHitCatchData Catch;
-                Catch.SetObject(GetHandle());
-                Catch.SetObjectType(GetType());
-                Catch.SetShape(CHitCatchData::SHAPE_SPHERE);
-                Catch.SetSphere(&sphere);
+                CHitCatchData hitCatch;
+                hitCatch.SetObject(GetHandle());
+                hitCatch.SetObjectType(GetType());
+                hitCatch.SetShape(CHitCatchData::SHAPE_SPHERE);
+                hitCatch.SetSphere(&hitSphere);
 
-                CHitAttackManager::RegistCatch(&Catch);
+                CHitAttackManager::RegistCatch(&hitCatch);
             }
             else
             {
                 m_fInvinT -= CGameProperty::GetElapsedTime();
             };
 
-            m_fTimer += CGameProperty::GetElapsedTime();
-            if (m_fTimer >= 0.2f)
+            if (m_model.GetDrawType() || (m_fTimer <= 0.2f))
             {
-                if (m_bFlashFlag)
+                if ((m_model.GetDrawType() == CNormalGimmickModel::MODELTYPE_DRAW_BREAK) &&
+                    (m_fTimer > 0.6f))
                 {
-                    m_fTimer = 0.0f;
-                    m_bFlashFlag = false;
                     m_model.SetVisualNormal();
-                }
-                else
-                {
                     m_fTimer = 0.0f;
-                    m_bFlashFlag = true;
-                    m_model.SetVisualBreak();
                 };
+            }
+            else
+            {
+                m_model.SetVisualBreak();
+                m_fTimer = 0.0f;                
             };
         }
         break;
 
     case STATE_START_INPUT:
         {
-            m_fTimer += CGameProperty::GetElapsedTime();
-            if (m_fTimer >= 0.15f)
+            if (m_fTimer > 0.15f)
             {
                 CGameSound::PlayObjectSE(this, SDCODE_SE(4221));
                 m_state = STATE_INPUT;
-                m_fTimer = 0.0f;
             };
         }
         break;
 
     case STATE_INPUT:
         {
-            m_fTimer += CGameProperty::GetElapsedTime();
             if (m_fTimer > 1.0f)
             {
+                m_model.SetVisualNormal();
+
                 if (std::strcmp(m_szTargetGimmickName, ""))
                     CGimmickManager::PostEvent(m_szTargetGimmickName, GetName(), GIMMICKTYPES::EVENTTYPE_ACTIVATE);
 
                 CGameSound::PlayObjectSE(this, SDCODE_SE(4148));
                 m_state = STATE_UNLOCK;
-                m_fTimer = 0.0f;
             };
         }
         break;
 
     case STATE_UNLOCK:
-        {
-            ;
-        }
         break;
 
     default:
-        ASSERT(false);
         break;
     };
 };
@@ -184,32 +190,32 @@ void CConsoleGimmick::OnReceiveEvent(const char* pszSender, GIMMICKTYPES::EVENTT
 
 void CConsoleGimmick::OnCatchAttack(CHitAttackData* pAttack)
 {
-    ASSERT(pAttack);
-
     if (m_state != STATE_WAIT)
         return;
     
     CGameObject* pAttacker = pAttack->GetObject();
-    ASSERT(pAttacker);
+    if (!pAttack)
+        return;
 
     if (pAttacker->GetType() != GAMEOBJECTTYPE::CHARACTER)
         return;
 
-    CCharacter* pCharacter = (CCharacter*)pAttacker;
+    CCharacter* pCharacter = static_cast<CCharacter*>(pAttacker);
 
     switch (pAttack->GetShape())
     {
     case CHitAttackData::SHAPE_SPHERE:
         {
-            RwSphere sphere = *pAttack->GetSphere();
-            EFFECT_GENERIC::CallHitEffect(pAttack, &sphere.center);
+            RwSphere hitSphere = *pAttack->GetSphere();
+            EFFECT_GENERIC::CallHitEffect(pAttack, &hitSphere.center);
+
             CGameSound::PlayObjectSE(this, SDCODE_SE(4197));
 
             if (pCharacter->GetCharacterType() == CCharacter::TYPE_PLAYER)
             {
-                CPlayerCharacter* pPlayerCharacter = (CPlayerCharacter*)pCharacter;
+                CPlayerCharacter* pPlayerCharacter = static_cast<CPlayerCharacter*>(pCharacter);
                 if (pPlayerCharacter->GetID() == PLAYERID::ID_SPL)
-                    m_nHitNum = 10;
+                    m_nHitNum = 9;
             };
             
             if (++m_nHitNum >= 10)
@@ -228,15 +234,17 @@ void CConsoleGimmick::OnCatchAttack(CHitAttackData* pAttack)
 
 void CConsoleGimmick::GetDirection(RwV3d* pvDirection)
 {
-    ASSERT(pvDirection);
     *pvDirection = m_vDirection;
 };
 
 
 void CConsoleGimmick::consoleOn(void)
 {
+    m_model.SetVisualBreak();
+
     collisionDestroy();
     collisionCreate(COLLTYPE_OFF);
+
     m_fTimer = 0.0f;
     m_state = STATE_START_INPUT;
 };
@@ -244,18 +252,17 @@ void CConsoleGimmick::consoleOn(void)
 
 void CConsoleGimmick::collisionCreate(COLLTYPE colltype)
 {
-    ASSERT(!m_hAtari);
+    ASSERT(!m_hAtari);    
 
     RpClump* pClump = m_model.GetCollisionModelClump();
     ASSERT(pClump);
 
-    m_hAtari = CMapCollisionModel::RegistCollisionModel(
-        pClump,
-        GetName(),
-        colltype == COLLTYPE_ON ? MAPTYPES::GIMMICKTYPE_CONSOLE : MAPTYPES::GIMMICKTYPE_NORMAL
-    );
-    
+    MAPTYPES::GIMMICKTYPE gimmickType = (colltype == COLLTYPE_ON) ? MAPTYPES::GIMMICKTYPE_CONSOLE :
+                                                                    MAPTYPES::GIMMICKTYPE_NORMAL;
+
+    m_hAtari = CMapCollisionModel::RegistCollisionModel(pClump, GetName(), gimmickType);    
     ASSERT(m_hAtari);
+
     if (m_hAtari)
         CMapCollisionModel::SetBoundingSphereRadius(m_hAtari, 2.0f);
 };

@@ -421,14 +421,15 @@ namespace AIOT
         return 0.0f;
 
     PLAYERTYPES::STATUS eStatus = pPlayerCharacter->GetStatus();
-    if (eStatus >= PLAYERTYPES::STATUS_IDLE)
-    {
-        if (eStatus <= PLAYERTYPES::STATUS_WALK)
-            return 0.2f;
 
-        if (eStatus == PLAYERTYPES::STATUS_RUN)
-            return 1.0f;
-    };
+    if (eStatus == PLAYERTYPES::STATUS_IDLE)
+        return 0.2f;
+
+    if (eStatus == PLAYERTYPES::STATUS_WALK)
+        return 0.2f;
+
+    if (eStatus == PLAYERTYPES::STATUS_RUN)
+        return 1.0f;
 
     CAIUtils::PLAYER_STATE_FLAG stateFlag = CAIUtils::PLAYER_STATE_ATTACK
                                           | CAIUtils::PLAYER_STATE_AERIAL
@@ -438,10 +439,10 @@ namespace AIOT
 
     ASSERT(stateFlag == 0x7C, "update me");
 
-    if (!(CAIUtils::GetPlayerStateFlag(eStatus) & stateFlag))
-        return 1.0f;
+    if (CAIUtils::GetPlayerStateFlag(eStatus) & stateFlag)
+        return 0.8f;
 
-    return 0.8f;
+    return 1.0f;
 };
 
 
@@ -798,7 +799,8 @@ CSpecialityConsider::CSpecialityConsider(void)
     ENEMYTYPES::STATUS status = m_pEnemyChr->GetStatus();
 
     if ((status == ENEMYTYPES::STATUS_GETUP) ||
-        ((status > ENEMYTYPES::STATUS_CRASHWALL_TOUCHDOWN_BACK) && (status <= ENEMYTYPES::STATUS_DEATH)))
+        (status == ENEMYTYPES::STATUS_DINDLE) ||
+        (status == ENEMYTYPES::STATUS_STUN))
     {
         m_state |= STATE_FLAG_DOWN;
     };
@@ -1035,53 +1037,74 @@ CBaseGeneralEnemyAIModerator::UNDERACTION CBaseGeneralEnemyAIModerator::OnUnderM
     Math::Vec3_Scale(&vecAt, &vecAt, fCollRadius * 4.0f);
     Math::Vec3_Add(&vecAt, &vecAt, &vecChrPos);
 
-    CBaseGeneralEnemyChr::MOVABLETYPE movableType = static_cast<CBaseGeneralEnemyChr&>(EnemyCharacter()).GetMovableType(&vecPos);
-    if (movableType == CBaseGeneralEnemyChr::MOVABLETYPE_POSSIBLE)
+    CBaseGeneralEnemyChr::MOVABLETYPE movableTypePos = static_cast<CBaseGeneralEnemyChr&>(EnemyCharacter()).GetMovableType(&vecPos);
+    switch (movableTypePos)
     {
+    case CBaseGeneralEnemyChr::MOVABLETYPE_POSSIBLE:
         return UNDERACTIONS_CONTINUOUS;
-    }
-    else if (movableType == CBaseGeneralEnemyChr::MOVABLETYPE_IMPOSSIBLE)
-    {
-        movableType = static_cast<CBaseGeneralEnemyChr&>(EnemyCharacter()).GetMovableType(&vecAt);
-        if (movableType == CBaseGeneralEnemyChr::MOVABLETYPE_POSSIBLE)
-            return UNDERACTIONS_CONTINUOUS;
 
-        if (movableType == CBaseGeneralEnemyChr::MOVABLETYPE_IMPOSSIBLE)
+    case CBaseGeneralEnemyChr::MOVABLETYPE_IMPOSSIBLE:
         {
-            ThinkOrder().OrderMove().m_iMoveType = AIOT::Set(AIOT::MoveTurn, moveTarget);            
+            CBaseGeneralEnemyChr::MOVABLETYPE movableTypeAt = static_cast<CBaseGeneralEnemyChr&>(EnemyCharacter()).GetMovableType(&vecAt);
+            if (movableTypeAt == CBaseGeneralEnemyChr::MOVABLETYPE_POSSIBLE)
+                return UNDERACTIONS_CONTINUOUS;
+
+            if (movableTypeAt == CBaseGeneralEnemyChr::MOVABLETYPE_IMPOSSIBLE)
+            {
+                ThinkOrder().OrderMove().m_iMoveType = AIOT::Set(AIOT::MoveTurn, moveTarget);
+                return UNDERACTIONS_CONTINUOUS;
+            }
+            else
+            {
+                ThinkOrder().SetAnswer(CAIThinkOrder::RESULT_REFUSE);
+                if (m_bActionRun)
+                {
+                    float fPatrolRadius = EnemyCharacter().Feature().m_fPatrolRadius;
+                    EnemyCharacter().SetPatrolArea(&vecChrPos, fPatrolRadius);
+                };
+
+                return UNDERACTIONS_THINKOVER;
+            };
+        }
+        break;
+
+    case CBaseGeneralEnemyChr::MOVABLETYPE_JUMP:
+        {
+            ThinkOrder().OrderMove().m_iMoveType = AIOT::Set(AIOT::MoveJump, moveTarget);
             return UNDERACTIONS_CONTINUOUS;
         };
-    }
-    else if (movableType == CBaseGeneralEnemyChr::MOVABLETYPE_JUMP)
-    {
-        ThinkOrder().OrderMove().m_iMoveType = AIOT::Set(AIOT::MoveJump, moveTarget);
-        return UNDERACTIONS_CONTINUOUS;
+        break;
+
+    case CBaseGeneralEnemyChr::MOVABLETYPE_FALLDOWN:
+    case CBaseGeneralEnemyChr::MOVABLETYPE_HOLE:
+    case CBaseGeneralEnemyChr::MOVABLETYPE_BODILYCRUSH:
+        {
+            CBaseGeneralEnemyChr::MOVABLETYPE movableTypeAt = static_cast<CBaseGeneralEnemyChr&>(EnemyCharacter()).GetMovableType(&vecAt);
+            if (movableTypeAt == CBaseGeneralEnemyChr::MOVABLETYPE_POSSIBLE)
+            {
+                ThinkOrder().OrderMove().m_iMoveType = AIOT::Set(AIOT::MoveTurn, moveTarget);
+                return UNDERACTIONS_CONTINUOUS;
+            };
+
+            if (movableTypeAt == CBaseGeneralEnemyChr::MOVABLETYPE_IMPOSSIBLE)
+                return UNDERACTIONS_CONTINUOUS;
+            
+            ThinkOrder().SetAnswer(CAIThinkOrder::RESULT_REFUSE);
+            if (m_bActionRun)
+            {
+                float fPatrolRadius = EnemyCharacter().Feature().m_fPatrolRadius;
+                EnemyCharacter().SetPatrolArea(&vecChrPos, fPatrolRadius);
+            };
+
+            return UNDERACTIONS_THINKOVER;
+        }
+        break;
+
+    default:
+        break;
     };
 
-    ASSERT((movableType == CBaseGeneralEnemyChr::MOVABLETYPE_FALLDOWN)    ||
-           (movableType == CBaseGeneralEnemyChr::MOVABLETYPE_HOLE)        ||
-           (movableType == CBaseGeneralEnemyChr::MOVABLETYPE_BODILYCRUSH) ||
-           (movableType == CBaseGeneralEnemyChr::MOVABLETYPE_IMPOSSIBLE)  ||
-		   (movableType == CBaseGeneralEnemyChr::MOVABLETYPE_JUMP));
-
-    movableType = static_cast<CBaseGeneralEnemyChr&>(EnemyCharacter()).GetMovableType(&vecAt);
-    if (movableType == CBaseGeneralEnemyChr::MOVABLETYPE_POSSIBLE)
-    {
-        ThinkOrder().OrderMove().m_iMoveType = AIOT::Set(AIOT::MoveTurn, moveTarget);
-        return UNDERACTIONS_CONTINUOUS;
-    };
-
-    if (movableType == CBaseGeneralEnemyChr::MOVABLETYPE_IMPOSSIBLE)
-        return UNDERACTIONS_CONTINUOUS;
-
-    ThinkOrder().SetAnswer(CAIThinkOrder::RESULT_REFUSE);
-    if (m_bActionRun)
-    {
-        float fPatrolRadius = EnemyCharacter().Feature().m_fPatrolRadius;
-        EnemyCharacter().SetPatrolArea(&vecChrPos, fPatrolRadius);
-    };
-
-    return UNDERACTIONS_THINKOVER;
+    return UNDERACTIONS_CONTINUOUS;
 };
 
 

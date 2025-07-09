@@ -36,15 +36,12 @@ static_assert(COUNT_OF(s_aFootprintsInfo) == PLAYERID::ID_MAX, "update me");
     ASSERT(pPlayerChr);
 
     PLAYERID::VALUE idPlayer = pPlayerChr->GetID();
-    ASSERT(idPlayer >= PLAYERID::ID_START && idPlayer < PLAYERID::ID_MAX);
+    ASSERT(idPlayer >= PLAYERID::ID_START);
+    ASSERT(idPlayer < PLAYERID::ID_MAX);
 
-    CFootprintsModule* pRet = new CFootprintsModule(
-        pPlayerChr,
-        &s_aFootprintsInfo[idPlayer].m_vSize,
-        s_aFootprintsInfo[idPlayer].m_fRadius
-    );
-
-    ASSERT(pRet);
+    CFootprintsModule* pRet = new CFootprintsModule(pPlayerChr,
+                                                    &s_aFootprintsInfo[idPlayer].m_vSize,
+                                                    s_aFootprintsInfo[idPlayer].m_fRadius);
 
     return pRet;
 };
@@ -97,21 +94,19 @@ void CFootprintsModule::Run(void)
     
     for (WORK& it : m_listWorkAlloc)
     {
-        int32 nAlphaBasis = int32( float(it.m_uAlphaBasis) - (dt * 256.0f) );
-        if (nAlphaBasis < 0)
+        int32 nAlphaBasis = static_cast<int32>( static_cast<float>(it.m_uAlphaBasis) - (dt * 256.0f) );
+        if (nAlphaBasis <= 0)
             nAlphaBasis = 0;
 
-        it.m_uAlphaBasis = uint8(nAlphaBasis);
+        it.m_uAlphaBasis = static_cast<uint8>(nAlphaBasis);
     };
 
-    float fStampTime = 0.0f;
-    
     switch (m_pPlayerChr->GetStatus())
     {
     case PLAYERTYPES::STATUS_WALK:
         {
             m_fTime += dt;
-            if (m_fTime >= 0.30f)
+            if (m_fTime >= 0.43333292f)
             {
                 m_fTime = 0.0f;
                 
@@ -122,15 +117,15 @@ void CFootprintsModule::Run(void)
 
                 if (m_lastFoottype)
                 {
-                    vPosition.x += m_fRadius * (Math::Sin(fDirection - Math::PI05));
-                    vPosition.z += m_fRadius * (Math::Cos(fDirection - Math::PI05));                    
+                    vPosition.x += m_fRadius * (Math::Sin(fDirection - MATH_PI05));
+                    vPosition.z += m_fRadius * (Math::Cos(fDirection - MATH_PI05));                    
                     Stamp(&vPosition, fDirection, FOOTTYPE_LEFT);
                     m_lastFoottype = FOOTTYPE_LEFT;
                 }
                 else
                 {
-                    vPosition.x += m_fRadius * (Math::Sin(fDirection + Math::PI05));
-                    vPosition.z += m_fRadius * (Math::Cos(fDirection + Math::PI05));
+                    vPosition.x += m_fRadius * (Math::Sin(fDirection + MATH_PI05));
+                    vPosition.z += m_fRadius * (Math::Cos(fDirection + MATH_PI05));
                     Stamp(&vPosition, fDirection, FOOTTYPE_RIGHT);
                     m_lastFoottype = FOOTTYPE_RIGHT;
                 };
@@ -141,7 +136,7 @@ void CFootprintsModule::Run(void)
     case PLAYERTYPES::STATUS_RUN:
         {
             m_fTime += dt;
-            if (m_fTime >= 0.20f)
+            if (m_fTime >= 0.33333302f)
             {
                 m_fTime = 0.0f;
                 
@@ -152,15 +147,15 @@ void CFootprintsModule::Run(void)
 
                 if (m_lastFoottype)
                 {
-                    vPosition.x += m_fRadius * (Math::Sin(fDirection - Math::PI05));
-                    vPosition.z += m_fRadius * (Math::Cos(fDirection - Math::PI05));
+                    vPosition.x += m_fRadius * (Math::Sin(fDirection - MATH_PI05));
+                    vPosition.z += m_fRadius * (Math::Cos(fDirection - MATH_PI05));
                     Stamp(&vPosition, fDirection, FOOTTYPE_LEFT);
                     m_lastFoottype = FOOTTYPE_LEFT;
                 }
                 else
                 {
-                    vPosition.x += m_fRadius * (Math::Sin(fDirection + Math::PI05));
-                    vPosition.z += m_fRadius * (Math::Cos(fDirection + Math::PI05));
+                    vPosition.x += m_fRadius * (Math::Sin(fDirection + MATH_PI05));
+                    vPosition.z += m_fRadius * (Math::Cos(fDirection + MATH_PI05));
                     Stamp(&vPosition, fDirection, FOOTTYPE_RIGHT);
                     m_lastFoottype = FOOTTYPE_RIGHT;
                 };
@@ -202,37 +197,38 @@ void CFootprintsModule::Stamp(const RwV3d* pvPosition, float fDirection, FOOTTYP
     if (pCollisionResult->m_attribute & uAttributeMask)
     {
         RwV3d vAxisX = Math::VECTOR3_ZERO;
-        RwV3d vAxisY = Math::VECTOR3_ZERO;
-        RwV3d vAxisZ = Math::VECTOR3_ZERO;
-
         Math::Vec3_Cross(&vAxisX, &Math::VECTOR3_AXIS_Z, &pCollisionResult->m_vNormal);
-        Math::Vec3_Cross(&vAxisZ, &pCollisionResult->m_vNormal, &Math::VECTOR3_AXIS_X);
         Math::Vec3_Normalize(&vAxisX, &vAxisX);
-        Math::Vec3_Normalize(&vAxisY, &pCollisionResult->m_vNormal);
+
+        RwV3d vAxisZ = Math::VECTOR3_ZERO;
+        Math::Vec3_Cross(&vAxisZ, &pCollisionResult->m_vNormal, &Math::VECTOR3_AXIS_X);
         Math::Vec3_Normalize(&vAxisZ, &vAxisZ);
+        
+        RwV3d vAxisY = Math::VECTOR3_ZERO;
+        Math::Vec3_Normalize(&vAxisY, &pCollisionResult->m_vNormal);
 
         WORK* pWork = GetWork();
         ASSERT(pWork);
         
         RwMatrix matView;
-        RwMatrix matRotY;
-        RwMatrixSetIdentityMacro(&matView);
-        RwMatrixSetIdentityMacro(&matRotY);
-        RwMatrixSetIdentityMacro(&pWork->m_matrix);
-        
-        Math::Matrix_Update(
-            &matView,
-            &vAxisX,
-            &vAxisY,
-            &vAxisZ,
-            &Math::VECTOR3_ZERO
-        );
+        RwMatrixSetIdentityMacro(&matView);        
+        Math::Matrix_Update(&matView,
+                            &vAxisX,
+                            &vAxisY,
+                            &vAxisZ,
+                            &Math::VECTOR3_ZERO);
 
+        RwMatrix matRotY;
+        RwMatrixSetIdentityMacro(&matRotY);
         Math::Matrix_RotateY(&matRotY, fDirection);
+
+        RwMatrixSetIdentityMacro(&pWork->m_matrix);
         Math::Matrix_Multiply(&pWork->m_matrix, &pWork->m_matrix, &matRotY);
         Math::Matrix_Multiply(&pWork->m_matrix, &pWork->m_matrix, &matView);
+
         pWork->m_vPosition = *pvPosition;
         pWork->m_vPosition.y = fMapHeight + 0.05f;
+
         pWork->m_foottype = foottype;
 
         if (pCollisionResult->m_attribute & MAPTYPES::ATTRIBUTE_SNOW)
@@ -338,20 +334,19 @@ void CFootprintsModule::DrawFootprints(void)
     RENDERSTATE_PUSH(rwRENDERSTATEFOGENABLE, false);
     RENDERSTATE_PUSH(rwRENDERSTATEVERTEXALPHAENABLE, true);
     RENDERSTATE_PUSH(rwRENDERSTATECULLMODE, rwCULLMODECULLNONE);
+    RENDERSTATE_PUSH(rwRENDERSTATETEXTURERASTER, (m_pTexture ? RwTextureGetRasterMacro(m_pTexture) : NULL));
 
-    if (m_pTexture)
-        RENDERSTATE_PUSH(rwRENDERSTATETEXTURERASTER, RwTextureGetRaster(m_pTexture));
-    else
-        RENDERSTATE_PUSH(rwRENDERSTATETEXTURERASTER, 0);
+    uint32 flags = rwIM3D_VERTEXRGBA
+                 | rwIM3D_VERTEXXYZ
+                 | rwIM3D_VERTEXUV;
 
-    uint32 uFlags = rwIM3D_VERTEXRGBA | rwIM3D_VERTEXXYZ | rwIM3D_VERTEXUV;
-
-    if (RwIm3DTransform(m_aVertex, m_nDispNum * 6, nullptr, uFlags))
+    if (RwIm3DTransform(m_aVertex, m_nDispNum * 6, nullptr, flags))
     {
         RwIm3DRenderPrimitive(rwPRIMTYPETRILIST);
         RwIm3DEnd();
     };
 
+    RENDERSTATE_POP(rwRENDERSTATETEXTURERASTER);
     RENDERSTATE_POP(rwRENDERSTATECULLMODE);
     RENDERSTATE_POP(rwRENDERSTATEVERTEXALPHAENABLE);
     RENDERSTATE_POP(rwRENDERSTATEFOGENABLE);

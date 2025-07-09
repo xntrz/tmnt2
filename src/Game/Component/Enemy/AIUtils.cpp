@@ -236,7 +236,6 @@ CAIUtils::GetNearerPlayerData(int32 dataNo)
 /*static*/ bool CAIUtils::IsInsidePatrolArea(const RwV3d* pos,
                                              const ENEMYTYPES::FEATURE* feature)
 {
-
     RwV3d vecPos = *pos;
     vecPos.y = 0.0f;
 

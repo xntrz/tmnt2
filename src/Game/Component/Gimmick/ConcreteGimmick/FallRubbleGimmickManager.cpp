@@ -57,20 +57,19 @@ CFallRubbleGimmickManager::CFallRubbleGimmickManager(const char* pszName, void* 
 };
 
 
-/*virtual*/ CFallRubbleGimmickManager::~CFallRubbleGimmickManager(void)
+CFallRubbleGimmickManager::~CFallRubbleGimmickManager(void)
 {
     ;
 };
 
 
-/*virtual*/ void CFallRubbleGimmickManager::Run(void) /*override*/
+void CFallRubbleGimmickManager::Run(void)
 {
     rubbleGrandControl();
 };
 
 
-/*virtual*/ void CFallRubbleGimmickManager::OnReceiveEvent(const char* pszSender,
-                                                           GIMMICKTYPES::EVENTTYPE eventtype) /*override*/
+void CFallRubbleGimmickManager::OnReceiveEvent(const char* pszSender, GIMMICKTYPES::EVENTTYPE eventtype)
 {
     if (eventtype == GIMMICKTYPES::EVENTTYPE_ACTIVATE)
         createRubble();

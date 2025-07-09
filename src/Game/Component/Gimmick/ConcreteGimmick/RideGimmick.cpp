@@ -66,35 +66,35 @@ void CRideGimmick::PostMove(void)
 
     if (IsProcess(PROCESSTYPE_ATTACK))
     {
-        RwSphere sphere = { 0 };
-        sphere.center = { vPosition.x, vPosition.y + m_fOffset, vPosition.z };
-        sphere.radius = m_fRadius;
+        RwSphere hitSphere = { 0 };
+        hitSphere.center = { vPosition.x, vPosition.y + m_fOffset, vPosition.z };
+        hitSphere.radius = m_fRadius;
 
-        CHitAttackData Attack;
-        Attack.SetObject(GetHandle());
-        Attack.SetObjectPos(&vPosition);
-        Attack.SetShape(CHitAttackData::SHAPE_SPHERE);
-        Attack.SetSphere(&sphere);
-        Attack.SetTarget(CHitAttackData::TARGET_PLAYER);
-        Attack.SetAntiguard(CHitAttackData::ANTIGUARD_INVALID);
-        Attack.SetPower(m_iPower);
+        CHitAttackData hitAttack;
+        hitAttack.SetObject(GetHandle());
+        hitAttack.SetObjectPos(&vPosition);
+        hitAttack.SetShape(CHitAttackData::SHAPE_SPHERE);
+        hitAttack.SetSphere(&hitSphere);
+        hitAttack.SetTarget(CHitAttackData::TARGET_PLAYER);
+        hitAttack.SetAntiguard(CHitAttackData::ANTIGUARD_INVALID);
+        hitAttack.SetPower(m_iPower);
 
-        CHitAttackManager::RegistAttack(&Attack);
+        CHitAttackManager::RegistAttack(&hitAttack);
     };
 
     if (m_bCatchHit && IsProcess(PROCESSTYPE_DAMAGE))
     {
-        RwSphere sphere = { vPosition, m_fRadius };
-        sphere.center = { vPosition.x, vPosition.y + m_fOffset, vPosition.z };
-        sphere.radius = m_fRadius;
+        RwSphere hitSphere = { vPosition, m_fRadius };
+        hitSphere.center = { vPosition.x, vPosition.y + m_fOffset, vPosition.z };
+        hitSphere.radius = m_fRadius;
 
-        CHitCatchData Catch;
-        Catch.SetObject(GetHandle());
-        Catch.SetObjectType(GetType());
-        Catch.SetShape(CHitCatchData::SHAPE_SPHERE);
-        Catch.SetSphere(&sphere);
+        CHitCatchData hitCatch;
+        hitCatch.SetObject(GetHandle());
+        hitCatch.SetObjectType(GetType());
+        hitCatch.SetShape(CHitCatchData::SHAPE_SPHERE);
+        hitCatch.SetSphere(&hitSphere);
 
-        CHitAttackManager::RegistCatch(&Catch);
+        CHitAttackManager::RegistCatch(&hitCatch);
     };
 
     if (m_pModuleManager && IsProcess(PROCESSTYPE_DRAW_SHADOW))

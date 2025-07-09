@@ -606,10 +606,17 @@ float CCharacterAttackCalculator::CalcAttackPowerRatio(int32 iMinPower, int32 iM
 {
     ASSERT(iMinPower < iMaxPower);
 
-    float fRatio =  static_cast<float>(m_rAttack.GetPower() - iMinPower) /
-                    static_cast<float>(iMaxPower - iMinPower);
+    int32 iAttackPower = m_rAttack.GetPower();
+    if (iAttackPower <= iMinPower)
+        return 0.0f;
 
-    return Clamp(fRatio, 0.0f, 1.0f);
+    if (iAttackPower >= iMaxPower)
+        return 1.0f;
+
+    float fRatio = static_cast<float>(iAttackPower - iMinPower) /
+                   static_cast<float>(iMaxPower - iMinPower);
+
+    return fRatio;
 };
 
 

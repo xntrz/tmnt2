@@ -27,7 +27,7 @@ CPipeGimmick::CPipeGimmick(const char* pszName, void* pParam)
 };
 
 
-/*virtual*/ CPipeGimmick::~CPipeGimmick(void)
+CPipeGimmick::~CPipeGimmick(void)
 {
     if (m_hMagic)
     {
@@ -37,19 +37,19 @@ CPipeGimmick::CPipeGimmick(const char* pszName, void* pParam)
 };
 
 
-/*virtual*/ void CPipeGimmick::GetPosition(RwV3d* pvPosition) const /*override*/
+void CPipeGimmick::GetPosition(RwV3d* pvPosition) const
 {
     *pvPosition = m_vPosition;
 };
 
 
-/*virtual*/ GIMMICKTYPES::FEATURE CPipeGimmick::GetFeatures(void) const /*override*/
+GIMMICKTYPES::FEATURE CPipeGimmick::GetFeatures(void) const
 {
     return GIMMICKTYPES::FEATURE_ABLE_SLEEP;
 };
 
 
-/*virtual*/ void CPipeGimmick::PostMove(void) /*override*/
+void CPipeGimmick::PostMove(void)
 {
     switch (m_state)
     {
@@ -80,10 +80,8 @@ CPipeGimmick::CPipeGimmick(const char* pszName, void* pParam)
 };
 
 
-/*virtual*/ void CPipeGimmick::OnCatchAttack(CHitAttackData* pAttack) /*override*/
+void CPipeGimmick::OnCatchAttack(CHitAttackData* pAttack)
 {
-    ASSERT(pAttack);
-    
     if (m_state == STATE_WAIT)
     {
         if (pAttack->IsFlagSlice())

@@ -38,13 +38,15 @@ protected:
     const KINDINFO& kindinfo(void) const;
 
 protected:
-    static const KINDINFO m_aPushingGimmickKindInfoList[];
-    CPushingGimmickMove* m_pPushingMove;
-    CNormalGimmickModel m_model;
-    RwV3d m_vPrePos;
-    float m_fEffectTimer;
-    bool m_bSE;
-    int32 m_subid;
-    uint32 m_hAtari;
-    CBodyHitData* m_pBodyHitData;
+    static const KINDINFO   m_aPushingGimmickKindInfoList[];
+    CPushingGimmickMove*    m_pPushingMove;
+    CNormalGimmickModel     m_model;
+    RwV3d                   m_vPrePos;
+    float                   m_fEffectTimer;
+    bool                    m_bSE;
+    int32                   m_subid;
+    uint32                  m_hAtari;
+    CBodyHitData*           m_pBodyHitData;
+    float                   m_fInvincibleTimer;
+    int32                   m_iLife;
 };

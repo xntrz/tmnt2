@@ -43,6 +43,9 @@ CBandanaModule::CBandanaModule(CCharacter* pCharacter,
 , m_vOffset(*pvOffset)
 , m_vJointPosition(Math::VECTOR3_ZERO)
 , m_bWindChrSync(true)
+#ifdef TARGET_PC    
+, m_vBonePos(Math::VECTOR3_ZERO)
+#endif /* TARGET_PC */
 {
     ASSERT(m_pCharacter);
     ASSERT(m_pModel);
@@ -63,8 +66,6 @@ CBandanaModule::CBandanaModule(CCharacter* pCharacter,
 
 CBandanaModule::~CBandanaModule(void)
 {
-    ASSERT(m_pCloth);
-
     if (m_pCloth)
     {
         delete m_pCloth;
@@ -82,6 +83,18 @@ void CBandanaModule::Run(void)
     RwV3dTransformPoint(&vJointPos, &vJointPos, &matRotY);
 
     RwV3d vBonePos = *m_pModel->GetBonePositionFromID(m_nBoneID);
+#ifdef TARGET_PC    
+    if (std::isfinite(vBonePos.x) &&
+        std::isfinite(vBonePos.y) &&
+        std::isfinite(vBonePos.z))
+    {
+        m_vBonePos = vBonePos;
+    }
+    else
+    {
+        vBonePos = m_vBonePos;
+    };
+#endif /* TARGET_PC */
     Math::Vec3_Add(&vJointPos, &vJointPos, &vBonePos);
 
     m_vJointPosition = vJointPos;
@@ -89,9 +102,9 @@ void CBandanaModule::Run(void)
 
 	if (m_bWindChrSync)
 	{
-		float fDir = m_pCharacter->GetDirection();
-		RwV3d vWind = Math::VECTOR3_ZERO;
-
+        float fDir = m_pCharacter->GetDirection();
+        
+        RwV3d vWind = Math::VECTOR3_ZERO;
 		vWind.x = Math::Sin(fDir) * -1.0f * 3.0f;
 		vWind.y = 0.0f;
 		vWind.z = Math::Cos(fDir) * -1.0f * 3.0f;

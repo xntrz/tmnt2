@@ -583,7 +583,7 @@ void CGaugeStatus_Container::PlayerMarkerDisp(int32 nPlayerNo)
         float fRotate = Math::ATan2(((screenH * 0.5f) + 16.0f) - ((vScreenPos.y - 18.0f) + 16.0f),
                                     ((screenW * 0.5f) + 16.0f) - (vScreenPos.x - 16.0f));
 
-        fRotate += Math::PI;
+        fRotate += MATH_PI;
 
         PLAYERID::VALUE playerId = CGameProperty::Player(nPlayerNo)->GetCurrentCharacterID();
         RwRGBA playerColor = PLAYERID::GetColor(playerId);
@@ -805,7 +805,6 @@ void CGaugeStatus_Container::NumDraw(int32 nFontNo, float fOfsX, float fOfsY, ui
     float spriteW = 0.0f;
     float spriteH = 0.0f;
     float stepX = 0.0f;
-    float stepY = 0.0f;
 
     switch (nFontNo)
     {

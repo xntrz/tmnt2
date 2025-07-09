@@ -109,7 +109,7 @@ CFallGimmick::CFallGimmick(const char* pszName, void* pParam)
 };
 
 
-/*virtual*/ CFallGimmick::~CFallGimmick(void)
+CFallGimmick::~CFallGimmick(void)
 {
     if (m_pModuleManager)
     {
@@ -125,7 +125,7 @@ CFallGimmick::CFallGimmick(const char* pszName, void* pParam)
 };
 
 
-/*virtual*/ void CFallGimmick::Run(void) /*override*/
+void CFallGimmick::Run(void)
 {
     PreMove();
     
@@ -136,7 +136,7 @@ CFallGimmick::CFallGimmick(const char* pszName, void* pParam)
 };
 
 
-/*virtual*/ void CFallGimmick::Draw(void) const /*override*/
+void CFallGimmick::Draw(void) const
 {
     switch (m_eState)
     {
@@ -156,20 +156,19 @@ CFallGimmick::CFallGimmick(const char* pszName, void* pParam)
 };
 
 
-/*virtual*/ void CFallGimmick::PreMove(void) /*override*/
+void CFallGimmick::PreMove(void)
 {
     m_pFallMove->GetPosition(&m_vPreMovePosition);
 };
 
 
-/*virtual*/ void CFallGimmick::PostMove(void) /*override*/
+void CFallGimmick::PostMove(void)
 {
     m_pModuleManager->Run();
 };
 
 
-/*virtual*/ void CFallGimmick::OnReceiveEvent(const char* pszSender,
-                                              GIMMICKTYPES::EVENTTYPE eventtype) /*override*/
+void CFallGimmick::OnReceiveEvent(const char* pszSender, GIMMICKTYPES::EVENTTYPE eventtype)
 {
     if (m_eState == STATE_WAIT)
     {
@@ -179,7 +178,7 @@ CFallGimmick::CFallGimmick(const char* pszName, void* pParam)
 };
 
 
-/*virtual*/ void CFallGimmick::OnTouchedDown(void) /*override*/
+void CFallGimmick::OnTouchedDown(void)
 {
     if (m_bAttack)
         m_bAttack = false;
@@ -199,7 +198,7 @@ CFallGimmick::CFallGimmick(const char* pszName, void* pParam)
 };
 
 
-/*virtual*/ void CFallGimmick::OnAttackResult(CHitCatchData* pCatch) /*override*/
+void CFallGimmick::OnAttackResult(CHitCatchData* pCatch)
 {
     if (!m_bTouched)
     {

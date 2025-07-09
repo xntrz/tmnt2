@@ -21,10 +21,14 @@
 #include "Game/System/GameObject/GameObjectManager.hpp"
 
 
-#ifdef _DEBUG
-#define EFFECT_MAX_NUM (256)
-#else
-#define EFFECT_MAX_NUM (100)
+#if defined(_DEBUG)
+#define EFFECT_COMMON_MAX_NUM   (256)
+#define EFFECT_ATTACHED_MAX_NUM (256)
+#define EFFECT_DISPLAY_MAX_NUM  (256)
+#elif defined(NDEBUG)
+#define EFFECT_COMMON_MAX_NUM   (100)
+#define EFFECT_ATTACHED_MAX_NUM (30)
+#define EFFECT_DISPLAY_MAX_NUM  (100)
 #endif
 
 
@@ -281,12 +285,11 @@ CEffectContainer::CEffectContainer(void)
 , m_pListEffectDisplay(nullptr)
 , m_pooltype(POOLTYPE_COMMON)
 {
-    const int32 EffectNum = EFFECT_MAX_NUM;
-    
-    m_pListCommonEffectPool     = new CEffectList(EffectNum);
-    m_pListAttachedEffectPool   = new CEffectList(EffectNum);
-    m_pListEffectDisplay        = new CEffectList(EffectNum);
-    m_pCurrentEffectPool        = m_pListCommonEffectPool;
+    m_pListCommonEffectPool   = new CEffectList(EFFECT_COMMON_MAX_NUM);
+    m_pListAttachedEffectPool = new CEffectList(EFFECT_ATTACHED_MAX_NUM);
+    m_pListEffectDisplay      = new CEffectList(EFFECT_DISPLAY_MAX_NUM);
+
+    m_pCurrentEffectPool = m_pListCommonEffectPool;
 };
 
 
@@ -359,11 +362,11 @@ void CEffectContainer::Play(CEffect* pEffect)
 
 CEffect* CEffectContainer::Search(const char* pszName)
 {
-    CEffect* pRet = m_pListCommonEffectPool->GetEffect(pszName);
-    if (!pRet)
-        pRet = m_pListAttachedEffectPool->GetEffect(pszName);
+    CEffect* pEffect = m_pListCommonEffectPool->GetEffect(pszName);
+    if (!pEffect)
+        pEffect = m_pListAttachedEffectPool->GetEffect(pszName);
 
-	return pRet;
+	return pEffect;
 };
 
 
@@ -537,7 +540,8 @@ static inline CEffect* EffectFromHandle(uint32 hEffect)
 
 	if (!EffectContainer().IsEnableRegistDisplay())
 	{
-		ASSERT(false, "disp pool empty");
+        ASSERT(false, "effect display pool empty");
+        FATAL("effect display pool empty");
         return 0;
 	};
 
@@ -548,7 +552,6 @@ static inline CEffect* EffectFromHandle(uint32 hEffect)
 	CEffect* pEffectPlay = pEffect->Clone();
     ASSERT(pEffectPlay);
 
-    pEffectPlay->SetDirection(0.0f);
     pEffectPlay->SetPosition(pvPosition);
     pEffectPlay->SetSoundPlay(bPlaySound);
 
@@ -565,7 +568,8 @@ static inline CEffect* EffectFromHandle(uint32 hEffect)
 
 	if (!EffectContainer().IsEnableRegistDisplay())
 	{
-		ASSERT(false, "disp pool empty");
+        ASSERT(false, "effect display pool empty");
+        FATAL("effect display pool empty");
         return 0;
 	};
 
@@ -606,7 +610,8 @@ static inline CEffect* EffectFromHandle(uint32 hEffect)
 
     if (!EffectContainer().IsEnableRegistDisplay())
     {
-		ASSERT(false, "disp pool empty");
+        ASSERT(false, "effect display pool empty");
+        FATAL("effect display pool empty");
         delete pTracer;
         return 0;
     };
@@ -621,7 +626,6 @@ static inline CEffect* EffectFromHandle(uint32 hEffect)
     CEffect* pEffectPlay = pEffect->Clone();
     ASSERT(pEffectPlay);
 
-    pEffectPlay->SetDirection(0.0f);
     pEffectPlay->SetTracer(pTracer, pvOffset, 0.0f);
     pEffectPlay->SetDirectionTraceFlag(true);
     pEffectPlay->SetSoundPlay(bPlaySound);
@@ -640,7 +644,8 @@ static inline CEffect* EffectFromHandle(uint32 hEffect)
 
     if (!EffectContainer().IsEnableRegistDisplay())
     {
-		ASSERT(false, "disp pool empty");
+        ASSERT(false, "effect display pool empty");
+        FATAL("effect display pool empty");
         delete pTracer;
         return 0;
     };

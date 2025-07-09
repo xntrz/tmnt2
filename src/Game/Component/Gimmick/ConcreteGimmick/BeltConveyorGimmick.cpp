@@ -32,7 +32,7 @@ CBeltConveyorGimmick::CBeltConveyorGimmick(const char* pszName, void* pParam)
     GIMMICKPARAM::GIMMICK_BASIC* pBasicParam = static_cast<GIMMICKPARAM::GIMMICK_BASIC*>(pParam);
     ASSERT(pBasicParam);
 
-    m_subid = SUBID(pBasicParam->m_subid);
+    m_subid = static_cast<SUBID>(pBasicParam->m_subid);
     ASSERT(m_subid >= SUBID_START);
     ASSERT(m_subid < SUBID_NUM);
 
@@ -48,24 +48,17 @@ CBeltConveyorGimmick::CBeltConveyorGimmick(const char* pszName, void* pParam)
     m_fVelocity = s_afVelocity[m_subid];
 
     //
-    //  init disp model
+    //  Init MODEL
     //
     CModel* pModel = CModelManager::CreateModel("belt");
     ASSERT(pModel);
 
-    m_model.SetModel(CNormalGimmickModel::MODELTYPE_DRAW_NORMAL, pModel);
-
-    //
-    //  init atari model
-    //
     CModel* pAtariModel = CModelManager::CreateModel("belt_a");
-    ASSERT(pModel);
+    ASSERT(pAtariModel);
 
+    m_model.SetModel(CNormalGimmickModel::MODELTYPE_DRAW_NORMAL, pModel);
     m_model.SetModel(CNormalGimmickModel::MODELTYPE_ATARI_NORMAL, pAtariModel);
-    
-    //
-    //  init pos & rot
-    //
+
     RwV3d vRotation = Math::VECTOR3_ZERO;
     vRotation.y = CGimmickUtils::QuaternionToRotationY(&pBasicParam->m_quat);
 
@@ -73,6 +66,8 @@ CBeltConveyorGimmick::CBeltConveyorGimmick(const char* pszName, void* pParam)
     SetRotation(&vRotation);
 
     m_model.UpdateFrame();
+
+    SetModelStrategy(&m_model);
 
     //
     //  init map collision
@@ -82,8 +77,6 @@ CBeltConveyorGimmick::CBeltConveyorGimmick(const char* pszName, void* pParam)
         RpClump* pClump = m_model.GetCollisionModelClump();
 
         m_hAtari = CMapCollisionModel::RegistCollisionModel(pClump, GetName(), MAPTYPES::GIMMICKTYPE_BELTCONVEYOR);
-        ASSERT(m_hAtari);
-
         if (m_hAtari)
             CMapCollisionModel::SetBoundingSphereRadius(m_hAtari, 3.0f);
     };
@@ -93,32 +86,30 @@ CBeltConveyorGimmick::CBeltConveyorGimmick(const char* pszName, void* pParam)
     //
     if (!m_bAnimOwnerExist && (m_subid == SUBID_MODEL_DISP))
     {
-        m_pAnimatedMaterials = CUVAnim::CreateAnimatedMaterialsList(pModel->GetClump());
+        RpClump* pClump = pModel->GetClump();
+        ASSERT(pClump != nullptr);
+
+        m_pAnimatedMaterials = CUVAnim::CreateAnimatedMaterialsList(pClump);
         ASSERT(m_pAnimatedMaterials);
 
         m_bAnimOwner = true;
         m_bAnimOwnerExist = true;
     };
-    
-    //
-    //  setup model & movement strat
-    //
-    SetModelStrategy(&m_model);
 };
 
 
-CBeltConveyorGimmick::~CBeltConveyorGimmick(void)
+ CBeltConveyorGimmick::~CBeltConveyorGimmick(void)
 {
     if (m_bAnimOwner)
     {
+        if (m_pAnimatedMaterials)
+        {
+            CUVAnim::DestroyAnimatedMaterialsList(m_pAnimatedMaterials);
+            m_pAnimatedMaterials = nullptr;
+        };
+
         m_bAnimOwnerExist = false;
         m_bAnimOwner = false;
-    };
-
-    if (m_pAnimatedMaterials)
-    {
-        CUVAnim::DestroyAnimatedMaterialsList(m_pAnimatedMaterials);
-        m_pAnimatedMaterials = nullptr;
     };
 
     if (m_hAtari)
@@ -129,14 +120,14 @@ CBeltConveyorGimmick::~CBeltConveyorGimmick(void)
 };
 
 
-void CBeltConveyorGimmick::Draw(void) const
+ void CBeltConveyorGimmick::Draw(void) const
 {
     if (m_subid == SUBID_MODEL_DISP)
         CGimmick::Draw();
 };
 
 
-void CBeltConveyorGimmick::PostMove(void)
+ void CBeltConveyorGimmick::PostMove(void)
 {
     float dt = CGameProperty::GetElapsedTime();
 
@@ -145,10 +136,10 @@ void CBeltConveyorGimmick::PostMove(void)
 
     if (m_hAtari)
     {
-        RwV3d vDltPos = Math::VECTOR3_ZERO;
-        Math::Vec3_Scale(&vDltPos, &m_vDirection, (m_fVelocity * dt));
+        RwV3d vVelocity = Math::VECTOR3_ZERO;
+        Math::Vec3_Scale(&vVelocity, &m_vDirection, (m_fVelocity * dt));
 
-        CMapCollisionModel::UpdateCollisionModel(m_hAtari, &vDltPos);
+        CMapCollisionModel::UpdateCollisionModel(m_hAtari, &vVelocity);
     };
 };
 

@@ -49,9 +49,7 @@ CCrumbleFloorGimmick::CCrumbleFloorGimmick(const char* pszName, void* pParam)
     if (m_model.GetCollisionModelClump())
     {
         RpClump* pClump = m_model.GetCollisionModelClump();
-
         m_hAtari = CMapCollisionModel::RegistCollisionModel(pClump, GetName(), MAPTYPES::GIMMICKTYPE_SEESAW);
-        ASSERT(m_hAtari);
     };
         
     //
@@ -88,7 +86,7 @@ void CCrumbleFloorGimmick::PreMove(void)
 
 void CCrumbleFloorGimmick::PostMove(void)
 {
-    if (m_model.GetCollisionModelClump())
+    if (m_hAtari)
     {
         RwV3d vPosition = Math::VECTOR3_ZERO;
         m_pCrumbleFloorMove->GetPosition(&vPosition);
@@ -102,7 +100,6 @@ void CCrumbleFloorGimmick::PostMove(void)
         RwV3d vRotationVel = Math::VECTOR3_ZERO;
         m_pCrumbleFloorMove->GetOmega(&vRotationVel);
 
-        ASSERT(m_hAtari);
         CMapCollisionModel::UpdateCollisionModel(m_hAtari, nullptr, &vRotationVel);
     };
 };

@@ -401,7 +401,7 @@ bool CEnemyGeneratorBase::IsActive(void) const
     if (m_bAutoActivate)
     {
         float fDist = CGimmickUtils::CalcNearestPlayerDistance(&m_origin.m_vPos);
-        if (fDist > m_fActivateDistance)
+        if (fDist >= m_fActivateDistance)
             return false;
     };    
 
@@ -471,14 +471,14 @@ bool CEnemyGeneratorBase::HandleQuery(CGimmickQuery* pQuery) const
         {
             static_cast<CCounterGimmickQuery*>(pQuery)->m_nCounter += GetTotalEnemyNum();
             bHandled = true;
-        };
+        }
         break;
 
     case GIMMICKTYPES::QUERY_GEN_DEAD_ENEMY_NUM:
         {
             static_cast<CCounterGimmickQuery*>(pQuery)->m_nCounter += CountDeadEnemy();
             bHandled = true;
-        };
+        }
         break;
 
     default:

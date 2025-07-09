@@ -47,14 +47,14 @@ private:
     void onThrow(RwV3d* pvVelocity, bool bMiss);
     
 private:
-    static int32 m_iUtromID;
-    STATE m_eState;
-    float m_fCounter;
+    static int32        m_iUtromID;
+    STATE               m_eState;
+    float               m_fCounter;
     CNormalGimmickModel m_model;
-    CBodyHitData* m_pBodyHitData;
-    CModuleManager* m_pModuleMan;
-    CGimmickMotion* m_pGimmickMotion;
-    CUtromGimmickMove* m_pUtromMove;
+    CBodyHitData*       m_pBodyHitData;
+    CModuleManager*     m_pModuleMan;
+    CGimmickMotion*     m_pGimmickMotion;
+    CUtromGimmickMove*  m_pUtromMove;
 };
 
 
@@ -82,6 +82,6 @@ private:
     float m_fRadius;
     float m_fHeight;
     int32 m_iUtromCount;
-    char m_szClearTargetName[16];
+    char  m_szClearTargetName[16];
     CList<CUtromGimmick> m_listUtrom;
 };

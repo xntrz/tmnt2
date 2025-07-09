@@ -5,10 +5,14 @@
 #include "Game/System/GameObject/GameObjectManager.hpp"
 
 
-#ifdef _DEBUG
-#define MAGIC_MAX_NUM (256)
-#else
-#define MAGIC_MAX_NUM (100)
+#if defined(_DEBUG)
+#define MAGIC_COMMON_MAX_NUM   (256)
+#define MAGIC_ATTACHED_MAX_NUM (256)
+#define MAGIC_DISPLAY_MAX_NUM  (256)
+#elif defined(NDEBUG)
+#define MAGIC_COMMON_MAX_NUM   (15)
+#define MAGIC_ATTACHED_MAX_NUM (30)
+#define MAGIC_DISPLAY_MAX_NUM  (30)
 #endif
 
 
@@ -271,11 +275,9 @@ CMagicContainer::CMagicContainer(void)
 , m_pListMagicDisplay(nullptr)
 , m_pooltype(POOLTYPE_COMMON)
 {
-    const int32 MagicNum = MAGIC_MAX_NUM;
-    
-    m_pListCommonMagicPool   = new CMagicList(MagicNum);
-    m_pListAttachedMagicPool = new CMagicList(MagicNum);
-    m_pListMagicDisplay      = new CMagicList(MagicNum);
+    m_pListCommonMagicPool   = new CMagicList(MAGIC_COMMON_MAX_NUM);
+    m_pListAttachedMagicPool = new CMagicList(MAGIC_ATTACHED_MAX_NUM);
+    m_pListMagicDisplay      = new CMagicList(MAGIC_DISPLAY_MAX_NUM);
 
     m_pCurrentMagicPool = m_pListCommonMagicPool;
 };
@@ -350,11 +352,11 @@ void CMagicContainer::Play(CMagic* pMagic)
 
 CMagic* CMagicContainer::Search(const char* pszName)
 {
-    CMagic* pRet = m_pListCommonMagicPool->GetMagic(pszName);
-    if (!pRet)
-        pRet = m_pListAttachedMagicPool->GetMagic(pszName);
+    CMagic* pMagic = m_pListCommonMagicPool->GetMagic(pszName);
+    if (!pMagic)
+        pMagic = m_pListAttachedMagicPool->GetMagic(pszName);
 
-    return pRet;
+    return pMagic;
 };
 
 

@@ -35,12 +35,14 @@ void CMadCarGimmickMove::UpdateRotation(float dt)
 {
     ASSERT(m_pszPathName);
 
-    int32 PathId = CCameraDataManager::GetPathIDFromName(m_pszPathName);
-    ASSERT(PathId >= 0);
+    int32 iPathID = CCameraDataManager::GetPathIDFromName(m_pszPathName);
+    ASSERT(iPathID >= 0);
 
-    ASSERT((m_fPathT >= 0.0f) && (m_fPathT <= 1.0f));
+    ASSERT(m_fPathT >= 0.0f);
+    ASSERT(m_fPathT <= 1.0f);
+    
     RwV3d vNextPosition = Math::VECTOR3_ZERO;
-    CCameraDataManager::GetSplinePos(&vNextPosition, PathId, m_fPathT);
+    CCameraDataManager::GetSplinePos(&vNextPosition, iPathID, m_fPathT);
 
     RwV3d vVelocity = Math::VECTOR3_ZERO;
     Math::Vec3_Sub(&vVelocity, &vNextPosition, &m_vPosition);
@@ -48,9 +50,9 @@ void CMadCarGimmickMove::UpdateRotation(float dt)
     Math::Vec3_Normalize(&vVelocity, &vVelocity);
 
     if (m_bCarDirection)
-        m_vRotation.y = Math::ACos(vVelocity.x) + Math::PI05;
+        m_vRotation.y = Math::ACos(vVelocity.x) + MATH_PI05;
     else
-        m_vRotation.y = Math::PI05 - Math::ACos(vVelocity.x);
+        m_vRotation.y = MATH_PI05 - Math::ACos(vVelocity.x);
 };
 
 

@@ -75,6 +75,11 @@ void CMadCarGimmick::CCarHeadLight::Update(const RwV3d* pvPosition)
 };
 
 
+//
+// *********************************************************************************
+//
+
+
 /*static*/ int32 CMadCarGimmick::GetCarType(SUBID subid)
 {
     ASSERT((subid >= SUBID_START) && (subid < SUBID_NUM));
@@ -94,17 +99,19 @@ CMadCarGimmick::CMadCarGimmick(const char* pszName, void* pParam)
 , m_aCarLight()
 , m_bCarLight(false)
 {
-    GIMMICKPARAM::GIMMICK_TERMS_TIME* pInitParam = (GIMMICKPARAM::GIMMICK_TERMS_TIME*)pParam;
+    GIMMICKPARAM::GIMMICK_TERMS_TIME* pInitParam = static_cast<GIMMICKPARAM::GIMMICK_TERMS_TIME*>(pParam);
     ASSERT(pInitParam);
 
     ASSERT(std::strlen(pInitParam->m_szTargetGimmick) < COUNT_OF(m_szPathName));
     std::strcpy(m_szPathName, pInitParam->m_szTargetGimmick);
     
-    m_subid = GetCarType(SUBID(pInitParam->m_subid));
+    m_subid = GetCarType(static_cast<SUBID>(pInitParam->m_subid));
     m_bCarLight = (pInitParam->m_subid < SUBID_START_LIGHTOFF);
 
+    //
+    //  Init movement
+    //
     m_pMove = new CMadCarGimmickMove;
-    ASSERT(m_pMove);
     m_pMove->SetPosition(&Math::VECTOR3_ZERO);
     m_pMove->SetRotation(&Math::VECTOR3_ZERO);
     m_pMove->InitPath(m_szPathName, 0.0f);
@@ -113,18 +120,26 @@ CMadCarGimmick::CMadCarGimmick(const char* pszName, void* pParam)
     m_pMove->SetCarDirection(CMadCarGimmickManager::IsPathDirection(m_szPathName));
     m_pMove->Start();
     SetMoveStrategy(m_pMove);
-    
-    RwV3d vPos = Math::VECTOR3_ZERO;
-    m_pMove->GetPosition(&vPos);
-    
+
+    //
+    //  Init model
+    //    
     CModel* pModel = CModelManager::CreateModel(s_aMadCarSubinfo[m_subid].m_pszModelName);
     ASSERT(pModel);
-    pModel->SetLightingEnable(false);    
+    pModel->SetLightingEnable(false);
+    
     m_model.SetModel(CNormalGimmickModel::MODELTYPE_DRAW_NORMAL, pModel);
+
+    RwV3d vPos = Math::VECTOR3_ZERO;
+    m_pMove->GetPosition(&vPos);
     m_model.SetPosition(&vPos);
+
     m_model.UpdateFrame();
     SetModelStrategy(&m_model);
 
+    //
+    //  Init lights
+    //
     if (m_bCarLight)
     {
         RwV3d vLightPos = Math::VECTOR3_ZERO;
@@ -189,36 +204,31 @@ void CMadCarGimmick::PostMove(void)
 
     if (m_bCarLight)
     {
-        CHitAttackData Attack;
-        Attack.SetObject(GetHandle());
-        Attack.SetPower(s_aMadCarSubinfo[m_subid].m_nAttackPower);
-        Attack.SetTarget(CHitAttackData::TARGET_ENEMY | CHitAttackData::TARGET_PLAYER);
-        Attack.SetAntiguard(CHitAttackData::ANTIGUARD_INVALID);
-        Attack.SetStatus(CHitAttackData::STATUS_FLYAWAY);
-        Attack.SetFlyawayParameter(0.0f, 12.0f);
-        Attack.SetMotion("MadCarMotion");
+        CHitAttackData hitAttack;
+        hitAttack.SetObject(GetHandle());
+        hitAttack.SetPower(s_aMadCarSubinfo[m_subid].m_nAttackPower);
+        hitAttack.SetTarget(CHitAttackData::TARGET_ENEMY | CHitAttackData::TARGET_PLAYER);
+        hitAttack.SetAntiguard(CHitAttackData::ANTIGUARD_INVALID);
+        hitAttack.SetStatus(CHitAttackData::STATUS_FLYAWAY);
+        hitAttack.SetFlyawayParameter(0.0f, 12.0f);
+        hitAttack.SetMotion("MadCarMotion");
 
         for (int32 i = 0; i < COUNT_OF(m_aCarLight); ++i)
-        {
-            RwV3d vAttackHitCenter = Math::VECTOR3_ZERO;
-            
+        {            
             RwMatrix matRotY;
             RwMatrixSetIdentityMacro(&matRotY);
             Math::Matrix_RotateY(&matRotY, vRotation.y);
             
-            RwV3dTransformPoint(
-                &vAttackHitCenter,
-                &s_aMadCarSubinfo[m_subid].m_vAttackPoint[i],
-                &matRotY
-            );
+            RwV3d vAttackHitCenter = Math::VECTOR3_ZERO;
+            RwV3dTransformPoint(&vAttackHitCenter, &s_aMadCarSubinfo[m_subid].m_vAttackPoint[i], &matRotY);
 
             Math::Vec3_Add(&vAttackHitCenter, &vAttackHitCenter, &vPosition);
 
-            RwSphere AttackSphere = { vAttackHitCenter, s_aMadCarSubinfo[m_subid].m_fAttackRadius };
-            Attack.SetShape(CHitAttackData::SHAPE_SPHERE);
-            Attack.SetSphere(&AttackSphere);
+            RwSphere hitSphere = { vAttackHitCenter, s_aMadCarSubinfo[m_subid].m_fAttackRadius };
+            hitAttack.SetShape(CHitAttackData::SHAPE_SPHERE);
+            hitAttack.SetSphere(&hitSphere);
 
-            CHitAttackManager::RegistAttack(&Attack);            
+            CHitAttackManager::RegistAttack(&hitAttack);            
         };
     };
 

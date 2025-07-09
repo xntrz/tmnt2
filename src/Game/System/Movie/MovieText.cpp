@@ -308,7 +308,6 @@ static void DrawSubtitleText(void)
 
     /* read elements */
     MOVIETEXT_ELEMENT* pFileElm = reinterpret_cast<MOVIETEXT_ELEMENT*>(++pFileHdr);
-    int32 elmIndex = 0;
 
     for (int32 i = 0; i < s_elementMax;)
     {

@@ -141,7 +141,7 @@ CUtromGimmick::CUtromGimmick(const char* pszName, void* pParam)
 };
 
 
-CUtromGimmick::~CUtromGimmick(void)
+/*virtual*/ CUtromGimmick::~CUtromGimmick(void)
 {
     if (m_pBodyHitData)
     {
@@ -169,7 +169,7 @@ CUtromGimmick::~CUtromGimmick(void)
 };
 
 
-void CUtromGimmick::MessageProc(int32 nMessageID, void* pParam)
+/*virtual*/ void CUtromGimmick::MessageProc(int32 nMessageID, void* pParam) /*override*/
 {
     CGimmick::MessageProc(nMessageID, pParam);
 
@@ -197,7 +197,7 @@ void CUtromGimmick::MessageProc(int32 nMessageID, void* pParam)
 };
 
 
-void CUtromGimmick::Draw(void) const
+/*virtual*/ void CUtromGimmick::Draw(void) const /*override*/
 {
     CGimmick::Draw();
 
@@ -206,13 +206,13 @@ void CUtromGimmick::Draw(void) const
 };
 
 
-void CUtromGimmick::PreMove(void)
+/*virtual*/ void CUtromGimmick::PreMove(void) /*override*/
 {
     ;
 };
 
 
-void CUtromGimmick::PostMove(void)
+/*virtual*/ void CUtromGimmick::PostMove(void) /*override*/
 {
     switch (m_eState)
     {
@@ -221,18 +221,18 @@ void CUtromGimmick::PostMove(void)
             //
             //  update catch hit
             //
-            RwSphere HitSphere = { 0 };
-            m_pUtromMove->GetPosition(&HitSphere.center);
-            HitSphere.radius = m_pUtromMove->GetRadius();
+            RwSphere hitSphere = { 0 };
+            m_pUtromMove->GetPosition(&hitSphere.center);
+            hitSphere.radius = m_pUtromMove->GetRadius();
         
-            CHitCatchData CatchData;
-            CatchData.Cleanup();
-            CatchData.SetObject(GetHandle());
-            CatchData.SetObjectType(GetType());
-            CatchData.SetShape(CHitCatchData::SHAPE_SPHERE);
-            CatchData.SetSphere(&HitSphere);
+            CHitCatchData hitCatch;
+            hitCatch.Cleanup();
+            hitCatch.SetObject(GetHandle());
+            hitCatch.SetObjectType(GetType());
+            hitCatch.SetShape(CHitCatchData::SHAPE_SPHERE);
+            hitCatch.SetSphere(&hitSphere);
 
-            CHitAttackManager::RegistCatch(&CatchData);
+            CHitAttackManager::RegistCatch(&hitCatch);
 
             //
             //  update body hit
@@ -269,11 +269,14 @@ void CUtromGimmick::PostMove(void)
         {
             if (m_fCounter >= 0.0f)
             {
-                CModel* pMdl = m_model.GetModel(CNormalGimmickModel::MODELTYPE_DRAW_NORMAL);
+                RwUInt8 alpha = static_cast<RwUInt8>(255.0f * (m_fCounter / 0.5f));
 
-                RwRGBA MatColor = pMdl->GetColor();
-                MatColor.alpha = uint8(255.0f * (m_fCounter / 0.5f));
-                pMdl->SetColor(MatColor);
+                CModel* pMdl = m_model.GetModel(CNormalGimmickModel::MODELTYPE_DRAW_NORMAL);
+                ASSERT(pMdl);
+
+                RwRGBA materialColor = pMdl->GetColor();
+                materialColor.alpha = alpha;                
+                pMdl->SetColor(materialColor);
 
                 m_fCounter -= CGameProperty::GetElapsedTime();
             }
@@ -314,7 +317,8 @@ void CUtromGimmick::PostMove(void)
 };
 
 
-void CUtromGimmick::OnReceiveEvent(const char* pszSender, GIMMICKTYPES::EVENTTYPE eventtype)
+/*virtual*/ void CUtromGimmick::OnReceiveEvent(const char* pszSender,
+                                               GIMMICKTYPES::EVENTTYPE eventtype) /*override*/
 {
     if (eventtype != GIMMICKTYPES::EVENTTYPE_ACTIVATE)
         return;
@@ -332,18 +336,16 @@ void CUtromGimmick::OnReceiveEvent(const char* pszSender, GIMMICKTYPES::EVENTTYP
         m_pModuleMan = nullptr;
     };
 
-    bool bSoundCall = false;
     RwV3d vPosition = Math::VECTOR3_ZERO;
     m_pUtromMove->GetPosition(&vPosition);
 
-    uint32 hEffect = CEffectManager::Play(EFFECTID::ID_WARP_START, &vPosition, bSoundCall);
-    ASSERT(hEffect);
+    CEffectManager::Play(EFFECTID::ID_WARP_START, &vPosition, false);
 
     CGameSound::PlayObjectSE(this, SDCODE_SE(4205));
 };
 
 
-void CUtromGimmick::OnCatchAttack(CHitAttackData* pAttack)
+/*virtual*/ void CUtromGimmick::OnCatchAttack(CHitAttackData* pAttack) /*override*/
 {
     if (m_eState != STATE_WAIT)
         return;
@@ -355,7 +357,7 @@ void CUtromGimmick::OnCatchAttack(CHitAttackData* pAttack)
 };
 
 
-void CUtromGimmick::OnCatch(CHitCatchData::RESULT* pResult)
+/*virtual*/ void CUtromGimmick::OnCatch(CHitCatchData::RESULT* pResult)
 {
     if ((*pResult == CHitCatchData::RESULT_THROWFRONT) ||
         (*pResult == CHitCatchData::RESULT_THROWBACK))
@@ -370,7 +372,7 @@ void CUtromGimmick::OnCatch(CHitCatchData::RESULT* pResult)
 };
 
 
-void CUtromGimmick::OnLift(CCharacter::MSG_LIFT_INFO* pMsgLiftInfo)
+/*virtual*/ void CUtromGimmick::OnLift(CCharacter::MSG_LIFT_INFO* pMsgLiftInfo)
 {
     RwV3d vPosition = Math::VECTOR3_ZERO;
 
@@ -411,13 +413,13 @@ void CUtromGimmick::OnLift(CCharacter::MSG_LIFT_INFO* pMsgLiftInfo)
 };
 
 
-void CUtromGimmick::OnMissThrow(RwV3d* pvVelocity)
+/*virtual*/ void CUtromGimmick::OnMissThrow(RwV3d* pvVelocity)
 {
     onThrow(pvVelocity, true);
 };
 
 
-void CUtromGimmick::OnThrow(RwV3d* pvVelocity)
+/*virtual*/ void CUtromGimmick::OnThrow(RwV3d* pvVelocity)
 {
     onThrow(pvVelocity, false);
 };
@@ -453,7 +455,6 @@ CUtromAreaCheckGimmick::CUtromAreaCheckGimmick(const char* pszName, void* pParam
 , m_listUtrom()
 {
     GIMMICKPARAM::GIMMICK_TERMS_AREA_BOX* pTermsParam = static_cast<GIMMICKPARAM::GIMMICK_TERMS_AREA_BOX*>(pParam);
-
     ASSERT(pTermsParam);
 
     m_listUtrom.clear();
@@ -461,13 +462,13 @@ CUtromAreaCheckGimmick::CUtromAreaCheckGimmick(const char* pszName, void* pParam
     m_vPosition = pTermsParam->m_vPosition;
     std::strcpy(m_szClearTargetName, pTermsParam->m_szTargetGimmick);
     m_iUtromCount = 0;
-    m_fRadius = pTermsParam->m_box.x * 0.5f;
+    m_fRadius = (pTermsParam->m_box.x * 0.5f);
     m_fHeight = pTermsParam->m_box.y;
     m_state = STATE_INIT;
 };
 
 
-CUtromAreaCheckGimmick::~CUtromAreaCheckGimmick(void)
+/*virtual*/ CUtromAreaCheckGimmick::~CUtromAreaCheckGimmick(void)
 {
     auto it = m_listUtrom.begin();
     while (!m_listUtrom.empty())
@@ -481,7 +482,7 @@ CUtromAreaCheckGimmick::~CUtromAreaCheckGimmick(void)
 };
 
 
-void CUtromAreaCheckGimmick::PostMove(void)
+/*virtual*/ void CUtromAreaCheckGimmick::PostMove(void) /*override*/
 {
     switch (m_state)
     {
@@ -499,7 +500,8 @@ void CUtromAreaCheckGimmick::PostMove(void)
 };
 
 
-void CUtromAreaCheckGimmick::OnReceiveEvent(const char* pszSender, GIMMICKTYPES::EVENTTYPE eventtype)
+/*virtual*/ void CUtromAreaCheckGimmick::OnReceiveEvent(const char* pszSender,
+                                                        GIMMICKTYPES::EVENTTYPE eventtype) /*override*/
 {
     ;
 };
@@ -536,8 +538,9 @@ void CUtromAreaCheckGimmick::AreaCheckInit(void)
 
 void CUtromAreaCheckGimmick::AreaCheckOn(void)
 {
+    auto itEnd = m_listUtrom.end();
     auto it = m_listUtrom.begin();
-    while (it != m_listUtrom.end())
+    while (it != itEnd)
     {
         CListNode<CUtromGimmick>* pNode = it.node();
         CUtromGimmick* pUtromGimmick = pNode->data;
@@ -553,14 +556,14 @@ void CUtromAreaCheckGimmick::AreaCheckOn(void)
 
         if ((vPosition.y >= m_vPosition.y) && ((m_vPosition.y + m_fHeight) >= vPosition.y))
         {
-            RwV3d vPos = Math::VECTOR3_ZERO;
-            Math::Vec3_Sub(&vPos, &vPosition, &m_vPosition);
-            vPos.y = 0.0f;
+            RwV3d vDist = Math::VECTOR3_ZERO;
+            Math::Vec3_Sub(&vDist, &vPosition, &m_vPosition);
+            vDist.y = 0.0f;
             
-            float fDist = Math::Vec3_Length(&vPos);
+            float fDist = Math::Vec3_Length(&vDist);
             
             if ((fDist <= m_fRadius) && (pUtromGimmick->m_eState == CUtromGimmick::STATE_WAIT))
-                CGimmickManager::PostEvent( pUtromGimmick->GetName(), GetName(), GIMMICKTYPES::EVENTTYPE_ACTIVATE);
+                CGimmickManager::PostEvent(pUtromGimmick->GetName(), GetName(), GIMMICKTYPES::EVENTTYPE_ACTIVATE);
         };
 
         if (pUtromGimmick->m_eState == CUtromGimmick::STATE_WARP_OUT)

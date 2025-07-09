@@ -26,13 +26,15 @@
 CAndSwitchGimmick::CAndSwitchGimmick(const char* pszName, void* pParam)
 : CGimmick(pszName, pParam)
 , m_privatestate(PRIVATESTATE_CHECK)
+, m_szEventGimmick()
+, m_szTargetGimmick()
 {
     m_szEventGimmick[0] = '\0';
     m_szTargetGimmick[0] = '\0';
 
-    ASSERT(pParam);
+    GIMMICKPARAM::GIMMICK_TERMS_AND* pAndSwitchParam = static_cast<GIMMICKPARAM::GIMMICK_TERMS_AND*>(pParam);
+    ASSERT(pAndSwitchParam);
     
-    GIMMICKPARAM::GIMMICK_TERMS_AND* pAndSwitchParam = (GIMMICKPARAM::GIMMICK_TERMS_AND*)pParam;
     std::strcpy(m_szTargetGimmick, pAndSwitchParam->m_szTargetGimmick);
     std::strcpy(m_szEventGimmick, pAndSwitchParam->m_szEventGimmickName);
 };
@@ -53,10 +55,12 @@ void CAndSwitchGimmick::PostMove(void)
             if (checkSwitch())
             {
                 CGimmickManager::PostEvent(m_szTargetGimmick, GetName(), GIMMICKTYPES::EVENTTYPE_ACTIVATE);
-
                 m_privatestate = PRIVATESTATE_END;
             };
         }
+        break;
+
+    default:
         break;
     };
 };
@@ -70,7 +74,8 @@ bool CAndSwitchGimmick::checkSwitch(void)
         CStateGimmickQuery query(GIMMICKTYPES::QUERY_SYS_SWITCH);
         pEventGimmick->Query(&query);
 
-        if (query.m_nState == query.m_nTarget && query.m_nTarget > 0)
+        if ((query.m_nState == query.m_nTarget) &&
+            (query.m_nTarget > 0))
             return true;
     };
 
@@ -104,7 +109,8 @@ CGimmick* CGroupGimmick::CHILDNODE::GetGimmick(void) const
     if (pGameObject)
     {
         ASSERT(pGameObject->GetType() == GAMEOBJECTTYPE::GIMMICK);
-        CGimmick* pGimmick = (CGimmick*)pGameObject;
+
+        CGimmick* pGimmick = static_cast<CGimmick*>(pGameObject);
         return pGimmick;
 	};
 	
@@ -117,14 +123,13 @@ CGroupGimmick::CGroupGimmick(const char* pszName, void* pParam)
 , m_pChildArray(nullptr)
 , m_nChildNum(0)
 {
-    ASSERT(pParam);
+    GIMMICKPARAM::GIMMICK_GROUP* pGroupParam = static_cast<GIMMICKPARAM::GIMMICK_GROUP*>(pParam);
+    ASSERT(pGroupParam);
 
-    GIMMICKPARAM::GIMMICK_GROUP* pGroupParam = (GIMMICKPARAM::GIMMICK_GROUP*)pParam;
     if (pGroupParam->m_nGimmickNum > 0)
     {
         m_nChildNum = pGroupParam->m_nGimmickNum;
         m_pChildArray = new CHILDNODE[m_nChildNum];
-        ASSERT(m_pChildArray);
     };
 
     for (int32 i = 0; i < m_nChildNum; ++i)
@@ -160,7 +165,8 @@ bool CGroupGimmick::Query(CGimmickQuery* pQuery) const
 };
 
 
-void CGroupGimmick::OnReceiveEvent(const char* pszSender, GIMMICKTYPES::EVENTTYPE eventtype)
+void CGroupGimmick::OnReceiveEvent(const char* pszSender,
+                                               GIMMICKTYPES::EVENTTYPE eventtype)
 {
     for (int32 i = 0; i < m_nChildNum; ++i)
         CGimmickManager::PostEvent(getChildNode(i)->GetName(), pszSender, eventtype);
@@ -169,14 +175,18 @@ void CGroupGimmick::OnReceiveEvent(const char* pszSender, GIMMICKTYPES::EVENTTYP
 
 CGimmick* CGroupGimmick::GetChild(int32 no) const
 {
-    ASSERT(no >= 0 && no < m_nChildNum);
+    ASSERT(no >= 0);
+    ASSERT(no < m_nChildNum);
+
     return getChildNode(no)->GetGimmick();
 };
 
 
 CGroupGimmick::CHILDNODE* CGroupGimmick::getChildNode(int32 no) const
 {
-    ASSERT(no >= 0 && no < m_nChildNum);
+    ASSERT(no >= 0);
+    ASSERT(no < m_nChildNum);
+
     return &m_pChildArray[no];
 };
 
@@ -191,20 +201,19 @@ CGameEndGimmick::CGameEndGimmick(const char* pszName, void* pParam)
 , m_mode(MODE_GAMECLEAR)
 , m_clearsub(0)
 {
-    ASSERT(pParam);
+    GIMMICKPARAM::GIMMICK_BASIC* pBasicParam = static_cast<GIMMICKPARAM::GIMMICK_BASIC*>(pParam);
+    ASSERT(pBasicParam);
 
-    GIMMICKPARAM::GIMMICK_BASIC* pBasic = (GIMMICKPARAM::GIMMICK_BASIC*)pParam;
-
-    switch (pBasic->m_id)
+    switch (pBasicParam->m_id)
     {
     case GIMMICKID::ID_S_GCLEAR:
         m_mode = MODE_GAMECLEAR;
-        m_clearsub = pBasic->m_subid;
+        m_clearsub = pBasicParam->m_subid;
         break;
 
     case GIMMICKID::ID_S_GOVER:
         m_mode = MODE_GAMEOVER;
-        m_clearsub = pBasic->m_subid;
+        m_clearsub = pBasicParam->m_subid;
         break;
 
     default:
@@ -220,7 +229,8 @@ CGameEndGimmick::~CGameEndGimmick(void)
 };
 
 
-void CGameEndGimmick::OnReceiveEvent(const char* pszSender, GIMMICKTYPES::EVENTTYPE eventtype)
+void CGameEndGimmick::OnReceiveEvent(const char* pszSender,
+                                                 GIMMICKTYPES::EVENTTYPE eventtype)
 {
     if (eventtype == GIMMICKTYPES::EVENTTYPE_ACTIVATE)
     {
@@ -252,27 +262,28 @@ void CGameEndGimmick::OnReceiveEvent(const char* pszSender, GIMMICKTYPES::EVENTT
 
 CCameraChangeGimmick::CCameraChangeGimmick(const char* pszName, void* pParam)
 : CGimmick(pszName, pParam)
+, m_step(STEP_IDLE)
 , m_vPosition(Math::VECTOR3_ZERO)
 , m_vRotation(Math::VECTOR3_ZERO)
 , m_fRotationY(0.0f)
-, m_step(STEP_IDLE)
+, m_szSenderGimmick()
 {
     m_szSenderGimmick[0] = '\0';
 
-    ASSERT(pParam);
+    GIMMICKPARAM::GIMMICK_BASIC* pBasicParam = static_cast<GIMMICKPARAM::GIMMICK_BASIC*>(pParam);
+    ASSERT(pBasicParam);
 
-    GIMMICKPARAM::GIMMICK_BASIC* pBasic = (GIMMICKPARAM::GIMMICK_BASIC*)pParam;
-    m_vPosition = pBasic->m_vPosition;
+    m_vPosition = pBasicParam->m_vPosition;
 
     RwMatrix matrix;
     RwMatrixSetIdentityMacro(&matrix);
-    CGimmickUtils::QuaternionToRotationMatrix(&matrix, &pBasic->m_quat);
+    CGimmickUtils::QuaternionToRotationMatrix(&matrix, &pBasicParam->m_quat);
     
     m_vRotation = matrix.at;
     m_vRotation.y = 0.0f;
     Math::Vec3_Normalize(&m_vRotation, &m_vRotation);
     
-    m_fRotationY = CGimmickUtils::QuaternionToRotationY(&pBasic->m_quat);
+    m_fRotationY = CGimmickUtils::QuaternionToRotationY(&pBasicParam->m_quat);
 };
 
 
@@ -345,11 +356,15 @@ void CCameraChangeGimmick::PostMove(void)
             Release();            
         }
         break;
+
+    default:
+        break;
     };
 };
 
 
-void CCameraChangeGimmick::OnReceiveEvent(const char* pszSender, GIMMICKTYPES::EVENTTYPE eventtype)
+void CCameraChangeGimmick::OnReceiveEvent(const char* pszSender,
+                                                      GIMMICKTYPES::EVENTTYPE eventtype)
 {
     if (eventtype == GIMMICKTYPES::EVENTTYPE_ACTIVATE)
     {
@@ -377,9 +392,9 @@ void CCameraChangeGimmick::ReplacePlayers(void)
 
     static_assert(COUNT_OF(afRotation) == GAMETYPES::PLAYERS_MAX, "update me");
 
-    RwV3d vTmp = Math::VECTOR3_ZERO;
-    Math::Vec3_Normalize(&vTmp, &m_vRotation);
-    Math::Vec3_Scale(&vTmp, &vTmp, 1.5f);
+    RwV3d vDir = Math::VECTOR3_ZERO;
+    Math::Vec3_Normalize(&vDir, &m_vRotation);
+    Math::Vec3_Scale(&vDir, &vDir, 1.5f);
 
 	int32 nPlayerNum = CGameProperty::GetPlayerNum();
     for (int32 i = 0; i < nPlayerNum; ++i)
@@ -389,7 +404,7 @@ void CCameraChangeGimmick::ReplacePlayers(void)
         Math::Matrix_RotateY(&matrix, MATH_DEG2RAD(afRotation[i]));
 
         RwV3d vPosition = Math::VECTOR3_ZERO;
-        RwV3dTransformPoint(&vPosition, &vTmp, &matrix);
+        RwV3dTransformPoint(&vPosition, &vDir, &matrix);
         Math::Vec3_Add(&vPosition, &vPosition, &m_vPosition);
 
         float fHeight = CWorldMap::GetMapHeight(&vPosition);
@@ -445,12 +460,11 @@ CSEGimmick::CSEGimmick(const char* pszName, void* pParam)
 , m_pNowSEInfo(nullptr)
 , m_fTimer(0.0f)
 {
-    ASSERT(pParam);
-
-    GIMMICKPARAM::GIMMICK_PLAYSE* pPlaySeParam = (GIMMICKPARAM::GIMMICK_PLAYSE*)pParam;
-
-    ASSERT( pPlaySeParam->m_nSE >= 0 &&
-            pPlaySeParam->m_nSE < COUNT_OF(m_aSeInfoList));
+    GIMMICKPARAM::GIMMICK_PLAYSE* pPlaySeParam = static_cast<GIMMICKPARAM::GIMMICK_PLAYSE*>(pParam);
+    ASSERT(pPlaySeParam);
+    
+    ASSERT(pPlaySeParam->m_nSE >= 0);    
+    ASSERT(pPlaySeParam->m_nSE < COUNT_OF(m_aSeInfoList));
     
 	m_vPosition = pPlaySeParam->m_vPosition;
     m_pNowSEInfo = &m_aSeInfoList[pPlaySeParam->m_nSE];
@@ -488,18 +502,15 @@ void CSEGimmick::PostMove(void)
 };
 
 
-void CSEGimmick::OnReceiveEvent(const char* pszSender, GIMMICKTYPES::EVENTTYPE eventtype)
+void CSEGimmick::OnReceiveEvent(const char* pszSender,
+                                            GIMMICKTYPES::EVENTTYPE eventtype)
 {
     if (eventtype == GIMMICKTYPES::EVENTTYPE_ACTIVATE)
     {
         if (m_bPlaying)
-        {
             stopSE();
-        }
         else
-        {
             startSE();
-        };
     };
 };
 
@@ -527,12 +538,12 @@ void CSEGimmick::stopSE(void)
 CInvisibleWallGimmick::CInvisibleWallGimmick(const char* pszName, void* pParam)
 : CGimmick(pszName, pParam)
 , m_type(TYPE_5M_DISAPPEAR)
+, m_model()
 , m_hAtari(0)
 , m_bEnable(false)
 {
-    ASSERT(pParam);
-
-    GIMMICKPARAM::GIMMICK_BASIC* pWallParam = (GIMMICKPARAM::GIMMICK_BASIC*)pParam;
+    GIMMICKPARAM::GIMMICK_BASIC* pWallParam = static_cast<GIMMICKPARAM::GIMMICK_BASIC*>(pParam);
+    ASSERT(pWallParam);
 
     const char* apszModel[] =
     {
@@ -552,22 +563,20 @@ CInvisibleWallGimmick::CInvisibleWallGimmick(const char* pszName, void* pParam)
     CModel* pDispModel = CModelManager::CreateModel(apszModel[pWallParam->m_subid]);
     ASSERT(pDispModel);
     m_model.SetModel(CNormalGimmickModel::MODELTYPE_DRAW_NORMAL, pDispModel);
-#endif
-    
-    RwV3d vRotate = Math::VECTOR3_ZERO;
-    
+#endif /* _DEBUG */
+        
     RwMatrix matrix;
     RwMatrixSetIdentityMacro(&matrix);
-    
     CGimmickUtils::QuaternionToRotationMatrix(&matrix, &pWallParam->m_quat);
+    
+    RwV3d vRotate = Math::VECTOR3_ZERO;
     CGimmickUtils::MatrixToRotation(&matrix, &vRotate);
 
     m_model.SetPosition(&pWallParam->m_vPosition);
     m_model.SetRotation(&vRotate);
     SetModelStrategy(&m_model);
 
-    m_type = TYPE(pWallParam->m_subid);
-
+    m_type = static_cast<TYPE>(pWallParam->m_subid);
     switch (m_type)
     {
     case TYPE_5M_DISAPPEAR:
@@ -601,11 +610,12 @@ void CInvisibleWallGimmick::Draw(void) const
 #ifdef _DEBUG
     if (CGimmickDebug::SHOW_MODEL)
         CGimmick::Draw();
-#endif
+#endif /* _DEBUG */
 };
 
 
-void CInvisibleWallGimmick::OnReceiveEvent(const char* pszSender, GIMMICKTYPES::EVENTTYPE eventtype)
+void CInvisibleWallGimmick::OnReceiveEvent(const char* pszSender,
+                                                       GIMMICKTYPES::EVENTTYPE eventtype)
 {
     if (eventtype == GIMMICKTYPES::EVENTTYPE_ACTIVATE)
     {
@@ -627,13 +637,9 @@ void CInvisibleWallGimmick::OnReceiveEvent(const char* pszSender, GIMMICKTYPES::
         };
 
         if (m_bEnable)
-        {
             initCollision();
-        }
         else
-        {
             termCollision();
-        };
     };
 };
 
@@ -643,10 +649,10 @@ void CInvisibleWallGimmick::initCollision(void)
     if (m_model.GetCollisionModelClump())
     {
         RpClump* pClump = m_model.GetCollisionModelClump();
+        ASSERT(pClump);
 
-        uint32 hAtari = CMapCollisionModel::RegistCollisionModel(pClump);
-        ASSERT(hAtari);
-		m_hAtari = hAtari;
+        m_hAtari = CMapCollisionModel::RegistCollisionModel(pClump);
+        ASSERT(m_hAtari);
 
         if (m_hAtari)
         {
@@ -695,7 +701,7 @@ void CInvisibleWallGimmick::termCollision(void)
     ASSERT(pszBaseName);
 
     std::sprintf(szSearchGimmickName, "%s_A", pszBaseName);
-    replacePlayer(szSearchGimmickName, nPlayerNo, pvPosition, bBlink);
+    ReplacePlayer(szSearchGimmickName, nPlayerNo, pvPosition, bBlink);
 };
 
 
@@ -708,11 +714,11 @@ void CInvisibleWallGimmick::termCollision(void)
     ASSERT(pszBaseName);
 
     std::sprintf(szSearchGimmickName, "%s_B", pszBaseName);
-    replacePlayer(szSearchGimmickName, nPlayerNo, pvPosition, bBlink);
+    ReplacePlayer(szSearchGimmickName, nPlayerNo, pvPosition, bBlink);
 };
 
 
-/*static*/ void CReplaceGimmick::replacePlayer(const char* pszSearchGimmickName,
+/*static*/ void CReplaceGimmick::ReplacePlayer(const char* pszSearchGimmickName,
                                                int32 nPlayerNo,
                                                const RwV3d* pvPosition,
                                                bool bBlink)
@@ -774,15 +780,16 @@ CReplaceGimmick::CReplaceGimmick(const char* pszName, void* pParam)
 : CGimmick(pszName, pParam)
 , m_vReplacePosition(Math::VECTOR3_ZERO)
 , m_vReplaceRotation(Math::VECTOR3_ZERO)
+, m_aAreaRectVertex()
 , m_fRotationY(0.0f)
 , m_bEnable(false)
 , m_bStartPosition(false)
 {
     std::memset(m_aAreaRectVertex, 0x00, sizeof(m_aAreaRectVertex));
 
-    ASSERT(pParam);
+    GIMMICKPARAM::GIMMICK_BASIC* pReplaceParam = static_cast<GIMMICKPARAM::GIMMICK_BASIC*>(pParam);
+    ASSERT(pReplaceParam);
 
-    GIMMICKPARAM::GIMMICK_BASIC* pReplaceParam = (GIMMICKPARAM::GIMMICK_BASIC*)pParam;
     m_vReplacePosition = pReplaceParam->m_vPosition;
     
     RwMatrix matrix;
@@ -794,8 +801,10 @@ CReplaceGimmick::CReplaceGimmick(const char* pszName, void* pParam)
     Math::Vec3_Normalize(&m_vReplaceRotation, &m_vReplaceRotation);
 
     m_fRotationY = CGimmickUtils::QuaternionToRotationY(&pReplaceParam->m_quat);
-	setAreaVertex();
-    m_bStartPosition = bool(pReplaceParam->m_subid == 1);
+
+    setAreaVertex();
+
+    m_bStartPosition = (pReplaceParam->m_subid == 1) ? true : false;
 };
 
 
@@ -811,7 +820,8 @@ void CReplaceGimmick::PostMove(void)
 };
 
 
-void CReplaceGimmick::OnReceiveEvent(const char* pszSender, GIMMICKTYPES::EVENTTYPE eventtype)
+void CReplaceGimmick::OnReceiveEvent(const char* pszSender,
+                                                 GIMMICKTYPES::EVENTTYPE eventtype)
 {
     if (eventtype == GIMMICKTYPES::EVENTTYPE_ACTIVATE)
         m_bEnable = !m_bEnable;
@@ -830,16 +840,16 @@ void CReplaceGimmick::OnReplacePlayer(int32 nPlayerNo, bool bBlink)
 
     static_assert(COUNT_OF(afRotation) == GAMETYPES::PLAYERS_MAX, "update me");
 
-    RwV3d vTmp = Math::VECTOR3_ZERO;
-    Math::Vec3_Normalize(&vTmp, &m_vReplaceRotation);
-    Math::Vec3_Scale(&vTmp, &vTmp, 1.5f);
+    RwV3d vDir = Math::VECTOR3_ZERO;
+    Math::Vec3_Normalize(&vDir, &m_vReplaceRotation);
+    Math::Vec3_Scale(&vDir, &vDir, 1.5f);
 
     RwMatrix matrix;
     RwMatrixSetIdentityMacro(&matrix);
     Math::Matrix_RotateY(&matrix, MATH_DEG2RAD(afRotation[nPlayerNo]));
 
     RwV3d vPosition = Math::VECTOR3_ZERO;
-    RwV3dTransformPoint(&vPosition, &vTmp, &matrix);
+    RwV3dTransformPoint(&vPosition, &vDir, &matrix);
     Math::Vec3_Add(&vPosition, &vPosition, &m_vReplacePosition);
 
     float fHeight = CWorldMap::GetMapHeight(&vPosition);
@@ -858,7 +868,7 @@ void CReplaceGimmick::OnReplacePlayer(int32 nPlayerNo, bool bBlink)
 
 bool CReplaceGimmick::IsEnableReplaceGimmick(void) const
 {
-    return (m_bEnable && isAreaRectvertexInScreen());
+    return (m_bEnable && isAreaRectVertexInScreen());
 };
 
 
@@ -886,7 +896,7 @@ void CReplaceGimmick::setAreaVertex(void)
 };
 
 
-bool CReplaceGimmick::isAreaRectvertexInScreen(void) const
+bool CReplaceGimmick::isAreaRectVertexInScreen(void) const
 {
     RwMatrix matrix;
     RwMatrixSetIdentityMacro(&matrix);    
@@ -1056,12 +1066,11 @@ CHelpGimmick::CHelpGimmick(const char* pszName, void* pParam)
 , m_fTime(0.0f)
 , m_bExclusive(false)
 {
-    ASSERT(pParam);
+    GIMMICKPARAM::GIMMICK_HELP* pHelpParam = static_cast<GIMMICKPARAM::GIMMICK_HELP*>(pParam);
+    ASSERT(pHelpParam);
 
-    GIMMICKPARAM::GIMMICK_HELP* pHelpParam = (GIMMICKPARAM::GIMMICK_HELP*)pParam;
-
-    ASSERT( pHelpParam->m_nHelpNo >= 0 &&
-            pHelpParam->m_nHelpNo < COUNT_OF(m_aInitParam));
+    ASSERT(pHelpParam->m_nHelpNo >= 0);
+    ASSERT(pHelpParam->m_nHelpNo < COUNT_OF(m_aInitParam));
 
     m_nSeGroupID = m_aInitParam[pHelpParam->m_nHelpNo].m_nSeGroupID;
     m_bExclusive = m_aInitParam[pHelpParam->m_nHelpNo].m_bExclusive;
@@ -1106,11 +1115,15 @@ void CHelpGimmick::Run(void)
     case STATE_STOP:
         Release();
         break;
+
+    default:
+        break;
     };
 };
 
 
-void CHelpGimmick::OnReceiveEvent(const char* pszSender, GIMMICKTYPES::EVENTTYPE eventtype)
+void CHelpGimmick::OnReceiveEvent(const char* pszSender,
+                                              GIMMICKTYPES::EVENTTYPE eventtype)
 {
     if (eventtype == GIMMICKTYPES::EVENTTYPE_ACTIVATE)
     {
@@ -1122,6 +1135,10 @@ void CHelpGimmick::OnReceiveEvent(const char* pszSender, GIMMICKTYPES::EVENTTYPE
 
         case STATE_RUN:
             forceEnd();
+            break;
+
+        default:
+            ASSERT(false);
             break;
         };
     };
@@ -1171,6 +1188,9 @@ bool CHelpGimmick::isSatisfyCrystalMessageCondition(void)
         if (CGameData::Record().Item().IsItemTakenYet(ITEMID::ID_INVINCIBLE))
             bResult = false;
         break;
+
+    default:
+        break;
     };
 
     return bResult;
@@ -1179,7 +1199,8 @@ bool CHelpGimmick::isSatisfyCrystalMessageCondition(void)
 
 void CHelpGimmick::showMessage(void)
 {
-    if (m_nSeGroupID < SEGROUPID::VALUE(227) || m_nSeGroupID > SEGROUPID::VALUE(231))
+    if ((m_nSeGroupID < SEGROUPID::VALUE(227)) ||
+        (m_nSeGroupID > SEGROUPID::VALUE(231)))
         CMessageManager::Request(SEGROUPID::VALUE(m_nSeGroupID));
     else
         CMessageManager::OnlyTextRequest(SEGROUPID::VALUE(m_nSeGroupID));
@@ -1193,16 +1214,14 @@ void CHelpGimmick::showMessage(void)
 
 CTutorialGimmick::CTutorialGimmick(const char* pszName, void* pParam)
 : CGimmick(pszName, pParam)
+, m_state(STATE_IDLE)
 , m_nTutoNo(0)
 , m_bDonLaserTutoEnable(false)
 {
-    ASSERT(pParam);
-
-    GIMMICKPARAM::GIMMICK_TUTORIAL* pTutorialParam = (GIMMICKPARAM::GIMMICK_TUTORIAL*)pParam;
+    GIMMICKPARAM::GIMMICK_TUTORIAL* pTutorialParam = static_cast<GIMMICKPARAM::GIMMICK_TUTORIAL*>(pParam);
+    ASSERT(pTutorialParam);
 
     m_nTutoNo = pTutorialParam->m_nTutoNo;
-	m_state = STATE_IDLE;
-
     if (m_nTutoNo == 3)
     {
         if (CGameData::Record().Secret().IsDonLazerEnabled())
@@ -1232,24 +1251,31 @@ void CTutorialGimmick::PostMove(void)
         m_state = STATE_EOL;
         break;
 
-    case STATE_EOL:
+    case STATE_EOL:        
+        break;
+
+    default:
         break;
     };
 };
 
 
-void CTutorialGimmick::OnReceiveEvent(const char* pszSender, GIMMICKTYPES::EVENTTYPE eventtype)
+void CTutorialGimmick::OnReceiveEvent(const char* pszSender,
+                                                  GIMMICKTYPES::EVENTTYPE eventtype)
 {
     if (eventtype == GIMMICKTYPES::EVENTTYPE_ACTIVATE)
     {
         switch (m_state)
         {
         case STATE_IDLE:
-            if (m_nTutoNo != 3 || !m_bDonLaserTutoEnable)
+            if ((m_nTutoNo != 3) || !m_bDonLaserTutoEnable)
             {
                 CGameEvent::SetTutorialOpened(m_nTutoNo);
                 m_state = STATE_OPENED;
             };
+            break;
+
+        default:
             break;
         };
     };
@@ -1263,12 +1289,12 @@ void CTutorialGimmick::OnReceiveEvent(const char* pszSender, GIMMICKTYPES::EVENT
 
 CEnemyKillGimmick::CEnemyKillGimmick(const char* pszName, void* pParam)
 : CGimmick(pszName, pParam)
+, m_szTargetGimmick()
 {
     m_szTargetGimmick[0] = '\0';
 
-    ASSERT(pParam);
-
-    GIMMICKPARAM::GIMMICK_TERMS* pTermsParam = (GIMMICKPARAM::GIMMICK_TERMS*)pParam;
+    GIMMICKPARAM::GIMMICK_TERMS* pTermsParam = static_cast<GIMMICKPARAM::GIMMICK_TERMS*>(pParam);
+    ASSERT(pTermsParam);
 
     std::strcpy(m_szTargetGimmick, pTermsParam->m_szTargetGimmick);
 };
@@ -1280,7 +1306,8 @@ CEnemyKillGimmick::~CEnemyKillGimmick(void)
 };
 
 
-void CEnemyKillGimmick::OnReceiveEvent(const char* pszSender, GIMMICKTYPES::EVENTTYPE eventtype)
+void CEnemyKillGimmick::OnReceiveEvent(const char* pszSender,
+                                                   GIMMICKTYPES::EVENTTYPE eventtype)
 {
     if (eventtype == GIMMICKTYPES::EVENTTYPE_ACTIVATE)
         CGimmickManager::PostEvent(m_szTargetGimmick, GetName(), GIMMICKTYPES::EVENTTYPE_ENEMYKILL);

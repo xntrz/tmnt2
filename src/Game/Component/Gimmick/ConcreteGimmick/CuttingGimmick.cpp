@@ -63,6 +63,11 @@ void CCuttingGimmickModel::SetState(STATE state)
 };
 
 
+//
+// *********************************************************************************
+//
+
+
 /*static*/ const int32 CCuttingGimmick::NUM_ATTACK_TO_BREAK = 10;
 
 
@@ -79,6 +84,7 @@ void CCuttingGimmickModel::SetState(STATE state)
 CCuttingGimmick::CCuttingGimmick(const char* pszName, void* pParam)
 : CGimmick(pszName, pParam)
 , m_pCuttingMove(nullptr)
+, m_model()
 , m_fTimer(0.0f)
 , m_state(STATE_NONE)
 , m_subid(0)
@@ -128,7 +134,7 @@ bool CCuttingGimmick::Query(CGimmickQuery* pQuery) const
 
     if (pQuery->GetType() == GIMMICKTYPES::QUERY_EVE_BROKEN)
     {
-        CStateGimmickQuery* pStateQuery = (CStateGimmickQuery*)pQuery;
+        CStateGimmickQuery* pStateQuery = static_cast<CStateGimmickQuery*>(pQuery);
         ++pStateQuery->m_nTarget;
 
         if (m_state == STATE_END)
@@ -205,11 +211,14 @@ void CCuttingGimmick::OnCatchAttack(CHitAttackData* pAttack)
 
 void CCuttingGimmick::init(void* pParam)
 {
-    ASSERT(pParam);
+    GIMMICKPARAM::GIMMICK_BASIC* pInitParam = static_cast<GIMMICKPARAM::GIMMICK_BASIC*>(pParam);
+    ASSERT(pInitParam);
 
-    GIMMICKPARAM::GIMMICK_BASIC* pInitParam = (GIMMICKPARAM::GIMMICK_BASIC*)pParam;
     m_subid = pInitParam->m_subid;
 
+    //
+    //  Init model
+    //
     CModel* pModel = CModelManager::CreateModel(kindinfo().m_pszModelName);
     ASSERT(pModel);
     pModel->SetLightingEnable(kindinfo().m_bLighting);
@@ -230,26 +239,33 @@ void CCuttingGimmick::init(void* pParam)
     m_model.SetModel(CCuttingGimmickModel::CUTMODELKIND_ATARI, pAtari);
     m_model.SetModel(CCuttingGimmickModel::CUTMODELKIND_NORMAL_UP, pModelU);
     m_model.SetModel(CCuttingGimmickModel::CUTMODELKIND_NORMAL_DOWN, pModelD);
+
     m_model.SetPosition(&pInitParam->m_vPosition);
 
     RwV3d vRotation = Math::VECTOR3_ZERO;
     vRotation.y = CGimmickUtils::QuaternionToRotationY(&pInitParam->m_quat);
     m_model.SetRotation(&vRotation);
+
     m_model.SetState(CCuttingGimmickModel::STATE_NORMAL);
     m_model.UpdateFrame();
 
+    //
+    //  Init movement
+    //
     m_pCuttingMove = new CCuttingGimmickMove;
-    ASSERT(m_pCuttingMove);
     m_pCuttingMove->SetPosition(&pInitParam->m_vPosition);
     m_pCuttingMove->SetRotation(&vRotation);
-    SetMoveStrategy(m_pCuttingMove);
     m_pCuttingMove->Start();
 
+    SetMoveStrategy(m_pCuttingMove);
+
+    //
+    //  Init atari
+    //
     RpClump* pAtariClump = pAtari->GetClump();
     if (pAtariClump)
     {
         m_hAtari = CMapCollisionModel::RegistCollisionModel(pAtariClump);
-        ASSERT(m_hAtari);
         if (m_hAtari)
             CMapCollisionModel::SetBoundingSphereRadius(m_hAtari, kindinfo().m_fCollisionRadius);
     };
@@ -260,20 +276,18 @@ void CCuttingGimmick::waiting(void)
 {
     if (m_fInvinsibleTimer <= 0.0f)
     {        
-        RwSphere sphere = { 0 };
-        sphere.radius = kindinfo().m_fHitRadius;
+        RwSphere hitSphere = { 0 };
+        m_pCuttingMove->GetPosition(&hitSphere.center);
+        hitSphere.center.y += 1.0f;
+        hitSphere.radius = kindinfo().m_fHitRadius;
         
-        ASSERT(m_pCuttingMove);
-        m_pCuttingMove->GetPosition(&sphere.center);
-        sphere.center.y += 1.0f;
+        CHitCatchData hitCatch;
+        hitCatch.SetObject(GetHandle());
+        hitCatch.SetObjectType(GetType());
+        hitCatch.SetShape(CHitCatchData::SHAPE_SPHERE);
+        hitCatch.SetSphere(&hitSphere);
 
-        CHitCatchData Catch;
-        Catch.SetObject(GetHandle());
-        Catch.SetObjectType(GetType());
-        Catch.SetShape(CHitCatchData::SHAPE_SPHERE);
-        Catch.SetSphere(&sphere);
-
-        CHitAttackManager::RegistCatch(&Catch);
+        CHitAttackManager::RegistCatch(&hitCatch);
     }
     else
     {
@@ -314,12 +328,12 @@ void CCuttingGimmick::breakdown(void)
 
     RwV3d vRotVelocity = Math::VECTOR3_ZERO;
     m_pCuttingMove->GetRotVelocity(&vRotVelocity);
-    vRotVelocity.z += (CGameProperty::GetElapsedTime() * Math::PI05);
+    vRotVelocity.z += (CGameProperty::GetElapsedTime() * MATH_PI05);
     m_pCuttingMove->SetRotVelocity(&vRotVelocity);
 
-    RwRGBA Color = { 0xFF, 0xFF, 0xFF, 0xFF };
-    Color.alpha = uint8((1.0f - m_fTimer * 0.83) * 255.0f);
-    pModel->SetColor(Color);
+    RwRGBA materialColor = { 0xFF, 0xFF, 0xFF, 0xFF };
+    materialColor.alpha = static_cast<RwUInt8>((1.0f - (m_fTimer / 1.2f)) * 255.0f);
+    pModel->SetColor(materialColor);
     
     m_fTimer += CGameProperty::GetElapsedTime();
     if (m_fTimer > 1.2f)
@@ -336,9 +350,9 @@ void CCuttingGimmick::disappear(void)
     CModel* pModel = m_model.GetModel(CCuttingGimmickModel::CUTMODELKIND_NORMAL_DOWN);
     ASSERT(pModel);
     
-    RwRGBA Color = { 0xFF, 0xFF, 0xFF, 0xFF };
-    Color.alpha = uint8((1.0f - m_fTimer * 0.83) * 255.0f);
-    pModel->SetColor(Color);
+    RwRGBA materialColor = { 0xFF, 0xFF, 0xFF, 0xFF };
+    materialColor.alpha = static_cast<RwUInt8>((1.0f - m_fTimer) * 255.0f);
+    pModel->SetColor(materialColor);
 
     m_fTimer += CGameProperty::GetElapsedTime();
     if (m_fTimer > 1.0f)
@@ -359,18 +373,11 @@ void CCuttingGimmick::onCut(void)
     };
 
     m_model.SetState(CCuttingGimmickModel::STATE_DESTROY);
-    
+
     CModel* pModel = m_model.GetModel(CCuttingGimmickModel::CUTMODELKIND_NORMAL_UP);
-    ASSERT(pModel);
-    
     RpClump* pClump = pModel->GetClump();
-    ASSERT(pClump);
-    
     RwFrame* pFrame = RpClumpGetFrameMacro(pClump);
-    ASSERT(pFrame);
-    
     RwMatrix* pModeling = RwFrameGetMatrixMacro(pFrame);
-    ASSERT(pModeling);
 
     RwV3d vVelocity = Math::VECTOR3_ZERO;
     vVelocity.x = -pModeling->right.x;
@@ -402,6 +409,8 @@ void CCuttingGimmick::onDisappear(void)
 
 const CCuttingGimmick::KINDINFO& CCuttingGimmick::kindinfo(void) const
 {
-    ASSERT(m_subid >= 0 && m_subid < COUNT_OF(m_aCuttingGimmickKindInfoList));
+    ASSERT(m_subid >= 0);
+    ASSERT(m_subid < COUNT_OF(m_aCuttingGimmickKindInfoList));
+    
     return m_aCuttingGimmickKindInfoList[m_subid];
 };

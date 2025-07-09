@@ -117,8 +117,6 @@ CBaseMouserAI::CBaseMouserAI(CEnemyCharacter* pEnemyChr)
 : CBaseAI6045(pEnemyChr)
 {
     /* init common param */
-    GAMETYPES::DIFFICULTY difficulty = CGameProperty::GetDifficulty();
-
     uint8 freq = AIFreqParam().GetFrequency(CEnemyParameter::FREQUENCY_COMMON_ATTACKINTERVAL);
     float fAttackInterval = static_cast<float>(freq) * 0.01f;
     

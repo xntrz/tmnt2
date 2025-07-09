@@ -28,8 +28,9 @@ CBreakableCarGimmick::CBreakableCarGimmick(const char* pszName, void* pParam)
 , m_ahEffect()
 , m_hAtari(0)
 {
-    GIMMICKPARAM::GIMMICK_BASIC* pInitParam = (GIMMICKPARAM::GIMMICK_BASIC*)pParam;
-    
+    GIMMICKPARAM::GIMMICK_BASIC* pInitParam = static_cast<GIMMICKPARAM::GIMMICK_BASIC*>(pParam);
+    ASSERT(pInitParam != nullptr);
+
     static const char* s_apszModelName[] =
     {
         "car1",
@@ -150,16 +151,16 @@ void CBreakableCarGimmick::GetPosition(RwV3d* pvPosition) const
 
 void CBreakableCarGimmick::OnCatchAttack(CHitAttackData* pAttack)
 {
-    if (m_eState != STATE_IDLE)
-        return;
+    if (m_eState == STATE_IDLE)
+    {
+        if ((pAttack->GetStatus() == CHitAttackData::STATUS_THROW) ||
+            (pAttack->GetStatus() == CHitAttackData::STATUS_BIND))
+            return;
 
-    if (pAttack->GetStatus() == CHitAttackData::STATUS_THROW ||
-        pAttack->GetStatus() == CHitAttackData::STATUS_BIND)
-        return;
+        m_nLife -= pAttack->GetPower();
 
-    m_nLife -= pAttack->GetPower();
-
-    CGimmickUtils::PlayHitEffect(pAttack);
+        CGimmickUtils::PlayHitEffect(pAttack);
+    };
 };
 
 
@@ -216,13 +217,9 @@ void CBreakableCarGimmick::carControl(void)
         break;
 
     case STATE_END:
-        {
-            ;
-        }
         break;
 
     default:
-        ASSERT(false);
         break;
     };
 };
@@ -240,12 +237,10 @@ bool CBreakableCarGimmick::smokeControl(bool bWaitErase)
         {
             for (int32 i = 0; i < COUNT_OF(m_ahEffect); ++i)
             {
-                RwV3d vPosition =
-                {
-                    Math::RandFloatRange(-1.0f, 1.0f) * 1.5f,
-                    0.5f,
-                    Math::RandFloatRange(-1.0f, 1.0f) * 3.0f,
-                };
+                RwV3d vPosition = Math::VECTOR3_ZERO;
+                vPosition.x = Math::RandFloatRange(-1.0f, 1.0f) * 1.5f;
+                vPosition.y = 0.5f;
+                vPosition.z = Math::RandFloatRange(-1.0f, 1.0f) * 3.0f;
                 
                 RpClump* pClump = m_model.GetModel(CNormalGimmickModel::MODELTYPE_DRAW_NORMAL)->GetClump();
                 RwFrame* pFrame = RpClumpGetFrameMacro(pClump);
@@ -253,8 +248,7 @@ bool CBreakableCarGimmick::smokeControl(bool bWaitErase)
                 
                 RwV3dTransformPoint(&vPosition, &vPosition, pMatrix);
 
-                m_ahEffect[i] = CEffectManager::Play(EFFECTID::ID_BLACKSMOKE, &vPosition, true);
-                ASSERT(m_ahEffect[i]);
+                m_ahEffect[i] = CEffectManager::Play(EFFECTID::ID_BLACKSMOKE, &vPosition);
             };
 
             m_eSmokeState   = SMOKESTATE_GENERATE;
@@ -300,7 +294,6 @@ bool CBreakableCarGimmick::smokeControl(bool bWaitErase)
         break;
 
     default:
-        ASSERT(false);
         break;
     };
 
@@ -310,8 +303,6 @@ bool CBreakableCarGimmick::smokeControl(bool bWaitErase)
 
 bool CBreakableCarGimmick::explosionControl(void)
 {
-    bool bResult = false;
-
     m_fTimer += CGameProperty::GetElapsedTime();
     m_fTimerExplosionInterval += CGameProperty::GetElapsedTime();
 
@@ -326,6 +317,7 @@ bool CBreakableCarGimmick::explosionControl(void)
         if (m_model.GetCollisionModelClump())
         {
             ASSERT(m_hAtari);
+
             CMapCollisionModel::RemoveCollisionModel(m_hAtari);
             m_hAtari = 0;
 
@@ -344,12 +336,10 @@ bool CBreakableCarGimmick::explosionControl(void)
     //
     if (m_fTimerExplosionInterval >= 0.2f)
     {
-        RwV3d vPosition =
-        {
-            Math::RandFloatRange(-1.0f, 1.0f) * s_vCarSize.x,
-            s_vCarSize.y,
-            Math::RandFloatRange(-1.0f, 1.0f)* s_vCarSize.z,            
-        };
+        RwV3d vPosition = Math::VECTOR3_ZERO;
+        vPosition.x = Math::RandFloatRange(-1.0f, 1.0f) * s_vCarSize.x;
+        vPosition.y = Math::RandFloatRange(-1.0f, 1.0f) * s_vCarSize.y;
+        vPosition.z = Math::RandFloatRange(-1.0f, 1.0f) * s_vCarSize.z;
 
         CModel* pModel = m_model.GetModel(CNormalGimmickModel::MODELTYPE_DRAW_NORMAL);
         RpClump* pClump = pModel->GetClump();
@@ -358,9 +348,7 @@ bool CBreakableCarGimmick::explosionControl(void)
 
         RwV3dTransformPoint(&vPosition, &vPosition, pMatrix);
 
-        uint32 hMagic = CMagicManager::Play(MAGICID::GetNameFromID(MAGICID::ID_EXPL_B1_CHARA), &vPosition, nullptr, nullptr, false);
-        ASSERT(hMagic);
-
+        uint32 hMagic = CMagicManager::Play(MAGICID::GetNameFromID(MAGICID::ID_EXPL_B1_CHARA), &vPosition);
         if (hMagic)
             CMagicManager::SetScale(hMagic, Math::RandFloatRange(1.0f, 3.0f));
 
@@ -372,7 +360,7 @@ bool CBreakableCarGimmick::explosionControl(void)
     //
     //  wait for explosions
     //
-    if (m_fTimer <= 1.5f)
+    if (m_fTimer < 1.5f)
         return false;
 
     //
@@ -393,12 +381,11 @@ bool CBreakableCarGimmick::explosionControl(void)
 
 void CBreakableCarGimmick::setHitAttack(void)
 {
-    const int32 CatchNum = 3;
+    const int32 catchNum = 3;
     const RwV3d vBasePos = { 0.0f, 0.5f, -1.5f };
 
-    for (int32 i = 0; i < CatchNum; ++i)
+    for (int32 i = 0; i < catchNum; ++i)
     {
-        float fRadius = 1.5f;
         RwV3d vPosition = vBasePos;
         vPosition.z += (static_cast<float>(i) * 3.0f);
 
@@ -409,15 +396,15 @@ void CBreakableCarGimmick::setHitAttack(void)
 
         RwV3dTransformPoint(&vPosition, &vPosition, pMatrix);
 
-        RwSphere HitSphere = { vPosition, fRadius };
+        RwSphere hitSphere = { vPosition, 1.5f };
 
-        CHitCatchData CatchData;
-        CatchData.Cleanup();
-        CatchData.SetObject(GetHandle());
-        CatchData.SetObjectType(GetType());
-        CatchData.SetShape(CHitCatchData::SHAPE_SPHERE);
-        CatchData.SetSphere(&HitSphere);
+        CHitCatchData hitCatch;
+        hitCatch.Cleanup();
+        hitCatch.SetObject(GetHandle());
+        hitCatch.SetObjectType(GetType());
+        hitCatch.SetShape(CHitCatchData::SHAPE_SPHERE);
+        hitCatch.SetSphere(&hitSphere);
 
-        CHitAttackManager::RegistCatch(&CatchData);
+        CHitAttackManager::RegistCatch(&hitCatch);
     };
 };

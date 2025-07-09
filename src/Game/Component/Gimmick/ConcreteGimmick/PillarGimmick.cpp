@@ -179,13 +179,10 @@ void CPillarGimmick::onCrumble(void)
         RwV3d vVelocity = { 0.0f, -5.0f, 0.0f };
         m_pPillarMove->SetVelocity(&vVelocity);
 
-        bool bSoundCall = true;        
         RwV3d vPosition = m_vPrePosition;
         vPosition.y -= 0.8f;
 
-        uint32 hEffect = CEffectManager::Play(EFFECTID::ID_ALL_DOWNSMOKE, &vPosition, bSoundCall);
-        ASSERT(hEffect);
-
+        uint32 hEffect = CEffectManager::Play(EFFECTID::ID_ALL_DOWNSMOKE, &vPosition);
         if (hEffect)
             CEffectManager::SetScale(hEffect, 2.5f);
 
@@ -204,16 +201,12 @@ void CPillarGimmick::shake(float dt)
 
     m_fEffectTime += dt;
     
-    if (m_fEffectTime >= 0.25f)
-    {
-        bool bSoundCall = true;
-        
+    if (m_fEffectTime > 0.25f)
+    {   
         RwV3d vPosEff = m_vPrePosition;
         vPosEff.y -= 1.0f;
 
-        uint32 hEffect = CEffectManager::Play(EFFECTID::ID_ALL_DOWNSMOKE, &vPosEff, bSoundCall);
-        ASSERT(hEffect);
-
+        uint32 hEffect = CEffectManager::Play(EFFECTID::ID_ALL_DOWNSMOKE, &vPosEff);
         if (hEffect)
             CEffectManager::SetScale(hEffect, 2.0f);
 
@@ -234,9 +227,9 @@ void CPillarGimmick::shake(float dt)
     bool bShakeEnd = false;
 
     m_fRad += fRadianPerFrame;
-    if (m_fRad > Math::PI2)
+    if (m_fRad > MATH_PI2)
     {
-        m_fRad -= Math::PI2;
+        m_fRad -= MATH_PI2;
         
         if (m_fTimer > 1.0f)
             bShakeEnd = true;
@@ -277,9 +270,6 @@ void CPillarGimmick::crumble(float dt)
     switch (m_step)
     {
     case BRKSTEP_IDLE:
-        {
-            ;
-        }
         break;
 
     case BRKSTEP_STEADY:
@@ -298,14 +288,10 @@ void CPillarGimmick::crumble(float dt)
         {
             if (m_fEffectTime > 0.4f)
             {
-                bool bSoundCall = true;
-
                 RwV3d vEffPos = m_vPrePosition;
                 vEffPos.y -= 1.0f;
 
-                uint32 hEffect = CEffectManager::Play(EFFECTID::ID_ALL_DOWNSMOKE, &vEffPos, bSoundCall);
-                ASSERT(hEffect);
-
+                uint32 hEffect = CEffectManager::Play(EFFECTID::ID_ALL_DOWNSMOKE, &vEffPos);
                 if (hEffect)
                     CEffectManager::SetScale(hEffect, 2.0f);
 
@@ -398,8 +384,6 @@ CSwitchPillarGimmick::CSwitchPillarGimmick(const char* pszName, void* pParam)
         RpClump* pClump = m_model.GetCollisionModelClump();
 
         m_hAtari = CMapCollisionModel::RegistCollisionModel(pClump, GetName(), MAPTYPES::GIMMICKTYPE_SWITCH_PILLAR);
-        ASSERT(m_hAtari);
-
         if (m_hAtari)
             CMapCollisionModel::SetBoundingSphereRadius(m_hAtari, 5.0f);
     };
@@ -477,7 +461,7 @@ void CSwitchPillarGimmick::OnReceiveEvent(const char* pszSender, GIMMICKTYPES::E
 
     if (!isPlayerPreOnSwitchPillar(pszSender))
     {
-        m_eState = STATE((int32(m_eState) + 1) % STATENUM);
+        m_eState = static_cast<STATE>( (static_cast<int32>(m_eState) + 1) % STATENUM );
         
         m_model.SetDrawType(
             m_eState == STATE_OFF ? CNormalGimmickModel::MODELTYPE_DRAW_NORMAL : CNormalGimmickModel::MODELTYPE_DRAW_BREAK

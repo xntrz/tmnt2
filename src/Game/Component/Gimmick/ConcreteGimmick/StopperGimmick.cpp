@@ -15,14 +15,15 @@
 CStopperGimmick::CStopperGimmick(const char* pszName, void* pParam)
 : CGimmick(pszName, pParam)
 , m_vPosition(Math::VECTOR3_ZERO)
+, m_model()
 , m_hAtari(0)
+, m_apBodyHitData()
 , m_bIsPushingBig(false)
 {
     std::memset(m_apBodyHitData, 0x00, sizeof(m_apBodyHitData));
 
-    ASSERT(pParam);
-
     GIMMICKPARAM::GIMMICK_BASIC* pInitParam = static_cast<GIMMICKPARAM::GIMMICK_BASIC*>(pParam);
+    ASSERT(pInitParam);
 
     if (pInitParam->m_subid == 0)
     {
@@ -60,15 +61,14 @@ CStopperGimmick::CStopperGimmick(const char* pszName, void* pParam)
             RpClump* pClump = m_model.GetCollisionModelClump();
             
             m_hAtari = CMapCollisionModel::RegistCollisionModel(pClump, GetName(), MAPTYPES::GIMMICKTYPE_NORMAL);
-            ASSERT(m_hAtari);
-            
-            CMapCollisionModel::SetBoundingSphereRadius(m_hAtari, 2.0f);
+            if (m_hAtari)
+                CMapCollisionModel::SetBoundingSphereRadius(m_hAtari, 2.0f);
         };
     };
 
-    RwV3d vBodyPosition = pInitParam->m_vPosition;
     float fRotY = CGimmickUtils::QuaternionToRotationY(&pInitParam->m_quat);
     
+    RwV3d vBodyPosition = pInitParam->m_vPosition;
     vBodyPosition.x += Math::Sin(fRotY) * 1.3f;
     vBodyPosition.y += 0.5f;
     vBodyPosition.z += Math::Cos(fRotY) * 1.3f;
@@ -90,7 +90,7 @@ CStopperGimmick::CStopperGimmick(const char* pszName, void* pParam)
 };
 
 
-CStopperGimmick::~CStopperGimmick(void)
+/*virtual*/ CStopperGimmick::~CStopperGimmick(void)
 {
     if (m_hAtari)
     {
@@ -109,7 +109,7 @@ CStopperGimmick::~CStopperGimmick(void)
 };
 
 
-void CStopperGimmick::PostMove(void)
+/*virtual*/ void CStopperGimmick::PostMove(void) /*override*/
 {
     float fNearestPlayerDist = CGimmickUtils::CalcNearestPlayerDistanceXZ(&m_vPosition);
     

@@ -59,14 +59,14 @@ public:
 
 private:
     CMultipleEnemyGenerator m_generator;
-    CNormalGimmickModel m_model;
-    int32 m_nLife;
-    STATUS m_status;
-    float m_fTimer;
-    float m_fInterval;
-    float m_fDecreaseRate;
-    float m_fSeTimer;
-    SHIPTYPE m_shipType;
-    SMOKEDATA m_aSmokeData[3];
-    uint32 m_hAtari;
+    CNormalGimmickModel     m_model;
+    int32                   m_nLife;
+    STATUS                  m_status;
+    float                   m_fTimer;
+    float                   m_fInterval;
+    float                   m_fDecreaseRate;
+    float                   m_fSeTimer;
+    SHIPTYPE                m_shipType;
+    SMOKEDATA               m_aSmokeData[3];
+    uint32                  m_hAtari;
 };

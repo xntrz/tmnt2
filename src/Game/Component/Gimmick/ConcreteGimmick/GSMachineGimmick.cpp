@@ -133,7 +133,7 @@ CGSMachineGimmick::CGSMachineGimmick(const char* pszName, void* pParam)
 };
 
 
-/*virtual*/ CGSMachineGimmick::~CGSMachineGimmick(void)
+CGSMachineGimmick::~CGSMachineGimmick(void)
 {
     EffectStop();
 
@@ -157,7 +157,7 @@ CGSMachineGimmick::CGSMachineGimmick(const char* pszName, void* pParam)
 };
 
 
-/*virtual*/ void CGSMachineGimmick::MessageProc(int32 nMessageID, void* pParam) /*override*/
+void CGSMachineGimmick::MessageProc(int32 nMessageID, void* pParam)
 {
     switch (nMessageID)
     {
@@ -180,7 +180,7 @@ CGSMachineGimmick::CGSMachineGimmick(const char* pszName, void* pParam)
 };
 
 
-/*virtual*/ void CGSMachineGimmick::PostMove(void) /*override*/
+void CGSMachineGimmick::PostMove(void)
 {
     float dt = CGameProperty::GetElapsedTime();
 
@@ -264,8 +264,8 @@ CGSMachineGimmick::CGSMachineGimmick(const char* pszName, void* pParam)
 };
 
 
-/*virtual*/ void CGSMachineGimmick::OnReceiveEvent(const char* pszSender,
-                                                   GIMMICKTYPES::EVENTTYPE eventtype) /*override*/
+void CGSMachineGimmick::OnReceiveEvent(const char* pszSender,
+                                                   GIMMICKTYPES::EVENTTYPE eventtype)
 {
     if (eventtype != GIMMICKTYPES::EVENTTYPE_ACTIVATE)
         return;
@@ -282,7 +282,7 @@ CGSMachineGimmick::CGSMachineGimmick(const char* pszName, void* pParam)
 };
 
 
-/*virtual*/ void CGSMachineGimmick::OnAttackResult(CHitCatchData* pCatch) /*override*/
+void CGSMachineGimmick::OnAttackResult(CHitCatchData* pCatch)
 {
     CGameObject* pGameObj = CGameObjectManager::GetObject(pCatch->GetObjectHandle());
     ASSERT(pGameObj);

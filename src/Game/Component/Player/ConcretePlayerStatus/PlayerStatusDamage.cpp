@@ -347,7 +347,7 @@ namespace PlayerStatus
 
     void CFlyawayBoundBack::OnDetach(void)
     {
-        Character().SetDirection(Character().GetDirection() + Math::PI);
+        Character().SetDirection(Character().GetDirection() + MATH_PI);
         CFlyawayBoundCommon::OnDetach();
     };
 

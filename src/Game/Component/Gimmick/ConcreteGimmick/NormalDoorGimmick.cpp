@@ -43,54 +43,61 @@ CNormalDoorGimmick::CNormalDoorGimmick(const char* pszName, void* pParam)
 
     ASSERT(pParam);
     
-    GIMMICKPARAM::GIMMICK_BASIC* pInitParam = (GIMMICKPARAM::GIMMICK_BASIC*)pParam;
+    GIMMICKPARAM::GIMMICK_BASIC* pInitParam = static_cast<GIMMICKPARAM::GIMMICK_BASIC*>(pParam);
     m_subid = pInitParam->m_subid;
 
     std::strcpy(m_szMotionName, kindinfo().m_pszModelName);
 
-    CModel* pModelDisp = CModelManager::CreateModel(kindinfo().m_pszModelName);
-
+    //
+    //  Init model
+    //
     char szModelNameAtariBuff[16];
     szModelNameAtariBuff[0] = '\0';
-    sprintf(szModelNameAtariBuff, "%s_a", kindinfo().m_pszModelName);
+    std::sprintf(szModelNameAtariBuff, "%s_a", kindinfo().m_pszModelName);
 
-    CModel* pModelColl = CModelManager::CreateModel(szModelNameAtariBuff);
-
+    CModel* pModelDisp = CModelManager::CreateModel(kindinfo().m_pszModelName);
     ASSERT(pModelDisp);
-    ASSERT(pModelColl);
+
+    CModel* pModelAtari = CModelManager::CreateModel(szModelNameAtariBuff);
+    ASSERT(pModelAtari);
 
     m_apModel[MODELTYPE_DISP] = pModelDisp;
-    m_apModel[MODELTYPE_COLL] = pModelColl;
+    m_apModel[MODELTYPE_COLL] = pModelAtari;
 
     for (int32 i = 0; i < COUNT_OF(m_apModel); ++i)
-    {
-		RwV3d vRotation = Math::VECTOR3_ZERO;
-        RwV3d vPosition = pInitParam->m_vPosition;
-        
+    {        
         RwMatrix matrix;
         RwMatrixSetIdentityMacro(&matrix);
         CGimmickUtils::QuaternionToRotationMatrix(&matrix, &pInitParam->m_quat);
+
+        RwV3d vRotation = Math::VECTOR3_ZERO;
         CGimmickUtils::MatrixToRotation(&matrix, &vRotation);
 
-        m_apModel[i]->SetPosition(&vPosition);
+        m_apModel[i]->SetPosition(&pInitParam->m_vPosition);
         m_apModel[i]->SetRotation(&vRotation);
         m_apModel[i]->UpdateFrame();
     };
 
-    if (pModelColl->GetClump())
+    m_model.SetModel(CNormalGimmickModel::MODELTYPE_DRAW_NORMAL, pModelDisp);
+    m_model.SetModel(CNormalGimmickModel::MODELTYPE_ATARI_NORMAL, pModelAtari);
+    SetModelStrategy(&m_model);
+
+    //
+    //  Init atari
+    //
+    RpClump* pClump = pModelAtari->GetClump();
+    if (pClump)
     {
-        RpClump* pClump = pModelColl->GetClump();
         m_hAtari = CMapCollisionModel::RegistCollisionModel(pClump);
         ASSERT(m_hAtari);
     };
 
-    m_model.SetModel(CNormalGimmickModel::MODELTYPE_DRAW_NORMAL, pModelDisp);
-    m_model.SetModel(CNormalGimmickModel::MODELTYPE_ATARI_NORMAL, pModelColl);
-    SetModelStrategy(&m_model);
+    //
+    //  Init motion
+    //
+    CMotionManager::SetCurrentMotionSet(m_szMotionName);
 
     m_pMotion = new CGimmickMotion(pModelDisp);
-    ASSERT(m_pMotion);
-    CMotionManager::SetCurrentMotionSet(m_szMotionName);
     m_pMotion->AddMotion(m_szMotionName);
     m_pMotion->SetMotion(m_szMotionName, 0.0f, 0.0f, 0.0f, false);    
 };
@@ -151,9 +158,6 @@ void CNormalDoorGimmick::PreMove(void)
         break;
 
     case STATE_OPENED:
-        {
-            ;
-        }
         break;
 
     default:
@@ -175,6 +179,8 @@ void CNormalDoorGimmick::OnReceiveEvent(const char* pszSender, GIMMICKTYPES::EVE
 
 const CNormalDoorGimmick::KINDINFO& CNormalDoorGimmick::kindinfo(void) const
 {
-    ASSERT(m_subid >= 0 && m_subid < COUNT_OF(m_aDoorKindInfoList));
+    ASSERT(m_subid >= 0);
+    ASSERT(m_subid < COUNT_OF(m_aDoorKindInfoList));
+    
     return m_aDoorKindInfoList[m_subid];
 };

@@ -144,6 +144,9 @@ void CThrowingGimmick::MessageProc(int32 nMessageID, void* pParam)
     case CHARACTERTYPES::MESSAGEID_MISSTHROW:
         OnMissThrow(static_cast<RwV3d*>(pParam));
         break;
+
+    default:
+        break;
     };
 };
 
@@ -151,8 +154,6 @@ void CThrowingGimmick::MessageProc(int32 nMessageID, void* pParam)
 void CThrowingGimmick::Draw(void) const
 {
     CGimmick::Draw();
-
-    //m_pModuleManager->Draw(); TODO there is no shadows for throwing gimmicks in retail game (for some reason)
 };
 
 
@@ -321,7 +322,7 @@ void CThrowingGimmick::OnLift(CCharacter::MSG_LIFT_INFO* pMsgLiftInfo)
     RwV3d vRotation = Math::VECTOR3_ZERO;
     m_pThrowingMove->GetRotation(&vRotation);
     vRotation.y = pMsgLiftInfo->m_fDirection;
-    vRotation.z = -Math::PI05;
+    vRotation.z = -MATH_PI05;
     m_pThrowingMove->SetRotation(&vRotation);
     m_model.SetRotation(&vRotation);
 };
@@ -366,18 +367,20 @@ void CThrowingGimmick::OnThrow(RwV3d* pvVelocity)
 
 void CThrowingGimmick::init(void* pParam)
 {
-    GIMMICKPARAM::GIMMICK_BASIC* pInitParam = (GIMMICKPARAM::GIMMICK_BASIC*)pParam;
+    GIMMICKPARAM::GIMMICK_BASIC* pInitParam = static_cast<GIMMICKPARAM::GIMMICK_BASIC*>(pParam);    
     m_subid = pInitParam->m_subid;
 
     bool bIsBoxNotEmpty = false;
     
     if (pInitParam->m_id == GIMMICKID::ID_N_ITEMBX)
     {
-        ASSERT(m_subid >= 0 && m_subid < COUNT_OF(m_aItemBoxGimmickKindInfoList));
+        ASSERT(m_subid >= 0);
+        ASSERT(m_subid < COUNT_OF(m_aItemBoxGimmickKindInfoList));
+
         m_pKindinfo = &m_aItemBoxGimmickKindInfoList[m_subid];
         m_type = TYPE_ITEMBOX;
 
-        GIMMICKPARAM::GIMMICK_ITEMBOX* pItemInitParam = (GIMMICKPARAM::GIMMICK_ITEMBOX*)pParam;
+        GIMMICKPARAM::GIMMICK_ITEMBOX* pItemInitParam = static_cast<GIMMICKPARAM::GIMMICK_ITEMBOX*>(pParam);
         m_nItem = pItemInitParam->m_nItem;
         
         changeItemBySituation();
@@ -388,14 +391,20 @@ void CThrowingGimmick::init(void* pParam)
     }
     else
     {
-        ASSERT(m_subid >= 0 && m_subid < COUNT_OF(m_aThrowingGimmickKindInfoList));
+        ASSERT(m_subid >= 0);
+        ASSERT(m_subid < COUNT_OF(m_aThrowingGimmickKindInfoList));
+
         m_pKindinfo = &m_aThrowingGimmickKindInfoList[m_subid];
     };
 
     m_nLife = m_pKindinfo->m_nLife;
 
+    //
+    //  Init model & atari
+    //
     CModel* pDispModel = CModelManager::CreateModel(m_pKindinfo->m_pszModelName);
     ASSERT(pDispModel);
+
     m_model.SetModel(CNormalGimmickModel::MODELTYPE_DRAW_NORMAL, pDispModel);
 
     if (!std::strcmp(m_pKindinfo->m_pszAtariModelName, ATARI_NAME_EMPTY))
@@ -406,7 +415,6 @@ void CThrowingGimmick::init(void* pParam)
         RwV3d vPosition = pInitParam->m_vPosition;
         vPosition.y += m_pKindinfo->m_fRadius;
 
-        m_pBodyHitData->SetHitID(GetHandle());
         m_pBodyHitData->InitData(&vPosition, m_pKindinfo->m_fRadius);
         m_pBodyHitData->SetState(CBodyHitData::STATE_SELF_TO_OTHER, true);
     }
@@ -414,13 +422,14 @@ void CThrowingGimmick::init(void* pParam)
     {
         CModel* pAtariModel = CModelManager::CreateModel(m_pKindinfo->m_pszAtariModelName);
         ASSERT(pAtariModel);
+
         m_model.SetModel(CNormalGimmickModel::MODELTYPE_ATARI_NORMAL, pAtariModel);
 
         if (m_model.GetCollisionModelClump())
         {
             RpClump* pClump = m_model.GetCollisionModelClump();
+
             m_hAtari = CMapCollisionModel::RegistCollisionModel(pClump, GetName(), MAPTYPES::GIMMICKTYPE_THROWOBJ);
-            ASSERT(m_hAtari);
             if (m_hAtari)
                 CMapCollisionModel::SetBoundingSphereRadius(m_hAtari, m_pKindinfo->m_fRadius * 1.5f);
         };
@@ -434,25 +443,32 @@ void CThrowingGimmick::init(void* pParam)
     m_model.UpdateFrame();
     SetModelStrategy(&m_model);
 
+    //
+    //  Init movement
+    //
     m_pThrowingMove = new CThrowingGimmickMove;
-    ASSERT(m_pThrowingMove);
     m_pThrowingMove->SetPosition(&pInitParam->m_vPosition);
     m_pThrowingMove->SetRadius(m_pKindinfo->m_fRadius);
     m_pThrowingMove->Start();
     SetMoveStrategy(m_pThrowingMove);
 
-    if (m_type == TYPE_NORMAL && m_subid == SUBID_THROWING::CANDLESTICK)
+    //
+    //  Init effect
+    //
+    if ((m_type == TYPE_NORMAL) && (m_subid == SUBID_THROWING::CANDLESTICK))
     {
         RwV3d vPosition = pInitParam->m_vPosition;
         vPosition.y += 2.0f;
         
         m_hKagaribiEffect = CEffectManager::Play(EFFECTID::ID_FIRE_TORCH, &vPosition);
-        ASSERT(m_hKagaribiEffect);
         if (m_hKagaribiEffect)
             CEffectManager::SetScale(m_hKagaribiEffect, 1.5f);
     };
 
-    if (m_type == TYPE_ITEMBOX && m_nItem == ITEMID::ID_DON_LASER)
+    //
+    //  Post init
+    //
+    if ((m_type == TYPE_ITEMBOX) && (m_nItem == ITEMID::ID_DON_LASER))
     {
         if (m_hAtari)
         {
@@ -467,7 +483,7 @@ void CThrowingGimmick::init(void* pParam)
     }
     else
     {
-        if(bIsBoxNotEmpty)
+        if (bIsBoxNotEmpty)
             CGameEvent::SetItemBoxPut();
     };
 };
@@ -480,18 +496,18 @@ void CThrowingGimmick::waiting(void)
 
     vPosition.y += m_pKindinfo->m_fRadius;
 
-    RwSphere sphere;
-    sphere.center = vPosition;
-    sphere.radius = m_pKindinfo->m_fRadius;
+    RwSphere hitSphere;
+    hitSphere.center = vPosition;
+    hitSphere.radius = m_pKindinfo->m_fRadius;
 
     {
-        CHitCatchData Catch;
-        Catch.SetObject(GetHandle());
-        Catch.SetObjectType(GetType());
-        Catch.SetShape(CHitCatchData::SHAPE_SPHERE);
-        Catch.SetSphere(&sphere);
+        CHitCatchData hitCatch;
+        hitCatch.SetObject(GetHandle());
+        hitCatch.SetObjectType(GetType());
+        hitCatch.SetShape(CHitCatchData::SHAPE_SPHERE);
+        hitCatch.SetSphere(&hitSphere);
 
-        CHitAttackManager::RegistCatch(&Catch);
+        CHitAttackManager::RegistCatch(&hitCatch);
     }
 
     if (m_fTimerPlayerRideOnJudge > 10000.0f)
@@ -522,18 +538,18 @@ void CThrowingGimmick::throwing(void)
     RwV3d vPosition = Math::VECTOR3_ZERO;
     m_pThrowingMove->GetPosition(&vPosition);
 
-    RwSphere sphere;
-    sphere.center = vPosition;
-    sphere.radius = m_pKindinfo->m_fHitAttackRadius;
+    RwSphere hitSphere;
+    hitSphere.center = vPosition;
+    hitSphere.radius = m_pKindinfo->m_fHitAttackRadius;
 
-    CHitAttackData Attack;
-    Attack.SetObject(GetHandle());
-    Attack.SetShape(CHitAttackData::SHAPE_SPHERE);
-    Attack.SetSphere(&sphere);
-    Attack.SetPower(m_pKindinfo->m_nAttackPower);
-    Attack.SetTarget(CHitAttackData::TARGET_ENEMY_GIMMICK);
+    CHitAttackData hitAttack;
+    hitAttack.SetObject(GetHandle());
+    hitAttack.SetShape(CHitAttackData::SHAPE_SPHERE);
+    hitAttack.SetSphere(&hitSphere);
+    hitAttack.SetPower(m_pKindinfo->m_nAttackPower);
+    hitAttack.SetTarget(CHitAttackData::TARGET_ENEMY_GIMMICK);
     
-    CHitAttackManager::RegistAttack(&Attack);
+    CHitAttackManager::RegistAttack(&hitAttack);
 };
 
 
@@ -668,8 +684,6 @@ void CThrowingGimmick::setKagaribiBreakEffect(void)
     m_pThrowingMove->GetPosition(&vPosition);
 
     m_hKagaribiEffect = CEffectManager::Play(EFFECTID::ID_FLAME_MAP, &vPosition);
-    ASSERT(m_hKagaribiEffect);
-    
     if (m_hKagaribiEffect)
         CEffectManager::SetScale(m_hKagaribiEffect, 2.0f);
 };
@@ -778,10 +792,9 @@ void CThrowingGimmick::setDefaultBreakEffect(void)
 
         CMagicManager::CParameter param;
         param.SetPositon(&vPosition);
+        param.SetObject(this);
 
         uint32 hMagic = CMagicManager::Play(idMagic, &param);
-        ASSERT(hMagic);
-        
         if (hMagic)
             CMagicManager::SetScale(hMagic, fScale);
     }
@@ -790,8 +803,6 @@ void CThrowingGimmick::setDefaultBreakEffect(void)
         for (int32 i = 0; i < nNumEffect; ++i)
         {
             uint32 hEffect = CEffectManager::Play(idEffect, &vPosition);
-            ASSERT(hEffect);
-            
             if (hEffect)
                 CEffectManager::SetScale(hEffect, fScale);
             
@@ -810,12 +821,12 @@ void CThrowingGimmick::setThrowingParam(RwV3d* pvVelocity)
     Math::Vec3_Scale(&vVelocity, pvVelocity, 12.0f);
     m_pThrowingMove->SetVelocity(&vVelocity);
 
-    RwV3d vRotVelocity = Math::VECTOR3_ZERO;
-    m_pThrowingMove->GetRotVelocity(&vRotVelocity);
+    uint32 rand = ((Math::Rand() % TYPEDEF::UINT32_MAX) / TYPEDEF::UINT32_MAX);
 
-    vRotVelocity.x = MATH_DEG2RAD(vVelocity.z);
-	vRotVelocity.y = MATH_DEG2RAD(float((Math::Rand() % TYPEDEF::UINT32_MAX) / TYPEDEF::UINT32_MAX) * 200.0f - 100.0f);
-    vRotVelocity.z = MATH_DEG2RAD(vVelocity.x);
+    RwV3d vRotVelocity = Math::VECTOR3_ZERO;
+    vRotVelocity.x = MATH_DEG2RAD(vVelocity.z * 10.0f);
+    vRotVelocity.y = MATH_DEG2RAD((200.0f * static_cast<float>(rand)) - 100.0f);
+    vRotVelocity.z = MATH_DEG2RAD(vVelocity.x * 10.0f);
 
 	m_pThrowingMove->SetRotVelocity(&vRotVelocity);
 };
@@ -852,6 +863,7 @@ void CThrowingGimmick::updateKagaribiFireEffect(void)
         m_pThrowingMove->GetPosition(&vPosition);
         
         RwMatrix matrix;
+        RwMatrixSetIdentityMacro(&matrix);
         Math::Matrix_Rotate(&matrix, &vRotation);
         
         RwV3d vEffectOfs = { 0.0f, 2.0f, 0.0f };
@@ -965,7 +977,10 @@ void CThrowingGimmick::changeItemBySituation(void)
                 m_nItem = ITEMID::ID_NONE;            
         }
         break;
-    };  
+
+    default:
+        break;
+    };
 };
 
 

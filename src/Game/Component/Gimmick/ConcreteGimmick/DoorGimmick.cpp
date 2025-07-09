@@ -43,8 +43,10 @@ CDoorGimmick::CDoorGimmick(const char* pszName, void* pParam)
 
         pModel->SetPosition(&pGeneratorParam->m_vPosition);
         pModel->UpdateFrame();
+
         pModel->SetRotation(&vRotation);
         pModel->UpdateFrame();
+
         pModel->SetBoundingSphereRadius(4.0f);
         pModel->UpdateFrame();
 
@@ -104,6 +106,8 @@ void CDoorGimmick::Draw(void) const
     RENDERSTATE_POP(rwRENDERSTATETEXTUREADDRESSU);
     RENDERSTATE_POP(rwRENDERSTATECULLMODE);
     RENDERSTATE_POP(rwRENDERSTATETEXTURERASTER);
+
+    CGimmick::Draw();
 };
 
 
@@ -142,15 +146,13 @@ void CDoorGimmick::forceGenerateEnd(void)
 
 void CDoorGimmick::doorMoveOperate(void)
 {
+    float dt = CGameProperty::GetElapsedTime();
     float fMoveVolume = 0.0f;
-    float fMovePerFrame = 2.0f * (CGameProperty::GetElapsedTime() / 0.5f);
+    float fMovePerFrame = 2.0f * (dt / 0.5f);
     
     switch (m_status)
     {
     case STATUS_IDLE:
-        {
-            ;
-        }
         break;
 
     case STATUS_OPENING:
@@ -168,7 +170,7 @@ void CDoorGimmick::doorMoveOperate(void)
 
     case STATUS_OPENED:
         {
-            m_fTimer += CGameProperty::GetElapsedTime();
+            m_fTimer += dt;
             if (m_fTimer >= 0.5f)
             {
                 m_fTimer = 0.0f;
@@ -200,7 +202,7 @@ void CDoorGimmick::doorMoveOperate(void)
             }
             else
             {
-                switch (m_generator.Run(CGameProperty::GetElapsedTime()))
+                switch (m_generator.Run(dt))
                 {
                 case CDoorEnemyGenerator::STATE_GENERATE_ENEMY:
                     {
@@ -217,6 +219,9 @@ void CDoorGimmick::doorMoveOperate(void)
                         m_generator.Finish();
                     }
                     break;
+
+                default:
+                    break;
                 };
             };
         }
@@ -226,7 +231,7 @@ void CDoorGimmick::doorMoveOperate(void)
         break;
     };
 
-    if (Math::FEqual(fMoveVolume, 0.0f))
+    if (fMoveVolume == 0.0f)
         return;
 
     for (int32 i = 0; i < COUNT_OF(m_apModel); ++i)

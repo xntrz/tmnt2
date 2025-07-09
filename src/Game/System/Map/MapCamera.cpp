@@ -169,7 +169,7 @@ void CMapCamera::CVibration::Period(void)
         m_vVibration = Math::VECTOR3_ZERO;
         m_vVibration.y = (fDltRadian * m_fVibPower);
 
-        m_fTheta += (CGameProperty::GetElapsedTime() * float(m_nFreq) * Math::PI2);
+        m_fTheta += (CGameProperty::GetElapsedTime() * float(m_nFreq) * MATH_PI2);
         m_fTimer -= CGameProperty::GetElapsedTime();
     };
 };
@@ -389,10 +389,8 @@ void CMapCamera::PostUpdate(void)
 
     m_fLookatViewAreaRadius = fLen * m_fViewSize;
 
-    // TODO: retail game both checks has lower case 'f' here, so probably mistake there should be 'F' and 'f'
-    //       return to both 'f' if it brokes game camera
-    if (!std::strcmp(m_szCameraAreaName, "F") ||
-        !std::strcmp(m_szCameraAreaName, "f"))
+    if (!std::strncmp(m_szCameraAreaName, "f", 1) ||
+        !std::strncmp(m_szCameraAreaName, "f", 1))
         m_fLookatViewAreaRadius = 1000.0f;
 
     m_bChangeMoment = false;
@@ -661,12 +659,6 @@ void CMapCamera::UpdatePathCamera(const RwV3d* pvAt, bool bExPath)
 
         MakePathAtCameraName(szPathName, m_szCameraAreaName);
         nAtPathID = CCameraDataManager::GetPathIDFromName(szPathName);
-    }
-    else
-    {
-        // TODO
-        nAtPathID = 0;
-        nEyePathID = 0;
     };
 
     if ((nEyePathID >= 0) &&
@@ -674,8 +666,20 @@ void CMapCamera::UpdatePathCamera(const RwV3d* pvAt, bool bExPath)
     {
         m_fPathTime = CCameraDataManager::FindNearestPosValueLight(&m_vAt, nAtPathID, m_fPathTime);
 
-		if (CCameraDataManager::GetPathType(nAtPathID) == 1)
-			m_fPathTime = InvClamp(m_fPathTime, Math::EPSILON, 1.0f - Math::EPSILON);
+        if (CCameraDataManager::GetPathType(nAtPathID) == 1)
+        {
+            const float fMinPathT = 0.0001f;
+
+            if (m_fPathTime > m_fPrePathTime)
+            {
+                if (m_fPathTime >= (1.0f - fMinPathT))
+                    m_fPathTime = (1.0f - fMinPathT);
+            }
+            else if (m_fPathTime <= fMinPathT)
+            {
+                m_fPathTime = fMinPathT;
+            };
+        };
 
         RwV3d vEye = Math::VECTOR3_ZERO;
         CCameraDataManager::GetSplinePos(&vEye, nEyePathID, m_fPathTime);

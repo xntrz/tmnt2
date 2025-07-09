@@ -37,8 +37,6 @@ public:
     virtual void Draw(void) const override;
     virtual void OnReceiveEvent(const char* pszSender, GIMMICKTYPES::EVENTTYPE eventtype) override;
     virtual void OnCatchAttack(CHitAttackData* pAttack) override;
-
-private:
     void eggCtrl(void);
     void shakeMoveGrandCtrl(void);
     void shakeMoveCtrl(void);
@@ -50,13 +48,13 @@ private:
     bool eraseEgg(void);
 
 private:
-    CSingleEnemyGenerator m_generator;
-    CNormalGimmickModel m_model;
-    CNormalGimmickMove m_move;
-    CModuleManager* m_pModuleMan;
-    float m_fNearestPlayerDist;
-    float m_fTimer;
-    STATE m_state;
-    SHAKESTATE m_shakeState;
-    int32 m_nShake;
+    CSingleEnemyGenerator   m_generator;
+    CNormalGimmickModel     m_model;
+    CNormalGimmickMove      m_move;
+    CModuleManager*         m_pModuleMan;
+    float                   m_fNearestPlayerDist;
+    float                   m_fTimer;
+    STATE                   m_state;
+    SHAKESTATE              m_shakeState;
+    int32                   m_nShake;
 };

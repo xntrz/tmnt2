@@ -17,14 +17,12 @@ public:
     CAndSwitchGimmick(const char* pszName, void* pParam);
     virtual ~CAndSwitchGimmick(void);
     virtual void PostMove(void) override;
-
-protected:
     bool checkSwitch(void);
 
 protected:
     PRIVATESTATE m_privatestate;
-    char m_szEventGimmick[GAMEOBJECTTYPES::NAME_MAX];
-    char m_szTargetGimmick[GAMEOBJECTTYPES::NAME_MAX];
+    char         m_szEventGimmick[GAMEOBJECTTYPES::NAME_MAX];
+    char         m_szTargetGimmick[GAMEOBJECTTYPES::NAME_MAX];
 };
 
 
@@ -46,13 +44,11 @@ public:
     virtual bool Query(CGimmickQuery* pQuery) const override;
     virtual void OnReceiveEvent(const char* pszSender, GIMMICKTYPES::EVENTTYPE eventtype) override;
     CGimmick* GetChild(int32 no) const;
-
-protected:
     CHILDNODE* getChildNode(int32 no) const;
 
 protected:
-    CHILDNODE* m_pChildArray;
-    int32 m_nChildNum;
+    CHILDNODE*  m_pChildArray;
+    int32       m_nChildNum;
 };
 
 
@@ -71,8 +67,8 @@ public:
     virtual void OnReceiveEvent(const char* pszSender, GIMMICKTYPES::EVENTTYPE eventtype) override;
 
 protected:
-    MODE m_mode;
-    int32 m_clearsub;
+    MODE    m_mode;
+    int32   m_clearsub;
 };
 
 
@@ -98,11 +94,11 @@ public:
     void ReplacePlayers(void);
     
 protected:
-    STEP m_step;
-    RwV3d m_vPosition;
-    RwV3d m_vRotation;
-    float m_fRotationY;
-    char m_szSenderGimmick[GAMEOBJECTTYPES::NAME_MAX];
+    STEP    m_step;
+    RwV3d   m_vPosition;
+    RwV3d   m_vRotation;
+    float   m_fRotationY;
+    char    m_szSenderGimmick[GAMEOBJECTTYPES::NAME_MAX];
 };
 
 
@@ -118,9 +114,9 @@ protected:
             FLAG_LOOP = 0x2,
         };
 
-        int32 m_nSE;
+        int32  m_nSE;
         uint32 m_flag;
-        float m_fDuration;
+        float  m_fDuration;
     };
 
     enum SUBID
@@ -135,17 +131,15 @@ public:
 	virtual void GetPosition(RwV3d* pvPosition) const;
 	virtual void PostMove(void) override;
     virtual void OnReceiveEvent(const char* pszSender, GIMMICKTYPES::EVENTTYPE eventtype) override;
-
-protected:
     void startSE(void);
     void stopSE(void);
 
 protected:
     static const SEINFO m_aSeInfoList[];
-    bool m_bPlaying;
-    RwV3d m_vPosition;
-    const SEINFO* m_pNowSEInfo;
-    float m_fTimer;
+    bool                m_bPlaying;
+    RwV3d               m_vPosition;
+    const SEINFO*       m_pNowSEInfo;
+    float               m_fTimer;
 };
 
 
@@ -167,16 +161,14 @@ public:
     virtual ~CInvisibleWallGimmick(void);
     virtual void Draw(void) const override;
     virtual void OnReceiveEvent(const char* pszSender, GIMMICKTYPES::EVENTTYPE eventtype) override;
-
-protected:
     void initCollision(void);
     void termCollision(void);
 
 protected:
-    TYPE m_type;
+    TYPE                m_type;
     CNormalGimmickModel m_model;
-    uint32 m_hAtari;
-    bool m_bEnable;
+    uint32              m_hAtari;
+    bool                m_bEnable;
 };
 
 
@@ -192,6 +184,7 @@ protected:
 public:
     static void ReplacePlayer(int32 nPlayerNo, const RwV3d* pvPosition, bool bBlink);
     static void SetPlayerStartPosition(int32 nPlayerNo, const RwV3d* pvPosition, bool bBlink);
+    static void ReplacePlayer(const char* pszSearchGimmickName, int32 nPlayerNo, const RwV3d* pvPosition, bool bBlink);
     
     CReplaceGimmick(const char* pszName, void* pParam);
     virtual ~CReplaceGimmick(void);
@@ -199,19 +192,16 @@ public:
     virtual void OnReceiveEvent(const char* pszSender, GIMMICKTYPES::EVENTTYPE eventtype) override;
     void OnReplacePlayer(int32 nPlayerNo, bool bBlink);
     bool IsEnableReplaceGimmick(void) const;
-    
-protected:
-    static void replacePlayer(const char* pszSearchGimmickName, int32 nPlayerNo, const RwV3d* pvPosition, bool bBlink);
     void setAreaVertex(void);
-    bool isAreaRectvertexInScreen(void) const;
+    bool isAreaRectVertexInScreen(void) const;
 
 protected:
     RwV3d m_vReplacePosition;
     RwV3d m_vReplaceRotation;
     RwV3d m_aAreaRectVertex[4];
     float m_fRotationY;
-    bool m_bEnable;
-    bool m_bStartPosition;
+    bool  m_bEnable;
+    bool  m_bStartPosition;
 };
 
 
@@ -228,7 +218,7 @@ protected:
     struct INITPARAM
     {
         int32 m_nSeGroupID;
-        bool m_bExclusive;
+        bool  m_bExclusive;
     };
 
 public:
@@ -236,21 +226,19 @@ public:
     virtual ~CHelpGimmick(void);
     virtual void Run(void) override;
     virtual void OnReceiveEvent(const char* pszSender, GIMMICKTYPES::EVENTTYPE eventtype) override;
-
-protected:
     void start(void);
     void forceEnd(void);
     bool isSatisfyCrystalMessageCondition(void);
     void showMessage(void);
 
 protected:
-    static const INITPARAM m_aInitParam[];
-    STATE m_state;
-    RwV3d m_vPosition;
-    int32 m_nSeGroupID;
-    float m_fDelayTime;
-    float m_fTime;
-    bool m_bExclusive;
+    static const INITPARAM  m_aInitParam[];
+    STATE                   m_state;
+    RwV3d                   m_vPosition;
+    int32                   m_nSeGroupID;
+    float                   m_fDelayTime;
+    float                   m_fTime;
+    bool                    m_bExclusive;
 };
 
 
@@ -274,7 +262,7 @@ public:
 protected:
     STATE m_state;
     int32 m_nTutoNo;
-    bool m_bDonLaserTutoEnable;
+    bool  m_bDonLaserTutoEnable;
 };
 
 

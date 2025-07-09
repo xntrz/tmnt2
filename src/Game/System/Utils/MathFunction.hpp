@@ -1,7 +1,8 @@
 #pragma once
 
 
-#define MATH_PI         (3.1415927f)
+#define MATH_PI         (3.14159265358979323846f)
+#define MATH_PI05       (MATH_PI * 0.5f)
 #define MATH_PI2        (MATH_PI * 2.0f)
 
 #define MATH_INV_PI     (1.0f / MATH_PI)
@@ -12,10 +13,6 @@
 
 namespace Math
 {
-    static const float EPSILON = 1e-06f;
-    static const float PI = MATH_PI;
-    static const float PI05 = 1.57079f;
-    static const float PI2 = PI * 2.0f;
     static const RwV3d VECTOR3_AXIS_X = { 1.0f, 0.0f, 0.0f };
     static const RwV3d VECTOR3_AXIS_Y = { 0.0f, 1.0f, 0.0f };
     static const RwV3d VECTOR3_AXIS_Z = { 0.0f, 0.0f, 1.0f };
@@ -70,14 +67,19 @@ namespace Math
     void Matrix_Translate(RwMatrix* matrix, const RwV3d* pvTranslation);
     void Matrix_Invert(RwMatrix* out, RwMatrix* in);
 
+    
     inline bool FEqual(float a, float b)
     {
+        const float EPSILON = 0.000001f;
+
         float c = (a - b);
         if (c < 0.0f)
             c = -c;
+        
         return (c <= EPSILON);
     };
 
+    
     template<class T>
     inline T Lerp(T start, T end, float t)
     {

@@ -110,7 +110,7 @@ CFallRubbleGimmick::CFallRubbleGimmick(const char* pszName, void* pParam)
 };
 
 
-/*virtual*/ CFallRubbleGimmick::~CFallRubbleGimmick(void)
+CFallRubbleGimmick::~CFallRubbleGimmick(void)
 {
     if (m_pModel)
     {
@@ -132,7 +132,7 @@ CFallRubbleGimmick::CFallRubbleGimmick(const char* pszName, void* pParam)
 };
 
 
-/*virtual*/ void CFallRubbleGimmick::Run(void) /*override*/
+void CFallRubbleGimmick::Run(void)
 {
     PreMove();
     
@@ -161,21 +161,21 @@ CFallRubbleGimmick::CFallRubbleGimmick(const char* pszName, void* pParam)
 };
 
 
-/*virtual*/ void CFallRubbleGimmick::Draw(void) const /*override*/
+void CFallRubbleGimmick::Draw(void) const
 {
     CGimmick::Draw();
     m_pModuleMan->Draw();
 };
 
 
-/*virtual*/ void CFallRubbleGimmick::PreMove(void) /*override*/
+void CFallRubbleGimmick::PreMove(void)
 {
     m_pFallRubbleMove->GetPosition(&m_vPreMovePosition);
     m_pModuleMan->Run();
 };
 
 
-/*virtual*/ void CFallRubbleGimmick::PostMove(void) /*override*/
+void CFallRubbleGimmick::PostMove(void)
 {
     RwV3d vRotation = Math::VECTOR3_ZERO;
     m_pFallRubbleMove->GetRotation(&vRotation);
@@ -209,7 +209,7 @@ CFallRubbleGimmick::CFallRubbleGimmick(const char* pszName, void* pParam)
 };
 
 
-/*virtual*/ void CFallRubbleGimmick::OnTouchedDown(void) /*override*/
+void CFallRubbleGimmick::OnTouchedDown(void)
 {
     if (m_bErase)
         return;

@@ -91,11 +91,12 @@ CMadCarGimmickManager::CMadCarGimmickManager(const char* pszName, void* pParam)
 , m_nPathEnd(0)
 , m_fTimerSE(0.0f)
 {
-    GIMMICKPARAM::GIMMICK_BASIC* pInitParam = (GIMMICKPARAM::GIMMICK_BASIC*)pParam;
+    GIMMICKPARAM::GIMMICK_BASIC* pInitParam = static_cast<GIMMICKPARAM::GIMMICK_BASIC*>(pParam);
     ASSERT(pInitParam);
 
     m_subid = pInitParam->m_subid;
-    ASSERT((m_subid >= SUBID_START) && (m_subid < SUBID_NUM));
+    ASSERT(m_subid >= SUBID_START);
+    ASSERT(m_subid < SUBID_NUM);
 
     const int32 anPathStart[] = { 0, 17, 20 };
     const int32 anPathEnd[] = { 17, 20, 23 };
@@ -137,11 +138,11 @@ void CMadCarGimmickManager::PreMove(void)
 void CMadCarGimmickManager::PostMove(void)
 {
     bool bCarCreate = false;
-    int32 PathStart = 0;
-    int32 PathEnd = 0;
-    int32 CarStart = 0;
-    int32 CarEnd = 0;
-    int32 Chance = Math::RandRange(0, uint32(CScreen::Framerate() * 2.0f));
+    int32 pathStart = 0;
+    int32 pathEnd = 0;
+    int32 carStart = 0;
+    int32 carEnd = 0;
+    int32 chance = Math::RandRange(0, static_cast<uint32>(CScreen::Framerate() * 2.0f));
     
     switch (m_subid)
     {
@@ -153,10 +154,10 @@ void CMadCarGimmickManager::PostMove(void)
                 {
                     if (m_fTimer > 0.6f)
                     {
-                        PathStart = m_nRndCnt;
-                        PathEnd = (PathStart + 1);
-						CarStart = CMadCarGimmick::SUBID_START_LIGHON;
-						CarEnd = CMadCarGimmick::SUBID_END_LIGHTON;
+                        pathStart = m_nRndCnt;
+                        pathEnd = (pathStart + 1);
+						carStart = CMadCarGimmick::SUBID_START_LIGHON;
+						carEnd = CMadCarGimmick::SUBID_END_LIGHTON;
 						bCarCreate = true;
 						if (++m_nRndCnt > 2)
 							m_nRndCnt = 0;
@@ -168,10 +169,10 @@ void CMadCarGimmickManager::PostMove(void)
                 {
                     if (m_fTimer > 0.9f)
                     {
-                        PathStart = 3;
-                        PathEnd = 9;
-                        CarStart = CMadCarGimmick::SUBID_START_LIGHON;
-                        CarEnd = CMadCarGimmick::SUBID_END_LIGHTON;
+                        pathStart = 3;
+                        pathEnd = 9;
+                        carStart = CMadCarGimmick::SUBID_START_LIGHON;
+                        carEnd = CMadCarGimmick::SUBID_END_LIGHTON;
                         bCarCreate = true;
                     };
                 }
@@ -181,13 +182,16 @@ void CMadCarGimmickManager::PostMove(void)
                 {
                     if (m_fTimer > 0.7f)
                     {
-                        PathStart = 9;
-                        PathEnd = 17;
-                        CarStart = CMadCarGimmick::SUBID_START_LIGHON;
-                        CarEnd = CMadCarGimmick::SUBID_END_LIGHTON;
+                        pathStart = 9;
+                        pathEnd = 17;
+                        carStart = CMadCarGimmick::SUBID_START_LIGHON;
+                        carEnd = CMadCarGimmick::SUBID_END_LIGHTON;
                         bCarCreate = true;
                     };
                 }
+                break;
+
+            default:
                 break;
             };
         }
@@ -195,12 +199,12 @@ void CMadCarGimmickManager::PostMove(void)
 
     case SUBID_BRIDGE_FIGHT_L:
         {
-            if ((m_fTimer >= 1.7f) && (Chance < 12))
+            if ((m_fTimer >= 1.7f) && (chance < 12))
             {
-                PathStart = 17;
-                PathEnd = 20;
-                CarStart = CMadCarGimmick::SUBID_START_LIGHTOFF;
-                CarEnd = CMadCarGimmick::SUBID_END_LIGHTOFF;
+                pathStart = 17;
+                pathEnd = 20;
+                carStart = CMadCarGimmick::SUBID_START_LIGHTOFF;
+                carEnd = CMadCarGimmick::SUBID_END_LIGHTOFF;
                 bCarCreate = true;
             };
         }
@@ -208,12 +212,12 @@ void CMadCarGimmickManager::PostMove(void)
 
     case SUBID_BRIDGE_FIGHT_R:
         {
-            if ((m_fTimer >= 1.5f) && (Chance < 4))
+            if ((m_fTimer >= 1.5f) && (chance < 4))
             {
-                PathStart = 20;
-                PathEnd = 23;
-                CarStart = CMadCarGimmick::SUBID_START_LIGHTOFF;
-                CarEnd = CMadCarGimmick::SUBID_END_LIGHTOFF;
+                pathStart = 20;
+                pathEnd = 23;
+                carStart = CMadCarGimmick::SUBID_START_LIGHTOFF;
+                carEnd = CMadCarGimmick::SUBID_END_LIGHTOFF;
                 bCarCreate = true;
             };
         }
@@ -226,31 +230,36 @@ void CMadCarGimmickManager::PostMove(void)
 
     if (bCarCreate)
     {
-        int32 Subid = Math::RandRange(CarStart, CarEnd);
-        int32 CarType = CMadCarGimmick::GetCarType(CMadCarGimmick::SUBID(Subid));
-        ASSERT((CarType >= 0) && (CarType < COUNT_OF(m_anCarCreated)));
-        ++m_anCarCreated[CarType];
+        int32 carSubId = Math::RandRange(carStart, carEnd);
 
-        int32 Path = Math::RandRange(PathStart, PathEnd);
+        int32 carType = CMadCarGimmick::GetCarType(static_cast<CMadCarGimmick::SUBID>(carSubId));
+        ASSERT(carType >= 0);
+        ASSERT(carType < COUNT_OF(m_anCarCreated));
 
-        GIMMICKPARAM::GIMMICK_TERMS_TIME Param;
-        std::memset(&Param, 0x00, sizeof(Param));
-        Param.m_subid = Subid;
-        CGimmickInfo::MakeName(Param.m_szName, GIMMICKID::ID_K_M44N, Subid, m_anCarCreated[CarType]);
-        std::strcpy(Param.m_szTargetGimmick, s_aMadCarManPathInfo[Path].m_pszPathName);
-        Param.m_fTime = (s_aMadCarManPathInfo[Path].m_fPathTimes / s_aMadCarManPathInfo[Path].m_fPathLength);
+        ++m_anCarCreated[carType];
 
-        CGimmick* pGimmick = CGimmickManager::Create(GIMMICKID::ID_K_M44N, 0, &Param);
+        int32 path = Math::RandRange(pathStart, pathEnd);
+
+        GIMMICKPARAM::GIMMICK_TERMS_TIME param;
+        std::memset(&param, 0x00, sizeof(param));
+        param.m_subid = carSubId;
+        CGimmickInfo::MakeName(param.m_szName, GIMMICKID::ID_K_M44N, carSubId, m_anCarCreated[carType]);
+        std::strcpy(param.m_szTargetGimmick, s_aMadCarManPathInfo[path].m_pszPathName);
+        param.m_fTime = (s_aMadCarManPathInfo[path].m_fPathTimes / s_aMadCarManPathInfo[path].m_fPathLength);
+
+        CGimmick* pGimmick = CGimmickManager::Create(GIMMICKID::ID_K_M44N, 0, &param);
         ASSERT(pGimmick);
 
         m_fTimer = 0.0f;
     };
 
-    if ((m_subid == SUBID_BRIDGE_FIGHT_L) || (m_eState == STATE_BATTLE_1) || (m_eState == STATE_BATTLE_2))
+    if ((m_subid == SUBID_BRIDGE_FIGHT_L) ||
+        (m_eState == STATE_BATTLE_1) ||
+        (m_eState == STATE_BATTLE_2))
     {
-        if (((m_fTimerSE > 2.6f) && (Chance < 4)) || (m_fTimerSE > 4.0f))
+        if (((m_fTimerSE > 2.6f) && (chance < 4)) || (m_fTimerSE > 4.0f))
         {
-            if ((m_subid == SUBID_BRIDGE_CHASE) && (Chance < 1))
+            if ((m_subid == SUBID_BRIDGE_CHASE) && (chance < 1))
                 CGameSound::PlayObjectSE(this, SDCODE_SE(0x1091), m_subid);
 
             CGameSound::PlayObjectSE(this, SDCODE_SE(0x1092));

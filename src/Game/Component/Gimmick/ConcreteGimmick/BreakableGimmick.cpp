@@ -75,20 +75,21 @@ static_assert(COUNT_OF(s_aDetailParam) == (CBreakableGimmick::DETAILKINDNUM * CB
 
 
 CBreakableGimmick::CBreakableGimmickEffect::CBreakableGimmickEffect(void)
+: m_fTimer(0.0f)
+, m_fInterval(0.0f)
+, m_fIntervalTimer(0.0f)
+, m_fScale(1.0f)
+, m_effectId(EFFECTID::ID_UNKNOWN)
+, m_bStart(false)
+, m_detailKind(DETAILKIND_UNKNOWN)
+, m_effectTiming(EFFECTTIMING_ATBREAK)
+, m_effectState(EFFECTSTATE_WAIT)
+, m_pParentModel(nullptr)
+, m_vEffectDir(Math::VECTOR3_ZERO)
+, m_vEffectPos(Math::VECTOR3_ZERO)
+, m_hEffect(0)
 {
-    m_fTimer        = 0.0f;
-    m_fInterval     = 0.0f;
-    m_fIntervalTimer= 0.0f;
-    m_fScale        = 1.0f;
-    m_effectId      = EFFECTID::ID_UNKNOWN;
-    m_bStart        = false;
-    m_detailKind    = DETAILKIND_UNKNOWN;
-    m_effectTiming  = EFFECTTIMING_ATBREAK;
-    m_effectState   = EFFECTSTATE_WAIT;
-    m_pParentModel  = nullptr;
-    m_vEffectDir    = Math::VECTOR3_ZERO;
-    m_vEffectPos    = Math::VECTOR3_ZERO;
-    m_hEffect       = 0;
+    ;
 };
 
 
@@ -96,8 +97,8 @@ void CBreakableGimmick::CBreakableGimmickEffect::Init(CModel* pModel, SUBID subi
 {
     m_detailKind = getDetailKind(subid);
 
-    const int32 ParamNo = m_detailKind + (DETAILKINDNUM * timing);
-    const DETAILPARAM* pDetailParam = &s_aDetailParam[ParamNo];
+    const int32 paramNo = m_detailKind + (DETAILKINDNUM * timing);
+    const DETAILPARAM* pDetailParam = &s_aDetailParam[paramNo];
     
     m_effectId      = pDetailParam->m_effectId;
     m_fInterval     = pDetailParam->m_fInterval;
@@ -132,13 +133,13 @@ void CBreakableGimmick::CBreakableGimmickEffect::Run(void)
             
             if (m_effectTiming == EFFECTTIMING_AFTERBREAK)
             {
-                if (m_detailKind == DETAILKIND_FIREPLUG_NY ||
-                    m_detailKind == DETAILKIND_FIREPLUG_SP)
+                if ((m_detailKind == DETAILKIND_FIREPLUG_NY) ||
+                    (m_detailKind == DETAILKIND_FIREPLUG_SP))
                 {
                     RwV3d vPosition = Math::VECTOR3_ZERO;                    
                     m_pParentModel->GetPosition(&vPosition);
                     
-                    CGameSound::PlayPositionSE(&vPosition, SDCODE_SE(4261), 0);
+                    CGameSound::PlayPositionSE(&vPosition, SDCODE_SE(4261));
                 };
             };
         }
@@ -160,8 +161,8 @@ void CBreakableGimmick::CBreakableGimmickEffect::Run(void)
 
                 if (m_effectTiming == EFFECTTIMING_AFTERBREAK)
                 {
-                    if (m_detailKind == DETAILKIND_FIREPLUG_NY ||
-                        m_detailKind == DETAILKIND_FIREPLUG_SP)
+                    if ((m_detailKind == DETAILKIND_FIREPLUG_NY) ||
+                        (m_detailKind == DETAILKIND_FIREPLUG_SP))
                         CGameSound::StopSE(SDCODE_SE(4261));
                 };
 
@@ -171,9 +172,6 @@ void CBreakableGimmick::CBreakableGimmickEffect::Run(void)
         break;
 
     case EFFECTSTATE_END:
-        {
-            ;
-        }
         break;
 
     default:
@@ -191,8 +189,9 @@ CBreakableGimmick::DETAILKIND CBreakableGimmick::CBreakableGimmickEffect::getDet
     MAPID::VALUE        idMap   = CStageInfo::GetMapID(idStage);
     CMapInfo::CATEGORY  catMap  = CMapInfo::GetCategory(idMap);
 
-    bool bSpace = bool((catMap == CMapInfo::CATEGORY_SPACE) || (catMap == CMapInfo::CATEGORY_ZERO));
-    
+    bool bSpace = (catMap == CMapInfo::CATEGORY_SPACE) ||
+                  (catMap == CMapInfo::CATEGORY_ZERO);
+
     switch (subid)
     {
     case SUBID_FIREPLUG:
@@ -313,29 +312,27 @@ void CBreakableGimmick::CBreakableGimmickEffect::defaultOneShotEffectRun(void)
     
     if (m_fIntervalTimer >= m_fInterval)
     {
-        RwV3d vPosition = Math::VECTOR3_ZERO;
-
         RpClump* pClump = m_pParentModel->GetClump();
         RwFrame* pFrame = RpClumpGetFrameMacro(pClump);
         RwMatrix* pMatrix = RwFrameGetMatrixMacro(pFrame);
 
+        RwV3d vPosition = Math::VECTOR3_ZERO;
         RwV3dTransformPoint(&vPosition, &m_vEffectPos, pMatrix);
         
         if (m_effectId == EFFECTID::ID_SPRAYWTER)
         {
-            uint32 hMagic = CMagicManager::Play("spraywater", &vPosition, &m_vEffectDir, nullptr, true);
-            ASSERT(hMagic);
-            
+            uint32 hMagic = CMagicManager::Play("spraywater", &vPosition, &m_vEffectDir);
             if (hMagic)
                 CMagicManager::SetFlyawaySpeed(hMagic, 10.0f, 5.0f);
         }
         else
         {
-            uint32 hEffect = CEffectManager::Play(m_effectId, &vPosition, true);
-            ASSERT(hEffect);
-
-            if (hEffect && !Math::FEqual(m_fScale, 1.0f))
-                CEffectManager::SetScale(hEffect, m_fScale);
+            uint32 hEffect = CEffectManager::Play(m_effectId, &vPosition);
+            if (hEffect)
+            {
+                if (m_fScale != 1.0f)
+                    CEffectManager::SetScale(hEffect, m_fScale);
+            };
         };
     };
 };
@@ -345,54 +342,71 @@ void CBreakableGimmick::CBreakableGimmickEffect::defaultLoopEffectRun(void)
 {
     if (m_hEffect)
         return;
-
-    bool bSoundCall = false;
-    RwV3d vPosition = Math::VECTOR3_ZERO;
-    RwV3d vRotation = Math::VECTOR3_ZERO;
     
     RpClump* pClump = m_pParentModel->GetClump();
     RwFrame* pFrame = RpClumpGetFrameMacro(pClump);
     RwMatrix* pMatrix = RwFrameGetMatrixMacro(pFrame);
 
-    m_pParentModel->GetRotation(&vRotation);
+    RwV3d vPosition = Math::VECTOR3_ZERO;
     RwV3dTransformPoint(&vPosition, &m_vEffectPos, pMatrix);
 
-    m_hEffect = CEffectManager::Play(m_effectId, &vPosition, vRotation.y, bSoundCall);
-    ASSERT(m_hEffect);
+    RwV3d vRotation = Math::VECTOR3_ZERO;
+    m_pParentModel->GetRotation(&vRotation);
 
-    if (m_hEffect && !Math::FEqual(m_fScale, 1.0f))
-        CEffectManager::SetScale(m_hEffect, m_fScale);
+    m_hEffect = CEffectManager::Play(m_effectId, &vPosition, vRotation.y, false);
+    if (m_hEffect)
+    {
+        if (m_fScale != 1.0f)
+            CEffectManager::SetScale(m_hEffect, m_fScale);
+    };    
 };
 
 
 void CBreakableGimmick::CBreakableGimmickEffect::sprayWaterEffectRun(void)
 {
-    m_fIntervalTimer += CGameProperty::GetElapsedTime();
-
-    if (m_fIntervalTimer >= m_fInterval)
+    if (m_fIntervalTimer <= m_fInterval)
     {
-        RwV3d vPosition = Math::VECTOR3_ZERO;
-
         RpClump* pClump = m_pParentModel->GetClump();
         RwFrame* pFrame = RpClumpGetFrameMacro(pClump);
         RwMatrix* pMatrix = RwFrameGetMatrixMacro(pFrame);
 
-        m_vEffectDir = *RwMatrixGetAt(pMatrix);
+        RwV3d vPosition = Math::VECTOR3_ZERO;
         RwV3dTransformPoint(&vPosition, &m_vEffectPos, pMatrix);
 
-        uint32 hMagic = CMagicManager::Play("spraywater", &vPosition, &m_vEffectDir, nullptr, true);
-        ASSERT(hMagic);
+        m_vEffectDir = *RwMatrixGetAt(pMatrix);
 
+        uint32 hMagic = CMagicManager::Play("spraywater", &vPosition, &m_vEffectDir);
         if (hMagic)
             CMagicManager::SetFlyawaySpeed(hMagic, 10.0f, 5.0f);
 
         m_fIntervalTimer = 0.0f;
+    }
+    else
+    {
+        m_fIntervalTimer += CGameProperty::GetElapsedTime();
     };
 };
 
 
+//
+// *********************************************************************************
+//
+
+
 CBreakableGimmick::CBreakableGimmick(const char* pszName, void* pParam)
 : CGimmick(pszName, pParam)
+, m_pModel(nullptr)
+, m_pMove(nullptr)
+, m_aEffect()
+, m_state(STATE_NORMAL)
+, m_subid(SUBIDNUM)
+, m_nLife(0)
+, m_nHitSphere(0)
+, m_fHitRadius(0.0f)
+, m_pBodyHit(nullptr)
+, m_hAtari(0)
+, m_pAnimatedMaterials(nullptr)
+, m_bUvAnimOwner(false)
 {
     allClear();
     
@@ -588,7 +602,6 @@ void CBreakableGimmick::initModel(void* pParam)
     const INITPARAM* pInitParam = &s_aInitParam[m_subid];
 
     m_pModel = new CNormalGimmickModel;
-    ASSERT(m_pModel);
 
     char szTempName[32];
     szTempName[0] = '\0';
@@ -749,25 +762,27 @@ void CBreakableGimmick::registHitAtack(void)
     for (int32 i = 0; i < m_nHitSphere; ++i)
     {
         float fRadius = m_fHitRadius;
+
         RwV3d vPosition = Math::VECTOR3_ZERO;
-        vPosition.y = (float(i) * m_fHitRadius) * (float(i) * m_fHitRadius);
-        
+        vPosition.y = ((static_cast<float>(i) * m_fHitRadius) *
+                       (static_cast<float>(i) * m_fHitRadius));
+
         RpClump* pClump = m_pModel->GetModel(CNormalGimmickModel::MODELTYPE_DRAW_NORMAL)->GetClump();
         RwFrame* pFrame = RpClumpGetFrameMacro(pClump);
         RwMatrix* pMatrix = RwFrameGetMatrixMacro(pFrame);
 
         RwV3dTransformPoint(&vPosition, &vPosition, pMatrix);
 
-        RwSphere HitSphere = { vPosition, fRadius };
+        RwSphere hitSphere = { vPosition, fRadius };
 
-        CHitCatchData CatchData;
-        CatchData.Cleanup();
-        CatchData.SetObject(GetHandle());
-        CatchData.SetObjectType(GetType());
-        CatchData.SetShape(CHitCatchData::SHAPE_SPHERE);
-        CatchData.SetSphere(&HitSphere);
+        CHitCatchData hitCatch;
+        hitCatch.Cleanup();
+        hitCatch.SetObject(GetHandle());
+        hitCatch.SetObjectType(GetType());
+        hitCatch.SetShape(CHitCatchData::SHAPE_SPHERE);
+        hitCatch.SetSphere(&hitSphere);
 
-        CHitAttackManager::RegistCatch(&CatchData);
+        CHitAttackManager::RegistCatch(&hitCatch);
     };
 };
 
@@ -786,6 +801,9 @@ void CBreakableGimmick::breakSdCall(void)
         
     case SUBID_NEON:
         CGameSound::PlayObjectSE(this, SDCODE_SE(4187));
+        break;
+
+    default:
         break;
     };
 };
@@ -806,6 +824,9 @@ void CBreakableGimmick::setAttackerDirection(const CGameObject* pObj)
 
     case GAMEOBJECTTYPE::SHOT:
         vRotation.y = static_cast<const CShot*>(pObj)->GetDirection();
+        break;
+
+    default:
         break;
     };
 
@@ -884,8 +905,6 @@ void CBreakableGimmick::setFlyAwayParam(const CGameObject* pObj)
         break;
     };
 
-    vVelocity.y = 6.0f;
-
     m_pMove->SetVelocity(&vVelocity);
     m_pMove->Start();
 };
@@ -909,23 +928,23 @@ bool CBreakableGimmick::billBoardEraseSlowly(void)
 {
     if ((m_subid == SUBID_BILLBOARD) && (m_state == STATE_BREAK))
         return eraseSlowly();
-    else
-        return false;
+    
+    return false;
 };
 
 
 bool CBreakableGimmick::eraseSlowly(void)
 {
-    uint8 decValue = uint8(255.0f / CScreen::Framerate());
+    RwUInt8 decValue = static_cast<RwUInt8>(255.0f / CScreen::Framerate());
 
     CModel* pMdl = m_pModel->GetModel(CNormalGimmickModel::MODELTYPE_DRAW_BREAK);
     ASSERT(pMdl);
 
-    RwRGBA MaterialColor = pMdl->GetColor();
-    MaterialColor.alpha -= decValue;
-    pMdl->SetColor(MaterialColor);
+    RwRGBA materialColor = pMdl->GetColor();
+    materialColor.alpha -= decValue;
+    pMdl->SetColor(materialColor);
 
-    return (MaterialColor.alpha < decValue);
+    return (materialColor.alpha < decValue);
 };
 
 

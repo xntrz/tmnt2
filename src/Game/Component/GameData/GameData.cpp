@@ -6,7 +6,7 @@
 
 #ifdef TARGET_PC
 #include "System/PC/PCSetting.hpp"
-#endif
+#endif /* TARGET_PC */
 
 
 static CGameRecord::RAWDATA s_RecordBackup;

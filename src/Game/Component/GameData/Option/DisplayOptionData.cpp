@@ -3,7 +3,7 @@
 
 #ifdef TARGET_PC
 #include "System/PC/PCSpecific.hpp"
-#endif
+#endif /* TARGET_PC */
 
 
 CDisplayOptionData::CDisplayOptionData(void)

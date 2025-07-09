@@ -6,7 +6,7 @@
 
 #ifdef TARGET_PC
 #include "System/PC/PCSpecific.hpp"
-#endif
+#endif /* TARGET_PC */
 
 
 CGamepadOptionData::CGamepadOptionData(void)
@@ -31,7 +31,7 @@ void CGamepadOptionData::Initialize(int32 port)
     //
     IGamepad::DIGITAL_OK = IPadFunctionMask(IGamepad::FUNCTION_ATTACK_A) | IGamepad::DIGITAL_START;
     IGamepad::DIGITAL_CANCEL = IPadFunctionMask(IGamepad::FUNCTION_JUMP) | IGamepad::DIGITAL_SELECT;
-#endif
+#endif /* TARGET_PC */
     
     SetDefault();
 };
@@ -73,10 +73,10 @@ void CGamepadOptionData::Apply(void)
     IGamepad::AppendButtonFunction(iController, m_auButtonAssign[OPTIONTYPES::BTNFUNC_DASH],            IGamepad::FUNCTION_DASH);
     IGamepad::AppendButtonFunction(iController, m_auButtonAssign[OPTIONTYPES::BTNFUNC_GUARD],           IGamepad::FUNCTION_GUARD);
     IGamepad::AppendButtonFunction(iController, m_auButtonAssign[OPTIONTYPES::BTNFUNC_CHANGE_CHARA],    IGamepad::FUNCTION_SWITCH_CHR);
-#ifdef TARGET_PS2
+#if defined(TARGET_PS2)
     IGamepad::AppendButtonFunction(iController, IGamepad::DIGITAL_LUP,      IGamepad::FUNCTION_SWITCH_CAM);
     IGamepad::AppendButtonFunction(iController, IGamepad::DIGITAL_LDOWN,    IGamepad::FUNCTION_SWITCH_GAUGE);
-#elif TARGET_PC    
+#elif defined(TARGET_PC)
     IGamepad::AppendButtonFunction(iController, IGamepad::DIGITAL_R3,       IGamepad::FUNCTION_SWITCH_CAM);
     IGamepad::AppendButtonFunction(iController, IGamepad::DIGITAL_L3,       IGamepad::FUNCTION_SWITCH_GAUGE);
 #else
@@ -86,7 +86,7 @@ void CGamepadOptionData::Apply(void)
 #ifdef TARGET_PC
     if (m_port == CPCSpecific::GetKeyboradPort())
         CGameData::Option().Keyboard().AssignButton();
-#endif
+#endif /* TARGET_PC */
     
     IGamepad::EnableVibration(iController, m_bVibration);
 };

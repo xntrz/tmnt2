@@ -13,8 +13,8 @@ public:
     virtual void OnAttackResult(CHitCatchData* pCatch) override;
 
 protected:
-    static RwRGBA m_DamageColor;
-    int32 m_iLife;
-    RwRGBA m_DefaultColor;
-    float m_fBlendRate;
+    static RwRGBA   m_damageColor;
+    int32           m_iLife;
+    RwRGBA          m_defaultColor;
+    float           m_fBlendRate;
 };

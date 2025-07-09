@@ -49,27 +49,20 @@ void CModuleManager::Include(IModule* pModule)
     ASSERT(pModule);
     ASSERT(!m_listModule.contains(pModule));
 
-    if (m_listModule.empty())
+    auto it = m_listModule.begin();
+    auto itEnd = m_listModule.end();
+    while (it != itEnd)
     {
-        m_listModule.push_back(pModule);
-    }
-    else
-    {
-        auto it = m_listModule.begin();
-        auto itEnd = m_listModule.end();
-        while (it != itEnd)
-        {
-            if (pModule->GetType() < (*it).GetType())
-                break;
+        if (pModule->GetType() < (*it).GetType())
+            break;
 
-            ++it;
-        };
-
-        if (it)
-            m_listModule.insert(it, pModule);
-        else
-            m_listModule.push_back(pModule);
+        ++it;
     };
+
+    if (it)
+        m_listModule.insert(it, pModule);
+    else
+        m_listModule.push_back(pModule);
 };
 
 

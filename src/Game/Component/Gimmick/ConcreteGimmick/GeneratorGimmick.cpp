@@ -100,7 +100,7 @@ void CEnemySettingGimmick::OnReceiveEvent(const char* pszSender, GIMMICKTYPES::E
 
         case MODE_AIR:
             {
-                ASSERT(m_generator.CountAliveEnemy() > 0); // TODO uncomment this when enemies done, this assert fire when no enemies created
+                ASSERT(m_generator.CountAliveEnemy() > 0);
                 m_generator.ActivateEnemy();
             }
             break;
@@ -190,6 +190,9 @@ void CEnemyGeneratePointGimmick::OnReceiveEvent(const char* pszSender, GIMMICKTY
 
     case GIMMICKTYPES::EVENTTYPE_INACTIVATE:
         m_generator.Stop();
+        break;
+
+    default:
         break;
     };
 

@@ -245,9 +245,9 @@ void CAttackDataRecord::SetCatchRecord(CCatchDataRecord* pCatchDataRecord)
 
 bool CAttackDataRecord::IsEqual(const CHitAttackData* pHitAttackData) const
 {
-    return (pHitAttackData->GetObjectHandle() == m_uObjHandle &&
-            pHitAttackData->GetAttackNo() == m_nAttackNo &&
-            !std::strcmp(pHitAttackData->GetMotion(), m_szMotionName));
+    return ((pHitAttackData->GetObjectHandle() == m_uObjHandle)
+        &&  (pHitAttackData->GetAttackNo() == m_nAttackNo)
+        &&  !std::strcmp(pHitAttackData->GetMotion(), m_szMotionName));
 };
 
 
@@ -612,7 +612,6 @@ void CHitAttackContainer::Period(void)
                     float fHitDist = 0.0f;
                         
                     bool bIntersection = Intersection::LineAndSphere(&line, &sphere, &fHitDist);
-                    
                     if (bIntersection)
                     {
                         itAttack.SetHitDistance(fHitDist);
@@ -731,7 +730,7 @@ bool CHitAttackContainer::IsHitTarget(const CHitAttackData* pAttack, const CHitC
         
     case GAMEOBJECTTYPE::CHARACTER:
         {
-            CCharacter* pCharacter = (CCharacter*)pCatch->GetObject();
+            CCharacter* pCharacter = static_cast<CCharacter*>(pCatch->GetObject());
 
             switch (pCharacter->GetCharacterType())
             {

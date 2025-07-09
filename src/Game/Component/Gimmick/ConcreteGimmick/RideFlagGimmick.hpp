@@ -28,7 +28,7 @@ public:
 protected:
     static int32 m_iCounter[FLAGTYPENUM];
     static int32 m_iRestCounter[FLAGTYPENUM];
-    FLAGTYPE m_flagtype;
-    int32 m_iScore;
-    bool m_bAdd;
+    FLAGTYPE     m_flagtype;
+    int32        m_iScore;
+    bool         m_bAdd;
 };

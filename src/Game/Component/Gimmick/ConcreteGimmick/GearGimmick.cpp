@@ -87,7 +87,7 @@ CGearGimmick::CGearGimmick(const char* pszName, void* pParam)
 };
 
 
-/*virtual*/ CGearGimmick::~CGearGimmick(void)
+CGearGimmick::~CGearGimmick(void)
 {
     CGameSound::FadeOutSE(SDCODE_SE(4244), CGameSound::FADESPEED_NORMAL);
     CGameSound::FadeOutSE(SDCODE_SE(4222), CGameSound::FADESPEED_NORMAL);
@@ -100,7 +100,7 @@ CGearGimmick::CGearGimmick(const char* pszName, void* pParam)
 };
 
 
-/*virtual*/ void CGearGimmick::Draw(void) const /*override*/
+void CGearGimmick::Draw(void) const
 {
     if (!m_aSubInfo[m_subid].bOwnerDraw)
     {
@@ -128,7 +128,7 @@ CGearGimmick::CGearGimmick(const char* pszName, void* pParam)
 };
 
 
-/*virtual*/ void CGearGimmick::PreMove(void) /*override*/
+void CGearGimmick::PreMove(void)
 {
     float fRotVel = m_aSubInfo[m_subid].fRotVelocity[m_eState == STATE_SLOW ? 1 : 0];
 
@@ -147,7 +147,7 @@ CGearGimmick::CGearGimmick(const char* pszName, void* pParam)
 };
 
 
-/*virtual*/ void CGearGimmick::PostMove(void) /*override*/
+void CGearGimmick::PostMove(void)
 {
     float fDltRot = (CGameProperty::GetElapsedTime() * m_fRotVelocity);
     
@@ -178,7 +178,7 @@ CGearGimmick::CGearGimmick(const char* pszName, void* pParam)
 };
 
 
-/*virtual*/ void CGearGimmick::OnReceiveEvent(const char* pszSender, GIMMICKTYPES::EVENTTYPE eventtype) /*override*/
+void CGearGimmick::OnReceiveEvent(const char* pszSender, GIMMICKTYPES::EVENTTYPE eventtype)
 {
     if (eventtype != GIMMICKTYPES::EVENTTYPE_ACTIVATE)
         return;

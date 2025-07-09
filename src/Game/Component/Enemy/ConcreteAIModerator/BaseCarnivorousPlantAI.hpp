@@ -9,14 +9,14 @@ namespace BASECARNIVOROUSPLANT_AI
     {
         ORDERTYPE_ATTACK_A = BASEAI6045::ORDERTYPE_ATTACK_EXTEND,
         ORDERTYPE_ATTACK_B,
-    }; /* enum ORDERTYPE_ATTACK */
+    };
 
     namespace AIDECISIONUNITNAME
     {
         static const char* ATTACK_A = "AttackA";
         static const char* ATTACK_B = "AttackB";        
-    }; /* namespace AIDECISIONUNITNAME */
-}; /* namespace BASECARNIVOROUSPLANT_AI */
+    };
+};
 
 
 class CBaseCarnivorousPlantAI : public CBaseAI6045

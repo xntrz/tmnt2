@@ -25,16 +25,14 @@ public:
     virtual void Draw(void) const;
     virtual bool Query(CGimmickQuery* pQuery) const;
     virtual void OnReceiveEvent(const char* pszSender, GIMMICKTYPES::EVENTTYPE eventtype);
-
-private:
     void forceGenerateEnd(void);
     void doorMoveOperate(void);
 
 private:
     CDoorEnemyGenerator m_generator;
-    STATUS m_status;
-    float m_fMoveVolume;
-    CModel* m_apModel[2];
-    float m_fTimer;
-    bool m_bEnd;
+    STATUS              m_status;
+    float               m_fMoveVolume;
+    CModel*             m_apModel[2];
+    float               m_fTimer;
+    bool                m_bEnd;
 };

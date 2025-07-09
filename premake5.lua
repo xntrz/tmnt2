@@ -135,6 +135,7 @@ function project_base_initialize()
    dependson { "System" }
    targetname "%{wks.name}"
    kind "WindowedApp"
+   --warnings "High"
    removefiles { 
       "src/System/Common/MemPool.*", -- unused in PC version
       "src/System/Common/Debug/**.*", -- TODO
@@ -193,7 +194,7 @@ function project_base_initialize()
       "rptoon.lib"
    } 
    linkoptions {
-      "/ignore:4099" -- PDB 'X' was not found with 'X' or at 'X'; linking object as if no debug info
+      "/ignore:4099", -- PDB 'X' was not found with 'X' or at 'X'; linking object as if no debug info
    }
    filter { "configurations:"..getConfigsDebug() }
       libdirs { "%{dir_lib}/rwsdk37/lib/d3d9/debug", "%{dir_bin}" }
@@ -205,6 +206,8 @@ end
 
 project "TMNT2"
    project_base_initialize()
+   filter { "configurations:"..getConfigsRelease() }
+      removefiles {  "src/Game/Sequence/Test/**" }
    filter { "configurations:"..getConfigsAllEU() }
       defines { "TMNT2_BUILD_EU" }
    --filter { "configurations:"..getConfigsAllNA() }

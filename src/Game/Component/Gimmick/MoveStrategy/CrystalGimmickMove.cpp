@@ -17,8 +17,8 @@ CCrystalGimmickMove::CCrystalGimmickMove(const RwV3d* pvInitialPos)
     m_vInitPos = *pvInitialPos;
     m_vInitPos.y += 0.5f;
 
-    m_fTheta = float(m_nCrystal) * MATH_DEG2RAD(18.0f) - (Math::PI * 0.5f);
-    m_fThetaAdd = Math::PI2 / (CScreen::Framerate() * 5.0f);
+    m_fTheta = static_cast<float>(m_nCrystal) * MATH_DEG2RAD(18.0f) - (MATH_PI * 0.5f);
+    m_fThetaAdd = (MATH_PI2 / (CScreen::Framerate() * 5.0f));
 
     ++m_nCrystal;
 };
@@ -73,9 +73,9 @@ void CCrystalGimmickMove::UpDownMove(float dt)
     float fOfsY = Math::Sin(m_fTheta) * 0.5f;
     
     m_fTheta += m_fThetaAdd;
-    m_fThetaAdd = (m_fTheta < -(Math::PI * 0.5f) ? -m_fThetaAdd : m_fThetaAdd);
-    m_fThetaAdd = (m_fTheta >  (Math::PI * 0.5f) ? -m_fThetaAdd : m_fThetaAdd);
-    m_fTheta = Clamp(m_fTheta, -(Math::PI * 0.5f), (Math::PI * 0.5f));
+    m_fThetaAdd = (m_fTheta < -MATH_DEG2RAD(90.0f) ? -m_fThetaAdd : m_fThetaAdd);
+    m_fThetaAdd = (m_fTheta >  MATH_DEG2RAD(90.0f) ? -m_fThetaAdd : m_fThetaAdd);
+    m_fTheta = Clamp(m_fTheta, -MATH_DEG2RAD(90.0f), MATH_DEG2RAD(90.0f));
 
     m_vPosition = m_vInitPos;
     m_vPosition.y += fOfsY;

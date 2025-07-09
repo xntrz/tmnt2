@@ -54,7 +54,6 @@ void CCaveGimmick::OnReceiveEvent(const char* pszSender, GIMMICKTYPES::EVENTTYPE
             m_generator.Start();
             m_status = STATUS_RUN;
         };
-
     }
     else
     {

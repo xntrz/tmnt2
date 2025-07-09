@@ -1016,34 +1016,13 @@ CBaseEliteAI::CAIBehaviorDebug::CAIBehaviorDebug(void)
 
 /*virtual*/ bool CBaseEliteAI::CAIBehaviorDebug::IsRunnable(void) /*override*/
 {
-#ifdef _DEBUG
-    m_orderType = -1;
-
-    int32 controller = (IGamepad::Max() - 1);
-    if (controller < 0)
-        controller = 0;
-
-    uint32 digital = IGamepad::GetDigital(controller);
-    uint32 digitalRelease = IGamepad::GetDigitalRelease(controller);
-    uint32 digitalRepeat = IGamepad::GetDigitalRepeat(controller);
-    uint32 digitalTrigger = IGamepad::GetDigitalTrigger(controller);
-
-    if (IGamepad::GetDigitalTrigger(controller, IGamepad::DIGITAL_START))
-        return true;
-
-    return (m_orderType != -1);
-#else /* _DEBUG */
-	return false;
-#endif /* _DEBUG */
+    return false;
 };
 
 
 /*virtual*/ void CBaseEliteAI::CAIBehaviorDebug::OnActive(void) /*override*/
 {
-#ifdef _DEBUG
-    m_orderType = CGameStageDebug::COUNTER;
-#endif /* _DEBUG */
-    AIModerator().AIBehaviorMgr().Change("AttackStab");
+
 };
 
 

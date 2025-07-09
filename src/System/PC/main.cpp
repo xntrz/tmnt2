@@ -12,10 +12,11 @@
 
 #ifdef VLDCHECK
 #include "vld.h"
-#endif
+#endif /* VLDCHECK */
 
 
 #ifdef TARGET_PC
+
 int32 APIENTRY
 _tWinMain(
     _In_     HINSTANCE	hInstance,
@@ -26,16 +27,18 @@ _tWinMain(
 {
 #ifdef VLDCHECK    
     VLDEnable();
-#endif
+#endif /* VLDCHECK */
 
-#ifdef _DEBUG
+#if defined(NDEBUG)
+    CDebug::Fatal = CPCDebug::Fatal;
+#elif defined(_DEBUG)
     CPCDebug::Initialize();
-#endif
-    
+#endif    
+
     CConfigure::SetLaunchMode(TYPEDEF::CONFIG_LAUNCH_NORMAL);
     CConfigure::InitArgs(__argc, __argv);
 
-    if(CConfigure::CheckArg("noeval"))
+    if (CConfigure::CheckArg("noeval"))
         rwevalInitialize();
 
     CPCSetting::Initialize();
@@ -48,10 +51,13 @@ _tWinMain(
     if (CConfigure::CheckArg("noeval"))
         rwevalTerminate();
 
-#ifdef _DEBUG
+#if defined(NDEBUG)
+    CDebug::Fatal = nullptr;
+#elif defined(_DEBUG)
     CPCDebug::Terminate();
 #endif
 
     return (bResult ? EXIT_SUCCESS : EXIT_FAILURE);
 };
-#endif
+
+#endif /* TARGET_PC */

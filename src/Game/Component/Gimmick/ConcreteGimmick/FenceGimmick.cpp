@@ -80,7 +80,7 @@ CFenceGimmick::CFenceGimmick(const char* pszName, void* pParam)
 };
 
 
-/*virtual*/ CFenceGimmick::~CFenceGimmick(void)
+CFenceGimmick::~CFenceGimmick(void)
 {
     if (m_hAtari)
     {
@@ -90,7 +90,7 @@ CFenceGimmick::CFenceGimmick(const char* pszName, void* pParam)
 };
 
 
-/*virtual*/ void CFenceGimmick::PostMove(void) /*override*/
+void CFenceGimmick::PostMove(void)
 {
     RwV3d vRotation = Math::VECTOR3_ZERO;
     m_move.GetRotation(&vRotation);
@@ -132,7 +132,7 @@ CFenceGimmick::CFenceGimmick(const char* pszName, void* pParam)
 };
 
 
-/*virtual*/ void CFenceGimmick::OnCatchAttack(CHitAttackData* pAttack) /*override*/
+void CFenceGimmick::OnCatchAttack(CHitAttackData* pAttack)
 {
     if (m_eState != STATE_IDLE)
         return;

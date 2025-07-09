@@ -14,8 +14,6 @@
 C082HunAI::C082HunAI(CEnemyCharacter* pEnemyChr)
 : CBaseHunAI(pEnemyChr)
 {
-    CBaseHunChr* pBaseHunChr = static_cast<CBaseHunChr*>(pEnemyChr);
-
     /* init common param */
     GAMETYPES::DIFFICULTY difficulty = CGameProperty::GetDifficulty();
 

@@ -5,6 +5,7 @@
 
 class CGimmickMotion;
 
+
 class CRideShutterGimmick final : public CRideGimmick
 {
 public:
@@ -16,6 +17,6 @@ public:
 private:
     CGimmickMotion* m_pMotionController;
     CGimmickMotion* m_pMotionControllerAtari;
-    uint32 m_hAtari;
-    bool m_bRunFlag;
+    uint32          m_hAtari;
+    bool            m_bRunFlag;
 };

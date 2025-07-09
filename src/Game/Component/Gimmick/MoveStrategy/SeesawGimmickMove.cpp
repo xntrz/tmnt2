@@ -107,7 +107,7 @@ void CSeesawGimmickMove::GetTotalMoment(RwV3d* pvMoment)
         m_avPosition[i] = Math::VECTOR3_ZERO;
     };
 
-    pvMoment->z -= (m_nIndex ? (m_fOmega * 80.0f) : (m_fOmega * 180.0f));
+    pvMoment->z -= (m_nIndex ? (m_fOmega * 80.0f) : (m_fOmega * 160.0f));
 
     m_nIndex = 0;
 };

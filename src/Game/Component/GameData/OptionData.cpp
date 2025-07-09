@@ -33,7 +33,7 @@ void COptionData::Initialize(void)
 
 #ifdef TARGET_PC
     m_keyboard.Initialize();
-#endif
+#endif /* TARGET_PC */
 
     Apply();
 };
@@ -43,7 +43,7 @@ void COptionData::Terminate(void)
 {
 #ifdef TARGET_PC
     m_keyboard.Terminate();
-#endif
+#endif /* TARGET_PC */
 
     for (int32 i = 0; i < m_iGamepadNum; ++i)
         m_paGamepad[i].Terminate();
@@ -74,7 +74,7 @@ void COptionData::Snapshot(RAWDATA& rRawData) const
 
 #ifdef TARGET_PC
     m_keyboard.Snapshot(rRawData.m_keyboard);
-#endif 
+#endif /* TARGET_PC */ 
 };
 
 
@@ -91,7 +91,7 @@ void COptionData::Restore(const RAWDATA& rRawData)
 
 #ifdef TARGET_PC
     m_keyboard.Restore(rRawData.m_keyboard);
-#endif    
+#endif /* TARGET_PC */    
 };
 
 
@@ -106,7 +106,7 @@ void COptionData::Apply(void)
 
 #ifdef TARGET_PC
     m_keyboard.Apply();
-#endif    
+#endif /* TARGET_PC */    
 };
 
 
@@ -136,11 +136,12 @@ CKeyboardOptionData& COptionData::Keyboard(void)
 
 CGamepadOptionData& COptionData::Gamepad(int32 no)
 {
-    ASSERT(no >= 0 && no < CController::Max());
-    
-#ifdef TARGET_PC
+    ASSERT(no >= 0);
+    ASSERT(no < CController::Max());
+
+#if defined(TARGET_PC)
     return m_paGamepad[no];
-#elif TARGET_PS2
+#elif defined(TARGET_PS2)
     int32 iPort = CController::GetPhysicalPort(no);
     return m_paGamepad[iPort];
 #else    

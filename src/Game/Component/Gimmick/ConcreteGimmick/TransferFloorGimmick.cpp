@@ -21,7 +21,7 @@ CTransferFloorGimmick::CTransferFloorGimmick(const char* pszName, void* pParam)
 };
 
 
-CTransferFloorGimmick::~CTransferFloorGimmick(void)
+/*virtual*/ CTransferFloorGimmick::~CTransferFloorGimmick(void)
 {
     if (m_pTransferMove)
     {
@@ -37,26 +37,29 @@ CTransferFloorGimmick::~CTransferFloorGimmick(void)
 };
 
 
-void CTransferFloorGimmick::PreMove(void)
+/*virtual*/ void CTransferFloorGimmick::PreMove(void) /*override*/
 {
     m_pTransferMove->GetPosition(&m_vPreMovePosition);
 };
 
 
-void CTransferFloorGimmick::PostMove(void)
+/*virtual*/ void CTransferFloorGimmick::PostMove(void) /*override*/
 {
-    RwV3d vPostMovePosition = Math::VECTOR3_ZERO;
-    m_pTransferMove->GetPosition(&vPostMovePosition);
+    if (m_hAtari)
+    {
+        RwV3d vPostMovePosition = Math::VECTOR3_ZERO;
+        m_pTransferMove->GetPosition(&vPostMovePosition);
 
-    RwV3d vFrameVel = Math::VECTOR3_ZERO;
-    Math::Vec3_Sub(&vFrameVel, &vPostMovePosition, &m_vPreMovePosition);
+        RwV3d vFrameVel = Math::VECTOR3_ZERO;
+        Math::Vec3_Sub(&vFrameVel, &vPostMovePosition, &m_vPreMovePosition);
 
-    ASSERT(m_hAtari);
-    CMapCollisionModel::UpdateCollisionModel(m_hAtari, &vFrameVel);
+        CMapCollisionModel::UpdateCollisionModel(m_hAtari, &vFrameVel);
+    };    
 };
 
 
-void CTransferFloorGimmick::OnReceiveEvent(const char* pszSender, GIMMICKTYPES::EVENTTYPE eventtype)
+/*virtual*/ void CTransferFloorGimmick::OnReceiveEvent(const char* pszSender,
+                                                       GIMMICKTYPES::EVENTTYPE eventtype) /*override*/
 {
     if (eventtype == GIMMICKTYPES::EVENTTYPE_ACTIVATE)
     {
@@ -66,10 +69,15 @@ void CTransferFloorGimmick::OnReceiveEvent(const char* pszSender, GIMMICKTYPES::
 };
 
 
+//
+// *********************************************************************************
+//
+
+
 CLinearTransferFloorGimmick::CLinearTransferFloorGimmick(const char* pszName, void* pParam)
 : CTransferFloorGimmick(pszName, pParam)
 {
-    GIMMICKPARAM::GIMMICK_MOVEFLOOR_LINEAR* pInitParam = (GIMMICKPARAM::GIMMICK_MOVEFLOOR_LINEAR*)pParam;
+    GIMMICKPARAM::GIMMICK_MOVEFLOOR_LINEAR* pInitParam = static_cast<GIMMICKPARAM::GIMMICK_MOVEFLOOR_LINEAR*>(pParam);
     ASSERT(pInitParam);
 
     static const char* s_apszMdlName[] =
@@ -89,9 +97,6 @@ CLinearTransferFloorGimmick::CLinearTransferFloorGimmick(const char* pszName, vo
 
     m_model.SetModel(CNormalGimmickModel::MODELTYPE_DRAW_NORMAL, pModel);
     
-    //
-    //  init pos & rot
-    //
     RwMatrix matrix;
     RwMatrixSetIdentityMacro(&matrix);    
     CGimmickUtils::QuaternionToRotationMatrix(&matrix, &pInitParam->m_quat);
@@ -123,8 +128,6 @@ CLinearTransferFloorGimmick::CLinearTransferFloorGimmick(const char* pszName, vo
         RpClump* pClump = m_model.GetCollisionModelClump();
         
         m_hAtari = CMapCollisionModel::RegistCollisionModel(pClump, GetName(), MAPTYPES::GIMMICKTYPE_NORMAL);
-        ASSERT(m_hAtari);
-
         if (m_hAtari)
             CMapCollisionModel::SetBoundingSphereRadius(m_hAtari, (pInitParam->m_subid ? 3.0f : 2.0f));
     };
@@ -138,10 +141,15 @@ CLinearTransferFloorGimmick::CLinearTransferFloorGimmick(const char* pszName, vo
 };
 
 
+//
+// *********************************************************************************
+//
+
+
 CPathTransferFloorGimmick::CPathTransferFloorGimmick(const char* pszName, void* pParam)
 : CTransferFloorGimmick(pszName, pParam)
 {
-    GIMMICKPARAM::GIMMICK_MOVEFLOOR_PATH* pInitParam = (GIMMICKPARAM::GIMMICK_MOVEFLOOR_PATH*)pParam;
+    GIMMICKPARAM::GIMMICK_MOVEFLOOR_PATH* pInitParam = static_cast<GIMMICKPARAM::GIMMICK_MOVEFLOOR_PATH*>(pParam);
     ASSERT(pInitParam);
 
     static const char* s_apszMdlName[] =
@@ -161,9 +169,6 @@ CPathTransferFloorGimmick::CPathTransferFloorGimmick(const char* pszName, void* 
 
     m_model.SetModel(CNormalGimmickModel::MODELTYPE_DRAW_NORMAL, pModel);
     
-    //
-    //  init pos & rot
-    //
     RwMatrix matrix;
     RwMatrixSetIdentityMacro(&matrix);
     CGimmickUtils::QuaternionToRotationMatrix(&matrix, &pInitParam->m_quat);
@@ -209,13 +214,18 @@ CPathTransferFloorGimmick::CPathTransferFloorGimmick(const char* pszName, void* 
 };
 
 
+//
+// *********************************************************************************
+//
+
+
 CRotateTransferFloorGimmick::CRotateTransferFloorGimmick(const char* pszName, void* pParam)
 : CTransferFloorGimmick(pszName, pParam)
 , m_pRotateMove(nullptr)
 , m_vPreMoveRotation(Math::VECTOR3_ZERO)
 , m_bSE(false)
 {
-    GIMMICKPARAM::GIMMICK_MOVEFLOOR_ROUND* pInitParam = (GIMMICKPARAM::GIMMICK_MOVEFLOOR_ROUND*)pParam;
+    GIMMICKPARAM::GIMMICK_MOVEFLOOR_ROUND* pInitParam = static_cast<GIMMICKPARAM::GIMMICK_MOVEFLOOR_ROUND*>(pParam);
     ASSERT(pInitParam);
 
     static const char* s_apszMdlName[] =
@@ -238,9 +248,6 @@ CRotateTransferFloorGimmick::CRotateTransferFloorGimmick(const char* pszName, vo
     
     m_model.SetModel(CNormalGimmickModel::MODELTYPE_DRAW_NORMAL, pModel);
 
-    //
-    //  init pos & rot
-    //
     RwV3d vRotation = Math::VECTOR3_ZERO;
     vRotation.y = CGimmickUtils::QuaternionToRotationY(&pInitParam->m_quat);
     
@@ -285,28 +292,31 @@ CRotateTransferFloorGimmick::CRotateTransferFloorGimmick(const char* pszName, vo
 };
 
 
-void CRotateTransferFloorGimmick::PreMove(void)
+/*virtual*/ void CRotateTransferFloorGimmick::PreMove(void) /*override*/
 {
     m_pRotateMove->GetRotation(&m_vPreMoveRotation);
 };
 
 
-void CRotateTransferFloorGimmick::PostMove(void)
+/*virtual*/ void CRotateTransferFloorGimmick::PostMove(void) /*override*/
 {
     RwV3d vPostMoveRotation = Math::VECTOR3_ZERO;
     m_pRotateMove->GetRotation(&vPostMoveRotation);
     
     m_model.SetRotation(&vPostMoveRotation);
 
-    RwV3d vFrameVel = Math::VECTOR3_ZERO;
-    Math::Vec3_Sub(&vFrameVel, &vPostMoveRotation, &m_vPreMoveRotation);
+    if (m_hAtari)
+    {
+        RwV3d vFrameVel = Math::VECTOR3_ZERO;
+        Math::Vec3_Sub(&vFrameVel, &vPostMoveRotation, &m_vPreMoveRotation);
 
-    ASSERT(m_hAtari);
-    CMapCollisionModel::UpdateCollisionModel(m_hAtari, nullptr, &vFrameVel);
+        CMapCollisionModel::UpdateCollisionModel(m_hAtari, nullptr, &vFrameVel);
+    };    
 };
 
 
-void CRotateTransferFloorGimmick::OnReceiveEvent(const char* pszSender, GIMMICKTYPES::EVENTTYPE eventtype)
+/*virtual*/ void CRotateTransferFloorGimmick::OnReceiveEvent(const char* pszSender,
+                                                             GIMMICKTYPES::EVENTTYPE eventtype) /*override*/
 {
     ;
 };

@@ -120,8 +120,8 @@ static void SetMichelangeroAccumulateAttack(void)
     CMagicParameter param;
     param.SetBaseEffectName(EFFECTID::GetNameFromID(EFFECTID::ID_MIC_SP_BALL));
     param.SetFeature(feature);
-    param.SetCollisionBody(0.34f);
-    param.SetCollisionAttack(0.34f, 5, CHitAttackData::ANTIGUARD_INVALID, CHitAttackData::STATUS_FLYAWAY);
+    param.SetCollisionBody(0.35f);
+    param.SetCollisionAttack(0.35f, 10, CHitAttackData::ANTIGUARD_INVALID, CHitAttackData::STATUS_FLYAWAY);
     param.SetMovement(&vVelocity);
     param.SetLive(0.25f);
     param.SetVanishEffectName(EFFECTID::GetNameFromID(EFFECTID::ID_MIC_SP_END));
@@ -200,8 +200,8 @@ static void SetCaseyAccumulateAttack(void)
     CMagicParameter param;
     param.SetBaseEffectName(EFFECTID::GetNameFromID(EFFECTID::ID_CAS_SP_BALL));
     param.SetFeature(feature);
-    param.SetCollisionBody(0.34f);
-    param.SetCollisionAttack(0.34f, 10, CHitAttackData::ANTIGUARD_INVALID, CHitAttackData::STATUS_FLYAWAY);
+    param.SetCollisionBody(0.35f);
+    param.SetCollisionAttack(0.35f, 10, CHitAttackData::ANTIGUARD_INVALID, CHitAttackData::STATUS_FLYAWAY);
     param.SetMovement(&vVelocity);
     param.SetLive(0.25f);
     param.SetVanishEffectName(EFFECTID::GetNameFromID(EFFECTID::ID_CAS_SP_END));
@@ -223,7 +223,7 @@ static void SetDeathExplosion(void)
     CMagicParameter param;
     param.SetBaseEffectName(EFFECTID::GetNameFromID(EFFECTID::ID_KO_EXPL));
     param.SetFeature(feature);
-    param.SetCollisionAttack(0.70f, 10, CHitAttackData::ANTIGUARD_INVALID, CHitAttackData::STATUS_FLYAWAY);
+    param.SetCollisionAttack(0.7f, 10, CHitAttackData::ANTIGUARD_INVALID, CHitAttackData::STATUS_FLYAWAY);
     param.SetLive(0.5f);
     param.SetHitTiming(0.0f, 0.3f);
     param.SetChangeSize(3.0f);
@@ -297,12 +297,12 @@ static void SetSleepgas(void)
                                 | MAGICTYPES::FEATURE_ATTACK_TO_PLAYER
                                 | MAGICTYPES::FEATURE_LIVETIME
                                 | MAGICTYPES::FEATURE_ATTACK;
-
+    
     CMagicParameter param;
     param.SetBaseEffectName(EFFECTID::GetNameFromID(EFFECTID::ID_SLEEPGAS));
     param.SetFeature(feature);
     param.SetCollisionAttack(1.1f, 0, CHitAttackData::ANTIGUARD_INVALID, CHitAttackData::STATUS_SLEEP, 2.0f);
-    param.SetLive(2.33f);
+    param.SetLive(2.0f + (1.0f / 3.0f));
     param.SetHitTiming(0.0f, 1.6f);
     param.SetChangeSize(0.4f);
 
@@ -324,7 +324,7 @@ static void SetFreezegas(void)
     param.SetBaseEffectName(EFFECTID::GetNameFromID(EFFECTID::ID_FREEZEGAS));
     param.SetFeature(feature);
     param.SetCollisionAttack(1.1f, 0, CHitAttackData::ANTIGUARD_INVALID, CHitAttackData::STATUS_FREEZE, 2.0f);
-    param.SetLive(2.33f);
+    param.SetLive(2.0f + (1.0f / 3.0f));
     param.SetHitTiming(0.0f, 0.9f);
     param.SetChangeSize(0.4f);
 
@@ -346,7 +346,7 @@ static void SetFireTorch(void)
     param.SetBaseEffectName(EFFECTID::GetNameFromID(EFFECTID::ID_FIRE_TORCH));
     param.SetFeature(feature);
     param.SetCollisionAttack(&vOffset, 0.15f, 10, CHitAttackData::ANTIGUARD_INVALID, CHitAttackData::STATUS_KNOCK);
-    param.SetLive(0.26f);
+    param.SetLive(0.2f + (0.1f / 1.5f));
 
     CMagicManager::ChangeToAttached();
     CEffectManager::Convert(EFFECTID::GetNameFromID(EFFECTID::ID_FIRE_TORCH), &param);
@@ -369,7 +369,7 @@ static void SetPipeSteam(void)
     param.SetFeature(feature);
     param.SetCollisionAttack(&vOffset, 1.0f, 20, CHitAttackData::ANTIGUARD_INVALID, CHitAttackData::STATUS_FLYAWAY);
     param.SetLive(7.0f);
-    param.SetHitTiming(2.0f, 6.0f);
+    param.SetHitTiming(2.0f - 0.0001f, 6.0f - 0.00051f);
 
     CMagicManager::ChangeToAttached();
     CEffectManager::Convert(EFFECTID::GetNameFromID(EFFECTID::ID_PIPE_STEAM), &param);
@@ -392,7 +392,7 @@ static void SetPipeFreezegas(void)
     param.SetFeature(feature);
     param.SetCollisionAttack(&vOffset, 1.0f, 20, CHitAttackData::ANTIGUARD_INVALID, CHitAttackData::STATUS_FREEZE, 2.0f);
     param.SetLive(7.0f);
-    param.SetHitTiming(2.0f, 6.0f);
+    param.SetHitTiming(2.0f - 0.0001f, 6.0f - 0.00051f);
 
     CMagicManager::ChangeToAttached();
     CEffectManager::Convert(EFFECTID::GetNameFromID(EFFECTID::ID_PIPE_FREEZEGAS), &param);

@@ -306,6 +306,9 @@ bool C088ShredderAI::CThinkingState::DispatchMove(void)
             CharacterController().DispatchTurnTarget(iTargetNo);
         }
         break;
+
+    default:
+        break;
     };
 
     return true;

@@ -309,7 +309,6 @@ C055KurageAI::C055KurageAI(CEnemyCharacter* pEnemyChr)
         };
     };
 
-    float fDirection = EnemyCharacter().Compositor().GetDirection();
     if (IsHitWall(m_fDirection))
     {
         ThinkOrder().SetAnswer(CAIThinkOrder::RESULT_REFUSE);

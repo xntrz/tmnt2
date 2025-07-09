@@ -63,13 +63,13 @@ CPropellerGimmick::CPropellerGimmick(const char* pszName, void* pParam)
 };
 
 
-/*virtual*/ CPropellerGimmick::~CPropellerGimmick(void)
+CPropellerGimmick::~CPropellerGimmick(void)
 {
     ;
 };
 
 
-/*virtual*/ void CPropellerGimmick::PostMove(void) /*override*/
+void CPropellerGimmick::PostMove(void)
 {
     float fPrevRotation = m_fRotation;
 
@@ -167,8 +167,7 @@ CPropellerGimmick::CPropellerGimmick(const char* pszName, void* pParam)
 };
 
 
-/*virtual*/ void CPropellerGimmick::OnReceiveEvent(const char* pszSender,
-                                                   GIMMICKTYPES::EVENTTYPE eventtype) /*override*/
+void CPropellerGimmick::OnReceiveEvent(const char* pszSender, GIMMICKTYPES::EVENTTYPE eventtype)
 {
     if (eventtype == GIMMICKTYPES::EVENTTYPE_ACTIVATE)
         m_bHitAttack = false;    

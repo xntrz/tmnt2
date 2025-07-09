@@ -19,13 +19,13 @@ protected:
     {
         const char* m_pszModelName;
         const char* m_pszAtariModelName;
-        float m_fRadius;
-        float m_fHitAttackRadius;
-        float m_fShadowRadius;
-        int32 m_nAttackPower;
-        int32 m_nLife;
-        bool m_bHeavy;
-        int32 m_nBreakSE;
+        float       m_fRadius;
+        float       m_fHitAttackRadius;
+        float       m_fShadowRadius;
+        int32       m_nAttackPower;
+        int32       m_nLife;
+        bool        m_bHeavy;
+        int32       m_nBreakSE;
     };
     
     enum STATE
@@ -116,20 +116,20 @@ protected:
     bool isPlayerEnableLift(const CGameObject* pGameObject);
 
 protected:
-    static const KINDINFO m_aThrowingGimmickKindInfoList[];
-    static const KINDINFO m_aItemBoxGimmickKindInfoList[];
-    CThrowingGimmickMove* m_pThrowingMove;
-    CNormalGimmickModel m_model;
-    STATE m_state;
-    TYPE m_type;
-    int32 m_subid;
-    int32 m_nItem;
-    float m_fTimer;
-    float m_fTimerPlayerRideOnJudge;
-    CBodyHitData* m_pBodyHitData;
-    CModuleManager* m_pModuleManager;
-    uint32 m_hAtari;
-    const KINDINFO* m_pKindinfo;
-    uint32 m_hKagaribiEffect;
-    int32 m_nLife;
+    static const KINDINFO   m_aThrowingGimmickKindInfoList[];
+    static const KINDINFO   m_aItemBoxGimmickKindInfoList[];
+    CThrowingGimmickMove*   m_pThrowingMove;
+    CNormalGimmickModel     m_model;
+    STATE                   m_state;
+    TYPE                    m_type;
+    int32                   m_subid;
+    int32                   m_nItem;
+    float                   m_fTimer;
+    float                   m_fTimerPlayerRideOnJudge;
+    CBodyHitData*           m_pBodyHitData;
+    CModuleManager*         m_pModuleManager;
+    uint32                  m_hAtari;
+    const KINDINFO*         m_pKindinfo;
+    uint32                  m_hKagaribiEffect;
+    int32                   m_nLife;
 };

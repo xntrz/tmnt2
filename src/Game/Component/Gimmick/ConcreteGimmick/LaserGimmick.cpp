@@ -16,7 +16,7 @@ CLaserGimmickModel::CLaserGimmickModel(void)
 , m_vPosition(Math::VECTOR3_ZERO)
 , m_vDirection(Math::VECTOR3_ZERO)
 , m_fNorm(0.0f)
-, m_type(0)
+, m_type(TYPE_RED)
 , m_bDraw(false)
 {
     ;
@@ -36,14 +36,14 @@ void CLaserGimmickModel::Draw(void) const
         CModel* pModel = m_apModel[i];
         if (pModel)
         {
-            if (i >= 2)
+            if (i >= TYPE_TRANSPARENT)
                 pModel->UpdateFrame();
             else
                 pModel->Draw();
         };
     };
 
-    if (m_type == 2)
+    if (m_type == TYPE_TRANSPARENT)
         return;
 
     if (!m_bDraw)
@@ -58,15 +58,15 @@ void CLaserGimmickModel::Draw(void) const
 
     static const POS aPosList[10] =
     {
-        { { -0.5,   0.5,    -0.5,   },  0.0, 0.0, },
+        { { -0.5,    0.5,   -0.5,   },  0.0, 0.0, },
         { { -0.5,   -0.5,   -0.5,   },  0.0, 1.0, },
-        { { -0.5,   0.5,    0.5,    },  1.0, 0.0, },
-        { { -0.5,   -0.5,   0.5,    },  1.0, 1.0, },
-        { { 0.5,    0.5,    0.5,    },  0.0, 0.0, },
-        { { 0.5,    -0.5,   0.5,    },  0.0, 1.0, },
-        { { 0.5,    0.5,    -0.5,   },  1.0, 0.0, },
-        { { 0.5,    -0.5,   -0.5,   },  1.0, 1.0, },
-        { { -0.5,   0.5,    -0.5,   },  0.0, 0.0, },
+        { { -0.5,    0.5,    0.5,   },  1.0, 0.0, },
+        { { -0.5,   -0.5,    0.5,   },  1.0, 1.0, },
+        { {  0.5,    0.5,    0.5,   },  0.0, 0.0, },
+        { {  0.5,   -0.5,    0.5,   },  0.0, 1.0, },
+        { {  0.5,    0.5,   -0.5,   },  1.0, 0.0, },
+        { {  0.5,   -0.5,   -0.5,   },  1.0, 1.0, },
+        { { -0.5,    0.5,   -0.5,   },  0.0, 0.0, },
         { { -0.5,   -0.5,   -0.5,   },  0.0, 1.0, },
     };
 
@@ -76,29 +76,20 @@ void CLaserGimmickModel::Draw(void) const
     RwV3d vRotation = Math::VECTOR3_ZERO;
     RwV3d vDirXZ = { m_vDirection.x, 0.0f, m_vDirection.z };
 
-    if (Math::Vec3_Length(&vDirXZ) >= 0.0f)
+    if (Math::Vec3_Length(&vDirXZ) >= 0.001f)
     {
         Math::Vec3_Normalize(&vDirXZ, &vDirXZ);
         
         if (vDirXZ.x <= 0.0f)
-        {
             vRotation.y = -Math::ACos(vDirXZ.z);
-        }
         else
-        {
             vRotation.y = Math::ACos(vDirXZ.z);
-        };
 
-        float fD = Math::Vec3_Dot(&vDirXZ, &m_vDirection);
-        
+        float fD = Math::Vec3_Dot(&vDirXZ, &m_vDirection);        
         if (fD <= 0.0f)
-        {
-            vRotation.x = -(Math::PI05 - Math::ACos(fD));
-        }
+            vRotation.x = -(MATH_PI05 - Math::ACos(fD));
         else
-        {
-            vRotation.x = (Math::PI05 - Math::ACos(fD));
-        };
+            vRotation.x = (MATH_PI05 - Math::ACos(fD));
     }
     else
     {
@@ -108,35 +99,34 @@ void CLaserGimmickModel::Draw(void) const
 
     RwMatrix matrix;
     RwMatrixSetIdentityMacro(&matrix);
-
     Math::Matrix_AffineTransformation(&matrix, &vScale, &vRotation, &m_vPosition);
 
     for (int32 i = 0; i < COUNT_OF(aVertex); ++i)
     {
         RwIm3DVertex* pVertex = &aVertex[i];
 
-        pVertex->objVertex = aPosList[ i ].pos;
-        pVertex->u = aPosList[ i ].u;
-        pVertex->v = aPosList[ i ].v;
+        pVertex->objVertex = aPosList[i].pos;
+        pVertex->u = aPosList[i].u;
+        pVertex->v = aPosList[i].v;
         pVertex->objNormal = Math::VECTOR3_ZERO;
 
         switch (m_type)
         {
-        case 0:            
+        case TYPE_RED:
             {
                 RwRGBA color = { 0xFF, 0x14, 0x0, 0xFF };
                 pVertex->color = RWRGBALONGEX(color);
             }
             break;
             
-        case 1:
+        case TYPE_PINK:
             {
                 RwRGBA color = { 0xFF, 0x00, 0xDE, 0xFF };
                 pVertex->color = RWRGBALONGEX(color);
             }
             break;
 
-        case 2:
+        case TYPE_TRANSPARENT:
             {
                 RwRGBA color = { 0xFF, 0xFF, 0xFF, 0x00 };
                 pVertex->color = RWRGBALONGEX(color);
@@ -149,15 +139,18 @@ void CLaserGimmickModel::Draw(void) const
         };
     };
 
-    RENDERSTATE_PUSH(rwRENDERSTATETEXTURERASTER, 0);
+    RENDERSTATE_PUSH(rwRENDERSTATETEXTURERASTER, NULL);
 
-    const uint32 uFlags = rwIM3D_VERTEXRGBA | rwIM3D_VERTEXXYZ;
+    const uint32 flags = rwIM3D_VERTEXRGBA
+                       | rwIM3D_VERTEXXYZ;
 
-    if (RwIm3DTransform(aVertex, COUNT_OF(aVertex), &matrix, uFlags))
+    if (RwIm3DTransform(aVertex, COUNT_OF(aVertex), &matrix, flags))
     {
         RwIm3DRenderPrimitive(rwPRIMTYPETRISTRIP);
         RwIm3DEnd();
     };
+
+    RENDERSTATE_POP(rwRENDERSTATETEXTURERASTER);
 };
 
 
@@ -175,10 +168,15 @@ void CLaserGimmickModel::SetDraw(bool bEnable)
 };
 
 
-void CLaserGimmickModel::SetType(int32 type)
+void CLaserGimmickModel::SetType(TYPE type)
 {
     m_type = type;
 };
+
+
+//
+// *********************************************************************************
+//
 
 
 CLaserGimmick::CLaserGimmick(const char* pszName, void* pParam)
@@ -190,31 +188,30 @@ CLaserGimmick::CLaserGimmick(const char* pszName, void* pParam)
 , m_line({ 0 })
 , m_type(0)
 {
-    ASSERT(pParam);
-    
-    GIMMICKPARAM::GIMMICK_AREA_BOX* pInitParam = (GIMMICKPARAM::GIMMICK_AREA_BOX*)pParam;
+    GIMMICKPARAM::GIMMICK_AREA_BOX* pInitParam = static_cast<GIMMICKPARAM::GIMMICK_AREA_BOX*>(pParam);
+    ASSERT(pInitParam);
 
-    RwV3d vPosition = pInitParam->m_vPosition;
-    RwV3d vDirection = Math::VECTOR3_ZERO;
-    
     RwMatrix matrix;
     RwMatrixSetIdentityMacro(&matrix);
     CGimmickUtils::QuaternionToRotationMatrix(&matrix, &pInitParam->m_quat);
 
+    RwV3d vDirection = Math::VECTOR3_ZERO;
     Math::Vec3_Scale(&vDirection, &matrix.up, pInitParam->m_box.y);
 
-    m_vPosition.x = vDirection.x * 0.5f + vPosition.x;
-    m_vPosition.y = vDirection.y * 0.5f + vPosition.y;
-    m_vPosition.z = vDirection.z * 0.5f + vPosition.z;
+    m_vPosition = pInitParam->m_vPosition;
+    m_vPosition.x += (vDirection.x * 0.5f);
+    m_vPosition.y += (vDirection.y * 0.5f);
+    m_vPosition.z += (vDirection.z * 0.5f);
+
     m_fNorm = Math::Vec3_Length(&vDirection);
     Math::Vec3_Normalize(&m_vDirection, &vDirection);
-    SetLasertForm(&vPosition, &vDirection);
+    SetLasertForm(&pInitParam->m_vPosition, &vDirection);
         
     m_bSwitch = true;
     m_type = pInitParam->m_subid;
     
     m_model.SetDraw(true);
-    m_model.SetType(m_type);
+    m_model.SetType(static_cast<CLaserGimmickModel::TYPE>(m_type));
     SetModelStrategy(&m_model);
 };
 
@@ -235,18 +232,18 @@ void CLaserGimmick::PostMove(void)
 {
     if (m_bSwitch)
     {
-        CHitAttackData Attack;
-        Attack.SetObject(GetHandle());
-        Attack.SetShape(CHitAttackData::SHAPE_LINE);
-        Attack.SetLine(&m_line);
-        Attack.SetObjectPos(&m_vPosition);
-        Attack.SetPower(20);
-        Attack.SetTarget(CHitAttackData::TARGET_PLAYER | CHitAttackData::TARGET_ENEMY);
-        Attack.SetAntiguard(CHitAttackData::ANTIGUARD_INVALID);
-        Attack.SetStatus(CHitAttackData::STATUS_FLYAWAY);
-        Attack.SetFlyawayParameter(5.0f, 2.5f);
+        CHitAttackData hitAttack;
+        hitAttack.SetObject(GetHandle());
+        hitAttack.SetShape(CHitAttackData::SHAPE_LINE);
+        hitAttack.SetLine(&m_line);
+        hitAttack.SetObjectPos(&m_vPosition);
+        hitAttack.SetPower(20);
+        hitAttack.SetTarget(CHitAttackData::TARGET_PLAYER | CHitAttackData::TARGET_ENEMY);
+        hitAttack.SetAntiguard(CHitAttackData::ANTIGUARD_INVALID);
+        hitAttack.SetStatus(CHitAttackData::STATUS_FLYAWAY);
+        hitAttack.SetFlyawayParameter(5.0f, 2.5f);
 
-        CHitAttackManager::RegistAttack(&Attack);
+        CHitAttackManager::RegistAttack(&hitAttack);
     };
 };
 
@@ -258,8 +255,8 @@ void CLaserGimmick::OnReceiveEvent(const char* pszSender, GIMMICKTYPES::EVENTTYP
         m_bSwitch = false;
         m_model.SetDraw(false);
         
-        if (m_type != 2)
-            CGameSound::PlayPositionSE(&m_vPosition, SDCODE_SE(4168), 0);
+        if (m_type != CLaserGimmickModel::TYPE_TRANSPARENT)
+            CGameSound::PlayPositionSE(&m_vPosition, SDCODE_SE(4168));
     };
 };
 

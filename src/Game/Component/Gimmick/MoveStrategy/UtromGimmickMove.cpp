@@ -21,7 +21,6 @@ CUtromGimmickMove::~CUtromGimmickMove(void)
 
 CUtromGimmickMove::RESULT CUtromGimmickMove::OnMove(float dt)
 {
-    const int32 ofs = offsetof(RwCamera, frustumCorners[2]);
     RESULT ret = RESULT_NONE;
 
     m_vVelocity.y += (CGameProperty::GetGravity() * dt);

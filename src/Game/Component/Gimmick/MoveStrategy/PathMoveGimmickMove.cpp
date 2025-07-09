@@ -15,7 +15,8 @@ CPathMoveGimmickMove::CPathMoveGimmickMove(void)
 };
 
 
-/*virtual*/ CPathMoveGimmickMove::RESULT CPathMoveGimmickMove::OnMove(float dt) /*override*/
+CPathMoveGimmickMove::RESULT
+CPathMoveGimmickMove::OnMove(float dt)
 {
     GetSplinePos(&m_vPosition, m_fPathT);
 
@@ -26,13 +27,13 @@ CPathMoveGimmickMove::CPathMoveGimmickMove(void)
 };
 
 
-/*virtual*/ void CPathMoveGimmickMove::SetPathTimeRate(float fTimeRate) /*override*/
+void CPathMoveGimmickMove::SetPathTimeRate(float fTimeRate)
 {
     m_fPathTimeRate = fTimeRate;
 };
 
 
-/*virtual*/ void CPathMoveGimmickMove::UpdatePathTime(float dt) /*override*/
+void CPathMoveGimmickMove::UpdatePathTime(float dt)
 {
     m_fPathT += (m_fPathTimeRate * dt);
     if (m_fPathT > 1.0f)
@@ -40,7 +41,7 @@ CPathMoveGimmickMove::CPathMoveGimmickMove(void)
 };
 
 
-/*virtual*/ void CPathMoveGimmickMove::UpdateRotation(float dt) /*override*/
+void CPathMoveGimmickMove::UpdateRotation(float dt)
 {
     if ((m_fPathT > 0.0f) && (m_fPathT < 1.0f))
     {

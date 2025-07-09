@@ -30,7 +30,8 @@ public:
     void DisposeMessage(void);
 
 private:
-    inline CPrivate& Private(void) const { return *m_pPrivate; };
+    inline CPrivate& Private(void) { return *m_pPrivate; };
+    inline const CPrivate& Private(void) const { return *m_pPrivate; };
 
 private:
     static int32 m_iLabelCurrently;

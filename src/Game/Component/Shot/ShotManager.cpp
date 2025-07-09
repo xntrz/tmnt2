@@ -214,7 +214,7 @@ static void CorrectDirection(RwV3d* pvPosition, RwV3d* pvVector, float fRadian)
                 RwV3d vDirection = Math::VECTOR3_ZERO;
                 Math::Vec3_Normalize(&vDirection, &vDistance);
 
-				float fDistance = (1.0f - Math::Vec3_Dot(&vInitDirection, &vDirection)) * Math::PI05;
+				float fDistance = (1.0f - Math::Vec3_Dot(&vInitDirection, &vDirection)) * MATH_PI05;
                 if (fDistance < fTargetDistance)
                 {
                     fTargetDistance = fDistance;

@@ -620,7 +620,7 @@ void CDatabase_Container::DB_DrawSundokei(void)
 
             float fRotStep = float(m_uSunadokeiAnimCnt) / (CScreen::Framerate() * 0.5f);
 
-            m_fSunadokeiRot = fRotStep * Math::PI;
+            m_fSunadokeiRot = fRotStep * MATH_PI;
 
             if (float(m_uSunadokeiAnimCnt) >= (CScreen::Framerate() * 0.5f))
             {

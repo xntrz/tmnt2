@@ -100,7 +100,7 @@ CGuillotineGimmick::CGuillotineGimmick(const char* pszName, void* pParam)
 };
 
 
-/*virtual*/ CGuillotineGimmick::~CGuillotineGimmick(void)
+CGuillotineGimmick::~CGuillotineGimmick(void)
 {
     if (m_pModuleMan)
     {
@@ -116,7 +116,7 @@ CGuillotineGimmick::CGuillotineGimmick(const char* pszName, void* pParam)
 };
 
 
-/*virtual*/ void CGuillotineGimmick::Run(void) /*override*/
+void CGuillotineGimmick::Run(void)
 {
     PreMove();
 
@@ -142,7 +142,7 @@ CGuillotineGimmick::CGuillotineGimmick(const char* pszName, void* pParam)
 };
 
 
-/*virtual*/ void CGuillotineGimmick::Draw(void) const /*override*/
+void CGuillotineGimmick::Draw(void) const
 {
     CGimmick::Draw();
 
@@ -151,7 +151,7 @@ CGuillotineGimmick::CGuillotineGimmick(const char* pszName, void* pParam)
 };
 
 
-/*virtual*/ void CGuillotineGimmick::PreMove(void) /*override*/
+void CGuillotineGimmick::PreMove(void)
 {
     m_pGuillotineMove->GetPosition(&m_vPrePos);
 
@@ -160,7 +160,7 @@ CGuillotineGimmick::CGuillotineGimmick(const char* pszName, void* pParam)
 };
 
 
-/*virtual*/ void CGuillotineGimmick::PostMove(void) /*override*/
+void CGuillotineGimmick::PostMove(void)
 {
     setHitAttack();
 
@@ -175,7 +175,7 @@ CGuillotineGimmick::CGuillotineGimmick(const char* pszName, void* pParam)
 };
 
 
-/*virtual*/ void CGuillotineGimmick::OnTouchedDown(void) /*override*/
+void CGuillotineGimmick::OnTouchedDown(void)
 {
     RwV3d vRotation = Math::VECTOR3_ZERO;
     m_pGuillotineMove->GetRotation(&vRotation);

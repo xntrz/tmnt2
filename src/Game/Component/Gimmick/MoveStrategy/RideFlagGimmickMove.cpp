@@ -22,6 +22,9 @@ CRideFlagGimmickMove::CRideFlagGimmickMove(int32 iType)
         { 1.0f, 2.0f },
     };
 
+    ASSERT(iType >= 0);
+    ASSERT(iType < COUNT_OF(s_aInfo));
+
     static RwV3d s_avDirection[CRideFlagGimmick::FLAGTYPENUM] =
     {
         { 0.0f, 0.0f, 0.0f },
@@ -32,8 +35,8 @@ CRideFlagGimmickMove::CRideFlagGimmickMove(int32 iType)
         { 0.0f, 1.0f, 0.0f },
     };
 
-    ASSERT(iType >= 0 && iType < COUNT_OF(s_aInfo));
-    ASSERT(iType >= 0 && iType < COUNT_OF(s_avDirection));
+    ASSERT(iType >= 0);
+    ASSERT(iType < COUNT_OF(s_avDirection));
 
     m_vMoveDirection = s_avDirection[iType];
     
@@ -55,7 +58,7 @@ CRideFlagGimmickMove::~CRideFlagGimmickMove(void)
 
 CRideFlagGimmickMove::RESULT CRideFlagGimmickMove::OnMove(float dt)
 {
-    m_fSpeed = Math::Cos((Math::PI2 / m_fT) * m_fTimer) * m_fA * (Math::PI2 / m_fT);
+    m_fSpeed = Math::Cos((MATH_PI2 / m_fT) * m_fTimer) * m_fA * (MATH_PI2 / m_fT);
     
     m_fTimer += dt;
     
@@ -67,7 +70,7 @@ CRideFlagGimmickMove::RESULT CRideFlagGimmickMove::OnMove(float dt)
     m_vPosition.y += m_vVelocity.y;
     m_vPosition.z += m_vVelocity.z;
 
-    m_vRotation.y += (dt * Math::PI2);
+    m_vRotation.y += (dt * MATH_PI2);
 
 	return RESULT_NONE;
 };

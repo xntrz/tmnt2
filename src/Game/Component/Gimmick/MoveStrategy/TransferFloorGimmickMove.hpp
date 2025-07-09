@@ -23,9 +23,9 @@ public:
     CTransferFloorGimmickMove(void);
     virtual ~CTransferFloorGimmickMove(void);
     virtual RESULT OnMove(float dt) override;
+    void StartTransfer(void);
     
     inline void SetVelocity(const RwV3d* pvVelocity) { m_vVelocity = *pvVelocity; };
-    inline void StartTransfer(void) { m_phase = (m_phase == PHASE_NONE ? PHASE_MOVE : PHASE_NONE); };
     inline void SetMoveTime(float t) { m_fMoveTime = t; };
     inline void SetStopTime(float t) { m_fStopTime = t; };
     inline void SetKind(int32 kind) { m_type = kind; };

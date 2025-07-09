@@ -565,11 +565,11 @@ void CMagic::Transition(void)
 
     if (CheckFeature(MAGICTYPES::FEATURE_LIVETIME))
     {
-        if (m_fNowTime >= m_fLivetime)
+        if (m_fLivetime < m_fNowTime)
         {
             RwV3d vMyPosition = Math::VECTOR3_ZERO;
             GetPosition(&vMyPosition);
-            
+
             Vanishing(&vMyPosition);
             Finish();
             return;
@@ -597,7 +597,7 @@ void CMagic::Transition(void)
         if (CheckFeature(MAGICTYPES::FEATURE_COLLISION_MAPOBJECT))
             nReflectNum += m_nMapObjectHitNum;
 
-        if (nReflectNum >= m_nReflectNumMax)
+        if (nReflectNum > m_nReflectNumMax)
         {
             RwV3d vMyPosition = Math::VECTOR3_ZERO;
             GetPosition(&vMyPosition);
@@ -693,7 +693,7 @@ bool CMagic::CheckBody(void)
     MAGICTYPES::FEATURE feature = MAGICTYPES::FEATURE_COLLISION_MAP
                                 | MAGICTYPES::FEATURE_COLLISION_MAPOBJECT;
 
-    if (CheckFeature(feature) && (m_fNowTime > 0.0f))
+    if (CheckFeature(feature) && (m_fNowTime != 0.0f))
     {
         float dt = CGameProperty::GetElapsedTime();
 
@@ -827,60 +827,60 @@ bool CMagic::CheckAttack(void)
         RwV3d vMyPrevPosition = Math::VECTOR3_ZERO;
         Math::Vec3_Sub(&vMyPrevPosition, &vMyPosition, &m_movement.m_vVelocity);
 
-        RwSphere sphere;
-        sphere.center = vMyPosition;
-        sphere.radius = m_collisionAttack.m_fRadius;
+        RwSphere hitSphere;
+        hitSphere.center = vMyPosition;
+        hitSphere.radius = m_collisionAttack.m_fRadius;
 
-        CHitAttackData Attack;
-        Attack.SetObject(GetHandle());
-        Attack.SetObjectPos(&vMyPrevPosition);
-        Attack.SetShape(CHitAttackData::SHAPE_SPHERE);
-        Attack.SetSphere(&sphere);
-        Attack.SetPower(m_collisionAttack.m_nDamage);
-        Attack.SetAntiguard(CHitAttackData::ANTIGUARD(m_collisionAttack.m_nAntiguard));
-        Attack.SetFlagConfusion(m_collisionAttack.m_bConfusion);
-        Attack.SetStatus(CHitAttackData::STATUS(m_collisionAttack.m_nStatus));
-		if (Attack.GetStatus() != CHitAttackData::STATUS_KNOCK)
+        CHitAttackData hitAttack;
+        hitAttack.SetObject(GetHandle());
+        hitAttack.SetObjectPos(&vMyPrevPosition);
+        hitAttack.SetShape(CHitAttackData::SHAPE_SPHERE);
+        hitAttack.SetSphere(&hitSphere);
+        hitAttack.SetPower(m_collisionAttack.m_nDamage);
+        hitAttack.SetAntiguard(CHitAttackData::ANTIGUARD(m_collisionAttack.m_nAntiguard));
+        hitAttack.SetFlagConfusion(m_collisionAttack.m_bConfusion);
+        hitAttack.SetStatus(CHitAttackData::STATUS(m_collisionAttack.m_nStatus));
+		if (hitAttack.GetStatus() != CHitAttackData::STATUS_KNOCK)
 		{
-			if (Attack.IsTroubleAttack())
-				Attack.SetTroubleParameter(m_collisionAttack.m_fStatusTime);
+			if (hitAttack.IsTroubleAttack())
+				hitAttack.SetTroubleParameter(m_collisionAttack.m_fStatusTime);
 			else
-				Attack.SetFlyawayParameter(m_collisionAttack.m_fFlyawayX, m_collisionAttack.m_fFlyawayY);
+				hitAttack.SetFlyawayParameter(m_collisionAttack.m_fFlyawayX, m_collisionAttack.m_fFlyawayY);
 		};
 
         MAGICTYPES::FEATURE featureAttack = (m_feature & MAGICTYPES::FEATURE_MASK_ATTACK_TO);
         switch (featureAttack)
         {
         case MAGICTYPES::FEATURE_ATTACK_TO_PLAYER:
-            Attack.SetTarget(CHitAttackData::TARGET_PLAYER);
+            hitAttack.SetTarget(CHitAttackData::TARGET_PLAYER);
             break;
 
         case MAGICTYPES::FEATURE_ATTACK_TO_ENEMY:
-            Attack.SetTarget(CHitAttackData::TARGET_ENEMY);
+            hitAttack.SetTarget(CHitAttackData::TARGET_ENEMY);
             break;
 
         case MAGICTYPES::FEATURE_ATTACK_TO_MAPOBJ:
-            Attack.SetTarget(CHitAttackData::TARGET_GIMMICK);
+            hitAttack.SetTarget(CHitAttackData::TARGET_GIMMICK);
             break;
 
         case MAGICTYPES::FEATURE_ATTACK_TO_PLAYER_MAPOBJ:                    
-            Attack.SetTarget(CHitAttackData::TARGET_PLAYER_GIMMICK);
+            hitAttack.SetTarget(CHitAttackData::TARGET_PLAYER_GIMMICK);
             break;
 
         case MAGICTYPES::FEATURE_ATTACK_TO_ENEMY_MAPOBJ:
-            Attack.SetTarget(CHitAttackData::TARGET_ENEMY_GIMMICK);
+            hitAttack.SetTarget(CHitAttackData::TARGET_ENEMY_GIMMICK);
             break;
 
         case MAGICTYPES::FEATURE_ATTACK_TO_PLAYER_ENEMY:
-            Attack.SetTarget(CHitAttackData::TARGET_PLAYER | CHitAttackData::TARGET_ENEMY);
+            hitAttack.SetTarget(CHitAttackData::TARGET_PLAYER | CHitAttackData::TARGET_ENEMY);
             break;
 
         default:
-            Attack.SetTarget(CHitAttackData::TARGET_ALL_EXCEPT_SELF);
+            hitAttack.SetTarget(CHitAttackData::TARGET_ALL_EXCEPT_SELF);
             break;
         };
 
-        CHitAttackManager::RegistAttack(&Attack);
+        CHitAttackManager::RegistAttack(&hitAttack);
     };
 
     if (CheckFeature(MAGICTYPES::FEATURE_COLLISION_ATTACKED))
@@ -890,17 +890,17 @@ bool CMagic::CheckAttack(void)
 
         Math::Vec3_Add(&vMyPosition, &vMyPosition, &m_collisionBody.m_vPosition);
 
-        RwSphere sphere;
-        sphere.center = vMyPosition;
-        sphere.radius = m_collisionBody.m_fRadius;
+        RwSphere hitSphere;
+        hitSphere.center = vMyPosition;
+        hitSphere.radius = m_collisionBody.m_fRadius;
 
-        CHitCatchData Catch;
-        Catch.SetShape(CHitCatchData::SHAPE_SPHERE);
-        Catch.SetSphere(&sphere);
-        Catch.SetObject(GetHandle());
-        Catch.SetObjectType(GetType());
+        CHitCatchData hitCatch;
+        hitCatch.SetShape(CHitCatchData::SHAPE_SPHERE);
+        hitCatch.SetSphere(&hitSphere);
+        hitCatch.SetObject(GetHandle());
+        hitCatch.SetObjectType(GetType());
 
-        CHitAttackManager::RegistCatch(&Catch);
+        CHitAttackManager::RegistCatch(&hitCatch);
     };
 
     return false;

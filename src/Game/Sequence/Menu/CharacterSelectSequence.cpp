@@ -453,7 +453,6 @@ void CPlayerSelectWorkPool::DrawChr(int32 iPlayerNo)
     float fPosX = (-205.0f + (iPlayerNo * 140.0f));
     float fPosY = 21.0f;
     float fSubOffset = 10.0f;
-    float fPosSub = fPosX - fSubOffset;
     float move = 0.0f;
 
     if (pPlayerInfo->m_CursorAnimDir == PLAYERINFO::ANIMDIR_RIGHT)
@@ -565,7 +564,6 @@ void CPlayerSelectWorkPool::DrawIcon(int32 iPlayerNo)
 void CPlayerSelectWorkPool::DrawCursor(int32 iPlayerNo)
 {
     const float fHorOffset = 55.0f;
-    const float fVerOffset = 30.0f;
     int32 iCursor = m_aPlayerInfo[iPlayerNo].m_iCursor;
 
     //

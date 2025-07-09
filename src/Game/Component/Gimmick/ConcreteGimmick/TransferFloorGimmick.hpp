@@ -7,21 +7,23 @@
 class CTransferFloorGimmickMove;
 class CRotateTransferFloorGimmickMove;
 
+
 class CTransferFloorGimmick : public CGimmick
 {
 public:
     CTransferFloorGimmick(const char* pszName, void* pParam);
     virtual ~CTransferFloorGimmick(void);
-    virtual void PreMove(void);
-    virtual void PostMove(void);
-    virtual void OnReceiveEvent(const char* pszSender, GIMMICKTYPES::EVENTTYPE eventtype);
+    virtual void PreMove(void) override;
+    virtual void PostMove(void) override;
+    virtual void OnReceiveEvent(const char* pszSender, GIMMICKTYPES::EVENTTYPE eventtype) override;
     
 protected:
-    uint32 m_hAtari;
-    CNormalGimmickModel m_model;
-    CTransferFloorGimmickMove* m_pTransferMove;
-    RwV3d m_vPreMovePosition;
+    uint32                      m_hAtari;
+    CNormalGimmickModel         m_model;
+    CTransferFloorGimmickMove*  m_pTransferMove;
+    RwV3d                       m_vPreMovePosition;
 };
+
 
 class CLinearTransferFloorGimmick final : public CTransferFloorGimmick
 {
@@ -30,12 +32,14 @@ public:
     virtual ~CLinearTransferFloorGimmick(void) {};
 };
 
+
 class CPathTransferFloorGimmick final : public CTransferFloorGimmick
 {
 public:
     CPathTransferFloorGimmick(const char* pszName, void* pParam);
     virtual ~CPathTransferFloorGimmick(void) {};
 };
+
 
 class CRotateTransferFloorGimmick final : public CTransferFloorGimmick
 {
@@ -48,6 +52,6 @@ public:
 
 private:
     CRotateTransferFloorGimmickMove* m_pRotateMove;
-    RwV3d m_vPreMoveRotation;
-    bool m_bSE;
+    RwV3d                            m_vPreMoveRotation;
+    bool                             m_bSE;
 };

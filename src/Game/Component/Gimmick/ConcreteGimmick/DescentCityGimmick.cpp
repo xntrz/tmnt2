@@ -40,7 +40,7 @@ CDescentCityGimmick::CDescentCityGimmick(const char* pszName, void* pParam)
 };
 
 
-/*virtual*/ CDescentCityGimmick::~CDescentCityGimmick(void) /*override*/
+ CDescentCityGimmick::~CDescentCityGimmick(void)
 {
     for (int32 i = 0; i < 4; ++i)
     {
@@ -62,15 +62,15 @@ CDescentCityGimmick::CDescentCityGimmick(const char* pszName, void* pParam)
 };
 
 
-/*virtual*/ void CDescentCityGimmick::GetCenterPosition(RwV3d* pvPosition) const /*override*/
+ void CDescentCityGimmick::GetCenterPosition(RwV3d* pvPosition) const
 {
 #ifdef _DEBUG
     *pvPosition = m_vPosition;
-#endif    
+#endif /* _DEBUG */
 };
 
 
-/*virtual*/ void CDescentCityGimmick::Draw(void) const
+ void CDescentCityGimmick::Draw(void) const
 {
     CRenderStateManager::SetForDrawBeginning();
 
@@ -95,7 +95,7 @@ CDescentCityGimmick::CDescentCityGimmick(const char* pszName, void* pParam)
 };
 
 
-/*virtual*/ void CDescentCityGimmick::PostMove(void) /*override*/
+ void CDescentCityGimmick::PostMove(void)
 {
     uvAnimUpdate();
     cityMoveControl();
@@ -135,12 +135,10 @@ void CDescentCityGimmick::initModel(void)
 
     for (int32 i = 0; i < COUNT_OF(apszModel); ++i)
     {
-        CNormalGimmickModel* pGimmickModel = new CNormalGimmickModel;
-        ASSERT(pGimmickModel);
-
         CModel* pModel = CModelManager::CreateModel(apszModel[i]);
         ASSERT(pModel);
 
+        CNormalGimmickModel* pGimmickModel = new CNormalGimmickModel;
         pGimmickModel->SetModel(CNormalGimmickModel::MODELTYPE_DRAW_NORMAL, pModel);
         pGimmickModel->SetVisualNormal();
         pGimmickModel->SetPosition(&m_vPosition);
@@ -175,8 +173,6 @@ void CDescentCityGimmick::cityMoveControl(void)
     for (int32 i = 0; i < COUNT_OF(m_apModel); ++i)
     {
         CNormalGimmickModel* pGimmickModel = m_apModel[i];
-        ASSERT(pGimmickModel);
-
         pGimmickModel->SetRotation(&m_vRotation);
         pGimmickModel->SetPosition(&m_vPosition);
     };

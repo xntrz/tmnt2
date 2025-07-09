@@ -11,7 +11,7 @@ CApproachingTrailerGimmickMove::CApproachingTrailerGimmickMove(void)
 };
 
 
-/*virtual*/ void CApproachingTrailerGimmickMove::UpdateRotation(float dt) /*override*/
+void CApproachingTrailerGimmickMove::UpdateRotation(float dt)
 {
     if (m_fTimerCounter < 0.025f)
     {
@@ -41,8 +41,8 @@ CApproachingTrailerHeadGimmickMove::CApproachingTrailerHeadGimmickMove(void)
 };
 
 
-/*virtual*/ CApproachingTrailerHeadGimmickMove::RESULT
-CApproachingTrailerHeadGimmickMove::OnMove(float dt) /*override*/
+CApproachingTrailerHeadGimmickMove::RESULT
+CApproachingTrailerHeadGimmickMove::OnMove(float dt)
 {
     Math::Vec3_Add(&m_vPosition, &m_vPosition, &m_vVelocity);
 
@@ -58,7 +58,7 @@ CApproachingTrailerHeadGimmickMove::OnMove(float dt) /*override*/
 
 
 void CApproachingTrailerHeadGimmickMove::GetRotation(RwV3d* pvRot) const
- { 
+{ 
     *pvRot = m_vRotation; 
 };
 

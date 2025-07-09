@@ -442,7 +442,6 @@ C087Slashuur::CAerialStatusObserver::Observing(void) /*override*/
 
     float fJumpInitSpeed = (pState->bEscape ? ESCAPE_JUMP_VELOCITY_Y : EnemyChr().Feature().m_fJumpInitializeSpeed);
     float fMotionT = CEnemyUtils::ProcAerialMotion(&EnemyChr().Compositor(), fJumpInitSpeed);
-	float fMotionET = EnemyChr().Compositor().GetMotionEndTime();
     if (pState->bEscape)
     {
         if (m_bAttackFlag && !m_bShotFlag && (fMotionT > 0.18032786f)) // TODO

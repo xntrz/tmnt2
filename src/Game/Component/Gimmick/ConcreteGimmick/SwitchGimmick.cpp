@@ -16,15 +16,17 @@
 
 CSwitchGimmick::CSwitchGimmick(const char* pszName, void* pParam)
 : CGimmick(pszName, pParam)
+, m_szTargetGimmickName()
 , m_switchtype(SWITCHTYPE_SLOTMACHINE_LEVER)
 , m_switchstate(SWITCHSTATE_OFF)
+, m_model()
 , m_fTimer(0.0f)
 , m_bEnable(true)
 {
     m_szTargetGimmickName[0] = '\0';
 
-    ASSERT(pParam);
-    GIMMICKPARAM::GIMMICK_TERMS* pInitParam = (GIMMICKPARAM::GIMMICK_TERMS*)pParam;
+    GIMMICKPARAM::GIMMICK_TERMS* pInitParam = static_cast<GIMMICKPARAM::GIMMICK_TERMS*>(pParam);
+    ASSERT(pInitParam);
 
     CModel* pModelOn = CModelManager::CreateModel("switch_on");
     ASSERT(pModelOn);
@@ -42,33 +44,34 @@ CSwitchGimmick::CSwitchGimmick(const char* pszName, void* pParam)
     
     SetModelStrategy(&m_model);
 
-    m_switchtype = SWITCHTYPE(pInitParam->m_subid);
-    ASSERT(m_switchtype >= 0 && m_switchtype < SWITCHTYPENUM);
+    m_switchtype = static_cast<SWITCHTYPE>(pInitParam->m_subid);
+    ASSERT(m_switchtype >= 0);
+    ASSERT(m_switchtype < SWITCHTYPENUM);
 
     ASSERT(std::strlen(pInitParam->m_szTargetGimmick) < COUNT_OF(m_szTargetGimmickName));
     std::strcpy(m_szTargetGimmickName, pInitParam->m_szTargetGimmick);
 };
 
 
-CSwitchGimmick::~CSwitchGimmick(void)
+/*virtual*/ CSwitchGimmick::~CSwitchGimmick(void)
 {
     ;
 };
 
 
-GIMMICKTYPES::FEATURE CSwitchGimmick::GetFeatures(void) const
+/*virtual*/ GIMMICKTYPES::FEATURE CSwitchGimmick::GetFeatures(void) const /*override*/
 {
     return GIMMICKTYPES::FEATURE_NONE;
 };
 
 
-bool CSwitchGimmick::Query(CGimmickQuery* pQuery) const
+/*virtual*/ bool CSwitchGimmick::Query(CGimmickQuery* pQuery) const /*override*/
 {
     ASSERT(pQuery);
 
     if (pQuery->GetType() == GIMMICKTYPES::QUERY_SYS_SWITCH)
     {
-        CStateGimmickQuery* pStateQuery = (CStateGimmickQuery*)pQuery;
+        CStateGimmickQuery* pStateQuery = static_cast<CStateGimmickQuery*>(pQuery);
         ++pStateQuery->m_nTarget;
         
         if (m_switchstate == SWITCHSTATE_ON)
@@ -82,7 +85,7 @@ bool CSwitchGimmick::Query(CGimmickQuery* pQuery) const
 };
 
 
-void CSwitchGimmick::PostMove(void)
+/*virtual*/ void CSwitchGimmick::PostMove(void) /*override*/
 {
     if (m_bEnable)
     {
@@ -92,17 +95,17 @@ void CSwitchGimmick::PostMove(void)
         RwV3d vPosition = Math::VECTOR3_ZERO;
         pModel->GetPosition(&vPosition);
         
-        RwSphere sphere = { 0 };
-        sphere.center = vPosition;
-        sphere.radius = 0.75f;
+        RwSphere hitSphere = { 0 };
+        hitSphere.center = vPosition;
+        hitSphere.radius = 0.75f;
         
-        CHitCatchData Catch;
-        Catch.SetObject(GetHandle());
-        Catch.SetObjectType(GetType());
-        Catch.SetShape(CHitCatchData::SHAPE_SPHERE);
-        Catch.SetSphere(&sphere);
+        CHitCatchData hitCatch;
+        hitCatch.SetObject(GetHandle());
+        hitCatch.SetObjectType(GetType());
+        hitCatch.SetShape(CHitCatchData::SHAPE_SPHERE);
+        hitCatch.SetSphere(&hitSphere);
 
-        CHitAttackManager::RegistCatch(&Catch);
+        CHitAttackManager::RegistCatch(&hitCatch);
     }
     else if (m_fTimer > 0.0f)
     {
@@ -123,7 +126,6 @@ void CSwitchGimmick::PostMove(void)
         };
     };
 
-
     switch (m_switchstate)
     {
     case SWITCHSTATE_OFF:
@@ -141,14 +143,15 @@ void CSwitchGimmick::PostMove(void)
 };
 
 
-void CSwitchGimmick::OnReceiveEvent(const char* pszSender, GIMMICKTYPES::EVENTTYPE eventtype)
+/*virtual*/ void CSwitchGimmick::OnReceiveEvent(const char* pszSender,
+                                                GIMMICKTYPES::EVENTTYPE eventtype) /*override*/
 {
     if (eventtype == GIMMICKTYPES::EVENTTYPE_ACTIVATE)
         CGimmickManager::PostEvent(m_szTargetGimmickName, GetName(), GIMMICKTYPES::EVENTTYPE_ACTIVATE);
 };
 
 
-void CSwitchGimmick::OnCatchAttack(CHitAttackData* pAttack)
+/*virtual*/ void CSwitchGimmick::OnCatchAttack(CHitAttackData* pAttack) /*override*/
 {
     ASSERT(pAttack);
     
@@ -157,7 +160,7 @@ void CSwitchGimmick::OnCatchAttack(CHitAttackData* pAttack)
         CGameObject* pAttacker = pAttack->GetObject();
         if (pAttacker->GetType() == GAMEOBJECTTYPE::CHARACTER)
         {
-            CCharacter* pCharacter = (CCharacter*)pAttacker;
+            CCharacter* pCharacter = static_cast<CCharacter*>(pAttacker);
             if (pCharacter->GetCharacterType() == CCharacter::TYPE_PLAYER)
                 onSwitchChange();
         };
@@ -169,25 +172,25 @@ void CSwitchGimmick::onSwitchChange(void)
 {
     switch (m_switchtype)
     {
-    case 0:
+    case SWITCHTYPE_SLOTMACHINE_LEVER:
         m_fTimer = 0.5f;
         m_switchstate = SWITCHSTATE_ON;
         m_bEnable = false;
         break;
 
-    case 1:
+    case SWITCHTYPE_TOGGLE:
         m_fTimer = 5.0f;
         m_switchstate = SWITCHSTATE_ON;
         m_bEnable = false;
         break;
 
-    case 2:
+    case SWITCHTYPE_ONCE:
         m_fTimer = 0.5f;
         m_switchstate = (m_switchstate == SWITCHSTATE_ON ? SWITCHSTATE_OFF : SWITCHSTATE_ON);
         m_bEnable = false;
         break;
         
-    case 3:
+    case SWITCHTYPE_BUTTON:
         m_fTimer = 0.0f;
         m_switchstate = SWITCHSTATE_ON;
         m_bEnable = false;

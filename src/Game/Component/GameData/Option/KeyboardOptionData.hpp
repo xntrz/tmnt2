@@ -1,4 +1,5 @@
 #pragma once
+
 #ifdef TARGET_PC
 
 #include "OptionTypes.hpp"

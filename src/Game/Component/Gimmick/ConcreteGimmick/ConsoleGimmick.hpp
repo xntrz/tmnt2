@@ -29,21 +29,19 @@ public:
     virtual void OnReceiveEvent(const char* pszSender, GIMMICKTYPES::EVENTTYPE eventtype) override;
     virtual void OnCatchAttack(CHitAttackData* pAttack) override;
     void GetDirection(RwV3d* pvDirection);
-    
-protected:
     void consoleOn(void);
     void collisionCreate(COLLTYPE colltype);
     void collisionDestroy(void);
 
 protected:
     CNormalGimmickModel m_model;
-    uint32 m_hAtari;
-    bool m_bFlashFlag;
-    STATE m_state;
-    float m_fTimer;
-    RwV3d m_vPosition;
-    RwV3d m_vDirection;
-    char m_szTargetGimmickName[GAMEOBJECTTYPES::NAME_MAX];
-    int32 m_nHitNum;
-    float m_fInvinT;
+    uint32              m_hAtari;
+    bool                m_bFlashFlag;
+    STATE               m_state;
+    float               m_fTimer;
+    RwV3d               m_vPosition;
+    RwV3d               m_vDirection;
+    char                m_szTargetGimmickName[GAMEOBJECTTYPES::NAME_MAX];
+    int32               m_nHitNum;
+    float               m_fInvinT;
 };

@@ -605,8 +605,8 @@ void CRideCharacter::Turn(void)
 
     if (fTurnDirection > 0.0f)
     {
-        fTurnDirection += CGameProperty::GetElapsedTime() * (Math::PI * 3.0f);
-        if (fTurnDirection > Math::PI2)
+        fTurnDirection += CGameProperty::GetElapsedTime() * (MATH_PI * 3.0f);
+        if (fTurnDirection > MATH_PI2)
             fTurnDirection = 0.0f;
 
         SetTurnDirection(fTurnDirection);
@@ -615,8 +615,8 @@ void CRideCharacter::Turn(void)
     }
     else if (fTurnDirection < 0.0f)
     {
-        fTurnDirection -= CGameProperty::GetElapsedTime() * (Math::PI * 3.0f);
-        if (fTurnDirection < -Math::PI2)
+        fTurnDirection -= CGameProperty::GetElapsedTime() * (MATH_PI * 3.0f);
+        if (fTurnDirection < -MATH_PI2)
             fTurnDirection = 0.0f;
 
         SetTurnDirection(fTurnDirection);
@@ -628,12 +628,12 @@ void CRideCharacter::Turn(void)
     {
         if (m_padinfo.bLeftTurn)
         {
-            fTurnDirection += CGameProperty::GetElapsedTime() * (Math::PI * 3.0f);
+            fTurnDirection += CGameProperty::GetElapsedTime() * (MATH_PI * 3.0f);
             CGameEvent::SetPlayerRideAction(GetPlayerNo(), GAMETYPES::RIDEACT_TRICK);
         }
         else if (m_padinfo.bRightTurn)
         {
-            fTurnDirection -= CGameProperty::GetElapsedTime() * (Math::PI * 3.0f);
+            fTurnDirection -= CGameProperty::GetElapsedTime() * (MATH_PI * 3.0f);
             CGameEvent::SetPlayerRideAction(GetPlayerNo(), GAMETYPES::RIDEACT_TRICK);
         };
 

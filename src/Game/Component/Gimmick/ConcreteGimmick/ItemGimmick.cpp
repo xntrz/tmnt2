@@ -20,6 +20,9 @@
 #include "System/Common/Screen.hpp"
 
 
+#define SPRITE_RADIUS (0.6f)
+
+
 static RwIm3DVertex s_aVertex[4] = { 0 };
 
 
@@ -27,6 +30,7 @@ CItemGimmick::CItemGimmick(const char* pszName, void* pParam)
 : CGimmick(pszName, pParam)
 , m_vPosition(Math::VECTOR3_ZERO)
 , m_vVelocity(Math::VECTOR3_ZERO)
+, m_aVertex()
 , m_pTexture(nullptr)
 , m_pModuleManager(nullptr)
 , m_fTimer(0.0f)
@@ -72,30 +76,29 @@ void CItemGimmick::Draw(void) const
     RwMatrix matBillboard;
     RwMatrixSetIdentityMacro(&matBillboard);
     Math::Matrix_Invert(&matBillboard, &matView);
-    matBillboard.pos.x = m_vPosition.x;
-    matBillboard.pos.y = m_vPosition.y + m_fOffsetY;
-    matBillboard.pos.z = m_vPosition.z;
+
+    matBillboard.pos = m_vPosition;
+    matBillboard.pos.y += m_fOffsetY;
 
     RENDERSTATE_PUSH(rwRENDERSTATEZWRITEENABLE, true);
     RENDERSTATE_PUSH(rwRENDERSTATESRCBLEND, rwBLENDSRCALPHA);
     RENDERSTATE_PUSH(rwRENDERSTATEDESTBLEND, rwBLENDINVSRCALPHA);
     RENDERSTATE_PUSH(rwRENDERSTATECULLMODE, rwCULLMODECULLNONE);
-    
-    if (m_pTexture)
-        RENDERSTATE_PUSH(rwRENDERSTATETEXTURERASTER, RwTextureGetRaster(m_pTexture));
-    else
-        RENDERSTATE_PUSH(rwRENDERSTATETEXTURERASTER, 0);
+    RENDERSTATE_PUSH(rwRENDERSTATETEXTURERASTER, m_pTexture ? RwTextureGetRasterMacro(m_pTexture) : NULL);    
 
-    const uint32 uFlags = rwIM3D_VERTEXRGBA | rwIM3D_VERTEXXYZ | rwIM3D_VERTEXUV;
+    const uint32 flags = rwIM3D_VERTEXRGBA
+                       | rwIM3D_VERTEXXYZ
+                       | rwIM3D_VERTEXUV;
 
     std::memcpy(s_aVertex, m_aVertex, sizeof(m_aVertex));
     
-    if (RwIm3DTransform(s_aVertex, COUNT_OF(s_aVertex), &matBillboard, uFlags))
+    if (RwIm3DTransform(s_aVertex, COUNT_OF(s_aVertex), &matBillboard, flags))
     {
         RwIm3DRenderPrimitive(rwPRIMTYPETRISTRIP);
         RwIm3DEnd();
     };
 
+    RENDERSTATE_POP(rwRENDERSTATETEXTURERASTER);
     RENDERSTATE_POP(rwRENDERSTATECULLMODE);
     RENDERSTATE_POP(rwRENDERSTATEDESTBLEND);
     RENDERSTATE_POP(rwRENDERSTATESRCBLEND);
@@ -115,7 +118,7 @@ void CItemGimmick::PostMove(void)
     {
     case STATE_INIT:
         {
-            m_fDeathHeight = CWorldMap::GetMapHeight(&m_vPosition) + 1.0f;
+            m_fDeathHeight = (CWorldMap::GetMapHeight(&m_vPosition) + (SPRITE_RADIUS * 2.0f));
 
             MAPTYPES::ATTRIBUTE attribute = CWorldMap::GetCollisionResultAttribute();
             if (attribute == MAPTYPES::ATTRIBUTE_DEATH)
@@ -133,7 +136,7 @@ void CItemGimmick::PostMove(void)
             }
             else
             {
-                float fGravity = CGameProperty::GetGravity();
+                float fGravity = CGameProperty::GetGravity() * SPRITE_RADIUS;
                 float dt = CGameProperty::GetElapsedTime();
 
                 m_vVelocity.y += fGravity * dt;
@@ -173,10 +176,10 @@ void CItemGimmick::PostMove(void)
                 float dt = CGameProperty::GetElapsedTime();
                 
                 m_fRadian += (dt * 2.0f);
-                if (m_fRadian > Math::PI2)
-                    m_fRadian -= Math::PI2;
+                if (m_fRadian > MATH_PI2)
+                    m_fRadian -= MATH_PI2;
 
-                m_fOffsetY = Math::Sin(m_fRadian) * 0.6f;
+                m_fOffsetY = Math::Sin(m_fRadian) * SPRITE_RADIUS;
             };
         }
         break;
@@ -203,7 +206,7 @@ void CItemGimmick::PostMove(void)
     if (m_pModuleManager)
         m_pModuleManager->Run();
 
-    setVertex(0.6f, { 0xFF, 0xFF, 0xFF, 0xFF });
+    setVertex(SPRITE_RADIUS, { 0xFF, 0xFF, 0xFF, 0xFF });
 
     if (m_state >= STATE_WAIT)
         m_fTimer += CGameProperty::GetElapsedTime();
@@ -218,19 +221,19 @@ void CItemGimmick::OnReceiveEvent(const char* pszSender, GIMMICKTYPES::EVENTTYPE
 
 void CItemGimmick::init(void* pParam)
 {
-    ASSERT(pParam);
-
-    GIMMICKPARAM::GIMMICK_ITEMBOX* pInitParam = (GIMMICKPARAM::GIMMICK_ITEMBOX*)pParam;
+    GIMMICKPARAM::GIMMICK_ITEMBOX* pInitParam = static_cast<GIMMICKPARAM::GIMMICK_ITEMBOX*>(pParam);
+    ASSERT(pInitParam != nullptr);
 
     m_vPosition = pInitParam->m_vPosition;
-    m_vPosition.y += 0.6f;
+    m_vPosition.y += SPRITE_RADIUS;
     
     m_vVelocity = Math::VECTOR3_ZERO;
 
-    setVertex(0.6f, { 0xFF, 0xFF, 0xFF, 0xFF });
+    setVertex(SPRITE_RADIUS, { 0xFF, 0xFF, 0xFF, 0xFF });
 
     m_nItemID = pInitParam->m_nItem;
-    ASSERT(m_nItemID > ITEMID::ID_NONE && m_nItemID < ITEMID::ID_MAX);
+    ASSERT(m_nItemID > ITEMID::ID_NONE);
+    ASSERT(m_nItemID < ITEMID::ID_MAX);
 
     const char* pszTexture = "pizza";
     switch (m_nItemID)
@@ -291,7 +294,6 @@ void CItemGimmick::init(void* pParam)
     if (isCrystalItem())
     {
         EFFECTID::VALUE idEffect = EFFECTID::ID_UNKNOWN;
-        RwV3d vEffectPost = m_vPosition;
         
         switch (m_nItemID)
         {
@@ -316,7 +318,7 @@ void CItemGimmick::init(void* pParam)
             break;
         };
 
-        m_hAppearEffect = CEffectManager::Play(idEffect, &vEffectPost);
+        m_hAppearEffect = CEffectManager::Play(idEffect, &m_vPosition);
         ASSERT(m_hAppearEffect);
     };
 };
@@ -327,8 +329,8 @@ void CItemGimmick::setVertex(float fRadius, const RwRGBA& rColor)
     CMapCamera* pMapCamera = CGameProperty::GetMapCamera();
     ASSERT(pMapCamera);
 
-    float sw = float(CScreen::Width());
-    float sh = float(CScreen::Height());
+    float sw = static_cast<float>(CScreen::Width());
+    float sh = static_cast<float>(CScreen::Height());
 
     float w = pMapCamera->GetViewRatio() * fRadius;
     float h = (sw / sh) * w;
@@ -440,7 +442,6 @@ bool CItemGimmick::checkItemGet(void)
     if (fNearestDistance >= 1.0f)
         return false;
 
-    ASSERT(nPlayerNo >= 0 && nPlayerNo < CGameProperty::GetPlayerNum());
     getItem(nPlayerNo);
     
     return true;
@@ -449,56 +450,40 @@ bool CItemGimmick::checkItemGet(void)
 
 bool CItemGimmick::isBlinkDisappear(void) const
 {
-    bool bResult = false;
-    
-    switch (m_nItemID)
+    if (isTimelimitEnable())
     {
-    case ITEMID::ID_HEAL_FULL:
-    case ITEMID::ID_HEAL_SMALL:
-    case ITEMID::ID_MISSILE:
-    case ITEMID::ID_COMEBACK:
-    case ITEMID::ID_INVINCIBLE:
+        if (m_fTimer > 15.0f)
         {
-            if (m_fTimer > 15.0f)
-            {
-                float fRad = 2.0f * (Math::PI * ((m_fTimer - 15.0f) / 0.5f));
-                
-                if (fRad > Math::PI2)
-                    fRad -= Math::PI2;
+            float fRad = 2.0f * (MATH_PI * ((m_fTimer - 15.0f) / 0.5f));
 
-                fRad = Math::Cos(fRad);
-                if (fRad > 0.0f)
-                    bResult = true;
-            };
-        }
-        break;
+            if (fRad > MATH_PI2)
+                fRad -= MATH_PI2;
+
+            fRad = Math::Cos(fRad);
+            if (fRad > 0.0f)
+                return true;
+        };
     };
 
-    return bResult;
+    return false;
 };
 
 
 bool CItemGimmick::isCrystalItem(void) const
 {
-    return (m_nItemID == ITEMID::ID_CRY_RED     ||
-            m_nItemID == ITEMID::ID_CRY_GREEN   ||
-            m_nItemID == ITEMID::ID_CRY_ORANGE  ||
-            m_nItemID == ITEMID::ID_CRY_WHITE);        
+    return (m_nItemID == ITEMID::ID_CRY_RED)
+        || (m_nItemID == ITEMID::ID_CRY_GREEN)
+        || (m_nItemID == ITEMID::ID_CRY_ORANGE)
+        || (m_nItemID == ITEMID::ID_CRY_WHITE);
 };
 
 
 bool CItemGimmick::isTimelimitEnable(void) const
 {
-    switch (m_nItemID)
-    {
-    case ITEMID::ID_HEAL_FULL:
-    case ITEMID::ID_HEAL_SMALL:
-    case ITEMID::ID_MISSILE:
-    case ITEMID::ID_COMEBACK:
-    case ITEMID::ID_INVINCIBLE:
-        return true;
-    };
-
-    return false;
+    return (m_nItemID == ITEMID::ID_HEAL_FULL)
+        || (m_nItemID == ITEMID::ID_HEAL_SMALL)
+        || (m_nItemID == ITEMID::ID_MISSILE)
+        || (m_nItemID == ITEMID::ID_COMEBACK)
+        || (m_nItemID == ITEMID::ID_INVINCIBLE);
 };
 

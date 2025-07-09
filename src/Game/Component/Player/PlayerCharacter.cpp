@@ -922,12 +922,12 @@ void CPlayerCharacter::OnDetach(CPlayerCharacter* pAfterCharacter)
 
 void CPlayerCharacter::RotateDirection(float fDirection)
 {
-    float fRotateDirectionMax = CGameProperty::GetElapsedTime() * Math::PI05;
+    float fRotateDirectionMax = CGameProperty::GetElapsedTime() * MATH_PI05;
     float fDirectionDiff = fDirection - m_fDirection;
 
     fDirectionDiff = Math::RadianNormalize(fDirectionDiff);
     
-    ASSERT(std::fabs(fDirectionDiff) <= Math::PI);
+    ASSERT(std::fabs(fDirectionDiff) <= MATH_PI);
     fDirectionDiff = Clamp(fDirectionDiff, -fRotateDirectionMax, fRotateDirectionMax);
 
     SetDirection(m_fDirection + fDirectionDiff);
@@ -1202,7 +1202,7 @@ void CPlayerCharacter::ChangeThrowStatus(CCharacterAttackCalculator& calculator)
 
     float fDiff = m_fDirection - pAttackerChr->GetDirection();
 
-    if (fDiff <= Math::PI05 || fDiff >= Math::PI05)
+    if (fDiff <= MATH_PI05 || fDiff >= MATH_PI05)
         calculator.SetCatchResult(CHitCatchData::RESULT_THROWFRONT);
     else
         calculator.SetCatchResult(CHitCatchData::RESULT_THROWBACK);

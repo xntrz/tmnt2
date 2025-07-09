@@ -27,8 +27,6 @@ public:
     virtual void PostMove(void);
     virtual void OnReceiveEvent(const char* pszSender, GIMMICKTYPES::EVENTTYPE eventtype);
     virtual void OnCatchAttack(CHitAttackData* pAttack);
-
-private:
     void init(void* pParam);
     void onCut(void);
     void onBreakdown(void);
@@ -39,14 +37,14 @@ private:
     void setBreakdownSmokeEffect(int32 Step);
 
 private:
-    CCuttingGimmickMove* m_pCuttingMove;
-    CNormalGimmickModel m_model;
-    float m_fTimer;
-    float m_fEffectTimer;
-    float m_fInvincibleTimer;
-    STATE m_eState;
-    int32 m_step;
-    int32 m_iLife;
-    uint32 m_hAtari;
-    CGimmickMotion* m_pGimmickMotion;
+    CCuttingGimmickMove*    m_pCuttingMove;
+    CNormalGimmickModel     m_model;
+    float                   m_fTimer;
+    float                   m_fEffectTimer;
+    float                   m_fInvincibleTimer;
+    STATE                   m_eState;
+    int32                   m_step;
+    int32                   m_iLife;
+    uint32                  m_hAtari;
+    CGimmickMotion*         m_pGimmickMotion;
 };

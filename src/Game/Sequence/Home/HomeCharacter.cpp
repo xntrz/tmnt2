@@ -23,7 +23,7 @@ CHomeCharacterManipulator::CHomeCharacterManipulator(CPlayerCharacter* pPlayerCh
 {
     RwV3d vPosition = { 0.0f, 0.0f, 10.0f };
     m_pPlayerChr->SetPosition(&vPosition);
-    m_pPlayerChr->SetDirection(Math::RandFloat() * Math::PI2);
+    m_pPlayerChr->SetDirection(Math::RandFloat() * MATH_PI2);
 };
 
 
@@ -40,7 +40,7 @@ void CHomeCharacterManipulator::Run(void)
     case PLAYERTYPES::STATUS_IDLE:
         {
             m_pPlayerChr->SetDirection(
-                m_pPlayerChr->GetDirection() + ((Math::RandFloat() - 0.5f) * Math::PI)
+                m_pPlayerChr->GetDirection() + ((Math::RandFloat() - 0.5f) * MATH_PI)
             );
             m_pPlayerChr->ChangeStatus(PLAYERTYPES::STATUS_RUN);
         }

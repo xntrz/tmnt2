@@ -291,17 +291,17 @@ void CSpaceShipGimmick::RegistHitAttack(void)
 
     for (int32 i = 0; i < COUNT_OF(s_aHitSphere[0]); ++i)
     {
-        RwSphere HitSphere = s_aHitSphere[m_shipType][i];
-        RwV3dTransformPoint(&HitSphere.center, &HitSphere.center, pMatrix);
+        RwSphere hitSphere = s_aHitSphere[m_shipType][i];
+        RwV3dTransformPoint(&hitSphere.center, &hitSphere.center, pMatrix);
 
-        CHitCatchData CatchData;
-        CatchData.Cleanup();
-        CatchData.SetObject(GetHandle());
-        CatchData.SetObjectType(GetType());
-        CatchData.SetShape(CHitCatchData::SHAPE_SPHERE);
-        CatchData.SetSphere(&HitSphere);
+        CHitCatchData hitCatch;
+        hitCatch.Cleanup();
+        hitCatch.SetObject(GetHandle());
+        hitCatch.SetObjectType(GetType());
+        hitCatch.SetShape(CHitCatchData::SHAPE_SPHERE);
+        hitCatch.SetSphere(&hitSphere);
 
-        CHitAttackManager::RegistCatch(&CatchData);
+        CHitAttackManager::RegistCatch(&hitCatch);
     };
 };
 
@@ -475,6 +475,9 @@ bool CSpaceShipGimmick::SmokeGeneration(SMOKEDATA* pSmokeData)
             };
         }
         break;
+
+    default:
+        return true;
     };
 
     return (pSmokeData->m_status >= SMOKEDATA::STATUS_END);

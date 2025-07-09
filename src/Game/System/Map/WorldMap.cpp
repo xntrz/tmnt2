@@ -103,7 +103,7 @@ void CWorldMapManager::OnLoaded(void)
     {
         RwV3d vRotation =
         {
-            MATH_DEG2RAD(m_pMapInfo->m_vLightDirection.x) + Math::PI05,
+            MATH_DEG2RAD(m_pMapInfo->m_vLightDirection.x) + MATH_PI05,
             MATH_DEG2RAD(m_pMapInfo->m_vLightDirection.y),
             MATH_DEG2RAD(m_pMapInfo->m_vLightDirection.z),
         };

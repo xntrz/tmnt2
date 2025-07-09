@@ -28,7 +28,7 @@ CHatchGimmickMove::RESULT CHatchGimmickMove::OnMove(float dt)
     //  check for zero speed
     //
     float fSpeed = Math::Vec3_Length(&m_vVelocity);
-    if (Math::FEqual(fSpeed, 0.0f))
+    if (fSpeed == 0.0f)
         return ret;
 
     //

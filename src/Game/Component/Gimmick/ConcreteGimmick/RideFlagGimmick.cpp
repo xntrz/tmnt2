@@ -23,6 +23,9 @@
 
 CRideFlagGimmick::CRideFlagGimmick(const char* pszName, void* pParam)
 : CRideGimmick(pszName, pParam)
+, m_flagtype(FLAGTYPENUM)
+, m_iScore(-1)
+, m_bAdd(false)
 {
     struct INFO
     {
@@ -41,11 +44,12 @@ CRideFlagGimmick::CRideFlagGimmick(const char* pszName, void* pParam)
         { 1, 1.0f, "gflag" },
     };
 
-    ASSERT(pParam);
-    
-    GIMMICKPARAM::GIMMICK_BASIC* pInitParam = (GIMMICKPARAM::GIMMICK_BASIC*)pParam;
+    GIMMICKPARAM::GIMMICK_BASIC* pInitParam = static_cast<GIMMICKPARAM::GIMMICK_BASIC*>(pParam);
+    ASSERT(pInitParam);
 
-    ASSERT(pInitParam->m_subid >= 0 && pInitParam->m_subid < COUNT_OF(s_aInfo));
+    ASSERT(pInitParam->m_subid >= 0);
+    ASSERT(pInitParam->m_subid < COUNT_OF(s_aInfo));
+
     const INFO* pInfo = &s_aInfo[pInitParam->m_subid];
 
     RwV3d vPosition = pInitParam->m_vPosition;
@@ -54,6 +58,9 @@ CRideFlagGimmick::CRideFlagGimmick(const char* pszName, void* pParam)
     m_iScore = pInfo->m_iScore;
     m_flagtype = FLAGTYPE(pInitParam->m_subid);
 
+    //
+    //  Init model
+    //
     CModel* pModel = CModelManager::CreateModel(pInfo->m_pszModelName);
     ASSERT(pModel);
     pModel->SetClippingEnable(false);
@@ -62,21 +69,26 @@ CRideFlagGimmick::CRideFlagGimmick(const char* pszName, void* pParam)
     m_model.SetPosition(&vPosition);
     m_model.UpdateFrame();
 
+    SetModelStrategy(&m_model);
+
+    //
+    //  Init movement
+    //
     m_pRideMove = new CRideFlagGimmickMove(m_flagtype);
-    ASSERT(m_pRideMove);
     m_pRideMove->SetPosition(&vPosition);
     m_pRideMove->Start();
 
-    SetModelStrategy(&m_model);
     SetMoveStrategy(m_pRideMove);
 
+    //
+    //  Init module man
+    //
     ++m_iCounter[m_flagtype];
     ++m_iRestCounter[m_flagtype];
 
     if (CRideStage::GetShadowFlag())
     {
         m_pModuleManager = new CModuleManager;
-        ASSERT(m_pModuleManager);
         m_pModuleManager->Include(CCircleShadowModule::New(this, m_fRadius * 3.0f, m_fRadius * 3.0f, false));
         m_pModuleManager->Run();
     };

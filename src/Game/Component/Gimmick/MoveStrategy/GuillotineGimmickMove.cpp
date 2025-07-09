@@ -90,10 +90,8 @@ void CGuillotineGimmickMove::windSE(void)
 void CGuillotineGimmickMove::pendulumMove(float dt)
 {
     m_vRotation.z = (Math::Sin(m_fTheta) * m_fOnceTheta);
-
     reviceTheta(dt);
-
-    InvClamp(m_vRotation.z, -Math::PI, Math::PI);
+    m_vRotation.z = Math::RadianCorrection(m_vRotation.z);
 
     RwV3d vPos = *RwMatrixGetPos(&m_matFulcrumPoint);
     Math::Matrix_AffineTransformation(&m_matFulcrumPoint, nullptr, &m_vRotation, &vPos);

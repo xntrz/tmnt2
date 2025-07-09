@@ -14,30 +14,9 @@
 #include "Game/Component/GameMain/GameProperty.hpp"
 #include "Game/System/Misc/Gamepad.hpp"
 
-//#define PLAYER_AI_MANIPULATOR
-
-#ifdef PLAYER_AI_MANIPULATOR
-#include "ManipulatorAI/PlayerGrapplerAI.hpp"
-#endif /* PLAYER_AI_MANIPULATOR */
-
 
 /*static*/ CManipulator* CManipulator::New(CPlayerCharacter* pPlayerChr, int32 nControllerNo)
 {
-#ifdef PLAYER_AI_MANIPULATOR    
-    /* TODO: custom code for tests - remove it later*/
-    if ((nControllerNo >= CController::Max()) &&
-        (CGameData::Attribute().GetGamemode() != GAMETYPES::GAMEMODE_DEMO))
-    {
-        char szName[GAMEOBJECTTYPES::NAME_MAX];
-        szName[0] = '\0';
-	
-        std::strcpy(szName, pPlayerChr->GetName());
-        std::strcat(szName, "_ai");
-	
-        return new CPlayerGrapplerAI(szName, pPlayerChr);
-    };
-#endif /* PLAYER_AI_MANIPULATOR */
-    
     switch (pPlayerChr->GetID())
     {
     case PLAYERID::ID_LEO:
@@ -628,7 +607,7 @@ void CManipulator::AnalyzeInputDevice(void)
 
     if (IGamepad::CheckFunction(uDigitalTrigger, IGamepad::FUNCTION_JUMP))
         m_input.m_jump = JUMP_ON;
-
+    
     if (IGamepad::CheckFunction(uDigitalTrigger, IGamepad::FUNCTION_ATTACK_A) &&
         IGamepad::CheckFunction(uDigitalTrigger, IGamepad::FUNCTION_ATTACK_B))
     {
@@ -641,10 +620,6 @@ void CManipulator::AnalyzeInputDevice(void)
     else if (IGamepad::CheckFunction(uDigitalTrigger, IGamepad::FUNCTION_ATTACK_A))
     {
         m_input.m_attack = ATTACK_A;
-    }
-    else
-    {
-        m_input.m_attack = ATTACK_OFF;
     };
 
     if (IGamepad::CheckFunction(uDigital, IGamepad::FUNCTION_ATTACK_B))
@@ -691,13 +666,13 @@ void CManipulator::AnalyzeInputVector(RwV3d& rvInputVector, float& rfInputVector
     rfInputVectorLength = Math::Vec3_Length(&rvInputVector);
 
 #ifdef TARGET_PC
-    uint32 uDigitalMovementMask = CController::DIGITAL_LUP
-                                | CController::DIGITAL_LDOWN
-                                | CController::DIGITAL_LLEFT
-                                | CController::DIGITAL_LRIGHT;
+    uint32 digitalMovementMask = CController::DIGITAL_LUP
+                               | CController::DIGITAL_LDOWN
+                               | CController::DIGITAL_LLEFT
+                               | CController::DIGITAL_LRIGHT;
 
-    uint32 uDigital = m_padstream.GetDigital(m_nControllerNo);
-    if (!(uDigital & uDigitalMovementMask))
+    uint32 digital = m_padstream.GetDigital(m_nControllerNo);
+    if (!(digital & digitalMovementMask))
         return;
     
     float xDigital, yDigital;
@@ -705,11 +680,11 @@ void CManipulator::AnalyzeInputVector(RwV3d& rvInputVector, float& rfInputVector
     //
     //  Check X axis
     //
-    if (uDigital & CController::DIGITAL_LLEFT)
+    if (digital & CController::DIGITAL_LLEFT)
     {
         xDigital = -1.0f;
     }
-    else if (uDigital & CController::DIGITAL_LRIGHT)
+    else if (digital & CController::DIGITAL_LRIGHT)
     {
         xDigital = 1.0f;
     }
@@ -721,11 +696,11 @@ void CManipulator::AnalyzeInputVector(RwV3d& rvInputVector, float& rfInputVector
     //
     //  Check Y axis
     //
-    if (uDigital & CController::DIGITAL_LUP)
+    if (digital & CController::DIGITAL_LUP)
     {
         yDigital = -1.0f;
     }
-    else if (uDigital & CController::DIGITAL_LDOWN)
+    else if (digital & CController::DIGITAL_LDOWN)
     {
         yDigital = 1.0f;
     }
@@ -738,7 +713,7 @@ void CManipulator::AnalyzeInputVector(RwV3d& rvInputVector, float& rfInputVector
     rvInputVector.y = 0.0f;
     rvInputVector.z = yDigital;
     rfInputVectorLength = 1.0f;
-#endif    
+#endif /* TARGET_PC */
 };
 
 

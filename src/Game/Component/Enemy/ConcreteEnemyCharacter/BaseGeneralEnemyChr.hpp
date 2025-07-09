@@ -17,7 +17,7 @@ public:
         MOVABLETYPE_JUMP,
         MOVABLETYPE_FALLDOWN,
         MOVABLETYPE_HOLE,
-        MOVABLETYPE_BODILYCRUSH
+        MOVABLETYPE_BODILYCRUSH,
     };
 
     class CHideStatusObserver : public CStatusObserver

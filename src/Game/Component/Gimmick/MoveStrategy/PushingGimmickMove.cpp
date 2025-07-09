@@ -39,13 +39,13 @@ CPushingGimmickMove::RESULT CPushingGimmickMove::OnMove(float dt)
                 m_bRequestPush = false;
 
                 RwV3d vSaveVelocity = m_vVelocity;
-                RwV3d vDltPos = Math::VECTOR3_ZERO;
-                RwV3d vNewPos = Math::VECTOR3_ZERO;
 
+                RwV3d vDltPos = Math::VECTOR3_ZERO;
                 vDltPos.x = (m_vVelocity.x * dt);
                 vDltPos.y = (m_vVelocity.y * dt);
                 vDltPos.z = (m_vVelocity.z * dt);
 
+                RwV3d vNewPos = Math::VECTOR3_ZERO;
                 vNewPos.x = m_vPosition.x + vDltPos.x;
                 vNewPos.y = m_vPosition.y + vDltPos.y;
                 vNewPos.z = m_vPosition.z + vDltPos.z;
@@ -53,13 +53,13 @@ CPushingGimmickMove::RESULT CPushingGimmickMove::OnMove(float dt)
                 float fSphereRadius = m_fRadius - (m_fRadius / 3.0f);
 
                 RwV3d vGimmickAt = Math::VECTOR3_ZERO;
-                RwV3d vGimmickRight = Math::VECTOR3_ZERO;
-
                 Math::Vec3_Normalize(&vGimmickAt, &m_vVelocity);
 
                 RwMatrix matrix;
                 RwMatrixSetIdentityMacro(&matrix);
-                Math::Matrix_RotateY(&matrix, Math::PI05);
+                Math::Matrix_RotateY(&matrix, MATH_PI05);
+
+                RwV3d vGimmickRight = Math::VECTOR3_ZERO;
                 RwV3dTransformPoint(&vGimmickRight, &vGimmickAt, &matrix);
 
                 for (int32 i = 0; i < 3; ++i)
@@ -73,9 +73,6 @@ CPushingGimmickMove::RESULT CPushingGimmickMove::OnMove(float dt)
                     switch (i)
                     {
                     case 0:
-                        {
-                            ;
-                        }
                         break;
 
                     case 1:
@@ -92,6 +89,9 @@ CPushingGimmickMove::RESULT CPushingGimmickMove::OnMove(float dt)
                             vPosition.y += ((vGimmickRight.y * -1.0f) * fSphereRadius);
                             vPosition.z += ((vGimmickRight.z * -1.0f) * fSphereRadius);
                         }
+                        break;
+
+                    default:
                         break;
                     };
 
@@ -131,19 +131,19 @@ CPushingGimmickMove::RESULT CPushingGimmickMove::OnMove(float dt)
                     switch (m_fallaxis)
                     {
                     case FALL_ROT_AXIS_X_P:
-                        m_vRotVelocity.x = Math::PI05;
+                        m_vRotVelocity.x = MATH_PI05;
                         break;
 
                     case FALL_ROT_AXIS_X_N:
-                        m_vRotVelocity.x = -Math::PI05;
+                        m_vRotVelocity.x = -MATH_PI05;
                         break;
 
                     case FALL_ROT_AXIS_Z_P:
-                        m_vRotVelocity.z = Math::PI05;
+                        m_vRotVelocity.z = MATH_PI05;
                         break;
 
                     case FALL_ROT_AXIS_Z_N:
-                        m_vRotVelocity.z = -Math::PI05;
+                        m_vRotVelocity.z = -MATH_PI05;
                         break;
 
                     default:
@@ -224,9 +224,7 @@ CPushingGimmickMove::RESULT CPushingGimmickMove::OnMove(float dt)
 
 bool CPushingGimmickMove::RequestPlayerPushGimmick(CPlayerCharacter* pPlayerCharacter)
 {
-    bool bResult = false;
-    
-    if (m_pushstate == PUSHSTATE_PUSH && !m_bRequestPush)
+    if ((m_pushstate == PUSHSTATE_PUSH) && !m_bRequestPush)
     {
         RwMatrix matrix;
         RwMatrixSetIdentityMacro(&matrix);
@@ -235,14 +233,16 @@ bool CPushingGimmickMove::RequestPlayerPushGimmick(CPlayerCharacter* pPlayerChar
         RwV3d vPlayerDir = Math::VECTOR3_ZERO;
         RwV3dTransformPoint(&vPlayerDir, &Math::VECTOR3_AXIS_Z, &matrix);
 
-        RwV3d vGimmickFrontDir = Math::VECTOR3_ZERO;
-        RwV3d vGimmickRightDir = Math::VECTOR3_ZERO;
-        RwV3d vGimmickBackDir = Math::VECTOR3_ZERO;
-
         RwMatrixSetIdentityMacro(&matrix);
         Math::Matrix_Rotate(&matrix, &m_vRotation);
+
+        RwV3d vGimmickFrontDir = Math::VECTOR3_ZERO;
         RwV3dTransformPoint(&vGimmickFrontDir, &Math::VECTOR3_AXIS_Z, &matrix);
+
+        RwV3d vGimmickBackDir = Math::VECTOR3_ZERO;
         Math::Vec3_Scale(&vGimmickBackDir, &vGimmickFrontDir, -1.0f);
+
+        RwV3d vGimmickRightDir = Math::VECTOR3_ZERO;
         RwV3dTransformPoint(&vGimmickRightDir, &Math::VECTOR3_AXIS_X, &matrix);
 
         const CPlayerCharacter::COLLISIONWALLINFO* pWallInfo = pPlayerCharacter->GetCollisionWall();
@@ -254,27 +254,73 @@ bool CPushingGimmickMove::RequestPlayerPushGimmick(CPlayerCharacter* pPlayerChar
             isSameDirectionVectors(&vGimmickBackDir, &vWallNormal, 0.99f))
         {
             RwV3d vVelocity = Math::VECTOR3_ZERO;
-            
             Math::Vec3_Scale(&vVelocity, &vGimmickFrontDir, m_fSpeed);
+
             SetVelocity(&vVelocity);
 
             m_bRequestPush = true;
-            bResult = true;
+            return true;
         }
         else if (isSameDirectionVectors(&vGimmickBackDir, &vPlayerDir, Math::Cos(MATH_DEG2RAD(15.0f))) &&
                  isSameDirectionVectors(&vGimmickFrontDir, &vWallNormal, 0.99f))
         {
             RwV3d vVelocity = Math::VECTOR3_ZERO;
-            
             Math::Vec3_Scale(&vVelocity, &vGimmickBackDir, m_fSpeed);
+
             SetVelocity(&vVelocity);
             
             m_bRequestPush = true;            
-            bResult = true;
+            return true;
         };
     };
 
-    return bResult;
+    return false;
+};
+
+
+bool CPushingGimmickMove::RequestPlayerAttackPushGimmick(CPlayerCharacter* pPlayerCharacter)
+{
+    if ((m_pushstate == PUSHSTATE_PUSH) && !m_bRequestPush)
+    {
+        RwV3d vPlayerPos = Math::VECTOR3_ZERO;
+        pPlayerCharacter->GetPosition(&vPlayerPos);
+
+        RwV3d vDirection = Math::VECTOR3_ZERO;
+        Math::Vec3_Sub(&vDirection, &m_vPosition, &vPlayerPos);
+
+        RwMatrix matRot;
+        RwMatrixSetIdentityMacro(&matRot);
+        Math::Matrix_Rotate(&matRot, &m_vRotation);        
+
+        RwV3d vGimmickFrontDir = Math::VECTOR3_ZERO;
+        RwV3dTransformPoint(&vGimmickFrontDir, &Math::VECTOR3_AXIS_Z, &matRot);
+
+        RwV3d vGimmickBackDir = Math::VECTOR3_ZERO;
+        Math::Vec3_Scale(&vGimmickBackDir, &vGimmickFrontDir, -1.0f);
+
+        if (isSameDirectionVectors(&vGimmickFrontDir, &vDirection, Math::Cos(MATH_DEG2RAD(30.0f))))
+        {
+            RwV3d vVelocity = Math::VECTOR3_ZERO;
+            Math::Vec3_Scale(&vVelocity, &vGimmickFrontDir, m_fSpeed);
+
+            SetVelocity(&vVelocity);
+
+            m_bRequestPush = true;
+            return true;
+        }
+        else if (isSameDirectionVectors(&vGimmickBackDir, &vDirection, Math::Cos(MATH_DEG2RAD(30.0f))))
+        {
+            RwV3d vVelocity = Math::VECTOR3_ZERO;
+            Math::Vec3_Scale(&vVelocity, &vGimmickBackDir, m_fSpeed);
+
+            SetVelocity(&vVelocity);
+
+            m_bRequestPush = true;
+            return true;
+        };
+    };
+
+    return false;
 };
 
 

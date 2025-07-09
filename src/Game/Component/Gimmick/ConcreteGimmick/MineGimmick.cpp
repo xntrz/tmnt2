@@ -70,8 +70,6 @@ CMineGimmick::CMineGimmick(const char* pszName, void* pParam)
         RpClump* pClump = m_model.GetCollisionModelClump();
 
         m_hAtari = CMapCollisionModel::RegistCollisionModel(pClump, GetName(), MAPTYPES::GIMMICKTYPE_SEESAW);
-        ASSERT(m_hAtari);
-
         if (m_hAtari)
             CMapCollisionModel::SetBoundingSphereRadius(m_hAtari, 1.0f);
     };
@@ -136,16 +134,16 @@ void CMineGimmick::PostMove(void)
             RwV3d vPosition = Math::VECTOR3_ZERO;
             m_model.GetPosition(&vPosition);
 
-            RwSphere HitSphere = { vPosition, m_fRadius };
+            RwSphere hitSphere = { vPosition, m_fRadius };
 
-            CHitCatchData CatchData;
-            CatchData.Cleanup();
-            CatchData.SetObject(GetHandle());
-            CatchData.SetObjectType(GetType());
-            CatchData.SetShape(CHitCatchData::SHAPE_SPHERE);
-            CatchData.SetSphere(&HitSphere);
+            CHitCatchData hitCatch;
+            hitCatch.Cleanup();
+            hitCatch.SetObject(GetHandle());
+            hitCatch.SetObjectType(GetType());
+            hitCatch.SetShape(CHitCatchData::SHAPE_SPHERE);
+            hitCatch.SetSphere(&hitSphere);
 
-            CHitAttackManager::RegistCatch(&CatchData);
+            CHitAttackManager::RegistCatch(&hitCatch);
 #endif
         }
         break;
@@ -174,15 +172,14 @@ void CMineGimmick::PostMove(void)
             RwV3d vPosition = Math::VECTOR3_ZERO;
             m_model.GetPosition(&vPosition);
 
-            CMagicManager::CParameter MagicParam;
-            MagicParam.SetPositon(&vPosition);
-            MagicParam.SetObject(this);
-            MagicParam.SetSoundPlay(false);
+            CMagicManager::CParameter param;
+            param.SetPositon(&vPosition);
+            param.SetObject(this);
+            param.SetSoundPlay(false);
             
-            uint32 hMagic = CMagicManager::Play(MAGICID::ID_EXPL_B1, &MagicParam);
-            ASSERT(hMagic);
+            CMagicManager::Play(MAGICID::ID_EXPL_B1, &param);
 
-            CGameSound::PlayPositionSE(&vPosition, SDCODE_SE(4139), 0);
+            CGameSound::PlayPositionSE(&vPosition, SDCODE_SE(4139));
         }
         break;
 
@@ -222,9 +219,9 @@ void CMineGimmick::OnReceiveEvent(const char* pszSender, GIMMICKTYPES::EVENTTYPE
     RwV3d vPosition = Math::VECTOR3_ZERO;
     m_model.GetPosition(&vPosition);
 
-    CGameSound::PlayPositionSE(&vPosition, SDCODE_SE(4167), 0);
-    CGameSound::PlayPositionSE(&vPosition, SDCODE_SE(4166), 0);
-    CGameSound::PlayPositionSE(&vPosition, SDCODE_SE(4165), 0);
+    CGameSound::PlayPositionSE(&vPosition, SDCODE_SE(4167));
+    CGameSound::PlayPositionSE(&vPosition, SDCODE_SE(4166));
+    CGameSound::PlayPositionSE(&vPosition, SDCODE_SE(4165));
 };
 
 

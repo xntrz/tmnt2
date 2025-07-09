@@ -2010,7 +2010,7 @@ static void SdSetAttackEnemy(const SE_ATTACK_PARAM* pParam)
 
 	float angle = Math::ATan2(x, z);
 	if (angle < 0.0f)
-		angle += Math::PI2;
+		angle += MATH_PI2;
 
 	*pDist = (int32)d;
 	*pRot = (int32)(((float)0x10000 / (MATH_PI * 2.0f)) * angle);

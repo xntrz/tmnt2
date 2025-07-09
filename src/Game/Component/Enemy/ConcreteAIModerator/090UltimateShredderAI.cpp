@@ -632,7 +632,7 @@ C090UltimateShredderAI::CAvoidState::OnEnd(void) /*override*/
 
 C090UltimateShredderAI::CTripleAttackState::CTripleAttackState(void)
 : Utils6034::IBaseAIState(AI_STATE_ATTACK_TRIPLE)
-, m_attackNum(0)
+, m_attackNum(-1)
 {
     ;
 };
@@ -656,15 +656,12 @@ C090UltimateShredderAI::CTripleAttackState::OnEnd(void) /*override*/
 /*virtual*/ C090UltimateShredderAI::CTripleAttackState::RUNRESULT
 C090UltimateShredderAI::CTripleAttackState::OnRun(void) /*override*/
 {
-    if (m_attackNum++ <= 3)
-    {
-        int32 iTargetNo = TargetManager().GetTargetNo();
-        CharacterController().DispatchAttack(ORDERTYPE_ATTACK_CHARGE, iTargetNo);
+    ++m_attackNum;
 
-        return RUNRESULT_CONTINUE;
-    };
+    int32 iTargetNo = TargetManager().GetTargetNo();
+    CharacterController().DispatchAttack(ORDERTYPE_ATTACK_CHARGE, iTargetNo);
 
-    return RUNRESULT_END;
+    return (m_attackNum >= 3 ? RUNRESULT_END : RUNRESULT_CONTINUE);
 };
 
 

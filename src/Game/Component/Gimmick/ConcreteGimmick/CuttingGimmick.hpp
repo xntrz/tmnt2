@@ -57,11 +57,11 @@ protected:
         const char* m_pszAtariModelName;
         const char* m_pszBreakDModelName;
         const char* m_pszBreakUModelName;
-        float m_fSlideTime;
-        float m_fHitRadius;
-        float m_fCollisionRadius;
-        bool m_bLighting;
-        int32 m_nSE;
+        float       m_fSlideTime;
+        float       m_fHitRadius;
+        float       m_fCollisionRadius;
+        bool        m_bLighting;
+        int32       m_nSE;
     };
     
 public:    
@@ -73,8 +73,6 @@ public:
     virtual void PostMove(void) override;
     virtual void OnReceiveEvent(const char* pszSender, GIMMICKTYPES::EVENTTYPE eventtype) override;
     virtual void OnCatchAttack(CHitAttackData* pAttack) override;
-
-protected:
     void init(void* pParam);
     void waiting(void);
     void cutting(void);
@@ -86,13 +84,13 @@ protected:
     const KINDINFO& kindinfo(void) const;
 
 protected:
-    static const KINDINFO m_aCuttingGimmickKindInfoList[];
-    CCuttingGimmickMove* m_pCuttingMove;
-    CCuttingGimmickModel m_model;
-    float m_fTimer;
-    STATE m_state;
-    int32 m_subid;
-    uint32 m_hAtari;
-    int32 m_nNumAttack;
-    float m_fInvinsibleTimer;
+    static const KINDINFO   m_aCuttingGimmickKindInfoList[];
+    CCuttingGimmickMove*    m_pCuttingMove;
+    CCuttingGimmickModel    m_model;
+    float                   m_fTimer;
+    STATE                   m_state;
+    int32                   m_subid;
+    uint32                  m_hAtari;
+    int32                   m_nNumAttack;
+    float                   m_fInvinsibleTimer;
 };

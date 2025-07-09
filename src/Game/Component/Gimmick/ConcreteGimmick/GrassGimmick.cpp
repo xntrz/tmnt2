@@ -28,6 +28,7 @@
 CGrassGimmick::CGrassGimmick(const char* pszName, void* pParam)
 : CGimmick(pszName, pParam)
 , m_pGrassMove(nullptr)
+, m_model()
 , m_fTimer(0.0f)
 , m_state(STATE_NONE)
 , m_subid(0)
@@ -47,6 +48,8 @@ CGrassGimmick::~CGrassGimmick(void)
 };
 
 
+#ifdef TARGET_PC 
+
 void CGrassGimmick::Draw(void) const
 {
     CRenderStateManager::SetForDrawBeginning();
@@ -55,6 +58,8 @@ void CGrassGimmick::Draw(void) const
     CGimmick::Draw();
     RENDERSTATE_POP(rwRENDERSTATEALPHATESTFUNCTIONREF);
 };
+
+#endif /* TARGET_PC */
 
 
 GIMMICKTYPES::FEATURE CGrassGimmick::GetFeatures(void) const
@@ -125,11 +130,14 @@ void CGrassGimmick::OnCatchAttack(CHitAttackData* pAttack)
 
 void CGrassGimmick::init(void* pParam)
 {
-    ASSERT(pParam);
+    GIMMICKPARAM::GIMMICK_BASIC* pInitParam = static_cast<GIMMICKPARAM::GIMMICK_BASIC*>(pParam);
+    ASSERT(pInitParam != nullptr);
 
-    GIMMICKPARAM::GIMMICK_BASIC* pInitParam = (GIMMICKPARAM::GIMMICK_BASIC*)pParam;
     m_subid = pInitParam->m_subid;
 
+    //
+    //  Init model
+    //
     CModel* pModel = CModelManager::CreateModel(kindinfo().m_pszModelName);
     ASSERT(pModel);
 
@@ -138,6 +146,7 @@ void CGrassGimmick::init(void* pParam)
 
     m_model.SetModel(CNormalGimmickModel::MODELTYPE_DRAW_NORMAL, pModel);
     m_model.SetModel(CNormalGimmickModel::MODELTYPE_DRAW_BREAK, pBreakModel);
+
     m_model.SetPosition(&pInitParam->m_vPosition);
 
     RwV3d vRotation = Math::VECTOR3_ZERO;
@@ -145,36 +154,41 @@ void CGrassGimmick::init(void* pParam)
     m_model.SetRotation(&vRotation);
     m_model.UpdateFrame();
 
+    SetModelStrategy(&m_model);
+
+    //
+    //  Init movement
+    //
     m_pGrassMove = new CCuttingGimmickMove;
-    ASSERT(m_pGrassMove);
     m_pGrassMove->SetPosition(&pInitParam->m_vPosition);
     m_pGrassMove->SetRotation(&vRotation);
     m_pGrassMove->Start();
-    
+
     SetMoveStrategy(m_pGrassMove);
-    SetModelStrategy(&m_model);
 };
 
 
 void CGrassGimmick::waiting(void)
 {
-    {
-        RwSphere sphere = { 0 };
-        sphere.radius = kindinfo().m_fHitRadius;
+    //
+    //  Update attack
+    //
+    RwSphere hitSphere = { 0 };
+    hitSphere.radius = kindinfo().m_fHitRadius;
+    m_pGrassMove->GetPosition(&hitSphere.center);
+    hitSphere.center.y += 0.8f;
 
-        ASSERT(m_pGrassMove);
-        m_pGrassMove->GetPosition(&sphere.center);
-        sphere.center.y += 0.8f;
+    CHitCatchData hitCatch;
+    hitCatch.SetObject(GetHandle());
+    hitCatch.SetObjectType(GetType());
+    hitCatch.SetShape(CHitCatchData::SHAPE_SPHERE);
+    hitCatch.SetSphere(&hitSphere);
 
-        CHitCatchData Catch;
-        Catch.SetObject(GetHandle());
-        Catch.SetObjectType(GetType());
-        Catch.SetShape(CHitCatchData::SHAPE_SPHERE);
-        Catch.SetSphere(&sphere);
+    CHitAttackManager::RegistCatch(&hitCatch);
 
-        CHitAttackManager::RegistCatch(&Catch);
-    }
-
+    //
+    //  Update sound
+    //
     RwV3d vPosition = Math::VECTOR3_ZERO;
     m_pGrassMove->GetPosition(&vPosition);
 
@@ -208,9 +222,8 @@ void CGrassGimmick::disappear(void)
     CModel* pModel = m_model.GetModel(CNormalGimmickModel::MODELTYPE_DRAW_BREAK);
     ASSERT(pModel);
 
-    RwRGBA Color = { 0xFF, 0xFF, 0xFF, 0xFF };
-    Color.alpha = uint8((1.0f - m_fTimer) * 255.0f);
-    pModel->SetColor(Color);
+    RwUInt8 alphaBasis = static_cast<RwUInt8>((1.0f - m_fTimer) * 255.0f);
+    pModel->SetColor({ 255, 255, 255, alphaBasis });
 
     m_fTimer += CGameProperty::GetElapsedTime();
     if (m_fTimer > 1.0f)
@@ -228,7 +241,9 @@ void CGrassGimmick::onCut(void)
 
     vPosition.y += 0.6f;
     CEffectManager::Play(EFFECTID::ID_GRASS, &vPosition);
+
     CGameSound::PlayObjectSE(this, SDCODE_SE(4156));
+
     m_model.SetVisualBreak();
     m_state = STATE_CUT;
 };
@@ -248,6 +263,8 @@ void CGrassGimmick::onDisappear(void)
 
 const CGrassGimmick::KINDINFO& CGrassGimmick::kindinfo(void) const
 {
-    ASSERT(m_subid >= 0 && m_subid < COUNT_OF(m_aGrassGimmickKindInfoList));
+    ASSERT(m_subid >= 0);
+    ASSERT(m_subid < COUNT_OF(m_aGrassGimmickKindInfoList));
+
     return m_aGrassGimmickKindInfoList[m_subid];
 };

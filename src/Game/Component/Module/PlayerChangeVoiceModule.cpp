@@ -38,7 +38,7 @@ void CPlayerChangeVoiceModule::Run(void)
     if (GetTime() < 0.1f)
         m_bChangeVoxRq = false;
 
-    if (m_bChangeVoxRq && (GetTime() >= m_fChangeVoxRqTime))
+    if (m_bChangeVoxRq && (GetTime() > m_fChangeVoxRqTime))
     {
         PlayChangeVoice();
         m_bChangeVoxRq = false;
@@ -61,7 +61,7 @@ void CPlayerChangeVoiceModule::Run(void)
     //
     //  update combo voice
     //
-    if (m_bComboVoxRq && (GetTime() >= m_fComboVoxRqTime))
+    if (m_bComboVoxRq && (GetTime() > m_fComboVoxRqTime))
     {
         PlayerUtil::CallVoiceOfComboHit(m_pPlayerChr);
         m_bComboVoxRq = false;

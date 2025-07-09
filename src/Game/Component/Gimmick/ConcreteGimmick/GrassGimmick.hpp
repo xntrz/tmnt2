@@ -24,19 +24,19 @@ protected:
     {
         const char* m_pszModelName;
         const char* m_pszBreakModelName;        
-        float m_fHitRadius;        
+        float       m_fHitRadius;        
     };
 
 public:
     CGrassGimmick(const char* pszName, void* pParam);
     virtual ~CGrassGimmick(void);
+#ifdef TARGET_PC    
     virtual void Draw(void) const override;
+#endif /* TARGET_PC */
     virtual GIMMICKTYPES::FEATURE GetFeatures(void) const override;
     virtual void PostMove(void) override;
     virtual void OnReceiveEvent(const char* pszSender, GIMMICKTYPES::EVENTTYPE eventtype) override;
     virtual void OnCatchAttack(CHitAttackData* pAttack) override;
-
-protected:
     void init(void* pParam);
     void waiting(void);
     void cutting(void);
@@ -48,11 +48,11 @@ protected:
     const KINDINFO& kindinfo(void) const;
 
 protected:
-    static const KINDINFO m_aGrassGimmickKindInfoList[];
-    CCuttingGimmickMove* m_pGrassMove;
-    CNormalGimmickModel m_model;
-    float m_fTimer;
-    STATE m_state;
-    int32 m_subid;
-    bool m_bPlayerNearMe;    
+    static const KINDINFO   m_aGrassGimmickKindInfoList[];
+    CCuttingGimmickMove*    m_pGrassMove;
+    CNormalGimmickModel     m_model;
+    float                   m_fTimer;
+    STATE                   m_state;
+    int32                   m_subid;
+    bool                    m_bPlayerNearMe;    
 };

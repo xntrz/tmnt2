@@ -2,12 +2,13 @@
 
 #ifdef _MSC_VER
 #pragma warning(disable : 4200) // nonstandard extension used: zero-sized array in struct/union
+#pragma warning(disable : 4201) // nonstandard extension used: nameless struct/union
 #pragma warning(disable : 4996) // function or variable may be unsafe
 #pragma warning(disable : 4100) // unreferenced formal parameter
 #pragma warning(disable : 4189) // local variable is initialized but not referenced
 #pragma warning(disable : 4505) // unreferenced local function has been removed
 #pragma warning(disable : 5054) // operator X deprecated between enumerations of different types
-#endif
+#endif /* _MSC_VER */
 
 //
 //	Wrap all SD codes to this while sound subsystem is not ready
@@ -68,7 +69,7 @@ typedef unsigned int wchar;
 
 #define CHECK_SIZE(type, targetSize)	static_assert(sizeof(type) == targetSize, "incorrect size")
 #define RWRGBALONGEX(rwrgba) 			(RWRGBALONG(rwrgba.red, rwrgba.green, rwrgba.blue, rwrgba.alpha))
-#define COUNT_OF(ptr)	            	int32(sizeof(ptr) / sizeof(ptr[0]))
+#define COUNT_OF(ptr)	            	static_cast<int32>(sizeof(ptr) / sizeof(ptr[0]))
 
 #define ALIGN_CHECK(v, a) 				(((v) & (((a) - 1u))) == 0u)
 #define ALIGN_ADJUST(v, a) 				((a) - ((v) & ((a) - 1u)))

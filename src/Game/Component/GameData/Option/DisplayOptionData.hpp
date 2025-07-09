@@ -11,7 +11,7 @@ public:
     {
         char m_szName[64];
     };
-#endif    
+#endif /* TARGET_PC */
 
     struct RAWDATA
     {
@@ -20,7 +20,7 @@ public:
         bool m_bHelpFlag;
 #ifdef TARGET_PC
         int32 m_iVideomodeNo;
-#endif
+#endif /* TARGET_PC */
     };
 
 public:
@@ -45,7 +45,7 @@ public:
     int32 GetVideomodeNum(void) const;
     int32 GetVideomodeCur(void) const;
     const char* GetVideomodeName(int32 No) const;
-#endif
+#endif /* TARGET_PC */
 
 private:
     bool m_bHelpFlag;
@@ -55,5 +55,5 @@ private:
     VIDEOMODE* m_pVideomode;
     int32 m_iVideomodeNum;
     int32 m_iVideomodeCur;
-#endif
+#endif /* TARGET_PC */
 };

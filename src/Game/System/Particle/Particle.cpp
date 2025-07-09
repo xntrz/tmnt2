@@ -937,8 +937,7 @@ void CParticle::CreateCylinder(float fTopRadius, float fBottomRadius, int32 nPoi
     m_nVertexNum = 2 * m_nPointNum + 2;
     ASSERT(m_nVertexNum <= VERTEXNUM);
 
-    float fDeltaSegAngle = Math::PI2 / float(m_nPointNum);
-    int32 nVertexIndex = 0;
+    float fDeltaSegAngle = MATH_PI2 / float(m_nPointNum);
     
     for (int32 i = 0, j = 0; i < (m_nPointNum + 1); ++i, j += 2)
     {
@@ -1223,7 +1222,9 @@ void CParticle::TransitionRotation(TRANSITION* pTransition, const RwV3d* pCamera
         Math::Vec3_Sub(&vAxis, &pTransition->m_vPositionNow, pCameraPos);
         Math::Vec3_Normalize(&vAxis, &vAxis);
 
-        if (Math::Vec3_Length(&vAxis) > Math::EPSILON)
+        const float EPSILON = 0.000001f;
+
+        if (Math::Vec3_Length(&vAxis) > EPSILON)
             RwMatrixRotate(&pTransition->m_matrix, &vAxis, fAngle, rwCOMBINEPOSTCONCAT);
     };
 };

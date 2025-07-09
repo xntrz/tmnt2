@@ -512,12 +512,7 @@ CBaseNinjaRatsChr::CJumpShotStatusObserver::Observing(void) /*override*/
                              (fMapHeight - vecMyFootPos.y),
                              (std::cos(fShotDir) * 12.0f) - vecMyFootPos.z, };
 
-        uint32 hShot = CShotManager::Shot(SHOTID::ID_KNIFE_ENEMY,   /* shot id */
-                                          &vecMyFootPos,            /* shot start pos */
-                                          &vecShotDir,              /* shot direction */
-                                          &EnemyChr().Compositor(), /* shot owner */
-                                          MATH_DEG2RAD(15.0f),      /* shot angle for direction correction */
-                                          5.0f);                    /* shot lifetime */
+        CShotManager::Shot(SHOTID::ID_KNIFE_ENEMY, &vecMyFootPos, &vecShotDir, &EnemyChr().Compositor());
 
         fShotDir += SHOT_QUARTER_DIR_STEP;
     };

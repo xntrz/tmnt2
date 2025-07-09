@@ -76,7 +76,7 @@ CPistonGimmick::CPistonGimmick(const char* pszName, void* pParam)
 };
 
 
-/*virtual*/ CPistonGimmick::~CPistonGimmick(void)
+CPistonGimmick::~CPistonGimmick(void)
 {
     if (m_hAtari)
     {
@@ -86,13 +86,13 @@ CPistonGimmick::CPistonGimmick(const char* pszName, void* pParam)
 };
 
 
-/*virtual*/ void CPistonGimmick::PreMove(void) /*override*/
+void CPistonGimmick::PreMove(void)
 {
     m_vPrePos = m_vPos;
 };
 
 
-/*virtual*/ void CPistonGimmick::PostMove(void) /*override*/
+void CPistonGimmick::PostMove(void)
 {
     float fPrevRotation = m_fRotation;
 
@@ -145,7 +145,7 @@ CPistonGimmick::CPistonGimmick(const char* pszName, void* pParam)
 };
 
 
-/*virtual*/ void CPistonGimmick::OnReceiveEvent(const char* pszSender, GIMMICKTYPES::EVENTTYPE eventtype) /*override*/
+void CPistonGimmick::OnReceiveEvent(const char* pszSender, GIMMICKTYPES::EVENTTYPE eventtype)
 {
     if (eventtype != GIMMICKTYPES::EVENTTYPE_ACTIVATE)
         return;

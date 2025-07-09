@@ -131,15 +131,15 @@ void CRollingRockGimmick::PostMove(void)
     {
         float fRadius = m_pRollingMove->GetHitRadius();
         
+        //
+        //  update model pos & rot
+        //
         RwV3d vPosition = Math::VECTOR3_ZERO;
         m_pRollingMove->GetPosition(&vPosition);
 
         RwV3d vRotation = Math::VECTOR3_ZERO;
         m_pRollingMove->GetRotation(&vRotation);
 
-        //
-        //  update model pos & rot
-        //
         m_model.SetPosition(&vPosition);
         m_model.SetRotation(&vRotation);
 
@@ -147,39 +147,39 @@ void CRollingRockGimmick::PostMove(void)
         //  regist hit catch
         //
         {
-            RwSphere HitSphere = { vPosition, fRadius };
+            RwSphere hitSphere = { vPosition, fRadius };
             
-            CHitCatchData CatchData;
-            CatchData.Cleanup();
-            CatchData.SetObject(GetHandle());
-            CatchData.SetObjectType(GetType());
-            CatchData.SetShape(CHitCatchData::SHAPE_SPHERE);
-            CatchData.SetSphere(&HitSphere);
+            CHitCatchData hitCatch;
+            hitCatch.Cleanup();
+            hitCatch.SetObject(GetHandle());
+            hitCatch.SetObjectType(GetType());
+            hitCatch.SetShape(CHitCatchData::SHAPE_SPHERE);
+            hitCatch.SetSphere(&hitSphere);
 
-            CHitAttackManager::RegistCatch(&CatchData);
+            CHitAttackManager::RegistCatch(&hitCatch);
         }
 
         //
         //  regist hit attack
         //
         {
-            RwSphere HitSphere = { vPosition, fRadius };
+            RwSphere hitSphere = { vPosition, fRadius };
 
-            CHitAttackData AttackData;
-            AttackData.Cleanup();
+            CHitAttackData hitAttack;
+            hitAttack.Cleanup();
 #ifdef _DEBUG
-            AttackData.SetMotion("RollingRock");
+            hitAttack.SetMotion("RollingRock");
 #endif            
-            AttackData.SetObject(GetHandle());
-            AttackData.SetShape(CHitAttackData::SHAPE_SPHERE);
-            AttackData.SetSphere(&HitSphere);
-            AttackData.SetTarget(CHitAttackData::TARGET_PLAYER);
-            AttackData.SetPower(m_nPower);
-            AttackData.SetObjectPos(&vPosition);
-            AttackData.SetAntiguard(CHitAttackData::ANTIGUARD_INVALID);
-            AttackData.SetStatus(CHitAttackData::STATUS_FLYAWAY);
+            hitAttack.SetObject(GetHandle());
+            hitAttack.SetShape(CHitAttackData::SHAPE_SPHERE);
+            hitAttack.SetSphere(&hitSphere);
+            hitAttack.SetTarget(CHitAttackData::TARGET_PLAYER);
+            hitAttack.SetPower(m_nPower);
+            hitAttack.SetObjectPos(&vPosition);
+            hitAttack.SetAntiguard(CHitAttackData::ANTIGUARD_INVALID);
+            hitAttack.SetStatus(CHitAttackData::STATUS_FLYAWAY);
 
-            CHitAttackManager::RegistAttack(&AttackData);
+            CHitAttackManager::RegistAttack(&hitAttack);
         }
         
         //
@@ -190,15 +190,14 @@ void CRollingRockGimmick::PostMove(void)
             switch (m_eState)
             {
             case STATE_MOVING:
-                {
-                    m_pRollingMove->Reset();                    
-                }
+                m_pRollingMove->Reset();
                 break;
 
             case STATE_CAPTURED:
-                {
-                    Release();
-                }
+                Release();
+                break;
+
+            default:
                 break;
             };
         };
@@ -233,9 +232,6 @@ void CRollingRockGimmick::OnReceiveEvent(const char* pszSender, GIMMICKTYPES::EV
         break;
 
     case STATE_CAPTURED:
-        {
-            ;
-        }
         break;
 
     default:

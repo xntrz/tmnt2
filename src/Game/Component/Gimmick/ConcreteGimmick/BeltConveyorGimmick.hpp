@@ -25,13 +25,13 @@ public:
     void SetRotation(const RwV3d* pvRotation);
     
 private:
-    static bool m_bAnimOwnerExist;
+    static bool         m_bAnimOwnerExist;
     CNormalGimmickModel m_model;
-    uint32 m_hAtari;
-    SUBID m_subid;
-    RwV3d m_vPosition;
-    RwV3d m_vDirection;
-    float m_fVelocity;
-    bool m_bAnimOwner;
-    void* m_pAnimatedMaterials;
+    uint32              m_hAtari;
+    SUBID               m_subid;
+    RwV3d               m_vPosition;
+    RwV3d               m_vDirection;
+    float               m_fVelocity;
+    bool                m_bAnimOwner;
+    void*               m_pAnimatedMaterials;
 };

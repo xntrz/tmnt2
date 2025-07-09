@@ -361,8 +361,6 @@ bool CMapEffectGimmick::playEffect(void)
         param.SetDirection(&m_vDirection);
 
         uint32 hMagic = CMagicManager::Play(m_pEffectInfo->m_pszName, &param);
-        ASSERT(hMagic);
-
         if (hMagic)
         {
             CMagicManager::SetScale(hMagic, fScale);
@@ -375,8 +373,6 @@ bool CMapEffectGimmick::playEffect(void)
     else
     {
         uint32 hEffect = CEffectManager::Play(m_pEffectInfo->m_pszName, &m_vPosition);
-        ASSERT(hEffect);
-
         if (hEffect)
         {
             CEffectManager::SetDirection(hEffect, &m_vDirection);

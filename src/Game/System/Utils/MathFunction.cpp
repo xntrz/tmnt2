@@ -137,19 +137,17 @@ namespace Math
 
     void Vec2_Normalize(RwV2d* pvOut, const RwV2d* pvIn)
     {
-        if (pvIn->x == 0.0f && pvIn->y == 0.0f)
+        float len = RwV2dLength(pvIn);
+
+        if (((pvIn->x == 0.0f) && (pvIn->y == 0.0f)) || (len <= 0.000001f))
         {
             pvOut->y = pvOut->x = 0.0f;
         }
         else
         {
-            float len = RwV2dLength(pvIn);
-            if (len > EPSILON)
-            {
-                float n = 1.0f / len;
-                pvOut->x = n * pvIn->x;
-                pvOut->y = n * pvIn->y;
-            };
+            float lenInv = 1.0f / len;
+            pvOut->x = lenInv * pvIn->x;
+            pvOut->y = lenInv * pvIn->y;
         };
     };
 
@@ -225,18 +223,18 @@ namespace Math
 
     void Vec3_Normalize(RwV3d* pvOut, const RwV3d* pvIn)
     {
-        if ((pvIn->x == 0.0f && pvIn->y == 0.0f && pvIn->z == 0.0f) ||
-            (RwV3dLength(pvIn) <= 0.000001f))
+        float len = RwV3dLength(pvIn);
+
+        if (((pvIn->x == 0.0f) && (pvIn->y == 0.0f) && (pvIn->z == 0.0f)) || (len <= 0.000001f))
         {
             pvOut->x = pvOut->y = pvOut->z = 0.0f;
         }
         else
         {
-            float len = RwV3dLength(pvIn);
-            float invlen = 1.0f / len;
-            pvOut->x = invlen * pvIn->x;
-            pvOut->y = invlen * pvIn->y;
-            pvOut->z = invlen * pvIn->z;
+            float lenInv = 1.0f / len;
+            pvOut->x = lenInv * pvIn->x;
+            pvOut->y = lenInv * pvIn->y;
+            pvOut->z = lenInv * pvIn->z;
         };
     };
 

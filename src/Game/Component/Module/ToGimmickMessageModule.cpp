@@ -7,31 +7,21 @@
 #include "Game/System/GameObject/GameObjectManager.hpp"
 
 
-/*static*/ CToGimmickMessageModule* CToGimmickMessageModule::New(CPlayerCharacter* pPlayerCharacter)
+/*static*/ CToGimmickMessageModule*
+CToGimmickMessageModule::New(CPlayerCharacter* pPlayerCharacter)
 {
-    ASSERT(pPlayerCharacter);
-
-    CToGimmickMessageModule* pRet = nullptr;
-
     switch (pPlayerCharacter->GetID())
     {
     case PLAYERID::ID_RAP:
     case PLAYERID::ID_CAS:
-        pRet = new CPowerfullCharacterToGimmickMessageModule(pPlayerCharacter);
-        break;
+        return new CPowerfullCharacterToGimmickMessageModule(pPlayerCharacter);
 
     case PLAYERID::ID_DON:
-        pRet = new CConsoleCharacterToGimmickMessageModule(pPlayerCharacter);
-        break;
+        return new CConsoleCharacterToGimmickMessageModule(pPlayerCharacter);
 
     default:
-        pRet = new CDefaultCharacterToGimmickMessageModule(pPlayerCharacter);
-        break;
+        return new CDefaultCharacterToGimmickMessageModule(pPlayerCharacter);
     };
-
-    ASSERT(pRet);
-
-    return pRet;
 };
 
 
@@ -56,7 +46,7 @@ void CToGimmickMessageModule::Run(void)
     const CPlayerCharacter::COLLISIONGROUNDINFO* pGroundInfo = m_pPlayerCharacter->GetCollisionGround();
     ASSERT(pGroundInfo);
 
-    if (pGroundInfo->m_bHit && pGroundInfo->m_hittype == MAPTYPES::HITTYPE_GIMMICK)
+    if (pGroundInfo->m_bHit && (pGroundInfo->m_hittype == MAPTYPES::HITTYPE_GIMMICK))
     {
         switch (pGroundInfo->m_gimmickinfo.m_type)
         {
@@ -69,6 +59,9 @@ void CToGimmickMessageModule::Run(void)
         case MAPTYPES::GIMMICKTYPE_SWITCH_PILLAR:
             if (std::strcmp(m_szPrevGimmickObjName, pGroundInfo->m_gimmickinfo.m_szGimmickObjName))
                 SendMessageCommon(pGroundInfo->m_gimmickinfo.m_szGimmickObjName);
+            break;
+
+        default:
             break;
         };
     };
@@ -119,29 +112,23 @@ bool CToGimmickMessageModule::DirectionCheck(void)
     if (pGameObject->GetType() != GAMEOBJECTTYPE::GIMMICK)
         return false;
 
-    RwV3d vCharacterDirection = Math::VECTOR3_ZERO;
-    RwV3d vToGimmickDirection = Math::VECTOR3_ZERO;
-    RwMatrix matRotY;
-
-    RwMatrixSetIdentityMacro(&matRotY);
-    
+    RwV3d vToGimmickDirection = Math::VECTOR3_ZERO;    
     Math::Vec3_Negate(&vToGimmickDirection, &pWallInfo->m_vNormal);
     vToGimmickDirection.y = 0.0f;
     Math::Vec3_Normalize(&vToGimmickDirection, &vToGimmickDirection);
 
-    vCharacterDirection.x = 0.0f;
-    vCharacterDirection.y = 0.0f;
-    vCharacterDirection.z = 1.0f;
+    RwMatrix matRotY;
+    RwMatrixSetIdentityMacro(&matRotY);
     Math::Matrix_RotateY(&matRotY, m_pPlayerCharacter->GetDirection());
+
+    RwV3d vCharacterDirection = Math::VECTOR3_AXIS_Z;
     RwV3dTransformVector(&vCharacterDirection, &vCharacterDirection, &matRotY);
 
     float fAngle = Math::Vec3_Dot(&vCharacterDirection, &vToGimmickDirection);
     fAngle = Math::ACos(fAngle);
-
-    static const float INTERACTION_RANGE = 0.5215044f;
-
-    if (fAngle >= INTERACTION_RANGE ||
-        fAngle <= -INTERACTION_RANGE)
+    
+    if ((fAngle >=  MATH_DEG2RAD(29.880f)) ||
+        (fAngle <= -MATH_DEG2RAD(29.880f)))
         return false;
 
     m_pPlayerCharacter->SetDirectionFromVector(&vToGimmickDirection);
@@ -152,11 +139,9 @@ bool CToGimmickMessageModule::DirectionCheck(void)
 
 void CToGimmickMessageModule::SendMessageCommon(const char* pszGimmickObjName)
 {
-    CGimmickManager::PostEvent(
-        pszGimmickObjName,
-        m_pPlayerCharacter->GetName(),
-        GIMMICKTYPES::EVENTTYPE_ACTIVATE
-    );
+    CGimmickManager::PostEvent(pszGimmickObjName,
+                               m_pPlayerCharacter->GetName(),
+                               GIMMICKTYPES::EVENTTYPE_ACTIVATE);
 };
 
 
@@ -174,6 +159,11 @@ void CToGimmickMessageModule::SetPrevGimmickObjName(const char* pszGimmickObjNam
 };
 
 
+//
+// *********************************************************************************
+//
+
+
 CDefaultCharacterToGimmickMessageModule::CDefaultCharacterToGimmickMessageModule(CPlayerCharacter* pPlayerCharacter)
 : CToGimmickMessageModule(pPlayerCharacter)
 {
@@ -185,6 +175,11 @@ CDefaultCharacterToGimmickMessageModule::~CDefaultCharacterToGimmickMessageModul
 {
     ;
 };
+
+
+//
+// *********************************************************************************
+//
 
 
 CPowerfullCharacterToGimmickMessageModule::CPowerfullCharacterToGimmickMessageModule(CPlayerCharacter* pPlayerCharacter)
@@ -221,6 +216,11 @@ void CPowerfullCharacterToGimmickMessageModule::Run(void)
 
     CToGimmickMessageModule::Run();
 };
+
+
+//
+// *********************************************************************************
+//
 
 
 CConsoleCharacterToGimmickMessageModule::CConsoleCharacterToGimmickMessageModule(CPlayerCharacter* pPlayerCharacter)
@@ -272,22 +272,23 @@ bool CConsoleCharacterToGimmickMessageModule::DistanceCheck(void)
     if (pGameObject->GetType() != GAMEOBJECTTYPE::GIMMICK)
         return false;
 
-    CGimmick* pGimmick = (CGimmick*)pGameObject;
+    CGimmick* pGimmick = static_cast<CGimmick*>(pGameObject);
     if (pGimmick->GetID() != GIMMICKID::ID_N_CONSOL)
         return false;
 
-    CConsoleGimmick* pConsoleGimmick = (CConsoleGimmick*)pGimmick;
+    CConsoleGimmick* pConsoleGimmick = static_cast<CConsoleGimmick*>(pGimmick);
 
     RwV3d vPosChara = Math::VECTOR3_ZERO;
-    RwV3d vPosGimmick = Math::VECTOR3_ZERO;
-
     m_pPlayerCharacter->GetPosition(&vPosChara);
+
+    RwV3d vPosGimmick = Math::VECTOR3_ZERO;
     pConsoleGimmick->GetPosition(&vPosGimmick);
 
-    RwV3d vDistance = Math::VECTOR3_ZERO;
-    Math::Vec3_Sub(&vDistance, &vPosGimmick, &vPosChara);
+    RwV3d vDirToGimmick = Math::VECTOR3_ZERO;
+    Math::Vec3_Sub(&vDirToGimmick, &vPosGimmick, &vPosChara);
 
-    if (Math::Vec3_Length(&vDistance) >= 1.2f)
+    float fDistToGimmick = Math::Vec3_Length(&vDirToGimmick);
+    if (fDistToGimmick >= 1.2f)
         return false;
 
     RwV3d vConsoleDir = Math::VECTOR3_ZERO;
@@ -295,12 +296,12 @@ bool CConsoleCharacterToGimmickMessageModule::DistanceCheck(void)
 
     Math::Vec3_Negate(&vConsoleDir, &vConsoleDir);
     vConsoleDir.y = 0.0f;
-
     Math::Vec3_Normalize(&vConsoleDir, &vConsoleDir);
-    Math::Vec3_Normalize(&vDistance, &vDistance);
+    Math::Vec3_Normalize(&vDirToGimmick, &vDirToGimmick);
 
-    float fAngle = Math::ACos(Math::Vec3_Dot(&vDistance, &vConsoleDir));
-    if (fAngle > 0.78539819f && fAngle < -0.78539819f)
+    float fAngle = Math::ACos(Math::Vec3_Dot(&vDirToGimmick, &vConsoleDir));
+    if ((fAngle >=  MATH_DEG2RAD(45.0f)) &&
+        (fAngle <= -MATH_DEG2RAD(45.0f)))
         return false;
 
     return true;

@@ -268,8 +268,6 @@ void CGateGimmick::gateEffectCtrl(void)
             };
 
             uint32 hEffect = CEffectManager::Play(pEffect->m_effectId, &vEffectPos);
-            ASSERT(hEffect);
-
             if (hEffect)
                 CEffectManager::SetScale(hEffect, pEffect->m_fScale);
         };

@@ -17,7 +17,7 @@ public:
     virtual void OnReceiveEvent(const char* pszSender, GIMMICKTYPES::EVENTTYPE eventtype) override;
 
 private:
-    CCrumbleFloorGimmickMove* m_pCrumbleFloorMove;
-    CNormalGimmickModel m_model;
-    uint32 m_hAtari;    
+    CCrumbleFloorGimmickMove*   m_pCrumbleFloorMove;
+    CNormalGimmickModel         m_model;
+    uint32                      m_hAtari;    
 };

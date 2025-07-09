@@ -9,20 +9,20 @@ class CTransferFloorGimmickMove;
 class CUniqueTransferFloorGimmickModel final : public CGimmickModel
 {
 public:
-    enum MODELTYPE
+    enum TYPE
     {
-        MODELTYPE_DISP = 0,
-        MODELTYPE_ATARI0,
-        MODELTYPE_ATARI1,
+        TYPE_DISP = 0,
+        TYPE_ATARI0,
+        TYPE_ATARI1,
 
-        MODELTYPE_NUM,
+        TYPENUM,
     };
     
 public:
     CUniqueTransferFloorGimmickModel(void);
-    virtual ~CUniqueTransferFloorGimmickModel(void);
-    void SetModel(MODELTYPE Modeltype, CModel* pModel);
-    RpClump* GetModelClump(MODELTYPE Modeltype);
+    virtual ~CUniqueTransferFloorGimmickModel(void) {};
+    void SetModel(TYPE type, CModel* pModel);
+    RpClump* GetModelClump(TYPE type);
 };
 
 
@@ -39,16 +39,17 @@ public:
 public:
     CUniqueTransferFloorGimmick(const char* pszName, void* pParam);
     virtual ~CUniqueTransferFloorGimmick(void);
+    uint32 CreateCollisionModel(CUniqueTransferFloorGimmickModel::TYPE modelType, float fInitialRadius);
 
 protected:
-    CTransferFloorGimmickMove* m_pTransferMove;
-    CUniqueTransferFloorGimmickModel m_model;
-    uint32 m_hAtari0;
-    uint32 m_hAtari1;
-    RwV3d m_vPreMovePosition;
-    float m_fMoveTime;
-    float m_fOneWayMoveTime;
-    STATE m_eState;
+    CTransferFloorGimmickMove*          m_pTransferMove;
+    CUniqueTransferFloorGimmickModel    m_model;
+    uint32                              m_hAtari0;
+    uint32                              m_hAtari1;
+    RwV3d                               m_vPreMovePosition;
+    float                               m_fMoveTime;
+    float                               m_fOneWayMoveTime;
+    STATE                               m_eState;
 };
 
 

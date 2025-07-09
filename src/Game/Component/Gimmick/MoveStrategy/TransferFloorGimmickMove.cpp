@@ -32,6 +32,18 @@ CTransferFloorGimmickMove::RESULT CTransferFloorGimmickMove::OnMove(float dt)
 };
 
 
+void CTransferFloorGimmickMove::StartTransfer(void)
+{
+    if (m_phase == PHASE_NONE)
+        m_phase = PHASE_MOVE;
+};
+
+
+//
+// *********************************************************************************
+//
+
+
 CLinearTransferFloorGimmickMove::CLinearTransferFloorGimmickMove(void)
 : m_vStartPosition(Math::VECTOR3_ZERO)
 , m_vGoalPosition(Math::VECTOR3_ZERO)
@@ -124,6 +136,11 @@ CLinearTransferFloorGimmickMove::RESULT CLinearTransferFloorGimmickMove::OnMove(
 };
 
 
+//
+// *********************************************************************************
+//
+
+
 CPathTransferFloorGimmickMove::CPathTransferFloorGimmickMove(void)
 : m_fPathT(0.0f)
 {
@@ -139,8 +156,6 @@ CPathTransferFloorGimmickMove::~CPathTransferFloorGimmickMove(void)
 
 CPathTransferFloorGimmickMove::RESULT CPathTransferFloorGimmickMove::OnMove(float dt)
 {
-    RESULT Result = RESULT_NONE;
-
     switch (m_phase)
     {
     case PHASE_NONE:
@@ -216,6 +231,11 @@ void CPathTransferFloorGimmickMove::SetPathName(const char* pszName)
     ASSERT(PathId >= 0);
     CCameraDataManager::GetSplinePos(&m_vPosition, PathId, 0.0f);
 };
+
+
+//
+// *********************************************************************************
+//
 
 
 CRotateTransferFloorGimmickMove::CRotateTransferFloorGimmickMove(void)

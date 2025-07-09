@@ -11,31 +11,34 @@
 
 
 CUniqueTransferFloorGimmickModel::CUniqueTransferFloorGimmickModel(void)
-: CGimmickModel(MODELTYPE_NUM)
+: CGimmickModel(TYPENUM)
 {
     ;
 };
 
 
-CUniqueTransferFloorGimmickModel::~CUniqueTransferFloorGimmickModel(void)
+void CUniqueTransferFloorGimmickModel::SetModel(TYPE type, CModel* pModel)
 {
-    ;
+    ASSERT(type >= 0);
+    ASSERT(type < m_nNumGimmickModel);
+    ASSERT(!m_apModel[type]);
+
+    m_apModel[type] = pModel;
 };
 
 
-void CUniqueTransferFloorGimmickModel::SetModel(MODELTYPE Modeltype, CModel* pModel)
+RpClump* CUniqueTransferFloorGimmickModel::GetModelClump(TYPE type)
 {
-    ASSERT((Modeltype >= 0) && (Modeltype < m_nNumGimmickModel));
-    ASSERT(!m_apModel[Modeltype]);
-    m_apModel[Modeltype] = pModel;
+    ASSERT(type >= 0);
+    ASSERT(type < m_nNumGimmickModel);
+
+    return m_apModel[type]->GetClump();
 };
 
 
-RpClump* CUniqueTransferFloorGimmickModel::GetModelClump(MODELTYPE Modeltype)
-{
-    ASSERT((Modeltype >= 0) && (Modeltype < m_nNumGimmickModel));
-    return m_apModel[Modeltype]->GetClump();
-};
+//
+// *********************************************************************************
+//
 
 
 CUniqueTransferFloorGimmick::CUniqueTransferFloorGimmick(const char* pszName, void* pParam)
@@ -53,8 +56,20 @@ CUniqueTransferFloorGimmick::CUniqueTransferFloorGimmick(const char* pszName, vo
 };
 
 
-CUniqueTransferFloorGimmick::~CUniqueTransferFloorGimmick(void)
+/*virtual*/ CUniqueTransferFloorGimmick::~CUniqueTransferFloorGimmick(void)
 {
+    if (m_hAtari0)
+    {
+        CMapCollisionModel::RemoveCollisionModel(m_hAtari0);
+        m_hAtari0 = 0;
+    };
+
+    if (m_hAtari1)
+    {
+        CMapCollisionModel::RemoveCollisionModel(m_hAtari1);
+        m_hAtari1 = 0;
+    };
+
     if (m_pTransferMove)
     {
         delete m_pTransferMove;
@@ -63,33 +78,62 @@ CUniqueTransferFloorGimmick::~CUniqueTransferFloorGimmick(void)
 };
 
 
+uint32 CUniqueTransferFloorGimmick::CreateCollisionModel(CUniqueTransferFloorGimmickModel::TYPE modelType, float fInitialRadius)
+{
+    RpClump* pClump = m_model.GetModelClump(modelType);
+    ASSERT(pClump != nullptr);
+
+    uint32 hAtari = CMapCollisionModel::RegistCollisionModel(pClump, GetName(), MAPTYPES::GIMMICKTYPE_NORMAL);
+    if (hAtari)
+        CMapCollisionModel::SetBoundingSphereRadius(hAtari, fInitialRadius);
+
+    return hAtari;
+};
+
+
+//
+// *********************************************************************************
+//
+
+
 CUniqueLinearTransferFloorGimmick::CUniqueLinearTransferFloorGimmick(const char* pszName, void* pParam)
 : CUniqueTransferFloorGimmick(pszName, pParam)
 {
 	m_fOneWayMoveTime = 10.0f;
 
-    GIMMICKPARAM::GIMMICK_BASIC* pInitParam = (GIMMICKPARAM::GIMMICK_BASIC*)pParam;
+    GIMMICKPARAM::GIMMICK_BASIC* pInitParam = static_cast<GIMMICKPARAM::GIMMICK_BASIC*>(pParam);
     ASSERT(pInitParam);
 
+    //
+    //  Init model
+    //
     CModel* pModel = CModelManager::CreateModel("m20f_mfloor");
-    CModel* pAtariModel0 = CModelManager::CreateModel("m20f_mfloor");
-    CModel* pAtariModel1 = CModelManager::CreateModel("m20f_mfloor_a");
     ASSERT(pModel);
+
+    CModel* pAtariModel0 = CModelManager::CreateModel("m20f_mfloor");
     ASSERT(pAtariModel0);
-    ASSERT(pAtariModel1);    
-    m_model.SetModel(CUniqueTransferFloorGimmickModel::MODELTYPE_DISP, pModel);
-    m_model.SetModel(CUniqueTransferFloorGimmickModel::MODELTYPE_ATARI0, pAtariModel0);
-    m_model.SetModel(CUniqueTransferFloorGimmickModel::MODELTYPE_ATARI1, pAtariModel1);
+
+    CModel* pAtariModel1 = CModelManager::CreateModel("m20f_mfloor_a");
+    ASSERT(pAtariModel1);
+    
+    m_model.SetModel(CUniqueTransferFloorGimmickModel::TYPE_DISP, pModel);
+    m_model.SetModel(CUniqueTransferFloorGimmickModel::TYPE_ATARI0, pAtariModel0);
+    m_model.SetModel(CUniqueTransferFloorGimmickModel::TYPE_ATARI1, pAtariModel1);
+
     m_model.SetPosition(&pInitParam->m_vPosition);
+
     RwV3d vRot = { 0.0f, CGimmickUtils::QuaternionToRotationY(&pInitParam->m_quat), 0.0f };
     m_model.SetRotation(&vRot);
     
     SetModelStrategy(&m_model);
 
+    //
+    //  Init movement
+    //
     RwV3d vPosStart = pInitParam->m_vPosition;
     RwV3d vPosGoal = { vPosStart.x, vPosStart.y + 10.0f, vPosStart.z };
-    CLinearTransferFloorGimmickMove* pLinearMove = new CLinearTransferFloorGimmickMove();
-    ASSERT(pLinearMove);
+
+    CLinearTransferFloorGimmickMove* pLinearMove = new CLinearTransferFloorGimmickMove;
     pLinearMove->SetPosition(&vPosStart);
     pLinearMove->SetStartPosition(&vPosStart);
     pLinearMove->SetGoalPosition(&vPosGoal);
@@ -101,30 +145,27 @@ CUniqueLinearTransferFloorGimmick::CUniqueLinearTransferFloorGimmick(const char*
     m_pTransferMove = pLinearMove;
     SetMoveStrategy(m_pTransferMove);
 
-    ASSERT(m_model.GetModelClump(CUniqueTransferFloorGimmickModel::MODELTYPE_ATARI0));
-    m_hAtari0 = CMapCollisionModel::RegistCollisionModel(
-        m_model.GetModelClump(CUniqueTransferFloorGimmickModel::MODELTYPE_ATARI0),
-        GetName(),
-        MAPTYPES::GIMMICKTYPE_NORMAL
-    );
-    if (m_hAtari0)
-        CMapCollisionModel::SetBoundingSphereRadius(m_hAtari0, 5.0f);
+    //
+    // Init atari
+    //
+    m_hAtari0 = CreateCollisionModel(CUniqueTransferFloorGimmickModel::TYPE_ATARI0, 5.0f);    
 };
 
 
-CUniqueLinearTransferFloorGimmick::~CUniqueLinearTransferFloorGimmick(void)
+/*virtual*/ CUniqueLinearTransferFloorGimmick::~CUniqueLinearTransferFloorGimmick(void)
 {
-    ;
+    if (m_eState == STATE_RUN)
+        CGameSound::StopSE(SDCODE_SE(0x1073));
 };
 
 
-void CUniqueLinearTransferFloorGimmick::PreMove(void)
+/*virtual*/ void CUniqueLinearTransferFloorGimmick::PreMove(void) /*override*/
 {
     m_pTransferMove->GetPosition(&m_vPreMovePosition);
 };
 
 
-void CUniqueLinearTransferFloorGimmick::PostMove(void)
+/*virtual*/ void CUniqueLinearTransferFloorGimmick::PostMove(void) /*override*/
 {
     if (m_eState == STATE_RUN)
     {
@@ -150,29 +191,26 @@ void CUniqueLinearTransferFloorGimmick::PostMove(void)
 };
 
 
-void CUniqueLinearTransferFloorGimmick::OnReceiveEvent(const char* pszSender, GIMMICKTYPES::EVENTTYPE eventtype)
+/*virtual*/ void CUniqueLinearTransferFloorGimmick::OnReceiveEvent(const char* pszSender,
+                                                                   GIMMICKTYPES::EVENTTYPE eventtype) /*override*/
 {
     if (eventtype == GIMMICKTYPES::EVENTTYPE_ACTIVATE)
     {
         if (m_eState == STATE_WAIT)
         {
             m_pTransferMove->StartTransfer();
-            
-            ASSERT(m_model.GetModelClump(CUniqueTransferFloorGimmickModel::MODELTYPE_ATARI1));
-            m_hAtari1 = CMapCollisionModel::RegistCollisionModel(
-                m_model.GetModelClump(CUniqueTransferFloorGimmickModel::MODELTYPE_ATARI1),
-                GetName(),
-                MAPTYPES::GIMMICKTYPE_NORMAL
-            );
-            if (m_hAtari1)
-                CMapCollisionModel::SetBoundingSphereRadius(m_hAtari1, 5.0f);
+            m_hAtari1 = CreateCollisionModel(CUniqueTransferFloorGimmickModel::TYPE_ATARI1, 5.0f);
+            m_eState = STATE_RUN;
 
             CGameSound::PlayObjectSE(this, SDCODE_SE(0x1073));
-
-            m_eState = STATE_RUN;
         };
     };
 };
+
+
+//
+// *********************************************************************************
+//
 
 
 CUniquePathTransferFloorGimmick::CUniquePathTransferFloorGimmick(const char* pszName, void* pParam)
@@ -180,27 +218,37 @@ CUniquePathTransferFloorGimmick::CUniquePathTransferFloorGimmick(const char* psz
 {
     m_fOneWayMoveTime = 60.0f;
 
-    GIMMICKPARAM::GIMMICK_BASIC* pInitParam = (GIMMICKPARAM::GIMMICK_BASIC*)pParam;
+    GIMMICKPARAM::GIMMICK_BASIC* pInitParam = static_cast<GIMMICKPARAM::GIMMICK_BASIC*>(pParam);
     ASSERT(pInitParam);
 
+    //
+    //  Init model
+    //
     CModel* pModel = CModelManager::CreateModel("m04n_mfloor");
-    CModel* pAtariModel0 = CModelManager::CreateModel("m04n_mfloor");
-    CModel* pAtariModel1 = CModelManager::CreateModel("m04n_mfloor_a");
     ASSERT(pModel);
+    pModel->SetLightingEnable(false);
+
+    CModel* pAtariModel0 = CModelManager::CreateModel("m04n_mfloor");
     ASSERT(pAtariModel0);
+
+    CModel* pAtariModel1 = CModelManager::CreateModel("m04n_mfloor_a");
     ASSERT(pAtariModel1);
-	pModel->SetLightingEnable(false);
-    m_model.SetModel(CUniqueTransferFloorGimmickModel::MODELTYPE_DISP, pModel);
-    m_model.SetModel(CUniqueTransferFloorGimmickModel::MODELTYPE_ATARI0, pAtariModel0);
-    m_model.SetModel(CUniqueTransferFloorGimmickModel::MODELTYPE_ATARI1, pAtariModel1);
+    
+    m_model.SetModel(CUniqueTransferFloorGimmickModel::TYPE_DISP, pModel);
+    m_model.SetModel(CUniqueTransferFloorGimmickModel::TYPE_ATARI0, pAtariModel0);
+    m_model.SetModel(CUniqueTransferFloorGimmickModel::TYPE_ATARI1, pAtariModel1);
+    
     m_model.SetPosition(&pInitParam->m_vPosition);
+
     RwV3d vRot = { 0.0f, CGimmickUtils::QuaternionToRotationY(&pInitParam->m_quat), 0.0f };
     m_model.SetRotation(&vRot);
 
     SetModelStrategy(&m_model);
 
-    CPathTransferFloorGimmickMove* pPathMove = new CPathTransferFloorGimmickMove();
-    ASSERT(pPathMove);
+    //
+    //  Init movement
+    //
+    CPathTransferFloorGimmickMove* pPathMove = new CPathTransferFloorGimmickMove;
     pPathMove->SetPathName("elevator");
     pPathMove->SetMoveTime(m_fOneWayMoveTime);
     pPathMove->SetStopTime(0.0f);
@@ -210,30 +258,27 @@ CUniquePathTransferFloorGimmick::CUniquePathTransferFloorGimmick(const char* psz
     m_pTransferMove = pPathMove;
     SetMoveStrategy(m_pTransferMove);
 
-    ASSERT(m_model.GetModelClump(CUniqueTransferFloorGimmickModel::MODELTYPE_ATARI0));
-    m_hAtari0 = CMapCollisionModel::RegistCollisionModel(
-        m_model.GetModelClump(CUniqueTransferFloorGimmickModel::MODELTYPE_ATARI0),
-        GetName(),
-        MAPTYPES::GIMMICKTYPE_NORMAL
-    );
-    if (m_hAtari0)
-        CMapCollisionModel::SetBoundingSphereRadius(m_hAtari0, 5.0f);
+    //
+    //  Init atari
+    //    
+    m_hAtari0 = CreateCollisionModel(CUniqueTransferFloorGimmickModel::TYPE_ATARI0, 5.0f);    
 };
 
 
-CUniquePathTransferFloorGimmick::~CUniquePathTransferFloorGimmick(void)
+/*virtual*/ CUniquePathTransferFloorGimmick::~CUniquePathTransferFloorGimmick(void)
 {
-    ;
+    if (m_eState == STATE_RUN)
+        CGameSound::StopSE(SDCODE_SE(0x1073));
 };
 
 
-void CUniquePathTransferFloorGimmick::PreMove(void)
+/*virtual*/ void CUniquePathTransferFloorGimmick::PreMove(void) /*override*/
 {
     m_pTransferMove->GetPosition(&m_vPreMovePosition);
 };
 
 
-void CUniquePathTransferFloorGimmick::PostMove(void)
+/*virtual*/ void CUniquePathTransferFloorGimmick::PostMove(void) /*override*/
 {
     if (m_eState == STATE_RUN)
     {
@@ -272,26 +317,18 @@ void CUniquePathTransferFloorGimmick::PostMove(void)
 };
 
 
-void CUniquePathTransferFloorGimmick::OnReceiveEvent(const char* pszSender, GIMMICKTYPES::EVENTTYPE eventtype)
+/*virtual*/ void CUniquePathTransferFloorGimmick::OnReceiveEvent(const char* pszSender,
+                                                                 GIMMICKTYPES::EVENTTYPE eventtype) /*override*/
 {
     if (eventtype == GIMMICKTYPES::EVENTTYPE_ACTIVATE)
     {
         if (m_eState == STATE_WAIT)
         {
             m_pTransferMove->StartTransfer();
-
-            ASSERT(m_model.GetModelClump(CUniqueTransferFloorGimmickModel::MODELTYPE_ATARI1));
-            m_hAtari1 = CMapCollisionModel::RegistCollisionModel(
-                m_model.GetModelClump(CUniqueTransferFloorGimmickModel::MODELTYPE_ATARI1),
-                GetName(),
-                MAPTYPES::GIMMICKTYPE_NORMAL
-            );
-            if (m_hAtari1)
-                CMapCollisionModel::SetBoundingSphereRadius(m_hAtari1, 10.0f);
+            m_hAtari1 = CreateCollisionModel(CUniqueTransferFloorGimmickModel::TYPE_ATARI1, 10.0f);
+            m_eState = STATE_RUN;
 
             CGameSound::PlayObjectSE(this, SDCODE_SE(0x1073));
-
-            m_eState = STATE_RUN;
         };
     };
 };

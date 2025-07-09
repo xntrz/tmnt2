@@ -21,9 +21,12 @@ CRideShutterGimmick::CRideShutterGimmick(const char* pszName, void* pParam)
     m_iPower = 0;
     m_bCatchHit = false;
 
-    ASSERT(pParam);
-    GIMMICKPARAM::GIMMICK_BASIC* pInitParam = (GIMMICKPARAM::GIMMICK_BASIC*)pParam;
+    GIMMICKPARAM::GIMMICK_BASIC* pInitParam = static_cast<GIMMICKPARAM::GIMMICK_BASIC*>(pParam);
+    ASSERT(pInitParam);
 
+    //
+    //  Init model
+    //
     CModel* pModel = CModelManager::CreateModel("shutter");
     ASSERT(pModel);
     pModel->SetClippingEnable(false);
@@ -31,10 +34,11 @@ CRideShutterGimmick::CRideShutterGimmick(const char* pszName, void* pParam)
     CModel* pModelAtari = CModelManager::CreateModel("shutter_a");
     ASSERT(pModelAtari);
 
-    RwV3d vRotation = Math::VECTOR3_ZERO;
     RwMatrix mat;
     RwMatrixSetIdentityMacro(&mat);
     CGimmickUtils::QuaternionToRotationMatrix(&mat, &pInitParam->m_quat);
+
+    RwV3d vRotation = Math::VECTOR3_ZERO;
     CGimmickUtils::MatrixToRotation(&mat, &vRotation);
     
     m_model.SetModel(CNormalGimmickModel::MODELTYPE_DRAW_NORMAL, pModel);
@@ -43,27 +47,30 @@ CRideShutterGimmick::CRideShutterGimmick(const char* pszName, void* pParam)
     m_model.SetRotation(&vRotation);
     m_model.UpdateFrame();
 
-    m_pMotionController = new CGimmickMotion(pModel);
-    ASSERT(m_pMotionController);
+    SetModelStrategy(&m_model);
+
+    //
+    //  Init motion
+    //
     CMotionManager::SetCurrentMotionSet("shutter");
+    m_pMotionController = new CGimmickMotion(pModel);
     m_pMotionController->AddMotion("close");
     m_pMotionController->SetMotion("close", 0.0f, 0.0f, 0.0f, false);
     m_pMotionController->StartOne(1.0f);
 
-    m_pMotionControllerAtari = new CGimmickMotion(pModelAtari);
-    ASSERT(m_pMotionControllerAtari);
     CMotionManager::SetCurrentMotionSet("shutter");
+    m_pMotionControllerAtari = new CGimmickMotion(pModelAtari);
     m_pMotionControllerAtari->AddMotion("close");
     m_pMotionControllerAtari->SetMotion("close", 0.0f, 0.0f, 0.0f, false);
     m_pMotionControllerAtari->StartOne(1.0f);
 
-    SetModelStrategy(&m_model);
-    
+    //
+    //  Init atari
+    //
     if (m_model.GetCollisionModelClump())
     {
         RpClump* pClump = m_model.GetCollisionModelClump();
         m_hAtari = CMapCollisionModel::RegistCollisionModel(pClump);
-        ASSERT(m_hAtari);
     };
 
     m_bRunFlag = false;
@@ -100,7 +107,7 @@ void CRideShutterGimmick::PostMove(void)
         m_pMotionControllerAtari->Update();
     };
 
-    if (m_model.GetCollisionModelClump())
+    if (m_hAtari)
         CMapCollisionModel::UpdateCollisionModel(m_hAtari, nullptr, nullptr);
 };
 

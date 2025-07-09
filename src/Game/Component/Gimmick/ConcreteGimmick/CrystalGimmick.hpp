@@ -26,7 +26,7 @@ private:
     public:
         CCrystalEffect(void);
         ~CCrystalEffect(void);
-        void Start(EFFECTID::VALUE id, const RwV3d* pvPos);        
+        void Start(EFFECTID::VALUE id, const RwV3d* pvPos, float fScale);
         void End(void);
         void Run(void);
         
@@ -43,20 +43,18 @@ public:
     virtual void PreMove(void) override;
     virtual void PostMove(void) override;
     virtual void OnCatchAttack(CHitAttackData* pAttack) override;
-
-private:
     void crystalCtrl(void);
     void setHitAttack(void);
     bool isValidAttack(CHitAttackData* pAttack);
 
 private:
-    CNormalGimmickModel m_model;    
+    CNormalGimmickModel  m_model;    
     CCrystalGimmickMove* m_pCryMove;
-    CModuleManager* m_pModuleMan;
-    char m_szTargetName[16];
-    STATE m_state;
-    int32 m_nLife;
-    float m_fTimer;
-    int32 m_nLaserPower;
-    CCrystalEffect m_effectObj;
+    CModuleManager*      m_pModuleMan;
+    char                 m_szTargetName[16];
+    STATE                m_state;
+    int32                m_nLife;
+    float                m_fTimer;
+    int32                m_nLaserPower;
+    CCrystalEffect       m_effectObj;
 };

@@ -24,5 +24,5 @@ public:
 
 private:
     CMultipleEnemyGenerator m_generator;
-    STATUS m_status;
+    STATUS                  m_status;
 };

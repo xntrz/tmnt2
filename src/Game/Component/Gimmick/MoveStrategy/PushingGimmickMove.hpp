@@ -30,6 +30,7 @@ public:
     virtual ~CPushingGimmickMove(void);
     virtual RESULT OnMove(float dt) override;
     bool RequestPlayerPushGimmick(CPlayerCharacter* pPlayerCharacter);
+    bool RequestPlayerAttackPushGimmick(CPlayerCharacter* pPlayerCharacter);
     void SetRadius(float fRadius);
     void SetVelocity(const RwV3d* pvVelocity);
     void SetRotation(const RwV3d* pvRotation);

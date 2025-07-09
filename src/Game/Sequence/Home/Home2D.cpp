@@ -264,7 +264,6 @@ void CHome2DContainer::DrawArrow(HOMETYPES::DOORPOSITION doorposition)
 
     float x = 0.0f;
     float y = 0.0f;
-    RwTexture* pTexture = nullptr;
     
     switch (doorposition)
     {

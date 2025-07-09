@@ -55,8 +55,8 @@ public:
 private:
     CNormalGimmickModel m_model;
     CMadCarGimmickMove* m_pMove;
-    int32 m_subid;
-    char m_szPathName[16];
-    CCarHeadLight m_aCarLight[2];
-    bool m_bCarLight;
+    int32               m_subid;
+    char                m_szPathName[16];
+    CCarHeadLight       m_aCarLight[2];
+    bool                m_bCarLight;
 };

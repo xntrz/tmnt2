@@ -124,7 +124,7 @@ CEggGimmick::CEggGimmick(const char* pszName, void* pParam)
 };
 
 
-/*virtual*/ CEggGimmick::~CEggGimmick(void)
+CEggGimmick::~CEggGimmick(void)
 {
     if (m_pModuleMan)
     {
@@ -134,7 +134,7 @@ CEggGimmick::CEggGimmick(const char* pszName, void* pParam)
 };
 
 
-/*virtual*/ void CEggGimmick::Run(void) /*override*/
+void CEggGimmick::Run(void)
 {
     eggCtrl();
 
@@ -143,7 +143,7 @@ CEggGimmick::CEggGimmick(const char* pszName, void* pParam)
 };
 
 
-/*virtual*/ void CEggGimmick::Draw(void) const /*override*/
+void CEggGimmick::Draw(void) const
 {
     CGimmick::Draw();
     
@@ -152,7 +152,7 @@ CEggGimmick::CEggGimmick(const char* pszName, void* pParam)
 };
 
 
-/*virtual*/ void CEggGimmick::OnReceiveEvent(const char* pszSender, GIMMICKTYPES::EVENTTYPE eventtype) /*override*/
+void CEggGimmick::OnReceiveEvent(const char* pszSender, GIMMICKTYPES::EVENTTYPE eventtype)
 {
     m_generator.HandleEvent(pszSender, eventtype);
 
@@ -161,17 +161,17 @@ CEggGimmick::CEggGimmick(const char* pszName, void* pParam)
 };
 
 
-/*virtual*/ void CEggGimmick::OnCatchAttack(CHitAttackData* pAttack) /*override*/
+void CEggGimmick::OnCatchAttack(CHitAttackData* pAttack)
 {
     if (m_state != STATE_SHAKE)
         return;
 
-    CGameObject* pGameObj = CGameObjectManager::GetObject(pAttack->GetObjectHandle());
-    switch (pGameObj->GetType())
+    CGameObject* pAttacker = pAttack->GetObject();
+    switch (pAttacker->GetType())
     {
     case GAMEOBJECTTYPE::CHARACTER:
         {
-            CCharacter* pChara = static_cast<CCharacter*>(pGameObj);
+            CCharacter* pChara = static_cast<CCharacter*>(pAttacker);
 
             if (pChara->GetCharacterType() != CCharacter::TYPE_PLAYER)
                 return;
@@ -186,7 +186,7 @@ CEggGimmick::CEggGimmick(const char* pszName, void* pParam)
 
     case GAMEOBJECTTYPE::EFFECT:
         {
-            CMagic* pMagic = static_cast<CMagic*>(pGameObj);
+            CMagic* pMagic = static_cast<CMagic*>(pAttacker);
 
             if ((pMagic->GetID() == MAGICID::ID_DON_LASER_BEAM)
                 || (pMagic->GetID() == MAGICID::ID_EXPL_B1)

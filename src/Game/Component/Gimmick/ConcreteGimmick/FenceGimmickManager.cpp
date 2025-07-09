@@ -150,7 +150,7 @@ CFenceGimmickManager::CFenceGimmickManager(const char* pszName, void* pParam)
 };
 
 
-/*virtual*/ CFenceGimmickManager::~CFenceGimmickManager(void)
+CFenceGimmickManager::~CFenceGimmickManager(void)
 {
     ASSERT(m_pInstance);
     ASSERT(m_pInstance == this);
@@ -161,14 +161,14 @@ CFenceGimmickManager::CFenceGimmickManager(const char* pszName, void* pParam)
 };
 
 
-/*virtual*/ void CFenceGimmickManager::Run(void) /*override*/
+void CFenceGimmickManager::Run(void)
 {
     CGimmick::Run();
     IntrudeObservation();
 };
 
 
-/*virtual*/ void CFenceGimmickManager::Draw(void) const /*override*/
+void CFenceGimmickManager::Draw(void) const
 {
     CGimmick::Draw();
 };

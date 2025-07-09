@@ -104,19 +104,19 @@ public:
         void sprayWaterEffectRun(void);
 
     private:
-        float m_fTimer;
-        float m_fInterval;
-        float m_fIntervalTimer;
-        float m_fScale;
+        float           m_fTimer;
+        float           m_fInterval;
+        float           m_fIntervalTimer;
+        float           m_fScale;
         EFFECTID::VALUE m_effectId;
-        bool m_bStart;
-        DETAILKIND m_detailKind;
-        EFFECTTIMING m_effectTiming;
-        EFFECTSTATE m_effectState;
-        CModel* m_pParentModel;
-        RwV3d m_vEffectDir;
-        RwV3d m_vEffectPos;
-        uint32 m_hEffect;
+        bool            m_bStart;
+        DETAILKIND      m_detailKind;
+        EFFECTTIMING    m_effectTiming;
+        EFFECTSTATE     m_effectState;
+        CModel*         m_pParentModel;
+        RwV3d           m_vEffectDir;
+        RwV3d           m_vEffectPos;
+        uint32          m_hEffect;
     };
 
 public:
@@ -144,18 +144,17 @@ private:
     SUBID convertSubid(int32 subid) const;
     
 private:
-    static bool m_bUvAnimOwnerExist;
-    
-    CNormalGimmickModel* m_pModel;
-    CFallGimmickMove* m_pMove;
+    static bool             m_bUvAnimOwnerExist;
+    CNormalGimmickModel*    m_pModel;
+    CFallGimmickMove*       m_pMove;
     CBreakableGimmickEffect m_aEffect[EFFECTTIMINGNUM];
-    STATE m_state;
-    SUBID m_subid;
-    int32 m_nLife;
-    int32 m_nHitSphere;
-    float m_fHitRadius;
-    CBodyHitData* m_pBodyHit;
-    uint32 m_hAtari;
-    void* m_pAnimatedMaterials;
-    bool m_bUvAnimOwner;
+    STATE                   m_state;
+    SUBID                   m_subid;
+    int32                   m_nLife;
+    int32                   m_nHitSphere;
+    float                   m_fHitRadius;
+    CBodyHitData*           m_pBodyHit;
+    uint32                  m_hAtari;
+    void*                   m_pAnimatedMaterials;
+    bool                    m_bUvAnimOwner;
 };

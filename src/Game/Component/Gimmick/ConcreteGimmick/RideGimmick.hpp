@@ -29,11 +29,11 @@ public:
     bool IsProcess(PROCESSTYPE processtype) const;
     
 protected:
-    CRideGimmickMove* m_pRideMove;
-    CModuleManager* m_pModuleManager;
+    CRideGimmickMove*   m_pRideMove;
+    CModuleManager*     m_pModuleManager;
     CNormalGimmickModel m_model;
-    bool m_bCatchHit;
-    int32 m_iPower;
-    float m_fRadius;
-    float m_fOffset;
+    bool                m_bCatchHit;
+    int32               m_iPower;
+    float               m_fRadius;
+    float               m_fOffset;
 };

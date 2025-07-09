@@ -44,4 +44,7 @@ private:
     RwV3d m_vOffset;
     RwV3d m_vJointPosition;
     bool m_bWindChrSync;
+#ifdef TARGET_PC    
+    RwV3d m_vBonePos;
+#endif /* TARGET_PC */
 };

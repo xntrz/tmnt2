@@ -63,8 +63,8 @@ bool CBridgePillarGimmick::Query(CGimmickQuery* pQuery) const
 
     if (pQuery->GetType() == GIMMICKTYPES::QUERY_EVE_BROKEN)
     {
-        CStateGimmickQuery* pStateQuery = (CStateGimmickQuery*)pQuery;
-        ++pStateQuery->m_nTarget;
+        CStateGimmickQuery* pStateQuery = static_cast<CStateGimmickQuery*>(pQuery);
+        ++pStateQuery->m_nTarget;        
 
         if (m_eState == STATE_END)
         {
@@ -82,27 +82,22 @@ void CBridgePillarGimmick::PostMove(void)
     switch (m_eState)
     {
     case STATE_NONE:
-        {
-            m_eState = STATE_WAIT;
-        }
+        m_eState = STATE_WAIT;
         break;
-        
+
     case STATE_WAIT:
-        {
-            waiting();
-        }
+        waiting();
         break;
 
     case STATE_CUT:
-        {
-            cutting();
-        }
+        cutting();
         break;
 
     case STATE_DISAPPEAR:
-        {
-            breakdown();
-        }
+        breakdown();
+        break;
+
+    default:
         break;
     };
 };
@@ -137,9 +132,12 @@ void CBridgePillarGimmick::OnCatchAttack(CHitAttackData* pAttack)
 
 void CBridgePillarGimmick::init(void* pParam)
 {
-    GIMMICKPARAM::GIMMICK_BASIC* pInitParam = (GIMMICKPARAM::GIMMICK_BASIC*)pParam;
+    GIMMICKPARAM::GIMMICK_BASIC* pInitParam = static_cast<GIMMICKPARAM::GIMMICK_BASIC*>(pParam);
     ASSERT(pInitParam);
 
+    //
+    //  Init model
+    //
     CModel* pModel = CModelManager::CreateModel("bpillar");
     ASSERT(pModel);
     pModel->SetBoundingSphereRadius(20.0f);
@@ -158,32 +156,42 @@ void CBridgePillarGimmick::init(void* pParam)
     m_model.SetModel(CNormalGimmickModel::MODELTYPE_ATARI_NORMAL, pAtariModel);
     m_model.SetModel(CNormalGimmickModel::MODELTYPE_DRAW_BREAK, pBreakModel);
     m_model.SetModel(CNormalGimmickModel::MODELTYPE_ATARI_BREAK, pBreakAtariModel);
+
     m_model.SetPosition(&pInitParam->m_vPosition);
+
     RwV3d vRot = { 0.0f, CGimmickUtils::QuaternionToRotationY(&pInitParam->m_quat), 0.0f };
     m_model.SetRotation(&vRot);
+
     SetModelStrategy(&m_model);
-    
+
+    //
+    //  Init movement
+    // 
     m_pCuttingMove = new CCuttingGimmickMove();
-    ASSERT(m_pCuttingMove);
     m_pCuttingMove->SetPosition(&pInitParam->m_vPosition);
     m_pCuttingMove->SetRotation(&vRot);
     m_pCuttingMove->Start();
+
     SetMoveStrategy(m_pCuttingMove);
 
+    //
+    //  Init atari
+    //
     if (m_model.GetCollisionModelClump())
     {
-        m_hAtari = CMapCollisionModel::RegistCollisionModel(
-            m_model.GetCollisionModelClump(),
-            GetName(),
-            MAPTYPES::GIMMICKTYPE_NORMAL
-        );
+        m_hAtari = CMapCollisionModel::RegistCollisionModel(m_model.GetCollisionModelClump(),
+                                                            GetName(),
+                                                            MAPTYPES::GIMMICKTYPE_NORMAL);
         if (m_hAtari)
             CMapCollisionModel::SetBoundingSphereRadius(m_hAtari, 20.0f);
     };
 
-    m_pGimmickMotion = new CGimmickMotion(pBreakModel);
-    ASSERT(m_pGimmickMotion);
+    //
+    //  Init motion
+    //
     CMotionManager::SetCurrentMotionSet("bridgepillar");
+
+    m_pGimmickMotion = new CGimmickMotion(pBreakModel);
     m_pGimmickMotion->AddMotion("breakdown");
     m_pGimmickMotion->SetMotion("breakdown", 0.0f, 0.0f, 0.0f, false);
 };
@@ -208,20 +216,20 @@ void CBridgePillarGimmick::waiting(void)
 {
     if (m_fInvincibleTimer <= 0.0f)
     {
-        RwSphere sphere = { 0 };
-        sphere.radius = 1.0f;
+        RwSphere hitSphere = { 0 };
+        hitSphere.radius = 1.0f;
 
         ASSERT(m_pCuttingMove);
-        m_pCuttingMove->GetPosition(&sphere.center);
-        sphere.center.y += 1.0f;
+        m_pCuttingMove->GetPosition(&hitSphere.center);
+        hitSphere.center.y += 1.0f;
 
-        CHitCatchData Catch;
-        Catch.SetObject(GetHandle());
-        Catch.SetObjectType(GetType());
-        Catch.SetShape(CHitCatchData::SHAPE_SPHERE);
-        Catch.SetSphere(&sphere);
+        CHitCatchData hitCatch;
+        hitCatch.SetObject(GetHandle());
+        hitCatch.SetObjectType(GetType());
+        hitCatch.SetShape(CHitCatchData::SHAPE_SPHERE);
+        hitCatch.SetSphere(&hitSphere);
 
-        CHitAttackManager::RegistCatch(&Catch);
+        CHitAttackManager::RegistCatch(&hitCatch);
     }
     else
     {
@@ -272,6 +280,7 @@ void CBridgePillarGimmick::breakdown(void)
             {
                 setBreakdownSmokeEffect(m_step);
                 setBreakdownHitAttack(m_step);
+
                 CGameSound::PlayObjectSE(this, SDCODE_SE(0x103D));
 
                 if (m_hAtari)
@@ -281,13 +290,12 @@ void CBridgePillarGimmick::breakdown(void)
                 };
 
                 m_model.SetCollisionBreak();
+
                 if (m_model.GetCollisionModelClump())
                 {
-                    m_hAtari = CMapCollisionModel::RegistCollisionModel(
-                        m_model.GetCollisionModelClump(),
-                        GetName(),
-                        MAPTYPES::GIMMICKTYPE_NORMAL
-                    );
+                    m_hAtari = CMapCollisionModel::RegistCollisionModel(m_model.GetCollisionModelClump(),
+                                                                        GetName(),
+                                                                        MAPTYPES::GIMMICKTYPE_NORMAL);
                     if (m_hAtari)
                         CMapCollisionModel::SetBoundingSphereRadius(m_hAtari, 20.0f);
                 };
@@ -297,6 +305,9 @@ void CBridgePillarGimmick::breakdown(void)
                 ++m_step;
             };
         }
+        break;
+
+    default:
         break;
     };
 
@@ -312,20 +323,20 @@ void CBridgePillarGimmick::breakdown(void)
 };
 
 
-void CBridgePillarGimmick::setBreakdownHitAttack(int32 Step)
+void CBridgePillarGimmick::setBreakdownHitAttack(int32 step)
 {
-    const int32 aAttackNum[] = { 1, 15 };
+    const int32 aAttackNumAtStep[] = { 1, 15 };
 
-    ASSERT((Step >= 0) && (Step < COUNT_OF(aAttackNum)));
+    ASSERT(step >= 0);
+    ASSERT(step < COUNT_OF(aAttackNumAtStep));
 
-    int32 AttackNum = aAttackNum[Step];
-
-    RwV3d vRotation = Math::VECTOR3_ZERO;
-    m_pCuttingMove->GetRotation(&vRotation);
+    int32 attackNum = aAttackNumAtStep[step];
 
     RwV3d vPosition = Math::VECTOR3_ZERO;
     m_pCuttingMove->GetPosition(&vPosition);
 
+    RwV3d vRotation = Math::VECTOR3_ZERO;
+    m_pCuttingMove->GetRotation(&vRotation);
     vRotation.x = Math::Sin(vRotation.y);
     vRotation.z = Math::Cos(vRotation.y);
     vRotation.y = 0.0f;
@@ -335,45 +346,46 @@ void CBridgePillarGimmick::setBreakdownHitAttack(int32 Step)
     Math::Vec3_Add(&vPosition, &vPosition, &vStep);
     Math::Vec3_Add(&vPosition, &vPosition, &vStep);
 
-    for (int32 i = 0; i < AttackNum; ++i)
+    for (int32 i = 0; i < attackNum; ++i)
     {
-        RwSphere Sphere = { vPosition, 1.0f };
+        RwSphere hitSphere = { vPosition, 1.0f };
 
-        CHitAttackData Attack;
-        Attack.SetObject(GetHandle());
-        Attack.SetShape(CHitAttackData::SHAPE_SPHERE);
-        Attack.SetSphere(&Sphere);
-        Attack.SetObjectPos(&vPosition);
-        Attack.SetPower(50);
-        Attack.SetAttackNo(i);
-        Attack.SetTarget(CHitAttackData::TARGET_PLAYER | CHitAttackData::TARGET_ENEMY);
-        Attack.SetStatus(CHitAttackData::STATUS_FLYAWAY);
-        Attack.SetAntiguard(CHitAttackData::ANTIGUARD_INVALID);
+        CHitAttackData hitAttack;
+        hitAttack.SetObject(GetHandle());
+        hitAttack.SetShape(CHitAttackData::SHAPE_SPHERE);
+        hitAttack.SetSphere(&hitSphere);
+        hitAttack.SetObjectPos(&vPosition);
+        hitAttack.SetPower(50);
+        hitAttack.SetAttackNo(i);
+        hitAttack.SetTarget(CHitAttackData::TARGET_PLAYER | CHitAttackData::TARGET_ENEMY);
+        hitAttack.SetStatus(CHitAttackData::STATUS_FLYAWAY);
+        hitAttack.SetAntiguard(CHitAttackData::ANTIGUARD_INVALID);
         
-        CHitAttackManager::RegistAttack(&Attack);
+        CHitAttackManager::RegistAttack(&hitAttack);
 
         Math::Vec3_Add(&vPosition, &vPosition, &vStep);
     };
 };
 
 
-void CBridgePillarGimmick::setBreakdownSmokeEffect(int32 Step)
+void CBridgePillarGimmick::setBreakdownSmokeEffect(int32 step)
 {
-    const int32 aSmokeNum[] = { 2, 10 };
-    const float aSmokeScale[] = { 2.0f, 4.0f };
+    const int32 aSmokeNumAtStep[] = { 2, 10 };
+    ASSERT(step >= 0);
+    ASSERT(step < COUNT_OF(aSmokeNumAtStep));
 
-    ASSERT((Step >= 0) && (Step < COUNT_OF(aSmokeNum)));
-    ASSERT((Step >= 0) && (Step < COUNT_OF(aSmokeScale)));
+    const float aSmokeScaleAtStep[] = { 2.0f, 4.0f };
+    ASSERT(step >= 0);
+    ASSERT(step < COUNT_OF(aSmokeScaleAtStep));
 
-    int32 SmokeNum = aSmokeNum[Step];
-    float EffectScale = aSmokeScale[Step];
-
-    RwV3d vRotation = Math::VECTOR3_ZERO;
-    m_pCuttingMove->GetRotation(&vRotation);
+    int32 smokeNum = aSmokeNumAtStep[step];
+    float fEffectScale = aSmokeScaleAtStep[step];
 
     RwV3d vPosition = Math::VECTOR3_ZERO;
     m_pCuttingMove->GetPosition(&vPosition);
 
+    RwV3d vRotation = Math::VECTOR3_ZERO;
+    m_pCuttingMove->GetRotation(&vRotation);
     vRotation.x = Math::Sin(vRotation.y);
     vRotation.z = Math::Cos(vRotation.y);
     vRotation.y = 0.0f;
@@ -382,7 +394,7 @@ void CBridgePillarGimmick::setBreakdownSmokeEffect(int32 Step)
     Math::Vec3_Normalize(&vStep, &vRotation);
     Math::Vec3_Scale(&vStep, &vStep, 1.5f);
 
-    for (int32 i = 0; i < SmokeNum; ++i)
+    for (int32 i = 0; i < smokeNum; ++i)
     {
         CWorldMap::GetMapHeight(&vPosition);
         
@@ -391,9 +403,9 @@ void CBridgePillarGimmick::setBreakdownSmokeEffect(int32 Step)
 
         if (pCollisonResult->m_attribute != MAPTYPES::ATTRIBUTE_DEATH)
         {
-            uint32 hFx = CEffectManager::Play(EFFECTID::ID_ALL_DOWNSMOKE, &vPosition);
-            if (hFx)
-                CEffectManager::SetScale(hFx, EffectScale);
+            uint32 hEffect = CEffectManager::Play(EFFECTID::ID_ALL_DOWNSMOKE, &vPosition);
+            if (hEffect)
+                CEffectManager::SetScale(hEffect, fEffectScale);
         };
 
         Math::Vec3_Add(&vPosition, &vPosition, &vStep);

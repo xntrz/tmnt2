@@ -230,7 +230,7 @@ CApproachingTrailerGimmick::CAttackAimingShot::CAttackAimingShot(CApproachingTra
 };
 
 
-/*virtual*/ bool CApproachingTrailerGimmick::CAttackAimingShot::Attach(void) /*override*/
+bool CApproachingTrailerGimmick::CAttackAimingShot::Attach(void)
 {
     m_iTargetPlayerNo = 0;
     m_iShotNum = m_iShotCnt;
@@ -242,7 +242,7 @@ CApproachingTrailerGimmick::CAttackAimingShot::CAttackAimingShot(CApproachingTra
 };
 
 
-/*virtual*/ bool CApproachingTrailerGimmick::CAttackAimingShot::Move(void) /*override*/
+bool CApproachingTrailerGimmick::CAttackAimingShot::Move(void)
 {
     if (m_fTimerCounter >= 0.0f)
     {
@@ -300,7 +300,7 @@ CApproachingTrailerGimmick::CAttackAreaShot::CAttackAreaShot(CApproachingTrailer
 };
 
 
-/*virtual*/ bool CApproachingTrailerGimmick::CAttackAreaShot::Attach(void) /*override*/
+bool CApproachingTrailerGimmick::CAttackAreaShot::Attach(void)
 {
     m_fSpeed = 10.0f;
     m_iStep = 0;
@@ -309,7 +309,7 @@ CApproachingTrailerGimmick::CAttackAreaShot::CAttackAreaShot(CApproachingTrailer
 };
 
 
-/*virtual*/ bool CApproachingTrailerGimmick::CAttackAreaShot::Move(void) /*override*/
+bool CApproachingTrailerGimmick::CAttackAreaShot::Move(void)
 {
     RwV3d avLocal[] =
     {
@@ -353,7 +353,7 @@ CApproachingTrailerGimmick::CAttackCenterLinearShot::CAttackCenterLinearShot(CAp
 };
 
 
-/*virtual*/ bool CApproachingTrailerGimmick::CAttackCenterLinearShot::Attach(void) /*override*/
+bool CApproachingTrailerGimmick::CAttackCenterLinearShot::Attach(void)
 {
     m_iTargetPlayerNo += Math::RandRange(0, (GAMETYPES::PLAYERS_MAX * 2));
     m_iTargetPlayerNo %= CGameProperty::GetPlayerNum();
@@ -373,7 +373,7 @@ CApproachingTrailerGimmick::CAttackCenterLinearShot::CAttackCenterLinearShot(CAp
 };
 
 
-/*virtual*/ bool CApproachingTrailerGimmick::CAttackCenterLinearShot::Move(void) /*override*/
+bool CApproachingTrailerGimmick::CAttackCenterLinearShot::Move(void)
 {
     if (!m_pvPos)
     {
@@ -440,7 +440,7 @@ CApproachingTrailerGimmick::CAttackSurroundShot::CAttackSurroundShot(CApproachin
 };
 
 
-/*virtual*/ bool CApproachingTrailerGimmick::CAttackSurroundShot::Attach(void) /*override*/
+bool CApproachingTrailerGimmick::CAttackSurroundShot::Attach(void)
 {
     m_iTargetPlayerNo += Math::RandRange(0, (GAMETYPES::PLAYERS_MAX * 2));
     m_iTargetPlayerNo %= CGameProperty::GetPlayerNum();
@@ -455,7 +455,7 @@ CApproachingTrailerGimmick::CAttackSurroundShot::CAttackSurroundShot(CApproachin
 };
 
 
-/*virtual*/ bool CApproachingTrailerGimmick::CAttackSurroundShot::Move(void) /*override*/
+bool CApproachingTrailerGimmick::CAttackSurroundShot::Move(void)
 {
     RwV3d* pvPos = m_pTrailer->GetPlayerPos(m_iTargetPlayerNo);
 
@@ -521,7 +521,7 @@ CApproachingTrailerGimmick::CAttackThreePointShot::CAttackThreePointShot(CApproa
 };
 
 
-/*virtual*/ bool CApproachingTrailerGimmick::CAttackThreePointShot::Attach(void) /*override*/
+bool CApproachingTrailerGimmick::CAttackThreePointShot::Attach(void)
 {
     m_iTargetPlayerNo += Math::RandRange(0, (GAMETYPES::PLAYERS_MAX * 2));
     m_iTargetPlayerNo %= CGameProperty::GetPlayerNum();
@@ -541,7 +541,7 @@ CApproachingTrailerGimmick::CAttackThreePointShot::CAttackThreePointShot(CApproa
 };
 
 
-/*virtual*/ bool CApproachingTrailerGimmick::CAttackThreePointShot::Move(void) /*override*/
+bool CApproachingTrailerGimmick::CAttackThreePointShot::Move(void)
 {
     if (!m_pvPos)
     {
@@ -810,7 +810,7 @@ CApproachingTrailerGimmick::CApproachingTrailerGimmick(const char* pszName, void
 };
 
 
-/*virtual*/ CApproachingTrailerGimmick::~CApproachingTrailerGimmick(void)
+CApproachingTrailerGimmick::~CApproachingTrailerGimmick(void)
 {
     if (m_pMotion)
     {
@@ -850,7 +850,7 @@ CApproachingTrailerGimmick::CApproachingTrailerGimmick(const char* pszName, void
 };
 
 
-/*virtual*/ void CApproachingTrailerGimmick::PostMove(void) /*override*/
+void CApproachingTrailerGimmick::PostMove(void)
 {
     SetPlayerInfo();
 
@@ -983,8 +983,7 @@ CApproachingTrailerGimmick::CApproachingTrailerGimmick(const char* pszName, void
 };
 
 
-/*virtual*/ void CApproachingTrailerGimmick::OnReceiveEvent(const char* pszSender,
-                                                            GIMMICKTYPES::EVENTTYPE eventtype) /*override*/
+void CApproachingTrailerGimmick::OnReceiveEvent(const char* pszSender, GIMMICKTYPES::EVENTTYPE eventtype)
 {
     if (eventtype != GIMMICKTYPES::EVENTTYPE_ACTIVATE)
         return;
@@ -997,7 +996,7 @@ CApproachingTrailerGimmick::CApproachingTrailerGimmick(const char* pszName, void
 };
 
 
-/*virtual*/ void CApproachingTrailerGimmick::OnAttackResult(CHitCatchData* pCatch) /*override*/
+void CApproachingTrailerGimmick::OnAttackResult(CHitCatchData* pCatch)
 {
     CGameObject* pGameObj = CGameObjectManager::GetObject(pCatch->GetObjectHandle());
     ASSERT(pGameObj);
@@ -1713,7 +1712,7 @@ void CApproachingTrailerGimmick::EffectUpdate(void)
     //
     if ((m_subid == SUBID_DESTROYED) || (m_eState != STATE_WAIT))
     {
-        if (m_fEffectTimer > 0.1f)
+        if (m_fEffectTimer < 0.1f)
         {
             m_fEffectTimer += CGameProperty::GetElapsedTime();
         }

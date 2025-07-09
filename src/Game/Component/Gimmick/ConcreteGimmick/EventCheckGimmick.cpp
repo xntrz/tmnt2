@@ -28,6 +28,7 @@
 CSimpleEventCheckGimmick::CSimpleEventCheckGimmick(const char* pszName, void* pParam)
 : CGimmick(pszName, pParam)
 , m_privatestate(PRIVATESTATE_CHECK)
+, m_szTargetName()
 {
     m_szTargetName[0] = '\0';
 };
@@ -57,6 +58,9 @@ void CSimpleEventCheckGimmick::PostMove(void)
             };
         }
         break;
+
+    default:
+        break;
     };
 };
 
@@ -81,9 +85,8 @@ CTimeCheckGimmick::CTimeCheckGimmick(const char* pszName, void* pParam)
 , m_fTargetTime(0.0f)
 , m_bIsCounting(false)
 {
-    ASSERT(pParam);
-
-    GIMMICKPARAM::GIMMICK_TERMS_TIME* pTimeParam = (GIMMICKPARAM::GIMMICK_TERMS_TIME*)pParam;
+    GIMMICKPARAM::GIMMICK_TERMS_TIME* pTimeParam = static_cast<GIMMICKPARAM::GIMMICK_TERMS_TIME*>(pParam);
+    ASSERT(pTimeParam);
 
     Init(pTimeParam->m_szTargetGimmick);
     m_fTargetTime = pTimeParam->m_fTime;
@@ -106,6 +109,9 @@ void CTimeCheckGimmick::OnReceiveEvent(const char* pszSender, GIMMICKTYPES::EVEN
 
     case GIMMICKTYPES::EVENTTYPE_INACTIVATE:
         m_bIsCounting = false;
+        break;
+
+    default:
         break;
     };
 };
@@ -147,9 +153,8 @@ CEnemyCheckGimmick::CEnemyCheckGimmick(const char* pszName, void* pParam)
 , m_nTargetDefeatNum(0)
 , m_bCheckCompleteFlag(false)
 {
-    ASSERT(pParam);
-
-    GIMMICKPARAM::GIMMICK_TERMS_GENERATOR* pInitParam = (GIMMICKPARAM::GIMMICK_TERMS_GENERATOR*)pParam;
+    GIMMICKPARAM::GIMMICK_TERMS_GENERATOR* pInitParam = static_cast<GIMMICKPARAM::GIMMICK_TERMS_GENERATOR*>(pParam);
+    ASSERT(pInitParam);
 
     Init(pInitParam->m_szTargetGimmick);
     std::strcpy(m_szGeneratorName, pInitParam->m_szObserveGeneratorName);
@@ -180,7 +185,7 @@ bool CEnemyCheckGimmick::Query(CGimmickQuery* pQuery) const
     if (pQuery->GetType() != GIMMICKTYPES::QUERY_SYS_SWITCH)
         return CGimmick::Query(pQuery);
 
-    CStateGimmickQuery* pStateQuery = (CStateGimmickQuery*)pQuery;
+    CStateGimmickQuery* pStateQuery = static_cast<CStateGimmickQuery*>(pQuery);
     ++pStateQuery->m_nTarget;
 
     if(!m_bCheckCompleteFlag)
@@ -224,10 +229,11 @@ bool CEnemyCheckGimmick::CheckEvent(void)
 /*static*/ void CAreaCheckGimmick::getPlaneNormal(RwV3d* pvV0, RwV3d* pvV1, RwV3d* pvV2, RwV3d* pvNormal)
 {
     RwV3d vVec0 = Math::VECTOR3_ZERO;
-    RwV3d vVec1 = Math::VECTOR3_ZERO;
-    
     Math::Vec3_Sub(&vVec0, pvV1, pvV0);
+
+    RwV3d vVec1 = Math::VECTOR3_ZERO;
     Math::Vec3_Sub(&vVec1, pvV2, pvV0);
+    
     Math::Vec3_Cross(pvNormal, &vVec0, &vVec1);
     Math::Vec3_Normalize(pvNormal, pvNormal);
 };
@@ -252,10 +258,9 @@ CAreaCheckGimmick::CAreaCheckGimmick(const char* pszName, void* pParam)
     std::memset(m_aWallVertex, 0x00, sizeof(m_aWallVertex));
     std::memset(m_aBoxVertex, 0x00, sizeof(m_aBoxVertex));
 
-    ASSERT(pParam);
+    GIMMICKPARAM::GIMMICK_TERMS* pInitParam = static_cast<GIMMICKPARAM::GIMMICK_TERMS*>(pParam);
+    ASSERT(pInitParam);
 
-    GIMMICKPARAM::GIMMICK_TERMS* pInitParam = (GIMMICKPARAM::GIMMICK_TERMS*)pParam;
-    
     ASSERT(std::strlen(pInitParam->m_szTargetGimmick) < COUNT_OF(m_szTargetGimmickName));
     std::strcpy(m_szTargetGimmickName, pInitParam->m_szTargetGimmick);
 };
@@ -329,8 +334,9 @@ void CAreaCheckGimmick::Draw(void) const
             break;
         };
     };
-#endif
-	CGimmick::Draw();
+#endif /* _DEBUG */
+    
+    CGimmick::Draw();
 };
 
 
@@ -345,13 +351,7 @@ void CAreaCheckGimmick::PostMove(void)
                 if (m_bInsideAreaAll)
                 {
                     if (std::strcmp(m_szTargetGimmickName, ""))
-                    {
-                        CGimmickManager::PostEvent(
-                            m_szTargetGimmickName,
-                            GetName(),
-                            GIMMICKTYPES::EVENTTYPE_ACTIVATE
-                        );
-                    };
+                        CGimmickManager::PostEvent(m_szTargetGimmickName, GetName(), GIMMICKTYPES::EVENTTYPE_ACTIVATE);
                 };
 
                 m_bInsideAreaAll = false;
@@ -361,13 +361,7 @@ void CAreaCheckGimmick::PostMove(void)
                 if (!m_bInsideAreaAll)
                 {
                     if (std::strcmp(m_szTargetGimmickName, ""))
-                    {
-                        CGimmickManager::PostEvent(
-                            m_szTargetGimmickName,
-                            GetName(),
-                            GIMMICKTYPES::EVENTTYPE_ACTIVATE
-                        );
-                    };
+                        CGimmickManager::PostEvent(m_szTargetGimmickName, GetName(), GIMMICKTYPES::EVENTTYPE_ACTIVATE);
                 };
 
                 m_bInsideAreaAll = true;
@@ -382,18 +376,15 @@ void CAreaCheckGimmick::PostMove(void)
                 if (CheckArea())
                 {
                     if (std::strcmp(m_szTargetGimmickName, ""))
-                    {
-                        CGimmickManager::PostEvent(
-                            m_szTargetGimmickName,
-                            GetName(),
-                            GIMMICKTYPES::EVENTTYPE_ACTIVATE
-                        );
-                    };
+                        CGimmickManager::PostEvent(m_szTargetGimmickName, GetName(), GIMMICKTYPES::EVENTTYPE_ACTIVATE);
                     
                     m_bInsideAreaSomeone = true;
                 };
             };
         }
+        break;
+
+    default:
         break;
     };
 };
@@ -406,7 +397,7 @@ bool CAreaCheckGimmick::Query(CGimmickQuery* pQuery) const
     if (pQuery->GetType() != GIMMICKTYPES::QUERY_SYS_SWITCH)
         return CGimmick::Query(pQuery);
 
-    CStateGimmickQuery* pStateQuery = (CStateGimmickQuery*)pQuery;
+    CStateGimmickQuery* pStateQuery = static_cast<CStateGimmickQuery*>(pQuery);
     bool bStatus = false;
     
     switch (m_numbertype)
@@ -464,9 +455,8 @@ bool CAreaCheckGimmick::IsInsideArea(RwV3d* pvPosition)
 
 void CAreaCheckGimmick::SetAreaParameter(AREATYPE areatype, void* pParam)
 {
-    ASSERT(pParam);
-    
-    GIMMICKPARAM::GIMMICK_BASIC* pBasicParam = (GIMMICKPARAM::GIMMICK_BASIC*)pParam;
+    GIMMICKPARAM::GIMMICK_BASIC* pBasicParam = static_cast<GIMMICKPARAM::GIMMICK_BASIC*>(pParam);
+    ASSERT(pBasicParam);
 
     RwMatrix matrixRotation;
     RwMatrixSetIdentityMacro(&matrixRotation);
@@ -478,7 +468,7 @@ void CAreaCheckGimmick::SetAreaParameter(AREATYPE areatype, void* pParam)
     {
     case AREATYPE_SPHERE:
         {
-            GIMMICKPARAM::GIMMICK_TERMS_AREA_SPHERE* pSphereParam = (GIMMICKPARAM::GIMMICK_TERMS_AREA_SPHERE*)pParam;
+            GIMMICKPARAM::GIMMICK_TERMS_AREA_SPHERE* pSphereParam = static_cast<GIMMICKPARAM::GIMMICK_TERMS_AREA_SPHERE*>(pParam);
             m_sphere.center = pSphereParam->m_vPosition;
             m_sphere.radius = pSphereParam->m_fRadius;
         }
@@ -486,7 +476,7 @@ void CAreaCheckGimmick::SetAreaParameter(AREATYPE areatype, void* pParam)
 
     case AREATYPE_WALL:
         {
-            GIMMICKPARAM::GIMMICK_TERMS_AREA_WALL* pWallParam = (GIMMICKPARAM::GIMMICK_TERMS_AREA_WALL*)pParam;
+            GIMMICKPARAM::GIMMICK_TERMS_AREA_WALL* pWallParam = static_cast<GIMMICKPARAM::GIMMICK_TERMS_AREA_WALL*>(pParam);
             RwV3d aWallVertex[4] = { 0 };
 
             static_assert(COUNT_OF(aWallVertex) == COUNT_OF(m_aWallVertex), "update me");
@@ -507,22 +497,13 @@ void CAreaCheckGimmick::SetAreaParameter(AREATYPE areatype, void* pParam)
             aWallVertex[3].y = 0.0f;
             aWallVertex[3].z = 0.0f;
 
-            RwMatrix matrix;
             RwMatrix matrixTranslate;
-            RwMatrixSetIdentityMacro(&matrix);
             RwMatrixSetIdentityMacro(&matrixTranslate);
+            RwMatrixTranslate(&matrixTranslate, &pWallParam->m_vPosition, rwCOMBINEREPLACE);            
             
-            RwMatrixTranslate(
-                &matrixTranslate,
-                &pWallParam->m_vPosition,
-                rwCOMBINEREPLACE
-            );
-            
-            Math::Matrix_Multiply(
-                &matrix,
-                &matrixRotation,
-                &matrixTranslate
-            );
+            RwMatrix matrix;
+            RwMatrixSetIdentityMacro(&matrix);
+            Math::Matrix_Multiply(&matrix, &matrixRotation, &matrixTranslate);
             
             RwV3dTransformPoints(m_aWallVertex, aWallVertex, COUNT_OF(aWallVertex), &matrix);
         }
@@ -530,7 +511,7 @@ void CAreaCheckGimmick::SetAreaParameter(AREATYPE areatype, void* pParam)
 
     case AREATYPE_BOX:
         {
-            GIMMICKPARAM::GIMMICK_TERMS_AREA_BOX* pBoxParam = (GIMMICKPARAM::GIMMICK_TERMS_AREA_BOX*)pParam;
+            GIMMICKPARAM::GIMMICK_TERMS_AREA_BOX* pBoxParam = static_cast<GIMMICKPARAM::GIMMICK_TERMS_AREA_BOX*>(pParam);
             RwV3d aBoxVertex[8] = { 0 };
 
             static_assert(COUNT_OF(aBoxVertex) == COUNT_OF(m_aBoxVertex), "update me");
@@ -567,22 +548,13 @@ void CAreaCheckGimmick::SetAreaParameter(AREATYPE areatype, void* pParam)
             aBoxVertex[7].y = 0.0f;
             aBoxVertex[7].z = pBoxParam->m_box.z * 0.5f;
 
-            RwMatrix matrix;
             RwMatrix matrixTranslate;
-            RwMatrixSetIdentityMacro(&matrix);
             RwMatrixSetIdentityMacro(&matrixTranslate);
+            RwMatrixTranslate(&matrixTranslate, &pBoxParam->m_vPosition, rwCOMBINEREPLACE);
 
-            RwMatrixTranslate(
-                &matrixTranslate,
-                &pBoxParam->m_vPosition,
-                rwCOMBINEREPLACE
-            );
-
-            Math::Matrix_Multiply(
-                &matrix,
-                &matrixRotation,
-                &matrixTranslate
-            );
+            RwMatrix matrix;
+            RwMatrixSetIdentityMacro(&matrix);
+            Math::Matrix_Multiply(&matrix, &matrixRotation, &matrixTranslate);
 
             RwV3dTransformPoints(m_aBoxVertex, aBoxVertex, COUNT_OF(aBoxVertex), &matrix);
         }
@@ -624,12 +596,10 @@ bool CAreaCheckGimmick::isInsideBox(RwV3d* pvPosition)
 
         RwV3d vNormal = Math::VECTOR3_ZERO;
         
-        getPlaneNormal(
-            &m_aBoxVertex[s_aBoxVertexIndex[i + 0]],
-            &m_aBoxVertex[s_aBoxVertexIndex[i + 1]],
-            &m_aBoxVertex[s_aBoxVertexIndex[i + 2]],
-            &vNormal
-        );
+        getPlaneNormal(&m_aBoxVertex[s_aBoxVertexIndex[i + 0]],
+                       &m_aBoxVertex[s_aBoxVertexIndex[i + 1]],
+                       &m_aBoxVertex[s_aBoxVertexIndex[i + 2]],
+                       &vNormal);
 
         if (!isPointReverseSidePlane(pvPosition, &m_aBoxVertex[s_aBoxVertexIndex[i + 0]], &vNormal))
             return false;
@@ -643,12 +613,10 @@ bool CAreaCheckGimmick::isReverseSideWall(RwV3d* pvPosition)
 {
     RwV3d vNormal = Math::VECTOR3_ZERO;
 
-    getPlaneNormal(
-        &m_aWallVertex[0],
-        &m_aWallVertex[2],
-        &m_aWallVertex[1],
-        &vNormal
-    );
+    getPlaneNormal(&m_aWallVertex[0],
+                   &m_aWallVertex[2],
+                   &m_aWallVertex[1],
+                   &vNormal);
 
     if (!isPointReverseSidePlane(pvPosition, &m_aWallVertex[0], &vNormal))
         return false;
@@ -686,7 +654,7 @@ CPlayerAreaCheckGimmick::CPlayerAreaCheckGimmick(const char* pszName, void* pPar
 : CAreaCheckGimmick(pszName, pParam)
 , m_bCheckAllFlag(false)
 {
-    GIMMICKPARAM::GIMMICK_TERMS* pInitParam = (GIMMICKPARAM::GIMMICK_TERMS*)pParam;
+    GIMMICKPARAM::GIMMICK_TERMS* pInitParam = static_cast<GIMMICKPARAM::GIMMICK_TERMS*>(pParam);
 
     AREATYPE areatype = AREATYPE_WALL;
     switch (pInitParam->m_id)
@@ -784,8 +752,6 @@ bool CPlayerAreaCheckGimmick::CheckArea(void)
 CEnemyAreaCheckGimmick::CEnemyAreaCheckGimmick(const char* pszName, void* pParam)
 : CAreaCheckGimmick(pszName, pParam)
 {
-    ASSERT(pParam);
-    
     SetAreaParameter(AREATYPE_WALL, pParam);
     m_numbertype = NUMBERTYPE_SOMEONE;
 };
@@ -835,8 +801,8 @@ CGimmickObjAreaCheckGimmick::CGimmickObjAreaCheckGimmick(const char* pszName, vo
 {
     SetAreaParameter(AREATYPE_SPHERE, pParam);
 
-    ASSERT(pParam);
-    GIMMICKPARAM::GIMMICK_TERMS* pInitParam = (GIMMICKPARAM::GIMMICK_TERMS*)pParam;
+    GIMMICKPARAM::GIMMICK_TERMS* pInitParam = static_cast<GIMMICKPARAM::GIMMICK_TERMS*>(pParam);
+    ASSERT(pInitParam);
 
     m_idTarget = (pInitParam->m_id != GIMMICKID::ID_E_RRSPHR ? GIMMICKID::ID_INVALID : GIMMICKID::ID_N_RAPROC);
     m_numbertype = NUMBERTYPE_SOMEONE;
@@ -938,8 +904,8 @@ CBrokenCheckGimmick::CBrokenCheckGimmick(const char* pszName, void* pParam)
 {
     m_szObserveTarget[0] = '\0';
 
-    ASSERT(pParam);
-    GIMMICKPARAM::GIMMICK_TERMS_TARGET* pInitParam = (GIMMICKPARAM::GIMMICK_TERMS_TARGET*)pParam;
+    GIMMICKPARAM::GIMMICK_TERMS_TARGET* pInitParam = static_cast<GIMMICKPARAM::GIMMICK_TERMS_TARGET*>(pParam);
+    ASSERT(pInitParam);
 
     Init(pInitParam->m_szTargetGimmick);
 
@@ -962,7 +928,8 @@ bool CBrokenCheckGimmick::CheckEvent(void)
         CStateGimmickQuery queryBroken(GIMMICKTYPES::QUERY_EVE_BROKEN);
         pWatchTarget->Query(&queryBroken);
         
-        if (queryBroken.m_nTarget == queryBroken.m_nState && queryBroken.m_nTarget > 0)
+        if ((queryBroken.m_nTarget == queryBroken.m_nState) &&
+            (queryBroken.m_nTarget > 0))
             return true;
     };
 
@@ -978,8 +945,8 @@ bool CBrokenCheckGimmick::CheckEvent(void)
 CDonLaserGetCheckGimmick::CDonLaserGetCheckGimmick(const char* pszName, void* pParam)
 : CSimpleEventCheckGimmick(pszName, pParam)
 {
-    ASSERT(pParam);
-    GIMMICKPARAM::GIMMICK_TERMS* pInitParam = (GIMMICKPARAM::GIMMICK_TERMS*)pParam;
+    GIMMICKPARAM::GIMMICK_TERMS* pInitParam = static_cast<GIMMICKPARAM::GIMMICK_TERMS*>(pParam);
+    ASSERT(pInitParam);
 
     Init(pInitParam->m_szTargetGimmick);
 };

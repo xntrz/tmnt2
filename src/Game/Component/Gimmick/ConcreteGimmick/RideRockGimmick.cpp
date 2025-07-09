@@ -11,13 +11,13 @@
 #include "Game/System/Model/Model.hpp"
 
 
-/*static*/ RwRGBA CRideRockGimmick::m_DamageColor = { 0xFF, 0x00, 0x00, 0xFF };
+/*static*/ RwRGBA CRideRockGimmick::m_damageColor = { 0xFF, 0x00, 0x00, 0xFF };
 
 
 CRideRockGimmick::CRideRockGimmick(const char* pszName, void* pParam)
 : CRideGimmick(pszName, pParam)
 , m_iLife(4)
-, m_DefaultColor({ 0xFF, 0xFF,0xFF,0xFF })
+, m_defaultColor({ 0xFF, 0xFF, 0xFF, 0xFF })
 , m_fBlendRate(0.0f)
 {
     m_fRadius = 1.0f;
@@ -25,31 +25,39 @@ CRideRockGimmick::CRideRockGimmick(const char* pszName, void* pParam)
     m_iPower = 10;
     m_bCatchHit = true;    
 
-    ASSERT(pParam);    
-    GIMMICKPARAM::GIMMICK_BASIC* pInitParam = (GIMMICKPARAM::GIMMICK_BASIC*)pParam;
+    GIMMICKPARAM::GIMMICK_BASIC* pInitParam = static_cast<GIMMICKPARAM::GIMMICK_BASIC*>(pParam);
+    ASSERT(pInitParam);
 
+    //
+    //  Init model
+    //
     CModel* pModel = CModelManager::CreateModel("asteroid");
     ASSERT(pModel);
     pModel->SetClippingEnable(false);
 
-    m_DefaultColor = pModel->GetColor();
+    m_defaultColor = pModel->GetColor();
 
     m_model.SetModel(CNormalGimmickModel::MODELTYPE_DRAW_NORMAL, pModel);
     m_model.SetPosition(&pInitParam->m_vPosition);
     m_model.UpdateFrame();
 
+    SetModelStrategy(&m_model);
+
+    //
+    //  Init movement
+    //
     m_pRideMove = new CRideRockGimmickMove;
-    ASSERT(m_pRideMove);
     m_pRideMove->SetPosition(&pInitParam->m_vPosition);
     m_pRideMove->Start();
 
-    SetModelStrategy(&m_model);
     SetMoveStrategy(m_pRideMove);
 
+    //
+    //  Init module man
+    //
     if (CRideStage::GetShadowFlag())
     {
         m_pModuleManager = new CModuleManager;
-        ASSERT(m_pModuleManager);
         m_pModuleManager->Include(CCircleShadowModule::New(this, m_fRadius * 3.0f, m_fRadius * 3.0f, false));
         m_pModuleManager->Run();
     };
@@ -74,22 +82,21 @@ void CRideRockGimmick::PostMove(void)
     if (m_fBlendRate < 0.0f)
         m_fBlendRate = 0.0f;
 
-    RwRGBA Color = { 0x00 ,0x00, 0x00, 0x00 };
-    Color.red   = uint8(m_DefaultColor.red   * (1.0f - m_fBlendRate) + m_DamageColor.red     * m_fBlendRate);
-    Color.green = uint8(m_DefaultColor.green * (1.0f - m_fBlendRate) + m_DamageColor.green   * m_fBlendRate);
-    Color.blue  = uint8(m_DefaultColor.blue  * (1.0f - m_fBlendRate) + m_DamageColor.blue    * m_fBlendRate);
-    Color.alpha = uint8(m_DefaultColor.alpha * (1.0f - m_fBlendRate) + m_DamageColor.alpha   * m_fBlendRate);
+    RwRGBA materialColor = { 0 };
+    materialColor.red   = static_cast<RwUInt8>(m_defaultColor.red   * (1.0f - m_fBlendRate) + m_damageColor.red     * m_fBlendRate);
+    materialColor.green = static_cast<RwUInt8>(m_defaultColor.green * (1.0f - m_fBlendRate) + m_damageColor.green   * m_fBlendRate);
+    materialColor.blue  = static_cast<RwUInt8>(m_defaultColor.blue  * (1.0f - m_fBlendRate) + m_damageColor.blue    * m_fBlendRate);
+    materialColor.alpha = static_cast<RwUInt8>(m_defaultColor.alpha * (1.0f - m_fBlendRate) + m_damageColor.alpha   * m_fBlendRate);
 
-    m_model.SetColor(CNormalGimmickModel::MODELTYPE_DRAW_NORMAL, Color);
+    m_model.SetColor(CNormalGimmickModel::MODELTYPE_DRAW_NORMAL, materialColor);
 };
 
 
 void CRideRockGimmick::OnCatchAttack(CHitAttackData* pAttack)
 {
     m_fBlendRate = 1.0f;
-    --m_iLife;
 
-    if (m_iLife <= 0)
+    if (--m_iLife <= 0)
     {
         RwV3d vPosition = Math::VECTOR3_ZERO;
         m_pRideMove->GetPosition(&vPosition);

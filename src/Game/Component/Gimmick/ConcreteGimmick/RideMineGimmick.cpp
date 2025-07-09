@@ -21,9 +21,12 @@ CRideMineGimmick::CRideMineGimmick(const char* pszName, void* pParam)
     m_iPower = 10;
     m_bCatchHit = true;
 
-    ASSERT(pParam);
-    GIMMICKPARAM::GIMMICK_BASIC* pInitParam = (GIMMICKPARAM::GIMMICK_BASIC*)pParam;
+    GIMMICKPARAM::GIMMICK_BASIC* pInitParam = static_cast<GIMMICKPARAM::GIMMICK_BASIC*>(pParam);
+    ASSERT(pInitParam);
 
+    //
+    //  Init model
+    //
     CModel* pModel = CModelManager::CreateModel("mine");
     ASSERT(pModel);
     pModel->SetClippingEnable(false);
@@ -32,18 +35,23 @@ CRideMineGimmick::CRideMineGimmick(const char* pszName, void* pParam)
     m_model.SetPosition(&pInitParam->m_vPosition);
     m_model.UpdateFrame();
 
+    SetModelStrategy(&m_model);
+
+    //
+    //  Init movement
+    //
     m_pRideMove = new CRideMineGimmickMove(pInitParam->m_subid);
-    ASSERT(m_pRideMove);
     m_pRideMove->SetPosition(&pInitParam->m_vPosition);
     m_pRideMove->Start();
 
-    SetModelStrategy(&m_model);
     SetMoveStrategy(m_pRideMove);
 
+    //
+    //  Init module man
+    //
     if (CRideStage::GetShadowFlag())
     {
         m_pModuleManager = new CModuleManager;
-        ASSERT(m_pModuleManager);
         m_pModuleManager->Include(CCircleShadowModule::New(this, m_fRadius * 3.0f, m_fRadius * 3.0f, false));
         m_pModuleManager->Run();
     };
@@ -83,13 +91,13 @@ void CRideMineGimmick::Explose(void)
     RwV3d vPosition = Math::VECTOR3_ZERO;
     m_pRideMove->GetPosition(&vPosition);
 
-    CMagicManager::CParameter MagicParam;
-    MagicParam.SetPositon(&vPosition);
-    MagicParam.SetObject(this);
-    MagicParam.SetSoundPlay(false);
-    CMagicManager::Play(MAGICID::ID_EXPL_B1, &MagicParam);
+    CMagicManager::CParameter param;
+    param.SetPositon(&vPosition);
+    param.SetObject(this);
+    param.SetSoundPlay(false);
+    CMagicManager::Play(MAGICID::ID_EXPL_B1, &param);
     
-    CGameSound::PlaySE(SDCODE_SE(0x102B));
+    CGameSound::PlayObjectSE(this, SDCODE_SE(0x102B));
 
     Release();
 };
@@ -107,10 +115,7 @@ bool CRideMineGimmick::IsNearByPlayer(void)
     if (CGimmickUtils::CalcNearestPlayerDistance(&vPosition, &vNearestPos) >= 5.0f)
         return false;
 
-    float fDist = vNearestPos.x - vPosition.x;
-    if (fDist < 0.0f)
-        fDist = -fDist;
-
+    float fDist = std::fabs(vNearestPos.x - vPosition.x);
     if (fDist >= 3.0f)
         return false;
 

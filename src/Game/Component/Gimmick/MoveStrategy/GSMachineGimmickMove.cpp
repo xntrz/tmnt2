@@ -9,20 +9,20 @@ CGSMachineGimmickMove::CGSMachineGimmickMove(void)
 };
 
 
-/*virtual*/ CGSMachineGimmickMove::~CGSMachineGimmickMove(void)
+CGSMachineGimmickMove::~CGSMachineGimmickMove(void)
 {
     ;
 };
 
 
-/*virtual*/ void CGSMachineGimmickMove::UpdatePathTime(float dt) /*override*/
+void CGSMachineGimmickMove::UpdatePathTime(float dt)
 {
     m_fPathT += (m_fPathTimeRate * dt);
     m_fPathT = Clamp(m_fPathT, 0.0f, 1.0f);
 };
 
 
-/*virtual*/ void CGSMachineGimmickMove::UpdateRotation(float dt) /*override*/
+void CGSMachineGimmickMove::UpdateRotation(float dt)
 {
     if ((m_fPathT > 0.0f) && (m_fPathT < 1.0f))
     {

@@ -301,7 +301,6 @@ void CSprite::Draw(void) const
         { m_fU1, m_fV0, },
     };
 
-    float z = RwIm2DGetNearScreenZMacro();
     float rhw = 1.0f / RwCameraGetNearClipPlaneMacro(CCamera::CameraCurrent());
 
     for (int32 i = 0; i < COUNT_OF(aVertices); ++i)
@@ -362,7 +361,6 @@ void CSprite::DrawRotate(void) const
         { m_fU1, m_fV0, },
     };
 
-    float z = RwIm2DGetNearScreenZMacro();
     float rhw = 1.0f / RwCameraGetNearClipPlaneMacro(CCamera::CameraCurrent());
 
     for (int32 i = 0; i < COUNT_OF(aVertices); ++i)

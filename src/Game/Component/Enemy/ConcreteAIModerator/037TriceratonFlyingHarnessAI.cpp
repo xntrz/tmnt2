@@ -22,9 +22,9 @@
 
 
 C037TriceratonFlyingHarnessAI::C037TriceratonFlyingHarnessAI(CEnemyCharacter* pEnemyChr)
-    : CBaseFlyingEnemyAI(pEnemyChr)
-    , m_prevHP(0)
-    , m_fDirection(0.0f)
+: CBaseFlyingEnemyAI(pEnemyChr)
+, m_prevHP(0)
+, m_fDirection(0.0f)
 {
     int32 playerNum = CAIUtils::GetPlayerNum();
     for (int32 i = 0; i < playerNum; ++i)

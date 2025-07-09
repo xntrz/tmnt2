@@ -77,28 +77,22 @@ void CCrumbleFloorGimmickMove::Wait(float dt)
     {
         if (m_fTotalMoment > 0.0f && m_bEffect)
         {
-            bool bSoundCall = true;
-
             RwV3d vPosition = m_vPosition;
             vPosition.x += 2.0f;
             vPosition.z += 2.0f;
 
-            uint32 hEffect = CEffectManager::Play("m12_breakrock", &vPosition, bSoundCall);
-            ASSERT(hEffect);
+            CEffectManager::Play("m12_breakrock", &vPosition);
 
             m_bEffect = false;
         };        
     }
     else
     {
-        bool bSoundCall = true;
-
         RwV3d vPosition = m_vPosition;
         vPosition.x += 2.0f;
         vPosition.z += 2.0f;
 
-        uint32 hEffect = CEffectManager::Play("m12_breakrock", &vPosition, bSoundCall);
-        ASSERT(hEffect);
+        CEffectManager::Play("m12_breakrock", &vPosition);
 
         CMessageManager::Request(SEGROUPID::VALUE(196));
 
@@ -123,7 +117,7 @@ void CCrumbleFloorGimmickMove::PreMove(float dt)
     
     m_fCounter += dt;
 
-    if (m_fCounter > 0.07f)
+    if (m_fCounter > 0.08f)
     {
         m_fTheta = -MATH_DEG2RAD(6.0f);
         m_eStep = STEP_ENDURE;
@@ -162,7 +156,7 @@ void CCrumbleFloorGimmickMove::Shake(float dt)
         m_fCounter = 0.0f;
         m_vVelocity.y = 0.0f;
 
-        CGameSound::PlayPositionSE(&m_vPosition, SDCODE_SE(4353), 0);
+        CGameSound::PlayPositionSE(&m_vPosition, SDCODE_SE(4353));
     };
 };
 

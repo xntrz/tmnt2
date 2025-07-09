@@ -42,7 +42,7 @@ CRideRockGimmickMove::~CRideRockGimmickMove(void)
 
 CRideRockGimmickMove::RESULT CRideRockGimmickMove::OnMove(float dt)
 {
-    float fSpeed = (dt * 1.2566371f);
+    float fSpeed = (dt * MATH_DEG2RAD(72.0f));
     
     m_vRotation.x += (fSpeed * m_vRotDir.x);
     m_vRotation.y += (fSpeed * m_vRotDir.y);

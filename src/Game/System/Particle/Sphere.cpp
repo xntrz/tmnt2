@@ -37,7 +37,7 @@ CSphere::CSphere(float fRadius,
 };
 
 
-/*virtual*/ CSphere::~CSphere(void)
+CSphere::~CSphere(void)
 {
     if (m_pVertex)
     {

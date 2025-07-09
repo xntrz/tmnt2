@@ -289,7 +289,7 @@ void CPlayNexusStageSeqState::SetItemBox(void)
 
     for (int32 i = 0; i < COUNT_OF(aItemBoxList); ++i)
     {                
-        const float fAngleDelta = Math::PI2 / static_cast<float>(COUNT_OF(aItemBoxList));
+        const float fAngleDelta = MATH_PI2 / static_cast<float>(COUNT_OF(aItemBoxList));
         
         param.m_vPosition.x = Math::Cos(i * fAngleDelta) * 8.0f;
         param.m_vPosition.z = Math::Sin(i * fAngleDelta) * 8.0f;

@@ -30,7 +30,7 @@ CRideMineGimmickMove::~CRideMineGimmickMove(void)
 
 CRideMineGimmickMove::RESULT CRideMineGimmickMove::OnMove(float dt)
 {
-    m_fSpeed = Math::Cos((Math::PI2 / m_fT) * m_fTimer) * m_fA * (Math::PI2 / m_fT);
+    m_fSpeed = Math::Cos((MATH_PI2 / m_fT) * m_fTimer) * m_fA * (MATH_PI2 / m_fT);
 
     m_fTimer += dt;
 
@@ -42,7 +42,7 @@ CRideMineGimmickMove::RESULT CRideMineGimmickMove::OnMove(float dt)
     m_vPosition.y += m_vVelocity.y;
     m_vPosition.z += m_vVelocity.z;
 
-    m_vRotation.y += (dt * Math::PI2);
+    m_vRotation.y += (dt * MATH_PI2);
 
     return RESULT_NONE;
 };
