@@ -187,9 +187,9 @@ void CAreaMenu_Container::AreaMenuInit_Sub(void)
 AREATYPES::NEXTSEQUENCE CAreaMenu_Container::AreaMenuSelect_Sub(void)
 {
     if (!m_bTextureSettingFlag)
-		return AREATYPES::NEXTSEQUENCE_NONE;
+        return AREATYPES::NEXTSEQUENCE_NONE;
 
-    uint32 uAnimDur = uint32(CScreen::Framerate() * 0.2f);
+    uint32 uAnimDur = static_cast<uint32>(ANIM_DURATION_FRAMES(12));
     int32 iController = CGameData::Attribute().GetVirtualPad();
 
     switch (m_SubmenuType)
@@ -256,8 +256,8 @@ AREATYPES::NEXTSEQUENCE CAreaMenu_Container::AreaMenuSelect_Sub(void)
             {
                 m_nSubCursorPage = InvClamp(--m_nSubCursorPage, 0, 1);
                 CGameSound::PlaySE(SDCODE_SE(4100));
-				if (m_nSubCursorPage && (m_nSubCursor == (nSubMenuItemCount - 1)))
-					--m_nSubCursor;
+                if (m_nSubCursorPage && (m_nSubCursor == (nSubMenuItemCount - 1)))
+                    --m_nSubCursor;
             }
             else if (CController::GetDigitalTrigger(iController, CController::DIGITAL_LRIGHT))
             {
@@ -298,16 +298,16 @@ AREATYPES::NEXTSEQUENCE CAreaMenu_Container::AreaMenuSelect_Sub(void)
                 m_nCursor = InvClamp(++m_nCursor, 0, m_nMenuItemCount - 1);
                 CGameSound::PlaySE(SDCODE_SE(4100));
             }
-			else if (CController::GetDigitalTrigger(iController, CController::DIGITAL_CANCEL | CController::DIGITAL_R1))
+            else if (CController::GetDigitalTrigger(iController, CController::DIGITAL_CANCEL | CController::DIGITAL_R1))
             {
                 m_bMenuDispFlag = false;
                 m_MenuAnimCount = 0;
                 CGameSound::PlaySE(SDCODE_SE(4097));
             }
             else if (CController::GetDigitalTrigger(iController, CController::DIGITAL_OK))
-			{
-				CGameSound::PlaySE(SDCODE_SE(4098));
-				switch (m_aMenuItemTable[m_nCursor])
+            {
+                CGameSound::PlaySE(SDCODE_SE(4098));
+                switch (m_aMenuItemTable[m_nCursor])
                 {
                 case MAIN_WARP:
                     m_SubmenuType = SUBMENUTYPE_WARP;
@@ -338,16 +338,16 @@ AREATYPES::NEXTSEQUENCE CAreaMenu_Container::AreaMenuSelect_Sub(void)
                 case MAIN_TITLE:
                     return AREATYPES::NEXTSEQUENCE_TITLE;
                     
-				case MAIN_BACK:
-					/*
-					 *	NOTE:
-					 *	in retail game there is call for playing CANCEL SE when back is pressed
-					 *	that overlaps OK SE (see before switch case) and they are playing together
-					 */
-					CGameSound::PlaySE(SDCODE_SE(4097));
+                case MAIN_BACK:
+                    /*
+                     *	NOTE:
+                     *	in retail game there is call for playing CANCEL SE when back is pressed
+                     *	that overlaps OK SE (see before switch case) and they are playing together
+                     */
+                    CGameSound::PlaySE(SDCODE_SE(4097));
 
-					m_bMenuDispFlag = false;
-					m_MenuAnimCount = 0;
+                    m_bMenuDispFlag = false;
+                    m_MenuAnimCount = 0;
                     break;
                 };
             };
@@ -608,7 +608,7 @@ void CAreaMenu_Container::AreaInfoMenuDraw_Sub(void)
 
 void CAreaMenu_Container::AreaMenuDisp(void)
 {
-    uint32 uAnimDur = uint32(CScreen::Framerate() * 0.2f);
+    uint32 uAnimDur = static_cast<uint32>(ANIM_DURATION_FRAMES(12));
     
     if (m_MenuAnimCount < uAnimDur)
         ++m_MenuAnimCount;
@@ -636,7 +636,7 @@ void CAreaMenu_Container::AreaMenuDisp(void)
                                                float(m_MenuAnimCount),
                                                float(uAnimDur)));
 
-	RenderStatePush();
+    RenderStatePush();
     WindowDisp(WINDOWTYPE_NORMAL, -296.0f, -194.0f, fWidth, fHeight);
     RenderStatePop();
 
@@ -702,7 +702,7 @@ void CAreaMenu_Container::AreaMenuDisp(void)
 
 void CAreaMenu_Container::MenuDispSub_Station(void)
 {
-    uint32 uAnimDur = uint32(CScreen::Framerate() * 0.2f);
+    uint32 uAnimDur = static_cast<uint32>(ANIM_DURATION_FRAMES(12));
 
     if (m_SubMenuAnimCount < uAnimDur)
         ++m_SubMenuAnimCount;
@@ -776,7 +776,7 @@ void CAreaMenu_Container::MenuDispSub_Station(void)
 
 void CAreaMenu_Container::MenuDispSub_Combo(void)
 {    
-    uint32 uAnimDur = uint32(CScreen::Framerate() * 0.2f);
+    uint32 uAnimDur = static_cast<uint32>(ANIM_DURATION_FRAMES(12));
 
     if (m_SubMenuAnimCount < uAnimDur)
         ++m_SubMenuAnimCount;
@@ -1153,7 +1153,6 @@ const wchar* CAreaMenu_Container::GetAreaMenuName(int32 nMenuNo)
 
     static_assert(COUNT_OF(s_aAreaMenuGametext) == MAINMAX, "update me");
 
-    //ASSERT(nMenuNo >= 0 && nMenuNo < m_nMenuItemCount);
     ASSERT(nMenuNo >= 0);
     ASSERT(nMenuNo < MAINMAX);
 
@@ -1202,18 +1201,18 @@ const wchar* CAreaMenu_Container::GetStationName(int32 nWarpNo)
 
 void CAreaMenu_Container::RenderStatePush(void)
 {
-    RENDERSTATE_PUSH(rwRENDERSTATETEXTUREADDRESS,       rwTEXTUREADDRESSCLAMP);
-    RENDERSTATE_PUSH(rwRENDERSTATEBORDERCOLOR,          0);
-    RENDERSTATE_PUSH(rwRENDERSTATETEXTUREPERSPECTIVE,   true);
-    RENDERSTATE_PUSH(rwRENDERSTATETEXTUREFILTER,        rwFILTERLINEAR);
-    RENDERSTATE_PUSH(rwRENDERSTATEZTESTENABLE,          true);
-    RENDERSTATE_PUSH(rwRENDERSTATESHADEMODE,            rwSHADEMODEGOURAUD);
-    RENDERSTATE_PUSH(rwRENDERSTATEVERTEXALPHAENABLE,    true);
-    RENDERSTATE_PUSH(rwRENDERSTATEFOGENABLE,            false);
-    RENDERSTATE_PUSH(rwRENDERSTATECULLMODE,             rwCULLMODECULLNONE);
-    RENDERSTATE_PUSH(rwRENDERSTATEZWRITEENABLE,         true);
-    RENDERSTATE_PUSH(rwRENDERSTATESRCBLEND,             rwBLENDSRCALPHA);
-    RENDERSTATE_PUSH(rwRENDERSTATEDESTBLEND,            rwBLENDINVSRCALPHA);
+    RENDERSTATE_PUSH(rwRENDERSTATETEXTUREADDRESS, rwTEXTUREADDRESSCLAMP);
+    RENDERSTATE_PUSH(rwRENDERSTATEBORDERCOLOR, 0);
+    RENDERSTATE_PUSH(rwRENDERSTATETEXTUREPERSPECTIVE, true);
+    RENDERSTATE_PUSH(rwRENDERSTATETEXTUREFILTER, rwFILTERLINEAR);
+    RENDERSTATE_PUSH(rwRENDERSTATEZTESTENABLE, true);
+    RENDERSTATE_PUSH(rwRENDERSTATESHADEMODE, rwSHADEMODEGOURAUD);
+    RENDERSTATE_PUSH(rwRENDERSTATEVERTEXALPHAENABLE, true);
+    RENDERSTATE_PUSH(rwRENDERSTATEFOGENABLE, false);
+    RENDERSTATE_PUSH(rwRENDERSTATECULLMODE, rwCULLMODECULLNONE);
+    RENDERSTATE_PUSH(rwRENDERSTATEZWRITEENABLE, true);
+    RENDERSTATE_PUSH(rwRENDERSTATESRCBLEND, rwBLENDSRCALPHA);
+    RENDERSTATE_PUSH(rwRENDERSTATEDESTBLEND, rwBLENDINVSRCALPHA);
 };
 
 

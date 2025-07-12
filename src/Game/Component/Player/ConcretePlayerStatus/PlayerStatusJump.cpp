@@ -232,17 +232,18 @@ namespace PlayerStatus
         Character().SetVelocity(&vVelocity);
         
         Character().ResetAcceleration();
-        
+
         Character().SetCharacterFlag(CHARACTERTYPES::FLAG_FIXED_DIRECTION);
         Character().ClearCharacterFlag(CHARACTERTYPES::FLAG_FIXED_MODEL_ROTATION);
-
         Character().SetPlayerFlag(PLAYERTYPES::FLAG_JUMP_2ND);
 
         CJumpCommon::OnAttach();
 
-        RwV3d vFootPos = Math::VECTOR3_ZERO;
-        Character().GetFootPosition(&vFootPos);
-        CEffectManager::Play(PLAYERTYPES::EFFECTNAMES::JUMP_WALL, &vFootPos);
+        RwV3d vEffectPos = Math::VECTOR3_ZERO;
+        Character().GetFootPosition(&vEffectPos);
+        vEffectPos.x = pWallInfo->m_vJumpWallPosition.x;
+        vEffectPos.z = pWallInfo->m_vJumpWallPosition.z;
+        CEffectManager::Play(PLAYERTYPES::EFFECTNAMES::JUMP_WALL, &vEffectPos);
         
         CGameEvent::SetPlayerTechnicalAction(Character().GetPlayerNo(), GAMETYPES::TECACT_JUMP_WALL);
         

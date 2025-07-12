@@ -219,7 +219,7 @@ void CPlayerSelectWorkPool::Move(void)
         else
             pPlayerInfo->m_state = PLAYERINFO::STATE_INACTIVE;
 
-        pPlayerInfo->m_uAnimPressStartDuration = static_cast<uint32>(CScreen::Framerate() * 0.5f);
+        pPlayerInfo->m_uAnimPressStartDuration = static_cast<uint32>(ANIM_DURATION_FRAMES(30));
         if (pPlayerInfo->m_uAnimPressStartFrame < pPlayerInfo->m_uAnimPressStartDuration)
             ++pPlayerInfo->m_uAnimPressStartFrame;
         
@@ -229,9 +229,9 @@ void CPlayerSelectWorkPool::Move(void)
         if (pPlayerInfo->m_state != PLAYERINFO::STATE_ACTIVE)
             continue;
 
-        uint32 uChngAnimDuration = static_cast<uint32>(CScreen::Framerate() * 0.25f);
+        uint32 uChngAnimDuration = static_cast<uint32>(ANIM_DURATION_FRAMES(15));
 #ifdef TMNT2_BUILD_EU
-        uChngAnimDuration = static_cast<uint32>(CScreen::Framerate() * 0.4f);
+        uChngAnimDuration = static_cast<uint32>(ANIM_DURATION_FRAMES(24));
 #endif /* TMNT2_BUILD_EU */
 
         if (pPlayerInfo->m_iCursorDisplay != pPlayerInfo->m_iCursor)
@@ -302,9 +302,11 @@ void CPlayerSelectWorkPool::Move(void)
         else if (CController::GetDigitalTrigger(iController, CController::DIGITAL_LUP) ||
                  CController::GetDigitalTrigger(iController, CController::DIGITAL_LDOWN))
         {
-            CGameSound::PlaySE(SDCODE_SE(4100));
             if (m_aCharacterInfo[pPlayerInfo->m_iCursor + 4].m_bEnable)
+            {
                 pPlayerInfo->m_bSecret = !pPlayerInfo->m_bSecret;
+                CGameSound::PlaySE(SDCODE_SE(4100));
+            };
         }
         else if (CController::GetDigital(iController, CController::DIGITAL_L1))
         {

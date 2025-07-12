@@ -340,7 +340,7 @@ bool CManipulator::RunAerialCommon(void)
         m_pPlayerChr->ChangeStatus(PLAYERTYPES::STATUS_ATTACK_JUMP);
     }
     else if ((m_input.m_knife == KNIFE_ON) &&
-              m_pPlayerChr->IsEnableAttackKnife())
+              m_pPlayerChr->IsEnableAttackKnifeJump())
     {
         m_pPlayerChr->ChangeStatus(PLAYERTYPES::STATUS_ATTACK_KNIFE_JUMP);
     }
@@ -738,7 +738,7 @@ void CManipulator::SetConfusionInput(void)
 	if (m_pPlayerChr->TestAttribute(PLAYERTYPES::ATTRIBUTE_CONFUSION))
 	{
 		m_input.m_fDirection += MATH_PI;
-		if (m_input.m_fDirection > MATH_PI)
+		if (m_input.m_fDirection > MATH_PI2)
 			m_input.m_fDirection -= MATH_PI2;
 	};
 };

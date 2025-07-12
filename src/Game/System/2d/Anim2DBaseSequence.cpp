@@ -113,16 +113,19 @@ void CAnim2DSequence::OnMove(bool bRet, const void* pReturnValue)
 
 void CAnim2DSequence::OnDraw(void) const
 {
-	if (IsDrawing())
-	{
-		CRenderStateManager::SetDefault();
+    if ((m_animStep == ANIMSTEP_FADEIN)  ||
+        (m_animStep == ANIMSTEP_DRAW)    ||
+        (m_animStep == ANIMSTEP_FADEOUT) ||
+        (m_animStep == ANIMSTEP_END))
+    {
+        if (CSystem2D::BeginScene())
+        {
+            CRenderStateManager::SetDefault();
+            Animation2D().Draw();
 
-		if (CSystem2D::BeginScene())
-		{
-			Animation2D().Draw();
-			CSystem2D::EndScene();
-		};
-	};
+            CSystem2D::EndScene();
+        };
+    };
 };
 
 

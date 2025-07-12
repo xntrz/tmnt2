@@ -10,6 +10,7 @@
 #include "Game/Component/Menu/Dialog.hpp"
 #include "Game/System/2d/GameFont.hpp"
 #include "Game/System/DataLoader/DataLoader.hpp"
+#include "Game/System/Misc/RenderStateManager.hpp"
 #include "Game/System/Misc/ScreenFade.hpp"
 #include "Game/System/Sound/GameSound.hpp"
 #include "Game/System/Text/GameText.hpp"
@@ -23,6 +24,14 @@
 #include "System/Common/System2D.hpp"
 #include "System/Common/SystemText.hpp"
 #include "System/Common/TextData.hpp"
+
+
+template<class T>
+static inline float
+LinearTween(float startValue, float changeValue, T time, T duration)
+{
+    return (startValue + ((static_cast<float>(time) / static_cast<float>(duration)) * changeValue));
+};
 
 
 class CAreaWorkPool
@@ -47,18 +56,10 @@ public:
 
     struct CLEARANIM
     {
-        enum
-        {
-            STEP_NONE = 0,
-            STEP_FADEIN,
-            STEP_SIZEIN,
-            STEP_FADEOUT,
-        };
-
-        int32 m_nStep;
-        uint32 m_uCounter;
-        uint8 m_uAlphaBasis;
-        float m_fScale;
+        int32   step;
+        uint32  counter;
+        uint8   alphaBasis;
+        float   scale;
     };
 
 public:
@@ -159,7 +160,7 @@ CAreaWorkPool::~CAreaWorkPool(void)
 
 void CAreaWorkPool::Attach(void)
 {
-	m_animation = ANIMATION_NONE;
+    m_animation = ANIMATION_NONE;
 
     AREAID::VALUE idArea = CGameData::Record().Area().GetCurrentSelectedArea();
 
@@ -183,7 +184,7 @@ void CAreaWorkPool::Attach(void)
     m_kameIconAnimCount = 0;
     m_kameMoveAnimCount = 0;
     m_bMenuOpenFlag = false;
-	m_bStationWarpFlag = false;
+    m_bStationWarpFlag = false;
 
     GetAreaPosition(&m_vKamePos, m_areaNew);
 
@@ -243,6 +244,9 @@ bool CAreaWorkPool::Move(void)
     case ANIMATION_CLEARED:
         AreaClearedAnimation();
         return false;
+
+    default:
+        break;
     };
 
     if (m_areaNow >= AREAID::SELECTABLEMAX)
@@ -278,12 +282,13 @@ bool CAreaWorkPool::Move(void)
     {
         if (m_areaNow >= AREAID::NORMALMAX)
         {
-            if (m_areaNow >= AREAID::WARPSTART && m_areaNow < AREAID::WARPMAX)
+            if ((m_areaNow >= AREAID::WARPSTART) &&
+                (m_areaNow < AREAID::WARPMAX))
             {
                 CGameSound::PlaySE(SDCODE_SE(4112));
                 m_nextSequence = AREATYPES::NEXTSEQUENCE_AREA;
                 return true;
-            }
+            };
 
             if (m_areaNow != AREAID::ID_MNY_STN)
                 return false;
@@ -381,7 +386,8 @@ void CAreaWorkPool::UpdateAreaWarp(void)
         break;
 
     default:
-        if (m_areaNow < AREAID::ID_MNY_E01 || m_areaNow > AREAID::ID_KUR_E01)
+        if ((m_areaNow < AREAID::ID_MNY_E01) ||
+            (m_areaNow > AREAID::ID_KUR_E01))
         {
             if (m_areaNow < AREAID::NORMALMAX)
             {
@@ -576,7 +582,9 @@ void CAreaWorkPool::TextureDraw(void)
     if (!m_bTextureSettingFlag)
         return;
 
-    RENDERSTATE_PUSH(rwRENDERSTATECULLMODE, RwCullMode::rwCULLMODECULLNONE);
+    CRenderStateManager::SetDefault();
+
+    RENDERSTATE_PUSH(rwRENDERSTATECULLMODE, rwCULLMODECULLNONE);
     RENDERSTATE_PUSH(rwRENDERSTATEFOGENABLE, false);
 
     AREAID::VALUE idArea = CGameData::Record().Area().GetCurrentSelectedArea();
@@ -587,10 +595,10 @@ void CAreaWorkPool::TextureDraw(void)
     ClearedAnimDisp();
     AreaSelectGuide();
 
-    RENDERSTATE_POP(rwRENDERSTATECULLMODE);
     RENDERSTATE_POP(rwRENDERSTATEFOGENABLE);
+    RENDERSTATE_POP(rwRENDERSTATECULLMODE);
 
-    if (m_kameIconAnimCount >= CScreen::Framerate() * 0.5f)
+    if (static_cast<float>(m_kameIconAnimCount) >= ANIM_DURATION_FRAMES(30))
     {
         m_bKameIconAnimFlag = !m_bKameIconAnimFlag;
         m_kameIconAnimCount = 0;
@@ -659,11 +667,11 @@ void CAreaWorkPool::AreaDisp(WORLDID::VALUE idWorld)
     for (int32 i = AREAID::SELECTABLESTART; i < AREAID::SELECTABLEMAX; ++i)
     {
         AREAID::VALUE idArea = AREAID::VALUE(i);
-	
-        if (CAreaInfo::GetWorldNo(idArea) == idWorld                     &&
-            (idArea < AREAID::ID_MNY_J01 || idArea > AREAID::ID_KUR_J01) &&
-            idArea < AREAID::STATIONMAX                                  &&
-            idArea != AREAID::HOME)
+    
+        if ((CAreaInfo::GetWorldNo(idArea) == idWorld)
+            && ((idArea < AREAID::ID_MNY_J01) || (idArea > AREAID::ID_KUR_J01))
+            && (idArea < AREAID::STATIONMAX)
+            && (idArea != AREAID::HOME))
         {
             AreaMarkDisp(idArea);
         };
@@ -674,46 +682,44 @@ void CAreaWorkPool::AreaDisp(WORLDID::VALUE idWorld)
 void CAreaWorkPool::AreaTextDisp(int32 nIndex)
 {
     static const Rt2dBBox s_aTextDispTable[] =
-    {
-        //  x         y           w       h
-
+    {        
         //
         //  NY
         //
-        {   1.0f,     53.0f,      64.0f,   64.0f,  },
-        { -145.0f,  -130.0f,      64.0f,   32.0f,  },
-        { -264.0f,    56.0f,      64.0f,   64.0f,  },
-        {  202.0f,   -50.0f,      64.0f,  128.0f,  },
-        {   90.0f,  -202.0f,     128.0f,   64.0f,  },
-        { -282.0f,    -8.0,       128.0f,  64.0f,  },
+        {    1.0f,    53.0f,    64.0f,   64.0f,  },
+        { -145.0f,  -130.0f,    64.0f,   32.0f,  },
+        { -264.0f,    56.0f,    64.0f,   64.0f,  },
+        {  202.0f,   -50.0f,    64.0f,  128.0f,  },
+        {   90.0f,  -202.0f,   128.0f,   64.0f,  },
+        { -282.0f,     -8.0,   128.0f,   64.0f,  },
 
         //
         //  DHO
         //
-        { -276.0f,    56.0f,       64.0f,  64.0f,  },
-        {  116.0f,    93.0f,      128.0f,  64.0f,  },
+        { -276.0f,    56.0f,    64.0f,   64.0f,  },
+        {  116.0f,    93.0f,   128.0f,   64.0f,  },
 
         //
         //  TRI
         //
-        { -196.0f,   116.0f,      128.0f,  32.0f,  },
-        {  188.0f,   102.0f,       64.0f,  64.0f,  },
+        { -196.0f,   116.0f,   128.0f,   32.0f,  },
+        {  188.0f,   102.0f,    64.0f,   64.0f,  },
 
         //
         //  JPN
         //
-        { -272.0f,    92.0f,      128.0f,  32.0f,  },
-        {  172.0f,  -200.0f,      128.0f,  64.0f,  },
+        { -272.0f,    92.0f,   128.0f,   32.0f,  },
+        {  172.0f,  -200.0f,   128.0f,   64.0f,  },
 
         //
         //  FNY
         //
-        { -268.0f,    32.0f,       64.0f,  64.0f,  },
+        { -268.0f,    32.0f,    64.0f,   64.0f,  },
 
         //
         //  KURA
         //
-        {  172.0f,    92.0f,      128.0f,  64.0f,  },
+        {  172.0f,    92.0f,   128.0f,   64.0f,  },
     };
 
     AREAID::VALUE idArea = CGameData::Record().Area().GetCurrentSelectedArea();
@@ -752,7 +758,7 @@ void CAreaWorkPool::AreaTextDisp(int32 nIndex)
     {
         m_sprite.ResetUV();
         m_sprite.SetRGBA(255, 255, 255, 255);
-        m_sprite.SetTexture(m_apAreaTextTexture[ nIndex ]);
+        m_sprite.SetTexture(m_apAreaTextTexture[nIndex]);
         m_sprite.SetOffset(0.0f, 0.0f);
         m_sprite.Move(s_aTextDispTable[nTextDispIdx].x,
                       s_aTextDispTable[nTextDispIdx].y);
@@ -770,90 +776,90 @@ void CAreaWorkPool::AreaLineDisp(int32 nIndex)
         //
         //  NY
         //
-        { -83.0f,   -158.0f,    32.0f,  64.0f   },
-        { -84.0f,   -188.0f,    256.0f, 256.0f, },        
-        { -33.0f,   66.0f,      128.0f, 64.0f,  },    
-        { 97.0f,    92.0f,      64.0f,  32.0f,  },        
-        { 151.0f,   69.0f,      64.0f,  32.0f,  },        
-        { 108.0f,   -108.0f,    32.0f,  64.0f,  },        
-        { 158.0f,   -112.0f,    32.0f,  16.0f,  },        
-        { 181.0f,   -226.0f,    32.0f,  128.0f, },        
-        { 208.0f,   -218.0f,    64.0f,  128.0f, },        
-        { 219.0f,   -66.0f,     64.0f,  32.0f,  },        
-        { 177.0f,   -53.0f,     64.0f,  16.0f,  },        
-        { 79.0f,    -23.0f,     128.0f, 32.0f,  },        
-        { -151.0f,  -53.0f,     128.0f, 128.0f, },        
-        { -105.0f,  87.0f,      16.0f,  32.0f,  },        
-        { -216.0f,  -51.0f,     64.0f,  32.0f,  },        
-        { -158.0f,  23.0f,      8.0f,   32.0f,  },        
-        { -192.0f,  64.0f,      64.0f,  64.0f,  },
-        { -267.0f,  113.0f,     64.0f,  32.0f,  },
-        { -279.0f,  -33.0f,     128.0f, 64.0f,  },
+        {  -83.0f,  -158.0f,    32.0f,    64.0f   },
+        {  -84.0f,  -188.0f,   256.0f,   256.0f,  },
+        {  -33.0f,    66.0f,   128.0f,    64.0f,  },
+        {   97.0f,    92.0f,    64.0f,    32.0f,  },
+        {  151.0f,    69.0f,    64.0f,    32.0f,  },
+        {  108.0f,  -108.0f,    32.0f,    64.0f,  },
+        {  158.0f,  -112.0f,    32.0f,    16.0f,  },
+        {  181.0f,  -226.0f,    32.0f,   128.0f,  },
+        {  208.0f,  -218.0f,    64.0f,   128.0f,  },
+        {  219.0f,   -66.0f,    64.0f,    32.0f,  },
+        {  177.0f,   -53.0f,    64.0f,    16.0f,  },
+        {   79.0f,   -23.0f,   128.0f,    32.0f,  },
+        { -151.0f,   -53.0f,   128.0f,   128.0f,  },
+        { -105.0f,    87.0f,    16.0f,    32.0f,  },
+        { -216.0f,   -51.0f,    64.0f,    32.0f,  },
+        { -158.0f,    23.0f,     8.0f,    32.0f,  },
+        { -192.0f,    64.0f,    64.0f,    64.0f,  },
+        { -267.0f,   113.0f,    64.0f,    32.0f,  },
+        { -279.0f,   -33.0f,   128.0f,    64.0f,  },
 
         //
         //  DHO
         //
-        { 128.0f,   -36.0f,     32.0f,  16.0f,  },
-        { 166.0f,   -10.0f,     16.0f,  16.0f,  },
-        { 164.0f,   34.0f,      16.0f,  32.0f,  },
-        { 176.0f,   88.0f,      32.0f,  16.0f,  },
-        { 240.0f,   76.0f,      32.0f,  32.0f,  },
-        { 56.0f,    -18.0f,     64.0f,  64.0f,  },
-        { 92.0f,    64.0f,      16.0f,  32.0f,  },
-        { 20.0f,    28.0f,      32.0f,  32.0f,  },
-        { 40.0f,    -44.0f,     32.0f,  16.0f,  },
-        { -200.0f,  -28.0f,     256.0f, 256.0f, },
-        { -108.0f,  -64.0f,     128.0f, 32.0f,  },
-        { -224.0f,  -64.0f,     128.0f, 32.0f,  },
-        { -228.0f,  -32.0f,     32.0f,  64.0f,  },
-        { -260.0f,  20.0f,      128.0f, 128.0f, },
+        {  128.0f,   -36.0f,    32.0f,    16.0f,  },
+        {  166.0f,   -10.0f,    16.0f,    16.0f,  },
+        {  164.0f,    34.0f,    16.0f,    32.0f,  },
+        {  176.0f,    88.0f,    32.0f,    16.0f,  },
+        {  240.0f,    76.0f,    32.0f,    32.0f,  },
+        {   56.0f,   -18.0f,    64.0f,    64.0f,  },
+        {   92.0f,    64.0f,    16.0f,    32.0f,  },
+        {   20.0f,    28.0f,    32.0f,    32.0f,  },
+        {   40.0f,   -44.0f,    32.0f,    16.0f,  },
+        { -200.0f,   -28.0f,   256.0f,   256.0f,  },
+        { -108.0f,   -64.0f,   128.0f,    32.0f,  },
+        { -224.0f,   -64.0f,   128.0f,    32.0f,  },
+        { -228.0f,   -32.0f,    32.0f,    64.0f,  },
+        { -260.0f,    20.0f,   128.0f,   128.0f,  },
 
         //
         //  TRI
         //
-        { -264.0f,  100.0f,     128.0f, 64.0f,  },
-        { -168.0f,  -24.0f,     256.0f, 128.0f, },
-        { -4.0f,    -40.0f,     32.0f,  16.0f,  },
-        { 60.0f,    -52.0f,     32.0f,  16.0f,  },
-        { 112.0f,   -50.0f,     64.0f,  16.0f,  },
-        { 179.0f,   -23.0f,     32.0f,  8.0f,   },
-        { 220.0f,   -16.0f,     16.0f,  64.0f,  },
-        { 148.0f,   52.0f,      128.0f, 128.0f, },
-        { 136.0f,   -12.0f,     32.0f,  128.0f, },
-        { 60.0f,    60.0f,      64.0f,  32.0f,  },
-        { -8.0f,    -8.0f,      64.0f,  64.0f,  },
+        { -264.0f,   100.0f,   128.0f,    64.0f,  },
+        { -168.0f,   -24.0f,   256.0f,   128.0f,  },
+        {   -4.0f,   -40.0f,    32.0f,    16.0f,  },
+        {   60.0f,   -52.0f,    32.0f,    16.0f,  },
+        {  112.0f,   -50.0f,    64.0f,    16.0f,  },
+        {  179.0f,   -23.0f,    32.0f,     8.0f,  },
+        {  220.0f,   -16.0f,    16.0f,    64.0f,  },
+        {  148.0f,    52.0f,   128.0f,   128.0f,  },
+        {  136.0f,   -12.0f,    32.0f,   128.0f,  },
+        {   60.0f,    60.0f,    64.0f,    32.0f,  },
+        {   -8.0f,    -8.0f,    64.0f,    64.0f,  },
 
         //
         //  JPN
         //
-        { 224.0f,   -160.0f,    64.0f,  128.0f, },
-        { 188.0f,   -64.0f,     64.0f,  32.0f,  },
-        { 172.0f,   -28.0f,     64.0f,  64.0f,  },
-        { 64.0f,    60.0f,      256.0f, 64.0f,  },
-        { -172.0f,  64.0f,      256.0f, 64.0f,  },
-        { -276.0f,  64.0f,      128.0f, 32.0f,  },
-        { -184.0f,  -10.0f,     64.0f,  64.0f,  },
-        { -104.0f,  -48.0f,     128.0f, 32.0f,  },
-        { 48.0f,    -52.0f,     128.0f, 16.0f,  },
+        {  224.0f,  -160.0f,    64.0f,   128.0f,  },
+        {  188.0f,   -64.0f,    64.0f,    32.0f,  },
+        {  172.0f,   -28.0f,    64.0f,    64.0f,  },
+        {   64.0f,    60.0f,   256.0f,    64.0f,  },
+        { -172.0f,    64.0f,   256.0f,    64.0f,  },
+        { -276.0f,    64.0f,   128.0f,    32.0f,  },
+        { -184.0f,   -10.0f,    64.0f,    64.0f,  },
+        { -104.0f,   -48.0f,   128.0f,    32.0f,  },
+        {   48.0f,   -52.0f,   128.0f,    16.0f,  },
 
         //
         //  FNY
         //
-        { -268.0f,  100.0f,     128.0f, 32.0f,  },
-        { -116.0f,  32.0f,      128.0f, 128.0f, },
-        { 24.0f,    -44.0f,     64.0f,  128.0f, },
-        { 12.0f,    -124.0f,    64.0f,  64.0f,  },
-        { -204.0f,  -120.0f,    256.0f, 256.0f, },
+        { -268.0f,   100.0f,   128.0f,    32.0f,  },
+        { -116.0f,    32.0f,   128.0f,   128.0f,  },
+        {   24.0f,   -44.0f,    64.0f,   128.0f,  },
+        {   12.0f,  -124.0f,    64.0f,    64.0f,  },
+        { -204.0f,  -120.0f,   256.0f,   256.0f,  },
 
         //
         //  KURA
         //
-        { 116.0f,   -36.0f,     128.0f, 128.0f, },
-        { 92.0f,    52.0f,      16.0f,  64.0f,  },
-        { 120.0f,   112.0f,     128.0f, 64.0f,  },
-        { -100.0f,  30.0f,      256.0f, 16.0f,  },
-        { -150.0f,  -48.0f,     32.0f,  128.0f, },        
-        { -144.0f,  -64.0f,     128.0f, 64.0f,  },
+        {  116.0f,   -36.0f,   128.0f,   128.0f,  },
+        {   92.0f,    52.0f,    16.0f,    64.0f,  },
+        {  120.0f,   112.0f,   128.0f,    64.0f,  },
+        { -100.0f,    30.0f,   256.0f,    16.0f,  },
+        { -150.0f,   -48.0f,    32.0f,   128.0f,  },
+        { -144.0f,   -64.0f,   128.0f,    64.0f,  },
     };
 
     if (!nIndex)
@@ -895,7 +901,7 @@ void CAreaWorkPool::AreaLineDisp(int32 nIndex)
     {
         m_sprite.ResetUV();
         m_sprite.SetRGBA(255, 255, 255, 255);
-        m_sprite.SetTexture(m_apAreaLineTexture[ nIndex - 1 ]);
+        m_sprite.SetTexture(m_apAreaLineTexture[nIndex - 1]);
         m_sprite.SetOffset(0.0f, 0.0f);
         m_sprite.Move(s_aLineDispTable[nLineDispIdx].x,
                       s_aLineDispTable[nLineDispIdx].y);
@@ -988,7 +994,7 @@ void CAreaWorkPool::KameIconDisp(void)
     m_sprite.ResetUV();
     m_sprite.SetRGBA(255, 255, 255, 255);
     m_sprite.SetOffset(0.5f, 0.5f);
-    m_sprite.SetTexture(m_apAreaSelTexture[ 4 ]);
+    m_sprite.SetTexture(m_apAreaSelTexture[4]);
     m_sprite.Move(m_vKamePos.x + 32.0f, m_vKamePos.y + 32.0f);
     m_sprite.Resize(64.0f, 64.0f);
     m_sprite.Draw();
@@ -1007,11 +1013,16 @@ void CAreaWorkPool::KameIconDisp(void)
     
     m_sprite.SetAlpha(AlphaBasis);
     m_sprite.Draw();
-    m_sprite.SetAlpha(255);
-    
-    RENDERSTATE_POP(rwRENDERSTATEZWRITEENABLE);
-    RENDERSTATE_POP(rwRENDERSTATESRCBLEND);
+
     RENDERSTATE_POP(rwRENDERSTATEDESTBLEND);
+    RENDERSTATE_POP(rwRENDERSTATESRCBLEND);
+    RENDERSTATE_POP(rwRENDERSTATEZWRITEENABLE);
+
+    RENDERSTATE_PUSH(rwRENDERSTATEZWRITEENABLE, true);
+    RENDERSTATE_PUSH(rwRENDERSTATESRCBLEND, rwBLENDSRCALPHA);
+    RENDERSTATE_PUSH(rwRENDERSTATEDESTBLEND, rwBLENDINVSRCALPHA);
+
+    m_sprite.SetAlpha(255);
 
     if ((m_animation != ANIMATION_KAMEMOVE) &&
         (m_areaNow < AREAID::SELECTABLEMAX))
@@ -1026,9 +1037,9 @@ void CAreaWorkPool::KameIconDisp(void)
 
             static const RwV2d s_aArrowOffsetTable[] =
             {
-                {   16.0f,  -16.0f, },
+                {   16.0f, -16.0f,  },
                 {   16.0f,  48.0f,  },
-                {   -12.0f, 16.0f,  },
+                {  -12.0f,  16.0f,  },
                 {   44.0f,  16.0f,  },
             };
 
@@ -1043,6 +1054,10 @@ void CAreaWorkPool::KameIconDisp(void)
             m_sprite.Draw();
         };
     };
+
+    RENDERSTATE_POP(rwRENDERSTATEDESTBLEND);
+    RENDERSTATE_POP(rwRENDERSTATESRCBLEND);
+    RENDERSTATE_POP(rwRENDERSTATEZWRITEENABLE);
 };
 
 
@@ -1062,8 +1077,8 @@ void CAreaWorkPool::ClearedAnimDisp(void)
     //
     m_sprite.SetTexture(m_apAreaSelTexture[9]);
     m_sprite.Move(vAreaPos.x + 32.0f, vAreaPos.y + 32.0f);
-    m_sprite.SetRGBA(255, 255, 255, m_aClearAnim[0].m_uAlphaBasis);
-    m_sprite.Resize(m_aClearAnim[0].m_fScale, m_aClearAnim[0].m_fScale);
+    m_sprite.SetRGBA(255, 255, 255, m_aClearAnim[0].alphaBasis);
+    m_sprite.Resize(m_aClearAnim[0].scale, m_aClearAnim[0].scale);
     m_sprite.Draw();
 
     //
@@ -1071,20 +1086,20 @@ void CAreaWorkPool::ClearedAnimDisp(void)
     //
     m_sprite.SetTexture(m_apAreaSelTexture[2]);
     m_sprite.Move(vAreaPos.x + 32.0f, vAreaPos.y + 32.0f);
-    m_sprite.SetRGBA(255, 255, 255, m_aClearAnim[1].m_uAlphaBasis);
-    m_sprite.Resize(m_aClearAnim[1].m_fScale, m_aClearAnim[1].m_fScale);
+    m_sprite.SetRGBA(255, 255, 255, m_aClearAnim[1].alphaBasis);
+    m_sprite.Resize(m_aClearAnim[1].scale, m_aClearAnim[1].scale);
     m_sprite.Draw();
 
     //
     //  Area clearrank
     //
-    GAMETYPES::CLEARRANK AreaClearrank = CGameData::Record().Area().GetAreaClearRank(m_areaCleared);
-    if(AreaClearrank)
+    GAMETYPES::CLEARRANK areaClearedRank = CGameData::Record().Area().GetAreaClearRank(m_areaCleared);
+    if (areaClearedRank)
     {
-        m_sprite.SetTexture(m_apAreaSelTexture[AreaClearrank + 9]);
+        m_sprite.SetTexture(m_apAreaSelTexture[areaClearedRank + 9]);
         m_sprite.Move(vAreaPos.x + 32.0f, vAreaPos.y + 32.0f);
-        m_sprite.SetRGBA(255, 255, 255, m_aClearAnim[2].m_uAlphaBasis);
-        m_sprite.Resize(m_aClearAnim[2].m_fScale, m_aClearAnim[2].m_fScale);
+        m_sprite.SetRGBA(255, 255, 255, m_aClearAnim[2].alphaBasis);
+        m_sprite.Resize(m_aClearAnim[2].scale, m_aClearAnim[2].scale);
         m_sprite.Draw();
     };
 
@@ -1092,8 +1107,8 @@ void CAreaWorkPool::ClearedAnimDisp(void)
     {
         m_sprite.SetTexture(m_apAreaSelTexture[4]);
         m_sprite.Move(m_vKamePos.x + 32.0f, m_vKamePos.y + 32.0f);
-        m_sprite.SetRGBA(255, 255, 255, m_aClearAnim[3].m_uAlphaBasis);
-        m_sprite.Resize(m_aClearAnim[3].m_fScale, m_aClearAnim[3].m_fScale);
+        m_sprite.SetRGBA(255, 255, 255, m_aClearAnim[3].alphaBasis);
+        m_sprite.Resize(m_aClearAnim[3].scale, m_aClearAnim[3].scale);
         m_sprite.SetRotate(m_fClearAnimRot);
         m_sprite.DrawRotate();
     };
@@ -1102,10 +1117,12 @@ void CAreaWorkPool::ClearedAnimDisp(void)
 
 void CAreaWorkPool::AreaSelectGuide(void)
 {
+    CSystem2D::PushRenderState();
+
     CGameFont::SetRGBA(255, 170, 0, 255);
 
     if ((CAreaInfo::GetWorldNo(m_areaNow) == WORLDID::ID_FNY) &&
-        GetAreaState(AREAID::ID_AREA50) == CAreaRecord::STATE_CLEAR)
+        (GetAreaState(AREAID::ID_AREA50) == CAreaRecord::STATE_CLEAR))
     {
         if (m_areaNow != AREAID::ID_FNY_STN)
         {
@@ -1120,7 +1137,7 @@ void CAreaWorkPool::AreaSelectGuide(void)
         const wchar* pwszText = CAreaInfo::GetDispWorldName(m_areaNow);
 
         CGameFont::SetHeightScaled(2.5f);
-		CGameFont::Show(pwszText, -269.0f, -175.0f);
+        CGameFont::Show(pwszText, -269.0f, -175.0f);
     };
 
     if (m_bAreaDiskFlag)
@@ -1136,6 +1153,8 @@ void CAreaWorkPool::AreaSelectGuide(void)
         CGameFont::SetHeightScaled(2.0f);
         CGameFont::Show(wszBuffer, -269.0f, 152.0f);
     };
+
+    CSystem2D::PopRenderState();
 };
 
 
@@ -1173,23 +1192,24 @@ void CAreaWorkPool::AreaMoveAnimation(void)
     else
         y = vOldPos.y - vNewPos.y;
 
-    float len = std::sqrt(x * x + y * y);    
-    float step = len / (CScreen::Framerate() * 0.4f);
+    float duration = ANIM_DURATION_FRAMES(24);
+    float len = std::sqrt(x * x + y * y);
+    float step = len / duration;
 
     x *= (1.0f / len) * step;
     y *= (1.0f / len) * step;
 
-    if (m_kameMoveAnimCount >= CScreen::Framerate() * 0.4f)
+    if (static_cast<float>(m_kameMoveAnimCount) >= duration)
     {        
         GetAreaPosition(&m_vKamePos, m_areaNew);
         
-		m_kameMoveAnimCount = 0;
+        m_kameMoveAnimCount = 0;
         m_animation = ANIMATION_NONE;
         m_areaNow = m_areaNew;
 
 #ifdef _DEBUG        
         OnAreaChanged();
-#endif
+#endif /* _DEBUG */
         
         if (m_areaNow < AREAID::SELECTABLEMAX)
             CGameData::Record().Area().SetCurrentSelectedArea(m_areaNow);
@@ -1215,21 +1235,15 @@ void CAreaWorkPool::AreaClearedAnimationInit(void)
 {
     for (int32 i = 0; i < COUNT_OF(m_aClearAnim); ++i)
     {
-        m_aClearAnim[i].m_nStep         = 0;
-        m_aClearAnim[i].m_uCounter      = 0;
-        m_aClearAnim[i].m_uAlphaBasis   = 0;
-        m_aClearAnim[i].m_fScale        = 0.0f;
+        m_aClearAnim[i].step = 0;
+        m_aClearAnim[i].counter = 0;
+        m_aClearAnim[i].alphaBasis = 0;
+        m_aClearAnim[i].scale = 0.0f;
     };
 
-    m_fClearAnimRot         = 0.0f;
-    m_animation             = ANIMATION_CLEARED;
+    m_fClearAnimRot = 0.0f;
+    m_animation = ANIMATION_CLEARED;
     m_bKameClearRotAnimFlag = false;
-
-    //
-    //  Animation sequence:
-    //  Status -> Rank -> Kemuri -> Kame    
-    // 
-    m_aClearAnim[1].m_nStep = CLEARANIM::STEP_FADEIN;
 };
 
 
@@ -1237,95 +1251,82 @@ void CAreaWorkPool::AreaClearedAnimation(void)
 {
     if (m_bKameClearRotAnimFlag)
     {
-        uint32 uKameClearAnimDur = uint32(CScreen::Framerate() * 0.5f);
-        
-        if (m_aClearAnim[3].m_uCounter >= uKameClearAnimDur)
+        CLEARANIM* anim = &m_aClearAnim[3];
+
+        const uint32 duration = static_cast<uint32>(ANIM_DURATION_FRAMES(30));
+
+        if (anim->counter >= duration)
         {
             m_areaCleared = AREAID::ID_NONE;
             m_animation = ANIMATION_NONE;
         }
         else
         {
-            ++m_aClearAnim[3].m_uCounter;
+            ++anim->counter;
         };
 
-        m_aClearAnim[3].m_fScale = Math::LinearTween(192.0f,
-                                                    -128.0f,
-                                                    float(m_aClearAnim[3].m_uCounter),
-                                                    float(uKameClearAnimDur));
-        
-        m_aClearAnim[3].m_uAlphaBasis = uint8(Math::LinearTween(0.0f,
-                                                                255.0f,
-                                                                float(m_aClearAnim[3].m_uCounter),
-                                                                float(uKameClearAnimDur)));
+        anim->alphaBasis = static_cast<uint8>(LinearTween(0.0f, 255.0f, anim->counter, duration));
+        anim->scale = LinearTween(192.0f, -128.0f, anim->counter, duration);        
 
-        m_fClearAnimRot = Math::LinearTween(360.0f,
-                                            -360.0f,
-                                            float(m_aClearAnim[3].m_uCounter),
-                                            float(uKameClearAnimDur));
+        m_fClearAnimRot = LinearTween(360.0f, -360.0f, anim->counter, duration);
     }
     else
     {
+        CLEARANIM* anim = nullptr;
+
         //
         //  Kemuri
         //
-        switch (m_aClearAnim[0].m_nStep)
+        anim = &m_aClearAnim[0];
+        switch (anim->step)
         {
-        case CLEARANIM::STEP_FADEIN:
+        case 0:
             {
-                uint32 uAnimKemuriFadeoutDur = uint32(CScreen::Framerate() * 0.25f);
-                CLEARANIM* pAnimKemuri = &m_aClearAnim[0];
-
-                pAnimKemuri->m_uAlphaBasis = uint8(Math::LinearTween(0.0f,
-                                                                     255.0f,
-                                                                     float(pAnimKemuri->m_uCounter),
-                                                                     float(uAnimKemuriFadeoutDur)));
-
-                pAnimKemuri->m_fScale = Math::LinearTween(64.0f,
-                                                          32.0f,
-                                                          float(pAnimKemuri->m_uCounter),
-                                                          float(uAnimKemuriFadeoutDur));
-
-                if (pAnimKemuri->m_uCounter >= uAnimKemuriFadeoutDur)
+                if (anim->counter >= static_cast<uint32>(ANIM_DURATION_FRAMES(8)))
                 {
-                    pAnimKemuri->m_nStep = CLEARANIM::STEP_FADEOUT;
-                    pAnimKemuri->m_uCounter = 0;
+                    ++anim->step;
+                    anim->counter = 0;
                 }
                 else
                 {
-                    ++pAnimKemuri->m_uCounter;
+                    ++anim->counter;
                 };
             }
             break;
 
-        case CLEARANIM::STEP_FADEOUT:
+        case 1:
             {
-                uint32 uAnimKemuriFadeinDur = uint32(CScreen::Framerate() * 0.25f);
-                CLEARANIM* pAnimKemuri = &m_aClearAnim[0];
+                const uint32 duration = static_cast<uint32>(ANIM_DURATION_FRAMES(10));
 
-                pAnimKemuri->m_uAlphaBasis = uint8(Math::LinearTween(255.0f,
-                                                                    -255.0f,
-                                                                    float(pAnimKemuri->m_uCounter),
-                                                                    float(uAnimKemuriFadeinDur)));
+                anim->alphaBasis = static_cast<uint8>(LinearTween(0.0f, 255.0f, anim->counter, duration));
+                anim->scale = LinearTween(64.0f, -38.4f, anim->counter, duration);
 
-                pAnimKemuri->m_fScale = Math::LinearTween(96.0f,
-                                                          32.0f,
-                                                          float(pAnimKemuri->m_uCounter),
-                                                          float(uAnimKemuriFadeinDur));
-
-                if (pAnimKemuri->m_uCounter >= uAnimKemuriFadeinDur)
+                if (anim->counter >= duration)
                 {
-                    pAnimKemuri->m_nStep = CLEARANIM::STEP_NONE;
-                    pAnimKemuri->m_uCounter = 0;
+                    ++anim->step;
+                    anim->counter = 0;
+                }
+                else
+                {
+                    ++anim->counter;
+                };
+            }
+            break;
 
-                    //
-                    //  Start kame anim
-                    //
+        case 2:
+            {
+                const uint32 duration = static_cast<uint32>(ANIM_DURATION_FRAMES(26));
+
+                anim->alphaBasis = static_cast<uint8>(LinearTween(255.0f, -255.0f, anim->counter, duration));
+                anim->scale = LinearTween(89.6f, 64.0f, anim->counter, duration);
+
+                if (anim->counter >= duration)
+                {
                     m_bKameClearRotAnimFlag = true;
                 }
                 else
                 {
-                    ++pAnimKemuri->m_uCounter;
+                    ++anim->counter;
                 };
             }
             break;
@@ -1337,59 +1338,36 @@ void CAreaWorkPool::AreaClearedAnimation(void)
         //
         //  Status
         //
-        switch (m_aClearAnim[1].m_nStep)
+        anim = &m_aClearAnim[1];
+        switch (anim->step)
         {
-        case CLEARANIM::STEP_FADEIN:
+        case 0:
             {
-                uint32 uAnimStatusFadeoutDur = uint32(CScreen::Framerate() * 0.25f);
-                CLEARANIM* pAnimStatus = &m_aClearAnim[1];
+                const uint32 duration = static_cast<uint32>(ANIM_DURATION_FRAMES(8));
 
-                pAnimStatus->m_uAlphaBasis = uint8(Math::LinearTween(0.0f,
-                                                                     255.0f,
-                                                                     float(pAnimStatus->m_uCounter),
-                                                                     float(uAnimStatusFadeoutDur)));
+                anim->alphaBasis = static_cast<uint8>(LinearTween(0.0f, 255.0f, anim->counter, duration));
+                anim->scale = LinearTween(192.0f, -128.0f, anim->counter, duration);
 
-                pAnimStatus->m_fScale = Math::LinearTween(192.0f,
-                                                          -144.0f,
-                                                          float(pAnimStatus->m_uCounter),
-                                                          float(uAnimStatusFadeoutDur));
-
-                if (pAnimStatus->m_uCounter >= uAnimStatusFadeoutDur)
+                if (anim->counter >= duration)
                 {
-                    pAnimStatus->m_nStep = CLEARANIM::STEP_SIZEIN;
-                    pAnimStatus->m_uCounter = 0;
-
-                    //
-                    //  Start rank anim
-                    //
-                    m_aClearAnim[2].m_nStep = CLEARANIM::STEP_FADEIN;
+                    ++anim->step;
+                    anim->counter = 0;
                 }
                 else
                 {
-                    ++pAnimStatus->m_uCounter;
+                    ++anim->counter;
                 };
             }
             break;
 
-        case CLEARANIM::STEP_SIZEIN:
+        case 1:
             {
-                uint32 uAnimStatusSizeinDur = uint32(CScreen::Framerate() * 0.25f);
-                CLEARANIM* pAnimStatus = &m_aClearAnim[1];
+                const uint32 duration = static_cast<uint32>(ANIM_DURATION_FRAMES(6));
 
-                pAnimStatus->m_fScale = Math::LinearTween(48.0f,
-                                                          16.0f,
-                                                          float(pAnimStatus->m_uCounter),
-                                                          float(uAnimStatusSizeinDur));
+                anim->scale = LinearTween(44.8f, 19.2f, anim->counter, duration);
 
-                if (pAnimStatus->m_uCounter >= uAnimStatusSizeinDur)
-                {
-                    pAnimStatus->m_uCounter = 0;
-                    pAnimStatus->m_nStep = CLEARANIM::STEP_NONE;
-                }
-                else
-                {
-                    ++pAnimStatus->m_uCounter;
-                };
+                if (anim->counter < duration)
+                    ++anim->counter;
             }
             break;
 
@@ -1400,59 +1378,50 @@ void CAreaWorkPool::AreaClearedAnimation(void)
         //
         //  Rank
         //
-        switch (m_aClearAnim[2].m_nStep)
+        anim = &m_aClearAnim[2];
+        switch (anim->step)
         {
-        case CLEARANIM::STEP_FADEIN:
+        case 0:
             {
-                uint32 uAnimRankFadeoutDur = uint32(CScreen::Framerate() * 0.25f);
-                CLEARANIM* pAnimRank = &m_aClearAnim[2];
-
-                pAnimRank->m_uAlphaBasis = uint8(Math::LinearTween(0.0f,
-                                                                   255.0f,
-                                                                   float(pAnimRank->m_uCounter),
-                                                                   float(uAnimRankFadeoutDur)));
-
-                pAnimRank->m_fScale = Math::LinearTween(192.0f,
-                                                        -144.0f,
-                                                        float(pAnimRank->m_uCounter),
-                                                        float(uAnimRankFadeoutDur));
-
-                if (pAnimRank->m_uCounter >= uAnimRankFadeoutDur)
+                if (anim->counter >= static_cast<uint32>(ANIM_DURATION_FRAMES(10)))
                 {
-                    pAnimRank->m_nStep = CLEARANIM::STEP_SIZEIN;
-                    pAnimRank->m_uCounter = 0;
-
-                    //
-                    //  Start kemuri anim
-                    //
-                    m_aClearAnim[0].m_nStep = CLEARANIM::STEP_FADEIN;
+                    ++anim->step;
+                    anim->counter = 0;
                 }
                 else
                 {
-                    ++pAnimRank->m_uCounter;
+                    ++anim->counter;
+                };
+            }
+            break;
+            
+        case 1:
+            {
+                const uint32 duration = static_cast<uint32>(ANIM_DURATION_FRAMES(6));
+
+                anim->alphaBasis = static_cast<uint8>(LinearTween(0.0f, 255.0f, anim->counter, duration));
+                anim->scale = LinearTween(192.0f, -128.0f, anim->counter, duration);
+
+                if (anim->counter >= duration)
+                {
+                    ++anim->step;
+                    anim->counter = 0;
+                }
+                else
+                {
+                    ++anim->counter;
                 };
             }
             break;
 
-        case CLEARANIM::STEP_SIZEIN:
+        case 2:
             {
-                uint32 uAnimRankSizeinDur = uint32(CScreen::Framerate() * 0.25f);
-                CLEARANIM* pAnimRank = &m_aClearAnim[2];
+                const uint32 duration = static_cast<uint32>(ANIM_DURATION_FRAMES(6));
 
-                pAnimRank->m_fScale = Math::LinearTween(48.0f,
-                                                        16.0f,
-                                                        float(pAnimRank->m_uCounter),
-                                                        float(uAnimRankSizeinDur));
+                anim->scale = LinearTween(51.2f, 12.8f, anim->counter, duration);
 
-                if (pAnimRank->m_uCounter >= uAnimRankSizeinDur)
-                {
-                    pAnimRank->m_uCounter = 0;
-                    pAnimRank->m_nStep = CLEARANIM::STEP_NONE;
-                }
-                else
-                {
-                    ++pAnimRank->m_uCounter;
-                };
+                if (anim->counter < duration)
+                    ++anim->counter;
             }
             break;
 
@@ -1626,8 +1595,8 @@ bool CAreaWorkPool::GetLineDrawEnable(int32 nIndex)
                 break;
 
             case 10:
-				if (IsAreaRootCleared(AREAID::ID_AREA11, CAreaRecord::CLEAR_ROOT_B))
-					bResult = true;
+                if (IsAreaRootCleared(AREAID::ID_AREA11, CAreaRecord::CLEAR_ROOT_B))
+                    bResult = true;
                 break;
 
             case 11:
@@ -1999,131 +1968,131 @@ void CAreaWorkPool::GetAreaPosition(RwV2d* pPosition, AREAID::VALUE idArea)
 {
     static const RwV2d s_aAreaPosTable[] =
     {
-        { 0.0f,     0.0f,       },
-        { -110.0f,  -126.0f,    },
-        { -75.0f,   -178.0f,    },
-        { -40.0f,   20.0f,      },
-        { 60.0f,    87.0f,      },
-        { 112.0f,   48.0f,      },
-        { 175.0f,   79.0f,      },
-        { 85.0f,    -76.0f,     },
-        { 118.0f,   -129.0f,    },
-        { 170.0f,   -148.0f,    },
-        { -212.0f,  -13.0f,     },
-        { -254.0f,  -68.0f,     },
-        { -147.0f,  -91.0f,     },
-        { -5.0f,    -65.0f,     },
-        { 20.0f,    -10.0f,     },
-        { -25.0f,   23.0f,      },
-        { 73.0f,    23.0f,      },
-        { 62.0f,    74.0f,      },
-        { 147.0f,   -60.0f,     },
-        { 139.0f,   -9.0f,      },
-        { 152.0f,   40.0f,      },
-        { 193.0f,   61.0f,      },
-        { -42.0f,   -51.0f,     },
-        { 32.0f,    12.0f,      },
-        { 100.0f,   44.0f,      },
-        { 12.0f,    -75.0f,     },
-        { 77.0f,    -82.0f,     },
-        { 132.0f,   -50.0f,     },
-        { 195.0f,   -52.0f,     },
-        { 201.0f,   19.0f,      },
-        { 152.0f,   -73.0f,     },
-        { 8.0f,     -79.0f,     },
-        { -149.0f,  -47.0f,     },
-        { 201.0f,   19.0f,      },
-        { 47.0f,    81.0f,      },
-        { -208.0f,  39.0f,      },
-        { 195.0f,   -81.0f,     },
-        { 146.0f,   -72.0f,     },
-        { -126.0f,  44.0f,      },
-        { -132.0f,  97.0f,      },
-        { -177.0f,  -68.0f,     },
-        { -238.0f,  -93.0f,     },
-        { -187.0f,  -19.0f,     },
-        { -184.0f,  32.0f,      },
-        { -223.0f,  82.0f,      },
-        { -158.0f,  75.0f,      },
-        { 33.0f,    -89.0f,     },
-        { -32.0f,   -152.0f,    },
-        { 84.0f,    83.0f,      },
-        { 82.0f,    -44.0f,     },
-        { 144.0f,   -73.0f,     },
-        { 201.0f,   -36.0f,     },
-        { -132.0f,  -4.0f,      },
-        { -179.0f,  -87.0f,     },
-        { -64.0f,   -31.0f,     },
-        { -37.0f,   -45.0f,     },
-        { 80.0f,    -35.0f,     },
-        { -120.0f,  -30.0f,     },
-        { 73.0f,    -24.0f,     },
-        { -216.0f,  76.0f,      },
-        { 140.0f,   -20.0f,     },
-        { -40.0f,   20.0f,      },
-        { 67.0f,    -64.0f,     },
-        { -196.0f,  60.0f,      },
-        { 200.0f,   -104.0f,    },
-        { -32.0f,   -4.0f,      },
-        { 68.0f,    12.0f,      },
-        { 167.0f,   -220.0f,    },
-        { 217.0f,   -220.0f,    },
-        { 230.0f,   -83.0f,     },
-        { -284.0f,  100.0f,     },
-        { -286.0f,  -50.0f,     },
-        { -274.0f,  92.0f,      },
-        { -221.0f,  99.0f,      },
-        { 226.0f,   62.0f,      },
-        { -284.0f,  104.0f,     },
-        { 132.0f,   116.0f,     },
-        { 224.0f,   -180.0f,    },
-        { -296.0f,  48.0f,      },
-        { -288.0f,  84.0f,      },
-        { 168.0f,   120.0f,     },
-        { -40.0f,   -190.0f,    },
-        { -40.0f,   87.0f,      },
-        { 112.0f,   82.0f,      },
-        { 170.0f,   44.0f,      },
-        { 80.0f,    -35.0f,     },
-        { 85.0f,    -120.0f,    },
-        { 202.0f,   -150.0f,    },
-        { 140.0f,   -35.0f,     },
-        { -70.0f,   5.0f,       },
-        { -67.0f,   -37.0f,     },
-        { -120.0f,  -73.0f,     },
-        { -233.0f,  -63.0f,     },
-        { -180.0f,  70.0f,      },
-        { -252.0f,  -14.0f,     },
-        { -222.0f,  31.0f,      },
-        { -251.0f,  -14.0f,     },
-        { -202.0f,  -74.0f,     },
-        { -13.0f,   -35.0f,     },
-        { 7.0f,     23.0f,      },
-        { 149.0f,   67.0f,      },
-        { -212.0f,  80.0f,      },
-        { -148.0f,  -12.0f,     },
-        { -8.0f,    16.0f,      },
-        { 44.0f,    52.0f,      },
-        { 124.0f,   -80.0f,     },
-        { 196.0f,   -76.0f,     },
-        { -196.0f,  -32.0f,     },
-        { 156.0f,   -36.0f,     },
-        { 192.0f,   -12.0f,     },
-        { 188.0f,   64.0f,      },
-        { -80.0f,   76.0f,      },
-        { -156.0f,  44.0f,      },
-        { -120.0f,  72.0f,      },
-        { 28.0f,    -8.0f,      },
-        { 16.0f,    -132.0f,    },
-        { -64.0f,   -136.0f,    },
-        { 64.0f,    52.0f,      },
-        { 120.0f,   12.0f,      },
-        { -172.0f,  -8.0f,      },
-        { -104.0f,  -80.0f,     },
-        { 0.0f,     0.0f,       },
-        { 0.0f,     0.0f,       },
-        { 0.0f,     0.0f,       },
-        { 0.0f,     0.0f,       },
+        {    0.0f,     0.0f, },
+        { -110.0f,  -126.0f, },
+        {  -75.0f,  -178.0f, },
+        {  -40.0f,    20.0f, },
+        {   60.0f,    87.0f, },
+        {  112.0f,    48.0f, },
+        {  175.0f,    79.0f, },
+        {   85.0f,   -76.0f, },
+        {  118.0f,  -129.0f, },
+        {  170.0f,  -148.0f, },
+        { -212.0f,   -13.0f, },
+        { -254.0f,   -68.0f, },
+        { -147.0f,   -91.0f, },
+        {   -5.0f,   -65.0f, },
+        {   20.0f,   -10.0f, },
+        {  -25.0f,    23.0f, },
+        {   73.0f,    23.0f, },
+        {   62.0f,    74.0f, },
+        {  147.0f,   -60.0f, },
+        {  139.0f,    -9.0f, },
+        {  152.0f,    40.0f, },
+        {  193.0f,    61.0f, },
+        {  -42.0f,   -51.0f, },
+        {   32.0f,    12.0f, },
+        {  100.0f,    44.0f, },
+        {   12.0f,   -75.0f, },
+        {   77.0f,   -82.0f, },
+        {  132.0f,   -50.0f, },
+        {  195.0f,   -52.0f, },
+        {  201.0f,    19.0f, },
+        {  152.0f,   -73.0f, },
+        {    8.0f,   -79.0f, },
+        { -149.0f,   -47.0f, },
+        {  201.0f,    19.0f, },
+        {   47.0f,    81.0f, },
+        { -208.0f,    39.0f, },
+        {  195.0f,   -81.0f, },
+        {  146.0f,   -72.0f, },
+        { -126.0f,    44.0f, },
+        { -132.0f,    97.0f, },
+        { -177.0f,   -68.0f, },
+        { -238.0f,   -93.0f, },
+        { -187.0f,   -19.0f, },
+        { -184.0f,    32.0f, },
+        { -223.0f,    82.0f, },
+        { -158.0f,    75.0f, },
+        {   33.0f,   -89.0f, },
+        {  -32.0f,  -152.0f, },
+        {   84.0f,    83.0f, },
+        {   82.0f,   -44.0f, },
+        {  144.0f,   -73.0f, },
+        {  201.0f,   -36.0f, },
+        { -132.0f,    -4.0f, },
+        { -179.0f,   -87.0f, },
+        {  -64.0f,   -31.0f, },
+        {  -37.0f,   -45.0f, },
+        {   80.0f,   -35.0f, },
+        { -120.0f,   -30.0f, },
+        {   73.0f,   -24.0f, },
+        { -216.0f,    76.0f, },
+        {  140.0f,   -20.0f, },
+        {  -40.0f,    20.0f, },
+        {   67.0f,   -64.0f, },
+        { -196.0f,    60.0f, },
+        {  200.0f,  -104.0f, },
+        {  -32.0f,    -4.0f, },
+        {   68.0f,    12.0f, },
+        {  167.0f,  -220.0f, },
+        {  217.0f,  -220.0f, },
+        {  230.0f,   -83.0f, },
+        { -284.0f,   100.0f, },
+        { -286.0f,   -50.0f, },
+        { -274.0f,    92.0f, },
+        { -221.0f,    99.0f, },
+        {  226.0f,    62.0f, },
+        { -284.0f,   104.0f, },
+        {  132.0f,   116.0f, },
+        {  224.0f,  -180.0f, },
+        { -296.0f,    48.0f, },
+        { -288.0f,    84.0f, },
+        {  168.0f,   120.0f, },
+        {  -40.0f,  -190.0f, },
+        {  -40.0f,    87.0f, },
+        {  112.0f,    82.0f, },
+        {  170.0f,    44.0f, },
+        {   80.0f,   -35.0f, },
+        {   85.0f,  -120.0f, },
+        {  202.0f,  -150.0f, },
+        {  140.0f,   -35.0f, },
+        {  -70.0f,     5.0f, },
+        {  -67.0f,   -37.0f, },
+        { -120.0f,   -73.0f, },
+        { -233.0f,   -63.0f, },
+        { -180.0f,    70.0f, },
+        { -252.0f,   -14.0f, },
+        { -222.0f,    31.0f, },
+        { -251.0f,   -14.0f, },
+        { -202.0f,   -74.0f, },
+        {  -13.0f,   -35.0f, },
+        {    7.0f,    23.0f, },
+        {  149.0f,    67.0f, },
+        { -212.0f,    80.0f, },
+        { -148.0f,   -12.0f, },
+        {   -8.0f,    16.0f, },
+        {   44.0f,    52.0f, },
+        {  124.0f,   -80.0f, },
+        {  196.0f,   -76.0f, },
+        { -196.0f,   -32.0f, },
+        {  156.0f,   -36.0f, },
+        {  192.0f,   -12.0f, },
+        {  188.0f,    64.0f, },
+        {  -80.0f,    76.0f, },
+        { -156.0f,    44.0f, },
+        { -120.0f,    72.0f, },
+        {   28.0f,    -8.0f, },
+        {   16.0f,  -132.0f, },
+        {  -64.0f,  -136.0f, },
+        {   64.0f,    52.0f, },
+        {  120.0f,    12.0f, },
+        { -172.0f,    -8.0f, },
+        { -104.0f,   -80.0f, },
+        {    0.0f,     0.0f, },
+        {    0.0f,     0.0f, },
+        {    0.0f,     0.0f, },
+        {    0.0f,     0.0f, },
     };
 
     static_assert(COUNT_OF(s_aAreaPosTable) == AREAID::NEXUSMAX, "update me");
@@ -2460,7 +2429,7 @@ void CAreaWorkPool::DebugStartPlayClearAnim(void)
     switch (CAreaInfo::GetWorldNo(idArea))
     {
     case WORLDID::ID_MNY:
-        m_areaCleared = AREAID::ID_MNY_STN;
+        m_areaCleared = AREAID::ID_AREA02;
         break;
 
     case WORLDID::ID_DHO:
@@ -2534,7 +2503,8 @@ bool CAreaSequence::OnAttach(const void* pParam)
             CGameData::Record().Area().SetAreaCleared(AREAID::VALUE(i), CAreaRecord::CLEAR_ROOT_C);
         };
 
-        CGameData::Record().Area().SetCurrentSelectedArea(AREAID::VALUE(int32(pParam)));
+        int32 areaId = reinterpret_cast<int32>(pParam);
+        CGameData::Record().Area().SetCurrentSelectedArea(AREAID::VALUE(areaId));
     };
 #endif /* _DEBUG */   
 
@@ -2546,7 +2516,7 @@ bool CAreaSequence::OnAttach(const void* pParam)
     m_pDlgSure->Set(0.0f, 0.0f, CSprite::m_fVirtualScreenW, 140.0f);
     m_pDlgSure->SetOpenAction(true);
     m_pDlgSure->SetText(CGameText::GetText(GAMETEXT_AREA_RET),
-		                CGameFont::GetHeightScaled() * 2.0f,
+                        CGameFont::GetHeightScaled() * 2.0f,
                         { 0xFF, 0xFF, 0xFF, 0xFF });
     
     m_bDlgRunning = false;
@@ -2714,11 +2684,14 @@ void CAreaSequence::OnMove(bool bRet, const void* pReturnValue)
 void CAreaSequence::OnDraw(void) const
 {
     CAnim2DSequence::OnDraw();
+    CRenderStateManager::SetDefault();
 
     if (IsDrawing())
     {
         m_pWorkPool->TextureDraw();
         m_pWorkPool->AreaMenuDraw();
+
+        CRenderStateManager::SetDefault();
     };
 
 #ifdef TMNT2_BUILD_EU

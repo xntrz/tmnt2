@@ -1567,7 +1567,13 @@ void CPlayerCharacter::SetReplacePosition(RwV3d* pvPosition)
 
 bool CPlayerCharacter::IsEnableCharacterChanging(void) const
 {
-    return (GetStatus() == PLAYERTYPES::STATUS_IDLE);        
+    if (TestAttribute(PLAYERTYPES::ATTRIBUTE_CONFUSION))
+        return false;
+
+    if (GetStatus() != PLAYERTYPES::STATUS_IDLE)
+        return false;
+
+    return true;
 };
 
 
