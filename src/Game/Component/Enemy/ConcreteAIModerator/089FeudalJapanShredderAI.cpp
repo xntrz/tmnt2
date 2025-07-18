@@ -760,7 +760,7 @@ C089FeudalJapanShredderAI::C089FeudalJapanShredderAI(CEnemyCharacter* pEnemyChr)
     pAIState = new Utils6034::CBaseCounterDownState(AI_STATE_COUNTER_DOWN);
     MessageStackAIStateContext().RegistAIState(pAIState);
 
-    pAIState = new Utils6034::CBaseCounterDownState(AI_STATE_COUNTER_DAMAGED);
+    pAIState = new Utils6034::CBaseDamagedCounterState(AI_STATE_COUNTER_DAMAGED);
     MessageStackAIStateContext().RegistAIState(pAIState);
 
     pAIState = new Utils6034::CBaseGuardState(AI_STATE_GUARD);
