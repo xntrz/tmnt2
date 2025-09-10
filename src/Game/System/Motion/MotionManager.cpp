@@ -10,9 +10,9 @@ public:
     public:
         CHAnimation(void);
         ~CHAnimation(void);
-        void Read(const char* pszName, const void* pBuffer, uint32 uBufferSize);
+        void Read(const char* pszName, void* pBuffer, uint32 uBufferSize);
         void Cleanup(void);
-        RtAnimAnimation* ReadRpHAnimatin(const void* pBuffer, uint32 uBufferSize);
+        RtAnimAnimation* ReadRpHAnimatin(void* pBuffer, uint32 uBufferSize);
         const char* GetName(void) const;
         RtAnimAnimation* GetAnimation(void) const;
 
@@ -47,7 +47,7 @@ public:
     void AllocHAnimationSet(const char* pszSetName, const char* pszParentSetName);
     void SetCurrentHAnimationSet(const char* pszSetName);
     void SetCurrentHAnimationSet(CHAnimationSet* pHAnimationSet);
-    void Read(const char* pszName, const void* pBuffer, uint32 uBufferSize);
+    void Read(const char* pszName, void* pBuffer, uint32 uBufferSize);
     CHAnimation* GetHAnimation(const char* pszName);
     CHAnimationSet* FindHAnmationSet(const char* pszName);
     CHAnimation* AllocHAnimation(void);
@@ -83,7 +83,7 @@ CHAnimationContainer::CHAnimation::~CHAnimation(void)
 };
 
 
-void CHAnimationContainer::CHAnimation::Read(const char* pszName, const void* pBuffer, uint32 uBufferSize)
+void CHAnimationContainer::CHAnimation::Read(const char* pszName, void* pBuffer, uint32 uBufferSize)
 {
     ASSERT(pBuffer);
     ASSERT(uBufferSize);
@@ -109,7 +109,7 @@ void CHAnimationContainer::CHAnimation::Cleanup(void)
 };
 
 
-RtAnimAnimation* CHAnimationContainer::CHAnimation::ReadRpHAnimatin(const void* pBuffer, uint32 uBufferSize)
+RtAnimAnimation* CHAnimationContainer::CHAnimation::ReadRpHAnimatin(void* pBuffer, uint32 uBufferSize)
 {
     ASSERT(pBuffer);
     ASSERT(uBufferSize);
@@ -117,7 +117,7 @@ RtAnimAnimation* CHAnimationContainer::CHAnimation::ReadRpHAnimatin(const void* 
     RtAnimAnimation* pResult = nullptr;
     RwMemory MemoryStream;
     
-    MemoryStream.start = (RwUInt8*)pBuffer;
+    MemoryStream.start = static_cast<RwUInt8*>(pBuffer);
     MemoryStream.length = uBufferSize;
 
     RwStream* pRwStream = RwStreamOpen(rwSTREAMMEMORY, rwSTREAMREAD, &MemoryStream);
@@ -179,7 +179,8 @@ void CHAnimationContainer::CHAnimationSet::Initialize(const char* pszName, CHAni
 void CHAnimationContainer::CHAnimationSet::Cleanup(CHAnimationContainer* pContainer)
 {
     auto it = m_listHAnimation.begin();
-    while (it)
+    auto itEnd = m_listHAnimation.end();
+    while (it != itEnd)
     {
         CHAnimation* pHAnimation = &(*it);
         it = m_listHAnimation.erase(it);
@@ -302,7 +303,7 @@ void CHAnimationContainer::SetCurrentHAnimationSet(CHAnimationSet* pHAnimationSe
 };
 
 
-void CHAnimationContainer::Read(const char* pszName, const void* pBuffer, uint32 uBufferSize)
+void CHAnimationContainer::Read(const char* pszName, void* pBuffer, uint32 uBufferSize)
 {
     ASSERT(pszName);
     ASSERT(pBuffer);
@@ -416,7 +417,7 @@ static inline CHAnimationContainer& AnimationContainer(void)
 };
 
 
-/*static*/ void CMotionManager::Read(const char* pszName, const void* pBuffer, uint32 uBufferSize)
+/*static*/ void CMotionManager::Read(const char* pszName, void* pBuffer, uint32 uBufferSize)
 {
     AnimationContainer().Read(pszName, pBuffer, uBufferSize);
 };

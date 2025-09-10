@@ -42,7 +42,7 @@ public:
     void SetNewAllocated(bool bSet);
     bool IsNewAllocated(void) const;
     void SetRecord(const CHitCatchData* pHitCatchData);
-    bool IsEqual(const CHitCatchData* pHitCatchData) const;
+    bool Equal(const CHitCatchData* pHitCatchData) const;
     
 private:
     bool m_bIsNewAllocated;
@@ -61,7 +61,7 @@ public:
     bool IsNewAllocated(void) const;
     void SetAttackRecord(const CHitAttackData* pHitAttackData);
     void SetCatchRecord(CCatchDataRecord* pCatchDataRecord);
-    bool IsEqual(const CHitAttackData* pHitAttackData) const;
+    bool Equal(const CHitAttackData* pHitAttackData) const;
     bool IsHit(const CHitCatchData* pHitCatchData) const;
     bool IsTroubleAttack(void) const;
 
@@ -119,6 +119,10 @@ public:
     void SetPause(bool bPause);
     bool IsPaused(void) const;
     bool IsHitTarget(const CHitAttackData* pAttack, const CHitCatchData* pCatch) const;
+    CHitCatchData* GetCatchData(void);
+    void SetCatchData(CHitCatchData* pCatch);    
+    CHitAttackData* GetAttackData(void);
+    void SetAttackData(CHitAttackData* pAttack);
 
 private:
     CHitAttackData m_aHitAttackData[DATA_POOL_SIZE];
@@ -173,11 +177,16 @@ void CCatchDataRecord::SetRecord(const CHitCatchData* pHitCatchData)
 };
 
 
-bool CCatchDataRecord::IsEqual(const CHitCatchData* pHitCatchData) const
+bool CCatchDataRecord::Equal(const CHitCatchData* pHitCatchData) const
 {
     return  (pHitCatchData->GetObjectHandle() == m_uObjHandle) &&
             (pHitCatchData->GetCatchNo() == m_nCatchNo);
 };
+
+
+//
+// *********************************************************************************
+//
 
 
 CAttackDataRecord::CAttackDataRecord(void)
@@ -201,7 +210,8 @@ CAttackDataRecord::~CAttackDataRecord(void)
 void CAttackDataRecord::Cleanup(void)
 {
     auto it = m_listCatchDataRecord.begin();
-    while (it)
+    auto itEnd = m_listCatchDataRecord.end();
+    while (it != itEnd)
     {
         CCatchDataRecord* pCatchDataRecord = &(*it);
         it = m_listCatchDataRecord.erase(it);
@@ -212,7 +222,7 @@ void CAttackDataRecord::Cleanup(void)
     m_uObjHandle = 0;
     m_nAttackNo = 0;
     m_bIsTroubleAttack = false;
-    m_szMotionName[0] = '\0';;
+    m_szMotionName[0] = '\0';
 };
 
 
@@ -243,11 +253,13 @@ void CAttackDataRecord::SetCatchRecord(CCatchDataRecord* pCatchDataRecord)
 };
 
 
-bool CAttackDataRecord::IsEqual(const CHitAttackData* pHitAttackData) const
+bool CAttackDataRecord::Equal(const CHitAttackData* pHitAttackData) const
 {
-    return ((pHitAttackData->GetObjectHandle() == m_uObjHandle)
-        &&  (pHitAttackData->GetAttackNo() == m_nAttackNo)
-        &&  !std::strcmp(pHitAttackData->GetMotion(), m_szMotionName));
+    bool bIsSameObj = (pHitAttackData->GetObjectHandle() == m_uObjHandle);
+    bool bIsSameAttack = (pHitAttackData->GetAttackNo() == m_nAttackNo);
+    bool bIsSameMotion = (std::strcmp(pHitAttackData->GetMotion(), m_szMotionName) == 0);
+
+    return (bIsSameObj && bIsSameAttack && bIsSameMotion);
 };
 
 
@@ -255,7 +267,7 @@ bool CAttackDataRecord::IsHit(const CHitCatchData* pHitCatchData) const
 {
     for (CCatchDataRecord& it : m_listCatchDataRecord)
     {
-        if (it.IsEqual(pHitCatchData))
+        if (it.Equal(pHitCatchData))
             return true;
     };
 
@@ -269,13 +281,17 @@ bool CAttackDataRecord::IsTroubleAttack(void) const
 };
 
 
+//
+// *********************************************************************************
+//
+
+
 CHitRecordContainer::CHitRecordContainer(void)
 : m_pListOld(&m_listPool)
 , m_pListNew(&m_listAlloc)
 , m_pNowAttackRecord(nullptr)
 , m_pPrevAttackRecord(nullptr)
 {
-
     for (int32 i = 0; i < COUNT_OF(m_aAttackDataRecord); ++i)
     {
         m_aAttackDataRecord[i].SetNewAllocated(false);
@@ -306,8 +322,6 @@ void CHitRecordContainer::Cleanup(CList<CAttackDataRecord>* pList)
     while (it != itEnd)
     {
         CAttackDataRecord* pAttack = &(*it);
-        ASSERT(pAttack);
-        
         it = pList->erase(it);
 
         RestoreAttackRecord(pAttack);
@@ -337,7 +351,7 @@ void CHitRecordContainer::Period(void)
 
 void CHitRecordContainer::SetCurrentAttackData(const CHitAttackData* pHitAttackData)
 {
-    if (m_pPrevAttackRecord && !m_pPrevAttackRecord->IsEqual(pHitAttackData))
+    if (m_pPrevAttackRecord && !m_pPrevAttackRecord->Equal(pHitAttackData))
     {
         m_pPrevAttackRecord->unlink();
         RestoreAttackRecord(m_pPrevAttackRecord);
@@ -346,11 +360,9 @@ void CHitRecordContainer::SetCurrentAttackData(const CHitAttackData* pHitAttackD
 
     if (!m_pPrevAttackRecord)
     {
-        ASSERT(m_pListOld);
-        
         for (CAttackDataRecord& it : *m_pListOld)
         {
-            if (it.IsEqual(pHitAttackData))
+            if (it.Equal(pHitAttackData))
             {
                 m_pPrevAttackRecord = &it;
                 break;
@@ -358,7 +370,7 @@ void CHitRecordContainer::SetCurrentAttackData(const CHitAttackData* pHitAttackD
         };
     };
 
-    if (!m_pNowAttackRecord || !m_pNowAttackRecord->IsEqual(pHitAttackData))
+    if (!m_pNowAttackRecord || !m_pNowAttackRecord->Equal(pHitAttackData))
     {
         if (m_pPrevAttackRecord && m_pPrevAttackRecord->IsTroubleAttack())
         {
@@ -369,14 +381,10 @@ void CHitRecordContainer::SetCurrentAttackData(const CHitAttackData* pHitAttackD
         else
         {
             CAttackDataRecord* pAttackDataRecord = GetAttackRecord();
-            ASSERT(pAttackDataRecord);
-
             m_pNowAttackRecord = pAttackDataRecord;
             m_pNowAttackRecord->SetAttackRecord(pHitAttackData);
         };
 
-        ASSERT(m_pNowAttackRecord);
-        
         m_pListNew->push_back(m_pNowAttackRecord);
     };
 };
@@ -384,12 +392,9 @@ void CHitRecordContainer::SetCurrentAttackData(const CHitAttackData* pHitAttackD
 
 void CHitRecordContainer::SetHitRecord(const CHitCatchData* pHitCatchData)
 {
-    ASSERT(m_pNowAttackRecord);
-    
     CCatchDataRecord* pCatchDataRecord = GetCatchRecord();
-    ASSERT(pCatchDataRecord);
-
     pCatchDataRecord->SetRecord(pHitCatchData);
+
     m_pNowAttackRecord->SetCatchRecord(pCatchDataRecord);
 };
 
@@ -482,6 +487,11 @@ bool CHitRecordContainer::IsHit(const CHitCatchData* pHitCatchData)
 };
 
 
+//
+// *********************************************************************************
+//
+
+
 CHitAttackContainer::CHitAttackContainer(void)
 : m_bPause(false)
 {
@@ -565,65 +575,65 @@ void CHitAttackContainer::CleanupCatch(CList<CHitCatchData>* pList)
 
 void CHitAttackContainer::Period(void)
 {
-    if (m_bPause)    
-    {
-        Cleanup();
-        return;
-    };
-    
-    for (CHitAttackData& itAttack : m_listAttackAlloc)
-    {
-        if (!itAttack.GetObject() || !itAttack.IsFlagAlive())
-            continue;
+    m_listAttackAlloc.merge(&m_listAttackShotAlloc);
+    m_listAttackShotAlloc.clear();
 
-        HitRecordContainer().SetCurrentAttackData(&itAttack);
-
-        for (CHitCatchData& itCatch : m_listCatchAlloc)
-        {       
-            if (!itCatch.GetObject() || !itCatch.IsFlagAlive())
-                continue;
-            
-            if (!IsHitTarget(&itAttack, &itCatch))
+    if (!m_bPause)
+    {
+        for (CHitAttackData& itAttack : m_listAttackAlloc)
+        {
+            if (!itAttack.GetObject() || !itAttack.IsFlagAlive())
                 continue;
 
-            switch (itAttack.GetShape())
+            HitRecordContainer().SetCurrentAttackData(&itAttack);
+
+            for (CHitCatchData& itCatch : m_listCatchAlloc)
             {
-            case CHitAttackData::SHAPE_SPHERE:
-                {
-                    RwSphere sphereP = *itAttack.GetSphere();
-                    RwSphere sphereQ = *itCatch.GetSphere();
-                    
-                    bool bIntersection = Intersection::SphereAndSphere(&sphereP.center,
-                                                                       sphereP.radius,
-                                                                       &sphereQ.center,
-                                                                       sphereQ.radius);
-                    if (bIntersection)
-                    {
-						if(!HitRecordContainer().IsHit(&itCatch))
-							Dispatch(&itAttack, &itCatch);
-                    };
-                }
-                break;
+                if (!itCatch.GetObject() || !itCatch.IsFlagAlive())
+                    continue;
 
-            case CHitAttackData::SHAPE_LINE:
-                {
-                    RwSphere sphere = *itCatch.GetSphere();
-                    RwLine line = *itAttack.GetLine();
-                    float fHitDist = 0.0f;
-                        
-                    bool bIntersection = Intersection::LineAndSphere(&line, &sphere, &fHitDist);
-                    if (bIntersection)
-                    {
-                        itAttack.SetHitDistance(fHitDist);
-                        if (!HitRecordContainer().IsHit(&itCatch))
-                            Dispatch(&itAttack, &itCatch);
-                    };
-                }
-                break;
+                if (!IsHitTarget(&itAttack, &itCatch))
+                    continue;
 
-            default:
-                ASSERT(false);
-                break;
+                switch (itAttack.GetShape())
+                {
+                case CHitAttackData::SHAPE_SPHERE:
+                    {
+                        RwSphere sphereP = *itAttack.GetSphere();
+                        RwSphere sphereQ = *itCatch.GetSphere();
+
+                        bool bIntersection = Intersection::SphereAndSphere(&sphereP.center,
+                                                                           sphereP.radius,
+                                                                           &sphereQ.center,
+                                                                           sphereQ.radius);
+                        if (bIntersection)
+                        {
+                            if (!HitRecordContainer().IsHit(&itCatch))
+                                Dispatch(&itAttack, &itCatch);
+                        };
+                    }
+                    break;
+
+                case CHitAttackData::SHAPE_LINE:
+                    {
+                        RwSphere sphere = *itCatch.GetSphere();
+                        RwLine line = *itAttack.GetLine();
+                        float fHitDist = 0.0f;
+
+                        bool bIntersection = Intersection::LineAndSphere(&line, &sphere, &fHitDist);
+                        if (bIntersection)
+                        {
+                            itAttack.SetHitDistance(fHitDist);
+                            if (!HitRecordContainer().IsHit(&itCatch))
+                                Dispatch(&itAttack, &itCatch);
+                        };
+                    }
+                    break;
+
+                default:
+                    ASSERT(false);
+                    break;
+                };
             };
         };
     };
@@ -671,33 +681,23 @@ void CHitAttackContainer::Dispatch(CHitAttackData* pAttack, CHitCatchData* pCatc
 
 void CHitAttackContainer::RegistAttack(const CHitAttackData* pHitAttack)
 {
-    ASSERT(pHitAttack);
-    ASSERT(!m_listAttackPool.empty());
-
-    if (m_listAttackPool.empty())
-        return;
-    
-    CHitAttackData* pNode = m_listAttackPool.front();
-    m_listAttackPool.erase(pNode);
-    m_listAttackAlloc.push_back(pNode);
-
-    pHitAttack->CopyData(pNode);
+    CHitAttackData* pAttack = GetAttackData();
+    if (pAttack)
+    {
+        pHitAttack->CopyData(pAttack);
+        SetAttackData(pAttack);
+    };
 };
 
 
 void CHitAttackContainer::RegistCatch(const CHitCatchData* pHitCatch)
 {
-    ASSERT(pHitCatch);
-    ASSERT(!m_listCatchPool.empty());
-
-    if (m_listCatchPool.empty())
-        return;
-
-    CHitCatchData* pNode = m_listCatchPool.front();
-    m_listCatchPool.erase(pNode);
-    m_listCatchAlloc.push_back(pNode);
-
-    pHitCatch->CopyData(pNode);
+    CHitCatchData* pCatch = GetCatchData();
+    if (pCatch)
+    {
+        pHitCatch->CopyData(pCatch);
+        SetCatchData(pCatch);
+    };
 };
 
 
@@ -762,6 +762,55 @@ bool CHitAttackContainer::IsHitTarget(const CHitAttackData* pAttack, const CHitC
 };
 
 
+CHitCatchData* CHitAttackContainer::GetCatchData(void)
+{
+    if (m_listCatchPool.empty())
+        return new CHitCatchData;
+
+    CHitCatchData* pCatch = m_listCatchPool.front();
+    m_listCatchPool.erase(pCatch);
+
+    return pCatch;
+};
+
+
+void CHitAttackContainer::SetCatchData(CHitCatchData* pCatch)
+{
+    ASSERT(pCatch);
+
+    m_listCatchAlloc.push_back(pCatch);
+};
+
+
+CHitAttackData* CHitAttackContainer::GetAttackData(void)
+{
+    if (m_listAttackPool.empty())
+        return new CHitAttackData;
+
+    CHitAttackData* pAttack = m_listAttackPool.front();
+    m_listAttackPool.erase(pAttack);
+
+    return pAttack;
+};
+
+
+void CHitAttackContainer::SetAttackData(CHitAttackData* pAttack)
+{
+    ASSERT(pAttack);
+    ASSERT(pAttack->GetObject());
+
+    if (pAttack->GetObject()->GetType() == GAMEOBJECTTYPE::SHOT)
+        m_listAttackShotAlloc.push_back(pAttack);
+    else
+        m_listAttackAlloc.push_back(pAttack);
+};
+
+
+//
+// *********************************************************************************
+//
+
+
 static CHitAttackContainer* s_pHitAttackContainer = nullptr;
 
 
@@ -821,8 +870,6 @@ static inline CHitAttackContainer& HitAttackContainer(void)
 
 /*static*/ void CHitAttackManager::RegistAttack(const CHitAttackData* pHitAttack)
 {
-    ASSERT(pHitAttack);
-    
 #ifdef _DEBUG
     if (CHitDebug::SHOW_HIT_ATTACK)
     {
@@ -847,15 +894,12 @@ static inline CHitAttackContainer& HitAttackContainer(void)
     };
 #endif /* _DEBUG */
     
-    ASSERT(pHitAttack->GetObject());
     HitAttackContainer().RegistAttack(pHitAttack);
 };
 
 
 /*static*/ void CHitAttackManager::RegistCatch(const CHitCatchData* pHitCatch)
 {
-    ASSERT(pHitCatch);
-    
 #ifdef _DEBUG
     if (CHitDebug::SHOW_HIT_CATCH)
     {
@@ -890,6 +934,5 @@ static inline CHitAttackContainer& HitAttackContainer(void)
     };
 #endif /* _DEBUG */
     
-    ASSERT(pHitCatch->GetObject());
     HitAttackContainer().RegistCatch(pHitCatch);
 };

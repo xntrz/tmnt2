@@ -396,8 +396,6 @@ namespace PlayerStatus
 
         Character().ResetVelocity();
         Character().ResetAcceleration();
-        
-        Character().ClearCharge();
 
         CAccumulateModule* pModule = static_cast<CAccumulateModule*>(Character().GetModule(MODULETYPE::ACCUMULATE));
         if (pModule)

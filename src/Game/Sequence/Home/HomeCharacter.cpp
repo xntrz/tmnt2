@@ -18,6 +18,12 @@ public:
 static CHomeCharacterManipulator* s_apHomeCharacterManipulator[PLAYERID::ID_MAX] = { nullptr };
 
 
+static inline float RandDirection(void)
+{
+    return (Math::RandFloat() - 0.5f);
+};
+
+
 CHomeCharacterManipulator::CHomeCharacterManipulator(CPlayerCharacter* pPlayerChr)
 : CManipulator("HomeChr_MP", pPlayerChr, -1)
 {
@@ -35,13 +41,13 @@ CHomeCharacterManipulator::~CHomeCharacterManipulator(void)
 
 void CHomeCharacterManipulator::Run(void)
 {
+    float fDirection = m_pPlayerChr->GetDirection();
+
     switch (m_pPlayerChr->GetStatus())
     {
     case PLAYERTYPES::STATUS_IDLE:
         {
-            m_pPlayerChr->SetDirection(
-                m_pPlayerChr->GetDirection() + ((Math::RandFloat() - 0.5f) * MATH_PI)
-            );
+            m_pPlayerChr->SetDirection(fDirection + (RandDirection() * MATH_PI));
             m_pPlayerChr->ChangeStatus(PLAYERTYPES::STATUS_RUN);
         }
         break;
@@ -56,22 +62,26 @@ void CHomeCharacterManipulator::Run(void)
 
             if (pWallInfo->m_bHit)
             {
-				m_pPlayerChr->SetDirection(
-					Math::ATan2(pWallInfo->m_vNormal.x, pWallInfo->m_vNormal.z) + Math::RandFloat()
-                );
+                RwV3d vecRot = Math::VECTOR3_ZERO;
+                Math::GetRotateFromVector(&vecRot, &pWallInfo->m_vNormal);
+
+                float fYaw = vecRot.y;
+
+                fYaw = (fYaw * 2.0f) - (fDirection + MATH_PI);
+                fYaw = Math::RadianNormalize(fYaw);
+
+                m_pPlayerChr->SetDirection(fYaw);
             }
             else
             {
-                m_pPlayerChr->SetDirection(
-                    m_pPlayerChr->GetDirection() + ((Math::RandFloat() - 0.5f) * 0.2f)
-                );
+                m_pPlayerChr->SetDirection(fDirection + (RandDirection() * 0.2f));
             };
 
             float fRand = 0.0f;
             if (vPos.y >= -1.0f)
-                fRand = CGameProperty::GetElapsedTime() / 3.0f;
+                fRand = (CGameProperty::GetElapsedTime() / 3.0f);
             else
-                fRand = 3.0f * CGameProperty::GetElapsedTime();
+                fRand = (3.0f * CGameProperty::GetElapsedTime());
 
             if (Math::RandFloat() < fRand)
                 m_pPlayerChr->ChangeStatus(PLAYERTYPES::STATUS_JUMP);
@@ -97,23 +107,16 @@ void CHomeCharacterManipulator::Run(void)
             RwV3d vVel = Math::VECTOR3_ZERO;
             m_pPlayerChr->GetVelocity(&vVel);
 
-            if (Math::FEqual(vVel.x, 0.0f) &&
-                Math::FEqual(vVel.z, 0.0f))
-            {
+            if ((vVel.x == 0.0f) && (vVel.z == 0.0f))
                 m_pPlayerChr->ChangeStatus(PLAYERTYPES::STATUS_AERIAL_MOVE);
-            };
 
-            m_pPlayerChr->SetDirection(
-                m_pPlayerChr->GetDirection() + ((Math::RandFloat() - 0.5f) * 0.2f)
-            );
+            m_pPlayerChr->SetDirection(fDirection + (RandDirection() * 0.2f));
         }
         break;
 
     case PLAYERTYPES::STATUS_TOUCHDOWN:
         {
-            m_pPlayerChr->SetDirection(
-                m_pPlayerChr->GetDirection() + ((Math::RandFloat() - 0.5f) * 0.2f)
-            );
+            m_pPlayerChr->SetDirection(fDirection + (RandDirection() * 0.2f));
         }
         break;
 

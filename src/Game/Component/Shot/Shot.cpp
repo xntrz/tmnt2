@@ -45,21 +45,6 @@ namespace
         MAGICID::VALUE          m_idMagicHit;
         LOCUSINFO               m_locusinfo;
     };
-
-    
-    void GetRotateFromVector(RwV3d* pvRot, RwV3d* pv)
-    {
-        pvRot->x = -Math::ASin(pv->y);
-        pvRot->z = 0.0f;
-
-        float fCosArg = pv->z / Math::Cos(pvRot->x);
-        pvRot->y = Math::ACos(fCosArg);
-
-        if (pv->x <= 0.0f)
-            pvRot->y *= -1.0f;
-        else
-            pvRot->y *= 1.0f;
-    };
 };
 
 
@@ -194,8 +179,8 @@ void CShotArrow::SetModel(void)
     RwV3d vMove = Math::VECTOR3_ZERO;
     Math::Vec3_Normalize(&vMove, &m_vVelocity);
 
-    RwV3d vRot = Math::VECTOR3_ZERO;    
-    GetRotateFromVector(&vRot, &vMove);
+    RwV3d vRot = Math::VECTOR3_ZERO;
+    Math::GetRotateFromVector(&vRot, &vMove);
     
     m_pModel->SetRotation(&vRot);
     m_pModel->UpdateFrame();
@@ -226,7 +211,7 @@ void CShotGrenade::SetModel(void)
     Math::Vec3_Normalize(&vMove, &m_vVelocity);
 
     RwV3d vRot = Math::VECTOR3_ZERO;
-    GetRotateFromVector(&vRot, &vMove);
+    Math::GetRotateFromVector(&vRot, &vMove);
 
     vRot.x += (m_fTimer * (MATH_PI * 6.0f));
 
@@ -604,7 +589,7 @@ CShot::CShot(const PARAMETER* pParameter)
 
     float dt = CGameProperty::GetElapsedTime();
     Math::Vec3_Normalize(&m_vVelocity, &pParameter->m_vDirection);
-    Math::Vec3_Scale(&m_vVelocity, &m_vVelocity, (dt * shotInfo.m_fSpeed) / 4.0f);
+    Math::Vec3_Scale(&m_vVelocity, &m_vVelocity, ((1000.0f * shotInfo.m_fSpeed) / 3600.0f) * dt);
 
     float fGravity = (CGameProperty::GetGravity() * dt);
     m_vAcceleration = { 0.0f, ((dt * fGravity) * shotInfo.m_fGravity), 0.0f };
@@ -802,8 +787,6 @@ void CShot::Finish(void)
         param.SetObject(this);
         
         uint32 hMagic = CMagicManager::Play(ShotInfo(m_id).m_idMagicHit, &param);
-        ASSERT(hMagic);
-
         if (m_id == SHOTID::ID_ARROW_FIRE)
             CMagicManager::SetScale(hMagic, 0.4f);        
     };
@@ -824,9 +807,9 @@ void CShot::CheckAttack(void)
         RwV3d vObjPos = Math::VECTOR3_ZERO;
         Math::Vec3_Sub(&vObjPos, &m_vPosition, &m_vVelocity);
 
-        CHitAttackData Attack;
-        Attack.SetObject(GetHandle());
-        Attack.SetObjectPos(&vObjPos);
+        CHitAttackData hitAttack;
+        hitAttack.SetObject(GetHandle());
+        hitAttack.SetObjectPos(&vObjPos);
 
         if (m_id == SHOTID::ID_RIDE)
         {
@@ -834,39 +817,39 @@ void CShot::CheckAttack(void)
             line.start = m_vPosition;
             line.end = vObjPos;
 
-            Attack.SetShape(CHitAttackData::SHAPE_LINE);
-            Attack.SetLine(&line);
+            hitAttack.SetShape(CHitAttackData::SHAPE_LINE);
+            hitAttack.SetLine(&line);
         }
         else
         {
             RwSphere sphere = { 0 };
             SetHitSphere(&sphere);
 
-            Attack.SetShape(CHitAttackData::SHAPE_SPHERE);
-            Attack.SetSphere(&sphere);
+            hitAttack.SetShape(CHitAttackData::SHAPE_SPHERE);
+            hitAttack.SetSphere(&sphere);
         };
 
-        Attack.SetPower(m_nPower);
-        Attack.SetTarget(CHitAttackData::TARGET(m_uTarget));
-        Attack.SetAntiguard(CHitAttackData::ANTIGUARD_ENABLE);
+        hitAttack.SetPower(m_nPower);
+        hitAttack.SetTarget(CHitAttackData::TARGET(m_uTarget));
+        hitAttack.SetAntiguard(CHitAttackData::ANTIGUARD_ENABLE);
 
         switch (m_id)
         {
         case SHOTID::ID_SCATTER_KNIFE:
-            Attack.SetStatus(CHitAttackData::STATUS_DINDLE);
-            Attack.SetTroubleParameter(2.0f);
+            hitAttack.SetStatus(CHitAttackData::STATUS_DINDLE);
+            hitAttack.SetTroubleParameter(2.0f);
             break;
 
         case SHOTID::ID_SCYTHE:
-            Attack.SetStatus(CHitAttackData::STATUS_FLYAWAY);
+            hitAttack.SetStatus(CHitAttackData::STATUS_FLYAWAY);
             break;
 
         default:
-            Attack.SetStatus(CHitAttackData::STATUS_KNOCK);
+            hitAttack.SetStatus(CHitAttackData::STATUS_KNOCK);
             break;
         };
 
-        CHitAttackManager::RegistAttack(&Attack);
+        CHitAttackManager::RegistAttack(&hitAttack);
     };
 
     if (m_bReflection)
@@ -874,13 +857,13 @@ void CShot::CheckAttack(void)
         RwSphere sphere = { 0 };
         SetHitSphere(&sphere);
 
-        CHitCatchData Catch;
-        Catch.SetObject(GetHandle());
-        Catch.SetObjectType(GetType());
-        Catch.SetShape(CHitCatchData::SHAPE_SPHERE);
-        Catch.SetSphere(&sphere);
+        CHitCatchData hitCatch;
+        hitCatch.SetObject(GetHandle());
+        hitCatch.SetObjectType(GetType());
+        hitCatch.SetShape(CHitCatchData::SHAPE_SPHERE);
+        hitCatch.SetSphere(&sphere);
 
-        CHitAttackManager::RegistCatch(&Catch);
+        CHitAttackManager::RegistCatch(&hitCatch);
     };
 };
 
@@ -1003,7 +986,7 @@ float CShot::GetDirection(void) const
     Math::Vec3_Normalize(&vDirection, &m_vVelocity);
 
     RwV3d vRotation = Math::VECTOR3_ZERO;
-    GetRotateFromVector(&vRotation, &vDirection);
+    Math::GetRotateFromVector(&vRotation, &vDirection);
     
     return vRotation.y;
 };

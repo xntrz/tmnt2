@@ -16,7 +16,7 @@ public:
     void TerminateLib(void);
     
 private:
+    uint8* m_pSoundHeap;
     IDirectSound8* m_pDs;
     IDirectSoundBuffer* m_pDsBuffer;
-    void* m_pSoundHeap;
 };

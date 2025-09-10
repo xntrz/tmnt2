@@ -4763,8 +4763,11 @@ namespace Utils6034
         vecPlrPos = Math::VECTOR3_ZERO;
         pPlrChr->GetPosition(&vecPlrPos);
 
+        static const float s_fTenguSwordRangeSQ = 3.24f;
+
+        /* TODO squared dist? */
         float fDist = CEnemyUtils::GetDistance(&EnemyChr().Compositor(), &vecPlrPos);
-        if (fDist >= 3.24f)
+        if (fDist >= s_fTenguSwordRangeSQ)
         {
             /* shot center */
             RwV3d vecMagicDirCenter = vecMagicDir;
@@ -4781,6 +4784,13 @@ namespace Utils6034
             Math::Vec3_Sub(&vecMagicDirRight, &vecMagicDir, &vecDirOffset);
 
             ShotTenguSwordMagic(&vecSwordPos, &vecMagicDirRight);
+
+            /* play SE */
+            RwV3d vecPos = Math::VECTOR3_ZERO;
+            EnemyChr().Compositor().GetPosition(&vecPos);
+            Math::Vec3_Add(&vecPos, &vecPos, &vecSwordPos);
+
+            CGameSound::PlayPositionSE(&vecPos, SDCODE_SE(4360));
         };
     };
 

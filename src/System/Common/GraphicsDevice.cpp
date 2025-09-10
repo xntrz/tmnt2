@@ -5,6 +5,7 @@
 #include "RenderState.hpp"
 #include "System2D.hpp"
 #include "Sprite.hpp"
+#include "rweval.hpp"
 
 #include "rtanim.h"
 #include "rphanim.h"
@@ -116,6 +117,8 @@ bool CGraphicsDevice::Start(void)
         return false;
     };
 
+    rwevalInitialize();
+
 #ifdef RWDEBUG
     RtCharsetOpen();
 #endif /* RWDEBUG */  
@@ -170,6 +173,7 @@ void CGraphicsDevice::Stop(void)
 #ifdef RWDEBUG
     RtCharsetClose();
 #endif /* RWDEBUG */
+    rwevalTerminate();    
     RwEngineStop();
 };
 
@@ -331,6 +335,8 @@ bool CGraphicsDevice::CreateCamera(void)
     m_pCamera = RwCameraCreate();
     if (!m_pCamera)
         return false;
+    
+    m_pCamera->endUpdate = rwevalGetCameraEndUpdateFunc();
 
     RwCameraSetRasterMacro(m_pCamera, m_pFrameBuffer);
     RwCameraSetZRasterMacro(m_pCamera, m_pZBuffer);

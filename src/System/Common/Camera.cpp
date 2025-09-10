@@ -1,4 +1,6 @@
 #include "Camera.hpp"
+#include "Configure.hpp"
+#include "rweval.hpp"
 
 
 /*static*/ RwCamera* CCamera::m_pCameraCurrent = nullptr;
@@ -21,6 +23,8 @@
     RwCamera* pNewCamera = RwCameraClone(pRwCamera);
     ASSERT(pNewCamera);
     
+    pNewCamera->endUpdate = rwevalGetCameraEndUpdateFunc();
+
     RwFrame* pFrame = RwFrameCreate();
     ASSERT(pFrame);
 

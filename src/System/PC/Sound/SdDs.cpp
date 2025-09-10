@@ -6,10 +6,7 @@
 
 
 static IDirectSound8* SdDS8Instance;
-static DWORD SdDSConfig = 0;
 static int32 SdDS8BuffCnt = 0;
-static bool SdIsSpeaker5p1 = false;
-static IDirectSoundBuffer* SdPrimaryBuff = nullptr;
 
 
 bool SdDsInitialize(HWND _hWnd)
@@ -28,29 +25,7 @@ bool SdDsInitialize(HWND _hWnd)
         return false;
     };
 
-    hResult = IDirectSound8_GetSpeakerConfig(SdDS8Instance, &SdDSConfig);
-    if (FAILED(hResult))
-    {
-        SDLOG("GetSpeakerConfig failed (hresult = %" PRIhr ")\n", hResult);
-        return false;
-    };
-
-    if (DSSPEAKER_CONFIG(SdDSConfig) == DSSPEAKER_5POINT1)
-        SdIsSpeaker5p1 = true;
-
     SdDS8BuffCnt = 0;
-
-    DSBUFFERDESC SdBuffDesc;
-    std::memset(&SdBuffDesc, 0, sizeof(SdBuffDesc));
-    SdBuffDesc.dwSize = sizeof(DSBUFFERDESC);
-    SdBuffDesc.dwFlags = DSBCAPS_PRIMARYBUFFER;
-    SdBuffDesc.dwBufferBytes = 0;
-    SdBuffDesc.dwReserved = 0;
-    SdBuffDesc.lpwfxFormat = NULL;
-
-    SdDsBuffCreate(&SdPrimaryBuff, &SdBuffDesc);
-    if (SdPrimaryBuff == nullptr)
-        SDLOG("primary buffer is NULL!");
 
     return true;
 };
@@ -58,12 +33,6 @@ bool SdDsInitialize(HWND _hWnd)
 
 void SdDsTerminate(void)
 {
-    if (SdPrimaryBuff != nullptr)
-    {
-        SdDsBuffDestroy(SdPrimaryBuff);
-        SdPrimaryBuff = nullptr;
-    };
-
     ASSERT(SdDS8BuffCnt == 0);
 
     if (SdDS8Instance)

@@ -4,6 +4,7 @@
 #include "Game/Component/Player/PlayerStatus.hpp"
 #include "Game/Component/Player/ConcretePlayerStatus/PlayerStatusAttack.hpp"
 #include "Game/Component/Player/ConcretePlayerStatus/PlayerStatusJump.hpp"
+#include "Game/Component/Player/ConcretePlayerStatus/PlayerStatusThrow.hpp"
 
 
 namespace Raphael
@@ -43,7 +44,7 @@ namespace Raphael
         virtual void OnAttach(void) override;
     };
 
-    class CAttackAAC : public PlayerStatus::CAttackAAC
+    class CAttackAAC : public PlayerStatus::CLiftChallenge
     {
     public:
         virtual bool IsEnableChangeStatus(PLAYERTYPES::STATUS status) override;

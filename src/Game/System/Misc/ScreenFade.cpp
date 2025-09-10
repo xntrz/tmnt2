@@ -138,7 +138,7 @@ void CScreenFade::CScreenFadeController::Start(float fFadeTime, bool bDraw)
     m_fTime     = 0.0f;
     m_bIsFading = true;
     m_bDrawFlag = bDraw;
-    m_color     = (Math::FEqual(m_fFadeTime, 0.0f) ? m_colorEnd : m_colorStart);
+    m_color     = (m_fFadeTime == 0.0f) ? m_colorEnd : m_colorStart;
 };
 
 

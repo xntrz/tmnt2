@@ -83,8 +83,6 @@ CManipulator::~CManipulator(void)
 
 void CManipulator::Run(void)
 {
-    ASSERT(m_pPlayerChr);
-
     AnalyzeInputDevice();
     SetConfusionInput();
     SetSpecificAbilityFlag();
@@ -555,7 +553,8 @@ void CManipulator::RunStatusDamage(void)
 
 void CManipulator::RunPush(void)
 {
-    ;
+    if (m_input.m_move)
+        m_pPlayerChr->SetDirection(m_input.m_fDirection);
 };
 
 
@@ -656,8 +655,8 @@ void CManipulator::AnalyzeInputVector(RwV3d& rvInputVector, float& rfInputVector
     float x =  static_cast<float>(m_padstream.GetAnalogX(m_nControllerNo));
     float y = -static_cast<float>(m_padstream.GetAnalogY(m_nControllerNo));
 
-    x = (x >= 0.0f ?  (x / static_cast<float>(TYPEDEF::SINT16_MAX)) : -(x / static_cast<float>(TYPEDEF::SINT16_MIN)));
-    y = (y >= 0.0f ? -(y / static_cast<float>(TYPEDEF::SINT16_MAX)) :  (y / static_cast<float>(TYPEDEF::SINT16_MIN)));
+    x = (x >= 0.0f ? (x / static_cast<float>(TYPEDEF::SINT16_MAX)) : -(x / static_cast<float>(TYPEDEF::SINT16_MIN)));
+    y = (y >= 0.0f ? (y / static_cast<float>(TYPEDEF::SINT16_MAX)) : -(y / static_cast<float>(TYPEDEF::SINT16_MIN)));
 
     rvInputVector.x = x;
     rvInputVector.y = 0.0f;
@@ -675,39 +674,18 @@ void CManipulator::AnalyzeInputVector(RwV3d& rvInputVector, float& rfInputVector
     if (!(digital & digitalMovementMask))
         return;
     
-    float xDigital, yDigital;
+    float xDigital = 0.0f;
+    float yDigital = 0.0f;
 
-    //
-    //  Check X axis
-    //
     if (digital & CController::DIGITAL_LLEFT)
-    {
         xDigital = -1.0f;
-    }
     else if (digital & CController::DIGITAL_LRIGHT)
-    {
         xDigital = 1.0f;
-    }
-    else
-    {
-        xDigital = 0.0f;
-    };
 
-    //
-    //  Check Y axis
-    //
     if (digital & CController::DIGITAL_LUP)
-    {
         yDigital = -1.0f;
-    }
     else if (digital & CController::DIGITAL_LDOWN)
-    {
         yDigital = 1.0f;
-    }
-    else
-    {
-        yDigital = 0.0f;
-    };
     
     rvInputVector.x = xDigital;
     rvInputVector.y = 0.0f;

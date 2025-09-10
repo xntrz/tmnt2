@@ -52,7 +52,9 @@ namespace Math
     float Vec3_Dot(const RwV3d* pvA, const RwV3d* pvB);
     void  Vec3_Lerp(RwV3d* pvOut, const RwV3d* pvInA, const RwV3d* pvInB, float t);
     void  Vec3_Reflect(RwV3d* pvOut, const RwV3d* pvIn, const RwV3d* pvNormal);
-    bool  Vec3_IsEqual(RwV3d const* vecA, RwV3d const* vecB);
+    bool  Vec3_Equal(RwV3d const* vecA, RwV3d const* vecB);
+    bool  Vec3_FEqual(RwV3d const* vecA, RwV3d const* vecB);
+    void  GetRotateFromVector(RwV3d* vecRot, const RwV3d* vec);
 
     void Matrix_Update(RwMatrix* matrix, const RwV3d* right, const RwV3d* up, const RwV3d* at, const RwV3d* pos = nullptr);
     void Matrix_Multiply(RwMatrix* matrix, const RwMatrix* m1, const RwMatrix* m2);

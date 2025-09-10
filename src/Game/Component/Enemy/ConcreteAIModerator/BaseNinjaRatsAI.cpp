@@ -660,7 +660,7 @@ void CBaseNinjaRatsAI::ExecuteManToManStrategy(void)
             vecFootPosPlr.y = 0.0f;
 
             float fDir = 0.0f;
-            if (!Math::Vec3_IsEqual(&vecFootPosPlr, &Math::VECTOR3_ZERO))
+            if (!Math::Vec3_Equal(&vecFootPosPlr, &Math::VECTOR3_ZERO))
                 fDir = std::atan2(vecFootPosPlr.x, vecFootPosPlr.z);
 
             float fDistSQ = Math::Vec3_Dot(&vecFootPosPlr, &vecFootPosPlr);
@@ -684,7 +684,7 @@ void CBaseNinjaRatsAI::ExecuteManToManStrategy(void)
                 vecFootPosPlr.y = 0.0f;
 
                 float fDir = 0.0f;
-                if (!Math::Vec3_IsEqual(&vecFootPosPlr, &Math::VECTOR3_ZERO))
+                if (!Math::Vec3_Equal(&vecFootPosPlr, &Math::VECTOR3_ZERO))
                     fDir = std::atan2(vecFootPosPlr.x, vecFootPosPlr.z);
                 
                 float fDistSQ = Math::Vec3_Dot(&vecFootPosPlr, &vecFootPosPlr);
@@ -709,7 +709,7 @@ void CBaseNinjaRatsAI::ExecuteManToManStrategy(void)
                 vecFootPosPlr.y = 0.0f;
 
                 afDir[i] = 0.0f;
-                if (!Math::Vec3_IsEqual(&vecFootPosPlr, &Math::VECTOR3_ZERO))
+                if (!Math::Vec3_Equal(&vecFootPosPlr, &Math::VECTOR3_ZERO))
                     afDir[i] = std::atan2(vecFootPosPlr.x, vecFootPosPlr.z);
             };
 
@@ -738,7 +738,7 @@ void CBaseNinjaRatsAI::ExecuteManToManStrategy(void)
             vecFootPosPlr.y = 0.0f;
 
             float fDir = 0.0f;
-            if (!Math::Vec3_IsEqual(&vecFootPosPlr, &Math::VECTOR3_ZERO))
+            if (!Math::Vec3_Equal(&vecFootPosPlr, &Math::VECTOR3_ZERO))
                 fDir = std::atan2(vecFootPosPlr.x, vecFootPosPlr.z);
 
             float fDistSQ = Math::Vec3_Dot(&vecFootPosPlr, &vecFootPosPlr);
@@ -927,30 +927,25 @@ int32 CBaseNinjaRatsAI::GetTargetRatNo(int32 playerNo) const
     CPlayerCharacter* pPlrChr = CAIUtils::GetActivePlayer(playerNo);
     ASSERT(pPlrChr != nullptr);
 
-    switch (pPlrChr->GetID())
+    static int32 s_aPlayerIdRatNo[] =
     {
-    case PLAYERID::ID_LEO:
-    case PLAYERID::ID_KAR:
-        return 1;
-
-    case PLAYERID::ID_RAP:
-    case PLAYERID::ID_SLA:
-        return 0;
-
-    case PLAYERID::ID_MIC:
-    case PLAYERID::ID_CAS:
-        return 2;
-
-    case PLAYERID::ID_DON:
-    case PLAYERID::ID_SPL:
-        return 3;
-
-    default:
-        ASSERT(false);
-        break;
+        1, // leo
+        0, // rap
+        2, // mic
+        3, // don
+        0, // sla
+        2, // cas
+        1, // kar
+        3, // spl
     };
 
-    return -1;
+    static_assert(COUNT_OF(s_aPlayerIdRatNo) == PLAYERID::ID_MAX, "update me");
+
+    PLAYERID::VALUE playerId = pPlrChr->GetID();
+    ASSERT(playerId >= 0);
+    ASSERT(playerId < COUNT_OF(s_aPlayerIdRatNo));
+
+    return s_aPlayerIdRatNo[playerId];
 };
 
 

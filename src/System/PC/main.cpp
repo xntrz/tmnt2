@@ -3,7 +3,6 @@
 #include "PCSpecific.hpp"
 #include "PCSetting.hpp"
 #include "PCFramework.hpp"
-#include "rweval.hpp"
 
 #include "System/Common/Configure.hpp"
 
@@ -38,18 +37,12 @@ _tWinMain(
     CConfigure::SetLaunchMode(TYPEDEF::CONFIG_LAUNCH_NORMAL);
     CConfigure::InitArgs(__argc, __argv);
 
-    if (CConfigure::CheckArg("noeval"))
-        rwevalInitialize();
-
     CPCSetting::Initialize();
     CPCSpecific::m_hInstance = hInstance;
     
     bool bResult = CPCFramework::StartAndRun();
 
     CPCSetting::Terminate();
-
-    if (CConfigure::CheckArg("noeval"))
-        rwevalTerminate();
 
 #if defined(NDEBUG)
     CDebug::Fatal = nullptr;

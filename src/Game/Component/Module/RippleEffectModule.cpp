@@ -45,8 +45,8 @@ void CRippleEffectModule::Run(void)
     }
     else
     {
-        StopEffect(&m_aEffectInfo[0]);
         StopEffect(&m_aEffectInfo[1]);
+        StopEffect(&m_aEffectInfo[0]);
     };
 };
 
@@ -73,28 +73,19 @@ void CRippleEffectModule::InitializeEffect(float fRadius)
     m_pCharacter->GetFootPosition(&vPosition);
 
     uint32 hEffect0 = CEffectManager::Play(EFFECTID::ID_ALL_W_HAMON, &vPosition, false);
-    ASSERT(hEffect0);
-
-    if (hEffect0)
-    {
-        CEffectManager::SetScale(hEffect0, (fRadius / 1.5f));
-        CEffectManager::SetActive(hEffect0, false);
-
-        m_aEffectInfo[0].m_hEffect = hEffect0;
-        m_aEffectInfo[0].m_bEnable = false;
-    };
-
     uint32 hEffect1 = CEffectManager::Play(EFFECTID::ID_ALL_W_SPLASH, &vPosition, false);
-    ASSERT(hEffect1);
+    
+    CEffectManager::SetScale(hEffect0, (fRadius / 1.5f));
+    CEffectManager::SetScale(hEffect1, (fRadius / 1.5f));
 
-    if (hEffect1)
-    {
-        CEffectManager::SetScale(hEffect1, (fRadius / 1.5f));
-        CEffectManager::SetActive(hEffect1, false);
+    CEffectManager::SetActive(hEffect0, false);
+    CEffectManager::SetActive(hEffect1, false);
 
-        m_aEffectInfo[1].m_hEffect = hEffect1;
-        m_aEffectInfo[1].m_bEnable = false;
-    };    
+    m_aEffectInfo[0].m_hEffect = hEffect0;
+    m_aEffectInfo[0].m_bEnable = false;
+
+    m_aEffectInfo[1].m_hEffect = hEffect1;
+    m_aEffectInfo[1].m_bEnable = false;
 };
 
 
@@ -133,8 +124,6 @@ void CRippleEffectModule::StopEffect(RIPPLE_EFFECT_INFO* pInfo)
 
 bool CRippleEffectModule::IsSubjectMoving(void) const
 {
-    bool bResult = false;
-
     switch (m_pCharacter->GetCharacterType())
     {
     case CCharacter::TYPE_ENEMY:
@@ -144,9 +133,7 @@ bool CRippleEffectModule::IsSubjectMoving(void) const
 
             if ((enemyStatus == ENEMYTYPES::STATUS_RUN) ||
                 (enemyStatus == ENEMYTYPES::STATUS_DASH))
-            {
-                bResult = true;
-            };
+                return true;
         }
         break;
         
@@ -155,14 +142,11 @@ bool CRippleEffectModule::IsSubjectMoving(void) const
             CPlayerCharacter* pPlayerChr = static_cast<CPlayerCharacter*>(m_pCharacter);
             PLAYERTYPES::STATUS playerStatus = pPlayerChr->GetStatus();
             
-            if ((playerStatus == PLAYERTYPES::STATUS_RUN)         ||
-                (playerStatus == PLAYERTYPES::STATUS_WALK)        ||
-                (playerStatus == PLAYERTYPES::STATUS_DASH)        ||
+            if ((playerStatus == PLAYERTYPES::STATUS_RUN) ||
+                (playerStatus == PLAYERTYPES::STATUS_DASH) ||
                 (playerStatus == PLAYERTYPES::STATUS_DASH_CANCEL) ||
                 (playerStatus == PLAYERTYPES::STATUS_DASH_FINISH))
-            {
-                bResult = true;
-            };
+                return true;
         }
         break;
 
@@ -171,5 +155,5 @@ bool CRippleEffectModule::IsSubjectMoving(void) const
         break;
     };
 
-    return bResult;
+    return false;
 };

@@ -47,8 +47,8 @@ CConsoleGimmick::CConsoleGimmick(const char* pszName, void* pParam)
     CModel* pModelAtari = CModelManager::CreateModel("console_a");
     ASSERT(pModelAtari);
 
-    m_model.SetModel(CNormalGimmickModel::MODELTYPE_DRAW_NORMAL, pModelOn);
-    m_model.SetModel(CNormalGimmickModel::MODELTYPE_DRAW_BREAK, pModelOff);
+    m_model.SetModel(CNormalGimmickModel::MODELTYPE_DRAW_NORMAL, pModelOff);
+    m_model.SetModel(CNormalGimmickModel::MODELTYPE_DRAW_BREAK, pModelOn);
     m_model.SetModel(CNormalGimmickModel::MODELTYPE_ATARI_NORMAL, pModelAtari);
     
     m_vPosition = pInitParam->m_vPosition;
@@ -85,11 +85,7 @@ CConsoleGimmick::CConsoleGimmick(const char* pszName, void* pParam)
 
 CConsoleGimmick::~CConsoleGimmick(void)
 {
-    if (m_hAtari)
-    {
-        CMapCollisionModel::RemoveCollisionModel(m_hAtari);
-        m_hAtari = 0;
-    };
+    collisionDestroy();
 };
 
 
@@ -206,6 +202,8 @@ void CConsoleGimmick::OnCatchAttack(CHitAttackData* pAttack)
     {
     case CHitAttackData::SHAPE_SPHERE:
         {
+            static const int32 HIT_NUM_FOR_ON = 10;
+
             RwSphere hitSphere = *pAttack->GetSphere();
             EFFECT_GENERIC::CallHitEffect(pAttack, &hitSphere.center);
 
@@ -215,10 +213,10 @@ void CConsoleGimmick::OnCatchAttack(CHitAttackData* pAttack)
             {
                 CPlayerCharacter* pPlayerCharacter = static_cast<CPlayerCharacter*>(pCharacter);
                 if (pPlayerCharacter->GetID() == PLAYERID::ID_SPL)
-                    m_nHitNum = 9;
+                    m_nHitNum = (HIT_NUM_FOR_ON - 1);
             };
             
-            if (++m_nHitNum >= 10)
+            if (++m_nHitNum >= HIT_NUM_FOR_ON)
                 consoleOn();
             else
                 m_fInvinT = 0.1f;

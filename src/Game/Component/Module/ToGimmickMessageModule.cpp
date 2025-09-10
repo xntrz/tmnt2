@@ -7,6 +7,27 @@
 #include "Game/System/GameObject/GameObjectManager.hpp"
 
 
+#define DIRECTION_ANGLE_CONDITION (MATH_DEG2RAD(29.880f))
+
+
+static inline CConsoleGimmick* GetConsoleGimmick(const CCharacter::COLLISIONWALLINFO* pWallInfo)
+{
+    CGameObject* pGameObject = CGameObjectManager::GetObject(pWallInfo->m_gimmickinfo.m_szGimmickObjName);
+    if (!pGameObject)
+        return nullptr;
+
+    if (pGameObject->GetType() != GAMEOBJECTTYPE::GIMMICK)
+        return nullptr;
+
+    CGimmick* pGimmick = static_cast<CGimmick*>(pGameObject);
+    if (pGimmick->GetID() != GIMMICKID::ID_N_CONSOL)
+        return nullptr;
+
+    CConsoleGimmick* pConsoleGimmick = static_cast<CConsoleGimmick*>(pGimmick);
+    return pConsoleGimmick;
+};
+
+
 /*static*/ CToGimmickMessageModule*
 CToGimmickMessageModule::New(CPlayerCharacter* pPlayerCharacter)
 {
@@ -70,8 +91,7 @@ void CToGimmickMessageModule::Run(void)
     {
         if (!(pGroundInfo->m_attribute & MAPTYPES::ATTRIBUTE_DEATH))
         {
-            RwV3d vPosition = Math::VECTOR3_ZERO;
-            
+            RwV3d vPosition = Math::VECTOR3_ZERO;            
             m_pPlayerCharacter->GetPosition(&vPosition);
             m_pPlayerCharacter->SetReplacePosition(&vPosition);
         };
@@ -127,8 +147,8 @@ bool CToGimmickMessageModule::DirectionCheck(void)
     float fAngle = Math::Vec3_Dot(&vCharacterDirection, &vToGimmickDirection);
     fAngle = Math::ACos(fAngle);
     
-    if ((fAngle >=  MATH_DEG2RAD(29.880f)) ||
-        (fAngle <= -MATH_DEG2RAD(29.880f)))
+    if ((fAngle >=  DIRECTION_ANGLE_CONDITION) ||
+        (fAngle <= -DIRECTION_ANGLE_CONDITION))
         return false;
 
     m_pPlayerCharacter->SetDirectionFromVector(&vToGimmickDirection);
@@ -200,18 +220,25 @@ void CPowerfullCharacterToGimmickMessageModule::Run(void)
     const CPlayerCharacter::COLLISIONWALLINFO* pWallInfo = m_pPlayerCharacter->GetCollisionWall();
     ASSERT(pWallInfo);
 
-    if (!pWallInfo->m_bHit || (pWallInfo->m_hittype != MAPTYPES::HITTYPE_GIMMICK) || !m_pPlayerCharacter->TestPlayerFlag(PLAYERTYPES::FLAG_PUSH))
+    bool bIsWallHit = pWallInfo->m_bHit;
+    bool bIsGimmickHit = (pWallInfo->m_hittype == MAPTYPES::HITTYPE_GIMMICK);
+    bool bIsPushStatus = (m_pPlayerCharacter->GetStatus() == PLAYERTYPES::STATUS_PUSH);
+    bool bIsPushFlag = m_pPlayerCharacter->TestPlayerFlag(PLAYERTYPES::FLAG_PUSH);
+
+    if (bIsPushStatus && (!bIsWallHit || !bIsGimmickHit || !bIsPushFlag || !DirectionCheck()))
+        m_pPlayerCharacter->ChangeStatus(PLAYERTYPES::STATUS_IDLE);
+
+    if (bIsWallHit && bIsGimmickHit && bIsPushFlag && DirectionCheck())
     {
-        if (m_pPlayerCharacter->GetStatus() == PLAYERTYPES::STATUS_PUSH)
-            m_pPlayerCharacter->ChangeStatus(PLAYERTYPES::STATUS_IDLE);
+        if (pWallInfo->m_gimmickinfo.m_type == MAPTYPES::GIMMICKTYPE_PUSHOBJ)
+            m_pPlayerCharacter->ChangeStatus(PLAYERTYPES::STATUS_PUSH);
     };
 
-    if ((pWallInfo->m_bHit) &&
-        (pWallInfo->m_hittype == MAPTYPES::HITTYPE_GIMMICK) &&
-        (pWallInfo->m_gimmickinfo.m_type == MAPTYPES::GIMMICKTYPE_PUSHOBJ))
+    if (bIsPushStatus)
     {
-        if (DirectionCheck() && m_pPlayerCharacter->TestPlayerFlag(PLAYERTYPES::FLAG_PUSH))
-            m_pPlayerCharacter->ChangeStatus(PLAYERTYPES::STATUS_PUSH);
+        RwV3d vVelocity = { 0.0f, 0.0f, m_pPlayerCharacter->Feature().m_fRunMoveSpeed };
+        m_pPlayerCharacter->RotateVectorByDirection(&vVelocity, &vVelocity);
+        m_pPlayerCharacter->SetVelocity(&vVelocity);
     };
 
     CToGimmickMessageModule::Run();
@@ -241,13 +268,17 @@ void CConsoleCharacterToGimmickMessageModule::Run(void)
     const CPlayerCharacter::COLLISIONWALLINFO* pWallInfo = m_pPlayerCharacter->GetCollisionWall();
     ASSERT(pWallInfo);
 
-    if ((pWallInfo->m_hittype == MAPTYPES::HITTYPE_GIMMICK) &&
-        (pWallInfo->m_gimmickinfo.m_type == MAPTYPES::GIMMICKTYPE_CONSOLE) &&
-        DirectionCheck() &&
-        DistanceCheck())        
+    bool bIsGimmickHit = (pWallInfo->m_hittype == MAPTYPES::HITTYPE_GIMMICK);
+    bool bIsConsoleHit = (pWallInfo->m_gimmickinfo.m_type == MAPTYPES::GIMMICKTYPE_CONSOLE);
+    bool bIsConsoleFlag = m_pPlayerCharacter->TestPlayerFlag(PLAYERTYPES::FLAG_CONSOLE);
+
+    if (bIsGimmickHit &&
+        bIsConsoleHit &&
+        DistanceCheck() &&
+        bIsConsoleFlag &&
+        DirectionCheck())
     {
-        if (m_pPlayerCharacter->TestPlayerFlag(PLAYERTYPES::FLAG_CONSOLE))
-            m_pPlayerCharacter->ChangeStatus(PLAYERTYPES::STATUS_CONSOLE);
+        m_pPlayerCharacter->ChangeStatus(PLAYERTYPES::STATUS_CONSOLE);
     };
 
     CToGimmickMessageModule::Run();
@@ -256,7 +287,37 @@ void CConsoleCharacterToGimmickMessageModule::Run(void)
 
 bool CConsoleCharacterToGimmickMessageModule::DirectionCheck(void)
 {
-    return CToGimmickMessageModule::DirectionCheck();
+    const CPlayerCharacter::COLLISIONWALLINFO* pWallInfo = m_pPlayerCharacter->GetCollisionWall();
+    ASSERT(pWallInfo);
+
+    CConsoleGimmick* pConsoleGimmick = GetConsoleGimmick(pWallInfo);
+    if (pConsoleGimmick == nullptr)
+        return false;
+
+    RwV3d vecConsoleDir = Math::VECTOR3_ZERO;
+    pConsoleGimmick->GetDirection(&vecConsoleDir);
+    vecConsoleDir.y = 0.0f;
+
+    Math::Vec3_Negate(&vecConsoleDir, &vecConsoleDir);
+    Math::Vec3_Normalize(&vecConsoleDir, &vecConsoleDir);
+
+    RwMatrix matRotY;
+    RwMatrixSetIdentityMacro(&matRotY);
+    Math::Matrix_RotateY(&matRotY, m_pPlayerCharacter->GetDirection());
+
+    RwV3d vecChrDir = Math::VECTOR3_AXIS_Z;
+    RwV3dTransformVector(&vecChrDir, &vecChrDir, &matRotY);
+
+    float fAngle = Math::Vec3_Dot(&vecChrDir, &vecConsoleDir);
+    fAngle = Math::ACos(fAngle);
+
+    if ((fAngle >=  DIRECTION_ANGLE_CONDITION) ||
+        (fAngle <= -DIRECTION_ANGLE_CONDITION))
+        return false;
+
+    m_pPlayerCharacter->SetDirectionFromVector(&vecConsoleDir);
+
+    return true;
 };
 
 
@@ -265,18 +326,9 @@ bool CConsoleCharacterToGimmickMessageModule::DistanceCheck(void)
     const CPlayerCharacter::COLLISIONWALLINFO* pWallInfo = m_pPlayerCharacter->GetCollisionWall();
     ASSERT(pWallInfo);
 
-    CGameObject* pGameObject = CGameObjectManager::GetObject(pWallInfo->m_gimmickinfo.m_szGimmickObjName);
-    if (!pGameObject)
+    CConsoleGimmick* pConsoleGimmick = GetConsoleGimmick(pWallInfo);
+    if (pConsoleGimmick == nullptr)
         return false;
-
-    if (pGameObject->GetType() != GAMEOBJECTTYPE::GIMMICK)
-        return false;
-
-    CGimmick* pGimmick = static_cast<CGimmick*>(pGameObject);
-    if (pGimmick->GetID() != GIMMICKID::ID_N_CONSOL)
-        return false;
-
-    CConsoleGimmick* pConsoleGimmick = static_cast<CConsoleGimmick*>(pGimmick);
 
     RwV3d vPosChara = Math::VECTOR3_ZERO;
     m_pPlayerCharacter->GetPosition(&vPosChara);

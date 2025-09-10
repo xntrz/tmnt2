@@ -16,6 +16,23 @@ static float CANCEL_TIMER_ATTACK_AWAY  = 0.5f;
 static float CANCEL_TIMER_PURPOSE      = 1.5f;
 
 
+static inline
+float GetDirection(const CCharacterCompositor* pChrCompositor, const RwV3d* pvecAt)
+{
+    RwV3d vecFootPos = Math::VECTOR3_ZERO;
+    pChrCompositor->GetFootPosition(&vecFootPos);
+
+    RwV3d vecPos = vecFootPos;
+    RwV3d vecAt = *pvecAt;
+
+    if (Math::FEqual(vecPos.x, vecAt.x) &&
+        Math::FEqual(vecPos.z, vecAt.z))
+        return pChrCompositor->GetDirection();
+
+    return CEnemyUtils::GetDirection(&vecPos, &vecAt);
+};
+
+
 /*static*/ CAIModerator* C055KurageAI::Instance(CEnemyCharacter* pEnemyChr)
 {
     return new C055KurageAI(pEnemyChr);
@@ -193,6 +210,11 @@ C055KurageAI::C055KurageAI(CEnemyCharacter* pEnemyChr)
         vecMovePos = vecFootPosEnemy;
     };
 
+    /* TODO: there is trouble in retail game if we are outside patrol area and we have high height displacement it cannot
+             calc path to the patrol origin point.
+
+             To reproduce problem see behavior of this enemy type at the end of the area id 48 (DOCKS - M52F) (where is blue crystal gained),
+             it will stuck in infinite run when goes to the water surface because origin point will be covered collision due high height displacement */
     float fRadiusOfAction = Characteristic().m_fRadiusOfAction;
     float fMoveDist = CAIUtils::CalcMovePointEscapeObstacle(&vecMovePos, &EnemyCharacter(), &vecMovePos, 1.0f, fRadiusOfAction);
     if (fMoveDist < 0.0f)
@@ -205,7 +227,7 @@ C055KurageAI::C055KurageAI(CEnemyCharacter* pEnemyChr)
     SetState(STATE_ATTACK_AWAY);
     SetCancelTimer(CANCEL_TIMER_ATTACK_AWAY);
 
-    m_fDirection = EnemyCharacter().Compositor().GetDirection();
+    m_fDirection = GetDirection(&EnemyCharacter().Compositor(), &vecMovePos);
 
     return true;
 };

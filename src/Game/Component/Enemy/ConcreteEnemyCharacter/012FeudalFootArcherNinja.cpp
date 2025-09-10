@@ -42,7 +42,7 @@ namespace
     CCharacterCompositor* pChrCompositor = static_cast<CCharacterCompositor*>(pObj);
 
     RwV3d vecOfsPos = Math::VECTOR3_ZERO;
-    pChrCompositor->GetOffsetPosition(&vecOfsPos, 1); // TODO offset no naming
+    pChrCompositor->GetOffsetPosition(&vecOfsPos, 1);
 
     RwV3d vecPos = Math::VECTOR3_ZERO;
     pChrCompositor->GetPosition(&vecPos);
@@ -190,8 +190,8 @@ C012FeudalFootArcherNinja::C012FeudalFootArcherNinja(void)
 
     /* CBaseGeneralEnemyChr status */
     AttachStatusObserver(ENEMYTYPES::STATUS_TURN,       new CBaseGeneralEnemyChr::CTurnStatusObserver(120.0f, ENEMYTYPES::MOTIONNAMES::TURNL, ENEMYTYPES::MOTIONNAMES::TURNR));
-    AttachStatusObserver(ENEMYTYPES::STATUS_WALK_LEFT,  new CBaseGeneralEnemyChr::CSideWalkStatusObserver(1.8f, ENEMYTYPES::MOTIONNAMES::WALKL));
-    AttachStatusObserver(ENEMYTYPES::STATUS_WALK_RIGHT, new CBaseGeneralEnemyChr::CSideWalkStatusObserver(1.9f, ENEMYTYPES::MOTIONNAMES::WALKR));   // 1.9 ??
+    AttachStatusObserver(ENEMYTYPES::STATUS_WALK_LEFT,  new CBaseGeneralEnemyChr::CSideWalkStatusObserver(1.8f, ENEMYTYPES::MOTIONNAMES::TURNL));
+    AttachStatusObserver(ENEMYTYPES::STATUS_WALK_RIGHT, new CBaseGeneralEnemyChr::CSideWalkStatusObserver(1.9f, ENEMYTYPES::MOTIONNAMES::TURNR));
     
     /* C012FeudalFootArcherNinja status */
     int32 repeatCount  = static_cast<int32>(FrequencyParameter(CEnemyParameter::FREQUENCY_FIRE_REPEATCOUNT));

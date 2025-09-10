@@ -1,5 +1,6 @@
 #include "098Fugitoid.hpp"
 
+#include "Game/Component/GameMain/GameProperty.hpp"
 #include "Game/System/Character/CharacterAttackCalculator.hpp"
 #include "Game/System/GameObject/GameObjectManager.hpp"
 #include "Game/System/Sound/GameSound.hpp"
@@ -20,8 +21,7 @@
 
 /*virtual*/ void C098Fugitoid::CDeathStatusObserver::OnStart(void) /*override*/
 {
-    bool bForce = true;
-    EnemyChr().Compositor().ChangeMotion(ENEMYTYPES::MOTIONNAMES::DEATH, bForce);
+    EnemyChr().Compositor().ChangeMotion(ENEMYTYPES::MOTIONNAMES::DEATH, true);
 
     m_bMessageRequest = false;
 };
@@ -125,6 +125,9 @@ C098Fugitoid::C098Fugitoid(void)
 
     parameter.m_iFrequencyMax    = 0;
     parameter.m_puFrequencyParam = nullptr;
+
+    if (CGameProperty::GetDifficulty() == GAMETYPES::DIFFICULTY_EASY)
+        parameter.m_feature.m_iHPMax = static_cast<int32>(static_cast<float>(parameter.m_feature.m_iHPMax) * 1.2f);
 
     bool bReplace = false;
     Initialize(&parameter, bReplace);

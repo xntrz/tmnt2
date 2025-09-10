@@ -290,7 +290,6 @@ CBaseGunnerAI::CBaseGunnerAI(CEnemyCharacter* pEnemyChr)
     RwMatrix mat;
     RwMatrixSetIdentityMacro(&mat);
     Math::Matrix_RotateY(&mat, -std::atan2(vec.x, vec.z));
-
     RwV3dTransformVector(&vec, &vec, &mat);
 
     float fPitchAngle = std::atan2(vec.y, vec.z);
@@ -337,23 +336,17 @@ CBaseGunnerAI::CBaseGunnerAI(CEnemyCharacter* pEnemyChr)
     };
 
 	if (attackId == AIOT::Null)
-		return false;
-
+        return false;
+    
     CMapCamera* pMapCamera = CGameProperty::GetMapCamera();
-    ASSERT(pMapCamera != nullptr);
-
-    RwCamera* pCamera = pMapCamera->GetRwCamera();
-    ASSERT(pCamera != nullptr);
 
     RwSphere sphere = { 0 };
     sphere.center = vecBodyPosEnemy;
     sphere.radius = EnemyCharacter().Compositor().GetCollisionParameter().m_fRadius;
 
-    float fRatioOfActivity = Characteristic().m_fRatioOfActivity;
-
-    if (RwCameraFrustumTestSphere(pCamera, &sphere) || (Math::RandFloat() <= fRatioOfActivity))
+    if (!pMapCamera || pMapCamera->FrustumSphereTest(&sphere) || (Math::RandFloat() <= Characteristic().m_fRatioOfActivity))
     {
-        RwV3d vecAt = { 0.0f, 0.0f, -fPitchAngle };
+        RwV3d vecAt = { -fPitchAngle, 0.0f, 0.0f };
         AIOT::SetFireOrder(ThinkOrder(), attackId, iNo, &vecAt);
 
         float fFireInterval = GetFrequency(CEnemyParameter::FREQUENCY_COMMON_ATTACKINTERVAL);
@@ -504,18 +497,18 @@ CBaseGunnerAI::CBaseGunnerAI(CEnemyCharacter* pEnemyChr)
 
 /*virtual*/ bool CBaseGunnerAI::IsTakeRun(void)
 {
-    CAIThinkOrder::ORDER order = ThinkOrder().GetOrder();
-
-    if (order == CAIThinkOrder::ORDER_RUN)
+    if (ThinkOrder().GetOrder() == CAIThinkOrder::ORDER_RUN)
         return false;
 
     float fDistanceOfSuitable = Characteristic().m_fDistanceOfSuitable;
-	float fRatioOfMove = Characteristic().m_fRatioOfMove;
+    float fRatioOfMove = Characteristic().m_fRatioOfMove;
     float fTargetDist = m_targetInfo.GetDistance();
 
-    if ( (((fDistanceOfSuitable * 0.25f) >= fTargetDist) && (Math::RandFloat() < fRatioOfMove)) ||
-         (IsOutsidePatrolArea() && (Math::RandFloat() < fRatioOfMove)) )
+    if (((fDistanceOfSuitable * 0.25f) >= fTargetDist) && (Math::RandFloat() < fRatioOfMove))
         return true;
 
+    if (IsOutsidePatrolArea() && (Math::RandFloat() < fRatioOfMove))
+        return true;
+   
     return false;
 };

@@ -346,7 +346,7 @@ void C087SlashuurAI::CheckPlayerStatus(void)
         m_aPlayerInfo[i].fDistance = std::sqrt(vecDistance.x * vecDistance.x +
                                                vecDistance.z * vecDistance.z);
 
-        if (!Math::Vec3_IsEqual(&vecDistance, &Math::VECTOR3_ZERO))
+        if (!Math::Vec3_Equal(&vecDistance, &Math::VECTOR3_ZERO))
             m_aPlayerInfo[i].fDirection = std::atan2(vecDistance.x, vecDistance.z);
 
         float fDirDiff = (m_aPlayerInfo[i].fDirection - fMyDir);
@@ -605,8 +605,11 @@ void C087SlashuurAI::ReserveOrderDefault(void)
 
     if (GetNearSidePlayerNum())
     {
-        IsNearSideTroublePlayerOnly(); // TODO ???
-        ReserveNormalAttackB();
+        if (IsNearSideTroublePlayerOnly())
+            ReserveNormalAttackB();
+        else
+            ReserveNormalAttackB();
+        
         return;
     };
 
@@ -1084,79 +1087,75 @@ bool C087SlashuurAI::IsMiddleFrontAttackPlayer(void) const
 
 bool C087SlashuurAI::IsNearFrontDownPlayerOnly(void) const
 {
+    int32 result = 0;
+
     for (int32 i = 0; i < m_numPlayers; ++i)
     {
-        bool bIsNearDist = (m_aPlayerInfo[i].fDistance <= DISTANCE_NEAR);
         bool bIsDown = (m_aPlayerInfo[i].bIsDown);
+        bool bIsNearDist = (m_aPlayerInfo[i].fDistance <= DISTANCE_NEAR);
         bool bIsInFront = (m_aPlayerInfo[i].eSide == PLAYER_INFO::SIDE_FRONT);
 
-        if (bIsNearDist && bIsInFront)
-        {
-            if (!bIsDown)
-                return false;
-        };
+        if (bIsNearDist && bIsInFront && bIsDown)
+            ++result;
     };
 
-    return true;
+    return (result == m_numPlayers);
 };
 
 
 bool C087SlashuurAI::IsMiddleFrontDownPlayerOnly(void) const
 {
+    int32 result = 0;
+
     for (int32 i = 0; i < m_numPlayers; ++i)
     {
         bool bIsDown = m_aPlayerInfo[i].bIsDown;
         bool bIsMiddleDist = (m_aPlayerInfo[i].fDistance > DISTANCE_NEAR) &&
                              (m_aPlayerInfo[i].fDistance <= DISTANCE_MIDDLE);
-        bool bIsFront = (m_aPlayerInfo[i].eSide == PLAYER_INFO::SIDE_FRONT);
+        bool bIsInFront = (m_aPlayerInfo[i].eSide == PLAYER_INFO::SIDE_FRONT);
 
-        if (bIsMiddleDist && bIsFront)
-        {
-            if (!bIsDown)
-                return false;
-        };
+        if (bIsMiddleDist && bIsInFront && bIsDown)
+            ++result;
     };
 
-    return true;
+    return (result == m_numPlayers);
 };
 
 
 bool C087SlashuurAI::IsNearFrontTroublePlayerOnly(void) const
 {
+    int32 result = 0;
+
     for (int32 i = 0; i < m_numPlayers; ++i)
     {
         bool bIsTrouble = m_aPlayerInfo[i].bIsTrouble;
         bool bIsNearDist = (m_aPlayerInfo[i].fDistance <= DISTANCE_NEAR);
-        bool bIsFront = (m_aPlayerInfo[i].eSide == PLAYER_INFO::SIDE_FRONT);
+        bool bIsInFront = (m_aPlayerInfo[i].eSide == PLAYER_INFO::SIDE_FRONT);
 
-        if (bIsNearDist && bIsFront)
-        {
-            if (!bIsTrouble)
-                return false;
-        };
+        if (bIsNearDist && bIsInFront && bIsTrouble)
+            ++result;
     };
 
-    return true;
+    return (result == m_numPlayers);
 };
 
 
 bool C087SlashuurAI::IsNearSideTroublePlayerOnly(void) const
 {
+    int32 result = 0;
+
     for (int32 i = 0; i < m_numPlayers; ++i)
     {
         bool bIsTrouble = m_aPlayerInfo[i].bIsTrouble;
         bool bIsNearDist = (m_aPlayerInfo[i].fDistance <= DISTANCE_NEAR);
-        bool bIsOnTheSide = (m_aPlayerInfo[i].eSide == PLAYER_INFO::SIDE_LEFT) ||
+        bool bIsInTheSide = (m_aPlayerInfo[i].eSide == PLAYER_INFO::SIDE_LEFT) ||
                             (m_aPlayerInfo[i].eSide == PLAYER_INFO::SIDE_RIGHT);
 
-        if (bIsNearDist && bIsOnTheSide)
-        {
-            if (!bIsTrouble)
-                return false;
-        };
+        if (bIsNearDist && bIsInTheSide && bIsTrouble)
+            ++result;
     };
 
-    return true;
+    return (result == m_numPlayers);
 };
 
 

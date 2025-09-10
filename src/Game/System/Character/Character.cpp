@@ -892,7 +892,7 @@ void CCharacter::SetDirection(float fDir)
     RwV3d vBodyPosition = Math::VECTOR3_ZERO;
     GetBonePositionOfPositionCheck(&vBodyPosition);
 
-    if (!m_pMotionController->GetCurrentMotion() || (vBodyPosition.x == 0.0f) && (vBodyPosition.z == 0.0f))
+    if (!m_pMotionController->GetCurrentMotion() || ((vBodyPosition.x == 0.0f) && (vBodyPosition.z == 0.0f)))
     {
         m_fDirection = fDir;
     }

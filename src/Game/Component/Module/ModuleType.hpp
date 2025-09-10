@@ -13,14 +13,14 @@ namespace MODULETYPE
         AMBIENT_LIGHT,
         BANDANA,
         LOCUS,
-        EFFECT,
-        SLEEP_EFFECT,
+        EFFECT, // unused
+        SLEEP_EFFECT, // unused
         FOOTPRINTS,
         RIPPLE,
         TO_GIMMICK_MSG,
         BARRIER,
         ACCUMULATE,
-        SICKLE_AURA,
+        SICKLE_AURA, // unused
         BLINK_CHARACTER,
         PLAYERATTRCTRL_INVINCIBILITY,
         PLAYERATTRCTRL_ATTACK_POWER_UP,

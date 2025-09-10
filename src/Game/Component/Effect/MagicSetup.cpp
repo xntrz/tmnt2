@@ -245,7 +245,7 @@ static void SetExplosion(void)
     CMagicParameter param;
     param.SetBaseEffectName(EFFECTID::GetNameFromID(EFFECTID::ID_EXPL_B1));
     param.SetLive(1.5f);
-    param.SetHitTiming(0.0f, 0.3f);
+    param.SetHitTiming(0.0f, 0.5f);
     param.SetChangeSize(0.35f);
     
     //

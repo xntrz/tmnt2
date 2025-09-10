@@ -103,23 +103,9 @@ bool CPlayDemoSequence::OnAttach(const void* pParam)
     RegisterStateObject(STATE_LOAD, new CLoadStageSeqState(CGameData::PlayParam().GetStage()), true);
     RegisterStateObject(STATE_PLAY, new CPlayDemoStageSeqState, true);
 
-    //
-    // TODO demo seq currently erased due impossible to reproduce floating point determinism.
-    // 
-    //      All pc inputs recorded on version that was built on compiler 21 year ago so there is
-    //      some micro pixel incorrections that breaks demo after some time elapsed due floating point precision.
-    // 
-    //      Currently have no idea how to fix that, maybe we will record new demo inputs when project will be done.
-    // 
-    //      Also renderware sdk that we are using is prebuilt with unknown version of compiler. Ideally it should
-    //      be build with same compiler as the game.
-    // 
-    //      So currently main problem with demo version that we get is when some character is colliding with camera 
-    //      view move boundary. If noone is colliding with move boundary of view camera then all ok, otherwise it brokes the simulation.
-    // 
-
-    //ChangeState(STATE_LOAD);
-    ChangeState(STATE_END);
+    /* TODO: currently simulation brokes after 628 stage tick
+             (or after 1000 tick when map effect gimmick is disabled) */
+    ChangeState(STATE_LOAD);
 
     RwCamera* camera = CSystem2D::Camera().GetRwCamera();
     float fDepth = (RwCameraGetNearClipPlaneMacro(camera) * 1.01f);

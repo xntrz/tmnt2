@@ -784,7 +784,7 @@ void CParticle::SetVertexInfo(RwIm3DVertex* aVertexList, RwCamera* pCamera, TRAN
             RwV3dTransformPoint(&vScreenPos, &pTransition->m_vPositionNow, RwCameraGetViewMatrixMacro(pCamera));
             
             if (vScreenPos.z > 0.0f)
-            {          
+            {
                 vScreenPos.x *= (1.0f / vScreenPos.z);
                 vScreenPos.y *= (1.0f / vScreenPos.z);
 
@@ -797,10 +797,6 @@ void CParticle::SetVertexInfo(RwIm3DVertex* aVertexList, RwCamera* pCamera, TRAN
                 {
                     return;
                 };
-            }
-            else
-            {
-                return;
             };
         }
         break;

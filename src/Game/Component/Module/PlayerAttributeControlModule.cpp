@@ -59,10 +59,17 @@ void CPlayerAttributeControlModule::Disable(void)
 
 void CPlayerAttributeControlModule::SetRemainTime(float fTime)
 {
-    if (fTime > 0.0f)
-        Enable(fTime);
-    else
+    if (fTime <= 0.0f)
+    {
         Disable();
+        return;
+    };
+
+    m_pPlayerChr->SetAttribute(m_attribute);
+
+    m_bEnable = true;
+    m_fEndTime = fTime;
+    m_fElapsedTime = 0.0f;
 };
 
 

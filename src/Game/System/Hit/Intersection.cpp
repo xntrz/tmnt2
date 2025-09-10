@@ -13,10 +13,15 @@ namespace Intersection
         ASSERT(pPosQ);
         ASSERT(fRadiusQ >= 0.0f);
 
+        float fRadiusSumm = (fRadiusP + fRadiusQ);
+        float fRadiusSummSQ = fRadiusSumm * fRadiusSumm;
+
         RwV3d vDist = Math::VECTOR3_ZERO;        
         Math::Vec3_Sub(&vDist, pPosP, pPosQ);
 
-        return ( Math::Vec3_Dot(&vDist, &vDist) - ((fRadiusP + fRadiusQ) * (fRadiusP + fRadiusQ)) );
+        float fDistSQ = Math::Vec3_Dot(&vDist, &vDist);
+
+        return (fDistSQ - fRadiusSummSQ);
     };
 
 
@@ -30,15 +35,15 @@ namespace Intersection
         ASSERT(pPosP);
         ASSERT(fRadiusQ >= 0.0f);
 
-        float fRadiusSQ = fRadiusP + fRadiusQ;
+        float fRadiusSumm = (fRadiusP + fRadiusQ);
 
-        float dx = std::fabs(pPosP->x - pPosQ->x);
-        float dy = std::fabs(pPosP->y - pPosQ->y);
-        float dz = std::fabs(pPosP->z - pPosQ->z);
+        float fDistX = std::fabs(pPosP->x - pPosQ->x);
+        float fDistY = std::fabs(pPosP->y - pPosQ->y);
+        float fDistZ = std::fabs(pPosP->z - pPosQ->z);
 
-        if ((fRadiusSQ < dx) ||
-            (fRadiusSQ < dy) ||
-            (fRadiusSQ < dz))
+        if ((fRadiusSumm < fDistX) ||
+            (fRadiusSumm < fDistY) ||
+            (fRadiusSumm < fDistZ))
             return false;
         
         return (GetSphereDistanceSQ(pPosP, fRadiusP, pPosQ, fRadiusQ) <= 0.0f);

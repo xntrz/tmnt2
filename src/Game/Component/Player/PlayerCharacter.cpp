@@ -173,8 +173,6 @@ CPlayerCharacter::~CPlayerCharacter(void)
 
 void CPlayerCharacter::Run(void)
 {
-    ASSERT(m_pStateMachine);
-    
     m_pStateMachine->Run();
     CCharacter::Run();
 };
@@ -855,9 +853,9 @@ void CPlayerCharacter::OnAttach(CPlayerCharacter* pBeforeCharacter, bool bChange
             pToGimmickMod->SetPrevGimmickObjName("");
     };
 
-    PLAYERTYPES::ATTRIBUTETIME attributetime;
-    pBeforeCharacter->GetAttributeTime(&attributetime);
-    SetAttributeTime(&attributetime);
+    PLAYERTYPES::ATTRIBUTETIME attributeTime = { 0 };
+    pBeforeCharacter->GetAttributeTime(&attributeTime);
+    SetAttributeTime(&attributeTime);
 
     SetEnableBodyHit(true);
 
@@ -868,10 +866,7 @@ void CPlayerCharacter::OnAttach(CPlayerCharacter* pBeforeCharacter, bool bChange
     SetEffectEnable(true);
 
     if (bChangeEffectEnable)
-    {
-        RwV3d vOffset = Math::VECTOR3_ZERO;
-        CEffectManager::PlayTrace(EFFECTID::ID_BARRIER_START, new CPlayerTracer(this), &vOffset);
-    };
+        CEffectManager::PlayTrace(EFFECTID::ID_BARRIER_START, new CPlayerTracer(this), &Math::VECTOR3_ZERO);
 
     CBandanaModule* pBandanaMod = static_cast<CBandanaModule*>(GetModule(MODULETYPE::BANDANA));
     if (pBandanaMod)
@@ -925,9 +920,9 @@ void CPlayerCharacter::RotateDirection(float fDirection)
     float fRotateDirectionMax = CGameProperty::GetElapsedTime() * MATH_PI05;
     float fDirectionDiff = fDirection - m_fDirection;
 
-    fDirectionDiff = Math::RadianNormalize(fDirectionDiff);
-    
+    fDirectionDiff = Math::RadianCorrection(fDirectionDiff);
     ASSERT(std::fabs(fDirectionDiff) <= MATH_PI);
+    
     fDirectionDiff = Clamp(fDirectionDiff, -fRotateDirectionMax, fRotateDirectionMax);
 
     SetDirection(m_fDirection + fDirectionDiff);
@@ -1165,8 +1160,6 @@ PLAYERTYPES::STATUS CPlayerCharacter::GetLastGroundingStatus(void) const
 
 PLAYERTYPES::STATUS CPlayerCharacter::ChangeStatus(PLAYERTYPES::STATUS status)
 {
-    ASSERT(m_pStateMachine);
-    
     status = RequestStatusMorphing(status);
     m_pStateMachine->ChangeStatus(status);
     
@@ -1176,19 +1169,15 @@ PLAYERTYPES::STATUS CPlayerCharacter::ChangeStatus(PLAYERTYPES::STATUS status)
 
 void CPlayerCharacter::ChangeKnockStatus(void)
 {
-    ChangeStatus(
-        m_attackparameter.m_direction == CHARACTERTYPES::ATTACKDIRECTIONTYPE_FRONT ?
-        PLAYERTYPES::STATUS_KNOCK_FRONT : PLAYERTYPES::STATUS_KNOCK_BACK
-    );
+    ChangeStatus(m_attackparameter.m_direction == CHARACTERTYPES::ATTACKDIRECTIONTYPE_FRONT ? PLAYERTYPES::STATUS_KNOCK_FRONT :
+                                                                                              PLAYERTYPES::STATUS_KNOCK_BACK);
 };
 
 
 void CPlayerCharacter::ChangeFlyawayStatus(void)
 {
-    ChangeStatus(
-        m_attackparameter.m_direction == CHARACTERTYPES::ATTACKDIRECTIONTYPE_FRONT ?
-        PLAYERTYPES::STATUS_FLYAWAY_FRONT : PLAYERTYPES::STATUS_FLYAWAY_BACK
-    );
+    ChangeStatus(m_attackparameter.m_direction == CHARACTERTYPES::ATTACKDIRECTIONTYPE_FRONT ? PLAYERTYPES::STATUS_FLYAWAY_FRONT :
+                                                                                              PLAYERTYPES::STATUS_FLYAWAY_BACK);
 };
 
 
@@ -1202,7 +1191,7 @@ void CPlayerCharacter::ChangeThrowStatus(CCharacterAttackCalculator& calculator)
 
     float fDiff = m_fDirection - pAttackerChr->GetDirection();
 
-    if (fDiff <= MATH_PI05 || fDiff >= MATH_PI05)
+    if ((fDiff <= -MATH_PI05) || (fDiff >= MATH_PI05))
         calculator.SetCatchResult(CHitCatchData::RESULT_THROWFRONT);
     else
         calculator.SetCatchResult(CHitCatchData::RESULT_THROWBACK);
@@ -1383,11 +1372,11 @@ void CPlayerCharacter::ReplayMotion(void)
 
 void CPlayerCharacter::SetAerialMotionTime(float fMaxSpeed)
 {
-    float fTime = (m_vVelocity.y / fMaxSpeed);
-    fTime = Clamp(fTime, -1.0f, 1.0f);
+    float fSpeedRatio = (m_vVelocity.y / fMaxSpeed);
+    fSpeedRatio = Clamp(fSpeedRatio, -1.0f, 1.0f);
 
     float fMotionEndT = GetMotionEndTime();
-    float fMotionT = fMotionEndT * (fTime * -0.5f + 0.5f);
+    float fMotionT = fMotionEndT * (fSpeedRatio * -0.5f + 0.5f);
 
     SetMotionTime(fMotionT);
 };

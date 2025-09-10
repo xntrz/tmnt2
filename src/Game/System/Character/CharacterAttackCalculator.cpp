@@ -504,15 +504,18 @@ CCharacterAttackCalculator::CheckAttackResult(CHARACTERTYPES::ATTACKTYPE attackt
 {
     CHARACTERTYPES::ATTACKRESULTTYPE result = static_cast<CHARACTERTYPES::ATTACKRESULTTYPE>(attacktype);
 
-    if (IsGuardableAttack(attacktype)
-        && ((defenceflag & CHARACTERTYPES::DEFENCERSTATUSFLAG_GUARD_ALLRANGE) || (defenceflag & CHARACTERTYPES::DEFENCERSTATUSFLAG_GUARD))
-        && (!(defenceflag & CHARACTERTYPES::DEFENCERSTATUSFLAG_GUARD) || (m_directiontype == CHARACTERTYPES::ATTACKDIRECTIONTYPE_FRONT)))
+    bool bIsGuardableAttack = IsGuardableAttack(attacktype);
+    bool bIsGuard = ((defenceflag & CHARACTERTYPES::DEFENCERSTATUSFLAG_GUARD) != 0) &&
+                    (m_directiontype == CHARACTERTYPES::ATTACKDIRECTIONTYPE_FRONT);
+    bool bIsAllRangeGuard = ((defenceflag & CHARACTERTYPES::DEFENCERSTATUSFLAG_GUARD_ALLRANGE) != 0);
+
+    if (bIsGuardableAttack && (bIsGuard || bIsAllRangeGuard))
     {
         switch (m_rAttack.GetAntiguard())
         {
-		case CHitAttackData::ANTIGUARD_ENABLE:
-			result = CHARACTERTYPES::ATTACKRESULTTYPE_GUARD;
-			break;
+        case CHitAttackData::ANTIGUARD_ENABLE:
+            result = CHARACTERTYPES::ATTACKRESULTTYPE_GUARD;
+            break;
 
         case CHitAttackData::ANTIGUARD_BREAK:
             result = CHARACTERTYPES::ATTACKRESULTTYPE_GUARD_BREAK;

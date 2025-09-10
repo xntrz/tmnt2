@@ -705,24 +705,22 @@ bool CPlayerWatcher::IsPlayerViewArea(int32 iPlayerIndex)
 
 bool CPlayerWatcher::IsPlayerLookAtMe(int32 iPlayerIndex, float fAngle)
 {
+    iPlayerIndex = PlayerIndexCorrection(iPlayerIndex);
     if (iPlayerIndex == -1)
-        iPlayerIndex = m_aPlayerData[PLAYER_DATA_TEMP].no;
+        return false;
 
-    if (iPlayerIndex != -1)
+    CPlayerCharacter* pPlayerChr = CAIUtils::GetActivePlayer(iPlayerIndex);
+    if (pPlayerChr)
     {
-        CPlayerCharacter* pPlayerChr = CAIUtils::GetActivePlayer(iPlayerIndex);
-        if (pPlayerChr)
-        {
-            RwV3d vecFootPosPlayer = Math::VECTOR3_ZERO;
-            pPlayerChr->GetFootPosition(&vecFootPosPlayer);
-            
-            float fDirToEnemy = (GetDirection(&vecFootPosPlayer, &m_vMyPos) - pPlayerChr->GetDirection());
-            fDirToEnemy = CEnemyUtils::RadianCorrect(fDirToEnemy);
-            fDirToEnemy = std::fabs(fDirToEnemy);
-            
-            if (fDirToEnemy <= fAngle)
-                return true;
-        };
+        RwV3d vecFootPosPlayer = Math::VECTOR3_ZERO;
+        pPlayerChr->GetFootPosition(&vecFootPosPlayer);
+
+        float fDirToEnemy = (GetDirection(&vecFootPosPlayer, &m_vMyPos) - pPlayerChr->GetDirection());
+        fDirToEnemy = CEnemyUtils::RadianCorrect(fDirToEnemy);
+        fDirToEnemy = std::fabs(fDirToEnemy);
+
+        if (fDirToEnemy <= fAngle)
+            return true;
     };
 
     return false;
@@ -852,7 +850,7 @@ bool CPlayerWatcher::IsLeoDash(float fLength)
         return false;
     
     float fDist = GetDistanceFromPlayer(iPlayerIndex, &m_vMyPos);
-    if (fDist < fLength)
+    if (fDist <= fLength)
     {
         if (IsAttackLeoDash(iPlayerIndex))
         {

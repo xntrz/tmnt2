@@ -6,18 +6,17 @@
 #include "System/Common/File/Filename.hpp"
 #include "System/Common/Configure.hpp"
 
-#include "cri_adxcs.h"
+#include "cri_adxt.h"
 #include "adx_dsound8.h"
 
 #include <ks.h>
 #include <ksmedia.h>
-#include <adx_pc.h>
 
 
 CPCSoundDevice::CPCSoundDevice(void)
-: m_pDs(nullptr)
+: m_pSoundHeap(nullptr)
+, m_pDs(nullptr)
 , m_pDsBuffer(nullptr)
-, m_pSoundHeap(nullptr)
 {
     ;
 };
@@ -25,46 +24,50 @@ CPCSoundDevice::CPCSoundDevice(void)
 
 bool CPCSoundDevice::Initialize(void)
 {
+    DWORD level = DSSCL_PRIORITY;
+
     if (FAILED(DirectSoundCreate8(0, &m_pDs, 0)))
         return false;
 
-    if (FAILED(m_pDs->SetCooperativeLevel(CPCSpecific::m_hWnd, DSSCL_PRIORITY)))
+    if (FAILED(m_pDs->SetCooperativeLevel(CPCSpecific::m_hWnd, level)))
         return false;
+
+    DSBUFFERDESC dsbd;
+    std::memset(&dsbd, 0, sizeof(dsbd));
+    dsbd.dwSize = sizeof(dsbd);
+    dsbd.dwFlags = DSBCAPS_PRIMARYBUFFER;
     
-    DSBUFFERDESC DsBufferDesc;
-    std::memset(&DsBufferDesc, 0x00, sizeof(DsBufferDesc));
-    DsBufferDesc.dwSize = sizeof(DsBufferDesc);
-    DsBufferDesc.dwFlags = DSBCAPS_PRIMARYBUFFER;
-
-    if (FAILED(m_pDs->CreateSoundBuffer(&DsBufferDesc, &m_pDsBuffer, 0)))
+    if (FAILED(m_pDs->CreateSoundBuffer(&dsbd, &m_pDsBuffer, 0)))
         return false;
 
-    WAVEFORMATEX WaveFormatEx;
-    std::memset(&WaveFormatEx, 0x00, sizeof(WaveFormatEx));
-    WaveFormatEx.wFormatTag = WAVE_FORMAT_PCM;
-    WaveFormatEx.nChannels = 2;
-    WaveFormatEx.nSamplesPerSec = 48000;
-    WaveFormatEx.wBitsPerSample = 16;
-    WaveFormatEx.nBlockAlign = 4;
-    WaveFormatEx.nAvgBytesPerSec = (WaveFormatEx.nSamplesPerSec * WaveFormatEx.nBlockAlign);
-
-    if (FAILED(m_pDsBuffer->SetFormat(&WaveFormatEx)))
+    if (level == DSSCL_PRIORITY)
     {
-        if ((WaveFormatEx.nSamplesPerSec != 48000))
-        {
-            WaveFormatEx.nSamplesPerSec = 44100;
-            WaveFormatEx.nAvgBytesPerSec = (WaveFormatEx.nSamplesPerSec * WaveFormatEx.nBlockAlign);
+        WORD numChannels = 2;
+        
+        WAVEFORMATEX wfex;
+        std::memset(&wfex, 0, sizeof(wfex));
+        wfex.wFormatTag = WAVE_FORMAT_PCM;
+        wfex.nChannels = numChannels;
+        wfex.nBlockAlign = (numChannels * 2);
+        wfex.nSamplesPerSec = 48000;
+        wfex.wBitsPerSample = 16;
+        wfex.nAvgBytesPerSec = (wfex.nSamplesPerSec * wfex.nBlockAlign);
 
-            if (FAILED(m_pDsBuffer->SetFormat(&WaveFormatEx)))
+        if (FAILED(m_pDsBuffer->SetFormat(&wfex)) || (wfex.nSamplesPerSec != 48000))
+        {
+            wfex.nSamplesPerSec = 44100;
+            wfex.nAvgBytesPerSec = (wfex.nSamplesPerSec * wfex.nBlockAlign);
+
+            if (FAILED(m_pDsBuffer->SetFormat(&wfex)))
                 return false;
         };
-
-        return false;
     };
 
-    ADXPC_SetupSoundDirectSound8(m_pDs);
-    ADXPC_SetDsbCapsGlobalFocus(0);
-    ADXPC_SetOutputStereo(1);
+    ADXPC_SetupSound(m_pDs);    
+    ADXPC_SetDsbCapsGlobalFocus(FALSE);
+    ADXPC_SetDsbCapsCtrl3D(FALSE);
+    ADXPC_SetDsbCapsCtrlFx(FALSE); 
+    ADXPC_SetDsbNumChannels(2);
 
     return true;
 };
@@ -73,7 +76,7 @@ bool CPCSoundDevice::Initialize(void)
 void CPCSoundDevice::Terminate(void)
 {
     ADXPC_ShutdownSound();
-
+    
     if (m_pDsBuffer)
     {
         m_pDsBuffer->Release();

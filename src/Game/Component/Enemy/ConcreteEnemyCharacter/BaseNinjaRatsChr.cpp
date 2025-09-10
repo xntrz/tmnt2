@@ -293,7 +293,7 @@ CBaseNinjaRatsChr::CRunStatusObserver::Observing(void) /*override*/
         EnemyChr().Compositor().GetPosition(&vecPosMe);
         vecPosMe.y = 0.0f;
 
-        if (!Math::Vec3_IsEqual(&vecFootPosPlr, &vecPosMe))
+        if (!Math::Vec3_Equal(&vecFootPosPlr, &vecPosMe))
         {
             fDir = CEnemyUtils::GetDirection(&EnemyChr().Compositor(), &vecFootPosPlr);
             EnemyChr().Compositor().SetDirection(fDir);
@@ -630,7 +630,7 @@ bool CBaseNinjaRatsChr::CGetupStatusObserver::IsLoopMotionEnd(void) const
     vecPosMe.y = 0.0f;
 
     float fDir = 0.0f;
-    if (!Math::Vec3_IsEqual(&vecFootPosPlr, &vecPosMe))
+    if (!Math::Vec3_Equal(&vecFootPosPlr, &vecPosMe))
     {
         fDir = CEnemyUtils::GetDirection(&EnemyChr().Compositor(), &vecFootPosPlr);
         EnemyChr().Compositor().SetDirection(fDir);
@@ -762,7 +762,7 @@ void CBaseNinjaRatsChr::CAttackStatusObserver::SqueakSoundProc(void)
     vecPosMe.y = 0.0f;
 
     float fDir = 0.0f;
-    if (!Math::Vec3_IsEqual(&vecFootPosPlr, &vecPosMe))
+    if (!Math::Vec3_Equal(&vecFootPosPlr, &vecPosMe))
     {
         fDir = CEnemyUtils::GetDirection(&EnemyChr().Compositor(), &vecFootPosPlr);
         EnemyChr().Compositor().SetDirection(fDir);
@@ -831,7 +831,7 @@ CBaseNinjaRatsChr::CBaseNinjaRatsChr(ENEMYID::VALUE enemyId)
     AttachStatusObserver(ENEMYTYPES::STATUS_JUMP_2ND,                   new CBaseNinjaRatsChr::CJump2ndStatusObserver);
     AttachStatusObserver(ENEMYTYPES::STATUS_JUMP_ATTACK,                new CBaseNinjaRatsChr::CJumpShotStatusObserver);
     AttachStatusObserver(ENEMYTYPES::STATUS_TOUCHDOWN,                  new CBaseNinjaRatsChr::CTouchdownStatusObserver);
-    AttachStatusObserver(ENEMYTYPES::STATUS_GETUP,                      new CBaseNinjaRatsChr::CGetupStatusObserver); // NOTE: guard present but AI not handled it
+    AttachStatusObserver(ENEMYTYPES::STATUS_GETUP,                      new CBaseNinjaRatsChr::CGetupStatusObserver);
     AttachStatusObserver(CBaseNinjaRatsChr::STATUS_ATTACK_CHAIN,        new CBaseNinjaRatsChr::CAttackStatusObserver);
     AttachStatusObserver(CBaseNinjaRatsChr::STATUS_ATTACK_SINGLE,       new CBaseNinjaRatsChr::CAttackStatusObserver);
     AttachStatusObserver(CBaseNinjaRatsChr::STATUS_ATTACK_STUN,         new CBaseNinjaRatsChr::CAttackStatusObserver);
@@ -839,7 +839,7 @@ CBaseNinjaRatsChr::CBaseNinjaRatsChr(ENEMYID::VALUE enemyId)
 
     /* CCommonEnemyObserver status */
     AttachStatusObserver(ENEMYTYPES::STATUS_IDLE,                       new CCommonEnemyObserver::CIdleStatus);
-    AttachStatusObserver(ENEMYTYPES::STATUS_GUARD,                      new CCommonEnemyObserver::CGuardStatus);
+    AttachStatusObserver(ENEMYTYPES::STATUS_GUARD,                      new CCommonEnemyObserver::CGuardStatus);  // NOTE: guard present but AI not handled it
     AttachStatusObserver(ENEMYTYPES::STATUS_KNOCK_FRONT,                new CCommonEnemyObserver::CKnockStatus);
     AttachStatusObserver(ENEMYTYPES::STATUS_KNOCK_BACK,                 new CCommonEnemyObserver::CKnockStatus);
     AttachStatusObserver(ENEMYTYPES::STATUS_FLYAWAY_FRONT,              new CCommonEnemyObserver::CFlyawayStatus(true));

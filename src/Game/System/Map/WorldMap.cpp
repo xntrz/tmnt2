@@ -351,10 +351,7 @@ void CWorldMapManager::Draw(CWorldMap::DRAWTYPE drawtype)
         if (m_pMapInfo->m_foginfo.m_bEnable)
         {
             RENDERSTATE_PUSH(rwRENDERSTATEFOGENABLE, true);
-            RENDERSTATE_PUSH(
-                rwRENDERSTATEFOGCOLOR,
-                RWRGBALONGEX(m_pMapInfo->m_foginfo.m_Color)
-            );
+            RENDERSTATE_PUSH(rwRENDERSTATEFOGCOLOR, RWRGBALONGEX(m_pMapInfo->m_foginfo.m_Color));
             RENDERSTATE_PUSH(rwRENDERSTATEFOGTYPE, rwFOGTYPELINEAR);
         }
         else
@@ -743,7 +740,7 @@ bool CWorldMapManager::CheckCollisionCharacterHeight(RwV3d* pPos, RwV3d* pNewPos
 
             if (pCollisionResult->m_type == MAPTYPES::HITTYPE_GIMMICK)
             {
-                if (pCollisionResult->m_mapobj.m_pLTM && !Math::Vec3_IsEqual(&pCollisionResult->m_mapobj.m_vRotate, &Math::VECTOR3_ZERO))
+                if (pCollisionResult->m_mapobj.m_pLTM && !Math::Vec3_Equal(&pCollisionResult->m_mapobj.m_vRotate, &Math::VECTOR3_ZERO))
                 {
                     RwMatrix invLTM;
                     RwMatrixSetIdentityMacro(&invLTM);

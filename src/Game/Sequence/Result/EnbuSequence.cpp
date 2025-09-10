@@ -261,7 +261,7 @@ void CEnbuSequence::OnDraw(void) const
 void CEnbuSequence::EnbuCameraProc(void)
 {
     float fEnbuTime = CEnbuProc::GetEnbuTime();
-    if (Math::FEqual(fEnbuTime, 0.0f))
+    if (fEnbuTime == 0.0f)
         return;
 
     if (CEnbuProc::IsEnbuIdle())

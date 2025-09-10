@@ -61,28 +61,33 @@ bool CAdxFileAccess::Open(int32 id)
     ASSERT(id >= 0);
     ASSERT(id < FILEID::ID_MAX);
 
-    if (!m_uReferenceCount++)
-    {
-        int32 ptId   = -1;
-        int32 fileNo = -1;
+	if (!m_uReferenceCount++)
+	{
+		int32 ptId = -1;
+		int32 fileNo = -1;
 
-        if (id < FILEID::COMMONMAX)
-        {
-            ptId   = 0;
-            fileNo = id;
-        }
-        else
-        {
-            ptId   = 1;
-            fileNo = (id - FILEID::LANGBEGIN);
-        };
+		if (id < FILEID::COMMONMAX)
+		{
+			ptId = 0;
+			fileNo = id;
+		}
+		else
+		{
+			ptId = 1;
+			fileNo = (id - FILEID::LANGBEGIN);
+		};
 
-        m_adxf = ADXF_OpenAfs(ptId, fileNo);
-        if (m_adxf)
-            return ReadNoWait();        
-    };
+		m_adxf = ADXF_OpenAfs(ptId, fileNo);
+		ASSERT(m_adxf != NULL);
 
-    return false;
+		if (m_adxf)
+			return ReadNoWait();
+
+		m_stat = STAT_ERROR;
+		return false;
+	};
+
+	return true;
 };
 
 

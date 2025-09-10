@@ -118,7 +118,7 @@ void C081Spasmosaur::STATE::CheckPlayerStatus(void)
         aPlayerInfo[i].fDistance = std::sqrt(vecDistance.x * vecDistance.x +
                                              vecDistance.z * vecDistance.z);
 
-        if (!Math::Vec3_IsEqual(&vecDistance, &Math::VECTOR3_ZERO))
+        if (!Math::Vec3_Equal(&vecDistance, &Math::VECTOR3_ZERO))
             aPlayerInfo[i].fDirection = std::atan2(vecDistance.x, vecDistance.z);
 
         float fDirDiff = (aPlayerInfo[i].fDirection - fMyDir);
@@ -558,7 +558,7 @@ bool C081Spasmosaur::CRunStatusObserver::CheckDirection(bool* pbDirectionFree) c
 	EnemyChr().Compositor().GetFootPosition(&vecFootPosMy);
 	vecFootPosMy.y = 0.0f;
 
-	float fDirMe = (Math::Vec3_IsEqual(&vecFootPosMy, &Math::VECTOR3_ZERO) ? 0.0f : CEnemyUtils::GetDirection(&vecFootPosMy));
+	float fDirMe = (Math::Vec3_Equal(&vecFootPosMy, &Math::VECTOR3_ZERO) ? 0.0f : CEnemyUtils::GetDirection(&vecFootPosMy));
     float fDirWallSide = MATH_DEG2RAD(120.0f);
 
     RwV3d vecWallNormal = Math::VECTOR3_ZERO;
@@ -933,6 +933,7 @@ C081Spasmosaur::CSpitStatusObserver::Observing(void) /*override*/
             CMagicManager::CParameter param;
             param.SetPositon(&vecMouthPos);
             param.SetDirection(&vecDir);
+            param.SetObject(&EnemyChr().Compositor());
 
             uint32 hMagic = CMagicManager::Play(MAGICID::ID_SPSM_TBSHOT, &param);
             CMagicManager::SetScale(hMagic, 2.0f);
@@ -950,6 +951,7 @@ C081Spasmosaur::CSpitStatusObserver::Observing(void) /*override*/
             CMagicManager::CParameter param;
             param.SetPositon(&vecMouthPos);
             param.SetDirection(fDir);
+            param.SetObject(&EnemyChr().Compositor());
 
             MAGICTYPES::FEATURE feature = MAGICTYPES::FEATURE_COLLISION_CHANGE_SIZE
                                         | MAGICTYPES::FEATURE_ATTACK_TO_PLAYER

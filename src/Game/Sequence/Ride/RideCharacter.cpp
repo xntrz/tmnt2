@@ -192,7 +192,7 @@ void CRideCharacter::CheckCollisionForBody(RwV3d& rvVelocityPerFrame, bool bPeri
     CCharacter::CheckCollisionForBody(rvVelocityPerFrame, bPeriod);
     rvVelocityPerFrame.z = vVelocityPerFrameSave.z;
 
-    if (!Math::Vec3_IsEqual(&vVelocityPerFrameSave, &rvVelocityPerFrame))
+    if (!Math::Vec3_FEqual(&vVelocityPerFrameSave, &rvVelocityPerFrame))
     {
         if ((CGameProperty::GetElapsedTime() * 0.1f) > Math::RandFloat())
             CMessageManager::Request(SEGROUPID::VALUE(165), GetID());

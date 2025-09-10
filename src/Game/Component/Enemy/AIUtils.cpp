@@ -158,7 +158,7 @@ CAIUtils::GetPlayerStateFlag(PLAYERTYPES::STATUS eStatus)
 
         float angle = 0.0f;
         vecPlayerPos.y = vecPos->y;
-        if (!Math::Vec3_IsEqual(vecPos, &vecPlayerPos))
+        if (!Math::Vec3_FEqual(vecPos, &vecPlayerPos))
             angle = CEnemyUtils::GetDirection(vecPos, &vecPlayerPos);
 
         NEARER_PLAYERDATA* pData = &s_aPlayerDataList[s_iNearerPlayerDataNum];
@@ -466,7 +466,7 @@ CAIUtils::CheckObstacle(const CCharacterCompositor* pChrCompositor,
     float fDist = CEnemyUtils::GetDistance(&vecFootPos, &vecAt);
 
     float fDir = 0.0f;
-	if (!Math::Vec3_IsEqual(&vecFootPos, &vecAt))
+	if (!Math::Vec3_FEqual(&vecFootPos, &vecAt))
 		fDir = CEnemyUtils::GetDirection(&vecFootPos, &vecAt);
 
     return IsObjectViewArea2(pEnemyChr, fDist, fDir);
@@ -640,7 +640,7 @@ CAIUtils::CheckMoveLine(const RwV3d* ptStart,
 
             for (int32 j = 0; j < collisionResultNum; ++j)
             {
-                if (Math::Vec3_IsEqual(&avecCollisionResultNormal[j], &pCollisionResult->m_vNormal))
+                if (Math::Vec3_FEqual(&avecCollisionResultNormal[j], &pCollisionResult->m_vNormal))
                 {
                     bAlreadyEntryFlag = true;
                     break;
@@ -749,7 +749,7 @@ CAIUtils::CalcEscapePointForHitPlane(RwV3d* avecPos,
     vecNormal.y = 0.0f;
     Math::Vec3_Normalize(&vecNormal, &vecNormal);
 
-    if (Math::Vec3_IsEqual(&vecNormal, &Math::VECTOR3_ZERO))
+    if (Math::Vec3_FEqual(&vecNormal, &Math::VECTOR3_ZERO))
         return ESCAPEPOINT_RESULT_NONE;
 
     RwV3d vecNormalNegate = Math::VECTOR3_ZERO;

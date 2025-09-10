@@ -367,39 +367,25 @@ namespace AIOT
     if (!pPlayerCharacter)
         return 0.0f;
 
-    PLAYERID::VALUE idPlayer = pPlayerCharacter->GetID();
-    switch (idPlayer)
+    static float s_aPlayerIdHate[] =
     {
-    case PLAYERID::ID_LEO:
-        return 0.7f;
-
-    case PLAYERID::ID_RAP:
-        return 0.8f;
-
-    case PLAYERID::ID_MIC:
-        return 0.9f;
-
-    case PLAYERID::ID_DON:
-        return 0.5f;
-
-    case PLAYERID::ID_SLA:
-        return 0.1f;
-
-    case PLAYERID::ID_CAS:
-        return 0.9f;
-
-    case PLAYERID::ID_KAR:
-        return 0.9f;
-
-    case PLAYERID::ID_SPL:
-        return 1.0f;
-
-    default:
-        ASSERT(false);
-        break;
+        0.7f, // leo
+        0.8f, // rap
+        0.9f, // mic
+        0.5f, // don
+        0.1f, // sla
+        0.9f, // cas
+        0.9f, // kar
+        1.0f, // spl
     };
 
-    return 1.0f;
+    static_assert(COUNT_OF(s_aPlayerIdHate) == PLAYERID::ID_MAX, "update me");
+
+    PLAYERID::VALUE playerId = pPlayerCharacter->GetID();
+    ASSERT(playerId >= 0);
+    ASSERT(playerId < COUNT_OF(s_aPlayerIdHate));
+
+    return s_aPlayerIdHate[playerId];
 };
 
 

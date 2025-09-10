@@ -384,11 +384,13 @@ int32 CCameraData::GetSetCamIDNearestPos(RwV3d* pPos, const char* pszName /*= nu
     float fMinDist = 1000.0f;
     int32 nMinSetCamID = -1;
 
+    size_t nameLen = std::strlen(pszName);
+
     for (int32 i = 0; i < pSetCamDataList->numSetCamData; ++i)
     {
         const SETCAMDATA* pSetCamData = GetSetCamData(i);
 
-        if (!pszName || !std::strcmp(pSetCamData->szName, pszName))
+        if (!pszName || !std::strncmp(pSetCamData->szName, pszName, nameLen))
         {
             RwV3d vTemp = Math::VECTOR3_ZERO;
             Math::Vec3_Sub(&vTemp, pPos, &pSetCamData->posLookat);

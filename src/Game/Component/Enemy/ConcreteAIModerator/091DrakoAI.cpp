@@ -195,7 +195,7 @@ void C091DrakoAI::CheckPlayerStatus(void)
         m_aPlayerInfo[i].fDistance = std::sqrt(vecDistance.x * vecDistance.x +
                                                vecDistance.z * vecDistance.z);
 
-        if (!Math::Vec3_IsEqual(&vecDistance, &Math::VECTOR3_ZERO))
+        if (!Math::Vec3_Equal(&vecDistance, &Math::VECTOR3_ZERO))
             m_aPlayerInfo[i].fDirection = std::atan2(vecDistance.x, vecDistance.z);
 
         float fDirDiff = (m_aPlayerInfo[i].fDirection - fMyDir);
@@ -386,43 +386,43 @@ void C091DrakoAI::ReserveOrderDefault(void)
     if (IsNearAttackCorePlayer())
     {
         ReserveGuard();
-    }
-    else
-    {
-        if (ReserveOrderDefault_OnHpAll())
-            return;
-
-        switch (m_eAIPattern)
-        {
-        case AIPATTERN_HP_HIGH:   ReserveOrderDefault_OnHpHigh();   break;
-        case AIPATTERN_HP_MEDIUM: ReserveOrderDefault_OnHpMedium(); break;
-        case AIPATTERN_HP_LOW:    ReserveOrderDefault_OnHpLow();    break;
-        default: break;
-        };
-    };
-};
-
-
-bool C091DrakoAI::ReserveOrderDefault_OnHpAll(void)
-{
-    if (GetNearBackPlayerNum())
-    {
-        ReserveAttackTail();
-        return true;
+        return;
     };
 
-    if (GetNearSidePlayerNum())
+    switch (m_eAIPattern)
     {
-        ReserveAttackEnergyBall();
-        return true;
-    };
+    case AIPATTERN_HP_HIGH:
+        ReserveOrderDefault_OnHpHigh();
+        break;
 
-    return false;
+    case AIPATTERN_HP_MEDIUM:
+        ReserveOrderDefault_OnHpMedium();
+        break;
+
+    case AIPATTERN_HP_LOW:
+        ReserveOrderDefault_OnHpLow();
+        break;
+
+    default:
+        break;
+    };
 };
 
 
 void C091DrakoAI::ReserveOrderDefault_OnHpHigh(void)
 {
+    if (GetNearBackPlayerNum())
+    {
+        ReserveAttackTail();
+        return;
+    };
+
+    if (GetNearSidePlayerNum())
+    {
+        ReserveAttackEnergyBall();
+        return;
+    };
+
     if (!GetNearFrontPlayerNum())
     {
         if (GetMiddlePlayerNum())
@@ -452,6 +452,18 @@ void C091DrakoAI::ReserveOrderDefault_OnHpHigh(void)
 
 void C091DrakoAI::ReserveOrderDefault_OnHpMedium(void)
 {
+    if (GetNearBackPlayerNum())
+    {
+        ReserveAttackTail();
+        return;
+    };
+
+    if (GetNearSidePlayerNum())
+    {
+        ReserveAttackEnergyBall();
+        return;
+    };
+
     if (GetNearFrontPlayerNum())
     {
         if (IsNearFrontGuardPlayerOnly())
@@ -477,6 +489,18 @@ void C091DrakoAI::ReserveOrderDefault_OnHpMedium(void)
 
 void C091DrakoAI::ReserveOrderDefault_OnHpLow(void)
 {
+    if (GetNearBackPlayerNum())
+    {
+        ReserveAttackTail();
+        return;
+    };
+
+    if (GetNearSidePlayerNum())
+    {
+        ReserveAttackEnergyBall();
+        return;
+    };
+
     if (!GetNearFrontPlayerNum())
     {
         if (GetMiddlePlayerNum())
@@ -806,20 +830,19 @@ bool C091DrakoAI::IsNearAttackCorePlayer(void) const
 
 bool C091DrakoAI::IsNearFrontDownPlayerOnly(void) const
 {
+    int32 result = 0;
+
     for (int32 i = 0; i < m_numPlayers; ++i)
     {
         bool bIsNearDist = (m_aPlayerInfo[i].fDistance <= DISTANCE_NEAR_FRONT);
         bool bIsInFront = (m_aPlayerInfo[i].eSide == PLAYER_INFO::SIDE_FRONT);
         bool bIsDown = (m_aPlayerInfo[i].bIsDown);
 
-        if (bIsNearDist && bIsInFront)
-        {
-			if (!bIsDown)
-				return true;
-        };
+        if (bIsNearDist && bIsInFront && bIsDown)
+            ++result;
     };
 
-	return false;
+    return (result == m_numPlayers);
 };
 
 
@@ -827,15 +850,15 @@ bool C091DrakoAI::IsNearFrontGuardPlayerOnly(void) const
 {
     for (int32 i = 0; i < m_numPlayers; ++i)
     {
-        bool bIsNearDist = (m_aPlayerInfo[i].fDistance <= DISTANCE_NEAR_FRONT);
+        bool bIsNearDist = (m_aPlayerInfo[i].fDistance < DISTANCE_NEAR_FRONT);
         bool bIsInFront = (m_aPlayerInfo[i].eSide == PLAYER_INFO::SIDE_FRONT);
         bool bIsGuard = (m_aPlayerInfo[i].bIsGuard);
 
-        if (!bIsNearDist && bIsInFront && !bIsGuard)
-            return false;
+        if (bIsNearDist && bIsInFront && bIsGuard)
+            return true;
     };
 
-    return true;
+    return false;
 };
 
 

@@ -109,7 +109,7 @@ CSlashuur::CSlashuur(GAMETYPES::COSTUME costume)
     parameter.m_feature.m_fJumpInitializeSpeed  = 7.5f;
     parameter.m_feature.m_fAerialMoveSpeed      = 5.2f;
     parameter.m_feature.m_fAerialAcceleration   = 12.0f;
-    parameter.m_feature.m_nKnifeAttachBoneID    = 3;
+    parameter.m_feature.m_nKnifeAttachBoneID    = 4;
     
     parameter.m_pStateMachine = new CPlayerStateMachine(this, PLAYERTYPES::STATUS::NORMALMAX);
 

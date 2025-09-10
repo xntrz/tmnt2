@@ -7,6 +7,10 @@
 #include "Game/Component/Effect/MagicManager.hpp"
 #include "Game/Component/Effect/Light.hpp"
 
+#ifdef _DEBUG
+#include "Game/System/Misc/DebugShape.hpp"
+#endif /* _DEBUG */
+
 
 CMapEffectLightGimmick::CMapEffectLightGimmick(const char* pszName, void* pParam)
 : CGimmick(pszName, pParam)
@@ -210,7 +214,7 @@ void CMapEffectGimmick::PostMove(void)
                     m_bLoopActive = false;
                 };
             }
-            else if(!m_bLoopActive)
+            else if (!m_bLoopActive)
             {
                 m_bLoopActive = playEffect();
             };
@@ -337,10 +341,9 @@ bool CMapEffectGimmick::playEffect(void)
     ASSERT(!m_hMagic);
     ASSERT(!m_hEffect);
 
-    bool bResult = false;
     RwV3d vPosition = m_vPosition;
 
-    if (!m_pEffectInfo->m_bLoop && m_pEffectInfo->m_fRandAreaRadius > 0.0f)
+    if (!m_pEffectInfo->m_bLoop && (m_pEffectInfo->m_fRandAreaRadius > 0.0f))
     {
         vPosition.x += Math::RandFloatRange(0.0f, m_pEffectInfo->m_fRandAreaRadius);
         vPosition.z += Math::RandFloatRange(0.0f, m_pEffectInfo->m_fRandAreaRadius);
@@ -359,6 +362,7 @@ bool CMapEffectGimmick::playEffect(void)
         CMagicManager::CParameter param;
         param.SetPositon(&vPosition);
         param.SetDirection(&m_vDirection);
+        param.SetObject(this);
 
         uint32 hMagic = CMagicManager::Play(m_pEffectInfo->m_pszName, &param);
         if (hMagic)
@@ -367,7 +371,7 @@ bool CMapEffectGimmick::playEffect(void)
             if (m_pEffectInfo->m_bLoop)
                 m_hMagic = hMagic;
 
-            bResult = true;
+            return true;
         };
     }
     else
@@ -381,9 +385,9 @@ bool CMapEffectGimmick::playEffect(void)
             if (m_pEffectInfo->m_bLoop)
                 m_hEffect = hEffect;
 
-            bResult = true;
+            return true;
         };
     };
 
-    return bResult;
+    return false;
 };

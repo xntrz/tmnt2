@@ -70,57 +70,42 @@ namespace Splinter
 
     void CAttackAABBC::OnRun(void)
     {
-        switch (m_phase)
+        if (m_phase == PHASE_FINISH)
         {
-        case PHASE_WAIT_TIMING:
-            {
-                if (Character().GetMotionTime() >= 0.6f)
-                {
-                    OnDischargeWave();
-                    Character().StopMotion();
-                    m_phase = PHASE_INVOKE_BARRIER;
-                };
-            }
-            break;
+            if (Character().IsMotionEnd())
+                StateMachine().ChangeStatus(PLAYERTYPES::STATUS_IDLE);
 
-        case PHASE_INVOKE_BARRIER:
-            {
-                CBarrierModule* pBarrierMod = static_cast<CBarrierModule*>(Character().GetModule(MODULETYPE::BARRIER));
-                ASSERT(pBarrierMod);
+            return;
+        };
 
-                switch (pBarrierMod->GetState())
-                {
-                case CBarrierModule::STATE_DISAPPEAR:
-                    break;
+        if (m_phase != PHASE_INVOKE_BARRIER)
+        {
+            if (Character().GetMotionTime() < 0.6f)
+                return;
 
-                case CBarrierModule::STATE_SLEEP:
-                    {
-                        m_phase = PHASE_FINISH;
-                        Character().PlayMotion();
+            OnDischargeWave();
+            Character().StopMotion();
+            m_phase = PHASE_INVOKE_BARRIER;
+        };
 
-                        CAccumulateModule* pAccumMod = static_cast<CAccumulateModule*>(Character().GetModule(MODULETYPE::ACCUMULATE));
-                        ASSERT(pAccumMod);
+        CBarrierModule* pBarrierMod = static_cast<CBarrierModule*>(Character().GetModule(MODULETYPE::BARRIER));
+        ASSERT(pBarrierMod);
 
-                        pAccumMod->SetDrawOff();
-                    }
-                    break;
+        if (pBarrierMod->GetState() == CBarrierModule::STATE_DISAPPEAR)
+        {
+            CAccumulateModule* pAccumMod = static_cast<CAccumulateModule*>(Character().GetModule(MODULETYPE::ACCUMULATE));
+            ASSERT(pAccumMod);
 
-                default:
-                    break;
-                };
-            }
-            break;
+            pAccumMod->SetDrawOff();
+        };
 
-        case PHASE_FINISH:
-            {
-                if (Character().IsMotionEnd())
-                    StateMachine().ChangeStatus(PLAYERTYPES::STATUS_IDLE);
-            }
-            break;
+        if (pBarrierMod->GetState() == CBarrierModule::STATE_SLEEP)
+        {
+            m_phase = PHASE_FINISH;
+            Character().PlayMotion();
 
-        default:
-            ASSERT(false);
-            break;
+            if (Character().IsMotionEnd())
+                StateMachine().ChangeStatus(PLAYERTYPES::STATUS_IDLE);
         };
     };
 
@@ -160,57 +145,42 @@ namespace Splinter
 
     void CAttackB::OnRun(void)
     {
-        switch (m_phase)
+        if (m_phase == PHASE_FINISH)
         {
-        case PHASE_WAIT_TIMING:
-            {
-                if (Character().GetMotionTime() >= 0.9f)
-                {
-                    CallDischargeWave();
-                    Character().StopMotion();
-                    m_phase = PHASE_INVOKE_BARRIER;
-                };
-            }
-            break;
+            if (Character().IsMotionEnd())
+                StateMachine().ChangeStatus(PLAYERTYPES::STATUS_IDLE);
 
-        case PHASE_INVOKE_BARRIER:
-            {
-                CBarrierModule* pBarrierMod = static_cast<CBarrierModule*>(Character().GetModule(MODULETYPE::BARRIER));
-                ASSERT(pBarrierMod);
+            return;
+        };
 
-                switch (pBarrierMod->GetState())
-                {
-                case CBarrierModule::STATE_DISAPPEAR:
-                    break;
+        if (m_phase != PHASE_INVOKE_BARRIER)
+        {
+            if (Character().GetMotionTime() < 0.9f)
+                return;
 
-                case CBarrierModule::STATE_SLEEP:
-                    {
-                        m_phase = PHASE_FINISH;
-                        Character().PlayMotion();
+            CallDischargeWave();
+            Character().StopMotion();
+            m_phase = PHASE_INVOKE_BARRIER;
+        };
 
-                        CAccumulateModule* pAccumMod = static_cast<CAccumulateModule*>(Character().GetModule(MODULETYPE::ACCUMULATE));
-                        ASSERT(pAccumMod);
-                        
-                        pAccumMod->SetDrawOff();
-                    }
-                    break;
+        CBarrierModule* pBarrierMod = static_cast<CBarrierModule*>(Character().GetModule(MODULETYPE::BARRIER));
+        ASSERT(pBarrierMod);
 
-                default:
-                    break;
-                };
-            }
-            break;
+        if (pBarrierMod->GetState() == CBarrierModule::STATE_DISAPPEAR)
+        {
+            CAccumulateModule* pAccumMod = static_cast<CAccumulateModule*>(Character().GetModule(MODULETYPE::ACCUMULATE));
+            ASSERT(pAccumMod);
 
-        case PHASE_FINISH:
-            {
-                if (Character().IsMotionEnd())
-                    StateMachine().ChangeStatus(PLAYERTYPES::STATUS_IDLE);
-            }
-            break;
+            pAccumMod->SetDrawOff();
+        };
 
-        default:
-            ASSERT(false);
-            break;
+        if (pBarrierMod->GetState() == CBarrierModule::STATE_SLEEP)
+        {
+            m_phase = PHASE_FINISH;
+            Character().PlayMotion();
+
+            if (Character().IsMotionEnd())
+                StateMachine().ChangeStatus(PLAYERTYPES::STATUS_IDLE);
         };
     };
 

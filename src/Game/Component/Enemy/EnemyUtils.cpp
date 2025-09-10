@@ -623,7 +623,7 @@ float CEnemyUtils::CKnockBackControl::GetPlayerNumRate(void) const
     RwV3d vecPos = *pos;
     vecPos.y = vecFootPos.y;
 
-    if (Math::Vec3_IsEqual(&vecFootPos, &vecPos))
+    if (Math::Vec3_FEqual(&vecFootPos, &vecPos))
         return 0;        
 
     float fDir = GetDirection(&vecFootPos, &vecPos);
@@ -1038,7 +1038,7 @@ CEnemyTracer6045::CEnemyTracer6045(const CCharacterCompositor* pChrCompositor, C
     RwV3d vecAt = *pvecAt;
     vecAt.y = 0.0f;
 
-    if (Math::Vec3_IsEqual(&vecPos, &vecAt))
+    if (Math::Vec3_FEqual(&vecPos, &vecAt))
         return false;
 
     *pfDirection = CEnemyUtils::GetDirection(&vecPos, &vecAt);

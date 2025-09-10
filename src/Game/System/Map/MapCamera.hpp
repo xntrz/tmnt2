@@ -71,6 +71,8 @@ public:
     void GetEye(RwV3d* pvEye) const;
     void GetLookat(RwV3d* pvLookat) const;
     float GetViewAreaRadius(void) const;
+    bool FrustumSphereTest(const RwV3d* pos, float fRadius) const;
+    bool FrustumSphereTest(const RwSphere* sphere) const;
 
 private:
     void IntroductionCreate(void);
@@ -80,8 +82,7 @@ private:
     void VibrationDestroy(void);
     void VibrationUpdate(void);
 
-    //private:
-public:    
+private:
     static float m_fDefaultClipFar;
     static float m_fDefaultClipNear;
     static float m_fDefaultFogDist;
@@ -106,5 +107,4 @@ public:
     bool m_bChangeMoment;
     CIntroduction* m_pIntroduction;
     CVibration* m_pVibration;
-    float m_fPitch;
 };

@@ -83,7 +83,7 @@
     RwV3d vRight = pMatrix->right;
     RwV3d vUp = pMatrix->up;
 
-    if (Math::FEqual(vAt.z, 0.0f))
+    if (vAt.z == 0.0f)
     {
         pvRotation->z = 0.0f;
         pvRotation->y = -Math::ATan2(vRight.z, vRight.x);
@@ -207,11 +207,7 @@
     };
 
     EFFECT_GENERIC::CallHitEffect(pAttack, &vPosition);
-
-    CGameSound::PlayOtherDamageSE(
-        pAttack->GetObject(),
-        pAttack->GetCatchObject()
-    );
+    CGameSound::PlayOtherDamageSE(pAttack->GetObject(), pAttack->GetCatchObject());
 };
 
 
@@ -246,8 +242,6 @@
 
 /*static*/ bool CGimmickUtils::IsPositionVisible(const RwV3d* pvPos, float fRadius, bool bTestZ)
 {
-    ASSERT(pvPos);
-
     if (bTestZ)
     {
         RwMatrix matrix;
@@ -257,19 +251,14 @@
         RwV3d vScreenPos = Math::VECTOR3_ZERO;
         RwV3dTransformPoint(&vScreenPos, pvPos, &matrix);
 
-        if ( !((vScreenPos.z >= 1.0f) && (vScreenPos.z <= 100.0f)) )
+        if ((vScreenPos.z < 1.0f) ||
+            (vScreenPos.z > 100.0f))
             return false;
     };
 
     CMapCamera* pMapCamera = CGameProperty::GetMapCamera();
-    ASSERT(pMapCamera);
+    if (pMapCamera && pMapCamera->FrustumSphereTest(pvPos, fRadius))
+        return true;
 
-    RwSphere sphere = { 0 };
-    sphere.center = *pvPos;
-    sphere.radius = fRadius;
-
-    if (!RwCameraFrustumTestSphere(pMapCamera->GetRwCamera(), &sphere))
-        return false;
-
-    return true;
+    return false;
 };

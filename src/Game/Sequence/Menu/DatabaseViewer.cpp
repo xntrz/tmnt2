@@ -292,7 +292,8 @@ bool CDatabaseViewer_Container::Run(void)
 
     int32 iPad = CGameData::Attribute().GetVirtualPad();
     
-    m_bFlagImgChange = ( (!Math::FEqual(m_vImgPos.x, 0.0f)) || (!Math::FEqual(m_vImgPos.y, 0.0f)) );
+    m_bFlagImgChange = ((m_vImgPos.x != 0.0f) ||
+                        (m_vImgPos.y != 0.0f));
     if (m_fImageZoom > 1.0f)
     {
         m_bFlagImgZoom = true;

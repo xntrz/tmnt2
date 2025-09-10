@@ -220,7 +220,6 @@ CMapCamera::CMapCamera(void)
 , m_bChangeMoment(false)
 , m_pIntroduction(nullptr)
 , m_pVibration(nullptr)
-, m_fPitch(0.0f)
 {
     m_pCamera = CCamera::GetCamera();
     ASSERT(m_pCamera);
@@ -315,12 +314,11 @@ void CMapCamera::Update(const RwV3d* pvAt, float fZoom)
 
     if (!CGameData::Attribute().IsPlayDemoMode())
     {
-        uint32 Digital = 0;
+        uint32 digitalTrigger = 0;
+        digitalTrigger |= IGamepad::GetDigitalTrigger(IGamepad::CONTROLLER_UNLOCKED_ON_VIRTUAL);
+        digitalTrigger |= IGamepad::GetDigitalTrigger(IGamepad::CONTROLLER_LOCKED_ON_VIRTUAL);
 
-        Digital |= IPad::GetDigitalTrigger(IPad::CONTROLLER_UNLOCKED_ON_VIRTUAL);
-        Digital |= IPad::GetDigitalTrigger(IPad::CONTROLLER_LOCKED_ON_VIRTUAL);
-
-        if (IPad::CheckFunction(Digital, IPad::FUNCTION_SWITCH_CAM))
+        if (IGamepad::CheckFunction(digitalTrigger, IGamepad::FUNCTION_SWITCH_CAM))
             m_pathmode = static_cast<PATHMODE>((m_pathmode + 1) % PATHMODEMAX);
     };
 
@@ -329,27 +327,15 @@ void CMapCamera::Update(const RwV3d* pvAt, float fZoom)
     switch (m_mode)
     {
     case MODE_MANUAL:
-        {
-            RwFrame* pFrame = RwCameraGetFrameMacro(m_pCamera->GetRwCamera());
-            RwMatrix* pMatrix = RwFrameGetMatrixMacro(pFrame);
-
-            m_vEye = pMatrix->pos;
-            m_vAt = pMatrix->at;
-            
-            UpdateManualCamera(pvAt);
-        }
+        UpdateManualCamera(pvAt);
         break;
 
     case MODE_AUTOCHANGE:
-        {
-            UpdateAutoChangeCamera(pvAt);
-        }        
+        UpdateAutoChangeCamera(pvAt);
         break;
         
     case MODE_INTRODUCTION:
-        {
-            IntroductionUpdate();
-        }        
+        IntroductionUpdate();
         break;
 
     default:
@@ -381,13 +367,13 @@ void CMapCamera::Update(const RwV3d* pvAt, float fZoom)
 
 void CMapCamera::PostUpdate(void)
 {
-    RwV3d vec = Math::VECTOR3_ZERO;
-    Math::Vec3_Sub(&vec, &m_vAt, &m_vEye);
+    RwV3d vecDist = Math::VECTOR3_ZERO;
+    Math::Vec3_Sub(&vecDist, &m_vAt, &m_vEye);
 
-    float fLen = Math::Vec3_Length(&vec);
-    fLen = std::fabs(fLen);
+    float fDist = Math::Vec3_Length(&vecDist);
+    fDist = std::fabs(fDist);
 
-    m_fLookatViewAreaRadius = fLen * m_fViewSize;
+    m_fLookatViewAreaRadius = fDist * m_fViewSize;
 
     if (!std::strncmp(m_szCameraAreaName, "f", 1) ||
         !std::strncmp(m_szCameraAreaName, "f", 1))
@@ -407,8 +393,8 @@ void CMapCamera::UpdateMoment(const RwV3d* pvAt)
 void CMapCamera::UpdateAutoChangeCamera(const RwV3d* pvAt)
 {
     RwV3d vCheckPoint = *pvAt;
-    char szName[32];
 
+    char szName[32];
     szName[0] = '\0';
 
     if (CWorldMap::GetCameraAreaName(&vCheckPoint, szName))
@@ -550,88 +536,47 @@ void CMapCamera::MakeSetCameraName(char* pszSetCameraName, const char* pszCamera
 
 void CMapCamera::UpdateManualCamera(const RwV3d* pvAt)
 {
-    float fRotSpeed = 100.0f;
-    float fMovSpeed = 20.0f;
-#ifdef _DEBUG
-    fMovSpeed = CGameStageDebug::CAMERA_MANUAL_SPEED;
-#endif /* _DEBUG */
+    const float DEADZONE = 0.3f;
+    const int32 controller = IGamepad::CONTROLLER_UNLOCKED_ON_VIRTUAL;
 
-    fMovSpeed *= CGameProperty::GetElapsedTime();
-    fRotSpeed *= CGameProperty::GetElapsedTime();
-   
-    int32 iPad = CGameData::Attribute().GetVirtualPad();
-
-    float rx = static_cast<float>(IPad::GetAnalog(IPad::CONTROLLER_UNLOCKED_ON_VIRTUAL, IPad::ANALOG_RSTICK_X));
-    float ry = static_cast<float>(IPad::GetAnalog(IPad::CONTROLLER_UNLOCKED_ON_VIRTUAL, IPad::ANALOG_RSTICK_Y));
+    float rx = static_cast<float>(IGamepad::GetAnalog(controller, IGamepad::ANALOG_RSTICK_X));
+    float ry = static_cast<float>(IGamepad::GetAnalog(controller, IGamepad::ANALOG_RSTICK_Y));
 
     rx = (rx >= 0.0f ? (rx / float(TYPEDEF::SINT16_MAX)) : -(rx / float(TYPEDEF::SINT16_MIN)));
     ry = (ry >= 0.0f ? (ry / float(TYPEDEF::SINT16_MAX)) : -(ry / float(TYPEDEF::SINT16_MIN)));
 
-	float fYaw = rx;
-    float fPitch = ry;
+    if ((rx > DEADZONE) || (rx < -DEADZONE))
+        m_fRotY += rx * (CGameProperty::GetElapsedTime() * 6.0f);
 
-    if (m_fPitch + fPitch > 89.0f)
-        fPitch = 89.0f - m_fPitch;
-    else if (m_fPitch + fPitch < -89.0f)
-        fPitch = -89.0f - m_fPitch;
+    if ((ry > DEADZONE) || (ry < -DEADZONE))
+        m_fHeight += ry * (CGameProperty::GetElapsedTime() * 10.0f);
 
-    m_fPitch += fPitch;
-
-    RwFrame* pFrame = RwCameraGetFrame(m_pCamera->GetRwCamera());
-
-    //
-    //  Remove translation
-    //
-    RwV3d vDelta = Math::VECTOR3_ZERO;
-    RwV3d vPos = *RwMatrixGetPos(RwFrameGetMatrix(pFrame));
-    RwV3dScale(&vDelta, &vPos, -1.0f);
-    RwFrameTranslate(pFrame, &vDelta, rwCOMBINEPOSTCONCAT);
-
-    //
-    //  Rotate
-    //
-	{
-		RwV3d vRight = *RwMatrixGetRight(RwFrameGetMatrix(pFrame));
-		RwFrameRotate(pFrame, &vRight, -fPitch * fRotSpeed, rwCOMBINEPOSTCONCAT);
-		RwFrameRotate(pFrame, &Math::VECTOR3_AXIS_Y, -fYaw * fRotSpeed, rwCOMBINEPOSTCONCAT);
-	}
-
-    //
-    //  Restore translation
-    //
-    RwFrameTranslate(pFrame, &vPos, rwCOMBINEPOSTCONCAT);
-
-    //
-    //  Forward / backward movement
-    //
-    RwV3d vAt = *RwMatrixGetAt(RwFrameGetMatrix(pFrame));
+    if (IGamepad::GetDigital(controller, IGamepad::DIGITAL_L1))
+        m_fDist += (CGameProperty::GetElapsedTime() * 20.0f);
+    else if (IGamepad::GetDigital(controller, IGamepad::DIGITAL_R1))
+        m_fDist -= (CGameProperty::GetElapsedTime() * 20.0f);
     
-	if (IPad::GetDigital(iPad, IPad::DIGITAL_LUP))
-	{
-        RwV3dScale(&vAt, &vAt, fMovSpeed);
-		RwFrameTranslate(pFrame, &vAt, rwCOMBINEPOSTCONCAT);
-	}
-	else if (IPad::GetDigital(iPad, IPad::DIGITAL_LDOWN))
-	{
-        RwV3dScale(&vAt, &vAt, -fMovSpeed);
-		RwFrameTranslate(pFrame, &vAt, rwCOMBINEPOSTCONCAT);
-	};
+    if (IGamepad::GetDigital(controller, IGamepad::DIGITAL_LUP))
+        m_fLookatOffsetY += (CGameProperty::GetElapsedTime() * 20.0f);
+    else if (IGamepad::GetDigital(controller, IGamepad::DIGITAL_LDOWN))
+        m_fLookatOffsetY -= (CGameProperty::GetElapsedTime() * 20.0f);
 
-    //
-    //  Left / right movement
-    //
-    RwV3d vRight = *RwMatrixGetRight(RwFrameGetMatrix(pFrame));
+    m_vAt = *pvAt;
+    m_vAt.y += m_fLookatOffsetY;
 
-	if (IPad::GetDigital(iPad, IPad::DIGITAL_LRIGHT))
-	{
-        RwV3dScale(&vRight, &vRight, -fMovSpeed);
-		RwFrameTranslate(pFrame, &vRight, rwCOMBINEPOSTCONCAT);
-	}
-	else if (IPad::GetDigital(iPad, IPad::DIGITAL_LLEFT))
-	{
-        RwV3dScale(&vRight, &vRight, fMovSpeed);
-		RwFrameTranslate(pFrame, &vRight, rwCOMBINEPOSTCONCAT);
-	};
+    RwMatrix matRotY;
+    RwMatrixSetIdentityMacro(&matRotY);
+    Math::Matrix_RotateY(&matRotY, m_fRotY);
+
+    RwV3d vecFront = Math::VECTOR3_ZERO;
+    RwV3dTransformVector(&vecFront, &Math::VECTOR3_AXIS_Z, &matRotY);
+    Math::Vec3_Normalize(&vecFront, &vecFront);
+    Math::Vec3_Scale(&vecFront, &vecFront, m_fDist);
+
+    Math::Vec3_Sub(&m_vEye, &m_vAt, &vecFront);
+    m_vEye.y += m_fHeight;
+
+    UpdateLookat();
 };
 
 
@@ -938,16 +883,8 @@ void CMapCamera::SetCameraMode(MODE mode)
     
     switch (m_mode)
     {
-    case MODE_MANUAL:
-        RwFrameSetIdentity(RwCameraGetFrame(m_pCamera->GetRwCamera()));
-		m_fPitch = 0.0f;
-        break;
-        
     case MODE_INTRODUCTION:
         IntroductionCreate();
-        break;
-
-	case MODE_AUTOCHANGE:
         break;
 
     default:
@@ -1080,6 +1017,22 @@ void CMapCamera::GetLookat(RwV3d* pvLookat) const
 float CMapCamera::GetViewAreaRadius(void) const
 {
     return m_fLookatViewAreaRadius;
+};
+
+
+bool CMapCamera::FrustumSphereTest(const RwV3d* pos, float fRadius) const
+{
+    RwSphere sphere;
+    sphere.center = *pos;
+    sphere.radius = fRadius;
+
+    return FrustumSphereTest(&sphere);
+};
+
+
+bool CMapCamera::FrustumSphereTest(const RwSphere* sphere) const
+{
+    return (RwCameraFrustumTestSphere(m_pCamera->GetRwCamera(), sphere) != rwSPHEREOUTSIDE);
 };
 
 

@@ -709,7 +709,7 @@ C087Slashuur::CNormalAttackStatusObserver::Observing(void) /*override*/
 
     float fDir = EnemyChr().Compositor().GetDirection();
 
-    if (!Math::Vec3_IsEqual(&vecFootPosMe, &vecFootPosPlr))
+    if (!Math::Vec3_Equal(&vecFootPosMe, &vecFootPosPlr))
     {
         fDir = CEnemyUtils::GetDirection(&EnemyChr().Compositor(), &vecFootPosPlr);
         EnemyChr().Compositor().SetDirection(fDir);
@@ -1033,7 +1033,7 @@ C087Slashuur::CTeleportationAttackStatusObserver::Observing(void) /*override*/
         RwV3d vecPlayerPos = avecPlayerPos[i];
         vecPlayerPos.y = 0.0f;
 
-        if (Math::Vec3_IsEqual(&vecPlayerPos, &Math::VECTOR3_ZERO))
+        if (Math::Vec3_Equal(&vecPlayerPos, &Math::VECTOR3_ZERO))
             afPlayerAngle[i + 1] = 0.0f;
         else
             afPlayerAngle[i + 1] = std::atan2(vecPlayerPos.x, vecPlayerPos.z);

@@ -54,7 +54,7 @@ protected:
     uint32 m_uEndFrame;
     uint32 m_uFrame;
     void* m_pFile;
-    void* m_pRecBuff;
+    uint8* m_pRecBuff;
     uint32 m_uRecBuffSize;
 };
 
@@ -247,21 +247,18 @@ CPadStream::CPCPadFileStream::CPCPadFileStream(FILEMODE filemode, STAGEID::VALUE
 
             GetModulePathSplit(szDrive, szDir, nullptr, nullptr);
 
-            sprintf(
-                szFilePath,
-                "%s%s..\\..\\..\\data\\Common\\Demo\\PC\\demo%03d%d.dat",
-                szDrive,
-                szDir,
-                idStage,
-                nControllerNo
-            );            
+            std::sprintf(szFilePath,
+                         "%s%s..\\..\\..\\data\\Common\\Demo\\PC\\demo%03d%d.dat",
+                         szDrive, szDir,
+                         idStage, nControllerNo);
+
             pszFilemode = "wb";
         }
         break;
 
     case FILEMODE_PLAY:
         {
-            sprintf(szFilePath, "Common/Demo/PC/demo%03d%d.dat", idStage, nControllerNo);
+            std::sprintf(szFilePath, "Common/Demo/PC/demo%03d%d.dat", idStage, nControllerNo);
             pszFilemode = "rb";
         }
         break;
@@ -273,6 +270,7 @@ CPadStream::CPCPadFileStream::CPCPadFileStream(FILEMODE filemode, STAGEID::VALUE
 
     m_pFile = RwFopen(szFilePath, pszFilemode);
     ASSERT(m_pFile);
+
     GotoTop();
 };
 
@@ -290,7 +288,7 @@ void CPadStream::CPCPadFileStream::GetInput(CPadStream::MODE mode, void* pInput,
     case CPadStream::MODE_RECORD:
         {
             std::memcpy(m_pPacked, pInput, uInputSize);
-            m_pPacked = (packed*)((uint8*)m_pPacked + uInputSize);
+            m_pPacked = reinterpret_cast<packed*>(reinterpret_cast<uint8*>(m_pPacked + uInputSize));
         }
         break;
 
@@ -340,8 +338,11 @@ bool CPadStream::Open(MODE mode, STAGEID::VALUE idStage, int32 iController)
 {
     m_mode = mode;
     
+    CPadFileStream::FILEMODE filemode = (mode == MODE_RECORD) ? CPadFileStream::FILEMODE_RECORD :
+                                                                CPadFileStream::FILEMODE_PLAY;
+
 #ifdef TARGET_PC
-    m_pStream = new CPCPadFileStream(mode == MODE_RECORD ? CPadFileStream::FILEMODE_RECORD : CPadFileStream::FILEMODE_PLAY, idStage, iController);
+    m_pStream = new CPCPadFileStream(filemode, idStage, iController);
 #else
 #error Not implemented for current target
 #endif
@@ -364,22 +365,26 @@ void CPadStream::Close(void)
 
 void CPadStream::GetPadData(int32 iController)
 {   
-    switch (m_mode)
-    {
-    case MODE_RECORD:
-		ASSERT(m_pStream);
-        m_pStream->Record(iController);
-		if (m_pStream->IsEnd())
-			CPadStreamSwitch::m_bEnd = true;
-        break;
+	if (m_pStream)
+	{
+		switch (m_mode)
+		{
+		case MODE_RECORD:
+			m_pStream->Record(iController);
+			break;
 
-    case MODE_PLAY:
-		ASSERT(m_pStream);
-        m_pStream->Play();
+		case MODE_PLAY:
+			m_pStream->Play();
+			break;
+
+		default:
+			ASSERT(false);
+			break;
+		};
+
 		if (m_pStream->IsEnd())
 			CPadStreamSwitch::m_bEnd = true;
-        break;
-    };
+	};
 };
 
 

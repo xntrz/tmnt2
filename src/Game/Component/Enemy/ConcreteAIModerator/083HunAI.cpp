@@ -152,7 +152,7 @@ C083HunAI::C083HunAI(CEnemyCharacter* pEnemyChr)
     if (m_catchTriggerAction & BASEHUN_AI::CATCHTRIGGER_BURST)
     {
         GAMETYPES::DIFFICULTY difficulty = CGameProperty::GetDifficulty();
-        DecisionUnitCommonParameter().SetAttackInterval(HUN_AI_083::ATTACK_INTERVAL[difficulty]);
+        DecisionUnitCommonParameter().SetAttackInterval(HUN_AI_083::ATTACK_INTERVAL_FOR_BURST_MODE[difficulty]);
 
         CEnemyAIDecisionUnit* pUnit = GetDicisionUnitForName(BASEAI6045::AIDECISIONUNITNAME::GUARD);
         if (pUnit)

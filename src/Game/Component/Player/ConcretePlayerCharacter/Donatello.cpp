@@ -80,34 +80,32 @@ namespace Donatello
 
     void CAttackLaser::ShootingLaser(void)
     {
-        RwV3d vChrPos = Math::VECTOR3_ZERO;
-        Character().GetPosition(&vChrPos);
-        
-        RwV3d vPosition = *Character().GetModel()->GetBonePositionFromID(Character().Feature().m_nKnifeAttachBoneID);
-        RwV3d vLocalPos = Math::VECTOR3_ZERO;
+        RwV3d vPos = Math::VECTOR3_ZERO;
+        Character().GetPosition(&vPos);
 
-        Math::Vec3_Sub(&vLocalPos, &vPosition, &vChrPos);
-        float fBuffY = vLocalPos.y;
-        vLocalPos.y = 0.0f;
+        int32 knifeBoneID = Character().Feature().m_nKnifeAttachBoneID;
+        RwV3d vBonePos = *Character().GetModel()->GetBonePositionFromID(knifeBoneID);
 
-        float fLen = Math::Vec3_Length(&vLocalPos);
+        RwV3d vec = Math::VECTOR3_ZERO;
+        Math::Vec3_Sub(&vec, &vBonePos, &vPos);
+        float fBuffY = vec.y;
+        vec.y = 0.0f;
+
+        float fLen = Math::Vec3_Length(&vec);
         if (fLen > 0.6f)
         {
-            vLocalPos.x *= 0.5f / fLen;
-            vLocalPos.z *= 0.5f / fLen;
-            vLocalPos.y = fBuffY;
+            vec.x *= (0.5f / fLen);
+            vec.y = fBuffY;
+            vec.z *= (0.5f / fLen);
 
-            Math::Vec3_Add(&vPosition, &vLocalPos, &vChrPos);
+            Math::Vec3_Add(&vPos, &vec, &vPos);
         };
 
-        RwV3d vDirection = Math::VECTOR3_AXIS_Z;
-        Character().RotateVectorByDirection(&vDirection, &vDirection);
+        RwV3d vDir = Math::VECTOR3_AXIS_Z;
+        Character().RotateVectorByDirection(&vDir, &vDir);
 
-        uint32 hMagic = CMagicManager::Play(Donatello::EFFECTNAMES::LASER_BEAM, &vPosition, &vDirection, &Character(), true);
-        ASSERT(hMagic);
-        
-        if (hMagic)
-            CMagicManager::SetStatusTime(hMagic, 4.0f);
+        uint32 hMagic = CMagicManager::Play(Donatello::EFFECTNAMES::LASER_BEAM, &vPos, &vDir, &Character(), true);
+        CMagicManager::SetStatusTime(hMagic, 4.0f);
 
         if (!Character().TestAttribute(PLAYERTYPES::ATTRIBUTE_INNUMERABLE_KNIFE))
             CGameProperty::Player(Character().GetPlayerNo())->AddShurikenNum(-1);
@@ -153,57 +151,42 @@ namespace Donatello
 
     void CAttackAABBC::OnRun(void)
     {
-        switch (m_phase)
+        if (m_phase == PHASE_FINISH)
         {
-        case PHASE_WAIT_TIMING:
-            {
-                if (Character().GetMotionTime() >= 0.6f)
-                {
-                    OnDischargeWave();
-                    Character().StopMotion();
-                    m_phase = PHASE_INVOKE_BARRIER;
-                };
-            }
-            break;
+            if (Character().IsMotionEnd())
+                StateMachine().ChangeStatus(PLAYERTYPES::STATUS_IDLE);
 
-        case PHASE_INVOKE_BARRIER:
-            {
-                CBarrierModule* pBarrierMod = static_cast<CBarrierModule*>(Character().GetModule(MODULETYPE::BARRIER));
-                ASSERT(pBarrierMod);
+            return;
+        };
 
-                switch (pBarrierMod->GetState())
-                {
-                case CBarrierModule::STATE_DISAPPEAR:
-                    break;
+        if (m_phase != PHASE_INVOKE_BARRIER)
+        {
+            if (Character().GetMotionTime() < 0.6f)
+                return;
 
-                case CBarrierModule::STATE_SLEEP:
-                    {
-                        m_phase = PHASE_FINISH;
-                        Character().PlayMotion();
+            OnDischargeWave();
+            Character().StopMotion();
+            m_phase = PHASE_INVOKE_BARRIER;
+        };
 
-                        CAccumulateModule* pAccumMod = static_cast<CAccumulateModule*>(Character().GetModule(MODULETYPE::ACCUMULATE));
-                        ASSERT(pAccumMod);
+        CBarrierModule* pBarrierMod = static_cast<CBarrierModule*>(Character().GetModule(MODULETYPE::BARRIER));
+        ASSERT(pBarrierMod);
 
-                        pAccumMod->SetDrawOff();
-                    }
-                    break;
+        if (pBarrierMod->GetState() == CBarrierModule::STATE_DISAPPEAR)
+        {
+            CAccumulateModule* pAccumMod = static_cast<CAccumulateModule*>(Character().GetModule(MODULETYPE::ACCUMULATE));
+            ASSERT(pAccumMod);
 
-                default:
-                    break;
-                };
-            }
-            break;
+            pAccumMod->SetDrawOff();
+        };
 
-        case PHASE_FINISH:
-            {
-                if (Character().IsMotionEnd())
-                    StateMachine().ChangeStatus(PLAYERTYPES::STATUS_IDLE);
-            }
-            break;
+        if (pBarrierMod->GetState() == CBarrierModule::STATE_SLEEP)
+        {
+            m_phase = PHASE_FINISH;
+            Character().PlayMotion();
 
-        default:
-            ASSERT(false);
-            break;
+            if (Character().IsMotionEnd())
+                StateMachine().ChangeStatus(PLAYERTYPES::STATUS_IDLE);
         };
     };
 
@@ -243,57 +226,42 @@ namespace Donatello
 
     void CAttackB::OnRun(void)
     {
-        switch (m_phase)
+        if (m_phase == PHASE_FINISH)
         {
-        case PHASE_WAIT_TIMING:
-            {
-                if (Character().GetMotionTime() >= 0.6f)
-                {
-                    CallDischargeWave();
-                    Character().StopMotion();
-                    m_phase = PHASE_INVOKE_BARRIER;
-                };
-            }
-            break;
+            if (Character().IsMotionEnd())
+                StateMachine().ChangeStatus(PLAYERTYPES::STATUS_IDLE);
 
-        case PHASE_INVOKE_BARRIER:
-            {
-                CBarrierModule* pBarrierMod = static_cast<CBarrierModule*>(Character().GetModule(MODULETYPE::BARRIER));
-                ASSERT(pBarrierMod);
+            return;
+        };
 
-                switch (pBarrierMod->GetState())
-                {
-                case CBarrierModule::STATE_DISAPPEAR:
-                    break;
+        if (m_phase != PHASE_INVOKE_BARRIER)
+        {
+            if (Character().GetMotionTime() < 0.6f)
+                return;
 
-                case CBarrierModule::STATE_SLEEP:
-                    {
-                        m_phase = PHASE_FINISH;
-						Character().PlayMotion();
+            CallDischargeWave();
+            Character().StopMotion();
+            m_phase = PHASE_INVOKE_BARRIER;
+        };
 
-                        CAccumulateModule* pAccumMod = static_cast<CAccumulateModule*>(Character().GetModule(MODULETYPE::ACCUMULATE));
-                        ASSERT(pAccumMod);
-                        
-                        pAccumMod->SetDrawOff();
-                    }
-                    break;
+        CBarrierModule* pBarrierMod = static_cast<CBarrierModule*>(Character().GetModule(MODULETYPE::BARRIER));
+        ASSERT(pBarrierMod);
 
-                default:
-                    break;
-                };
-            }
-            break;
+        if (pBarrierMod->GetState() == CBarrierModule::STATE_DISAPPEAR)
+        {
+            CAccumulateModule* pAccumMod = static_cast<CAccumulateModule*>(Character().GetModule(MODULETYPE::ACCUMULATE));
+            ASSERT(pAccumMod);
 
-        case PHASE_FINISH:
-            {
-                if (Character().IsMotionEnd())
-                    StateMachine().ChangeStatus(PLAYERTYPES::STATUS_IDLE);
-            }
-            break;
+            pAccumMod->SetDrawOff();
+        };
 
-        default:
-            ASSERT(false);
-            break;
+        if (pBarrierMod->GetState() == CBarrierModule::STATE_SLEEP)
+        {
+            m_phase = PHASE_FINISH;
+            Character().PlayMotion();
+
+            if (Character().IsMotionEnd())
+                StateMachine().ChangeStatus(PLAYERTYPES::STATUS_IDLE);
         };
     };
 

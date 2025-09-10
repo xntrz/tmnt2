@@ -99,7 +99,6 @@ public:
     void ReserveOrderOnDamaged(void);
     void ReserveOrderOnGuard(void);
     void ReserveOrderDefault(void);
-    bool ReserveOrderDefault_OnHpAll(void);
     void ReserveOrderDefault_OnHpHigh(void);
     void ReserveOrderDefault_OnHpMedium(void);
     void ReserveOrderDefault_OnHpLow(void);

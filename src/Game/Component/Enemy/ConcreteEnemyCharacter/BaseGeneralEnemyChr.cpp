@@ -473,7 +473,6 @@ CBaseGeneralEnemyChr::CSideWalkStatusObserver::CSideWalkStatusObserver(float fMo
 , m_fMotionSpeed(fMotionSpeed)
 , m_szSideWalkMotion()
 {
-    /* init walk left motion */
     ASSERT(pszMotionSideWalk != nullptr);
     ASSERT(std::strlen(pszMotionSideWalk) < sizeof(m_szSideWalkMotion));
 
@@ -533,11 +532,11 @@ CBaseGeneralEnemyChr::CSideWalkStatusObserver::Observing(void) /*override*/
     switch (currentStatus)
     {
     case ENEMYTYPES::STATUS_WALK_LEFT:
-        vecVelocity = { m_fMoveSpeed, 0.0f, m_fMotionSpeed * 0.2f };
+        vecVelocity = { m_fMoveSpeed, 0.0f, m_fMoveSpeed * 0.2f };
         break;
 
     case ENEMYTYPES::STATUS_WALK_RIGHT:
-        vecVelocity = { -m_fMoveSpeed, 0.0f, m_fMotionSpeed * 0.2f };
+        vecVelocity = { -m_fMoveSpeed, 0.0f, m_fMoveSpeed * 0.2f };
         break;
 
     default:
@@ -820,7 +819,7 @@ CBaseGeneralEnemyChr::GetMovableType(RwV3d* pVecAt) const
 
     MOVABLETYPE movtype = MOVABLETYPE_POSSIBLE;
 
-    if (Math::Vec3_IsEqual(&vecPos, &vecAt))
+    if (Math::Vec3_FEqual(&vecPos, &vecAt))
     {
         movtype = MOVABLETYPE_POSSIBLE;
     }

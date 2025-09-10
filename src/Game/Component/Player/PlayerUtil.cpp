@@ -60,6 +60,8 @@ namespace PlayerUtil
 			SDCODE_SE(0x2096), // spl
         };
 
+        static_assert(COUNT_OF(aiVoiceList) == PLAYERID::ID_MAX, "update me");
+
         PlayCharaSE(pPlayerChr, aiVoiceList);
     };
 
@@ -77,6 +79,8 @@ namespace PlayerUtil
 			SDCODE_SE(0x20CD), // kar
 			SDCODE_SE(0x2097), // spl
         };
+
+        static_assert(COUNT_OF(aiVoiceList) == PLAYERID::ID_MAX, "update me");
 
         PlayCharaSE(pPlayerChr, aiVoiceList);
     };
@@ -96,6 +100,8 @@ namespace PlayerUtil
 			SDCODE_SE(0x207E), // spl
         };
 
+        static_assert(COUNT_OF(aiVoiceList) == PLAYERID::ID_MAX, "update me");
+
         PlayCharaSE(pPlayerChr, aiVoiceList);
     };
 
@@ -113,6 +119,8 @@ namespace PlayerUtil
 			SDCODE_SE(0x20CB), 	// kar
 			SDCODE_SE(0x2095), 	// spl
         };
+
+        static_assert(COUNT_OF(aiVoiceList) == PLAYERID::ID_MAX, "update me");
         
         PlayCharaSE(pPlayerChr, aiVoiceList);
     };
@@ -171,7 +179,9 @@ namespace PlayerUtil
   			SDCODE_SE(0x20AD), // cas
   			SDCODE_SE(0x20C8), // kar
   			SDCODE_SE(0x2093), // spl
-		};
+        };
+
+        static_assert((COUNT_OF(aiVoiceList) / 5) == PLAYERID::ID_MAX, "update me");
 
 		const int32 nNumWallJumpMax = (COUNT_OF(aiVoiceList) / PLAYERID::ID_MAX) - 1;
 
@@ -194,7 +204,9 @@ namespace PlayerUtil
 			SDCODE_SE(0x209C), // cas
 			SDCODE_SE(0x20B6), // kar
 			SDCODE_SE(0x2082), // spl
-		};
+        };
+
+        static_assert(COUNT_OF(aiVoiceList) == PLAYERID::ID_MAX, "update me");
 
         PlayCharaSE(pPlayerChr, aiVoiceList);
     };
@@ -214,6 +226,8 @@ namespace PlayerUtil
 			SDCODE_SE(0x2083), // spl
         };
 
+        static_assert(COUNT_OF(aiVoiceList) == PLAYERID::ID_MAX, "update me");
+
         PlayCharaSE(pPlayerChr, aiVoiceList);
     };
 
@@ -232,6 +246,8 @@ namespace PlayerUtil
   			SDCODE_SE(0x208A), // spl
         };
 
+        static_assert(COUNT_OF(aiVoiceList) == PLAYERID::ID_MAX, "update me");
+
         PlayCharaSE(pPlayerChr, aiVoiceList);
     };
 
@@ -249,6 +265,8 @@ namespace PlayerUtil
   			SDCODE_SE(0x20C2), // kar
   			SDCODE_SE(0x208E), // spl
         };
+
+        static_assert(COUNT_OF(aiVoiceList) == PLAYERID::ID_MAX, "update me");
 
         PlayCharaSE(pPlayerChr, aiVoiceList);
     };

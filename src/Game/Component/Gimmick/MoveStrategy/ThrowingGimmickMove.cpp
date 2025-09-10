@@ -25,7 +25,7 @@ CThrowingGimmickMove::RESULT CThrowingGimmickMove::OnMove(float dt)
     RESULT Result = RESULT_NONE;
 
     float fSpeed = Math::Vec3_Length(&m_vVelocity);    
-    if (Math::FEqual(fSpeed, 0.0f))
+    if (fSpeed == 0.0f)
         return Result;
     
     m_vVelocity.y += (CGameProperty::GetGravity() * dt);

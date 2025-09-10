@@ -2,7 +2,6 @@
 
 #include "rprandom.h"
 
-#define _USE_MATH_DEFINES
 #include <math.h>
 
 
@@ -279,14 +278,38 @@ namespace Math
         Vec3_Multiply(pvOut, pvOut, inLen);
     };
 
+
+    bool Vec3_Equal(RwV3d const* vecA, RwV3d const* vecB)
+    {
+        return ((vecA->x == vecB->x) &&
+                (vecA->y == vecB->y) &&
+                (vecA->z == vecB->z));
+    };
+
     
-    bool Vec3_IsEqual(RwV3d const* vecA, RwV3d const* vecB)
+    bool Vec3_FEqual(RwV3d const* vecA, RwV3d const* vecB)
     {
         return (FEqual(vecA->x, vecB->x) &&
                 FEqual(vecA->y, vecB->y) &&
                 FEqual(vecA->z, vecB->z));
     };
-    
+
+
+    void GetRotateFromVector(RwV3d* vecRot, const RwV3d* vec)
+    {
+        vecRot->z = 0.0f;
+
+        float fPitch = -Math::ASin(vec->y);
+        vecRot->x = fPitch;
+
+        float c = (vec->z / std::cos(fPitch));
+        c = Clamp(c, -1.0f, 1.0f);
+
+        float fYaw = Math::ACos(c);
+        fYaw *= (vec->x <= 0.0f ? -1.0f : 1.0f);
+        vecRot->y = fYaw;
+    };
+
 
     void Matrix_Update(RwMatrix* matrix, const RwV3d* right, const RwV3d* up, const RwV3d* at, const RwV3d* pos)
     {

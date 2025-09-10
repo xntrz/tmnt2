@@ -55,7 +55,7 @@ CMovie::~CMovie(void)
 {
     if (m_mwply)
     {
-        mwPlySetOutVol(m_mwply, -960);
+        mwPlySetOutVol(m_mwply, MWSFD_OUTVOL_MIN);
         mwPlyStop(m_mwply);
         mwPlyDestroy(m_mwply);
     };
@@ -95,18 +95,18 @@ bool CMovie::IsCreateSuccess(void)
 
 void CMovie::PushRenderState(void)
 {
-    RENDERSTATE_PUSH(rwRENDERSTATEBORDERCOLOR,        0);
+    RENDERSTATE_PUSH(rwRENDERSTATEBORDERCOLOR, 0);
     RENDERSTATE_PUSH(rwRENDERSTATETEXTUREPERSPECTIVE, true);
-    RENDERSTATE_PUSH(rwRENDERSTATETEXTUREFILTER,      rwFILTERLINEAR);
-    RENDERSTATE_PUSH(rwRENDERSTATEVERTEXALPHAENABLE,  true);
-    RENDERSTATE_PUSH(rwRENDERSTATESRCBLEND,           rwBLENDSRCALPHA);
-    RENDERSTATE_PUSH(rwRENDERSTATEDESTBLEND,          rwBLENDINVSRCALPHA);
-    RENDERSTATE_PUSH(rwRENDERSTATETEXTUREADDRESS,     rwTEXTUREADDRESSCLAMP);
-    RENDERSTATE_PUSH(rwRENDERSTATEZTESTENABLE,        false);
-    RENDERSTATE_PUSH(rwRENDERSTATEZWRITEENABLE,       false);
-    RENDERSTATE_PUSH(rwRENDERSTATESHADEMODE,          rwSHADEMODEFLAT);
-    RENDERSTATE_PUSH(rwRENDERSTATEFOGENABLE,          false);
-    RENDERSTATE_PUSH(rwRENDERSTATECULLMODE,           rwCULLMODECULLNONE);
+    RENDERSTATE_PUSH(rwRENDERSTATETEXTUREFILTER, rwFILTERLINEAR);
+    RENDERSTATE_PUSH(rwRENDERSTATEVERTEXALPHAENABLE, true);
+    RENDERSTATE_PUSH(rwRENDERSTATESRCBLEND, rwBLENDSRCALPHA);
+    RENDERSTATE_PUSH(rwRENDERSTATEDESTBLEND, rwBLENDINVSRCALPHA);
+    RENDERSTATE_PUSH(rwRENDERSTATETEXTUREADDRESS, rwTEXTUREADDRESSCLAMP);
+    RENDERSTATE_PUSH(rwRENDERSTATEZTESTENABLE, false);
+    RENDERSTATE_PUSH(rwRENDERSTATEZWRITEENABLE, false);
+    RENDERSTATE_PUSH(rwRENDERSTATESHADEMODE, rwSHADEMODEFLAT);
+    RENDERSTATE_PUSH(rwRENDERSTATEFOGENABLE, false);
+    RENDERSTATE_PUSH(rwRENDERSTATECULLMODE, rwCULLMODECULLNONE);
 };
 
 
@@ -148,22 +148,22 @@ MWPLY CMovie::CreateHandle(char** ppWorkArea, int32 iWidth, int32 iHeight, int32
 {
     MwsfdInitPrm iprm;
     std::memset(&iprm, 0x00, sizeof(iprm));    
-    iprm.vhz          = (bUsePalMode ? MWSFD_VHZ_50_00 : MWSFD_VHZ_59_94);
-    iprm.disp_cycle   = 1;
+    iprm.vhz = (bUsePalMode ? MWSFD_VHZ_50_00 : MWSFD_VHZ_59_94);
+    iprm.disp_cycle = 1;
     iprm.disp_latency = 1;
     mwPlyInitSfdFx(&iprm);
 
     MwsfdCrePrm cprm;
     std::memset(&cprm, 0x00, sizeof(cprm));
-    cprm.max_bps      = iMaxBps;
-    cprm.ftype        = MWSFD_FTYPE_SFD;
-    cprm.compo_mode   = 0;
+    cprm.max_bps = iMaxBps;
+    cprm.ftype = MWSFD_FTYPE_SFD;
+    cprm.compo_mode = MWSFD_COMPO_AUTO;
     cprm.nfrm_pool_wk = 1;
-    cprm.max_stm      = 1;
-    cprm.max_width    = iWidth;
-    cprm.max_height   = iHeight;
-    cprm.wksize       = mwPlyCalcWorkCprmSfd(&cprm);
-    cprm.work         = new CriSint8[cprm.wksize];
+    cprm.max_stm = 1;
+    cprm.max_width = iWidth;
+    cprm.max_height = iHeight;
+    cprm.wksize = mwPlyCalcWorkCprmSfd(&cprm);
+    cprm.work = new CriSint8[cprm.wksize];
 
     *ppWorkArea = reinterpret_cast<char*>(cprm.work);
 

@@ -174,23 +174,27 @@ C085MiyamotoUsagi::CThinkingStatusObserver::OnEnd(void) /*override*/
 C085MiyamotoUsagi::CAttackAStatusObserver::Observing(void) /*override*/
 {
     bool bIsOrderChanged = (EnemyChr().AIThinkOrder().GetOrder() != CAIThinkOrder::ORDER_ATTACK);
+    bool bIsAttackTypeChanged = false;
+
     if (!bIsOrderChanged)
     {
         int32 attackType = EnemyChr().AIThinkOrder().OrderAttack().m_iAttackType;
-        bIsOrderChanged |= (attackType != ELITEAI::ORDERTYPE_ATTACK_NORMAL) &&
-                           (attackType != ELITEAI::ORDERTYPE_ATTACK_NORMALA);
+        bIsAttackTypeChanged = ((attackType != ELITEAI::ORDERTYPE_ATTACK_NORMAL) &&
+                                (attackType != ELITEAI::ORDERTYPE_ATTACK_NORMALA));
     };
-
-    if (bIsOrderChanged)
+    
+    if (bIsOrderChanged || (!bIsOrderChanged && bIsAttackTypeChanged))
     {
         if (EnemyChr().Compositor().IsMotionEnd())
         {
             EnemyChr().AIThinkOrder().SetAnswer(CAIThinkOrder::RESULT_REFUSE);
             return RESULT_END;
+        }
+        else
+        {
+            EnemyChr().AIThinkOrder().SetAnswer(CAIThinkOrder::RESULT_WAITING);
+            return RESULT_CONTINUE;
         };
-
-        EnemyChr().AIThinkOrder().SetAnswer(CAIThinkOrder::RESULT_WAITING);
-        return RESULT_CONTINUE;
     };
 
     switch (m_step)
@@ -841,7 +845,7 @@ C085MiyamotoUsagi::C085MiyamotoUsagi(void)
         /*  FREQUENCY_ATTACK_AVOID          2   */  {  30,  50,  80 },
 
         /****************************************/  
-        /*          CBaseSplinterAI freq        */  
+        /*      C085MiyamotoUsagiAI freq        */
         /****************************************/  
         /*  FREQUENCY_ATTACK_NORMAL         3   */  {  10,  30,  50 },
         /*  FREQUENCY_ATTACK_NORMALA        4   */  {  30,  40,  50 },

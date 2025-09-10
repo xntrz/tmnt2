@@ -1581,7 +1581,7 @@ static void SdSetAttackEnemy(const SE_ATTACK_PARAM* pParam)
 		return;
 	};
 
-	if (Math::Vec3_IsEqual(pPos, &Math::VECTOR3_ZERO))
+	if (Math::Vec3_Equal(pPos, &Math::VECTOR3_ZERO))
 	{
 		SoundSetEx(nSE | SD_MASTERCODE_SURCTRL, 0, 0, id);
 		return;

@@ -89,8 +89,7 @@ CBaseGunnerEnemyChr::CFireStatusObserver::CFireStatusObserver(const PARAM* pPara
         break;
     };
 
-    bool bReset = true;
-    MotionPlay(MOTIONID_FIRE_START, bReset);
+    MotionPlay(MOTIONID_FIRE_START, true);
 };
 
 
@@ -154,8 +153,7 @@ CBaseGunnerEnemyChr::CFireStatusObserver::Observing(void) /*override*/
         };
     };
 
-    bool bReset = true;
-    MotionPlay(idNew, bReset);
+    MotionPlay(idNew, true);
 
     return false;
 };
@@ -171,7 +169,8 @@ CBaseGunnerEnemyChr::CFireStatusObserver::Observing(void) /*override*/
 
     Math::Vec3_Add(&vecPos, &vecPos, &vecBonePos);
 
-    float fRange = 1.0f - (static_cast<float>(EnemyChr().FrequencyParameter(CEnemyParameter::FREQUENCY_FIRE_CONVERGENCE)) * 0.01f);
+    float fFireConvergence = static_cast<float>(EnemyChr().FrequencyParameter(CEnemyParameter::FREQUENCY_FIRE_CONVERGENCE));
+    float fRange = 1.0f - (fFireConvergence * 0.01f);
 
     float fLow  = -fRange;
     float fHigh =  fRange;
@@ -202,7 +201,6 @@ CBaseGunnerEnemyChr::CFireStatusObserver::Observing(void) /*override*/
         RwMatrix matRotY;
         RwMatrixSetIdentityMacro(&matRotY);
         Math::Matrix_RotateY(&matRotY, -fDir);
-
         RwV3dTransformVector(&vec, &vec, &matRotY);
 
         fPitch = -std::atan2(vec.y, vec.z);
@@ -211,16 +209,14 @@ CBaseGunnerEnemyChr::CFireStatusObserver::Observing(void) /*override*/
     RwMatrix matRot;
     RwMatrixSetIdentityMacro(&matRot);
     Math::Matrix_RotationYawPitchRoll(&matRot, fYaw, fPitch, 0.0f);
-
     RwV3dTransformVector(&vecDir, &vecDir, &matRot);
 
     switch (m_param.type)
     {
     case PARAM::TYPE_EFFECT:
         {
-            uint32 hEffect = CEffectManager::Play(m_param.effectId, &vecPos, fDir);
-            ASSERT(hEffect);
-
+            uint32 hEffect = CEffectManager::Play(m_param.effectId, &vecPos, fYaw);
+            RwMatrixTranslate(&matRot, &vecDir, rwCOMBINEREPLACE);
             CEffectManager::SetDirection(hEffect, &matRot);
         }
         break;
@@ -228,18 +224,14 @@ CBaseGunnerEnemyChr::CFireStatusObserver::Observing(void) /*override*/
     case PARAM::TYPE_MAGIC:
         {
             CGameObject* pParent = &EnemyChr().Compositor();
-
-            uint32 hShot = CShotManager::Shot(m_param.magicId, &vecPos, &vecDir, pParent, MATH_DEG2RAD(15.0f));
-            ASSERT(hShot);
+            CShotManager::Shot(m_param.magicId, &vecPos, &vecDir, pParent, MATH_DEG2RAD(15.0f));
         }
         break;
 
     case PARAM::TYPE_SHOT:
         {
-            CGameObject* pParent = &EnemyChr().Compositor();
-            
-            uint32 hShot = CShotManager::Shot(m_param.shotId, &vecPos, &vecDir, pParent, MATH_DEG2RAD(15.0f), 5.0f);
-            ASSERT(hShot);
+            CGameObject* pParent = &EnemyChr().Compositor();            
+            CShotManager::Shot(m_param.shotId, &vecPos, &vecDir, pParent, MATH_DEG2RAD(15.0f), 5.0f);
         }
         break;
 

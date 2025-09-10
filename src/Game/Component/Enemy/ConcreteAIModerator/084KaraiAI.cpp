@@ -56,7 +56,7 @@ bool C084KaraiAI::CDecisionUnitMoveEscape::ProcEscapeSetting(const RwV3d* pvecPl
     Math::Vec3_Sub(&vecDir, &vecEnemyPos, pvecPlayerPos);
     vecDir.y = 0.0f;
 
-    if (Math::Vec3_IsEqual(&vecEnemyPos, &Math::VECTOR3_ZERO))
+    if (Math::Vec3_FEqual(&vecEnemyPos, &Math::VECTOR3_ZERO))
     {
         m_orderType = KARAI_AI::ORDERTYPE_MOVE_BACKROUND;
 

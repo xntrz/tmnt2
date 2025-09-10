@@ -185,7 +185,7 @@ CBaseFlyingEnemyChr::CAppearFlyStatusObserver::Observing(void) /*override*/
 
 	float fDir = EnemyChr().Compositor().GetDirection();
 
-    if (!Math::Vec3_IsEqual(&vecNowPos, &vecStartPos))
+    if (!Math::Vec3_FEqual(&vecNowPos, &vecStartPos))
         fDir = CEnemyUtils::GetDirection(&vecNowPos, &vecStartPos);
 
     EnemyChr().Compositor().RotateDirection(fDir, m_fRotRate);
@@ -362,7 +362,7 @@ void CBaseFlyingEnemyChr::CMoveStatusObserver::Direction(const RwV3d* vecPos, co
     vecAtXZ.y = 0.0f;
 
     float fDir = EnemyChr().Compositor().GetDirection();
-    if (!Math::Vec3_IsEqual(&vecPosXZ, &vecAtXZ))
+    if (!Math::Vec3_Equal(&vecPosXZ, &vecAtXZ))
         fDir = CEnemyUtils::GetDirection(vecPos, vecAt);
 
     EnemyChr().Compositor().RotateDirection(fDir, m_fRotRate);

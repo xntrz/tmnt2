@@ -785,7 +785,9 @@ C091Drako::CBeamStatusObserver::Observing(void) /*override*/
                 RwV3d vecPlrPos = Math::VECTOR3_ZERO;
                 CPlayerCharacter* pPlrChr = CAIUtils::GetActivePlayer(m_playerNo);
                 if (pPlrChr)
-                    pPlrChr->GetFootPosition(&vecPlrPos);
+                    pPlrChr->GetFootPosition(&vecPlrPos); /* TODO some player chr can avoid beam hit by just staying (slashuur for example)
+                                                                  because catch sphere too high from the foot and  beam move vector just miss the hit catch sphere.
+                                                                  This how its works in retail game but i guess its incorrect (better get pos of the body not foot) */
 
                 RwV3d vecDir = Math::VECTOR3_ZERO;
                 Math::Vec3_Sub(&vecDir, &vecPlrPos, &vecWandPos);
