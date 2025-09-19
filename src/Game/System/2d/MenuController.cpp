@@ -286,20 +286,28 @@ void CMenuController::Trigger(Rt2dMaestro* pMaestro)
 {    
     ASSERT(pMaestro);
 
-    const int32 iControllerNo[CONTROLLER_ID_MAX] =
-    {
-		CGameData::Attribute().GetVirtualPad(), 0, 1, 2, 3,
-    };
+    int32 aController[] = { IPad::CONTROLLER_LOCKED_ON_VIRTUAL,
+                            IPad::CONTROLLER_1,
+                            IPad::CONTROLLER_2,
+                            IPad::CONTROLLER_3,
+                            IPad::CONTROLLER_4, };
 
-    int32 controllerMax = IPad::Max() + 1;
-    for (int32 i = 0; i < controllerMax; ++i)
+    static_assert(COUNT_OF(aController) == CONTROLLER_ID_MAX, "checkout");
+
+    aController[0] = CGameData::Attribute().GetVirtualPad();
+
+    int32 iControllerMax = IPad::Max();
+    if (iControllerMax > (CONTROLLER_ID_MAX - 1))
+        iControllerMax = (CONTROLLER_ID_MAX - 1);
+
+    for (int32 i = 0; i < iControllerMax; ++i)
     {
-        uint32 digital = IPad::GetDigitalTrigger(iControllerNo[i]);
+        uint32 digital = IPad::GetDigitalTrigger(aController[i]);
         
         if (!(m_aControllerEnableBit[i] & digital))
             continue;
 
-		bool bFlag = true;
+		bool bEnableSetState = true;
 
         for (int32 j = 0; j < BUTTON_ID_MAX; ++j)
         {
@@ -309,15 +317,18 @@ void CMenuController::Trigger(Rt2dMaestro* pMaestro)
 
 			if ((b1 || b2) && b3)
 			{
-				if (IPad::GetDigitalTrigger(iControllerNo[i], m_aDigitalDataTable[j]))
+				if (IPad::GetDigitalTrigger(aController[i], m_aDigitalDataTable[j]))
 				{
-					if (bFlag)
+					if (bEnableSetState)
 					{
-						if (j < 8)
-							bFlag = false;
+                        if (j < BUTTON_ID_MENU)
+							bEnableSetState = false;
 
-						SetButtonState(pMaestro, CONTROLLER_ID(i), BUTTON_ID(j), rt2dANIMBUTTONSTATEOVERUPTOOVERDOWN);
-					};
+                        SetButtonState(pMaestro,
+                                       static_cast<CONTROLLER_ID>(i),
+                                       static_cast<BUTTON_ID>(j),
+                                       rt2dANIMBUTTONSTATEOVERUPTOOVERDOWN);
+                    };
 				};
 			};
         };
