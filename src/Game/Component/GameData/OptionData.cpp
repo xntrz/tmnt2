@@ -134,19 +134,24 @@ CKeyboardOptionData& COptionData::Keyboard(void)
 };
 
 
-CGamepadOptionData& COptionData::Gamepad(int32 no)
+CGamepadOptionData& COptionData::Gamepad(int32 controller)
 {
-    ASSERT(no >= 0);
-    ASSERT(no < CController::Max());
+    ASSERT(controller >= 0);
+    ASSERT(controller < CController::Max());
 
-#if defined(TARGET_PC)
-    return m_paGamepad[no];
-#elif defined(TARGET_PS2)
-    int32 iPort = CController::GetPhysicalPort(no);
-    return m_paGamepad[iPort];
-#else    
-#error Not implemented for current target
-#endif
+    int32 physicalPort = CController::GetPhysicalPort(controller);
+    ASSERT(physicalPort < m_iGamepadNum);
+
+    return m_paGamepad[physicalPort];
+};
+
+
+CGamepadOptionData* COptionData::GamepadFromPort(int32 port)
+{
+    if ((port >= 0) && (port < m_iGamepadNum))
+        return &m_paGamepad[port];
+
+    return nullptr;
 };
 
 

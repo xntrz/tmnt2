@@ -102,7 +102,7 @@ void CEliteAIParam::DebugDrawPatrolAreaInfo(void)
 {
 #ifdef _DEBUG
     RwUInt8 alphaBasis = static_cast<RwUInt8>(128.0f / 4.0f);
-    CDebugShape::ShowSphere(m_vecTerriotiryCenter, m_fTerritoryRadius, { 255, 0, 0, alphaBasis });
+	CDebugShape::ShowSphere(&m_vecTerriotiryCenter, m_fTerritoryRadius, { 255, 0, 0, alphaBasis });
 #endif /* _DEBUG */
 };
 
@@ -1632,7 +1632,6 @@ void CBaseEliteAI::UpdateAI(void)
     if (!AIParam().IsThinkStackEmpty())
         AIParam().ThinkOrderSetFromStack(ThinkOrder());
 
-    /* TODO: old think order is unused (?) */
     m_AIThinkOrderOld = ThinkOrder();
 
     ThinkOrder().SetAnswer(CAIThinkOrder::RESULT_WAITING);

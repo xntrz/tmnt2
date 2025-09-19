@@ -35,7 +35,8 @@ public:
     CSoundOptionData& Sound(void);
     CDisplayOptionData& Display(void);
     CKeyboardOptionData& Keyboard(void);
-    CGamepadOptionData& Gamepad(int32 no);
+    CGamepadOptionData& Gamepad(int32 controller);
+    CGamepadOptionData* GamepadFromPort(int32 port);
     int32 GamepadNum(void) const;
 
 private:

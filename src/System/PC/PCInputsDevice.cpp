@@ -7,29 +7,29 @@ void CPCInputsDevice::SyncVirtualController(void)
 {
     CInputsDevice::SyncVirtualController();
 
-    int32 iKbrdPort = CPCPhysicalController::GetPort();
-    if (iKbrdPort < CController::Max())
+    int32 keyboardController = CController::GetController(CPCPhysicalController::GetPort());
+    if (keyboardController < CController::Max())
     {
-        const uint32 KbrdDigitalMask = CController::DIGITAL_LUP
-                                     | CController::DIGITAL_LDOWN	
-                                     | CController::DIGITAL_LLEFT	
-                                     | CController::DIGITAL_LRIGHT	
-                                     | CController::DIGITAL_SELECT	
-                                     | CController::DIGITAL_START;
+        const uint32 keyboardDigitalMask = CController::DIGITAL_LUP
+                                         | CController::DIGITAL_LDOWN	
+                                         | CController::DIGITAL_LLEFT	
+                                         | CController::DIGITAL_LRIGHT	
+                                         | CController::DIGITAL_SELECT	
+                                         | CController::DIGITAL_START;
 
-        IPhysicalController::INFO& KbrdInfo = ControllerResource(iKbrdPort).Info();
-        IPhysicalController::INFO& LockedInfo = GetLockedVirtualController();
-        IPhysicalController::INFO& UnlockedInfo = GetUnlockedVirtualController();
+        IPhysicalController::INFO& keyboard = ControllerResource(keyboardController).Info();
+        IPhysicalController::INFO& locked = GetLockedVirtualController();
+        IPhysicalController::INFO& unlocked = GetUnlockedVirtualController();
         
-        LockedInfo.m_digital 			|= (KbrdInfo.m_digital & KbrdDigitalMask);
-        LockedInfo.m_digitalTrigger 	|= (KbrdInfo.m_digitalTrigger & KbrdDigitalMask);
-        LockedInfo.m_digitalRelease 	|= (KbrdInfo.m_digitalRelease & KbrdDigitalMask);
-        LockedInfo.m_digitalRepeat 		|= (KbrdInfo.m_digitalRepeat & KbrdDigitalMask);
+        locked.m_digital          |= (keyboard.m_digital & keyboardDigitalMask);
+        locked.m_digitalTrigger   |= (keyboard.m_digitalTrigger & keyboardDigitalMask);
+        locked.m_digitalRelease   |= (keyboard.m_digitalRelease & keyboardDigitalMask);
+        locked.m_digitalRepeat    |= (keyboard.m_digitalRepeat & keyboardDigitalMask);
 
-        UnlockedInfo.m_digital 			|= (KbrdInfo.m_digital & KbrdDigitalMask);
-        UnlockedInfo.m_digitalTrigger 	|= (KbrdInfo.m_digitalTrigger & KbrdDigitalMask);
-        UnlockedInfo.m_digitalRelease 	|= (KbrdInfo.m_digitalRelease & KbrdDigitalMask);
-        UnlockedInfo.m_digitalRepeat 	|= (KbrdInfo.m_digitalRepeat & KbrdDigitalMask);
+        unlocked.m_digital        |= (keyboard.m_digital & keyboardDigitalMask);
+        unlocked.m_digitalTrigger |= (keyboard.m_digitalTrigger & keyboardDigitalMask);
+        unlocked.m_digitalRelease |= (keyboard.m_digitalRelease & keyboardDigitalMask);
+        unlocked.m_digitalRepeat  |= (keyboard.m_digitalRepeat & keyboardDigitalMask);
     };
 };
 
@@ -70,7 +70,7 @@ bool CPCInputsDevice::Start(void)
         for (int32 i = 0; i < m_iControllerMax; ++i)
             m_pbLockList[i] = false;
 
-        CController::DIGITAL_OK 	= CController::DIGITAL_START  | CController::DIGITAL_RDOWN;
+        CController::DIGITAL_OK = CController::DIGITAL_START | CController::DIGITAL_RDOWN;
         CController::DIGITAL_CANCEL = CController::DIGITAL_SELECT | CController::DIGITAL_RLEFT;
 
         return true;

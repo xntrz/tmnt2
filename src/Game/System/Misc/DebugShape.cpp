@@ -879,34 +879,12 @@ static inline CDebugShapeContainer& DebugShapeContainer(void)
 };
 
 
-/*static*/ void CDebugShape::ShowSphere(const RwV3d* pvecPos,
-                                        float fRadius /*= 0.5f*/,
-                                        const RwRGBA& color /*= { 255, 0, 0, 255 }*/)
+/*static*/ void CDebugShape::ShowSphere(const RwV3d* pvecPos, float fRadius, const RwRGBA& rColor)
 {
     RwSphere sphere;
-    sphere.radius = fRadius;
     sphere.center = *pvecPos;
-    CDebugShape::ShowSphere(&sphere, color);
-};
-
-
-/*static*/ void CDebugShape::ShowSphere(const RwV3d& rvecPos,
-                                        float fRadius /*= 0.5f*/,
-                                        const RwRGBA& color /*= { 255, 0, 0, 255 }*/)
-{
-    ShowSphere(&rvecPos, fRadius, color);
-};
-
-
-/*static*/ void CDebugShape::ShowSphere(const RwV3d* pvecPos, const RwRGBA& color)
-{
-    ShowSphere(pvecPos, 0.5f, color);
-};
-
-
-/*static*/ void CDebugShape::ShowSphere(const RwV3d& rvecPos, const RwRGBA& color)
-{
-    ShowSphere(rvecPos, 0.5f, color);
+    sphere.radius = fRadius;
+    ShowSphere(&sphere);
 };
 
 

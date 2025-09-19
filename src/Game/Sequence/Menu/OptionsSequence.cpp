@@ -33,7 +33,7 @@
 #define FONT_HEIGHT_SCALE   (2.0f)
 
 #define FONT_Y_POS(basePos, itemHeight, itemNo) \
-    ((basePos) + ((itemHeight) * (itemNo)))
+    ((basePos) + ((itemHeight) * (static_cast<float>(itemNo))))
 
 
 //
@@ -2197,10 +2197,10 @@ bool COptions::MsgDecidePad(void)
     {        
         if (digitalTrigger & CController::DIGITAL_OK)
         {
-            if (virtualPad == CController::CONTROLLER_LOCKED_ON_VIRTUAL)
-                m_ConfigPad = FindTriggeredController(CController::DIGITAL_OK, false);
-            else
+            if (virtualPad != CController::CONTROLLER_UNLOCKED_ON_VIRTUAL)
                 m_ConfigPad = FindTriggeredController(CController::DIGITAL_OK, true);
+            else
+                m_ConfigPad = LockTriggeredController(CController::DIGITAL_OK);
         };
 
         if (m_ConfigPad == -1)

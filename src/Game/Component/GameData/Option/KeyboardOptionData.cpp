@@ -66,17 +66,13 @@ void CKeyboardOptionData::Apply(void)
             CPCSpecific::MapDigital(m_auButtonAssign[i], m_aiKeyAssign[i]);
     };
 
-    CPCSpecific::MapAnalog(
-        CController::ANALOG_LSTICK_X,
-		m_aiKeyAssign[OPTIONTYPES::KEYFUNC_LEFT],
-		m_aiKeyAssign[OPTIONTYPES::KEYFUNC_RIGHT]
-    );
+    CPCSpecific::MapAnalog(CController::ANALOG_LSTICK_X,
+		                   m_aiKeyAssign[OPTIONTYPES::KEYFUNC_LEFT],
+		                   m_aiKeyAssign[OPTIONTYPES::KEYFUNC_RIGHT]);
     
-    CPCSpecific::MapAnalog(
-        CController::ANALOG_LSTICK_Y,
-		m_aiKeyAssign[OPTIONTYPES::KEYFUNC_UP],
-		m_aiKeyAssign[OPTIONTYPES::KEYFUNC_DOWN]
-    );
+    CPCSpecific::MapAnalog(CController::ANALOG_LSTICK_Y,
+		                   m_aiKeyAssign[OPTIONTYPES::KEYFUNC_UP],
+		                   m_aiKeyAssign[OPTIONTYPES::KEYFUNC_DOWN]);
 };
 
 
@@ -167,12 +163,11 @@ const char* CKeyboardOptionData::GetKeyName(int32 iDIKey) const
 
 void CKeyboardOptionData::AssignButton(void)
 {
-    int32 iPort = CPCSpecific::GetKeyboradPort();
-    
-    if ((iPort >= 0) && (iPort < CGameData::Option().GamepadNum()))
+    CGamepadOptionData* pKeyboardPadOptData = CGameData::Option().GamepadFromPort(CPCSpecific::GetKeyboradPort());
+    if (pKeyboardPadOptData)
     {
         for (int32 i = 0; i < OPTIONTYPES::BTNFUNCMAX; ++i)
-            m_auButtonAssign[i] = CGameData::Option().Gamepad(iPort).GetAssignedButton(OPTIONTYPES::BTNFUNC(i));
+            m_auButtonAssign[i] = pKeyboardPadOptData->GetAssignedButton(static_cast<OPTIONTYPES::BTNFUNC>(i));
     }
     else
     {
@@ -229,7 +224,7 @@ OPTIONTYPES::KEYFUNC CKeyboardOptionData::findFunction(int32 key) const
     for (int32 i = 0; i < COUNT_OF(m_aiKeyAssign); ++i)
     {
         if (m_aiKeyAssign[i] == key)
-            return OPTIONTYPES::KEYFUNC(i);
+            return static_cast<OPTIONTYPES::KEYFUNC>(i);
     };
 
     return OPTIONTYPES::KEYFUNCMAX;

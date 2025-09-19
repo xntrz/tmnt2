@@ -981,7 +981,7 @@ void CAntiqueShop::AntiqueDispChange(CAnimation2D* pAnimation2D)
     const char** pszAntiqTexOrg = s_apszAntiqueTexOrg;
     const char** pszAntiqTex = &s_apszAntiqueTex[1];
     
-    for (int32 i = 1; i < COUNT_OF(m_aAntiqueState); ++i)
+    for (int32 i = ANTIQUEID::ID_FIRST; i < COUNT_OF(m_aAntiqueState); ++i)
     {
         switch (m_aAntiqueState[i])
         {
@@ -1073,28 +1073,24 @@ void CAntiqueShop::AntiqueDispCtrl(void)
     if (m_pAnim2D->CheckMessageGetURL("PressUp"))
     {
         CGameSound::PlaySE(SDCODE_SE(0x1004));
-        m_iCursorV =  InvClamp(m_iCursorV + 1, 0, 6);
-		OUTPUT("cursor v=%d h=%d\n", m_iCursorV, m_iCursorH);
+        m_iCursorV = InvClamp(m_iCursorV + 1, 0, COUNT_OF(s_aAntiqueMap) - 1);
     }
     else if (m_pAnim2D->CheckMessageGetURL("PressDown"))
     {
         CGameSound::PlaySE(SDCODE_SE(0x1004));
-        m_iCursorV = InvClamp(m_iCursorV - 1, 0, 6);
-		OUTPUT("cursor v=%d h=%d\n", m_iCursorV, m_iCursorH);
+        m_iCursorV = InvClamp(m_iCursorV - 1, 0, COUNT_OF(s_aAntiqueMap) - 1);
     }
     else if (m_pAnim2D->CheckMessageGetURL("PressLeft"))
     {
         CGameSound::PlaySE(SDCODE_SE(0x1004));
-        m_iCursorH = InvClamp(m_iCursorH - 1, 0, 10 - 1);
+        m_iCursorH = InvClamp(m_iCursorH - 1, 0, COUNT_OF(s_aAntiqueMap[0]) - 1);
         m_iTextAntiqueCommentLineCur = 0;
-		OUTPUT("cursor v=%d h=%d\n", m_iCursorV, m_iCursorH);
     }
     else if (m_pAnim2D->CheckMessageGetURL("PressRight"))
     {
         CGameSound::PlaySE(SDCODE_SE(0x1004));
-        m_iCursorH = InvClamp(m_iCursorH + 1, 0, 10 - 1);
+        m_iCursorH = InvClamp(m_iCursorH + 1, 0, COUNT_OF(s_aAntiqueMap[0]) - 1);
         m_iTextAntiqueCommentLineCur = 0;
-		OUTPUT("cursor v=%d h=%d\n", m_iCursorV, m_iCursorH);
     };
 
     m_idAntiqueSel = s_aAntiqueMap[m_iCursorV][m_iCursorH];
@@ -1285,7 +1281,7 @@ void CAntiqueShop::AntiqueItemSet(void)
                 CGameData::Record().Antique().GetAntiqueTakenDate(ANTIQUEID::VALUE(m_idAntiqueSel), m_takendate);
                 std::sprintf(m_szTextAntiqueTakenDate,
                              "%02d-%02d-%02d %02d:%02d",
-                             m_takendate.GetYear() - 2000,
+                             m_takendate.GetYear() - CTimeObj::BASEYEAR,
                              m_takendate.GetMonth(),
                              m_takendate.GetDay(),
                              m_takendate.GetHour(),
@@ -1398,10 +1394,9 @@ void CAntiqueShopSequence::OnMove(bool bRet, const void* pReturnValue)
             {               
                 if (CGameData::Record().Antique().IsNewAntiqueExisted())
                 {
-                    // TODO replace it with 26 voice group
-                    int32 VoxCode [] = { SDCODE_VOICE(0x6000),
-                                         SDCODE_VOICE(0x6001),
-                                         SDCODE_VOICE(0x6002) };
+                    int32 VoxCode[] = { SDCODE_VOICE(0x6000),
+                                        SDCODE_VOICE(0x6001),
+                                        SDCODE_VOICE(0x6002) };
                     int32 RndSel3 = Math::Rand() % 3;
                     CGameSound::PlayVoice(VoxCode[RndSel3]);
                 };
@@ -1458,6 +1453,11 @@ void CAntiqueShopSequence::BeginFadeIn(void)
     Animation2D().SetText("ANTIQUE_C_02", CGameText::GetText(GAMETEXT_STATION_JAP));
     Animation2D().SetText("ANTIQUE_C_01", CGameText::GetText(GAMETEXT_DB_NY));
 #endif /* TMNT2_BUILD_EU */    
+
+#if defined(TARGET_PC) && !defined(TMNT2_BUILD_EU)
+    Animation2D().SetText("#@INFO.", "WeakAttack@INFO.  Jump@BACK");
+    Animation2D().SetText(";@BACK", "");
+#endif /* defined(TARGET_PC) && !defined(TMNT2_BUILD_EU) */
 
     s_pAntiqueShop->AntiqueDispChange(&Animation2D());
 

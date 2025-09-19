@@ -19,7 +19,7 @@ protected:
         STATE_INTRO,
         STATE_PLAY,
         
-        STAESPECIFIC_START,
+        STATESPECIFIC_START,
         STATE_END = 0xF,
         
         STATEMAX,

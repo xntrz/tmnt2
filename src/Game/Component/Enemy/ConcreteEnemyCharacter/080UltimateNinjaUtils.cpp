@@ -222,7 +222,7 @@ namespace UltimateNinjaUtils
 
     void CDragonEffect::Stop(void)
     {
-        m_pBodySmoke->Start();
+        m_pBodySmoke->Stop();
 
         for (int32 i = 0; i < COUNT_OF(m_apNeckSmoke); ++i)
             m_apNeckSmoke[i]->Stop();
