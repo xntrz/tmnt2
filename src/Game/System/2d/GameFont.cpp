@@ -47,7 +47,7 @@ static inline float GetFontHeight(Rt2dFont* pFont)
     
     Rt2dFontSetPath("");
 
-    Rt2dFont* pRt2dFont = Rt2dFontRead("Common/Fonts/MainFont");
+    Rt2dFont* pRt2dFont = Rt2dFontRead(pszFilePath);
     ASSERT(pRt2dFont);
 
     m_pFont   = new CUnicodeFont(pRt2dFont);

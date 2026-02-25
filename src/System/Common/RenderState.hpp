@@ -35,13 +35,10 @@ public:
 };
 
 
-#define RENDERSTATE_PUSH(rs, value)				       					                \
-    do                                                                                  \
-    {																                    \
-        RwRenderStateGet(rs, reinterpret_cast<void*>(&CRenderState::m_apValue[rs]));    \
-        RwRenderStateSet(rs, reinterpret_cast<void*>(value));                           \
-    } while (0)
+#define RENDERSTATE_PUSH(rs, value)				       					                    \
+    (RwRenderStateGet((rs), reinterpret_cast<void*>(&CRenderState::m_apValue[(rs)])),       \
+     RwRenderStateSet((rs), reinterpret_cast<void*>(value)))
 
 
-#define RENDERSTATE_POP(rs)                                                             \
-    RwRenderStateSet(rs, reinterpret_cast<void*>(CRenderState::m_apValue[rs].m_pVoid));
+#define RENDERSTATE_POP(rs)                                                                 \
+    (RwRenderStateSet((rs), reinterpret_cast<void*>(CRenderState::m_apValue[(rs)].m_pVoid)))

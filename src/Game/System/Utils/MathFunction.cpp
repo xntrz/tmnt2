@@ -151,19 +151,24 @@ namespace Math
     };
 
 
-    void Vec3_Multiply(RwV3d* pvOut, const RwV3d* pvInA, const RwV3d* pvInB)
+    void Vec2_Add(RwV2d* pvOut, const RwV2d* pvInA, const RwV2d* pvInB)
     {
-        pvOut->x = pvInA->x * pvInB->x;
-        pvOut->y = pvInA->y * pvInB->y;
-        pvOut->z = pvInA->z * pvInB->z;
+        pvOut->x = (pvInA->x + pvInB->x);
+        pvOut->y = (pvInA->y + pvInB->y);
     };
 
 
-    void Vec3_Multiply(RwV3d* pvOut, const RwV3d* pvInA, float s)
+    void Vec2_Sub(RwV2d* pvOut, const RwV2d* pvInA, const RwV2d* pvInB)
     {
-        pvOut->x = pvInA->x * s;
-        pvOut->y = pvInA->y * s;
-        pvOut->z = pvInA->z * s;
+        pvOut->x = pvInA->x - pvInB->x;
+        pvOut->y = pvInA->y - pvInB->y;
+    };
+
+
+    void Vec2_Scale(RwV2d* pvOut, const RwV2d* pvInA, float s)
+    {
+        pvOut->x = (pvInA->x * s);
+        pvOut->y = (pvInA->y * s);
     };
 
 
@@ -269,13 +274,13 @@ namespace Math
         float inLen = Vec3_Length(&in);
 
         Vec3_Normalize(&in, &in);
-        Vec3_Multiply(&in, &in, -1.0f);
+        Vec3_Scale(&in, &in, -1.0f);
         float d = Vec3_Dot(&in, &normal);
         d += d;
-        Vec3_Multiply(&normal, &normal, d);
+        Vec3_Scale(&normal, &normal, d);
         Vec3_Sub(pvOut, &normal, &in);
         Vec3_Normalize(pvOut, pvOut);
-        Vec3_Multiply(pvOut, pvOut, inLen);
+        Vec3_Scale(pvOut, pvOut, inLen);
     };
 
 
@@ -379,7 +384,7 @@ namespace Math
         Vec3_Cross(&vYAxis, &vZAxis, &vXAxis);
         
         matrix->flags = 0;
-        RwMatrixSetIdentityMacro(matrix);
+        RwMatrixSetIdentity(matrix);
 
         Matrix_Update(matrix, &vXAxis, &vYAxis, &vZAxis, pvEye);
     };
@@ -396,12 +401,12 @@ namespace Math
         if (scale)
             RwMatrixScale(matrix, scale, rwCOMBINEREPLACE);
         else
-            RwMatrixSetIdentityMacro(matrix);
+            RwMatrixSetIdentity(matrix);
 
         if (rotation)
         {
             RwMatrix matRotation;
-            RwMatrixSetIdentityMacro(&matRotation);
+            RwMatrixSetIdentity(&matRotation);
 			matRotation = *matrix;
 
             Math::Matrix_RotationYawPitchRoll(&matRotation, rotation->y, rotation->x, rotation->z);
@@ -411,7 +416,7 @@ namespace Math
         if (position)
         {
             RwMatrix matTranslation;
-            RwMatrixSetIdentityMacro(&matTranslation);
+            RwMatrixSetIdentity(&matTranslation);
 
             RwMatrixTranslate(&matTranslation, position, rwCOMBINEREPLACE);
             Math::Matrix_Multiply(matrix, matrix, &matTranslation);
@@ -428,7 +433,7 @@ namespace Math
     void Matrix_Invert(RwMatrix* out, RwMatrix* in)
     {
         RwMatrix matrix;
-        RwMatrixSetIdentityMacro(&matrix);
+        RwMatrixSetIdentity(&matrix);
         
         RwMatrixInvert(&matrix, in);
         std::memcpy(out, &matrix, sizeof(*out));

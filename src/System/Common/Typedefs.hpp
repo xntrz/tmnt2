@@ -1,22 +1,5 @@
 #pragma once
 
-#ifdef _MSC_VER
-#pragma warning(disable : 4200) // nonstandard extension used: zero-sized array in struct/union
-#pragma warning(disable : 4201) // nonstandard extension used: nameless struct/union
-#pragma warning(disable : 4996) // function or variable may be unsafe
-#pragma warning(disable : 4100) // unreferenced formal parameter
-#pragma warning(disable : 4189) // local variable is initialized but not referenced
-#pragma warning(disable : 4505) // unreferenced local function has been removed
-#pragma warning(disable : 5054) // operator X deprecated between enumerations of different types
-#endif /* _MSC_VER */
-
-//
-//	Wrap all SD codes to this while sound subsystem is not ready
-//
-#define SDCODE_SE(SeCode) 		(SeCode)
-#define SDCODE_BGM(BgmCode) 	(BgmCode)
-#define SDCODE_VOICE(VoiceCode) (VoiceCode)
-
 #include "rwcore.h"
 #include "rpworld.h"
 #include "rt2d.h"
@@ -28,6 +11,12 @@
 #include "rpskin.h"
 #include "rpcollis.h"
 
+#if (defined(TARGET_PC))
+#define rwRESOURCESDEFAULTARENASIZE (4 << 20)
+#else
+#error Not implemented for current target
+#endif
+
 #include <cstdlib>
 #include <cstring>
 #include <cinttypes>
@@ -37,38 +26,26 @@
 #include <algorithm>
 #include <cmath>
 
-using int8 	= int8_t;
-using int16 = int16_t;
-using int32 = int32_t;
-using int64 = int64_t;
-using uint8	= uint8_t;
-using uint16= uint16_t;
-using uint32= uint32_t;
-using uint64= uint64_t;
+#ifdef TARGET_PC
 
-
-#if (defined(TARGET_PC))
-
-typedef wchar_t wchar;
+typedef unsigned char       uint8;
+typedef unsigned short      uint16;
+typedef unsigned int        uint32;
+typedef unsigned __int64    uint64;
+typedef signed char         int8;
+typedef signed short        int16;
+typedef signed int          int32;
+typedef signed __int64      int64;
+typedef wchar_t             wchar;
 
 #define UTEXT(text)	L##text
 
-#elif (defined(TARGET_PS2))
-typedef unsigned int wchar;
-#define UTEXT(text)	text
-
-#else
-
-#error Current target is not set
-
-#endif /* defined(TARGET_PC) */
-
+#endif /* TARGET_PC */
 
 #include "MemoryStd.hpp"
 #include "Debug.hpp"
 
 #define CHECK_SIZE(type, targetSize)	static_assert(sizeof(type) == targetSize, "incorrect size")
-#define RWRGBALONGEX(rwrgba) 			(RWRGBALONG(rwrgba.red, rwrgba.green, rwrgba.blue, rwrgba.alpha))
 #define COUNT_OF(ptr)	            	static_cast<int32>(sizeof(ptr) / sizeof(ptr[0]))
 
 #define ALIGN_CHECK(v, a) 				(((v) & (((a) - 1u))) == 0u)
@@ -95,6 +72,7 @@ typedef unsigned int wchar;
 #undef UINT64_MAX
 #endif
 
+
 #ifdef min
 #undef min
 #endif
@@ -102,7 +80,6 @@ typedef unsigned int wchar;
 #ifdef max
 #undef max
 #endif
-
 
 template<class T>
 inline T Clamp(T val, T min, T max)

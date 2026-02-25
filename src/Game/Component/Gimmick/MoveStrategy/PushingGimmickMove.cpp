@@ -56,7 +56,7 @@ CPushingGimmickMove::RESULT CPushingGimmickMove::OnMove(float dt)
                 Math::Vec3_Normalize(&vGimmickAt, &m_vVelocity);
 
                 RwMatrix matrix;
-                RwMatrixSetIdentityMacro(&matrix);
+                RwMatrixSetIdentity(&matrix);
                 Math::Matrix_RotateY(&matrix, MATH_PI05);
 
                 RwV3d vGimmickRight = Math::VECTOR3_ZERO;
@@ -227,13 +227,13 @@ bool CPushingGimmickMove::RequestPlayerPushGimmick(CPlayerCharacter* pPlayerChar
     if ((m_pushstate == PUSHSTATE_PUSH) && !m_bRequestPush)
     {
         RwMatrix matrix;
-        RwMatrixSetIdentityMacro(&matrix);
+        RwMatrixSetIdentity(&matrix);
         Math::Matrix_RotateY(&matrix, pPlayerCharacter->GetDirection());
         
         RwV3d vPlayerDir = Math::VECTOR3_ZERO;
         RwV3dTransformPoint(&vPlayerDir, &Math::VECTOR3_AXIS_Z, &matrix);
 
-        RwMatrixSetIdentityMacro(&matrix);
+        RwMatrixSetIdentity(&matrix);
         Math::Matrix_Rotate(&matrix, &m_vRotation);
 
         RwV3d vGimmickFrontDir = Math::VECTOR3_ZERO;
@@ -289,7 +289,7 @@ bool CPushingGimmickMove::RequestPlayerAttackPushGimmick(CPlayerCharacter* pPlay
         Math::Vec3_Sub(&vDirection, &m_vPosition, &vPlayerPos);
 
         RwMatrix matRot;
-        RwMatrixSetIdentityMacro(&matRot);
+        RwMatrixSetIdentity(&matRot);
         Math::Matrix_Rotate(&matRot, &m_vRotation);        
 
         RwV3d vGimmickFrontDir = Math::VECTOR3_ZERO;
@@ -397,7 +397,7 @@ bool CPushingGimmickMove::isFall(const RwV3d* pvAt, const RwV3d* pvRight)
     };
 
     RwMatrix matrix;
-    RwMatrixSetIdentityMacro(&matrix);
+    RwMatrixSetIdentity(&matrix);
     Math::Matrix_Rotate(&matrix, &m_vRotation);
 
     RwV3d vGimmickAt = Math::VECTOR3_ZERO;

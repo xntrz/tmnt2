@@ -177,54 +177,52 @@ bool CCameraData::GetSpline(RwV3d* pPos, const PATHDATA* pPathData, float fTime)
     ASSERT(pPathData);
 
     fTime = Clamp(fTime, 0.0f, 1.0f);
-
-    int32 nKeyIndex = 0;
-    int32 nNumKey = pPathData->numPathKey - 1;
     
-    for (int32 i = 0; i < nNumKey;)
-    {
-        const PATHKEY* pKey = GetPathKey(pPathData, (i + nNumKey) / 2);
+    int32 i = 0;
+    int32 j = pPathData->numPathKey - 1;
 
-        if (pKey->value >= fTime)
-        {
-            nNumKey = (i + nNumKey) / 2;
-        }
+    while (i < j)
+    {
+        int32 d = i + j;
+        int32 k = d / 2;
+
+        if (d < 0)
+            k = (d + 1) / 2;
+
+        const PATHKEY key = *GetPathKey(pPathData, k);
+
+        if (key.value >= fTime)
+            j = k;
         else
-        {
-            i = ((i + nNumKey) / 2) + 1;
-            nKeyIndex = i;
-        };
+            i = k + 1;        
     };
 
-    if (nKeyIndex > 0)
-        --nKeyIndex;
+    if (i > 0)
+        --i;
 
-    const PATHKEY* pKey0 = GetPathKey(pPathData, nKeyIndex);
-    const PATHKEY* pKey1 = GetPathKey(pPathData, nKeyIndex + 1);
+    const PATHKEY key0 = *GetPathKey(pPathData, i);
+    const PATHKEY key1 = *GetPathKey(pPathData, i + 1);
 
-    float duration = pKey1->value - pKey0->value;
-    float progress = fTime - pKey0->value;
+    float d = key1.value - key0.value;
+    float h = fTime - key0.value;
 
-    pPos->x = ((pKey1->x - pKey0->x) * (1.0f / duration)
-        - (pKey0->ofsX + pKey0->ofsX + pKey1->ofsX) * duration
-        + ((pKey1->ofsX - pKey0->ofsX) * (1.0f / duration) * progress + pKey0->ofsX * 3.0f)
-        * progress)
-        * progress
-        + pKey0->x;
-
-    pPos->y = ((pKey1->y - pKey0->y) * (1.0f / duration)
-        - (pKey0->ofsY + pKey0->ofsY + pKey1->ofsY) * duration
-        + ((pKey1->ofsY - pKey0->ofsY) * (1.0f / duration) * progress + pKey0->ofsY * 3.0f)
-        * progress)
-        * progress
-        + pKey0->y;
-
-    pPos->z = ((pKey1->z - pKey0->z) * (1.0f / duration)
-        - (pKey0->ofsZ + pKey0->ofsZ + pKey1->ofsZ) * duration
-        + ((pKey1->ofsZ - pKey0->ofsZ) * (1.0f / duration) * progress + pKey0->ofsZ * 3.0f)
-        * progress)
-        * progress
-        + pKey0->z;
+    pPos->x = ((key1.x - key0.x) * (1.0f / d)
+        - (key0.ofsX + key0.ofsX + key1.ofsX) * d
+        + ((key1.ofsX - key0.ofsX) * (1.0f / d) * h + key0.ofsX * 3.0f) * h)
+        * h
+        + key0.x;
+    
+    pPos->y = ((key1.y - key0.y) * (1.0f / d)
+        - (key0.ofsY + key0.ofsY + key1.ofsY) * d
+        + ((key1.ofsY - key0.ofsY) * (1.0f / d) * h + key0.ofsY * 3.0f) * h)
+        * h
+        + key0.y;
+    
+    pPos->z = ((key1.z - key0.z) * (1.0f / d)
+        - (key0.ofsZ + key0.ofsZ + key1.ofsZ) * d
+        + ((key1.ofsZ - key0.ofsZ) * (1.0f / d) * h + key0.ofsZ * 3.0f) * h)
+        * h
+        + key0.z;
 
     return true;
 };

@@ -40,6 +40,7 @@ public:
 
 private:
     void OutputInfo(void);
+    bool IsFullscreenWindow(void) const;
 
 private:
     CPCFrameTimer* m_pFrameTimer;

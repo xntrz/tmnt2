@@ -78,7 +78,8 @@ void CAntiqueRecord::Restore(const RAWDATA& rRawData)
 
 void CAntiqueRecord::SetShopState(SHOPSTATE shopstate)
 {
-    m_shopstate = shopstate;
+    if (shopstate > m_shopstate)
+        m_shopstate = shopstate;
 };
 
 

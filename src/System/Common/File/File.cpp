@@ -1,85 +1,235 @@
 #include "File.hpp"
-#include "FileAccess.hpp"
 #include "FileManager.hpp"
+#include "AdxFileManager.hpp"
 
 
-CFile::CFile(void)
-: m_stat(STAT_NOREAD)
-, m_pAccessData(nullptr)
+/*static*/ CFileManager* CBaseFile::m_pFileManager = nullptr;
+
+
+/*static*/ void CBaseFile::Initialize(CFileManager* pFileManager)
+{
+    m_pFileManager = pFileManager;
+};
+
+
+/*static*/ void CBaseFile::Terminate(void)
+{
+    m_pFileManager = nullptr;
+};
+
+
+/*static*/ bool CBaseFile::LoadPartition(int32 ptid, const char* fname, void* dir, void* ptinfo)
+{
+    return CAdxFileManager::LoadPt(ptid, fname, dir, ptinfo);
+};
+
+
+CBaseFile::CBaseFile(void)
+: m_pAccessData(nullptr)
 {
     ;
 };
 
 
-CFile::~CFile(void)
+CBaseFile::~CBaseFile(void)
 {
-    ASSERT(!m_pAccessData);    
+    ;
 };
 
 
-bool CFile::Open(int32 nType, void* pTypeData)
+uint8* CBaseFile::GetData(void)
 {
-    m_pAccessData = CFileManager::Instance().AllocRequest(nType, pTypeData);
+    if (m_pAccessData)
+        return m_pAccessData->GetData();
+
+    return nullptr;
+};
+
+
+const uint8* CBaseFile::GetData(void) const
+{
+    if (m_pAccessData)
+        return m_pAccessData->GetData();
+
+    return nullptr;
+};
+
+
+uint32 CBaseFile::GetSize(void) const
+{
+    if (m_pAccessData)
+        return m_pAccessData->GetSize();
+
+    return 0;
+};
+
+
+FILE_STAT CBaseFile::GetStat(void) const
+{
+    if (m_pAccessData)
+        return m_pAccessData->GetStat();
+
+    return FILE_STAT_NOREAD;
+};
+
+
+//
+// *********************************************************************************
+//
+
+
+CIDFile::CIDFile(void)
+{
+    ;
+};
+
+
+CIDFile::~CIDFile(void)
+{
+    ;
+};
+
+
+void CIDFile::OpenRequest(int32 id)
+{
+    ASSERT(m_pFileManager);
+    ASSERT(id >= 0);
+    ASSERT(id < FILEID::FILEID_MAX);
+
+    m_pAccessData = m_pFileManager->GetFileInfo(id);
+    m_pFileManager->ReadDataRequest(m_pAccessData, id);
+};
+
+
+void CIDFile::Close(void)
+{
     ASSERT(m_pAccessData);
-    
-    return (m_pAccessData != nullptr);
+
+    m_pAccessData->ReleaseBuff();
+    m_pAccessData = nullptr;
+};
+
+
+//
+// *********************************************************************************
+//
+
+
+CISOFile::CISOFile(void)
+{
+    ;
+};
+
+
+CISOFile::~CISOFile(void)
+{
+    ;
+};
+
+
+void CISOFile::OpenRequest(const char* pszFilename)
+{
+    ASSERT(m_pFileManager);
+
+    m_pAccessData = new CFileAccessFname(pszFilename);
+    m_pFileManager->ReadDataRequest(m_pAccessData);
+};
+
+
+void CISOFile::Close(void)
+{
+    ASSERT(m_pAccessData);
+
+    m_pAccessData->ReleaseBuff();
+
+    delete m_pAccessData;
+    m_pAccessData = nullptr;
+};
+
+
+//
+// *********************************************************************************
+//
+
+
+CFile::CFile(void)
+: m_type(TYPE_UNKNOWN)
+{
+    ;
+};
+
+
+CFile::CFile(int32 id)
+: m_type(TYPE_UNKNOWN)
+{
+    OpenRequest(id);
+};
+
+
+CFile::~CFile(void)
+{
+    if (m_pAccessData)
+        Close();
+};
+
+
+void CFile::OpenRequest(int32 id)
+{
+    CIDFile::OpenRequest(id);
+    m_type = TYPE_ID;
+};
+
+
+void CFile::OpenRequest(const char* pszFilename, bool bSearchID /*= true*/)
+{
+    if (bSearchID)
+    {
+        int32 id = CFilename::ID(pszFilename);
+        if (id != -1)
+        {
+            CIDFile::OpenRequest(id);
+            m_type = TYPE_ID;
+
+            return;
+        };
+    };
+
+    CISOFile::OpenRequest(pszFilename);
+    m_type = TYPE_ISO;
+};
+
+
+bool CFile::Open(const char* pszFilename)
+{
+    OpenRequest(pszFilename);
+
+    while (m_pAccessData->GetStat() == FILE_STAT_READING)
+        m_pFileManager->Sync();
+
+    return (m_pAccessData->GetStat() == FILE_STAT_READEND);
 };
 
 
 void CFile::Close(void)
 {
-    if (m_pAccessData)
+    switch (m_type)
     {
-        m_pAccessData->Clear();
-        m_pAccessData = nullptr;
-
-        m_stat = STAT_NOREAD;
-    };
-};
-
-
-void* CFile::Data(void) const
-{
-    if (m_pAccessData)
-        return m_pAccessData->Data();
-    else
-        return nullptr;
-};
-
-
-uint32 CFile::Size(void) const
-{
-    if (m_pAccessData)
-        return m_pAccessData->Size();
-    else
-        return 0;
-};
-
-
-CFile::STAT CFile::Stat(void)
-{
-    ASSERT(m_pAccessData);
-    
-    switch (m_pAccessData->Stat())
-    {
-    case CFileAccess::STAT_READING:
-    case CFileAccess::STAT_PENDING:
-        m_stat = STAT_READING;
+    case TYPE_ID:
+        CIDFile::Close();
         break;
-        
-    case CFileAccess::STAT_READEND:
-        m_stat = STAT_READEND;
-        break;
-        
-    case CFileAccess::STAT_ERROR:
-        m_stat = STAT_ERROR;
+
+    case TYPE_ISO:
+        CISOFile::Close();
         break;
 
     default:
         ASSERT(false);
-        m_stat = STAT_ERROR;
         break;
     };
+};
 
-    return m_stat;
+
+CFile::TYPE CFile::GetType(void) const
+{
+    return m_type;
 };

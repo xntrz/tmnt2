@@ -276,7 +276,7 @@ CCameraChangeGimmick::CCameraChangeGimmick(const char* pszName, void* pParam)
     m_vPosition = pBasicParam->m_vPosition;
 
     RwMatrix matrix;
-    RwMatrixSetIdentityMacro(&matrix);
+    RwMatrixSetIdentity(&matrix);
     CGimmickUtils::QuaternionToRotationMatrix(&matrix, &pBasicParam->m_quat);
     
     m_vRotation = matrix.at;
@@ -400,7 +400,7 @@ void CCameraChangeGimmick::ReplacePlayers(void)
     for (int32 i = 0; i < nPlayerNum; ++i)
     {
         RwMatrix matrix;
-        RwMatrixSetIdentityMacro(&matrix);
+        RwMatrixSetIdentity(&matrix);
         Math::Matrix_RotateY(&matrix, MATH_DEG2RAD(afRotation[i]));
 
         RwV3d vPosition = Math::VECTOR3_ZERO;
@@ -566,7 +566,7 @@ CInvisibleWallGimmick::CInvisibleWallGimmick(const char* pszName, void* pParam)
 #endif /* _DEBUG */
         
     RwMatrix matrix;
-    RwMatrixSetIdentityMacro(&matrix);
+    RwMatrixSetIdentity(&matrix);
     CGimmickUtils::QuaternionToRotationMatrix(&matrix, &pWallParam->m_quat);
     
     RwV3d vRotate = Math::VECTOR3_ZERO;
@@ -793,7 +793,7 @@ CReplaceGimmick::CReplaceGimmick(const char* pszName, void* pParam)
     m_vReplacePosition = pReplaceParam->m_vPosition;
     
     RwMatrix matrix;
-    RwMatrixSetIdentityMacro(&matrix);
+    RwMatrixSetIdentity(&matrix);
     CGimmickUtils::QuaternionToRotationMatrix(&matrix, &pReplaceParam->m_quat);
     
     m_vReplaceRotation = matrix.at;
@@ -845,7 +845,7 @@ void CReplaceGimmick::OnReplacePlayer(int32 nPlayerNo, bool bBlink)
     Math::Vec3_Scale(&vDir, &vDir, 1.5f);
 
     RwMatrix matrix;
-    RwMatrixSetIdentityMacro(&matrix);
+    RwMatrixSetIdentity(&matrix);
     Math::Matrix_RotateY(&matrix, MATH_DEG2RAD(afRotation[nPlayerNo]));
 
     RwV3d vPosition = Math::VECTOR3_ZERO;
@@ -899,7 +899,7 @@ void CReplaceGimmick::setAreaVertex(void)
 bool CReplaceGimmick::isAreaRectVertexInScreen(void) const
 {
     RwMatrix matrix;
-    RwMatrixSetIdentityMacro(&matrix);    
+    RwMatrixSetIdentity(&matrix);    
     CGameProperty::GetCameraViewMatrix(&matrix);
 
     for (int32 i = 0; i < COUNT_OF(m_aAreaRectVertex); ++i)

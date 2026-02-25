@@ -18,55 +18,62 @@ public:
     
 private:
     RwIm2DVertex m_aVertex[4];
-    RwTexture* m_pTexture;
-    RwRGBA m_Color;
-    uint8 m_uAlphaBasis;
-    float m_fTime;
-    float m_fDisplayTime;
-    bool m_bPlay;
+    RwTexture*   m_pTexture;
+    RwRGBA       m_color;
+    uint8        m_uAlphaBasis;
+    float        m_fTime;
+    float        m_fDisplayTime;
+    bool         m_bPlay;
 };
 
 
 CScrEffectFlash::CScrEffectFlash(void)
 : m_pTexture(nullptr)
-, m_Color({ 0xFF,0xFF,0xFF,0x80 })
+, m_color({ 0xFF, 0xFF, 0xFF, 0x80 })
 , m_uAlphaBasis(0xFF)
 , m_fTime(0.0f)
 , m_fDisplayTime(0.3f)
 , m_bPlay(false)
 {
-    float w = float(CScreen::Width());
-    float h = float(CScreen::Height());
+    float w = static_cast<float>(CScreen::Width());
+    float h = static_cast<float>(CScreen::Height());
     float z = RwIm2DGetNearScreenZ();
     float rhw = 1.0f;
-    
-    m_aVertex[0].x = 0.0f;
-    m_aVertex[0].y = h;
-    m_aVertex[0].z = z;
-    m_aVertex[0].u = 0.0f;
-    m_aVertex[0].v = 1.0f;
-    m_aVertex[0].rhw = rhw;
 
-    m_aVertex[1].x = w;
-    m_aVertex[1].y = h;
-    m_aVertex[1].z = z;
-    m_aVertex[1].u = 1.0f;
-    m_aVertex[1].v = 1.0f;
-    m_aVertex[1].rhw = rhw;
+    RwRGBA color = m_color;
+    color.alpha = m_uAlphaBasis;
 
-    m_aVertex[2].x = 0.0f;
-    m_aVertex[2].y = 0.0f;
-    m_aVertex[2].z = z;
-    m_aVertex[2].u = 0.0f;
-    m_aVertex[2].v = 0.0f;
-    m_aVertex[2].rhw = rhw;
+    RwIm2DVertexSetScreenX(&m_aVertex[0], 0.0f);
+    RwIm2DVertexSetScreenY(&m_aVertex[0], h);
+    RwIm2DVertexSetScreenZ(&m_aVertex[0], z);
+    RwIm2DVertexSetIntRGBA(&m_aVertex[0], color.red, color.green, color.blue, color.alpha);
+    RwIm2DVertexSetU(&m_aVertex[0], 0.0f, rhw);
+    RwIm2DVertexSetV(&m_aVertex[0], 1.0f, rhw);
+    RwIm2DVertexSetRecipCameraZ(&m_aVertex[0], rhw);
 
-    m_aVertex[3].x = w;
-    m_aVertex[3].y = 0.0f;
-    m_aVertex[3].z = z;
-    m_aVertex[3].u = 1.0f;
-    m_aVertex[3].v = 0.0f;
-    m_aVertex[3].rhw = rhw;
+    RwIm2DVertexSetScreenX(&m_aVertex[1], w);
+    RwIm2DVertexSetScreenY(&m_aVertex[1], h);
+    RwIm2DVertexSetScreenZ(&m_aVertex[1], z);
+    RwIm2DVertexSetIntRGBA(&m_aVertex[1], color.red, color.green, color.blue, color.alpha);
+    RwIm2DVertexSetU(&m_aVertex[1], 1.0f, rhw);
+    RwIm2DVertexSetV(&m_aVertex[1], 1.0f, rhw);
+    RwIm2DVertexSetRecipCameraZ(&m_aVertex[1], rhw);
+
+    RwIm2DVertexSetScreenX(&m_aVertex[2], 0.0f);
+    RwIm2DVertexSetScreenY(&m_aVertex[2], 0.0f);
+    RwIm2DVertexSetScreenZ(&m_aVertex[2], z);
+    RwIm2DVertexSetIntRGBA(&m_aVertex[2], color.red, color.green, color.blue, color.alpha);
+    RwIm2DVertexSetU(&m_aVertex[2], 0.0f, rhw);
+    RwIm2DVertexSetV(&m_aVertex[2], 0.0f, rhw);
+    RwIm2DVertexSetRecipCameraZ(&m_aVertex[2], rhw);
+
+    RwIm2DVertexSetScreenX(&m_aVertex[3], w);
+    RwIm2DVertexSetScreenY(&m_aVertex[3], 0.0f);
+    RwIm2DVertexSetScreenZ(&m_aVertex[3], z);
+    RwIm2DVertexSetIntRGBA(&m_aVertex[3], color.red, color.green, color.blue, color.alpha);
+    RwIm2DVertexSetU(&m_aVertex[3], 1.0f, rhw);
+    RwIm2DVertexSetV(&m_aVertex[3], 0.0f, rhw);
+    RwIm2DVertexSetRecipCameraZ(&m_aVertex[3], rhw);
 };
 
 
@@ -81,7 +88,11 @@ void CScrEffectFlash::Run(void)
     if (m_bPlay)
     {
         m_fTime += CGameProperty::GetElapsedTime();
-        m_uAlphaBasis = uint8(((m_fDisplayTime - m_fTime) / m_fDisplayTime) * float(m_uAlphaBasis));
+
+        float ratio = ((m_fDisplayTime - m_fTime) / m_fDisplayTime);
+        float alpha = ratio * static_cast<float>(m_uAlphaBasis);
+
+        m_uAlphaBasis = static_cast<uint8>(alpha);
 
         if (m_fTime >= m_fDisplayTime)
         {
@@ -111,10 +122,10 @@ void CScrEffectFlash::Draw(void)
 
     for (int32 i = 0; i < COUNT_OF(m_aVertex); ++i)
     {
-        RwRGBA color = m_Color;
+        RwRGBA color = m_color;
         color.alpha = m_uAlphaBasis;
-        
-        m_aVertex[i].emissiveColor = RWRGBALONG(color.red, color.green, color.blue, color.alpha);
+
+        RwIm2DVertexSetIntRGBA(&m_aVertex[i], color.red, color.green, color.blue, color.alpha);
     };
 
     RwIm2DRenderPrimitive(rwPRIMTYPETRISTRIP, m_aVertex, COUNT_OF(m_aVertex));
@@ -129,7 +140,7 @@ void CScrEffectFlash::Draw(void)
 
 void CScrEffectFlash::Play(void)
 {
-    m_uAlphaBasis = m_Color.alpha;
+    m_uAlphaBasis = m_color.alpha;
     m_fTime = 0.0f;
     m_bPlay = true;
 };
@@ -137,7 +148,7 @@ void CScrEffectFlash::Play(void)
 
 void CScrEffectFlash::SetColor(const RwRGBA& color)
 {
-    m_Color = color;
+    m_color = color;
 };
 
 
@@ -154,9 +165,7 @@ static CScrEffectFlash& ScreenEffectFlash(void)
 /*static*/ void CScreenEffectFlash::Initialize(void)
 {
     if (!s_pScrEffectFlash)
-    {
         s_pScrEffectFlash = new CScrEffectFlash;
-    };
 };
 
 

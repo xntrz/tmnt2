@@ -303,7 +303,7 @@ void CGaugeMeter_Container::GaugeUpdate(void)
 
 void CGaugeMeter_Container::GaugeMeterDraw(void)
 {
-    RENDERSTATE_PUSH(rwRENDERSTATETEXTURERASTER, RwTextureGetRasterMacro(m_apTexture[3]));
+    RENDERSTATE_PUSH(rwRENDERSTATETEXTURERASTER, RwTextureGetRaster(m_apTexture[3]));
 
     int32 vertex_list[4] = { 0 };
     vertex_list[0] = 0;
@@ -383,18 +383,18 @@ void CGaugeMeter_Container::GaugeMeterVertexSet(int32 nVertexNum, int32 aVertexL
 
         float x = u - 224.0f;
         float y = v - 152.0f;
-
         CSprite::GetRealScreenPos(&x, &y);
 
-        RwRGBA Color = { 255, 255, 255, 255 };
+        float z = RwIm2DGetNearScreenZ();
+        float rhw = 1.0f;
 
-        aVertices[i].x = x;
-        aVertices[i].y = y;
-        aVertices[i].z = RwIm2DGetNearScreenZMacro();
-        aVertices[i].rhw = 1.0f;
-        aVertices[i].emissiveColor = RWRGBALONGEX(Color);
-        aVertices[i].u = (u + fScale) * (1.0f / 128.0f);
-        aVertices[i].v = (v + fScale) * (1.0f / 128.0f);
+        RwIm2DVertexSetScreenX(&aVertices[i], x);
+        RwIm2DVertexSetScreenY(&aVertices[i], y);
+        RwIm2DVertexSetScreenZ(&aVertices[i], z);
+        RwIm2DVertexSetIntRGBA(&aVertices[i], 255, 255, 255, 255);
+        RwIm2DVertexSetU(&aVertices[i], (u + fScale) * (1.0f / 128.0f), rhw);
+        RwIm2DVertexSetV(&aVertices[i], (v + fScale) * (1.0f / 128.0f), rhw);
+        RwIm2DVertexSetRecipCameraZ(&aVertices[i], rhw);
     };
 
     RwIm2DRenderPrimitive(rwPRIMTYPETRIFAN, aVertices, nVertexNum);

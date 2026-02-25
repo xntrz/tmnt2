@@ -6,8 +6,6 @@
 #include "AntiqueID.hpp"
 #include "GameTypes.hpp"
 
-#include "Game/System/Movie/MovieID.hpp"
-
 
 class CAreaInfo
 {
@@ -21,7 +19,7 @@ public:
     static int32 GetStageNum(AREAID::VALUE idArea);
     static ANTIQUEID::VALUE GetAntiqueID(AREAID::VALUE idArea);
     static AREAID::VALUE FindAntiqueArea(ANTIQUEID::VALUE idAntique);
-    static MOVIEID::VALUE GetAreaOutMovieID(AREAID::VALUE idArea);
+    static MVNAME GetAreaOutMovieID(AREAID::VALUE idArea);
     static bool IsPlayMovieOfAreaOut(AREAID::VALUE idArea);
     static GAMETYPES::NEXUSID GetNexusID(AREAID::VALUE idArea);
     static uint32 GetBestRankClearTime(AREAID::VALUE idArea);

@@ -83,7 +83,7 @@ public:
 
 RpAtomic* CCalcBoundingSphereFunctor::operator()(RpAtomic* pAtomic)
 {
-    RwSphere* pSphere = RpAtomicGetBoundingSphereMacro(pAtomic);
+    RwSphere* pSphere = RpAtomicGetBoundingSphere(pAtomic);
     if (!pSphere)
         return pAtomic;
 
@@ -141,7 +141,7 @@ RpAtomic* CGetAtomicFromIndexFunctor::operator()(RpAtomic* pAtomic)
 
 RpAtomic* CGetRootAtomicFunctor::operator()(RpAtomic* pAtomic)
 {
-    RwFrame* pFrame = RpAtomicGetFrameMacro(pAtomic);
+    RwFrame* pFrame = RpAtomicGetFrame(pAtomic);
 
     if (!RwFrameGetRoot(pFrame))
         return pAtomic;
@@ -161,9 +161,9 @@ RpAtomic* CInitializeAtomicFunctor::operator()(RpAtomic* pAtomic)
     RpGeometry* pGeometry = RpAtomicGetGeometry(pAtomic);    
     ASSERT(pGeometry);
 
-    RwUInt32 geometryFlags = RpGeometryGetFlagsMacro(pGeometry);
+    RwUInt32 geometryFlags = RpGeometryGetFlags(pGeometry);
     geometryFlags |= rpGEOMETRYMODULATEMATERIALCOLOR;
-    RpGeometrySetFlagsMacro(pGeometry, geometryFlags);    
+    RpGeometrySetFlags(pGeometry, geometryFlags);    
     
     return pAtomic;
 };
@@ -190,10 +190,10 @@ RpAtomic* CReplaceHierarchyFunctor::operator()(RpAtomic* pAtomic)
 
 RpAtomic* CSetLightingEnableFunctor::operator()(RpAtomic* pAtomic)
 {
-    RpGeometry* pGeometry = RpAtomicGetGeometryMacro(pAtomic);
+    RpGeometry* pGeometry = RpAtomicGetGeometry(pAtomic);
     ASSERT(pGeometry);
     
-    RwUInt32 geometryFlags = RpGeometryGetFlagsMacro(pGeometry);
+    RwUInt32 geometryFlags = RpGeometryGetFlags(pGeometry);
 	if (m_bEnable)
     {
         geometryFlags &= (~rpGEOMETRYPRELIT);
@@ -204,7 +204,7 @@ RpAtomic* CSetLightingEnableFunctor::operator()(RpAtomic* pAtomic)
         geometryFlags &= (~rpGEOMETRYLIGHT);
         geometryFlags |= rpGEOMETRYPRELIT;
     };
-    RpGeometrySetFlagsMacro(pGeometry, geometryFlags);
+    RpGeometrySetFlags(pGeometry, geometryFlags);
 
     return pAtomic;
 };
@@ -217,7 +217,7 @@ RpAtomic* CSetLightingEnableFunctor::operator()(RpAtomic* pAtomic)
 
 RpMaterial* CReplaceMaterialColorFunctor::operator()(RpMaterial* pMaterial)
 {
-    RpMaterialSetColorMacro(pMaterial, &m_MaterialColor);
+    RpMaterialSetColor(pMaterial, &m_MaterialColor);
 
     return pMaterial;
 };
@@ -259,7 +259,7 @@ CModel::CModel(const char* pszName, RpClump* pClump)
     ASSERT(m_pszName);
     ASSERT(m_pClump);
 
-    RwFrame* pFrame = RpClumpGetFrameMacro(m_pClump);
+    RwFrame* pFrame = RpClumpGetFrame(m_pClump);
     RwFrameUpdateObjects(pFrame);
     
     InitializeAtomic();
@@ -268,10 +268,11 @@ CModel::CModel(const char* pszName, RpClump* pClump)
     m_pHierarchyOriginal = GetHierarchyFromClump();
     if (m_pHierarchyOriginal)
     {
-        RwInt32 hierarchyFlags = RpHAnimHierarchyGetFlagsMacro(m_pHierarchyOriginal);
-        hierarchyFlags |= rpHANIMHIERARCHYUPDATEMODELLINGMATRICES;
-        hierarchyFlags |= rpHANIMHIERARCHYUPDATELTMS;
-        RpHAnimHierarchySetFlagsMacro(m_pHierarchyOriginal, hierarchyFlags);
+        RwInt32 flags = RpHAnimHierarchyGetFlags(m_pHierarchyOriginal) 
+                      | rpHANIMHIERARCHYUPDATEMODELLINGMATRICES 
+                      | rpHANIMHIERARCHYUPDATELTMS;
+        
+        RpHAnimHierarchySetFlags(m_pHierarchyOriginal, static_cast<RpHAnimHierarchyFlag>(flags));
 
         ReplaceHierarchyForClump(m_pHierarchyOriginal);
     };
@@ -359,10 +360,10 @@ RwMatrix* CModel::GetBoneMatrix(int32 index)
     }
     else
     {
-        RwFrame* pFrame = RpClumpGetFrameMacro(m_pClump);
+        RwFrame* pFrame = RpClumpGetFrame(m_pClump);
         ASSERT(pFrame);
 
-        pResult = RwFrameGetMatrixMacro(pFrame);
+        pResult = RwFrameGetMatrix(pFrame);
         ASSERT(pResult);
     };
 
@@ -386,10 +387,10 @@ RwMatrix* CModel::GetBoneMatrixFromID(int32 id)
     }
     else
     {
-        RwFrame* pFrame = RpClumpGetFrameMacro(m_pClump);
+        RwFrame* pFrame = RpClumpGetFrame(m_pClump);
         ASSERT(pFrame);
 
-        pResult = RwFrameGetMatrixMacro(pFrame);
+        pResult = RwFrameGetMatrix(pFrame);
         ASSERT(pResult);
     };
 
@@ -444,12 +445,12 @@ void CModel::SetPartsDrawEnable(int32 index, bool bEnable)
     RpAtomic* pAtomic = GetAtomicFromIndex(index);    
     ASSERT(pAtomic);
 
-    RwUInt8 atomicFlags = RpAtomicGetFlagsMacro(pAtomic);
+    RwUInt8 atomicFlags = RpAtomicGetFlags(pAtomic);
     if (bEnable)
         atomicFlags |= rpATOMICRENDER;
     else
         atomicFlags &= (~rpATOMICRENDER);
-    RpAtomicSetFlagsMacro(pAtomic, atomicFlags);
+    RpAtomicSetFlags(pAtomic, atomicFlags);
 };
 
 
@@ -540,7 +541,7 @@ void CModel::UpdateFrame(RpClump* pClump)
     RwMatrix matrix;    
     Math::Matrix_AffineTransformation(&matrix, nullptr, &m_vRotation, &m_vPosition);
 
-    RwFrame* pFrame = RpClumpGetFrameMacro(pClump);
+    RwFrame* pFrame = RpClumpGetFrame(pClump);
     ASSERT(pFrame);
 
     RwFrameTransform(pFrame, &matrix, rwCOMBINEREPLACE);
@@ -577,7 +578,7 @@ void CModel::ForAllChildrenFrameCallback(IFrameCallbackFunctor* pFunctor)
     ASSERT(pFunctor);
     ASSERT(m_pClump);
 
-    RwFrame* pFrame = RpClumpGetFrameMacro(m_pClump);
+    RwFrame* pFrame = RpClumpGetFrame(m_pClump);
     ASSERT(pFrame);
     
     RwFrameForAllChildren(pFrame, CallbackFrame, pFunctor);
@@ -631,7 +632,7 @@ void CModel::ForAllMaterialCallback(IMaterialCallbackFunctor* pFunctor)
 
 /*static*/ RpAtomic* CModel::CallbackAtomicForMaterialCallback(RpAtomic* atomic, void* data)
 {
-    RpGeometry* pGeometry = RpAtomicGetGeometryMacro(atomic);
+    RpGeometry* pGeometry = RpAtomicGetGeometry(atomic);
     
     if (pGeometry)
         RpGeometryForAllMaterials(pGeometry, CallbackMaterial, data);

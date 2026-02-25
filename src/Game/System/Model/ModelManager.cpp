@@ -151,7 +151,7 @@ RpClump* CClumpContainer::CClump::ReadRpClump(void* pBuffer, uint32 uBufferSize)
             {
                 RwMatrix matrix;
                 RwMatrixSetIdentity(&matrix);
-                RwFrameTransform(RpClumpGetFrameMacro(pClump), &matrix, rwCOMBINEREPLACE);
+                RwFrameTransform(RpClumpGetFrame(pClump), &matrix, rwCOMBINEREPLACE);
                 
                 pResult = pClump;
             };

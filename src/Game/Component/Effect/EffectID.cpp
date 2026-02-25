@@ -11,6 +11,10 @@ struct EFFECTNAME
 static const EFFECTNAME s_aEffectNameList[] =
 {
     { EFFECTID::ID_UNKNOWN,         "unknown"           },
+
+    //
+    //  Common
+    //
     { EFFECTID::ID_LEO_HIT_S,       "leo_hit_s"         },
     { EFFECTID::ID_LEO_HIT_B,       "leo_hit_b"         },
     { EFFECTID::ID_LEO_SP,          "leo_sp"            },
@@ -86,9 +90,13 @@ static const EFFECTNAME s_aEffectNameList[] =
     { EFFECTID::ID_ALL_W_DOBON,     "all_w_dobon"       },
     { EFFECTID::ID_ALL_W_SPLASH,    "all_w_splash"      },
     { EFFECTID::ID_ALL_DASH_SNOW,   "all_dash_snow"     },
-    { EFFECTID::ID_ALL_BREATH,      "all_breath"        },
+    { EFFECTID::ID_ALL_BREATH,      "all_breath"        }, // NOTE: unused in game
     { EFFECTID::ID_WHITESMOKE,      "whitesmoke"        },
     { EFFECTID::ID_BLACKSMOKE,      "blacksmoke"        },
+
+    //
+    //  Individual
+    //
     { EFFECTID::ID_FIRE_TORCH,      "fire_torch"        },
     { EFFECTID::ID_ROCK,            "rock"              },
     { EFFECTID::ID_WOOD,            "wood"              },
@@ -192,5 +200,12 @@ namespace EFFECTID
         ASSERT(idEffect >= 0 && idEffect < ID_MAX);
         
         return s_aEffectNameList[idEffect].m_pszEffectName;
+    };
+
+    
+    bool IsGeneric(VALUE idEffect)
+    {
+        return (idEffect >= EFFECTID::ID_GENERIC_START) &&
+               (idEffect <= EFFECTID::ID_GENERIC_END);
     };
 };

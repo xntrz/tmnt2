@@ -1,46 +1,6 @@
 #include "FileManager.hpp"
-#include "FileAccess.hpp"
-#include "FileTypes.hpp"
-
-
-CFileManager::CRequest::CRequest(const char* pszName, CFileAccess* pAccess)
-: m_pAccess(pAccess)
-, m_type(TYPE_NAME)
-{
-    m_data.name = new char[std::strlen(pszName) + 1];
-    std::strcpy(m_data.name, pszName);
-};
-
-
-CFileManager::CRequest::CRequest(int32 nID, CFileAccess* pAccess)
-: m_pAccess(pAccess)
-, m_type(TYPE_ID)
-{
-    m_data.id = nID;
-};
-
-
-void CFileManager::CRequest::Cleanup(void)
-{
-    switch (m_type)
-    {
-    case TYPE_NAME:
-        {
-            delete[] m_data.name;
-            m_data.name = nullptr;
-        }
-        break;
-
-    case TYPE_ID:
-        {
-            m_data.id = -1;
-        }
-        break;
-
-    default:
-        break;
-    };
-};
+#include "File.hpp"
+#include "Filename.hpp"
 
 
 /*static*/ CFileManager* CFileManager::m_pInstance = nullptr;
@@ -54,19 +14,30 @@ void CFileManager::CRequest::Cleanup(void)
 
 
 CFileManager::CFileManager(void)
-: m_state(STATE_IDLE)
-, m_pReqCurrent(nullptr)
+: m_stat(STAT_READY)
+, m_id(-1)
+, m_pAccessData(nullptr)
+, m_readQueue(32)
+, m_pInfoTable(nullptr)
+, m_rwFileSystem()
 {
-    ASSERT(!m_pInstance);
+    m_pInfoTable = new CFileInfo[FILEID::FILEID_MAX];
+
     m_pInstance = this;
+    CBaseFile::Initialize(this);
 };
 
 
 CFileManager::~CFileManager(void)
 {
-    ASSERT(m_pInstance);
-    ASSERT(m_pInstance == this);
+    CBaseFile::Terminate();
     m_pInstance = nullptr;
+
+    if (m_pInfoTable)
+    {
+        delete[] m_pInfoTable;
+        m_pInfoTable = nullptr;
+    };
 };
 
 
@@ -84,67 +55,80 @@ void CFileManager::Stop(void)
 
 void CFileManager::Sync(void)
 {
-    if (m_state != STATE_LOADING)
+    if (m_stat != STAT_BUSY)
         return;
 
-    ASSERT(!m_ReqQueue.empty());
-
-    if (!m_pReqCurrent)
-        m_pReqCurrent = &m_ReqQueue.front();
-
-    CFileAccess* pAccess = m_pReqCurrent->access();
-    switch (pAccess->Stat())
+    FILE_STAT fstat = m_pAccessData->SyncStat();
+    switch (fstat)
     {
-    case CFileAccess::STAT_PENDING:
+    case FILE_STAT_ERROR:
         {
-            switch (m_pReqCurrent->type())
-            {
-            case CRequest::TYPE_ID:
-                pAccess->Open(m_pReqCurrent->id());
-                break;
+            char szErrBuf[256];
+            szErrBuf[0] = '\0';
 
-            case CRequest::TYPE_NAME:
-                pAccess->Open(m_pReqCurrent->name());
-                break;
+            std::sprintf(szErrBuf, "Failed to read file: \"%s\"", CFileAccess::GetLastFilename());
+            Error(szErrBuf);
 
-            default:
-                ASSERT(false);
-                break;
-            };
+            m_pAccessData->Close();
+            m_pAccessData->ReleaseBuff();
+
+            OpenFile(m_pAccessData, m_id);
         }
         break;
 
-    case CFileAccess::STAT_READING:
+    case FILE_STAT_READEND:
         {
-            pAccess->Sync();
+            ReadEnd(m_pAccessData);
+            m_pAccessData->Close();
+
+            if (m_readQueue.is_empty())
+            {
+                m_stat = STAT_READY;
+                break;
+            };
+
+            READ_REQUEST request = m_readQueue.front();
+            m_readQueue.pop();
+
+            OpenFile(request.pData, request.id);
         }
         break;
 
-    case CFileAccess::STAT_READEND:
-    case CFileAccess::STAT_NOREAD:
-    case CFileAccess::STAT_ERROR:
+    default:
+        break;
+    };
+};
+
+
+void CFileManager::ReadEnd(CFileAccess* pData)
+{
+    ;
+};
+
+
+void CFileManager::ReadDataRequest(CFileAccess* pData, int32 id /*= -1*/)
+{
+    ASSERT(pData);
+
+    switch (m_stat)
+    {
+    case STAT_READY:
         {
-            if (pAccess->Stat() == CFileAccess::STAT_ERROR)
-            {
-                char szBuffer[256];
-                szBuffer[0] = '\0';
+            OpenFile(pData, id);
+            m_stat = STAT_BUSY;
+        }
+        break;
 
-                if (m_pReqCurrent->type() == CRequest::TYPE_ID)
-                    std::sprintf(szBuffer, "file id %d read error!", m_pReqCurrent->id());
-                else if (m_pReqCurrent->type() == CRequest::TYPE_NAME)
-                    std::sprintf(szBuffer, "file \"%s\" read error!", m_pReqCurrent->name());
-                else
-                    std::sprintf(szBuffer, "file read error!");
-                
-                Error(szBuffer);
-            };
+    case STAT_BUSY:
+        {
+            READ_REQUEST request;
+            request.pData = pData;
+            request.id = id;
 
-            m_pReqCurrent->Cleanup();
-            m_pReqCurrent = nullptr;
+            ASSERT(!m_readQueue.is_full());
+            m_readQueue.push(request);
 
-            m_ReqQueue.pop();
-            if (m_ReqQueue.empty())
-                m_state = STATE_IDLE;
+            pData->SetAwait();
         }
         break;
 
@@ -155,10 +139,21 @@ void CFileManager::Sync(void)
 };
 
 
-void CFileManager::RegistRequest(CRequest& Request)
+void CFileManager::OpenFile(CFileAccess* pData, int32 id)
 {
-    Request.access()->m_stat = CFileAccess::STAT_PENDING;
+    m_id = id;
+    m_pAccessData = pData;
+
+    m_pAccessData->Open(m_id);
+
+    //OUTPUT("Reading \"%s\"\n", m_pAccessData->GetLastFilename());
+};
+
+
+CFileAccess* CFileManager::GetFileInfo(int32 id)
+{
+    ASSERT(id >= 0);
+    ASSERT(id < FILEID::FILEID_MAX);
     
-    m_ReqQueue.push(Request);
-    m_state = STATE_LOADING;
+    return &m_pInfoTable[id];
 };

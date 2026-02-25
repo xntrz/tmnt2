@@ -1,7 +1,6 @@
 #include "GameObjLoadInfo.hpp"
 
 #include "System/Common/File/FileTypes.hpp"
-#include "System/Common/File/FileID.hpp"
 #include "System/Common/File/Filename.hpp"
 
 
@@ -18,13 +17,14 @@ CGameObjLoadInfo::~CGameObjLoadInfo(void)
 };
 
 
-int32 CGameObjLoadInfo::GetFileID(void) const
-{
+FNAME CGameObjLoadInfo::GetFileID(void) const
+{    
     const char* pszFilename = GetFileName();
-    if (pszFilename)
-        return CFilename::ID(pszFilename);
-
-    return FILEID::ID_INVALID;
+#ifdef TMNT2_IDFSYST
+    return (pszFilename ? CFilename::ID(pszFilename) : -1);    
+#else /* TMNT2_IDFSYST */
+    return pszFilename;
+#endif /* TMNT2_IDFSYST */    
 };
 
 

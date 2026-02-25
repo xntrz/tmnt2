@@ -488,7 +488,7 @@ void CMagic::SetDirection(const RwV3d* pvDirection)
     Math::Vec3_Normalize(&vAxisZ, pvDirection);
 
     RwMatrix matrix;
-    RwMatrixSetIdentityMacro(&matrix);
+    RwMatrixSetIdentity(&matrix);
     Math::Matrix_Update(&matrix,
                         &vAxisX,
                         &vAxisY,
@@ -997,7 +997,7 @@ void CMagic::VanishingHorizontal(RwV3d* pvNormal, RwV3d* pvPosition)
             Math::Vec3_Normalize(&vAxisZ, &vAxisZ);
 
             RwMatrix matrix;
-            RwMatrixSetIdentityMacro(&matrix);
+            RwMatrixSetIdentity(&matrix);
 
             Math::Matrix_Update(
                 &matrix,
@@ -1033,7 +1033,7 @@ void CMagic::VanishingHorizontal(RwV3d* pvNormal, RwV3d* pvPosition)
             Math::Vec3_Normalize(&vAxisZ, &vAxisZ);
 
             RwMatrix matrix;
-            RwMatrixSetIdentityMacro(&matrix);
+            RwMatrixSetIdentity(&matrix);
 
             Math::Matrix_Update(
                 &matrix,

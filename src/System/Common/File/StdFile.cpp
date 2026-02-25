@@ -3,9 +3,9 @@
 #include "AdxFileManager.hpp"
 
 
-/*static*/ bool CStdFile::IsExists(const char* pszFilename)
+/*static*/ bool CStdFile::exist(const char* pszFilename)
 {
-    return CAdxFileAccess::IsExists(pszFilename);
+    return CFileAccess::IsExist(pszFilename);
 };
 
 
@@ -22,57 +22,42 @@ CStdFile::~CStdFile(void)
 };
 
 
-bool CStdFile::Open(const char* pszFilename)
-{
-    if (CAdxFileISO::Open(pszFilename))
-    {
-        while (Stat() == STAT_READING)
-            CAdxFileManager::Instance().Sync();
-
-        return (Stat() == STAT_READEND);
-    };
-
-    return false;
-};
-
-
-void CStdFile::Close(void)
+bool CStdFile::open(const char* pszFilename)
 {
     m_uPosition = 0;
-    CAdxFileISO::Close();
+    return CFile::Open(pszFilename);
 };
 
 
-uint32 CStdFile::Read(void* buffer, uint32 size)
+void CStdFile::close(void)
 {
-    uint32 uReaded = 0;
-
-    const void* pBuff = Data();
-    ASSERT(pBuff);
-
-    uint32 uSize = Size();
-    ASSERT(uSize, "%" PRIu32, uSize);
-
-    uint32 uBytesToRead = size;
-    if ((m_uPosition + size) > uSize)
-        uBytesToRead = uSize - m_uPosition;
-
-    std::memcpy(buffer, &static_cast<const char*>(pBuff)[m_uPosition], uBytesToRead);
-
-    m_uPosition += uBytesToRead;
-    uReaded = uBytesToRead;
-
-    return uReaded;
+    CFile::Close();
 };
 
 
-bool CStdFile::IsEof(void)
+uint32 CStdFile::read(void* buffer, uint32 size)
 {
-    return (m_uPosition >= Size());
+    uint32 fsize = m_pAccessData->GetSize();
+    const uint8* fdata = m_pAccessData->GetData();
+    
+    uint32 cbToRead = size;
+    if ((m_uPosition + size) > fsize)
+        cbToRead = fsize - m_uPosition;
+
+    std::memcpy(buffer, &fdata[m_uPosition], cbToRead);
+    m_uPosition += cbToRead;
+
+    return cbToRead;
 };
 
 
-uint32 CStdFile::Seek(uint32 offset, int32 type)
+bool CStdFile::eof(void) const
+{
+    return (m_uPosition >= m_pAccessData->GetSize());
+};
+
+
+uint32 CStdFile::seek(uint32 offset, int32 type)
 {
     switch (type)
     {
@@ -85,7 +70,7 @@ uint32 CStdFile::Seek(uint32 offset, int32 type)
         break;
 
     case SEEK_END:
-        m_uPosition = static_cast<uint32>(static_cast<int32>(Size()) + offset);
+        m_uPosition = static_cast<uint32>(static_cast<int32>(m_pAccessData->GetSize()) + offset);
         break;
 
     default:
@@ -97,7 +82,7 @@ uint32 CStdFile::Seek(uint32 offset, int32 type)
 };
 
 
-bool CStdFile::IsOpen(void)
+uint32 CStdFile::tell(void) const
 {
-    return (Stat() == STAT_READEND);
+    return m_uPosition;
 };

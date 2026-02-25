@@ -12,7 +12,6 @@
 #include "Game/System/Sound/GameSound.hpp"
 #include "Game/System/Text/GameText.hpp"
 #include "Game/ProcessList.hpp"
-#include "System/Common/File/FileID.hpp"
 #include "System/Common/Configure.hpp"
 #include "System/Common/Controller.hpp"
 #include "System/Common/Screen.hpp"
@@ -75,8 +74,8 @@ bool CTitleSequence::OnAttach(const void* pParam)
 	CTimeoutProcess::Start(this);
 #endif
 
-	bool bResult = CAnim2DSequence::OnAttach(FILEID::ID_TITLE);
-	CDataLoader::Regist(FILEID::ID_TITLE2);
+    bool bResult = CAnim2DSequence::OnAttach(FPATH("Common/Menu/Title/Title.lpac"));
+    CDataLoader::Regist(FPATH("Common/Menu/Title/Title2.lpac"));
 	return bResult;
 };
 

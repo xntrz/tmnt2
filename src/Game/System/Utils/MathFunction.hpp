@@ -38,9 +38,10 @@ namespace Math
     
     float Vec2_Length(const RwV2d* pvIn);
     void  Vec2_Normalize(RwV2d* pvOut, const RwV2d* pvIn);
+    void  Vec2_Add(RwV2d* pvOut, const RwV2d* pvInA, const RwV2d* pvInB);
+    void  Vec2_Sub(RwV2d* pvOut, const RwV2d* pvInA, const RwV2d* pvInB);
+    void  Vec2_Scale(RwV2d* pvOut, const RwV2d* pvInA, float s);
 
-    void  Vec3_Multiply(RwV3d* pvOut, const RwV3d* pvInA, const RwV3d* pvInB);
-    void  Vec3_Multiply(RwV3d* pvOut, const RwV3d* pvInA, float s);
     void  Vec3_Add(RwV3d* pvOut, const RwV3d* pvInA, const RwV3d* pvInB);
     void  Vec3_Sub(RwV3d* pvOut, const RwV3d* pvInA, const RwV3d* pvInB);
     void  Vec3_Scale(RwV3d* pvOut, const RwV3d* pvIn, float s);

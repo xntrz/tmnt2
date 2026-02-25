@@ -98,45 +98,29 @@ void CLaserGimmickModel::Draw(void) const
     };
 
     RwMatrix matrix;
-    RwMatrixSetIdentityMacro(&matrix);
+    RwMatrixSetIdentity(&matrix);
     Math::Matrix_AffineTransformation(&matrix, &vScale, &vRotation, &m_vPosition);
 
     for (int32 i = 0; i < COUNT_OF(aVertex); ++i)
     {
         RwIm3DVertex* pVertex = &aVertex[i];
 
-        pVertex->objVertex = aPosList[i].pos;
-        pVertex->u = aPosList[i].u;
-        pVertex->v = aPosList[i].v;
-        pVertex->objNormal = Math::VECTOR3_ZERO;
+        RwIm3DVertexSetPos(pVertex, aPosList[i].pos.x, aPosList[i].pos.y, aPosList[i].pos.z);
+        RwIm3DVertexSetNormal(pVertex, 0.0f, 0.0f, 0.0f);
+        RwIm3DVertexSetU(pVertex, aPosList[i].u);
+        RwIm3DVertexSetV(pVertex, aPosList[i].v);
 
-        switch (m_type)
+        static RwRGBA s_aTypeColorTable[] =
         {
-        case TYPE_RED:
-            {
-                RwRGBA color = { 0xFF, 0x14, 0x0, 0xFF };
-                pVertex->color = RWRGBALONGEX(color);
-            }
-            break;
-            
-        case TYPE_PINK:
-            {
-                RwRGBA color = { 0xFF, 0x00, 0xDE, 0xFF };
-                pVertex->color = RWRGBALONGEX(color);
-            }
-            break;
-
-        case TYPE_TRANSPARENT:
-            {
-                RwRGBA color = { 0xFF, 0xFF, 0xFF, 0x00 };
-                pVertex->color = RWRGBALONGEX(color);
-            }
-            break;
-
-        default:
-            ASSERT(false);
-            break;
+            /* TYPE_RED         */  { 0xFF, 0x14, 0x00, 0xFF },
+            /* TYPE_PINK        */  { 0xFF, 0x00, 0xDE, 0xFF },
+            /* TYPE_TRANSPARENT */  { 0xFF, 0xFF, 0xFF, 0x00 },
         };
+
+        static_assert(COUNT_OF(s_aTypeColorTable) == CLaserGimmickModel::TYPENUM, "update table");
+
+        RwRGBA color = s_aTypeColorTable[m_type];
+        RwIm3DVertexSetRGBA(pVertex, color.red, color.green, color.blue, color.alpha);
     };
 
     RENDERSTATE_PUSH(rwRENDERSTATETEXTURERASTER, NULL);
@@ -192,7 +176,7 @@ CLaserGimmick::CLaserGimmick(const char* pszName, void* pParam)
     ASSERT(pInitParam);
 
     RwMatrix matrix;
-    RwMatrixSetIdentityMacro(&matrix);
+    RwMatrixSetIdentity(&matrix);
     CGimmickUtils::QuaternionToRotationMatrix(&matrix, &pInitParam->m_quat);
 
     RwV3d vDirection = Math::VECTOR3_ZERO;

@@ -3,7 +3,6 @@
 #include "Game/Component/GameMain/GameTypes.hpp"
 #include "Game/Component/GameData/GameData.hpp"
 #include "Game/System/Misc/ScreenFade.hpp"
-#include "Game/System/Movie/MovieID.hpp"
 #include "Game/ProcessList.hpp"
 
 
@@ -109,15 +108,15 @@ void CEndingSequence::Branch(void)
             switch (m_iType)
             {
             case GAMETYPES::ENDINGTYPE_STORY:
-                Call(PROCLABEL_SEQ_MOVIE, reinterpret_cast<const void*>(MOVIEID::ID_M58OB02E));
+                Call(PROCLABEL_SEQ_MOVIE, reinterpret_cast<const void*>(MVPATH("m58ob02E.sfd")));
                 break;
 
             case GAMETYPES::ENDINGTYPE_NEXUS:
-                Call(PROCLABEL_SEQ_MOVIE, reinterpret_cast<const void*>(MOVIEID::ID_M60X03E));
+                Call(PROCLABEL_SEQ_MOVIE, reinterpret_cast<const void*>(MVPATH("m60x03E.sfd")));
                 break;
 
             case GAMETYPES::ENDINGTYPE_SHOP:
-                Call(PROCLABEL_SEQ_MOVIE, reinterpret_cast<const void*>(MOVIEID::ID_M62X01E));
+                Call(PROCLABEL_SEQ_MOVIE, reinterpret_cast<const void*>(MVPATH("m62x01E.sfd")));
                 break;
 
             default:

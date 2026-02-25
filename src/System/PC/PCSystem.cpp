@@ -12,42 +12,35 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lPar
     {
     case WM_ACTIVATE:
         {
-            CPCSystem::Instance().SetFocused(wParam != WA_INACTIVE);
-            
-            if (!CPCSystem::Instance().IsFocused())
-                break;
-
-            UpdateWindow(hWnd);
+            CPCSystem::Instance().SetFocused(wParam != WA_INACTIVE);            
+            if (CPCSystem::Instance().IsFocused())
+                UpdateWindow(hWnd);
         }
         break;
    
     case WM_PAINT:
         {
-            PAINTSTRUCT Ps;
-
-            BeginPaint(hWnd, &Ps);
-            CPCSystem::Instance().Framework().Render();
-            CPCSystem::Instance().Framework().FlipNoSync();
-            EndPaint(hWnd, &Ps);
+            PAINTSTRUCT ps;            
+            HDC hDc = BeginPaint(hWnd, &ps);
+            if (hDc != NULL)
+            {
+                CPCSystem::Instance().Framework().Render();
+                CPCSystem::Instance().Framework().FlipNoSync();
+                EndPaint(hWnd, &ps);
+            };            
         }
         break;
 
     case WM_CLOSE:
-        {
-            DestroyWindow(hWnd);
-        }        
+        DestroyWindow(hWnd);
         break;
         
     case WM_DESTROY:
-        {
-            PostQuitMessage(0);
-        }        
+        PostQuitMessage(0);
         break;
 
     case WM_SETCURSOR:
-        {
-            CPCSpecific::DisplayCursor(false);
-        }
+        CPCSpecific::DisplayCursor(false);        
         break;
         
     default:
@@ -58,7 +51,8 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lPar
 };
 
 
-/*static*/ const char* CPCSystem::WNDNAME = "TMNT2";
+/*static*/ const TCHAR* CPCSystem::WND_CLASS = TEXT("TMNT2");
+/*static*/ const TCHAR* CPCSystem::WND_NAME = TEXT("TMNT2");
 /*static*/ CPCSystem* CPCSystem::m_pInstance = nullptr;
 
 
@@ -98,10 +92,10 @@ bool CPCSystem::Initialize(void)
     m_stickyKeys.cbSize = sizeof(m_stickyKeys);
     SystemParametersInfo(SPI_GETSTICKYKEYS, sizeof(m_stickyKeys), &m_stickyKeys, 0);
 
-    STICKYKEYS StickyKeys = { 0 };
-    StickyKeys.cbSize   = sizeof(StickyKeys);
-    StickyKeys.dwFlags  = (m_stickyKeys.dwFlags & (~SKF_HOTKEYACTIVE));
-    SystemParametersInfo(SPI_SETSTICKYKEYS, sizeof(StickyKeys), &StickyKeys, 0);
+    STICKYKEYS stickyKeys = { 0 };
+    stickyKeys.cbSize   = sizeof(stickyKeys);
+    stickyKeys.dwFlags  = (m_stickyKeys.dwFlags & (~SKF_HOTKEYACTIVE));
+    SystemParametersInfo(SPI_SETSTICKYKEYS, sizeof(stickyKeys), &stickyKeys, 0);
 
     //
     //  Set toggle keys
@@ -110,10 +104,10 @@ bool CPCSystem::Initialize(void)
     m_toggleKeys.cbSize = sizeof(m_toggleKeys);
     SystemParametersInfo(SPI_GETTOGGLEKEYS, sizeof(m_toggleKeys), &m_toggleKeys, 0);
 
-    TOGGLEKEYS ToggleKeys = { 0 };
-    ToggleKeys.cbSize   = sizeof(ToggleKeys);
-    ToggleKeys.dwFlags  = (m_toggleKeys.dwFlags & (~(TKF_HOTKEYACTIVE | TKF_TOGGLEKEYSON)));
-    SystemParametersInfo(SPI_SETTOGGLEKEYS, sizeof(ToggleKeys), &ToggleKeys, 0);
+    TOGGLEKEYS toggleKeys = { 0 };
+    toggleKeys.cbSize   = sizeof(toggleKeys);
+    toggleKeys.dwFlags  = (m_toggleKeys.dwFlags & (~(TKF_HOTKEYACTIVE | TKF_TOGGLEKEYSON)));
+    SystemParametersInfo(SPI_SETTOGGLEKEYS, sizeof(toggleKeys), &toggleKeys, 0);
 
     //
     //  Set filter keys
@@ -122,14 +116,14 @@ bool CPCSystem::Initialize(void)
     m_filterKeys.cbSize = sizeof(m_filterKeys);
     SystemParametersInfo(SPI_GETFILTERKEYS, sizeof(m_filterKeys), &m_filterKeys, 0);
 
-    FILTERKEYS FilterKeys   = { 0 };
-    FilterKeys.cbSize       = sizeof(FilterKeys);
-    FilterKeys.iWaitMSec    = m_filterKeys.iWaitMSec;
-    FilterKeys.iRepeatMSec  = m_filterKeys.iRepeatMSec;
-    FilterKeys.iDelayMSec   = m_filterKeys.iDelayMSec;
-    FilterKeys.iBounceMSec  = m_filterKeys.iBounceMSec;
-    FilterKeys.dwFlags      = (m_filterKeys.dwFlags & (~FKF_HOTKEYACTIVE));
-    SystemParametersInfo(SPI_SETFILTERKEYS, sizeof(FilterKeys), &FilterKeys, 0);
+    FILTERKEYS filterKeys   = { 0 };
+    filterKeys.cbSize       = sizeof(filterKeys);
+    filterKeys.iWaitMSec    = m_filterKeys.iWaitMSec;
+    filterKeys.iRepeatMSec  = m_filterKeys.iRepeatMSec;
+    filterKeys.iDelayMSec   = m_filterKeys.iDelayMSec;
+    filterKeys.iBounceMSec  = m_filterKeys.iBounceMSec;
+    filterKeys.dwFlags      = (m_filterKeys.dwFlags & (~FKF_HOTKEYACTIVE));
+    SystemParametersInfo(SPI_SETFILTERKEYS, sizeof(filterKeys), &filterKeys, 0);
 
     //
     //  Set screensave
@@ -138,11 +132,16 @@ bool CPCSystem::Initialize(void)
     SystemParametersInfo(SPI_GETSCREENSAVEACTIVE, 0, &m_bScreenSavingEnabled, 0);    
     SystemParametersInfo(SPI_SETSCREENSAVEACTIVE, 0, 0, 0);
 
+    //
+    //  Check OS & create window
+    //
     if (!CheckOS())
     {
-        OUTPUT("Operating system check failed\n");
+        OUTPUT("OS check failed: %s\n", m_szOsName);
         return false;
     };
+
+    OUTPUT("OS check success: %s\n", m_szOsName);
 
 #ifdef TMNT2_BUILD_EU
     SetLanguage();
@@ -171,19 +170,18 @@ void CPCSystem::Terminate(void)
 
 bool CPCSystem::Run(void)
 {
-    bool bResult = true;
-    MSG Msg;
+    MSG msg = { 0 };
 
-    if (PeekMessageA(&Msg, 0, 0, 0, PM_REMOVE))
+    if (PeekMessage(&msg, 0, 0, 0, PM_REMOVE))
     {
-        if (Msg.message == WM_QUIT)
+        if (msg.message == WM_QUIT)
         {
-            bResult = false;
+            return false;
         }
         else
         {
-            TranslateMessage(&Msg);
-            DispatchMessageA(&Msg);
+            TranslateMessage(&msg);
+            DispatchMessage(&msg);
         };
     }
     else if (m_bFocused)
@@ -191,70 +189,146 @@ bool CPCSystem::Run(void)
         Framework().Move();
         Framework().Render();
         Framework().Flip();
+    }
+    else
+    {
+        WaitMessage();
     };
 
-    return bResult;
+    return true;
 };
 
 
 bool CPCSystem::CheckOS(void)
 {
-    enum WINVERSION
+    enum OSVERSION
     {
-        WINVERSION_UNKNOWN = 0,
-        WINVERSION_2000,
-        WINVERSION_XP,
-        WINVERSION_VISTA,
-        WINVERSION_7,
-        WINVERSION_8,
-        WINVERSION_10,
+        OSVERSION_UNKNOWN = 0,
+        OSVERSION_WIN_95,
+        OSVERSION_TODO_2, // TODO possible OSR2 but idk
+        OSVERSION_WIN_98,
+        OSVERSION_WIN_ME,
+        OSVERSION_WIN_NT,
+        OSVERSION_WIN_2K,
+        OSVERSION_WIN_XP_OR_ABOVE,
+
+        OSVERSIONNUM,
     };
 
-    struct WINVERSION_INFO
+    static const bool s_abOsCompatibilityTable[OSVERSIONNUM] =
     {
-        const char* osName;
-        bool        compatibility;
+        /*  OSVERSION_UNKNOWN           */  false,
+        /*  OSVERSION_WIN_95            */  false,
+        /*  OSVERSION_TODO_2            */  false,
+        /*  OSVERSION_WIN_98            */  true,
+        /*  OSVERSION_WIN_ME            */  true,
+        /*  OSVERSION_WIN_NT            */  false,
+        /*  OSVERSION_WIN_2K            */  true,
+        /*  OSVERSION_WIN_XP_OR_ABOVE   */  true,
     };
 
-    static const WINVERSION_INFO s_aWinVersionInfo[] =
-    {
-        { "Unknown",                true    },
-        { "Windows 2000",           true    },
-        { "Windows XP",             true    },
-        { "Windows Vista",          true    },
-        { "Windows 7",              true    },
-        { "Windows 8",              true    },
-        { "Windows 10 or above",    true    },
-    };
+    OSVERSIONINFO osver = { 0 };
+    osver.dwOSVersionInfoSize = sizeof(osver);
 
-    WINVERSION WinVersion = WINVERSION_UNKNOWN;
-    OSVERSIONINFOEX osverex = { 0 };
-    osverex.dwOSVersionInfoSize = sizeof(osverex);
-
-    if (!GetVersionEx(LPOSVERSIONINFO(&osverex)))
+    if (!GetVersionEx(&osver))
         return false;
 
-    if (osverex.wProductType != VER_NT_WORKSTATION)
-        return false;
+    switch (osver.dwPlatformId)
+    {
+    case VER_PLATFORM_WIN32s:
+        std::strcpy(m_szOsName, "Windows 3.1 + Win32s");
+        return s_abOsCompatibilityTable[OSVERSION_WIN_95];
 
-    if (osverex.dwMajorVersion == 5 && osverex.dwMinorVersion == 0)
-        WinVersion = WINVERSION_2000;
-    else if (osverex.dwMajorVersion == 5 && osverex.dwMinorVersion >= 1)
-        WinVersion = WINVERSION_XP;
-    else if (osverex.dwMajorVersion == 6 && osverex.dwMinorVersion >= 0)
-        WinVersion = WINVERSION_VISTA;
-    else if (osverex.dwMajorVersion == 6 && osverex.dwMinorVersion >= 1)
-        WinVersion = WINVERSION_7;
-    else if (osverex.dwMajorVersion == 6 && osverex.dwMinorVersion >= 2)
-        WinVersion = WINVERSION_8;
-    else if (osverex.dwMajorVersion == 10 && osverex.dwMinorVersion >= 0)
-        WinVersion = WINVERSION_10;
-    else
-        WinVersion = WINVERSION_UNKNOWN;
+    case VER_PLATFORM_WIN32_WINDOWS:
+        {
+            if ((osver.dwMajorVersion == 4) &&
+                (osver.dwMinorVersion == 0))
+            {
+                std::strcpy(m_szOsName, "Windows 95");
+                return s_abOsCompatibilityTable[OSVERSION_WIN_95];
+            }
+            else if (osver.dwMinorVersion == 10)
+            {
+                std::strcpy(m_szOsName, "Windows 98");
+                return s_abOsCompatibilityTable[OSVERSION_WIN_98];
+            }
+            else if (osver.dwMinorVersion == 90)
+            {
+                std::strcpy(m_szOsName, "Windows Me");
+                return s_abOsCompatibilityTable[OSVERSION_WIN_ME];
+            };
+        }
+        break;
 
-    std::strcpy(m_szOsName, s_aWinVersionInfo[WinVersion].osName);
-    
-    return s_aWinVersionInfo[WinVersion].compatibility;
+    case VER_PLATFORM_WIN32_NT:
+        {
+            if ((osver.dwMajorVersion > 5) ||
+                (osver.dwMinorVersion > 1))
+            {
+                std::strcpy(m_szOsName, "Windows XP or Above");
+                return s_abOsCompatibilityTable[OSVERSION_WIN_XP_OR_ABOVE];
+            }
+            else if (osver.dwMajorVersion < 5)
+            {
+                return s_abOsCompatibilityTable[OSVERSION_WIN_NT];
+            };
+
+            OSVERSIONINFOEX osverex = { 0 };
+            osverex.dwOSVersionInfoSize = sizeof(osverex);
+
+            if (GetVersionEx(reinterpret_cast<OSVERSIONINFO*>(&osverex)))
+            {
+                if (osverex.dwMinorVersion > 0)
+                {
+                    if (osverex.wProductType == VER_NT_WORKSTATION)
+                    {
+                        std::strcpy(m_szOsName, "Windows XP");
+                        if (osverex.wSuiteMask == VER_SUITE_PERSONAL)
+                        {
+                            std::strcat(m_szOsName, " Home Edition");
+                            if (osverex.szCSDVersion[0] != '\0')
+                            {
+                                std::strcat(m_szOsName, " + (");
+                                std::strcat(m_szOsName, osverex.szCSDVersion);
+                                std::strcat(m_szOsName, ")");
+                            };
+                        };
+                    }
+                    else
+                    {
+                        std::strcpy(m_szOsName, "Windows .NET Server?");
+                        if (osverex.szCSDVersion[0] != '\0')
+                        {
+                            std::strcat(m_szOsName, " + (");
+                            std::strcat(m_szOsName, osverex.szCSDVersion);
+                            std::strcat(m_szOsName, ")");
+                        };
+                    };
+
+                    return s_abOsCompatibilityTable[OSVERSION_WIN_XP_OR_ABOVE];
+                }
+                else
+                {
+                    std::strcpy(m_szOsName, "Windows 2000");
+                    std::strcat(m_szOsName, (osverex.wProductType == VER_NT_WORKSTATION) ? " Professional" : " Server");
+                    if (osverex.szCSDVersion[0] != '\0')
+                    {
+                        std::strcat(m_szOsName, " + (");
+                        std::strcat(m_szOsName, osverex.szCSDVersion);
+                        std::strcat(m_szOsName, ")");
+                    };
+
+                    return s_abOsCompatibilityTable[OSVERSION_WIN_2K];
+                };
+            };
+        }
+        break;
+
+    default:
+        break;
+    };
+
+    return s_abOsCompatibilityTable[OSVERSION_UNKNOWN];
 };
 
 
@@ -326,39 +400,36 @@ void CPCSystem::SetLanguage(void)
 
 bool CPCSystem::WindowCreate(void)
 {
-    WNDCLASSEXA WndClass = { 0 };
-    WndClass.cbSize         = sizeof(WndClass);
-    WndClass.style          = CS_OWNDC;
-    WndClass.lpfnWndProc    = WndProc;
-    WndClass.cbClsExtra     = 0;
-    WndClass.cbWndExtra     = 0;
-    WndClass.hInstance      = CPCSpecific::m_hInstance;
-    WndClass.hIcon          = LoadIcon(GetModuleHandle(NULL), MAKEINTRESOURCE(IDI_APP));
-    WndClass.hCursor        = LoadCursor(NULL, IDC_ARROW);
-    WndClass.hbrBackground  = HBRUSH(GetStockObject(BLACK_BRUSH));
-    WndClass.lpszMenuName   = NULL;
-    WndClass.lpszClassName  = WNDNAME;
+    HWND hWndResult = NULL;
 
-    if (!RegisterClassExA(&WndClass))
+#if defined(TMNT2_SINGLE_INSTANCE)
+    hWndResult = FindWindow(WND_CLASS, WND_NAME);
+    if (hWndResult != NULL)
+    {
+        SetForegroundWindow(hWndResult);
+        return false;
+    };
+#endif /* defined(TMNT2_SINGLE_INSTANCE) */
+
+    WNDCLASSEX wc = { 0 };
+    wc.cbSize = sizeof(wc);
+    wc.style = CS_OWNDC;
+    wc.lpfnWndProc = WndProc;
+    wc.cbClsExtra = 0;
+    wc.cbWndExtra = 0;
+    wc.hInstance = CPCSpecific::m_hInstance;
+    wc.hIcon = LoadIcon(GetModuleHandle(NULL), MAKEINTRESOURCE(IDI_APP));
+    wc.hCursor = LoadCursor(NULL, IDC_ARROW);
+    wc.hbrBackground = reinterpret_cast<HBRUSH>(GetStockObject(BLACK_BRUSH));
+    wc.lpszMenuName = NULL;
+    wc.lpszClassName = WND_CLASS;
+
+    if (!RegisterClassEx(&wc))
         return false;
 
-    const DWORD Styles = (WS_OVERLAPPEDWINDOW);
-    
-    static_assert(Styles == 0xCF0000, "checkout");
-
-    HWND hWndResult = CreateWindowExA(NULL,
-                                      WNDNAME,
-                                      WNDNAME,
-                                      Styles,
-                                      CW_USEDEFAULT,
-                                      0,
-                                      CW_USEDEFAULT,
-                                      0,
-                                      NULL,
-                                      NULL,
-                                      CPCSpecific::m_hInstance,
-                                      NULL);
-
+    hWndResult = CreateWindowEx(NULL, WND_CLASS, WND_NAME, WS_OVERLAPPEDWINDOW,
+                                CW_USEDEFAULT, 0, CW_USEDEFAULT, 0,
+                                NULL, NULL, CPCSpecific::m_hInstance, NULL);
     if (!hWndResult)
         return false;
 
@@ -378,9 +449,5 @@ void CPCSystem::WindowDestroy(void)
         CPCSpecific::m_hWnd = NULL;
     };
 
-    MSG msg;
-    while (PeekMessageA(&msg, 0, 0, 0, PM_REMOVE))
-        ;
-
-    UnregisterClassA(WNDNAME, NULL);
+    UnregisterClass(WND_CLASS, NULL);
 };

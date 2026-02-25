@@ -81,11 +81,11 @@ void CEffectLight::Draw(void)
     m_nNumActiveLights = 0;
 
     RwMatrix matrixView;
-    RwMatrixSetIdentityMacro(&matrixView);
+    RwMatrixSetIdentity(&matrixView);
     CGameProperty::GetCameraViewMatrix(&matrixView);
 
     RwMatrix matrixBillboard;
-    RwMatrixSetIdentityMacro(&matrixBillboard);
+    RwMatrixSetIdentity(&matrixBillboard);
     Math::Matrix_Invert(&matrixBillboard, &matrixView);
 
     RwV3d vEyePos = matrixBillboard.pos;
@@ -254,45 +254,29 @@ void CEffectLight::SetVertex(LIGHTWORK* pWork, float fRadius, const RwRGBA& colo
 
     RwIm3DVertex* pVertex = pWork->aVertices;
 
-    pVertex[0].objVertex.x = x;
-    pVertex[0].objVertex.y = y;
-    pVertex[0].objVertex.z = 0.0f;
-    pVertex[0].objNormal.x = 0.0f;
-    pVertex[0].objNormal.y = 0.0f;
-    pVertex[0].objNormal.z = 0.0f;
-    pVertex[0].u = 0.0f;
-    pVertex[0].v = 1.0f;
-    pVertex[0].color = RWRGBALONG(color.red, color.green, color.blue, color.alpha);
+    RwIm3DVertexSetPos(&pVertex[0], x, y, 0.0f);
+    RwIm3DVertexSetNormal(&pVertex[0], 0.0f, 0.0f, 0.0f);
+    RwIm3DVertexSetRGBA(&pVertex[0], color.red, color.green, color.blue, color.alpha);
+    RwIm3DVertexSetU(&pVertex[0], 0.0f);
+    RwIm3DVertexSetV(&pVertex[0], 1.0f);
 
-    pVertex[1].objVertex.x = x;
-    pVertex[1].objVertex.y = y * -1.0f;
-    pVertex[1].objVertex.z = 0.0f;
-    pVertex[1].objNormal.x = 0.0f;
-    pVertex[1].objNormal.y = 0.0f;
-    pVertex[1].objNormal.z = 0.0f;
-    pVertex[1].u = 0.0f;
-    pVertex[1].v = 0.0f;
-    pVertex[1].color = RWRGBALONG(color.red, color.green, color.blue, color.alpha);
+    RwIm3DVertexSetPos(&pVertex[1], x, (y * -1.0f), 0.0f);
+    RwIm3DVertexSetNormal(&pVertex[1], 0.0f, 0.0f, 0.0f);
+    RwIm3DVertexSetRGBA(&pVertex[1], color.red, color.green, color.blue, color.alpha);
+    RwIm3DVertexSetU(&pVertex[1], 0.0f);
+    RwIm3DVertexSetV(&pVertex[1], 0.0f);
 
-    pVertex[2].objVertex.x = x * -1.0f;
-    pVertex[2].objVertex.y = y;
-    pVertex[2].objVertex.z = 0.0f;
-    pVertex[2].objNormal.x = 0.0f;
-    pVertex[2].objNormal.y = 0.0f;
-    pVertex[2].objNormal.z = 0.0f;
-    pVertex[2].u = 1.0f;
-    pVertex[2].v = 1.0f;
-    pVertex[2].color = RWRGBALONG(color.red, color.green, color.blue, color.alpha);
+    RwIm3DVertexSetPos(&pVertex[2], (x * -1.0f), y, 0.0f);
+    RwIm3DVertexSetNormal(&pVertex[2], 0.0f, 0.0f, 0.0f);
+    RwIm3DVertexSetRGBA(&pVertex[2], color.red, color.green, color.blue, color.alpha);
+    RwIm3DVertexSetU(&pVertex[2], 1.0f);
+    RwIm3DVertexSetV(&pVertex[2], 1.0f);
 
-    pVertex[3].objVertex.x = x * -1.0f;
-    pVertex[3].objVertex.y = y * -1.0f;
-    pVertex[3].objVertex.z = 0.0f;
-    pVertex[3].objNormal.x = 0.0f;
-    pVertex[3].objNormal.y = 0.0f;
-    pVertex[3].objNormal.z = 0.0f;
-    pVertex[3].u = 1.0f;
-    pVertex[3].v = 0.0f;
-    pVertex[3].color = RWRGBALONG(color.red, color.green, color.blue, color.alpha);
+    RwIm3DVertexSetPos(&pVertex[3], (x * -1.0f), (y * -1.0f), 0.0f);
+    RwIm3DVertexSetNormal(&pVertex[3], 0.0f, 0.0f, 0.0f);
+    RwIm3DVertexSetRGBA(&pVertex[3], color.red, color.green, color.blue, color.alpha);
+    RwIm3DVertexSetU(&pVertex[3], 1.0f);
+    RwIm3DVertexSetV(&pVertex[3], 0.0f);
 };
 
 

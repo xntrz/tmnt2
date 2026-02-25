@@ -199,7 +199,7 @@ CBaseGunnerEnemyChr::CFireStatusObserver::Observing(void) /*override*/
         fYaw = fDir;
 
         RwMatrix matRotY;
-        RwMatrixSetIdentityMacro(&matRotY);
+        RwMatrixSetIdentity(&matRotY);
         Math::Matrix_RotateY(&matRotY, -fDir);
         RwV3dTransformVector(&vec, &vec, &matRotY);
 
@@ -207,7 +207,7 @@ CBaseGunnerEnemyChr::CFireStatusObserver::Observing(void) /*override*/
     };
 
     RwMatrix matRot;
-    RwMatrixSetIdentityMacro(&matRot);
+    RwMatrixSetIdentity(&matRot);
     Math::Matrix_RotationYawPitchRoll(&matRot, fYaw, fPitch, 0.0f);
     RwV3dTransformVector(&vecDir, &vecDir, &matRot);
 

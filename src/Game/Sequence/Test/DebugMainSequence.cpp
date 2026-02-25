@@ -5,8 +5,6 @@
 #include "DebugMenuProcess.hpp"
 #include "DbgUnlockProcess.hpp"
 
-#include "Enemy/EnemyTestPlayerAI.hpp"
-
 #include "Game/Component/GameData/GameData.hpp"
 #include "Game/Component/GameMain/AreaInfo.hpp"
 #include "Game/Component/Gimmick/GimmickDebug.hpp"
@@ -113,18 +111,6 @@ static void CallArea(void* param)
 };
 
 
-//
-//	Calls text print sequence
-// 	Values for param:
-// 		0 - system text
-//      1 - game text
-//
-static void CallPrintText(void* param)
-{
-    s_pDebugMainSeq->Call(PROCLABEL_SEQ_MAKETEXT, param, true);
-};
-
-
 /*
  *  All tests (except enemy) runs in singleplayer mode so we need to have keyboard as main controller (first)
  */
@@ -179,9 +165,7 @@ bool CDebugMainSequence::OnAttach(const void* pParam)
     m_menu.AddTrigger("Test movie",             CallSeq,        PROCLABEL_SEQ_TESTMV);
     m_menu.AddTrigger("Test sound",             CallSeq,        PROCLABEL_SEQ_TESTSD);
     m_menu.AddTrigger("Test pad",               CallSeq,        PROCLABEL_SEQ_TESTPAD);
-    m_menu.AddTrigger("Test enemy",             CallSeq,        PROCLABEL_SEQ_ENEMYTESTSEL);
-    m_menu.AddTrigger("Print system text",      CallPrintText,  0);
-    m_menu.AddTrigger("Print game text",        CallPrintText,  1);
+    m_menu.AddTrigger("Test enemmy",            CallSeq,        PROCLABEL_SEQ_TESTENEMYSEL);
     m_menu.AddSeparator();
     m_menu.AddInt("Call area map view", 0, 7, 1, 0, { "NY", "ZERO", "DHO", "TRI", "JPN", "FNY", "KURA" }, [](int32 nValue, bool bTrigger) {    
         const AREAID::VALUE idAreaOfWorld[] =
@@ -199,16 +183,6 @@ bool CDebugMainSequence::OnAttach(const void* pParam)
             s_pDebugMainSeq->Call(PROCLABEL_SEQ_AREA, (const void*)idAreaOfWorld[nValue]);
     });
     m_menu.AddSeparator();
-//    m_menu.AddBool("ENABLE player AI", s_bNormalGamePAI, [](bool value, bool trigger) {
-//        if (value != s_bNormalGamePAI)
-//        {
-//            s_bNormalGamePAI = value;
-//            if (s_bNormalGamePAI)
-//                EnemyTestPlayerAILaunch(s_pDebugMainSeq);
-//            else
-//                EnemyTestPlayerAIKill(s_pDebugMainSeq);
-//        };
-//    });
     m_menu.AddTrigger("ultimate ninja nexus",     CallArea,       CallAreaParamMake(AREAID::ID_AREA60_D, 4, 0)); // tourney
     m_menu.AddTrigger("ultimate ninja bridge p",  CallArea,       CallAreaParamMake(AREAID::ID_AREA44, 1, 0)); // bridge pillar
     m_menu.AddTrigger("ultimate ninja bridge",    CallArea,       CallAreaParamMake(AREAID::ID_AREA44, 0, CALLAREA_FLAG_STAGE_SERIES)); // bridge
@@ -234,7 +208,7 @@ bool CDebugMainSequence::OnAttach(const void* pParam)
     //m_menu.AddTrigger("rats 1 test",            CallArea,       CallAreaParamMake(AREAID::ID_AREA18, 1, 0)); // sewers
     //m_menu.AddTrigger("rats 2 test",            CallArea,       CallAreaParamMake(AREAID::ID_AREA60_D, 3, 0)); // tourney
     //m_menu.AddTrigger("spasmosaur test",        CallArea,       AREAID::ID_AREA31); // tri arena
-    //m_menu.AddTrigger("drako test",             CallArea,       CallAreaParamMake(AREAID::ID_AREA60_D, 9, 0));
+    m_menu.AddTrigger("drako test",             CallArea,       CallAreaParamMake(AREAID::ID_AREA60_D, 9, 0));
     //m_menu.AddTrigger("slashuur 1 test",        CallArea,       CallAreaParamMake(AREAID::ID_AREA20, 1, 0));    // factory
     //m_menu.AddTrigger("slashuur 2 test",        CallArea,       AREAID::ID_AREA50); // air
     //m_menu.AddTrigger("slashuur 3 test",        CallArea,       CallAreaParamMake(AREAID::ID_AREA60_D, 7, 0)); // tourney

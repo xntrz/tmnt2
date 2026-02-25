@@ -63,13 +63,13 @@ inline CMapCamera* CGamePropertyObject::GetMapCamera(void) const
 
 inline void CGamePropertyObject::GetCameraViewMatrix(RwMatrix* pMatrix) const
 {
-    std::memcpy(pMatrix, RwCameraGetViewMatrixMacro(m_pRwCamera), sizeof(RwMatrix));
+    std::memcpy(pMatrix, RwCameraGetViewMatrix(m_pRwCamera), sizeof(RwMatrix));
 };
 
 
 inline void CGamePropertyObject::GetCameraFrameMatrix(RwMatrix* pMatrix) const
 {
-    std::memcpy(pMatrix, RwFrameGetMatrixMacro(RwCameraGetFrameMacro(m_pRwCamera)), sizeof(RwMatrix));
+    std::memcpy(pMatrix, RwFrameGetMatrix(RwCameraGetFrame(m_pRwCamera)), sizeof(RwMatrix));
 };
 
 

@@ -303,23 +303,23 @@ static RENDERSTATEDEFAULT s_RsDefault =
 
 /*static*/ void CRenderStateManager::SetDefault(void)
 {
-    RENDERSTATE_PUSH(rwRENDERSTATETEXTURERASTER,        0);
-    RENDERSTATE_PUSH(rwRENDERSTATETEXTUREADDRESSU,      s_RsDefault.m_textureAddressU);
-    RENDERSTATE_PUSH(rwRENDERSTATETEXTUREADDRESSV,      s_RsDefault.m_textureAddressV);
-    RENDERSTATE_PUSH(rwRENDERSTATEBORDERCOLOR,          s_RsDefault.m_uBorderColor);
-    RENDERSTATE_PUSH(rwRENDERSTATETEXTUREPERSPECTIVE,   s_RsDefault.m_bTexturePerspective);
-    RENDERSTATE_PUSH(rwRENDERSTATETEXTUREFILTER,        s_RsDefault.m_textureFilter);
-    RENDERSTATE_PUSH(rwRENDERSTATEZTESTENABLE,          s_RsDefault.m_bZTest);
-    RENDERSTATE_PUSH(rwRENDERSTATEZWRITEENABLE,         s_RsDefault.m_bZWrite);
-    RENDERSTATE_PUSH(rwRENDERSTATESHADEMODE,            s_RsDefault.m_shadeMode);
-    RENDERSTATE_PUSH(rwRENDERSTATEVERTEXALPHAENABLE,    s_RsDefault.m_bVertexAlpha);
-    RENDERSTATE_PUSH(rwRENDERSTATESRCBLEND,             s_RsDefault.m_srcBlendFunc);
-    RENDERSTATE_PUSH(rwRENDERSTATEDESTBLEND,            s_RsDefault.m_dstBlendFunc);
-    RENDERSTATE_PUSH(rwRENDERSTATEFOGENABLE,            s_RsDefault.m_bFog);
-    RENDERSTATE_PUSH(rwRENDERSTATEFOGCOLOR,             uint32(RWRGBALONGEX(s_FogColor)));
-    RENDERSTATE_PUSH(rwRENDERSTATEFOGTYPE,              s_RsDefault.m_fogType);
-    RENDERSTATE_PUSH(rwRENDERSTATECULLMODE,             s_RsDefault.m_cullMode);
-    RENDERSTATE_PUSH(rwRENDERSTATEALPHATESTFUNCTION,    s_RsDefault.m_alphaTestFunc);
+    RENDERSTATE_PUSH(rwRENDERSTATETEXTURERASTER, 0);
+    RENDERSTATE_PUSH(rwRENDERSTATETEXTUREADDRESSU, s_RsDefault.m_textureAddressU);
+    RENDERSTATE_PUSH(rwRENDERSTATETEXTUREADDRESSV, s_RsDefault.m_textureAddressV);
+    RENDERSTATE_PUSH(rwRENDERSTATEBORDERCOLOR, s_RsDefault.m_uBorderColor);
+    RENDERSTATE_PUSH(rwRENDERSTATETEXTUREPERSPECTIVE, s_RsDefault.m_bTexturePerspective);
+    RENDERSTATE_PUSH(rwRENDERSTATETEXTUREFILTER, s_RsDefault.m_textureFilter);
+    RENDERSTATE_PUSH(rwRENDERSTATEZTESTENABLE, s_RsDefault.m_bZTest);
+    RENDERSTATE_PUSH(rwRENDERSTATEZWRITEENABLE, s_RsDefault.m_bZWrite);
+    RENDERSTATE_PUSH(rwRENDERSTATESHADEMODE, s_RsDefault.m_shadeMode);
+    RENDERSTATE_PUSH(rwRENDERSTATEVERTEXALPHAENABLE, s_RsDefault.m_bVertexAlpha);
+    RENDERSTATE_PUSH(rwRENDERSTATESRCBLEND, s_RsDefault.m_srcBlendFunc);
+    RENDERSTATE_PUSH(rwRENDERSTATEDESTBLEND, s_RsDefault.m_dstBlendFunc);
+    RENDERSTATE_PUSH(rwRENDERSTATEFOGENABLE, s_RsDefault.m_bFog);
+    RENDERSTATE_PUSH(rwRENDERSTATEFOGCOLOR, RWRGBALONG(s_FogColor.red, s_FogColor.green, s_FogColor.blue, s_FogColor.alpha));
+    RENDERSTATE_PUSH(rwRENDERSTATEFOGTYPE, s_RsDefault.m_fogType);
+    RENDERSTATE_PUSH(rwRENDERSTATECULLMODE, s_RsDefault.m_cullMode);
+    RENDERSTATE_PUSH(rwRENDERSTATEALPHATESTFUNCTION, s_RsDefault.m_alphaTestFunc);
     RENDERSTATE_PUSH(rwRENDERSTATEALPHATESTFUNCTIONREF, s_RsDefault.m_byAlphaTestRef);
 };
 
@@ -343,7 +343,10 @@ static RENDERSTATEDEFAULT s_RsDefault =
     {
         s_FogColor = color;
         s_RsDefault.m_bFog = true;
-        s_RsDefault.m_uFogColor = RWRGBALONGEX(s_FogColor);
+        s_RsDefault.m_uFogColor = RWRGBALONG(s_FogColor.red,
+                                             s_FogColor.green,
+                                             s_FogColor.blue,
+                                             s_FogColor.alpha);
     }
     else
     {

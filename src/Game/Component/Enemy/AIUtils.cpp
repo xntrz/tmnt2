@@ -408,7 +408,7 @@ CAIUtils::CheckObstacle(const CCharacterCompositor* pChrCompositor,
             Math::Vec3_Normalize(&vecBuf, &vecDir);
 
             RwMatrix matBuf;
-            RwMatrixSetIdentityMacro(&matBuf);
+            RwMatrixSetIdentity(&matBuf);
             Math::Matrix_RotateY(&matBuf, fAngle);
 
             RwV3d vecCorrect = Math::VECTOR3_ZERO;
@@ -764,7 +764,7 @@ CAIUtils::CalcEscapePointForHitPlane(RwV3d* avecPos,
     int32 checkNum = static_cast<int32>(fCheckDistance / fCheckInterval);
 
     RwMatrix matBuf;
-    RwMatrixSetIdentityMacro(&matBuf);
+    RwMatrixSetIdentity(&matBuf);
 
     RwV3d avecDirBase[2] = { Math::VECTOR3_ZERO };
 

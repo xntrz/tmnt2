@@ -367,13 +367,12 @@ void CLocus::GetCompletionListLow(RwV3d* aCompletionList)
 void CLocus::SetVertex(RwIm3DVertex* pVertex, RwV3d* pVector, RwRGBA& color, uint8 alpha, float u, float v)
 {
     color.alpha = alpha;
-    
-    pVertex->color = RWRGBALONGEX(color);
-    pVertex->objVertex.x = pVector->x;
-    pVertex->objVertex.y = pVector->y;
-    pVertex->objVertex.z = pVector->z;
-    pVertex->u = u;
-    pVertex->v = v;
+
+    RwIm3DVertexSetPos(pVertex, pVector->x, pVector->y, pVector->z);
+    RwIm3DVertexSetNormal(pVertex, 0.0f, 0.0f, 0.0f);
+    RwIm3DVertexSetRGBA(pVertex, color.red, color.green, color.blue, color.alpha);
+    RwIm3DVertexSetU(pVertex, u);
+    RwIm3DVertexSetV(pVertex, v);
 };
 
 

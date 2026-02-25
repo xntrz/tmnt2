@@ -11,7 +11,6 @@
 #include "System/Common/Sprite.hpp"
 #include "System/Common/System2D.hpp"
 #include "System/Common/Screen.hpp"
-#include "System/Common/File/FileID.hpp"
 
 
 struct CREDITINFO
@@ -683,7 +682,7 @@ void CStaffRoll::Attach(void)
     
     CGameData::Attribute().SetInteractive(false);
     CTextureManager::GenerationInc();
-    CDataLoader::Regist(FILEID::ID_LOGO);
+    CDataLoader::Regist(FPATH("Common/Menu/Logo/Logo.lpac"));
     m_ePhase = PHASE_LOAD;
 };
 

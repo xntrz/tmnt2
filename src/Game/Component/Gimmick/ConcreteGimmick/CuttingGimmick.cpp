@@ -376,8 +376,8 @@ void CCuttingGimmick::onCut(void)
 
     CModel* pModel = m_model.GetModel(CCuttingGimmickModel::CUTMODELKIND_NORMAL_UP);
     RpClump* pClump = pModel->GetClump();
-    RwFrame* pFrame = RpClumpGetFrameMacro(pClump);
-    RwMatrix* pModeling = RwFrameGetMatrixMacro(pFrame);
+    RwFrame* pFrame = RpClumpGetFrame(pClump);
+    RwMatrix* pModeling = RwFrameGetMatrix(pFrame);
 
     RwV3d vVelocity = Math::VECTOR3_ZERO;
     vVelocity.x = -pModeling->right.x;

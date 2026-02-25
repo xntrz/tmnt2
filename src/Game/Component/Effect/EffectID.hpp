@@ -6,8 +6,9 @@ namespace EFFECTID
     enum VALUE
     {
         ID_UNKNOWN = 0,
-        
-        ID_LEO_HIT_S,
+
+        ID_GENERIC_START,
+        ID_LEO_HIT_S = ID_GENERIC_START,
         ID_LEO_HIT_B,
         ID_LEO_SP,
         ID_RAP_HIT_S,
@@ -85,7 +86,9 @@ namespace EFFECTID
         ID_ALL_BREATH,
         ID_WHITESMOKE,
         ID_BLACKSMOKE,
-        ID_FIRE_TORCH,
+        ID_GENERIC_END,
+
+        ID_FIRE_TORCH = ID_GENERIC_END,
         ID_ROCK,
         ID_WOOD,
         ID_METAL,
@@ -163,10 +166,11 @@ namespace EFFECTID
         ID_RIDE_WIND,
         ID_RAIN,
         ID_SNOW,
-        
+
         ID_MAX,
     };
 
     VALUE GetIDFromName(const char* pszName);
     const char* GetNameFromID(VALUE idEffect);
+    bool IsGeneric(VALUE idEffect);
 };

@@ -5,6 +5,12 @@
 #include "crimwsfd.h"
 
 
+#define MV_WIDTH        (1024)
+#define MV_HEIGHT       (512)
+#define MV_PIXEL_COMP   (4)
+#define MV_BPS          ((MV_WIDTH * MV_HEIGHT) * MV_PIXEL_COMP)
+
+
 class CMovie
 {
 public:
@@ -22,6 +28,7 @@ public:
     void ReleaseMovieFrame(void);
     bool LoadMovieFrame(void);
     void StartAfs(int32 partitionId, int32 fileId);
+    void StartFname(const char* pszFilename);
     const MwsfdFrmObj& FrameObj(void) const;
 
 protected:

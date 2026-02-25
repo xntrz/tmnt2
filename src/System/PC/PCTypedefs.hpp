@@ -1,6 +1,18 @@
 #pragma once
 
+#if !defined(WIN32_LEAN_AND_MEAN)
 #define WIN32_LEAN_AND_MEAN
+#endif /* !defined(WIN32_LEAN_AND_MEAN) */
+
+#if !defined(WIN32_EXTRA_LEAN)
+#define WIN32_EXTRA_LEAN
+#endif /* !defined(WIN32_EXTRA_LEAN) */
+
+#if !defined(VC_EXTRALEAN)
+#define VC_EXTRALEAN
+#endif /* !defined(VC_EXTRALEAN) */
+
+
 #include <Windows.h>
 #include <tchar.h>
 

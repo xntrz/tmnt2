@@ -75,24 +75,24 @@ public:
 #endif  
         
         inline iterator_base(void)
-            : m_list(nullptr)
-            , m_node(nullptr)
+        : m_list(nullptr)
+        , m_node(nullptr)
         {
             ;
         };
 
 
         inline iterator_base(Ty* list, Ty* node)
-            : m_list(list)
-            , m_node(node)
+        : m_list(list)
+        , m_node(node)
         {
             ;
         };
 
 
         inline iterator_base(const iterator_base& it)
-            : m_list(it.m_list)
-            , m_node(it.m_node)
+        : m_list(it.m_list)
+        , m_node(it.m_node)
         {
             ;
         };
@@ -401,23 +401,32 @@ public:
 
     inline bool contains(const CListNode<T, tag>* node) const
     {
-        return std::any_of(begin(), end(), [&](CListNode<T, tag>& n) {
-            return (node == &n);
-        });
+        auto it = begin();
+        auto itEnd = end();
+        while (it != itEnd)
+        {
+            if (node == &(*it))
+                return true;
+            
+            ++it;
+        };
+
+        return false;        
     };
 
 
     inline pointer search(int32 no)
     {
-#ifdef _DEBUG
-        int32 numNodes = static_cast<int32>(std::distance(begin(), end()));
+        auto it = begin();
+        auto itEnd = end();
+        while (it != itEnd)
+        {
+            if (!no--)
+                return &(*it);
 
-        ASSERT(no >= 0);
-        ASSERT(no < numNodes);
-#endif /* _DEBUG */
+            ++it;
+        };            
 
-        iterator it = begin();
-        std::advance(it, no);
-		return &(*it);
+        return nullptr;
     };
 };

@@ -1,0 +1,8 @@
+//
+//  Preprocess rules for path2id.py script
+//  Format: { MACRO; HeaderFile.h; tableName; pathIgnoreLevel; }
+//
+
+{ FPATH;      ../../../src/System/Common/File/FnameTable_PC_EU.hpp;           m_apszFilename; 1; },
+{ FPATH_LANG; ../../../src/System/Common/File/FnameTable_PC_EU.hpp;           m_apszFilename; 2; },
+{ MVPATH;     ../../../src/Game/System/Movie/MovieDataManagerTable_PC_EU.hpp; s_aMovieTable;  0; },

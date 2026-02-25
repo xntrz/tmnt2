@@ -707,7 +707,7 @@ namespace PlayerStatus
             if (pLiftObj)
             {
                 RwMatrix matrix;
-                RwMatrixSetIdentityMacro(&matrix);
+                RwMatrixSetIdentity(&matrix);
                 Math::Matrix_RotateY(&matrix, rPlayerChr.GetDirection());
 
                 RwV3d vVelocity = { 0.0f, -1.0f, 1.0f };

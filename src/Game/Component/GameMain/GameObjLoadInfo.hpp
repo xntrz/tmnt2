@@ -6,7 +6,7 @@ class CGameObjLoadInfo
 public:
     CGameObjLoadInfo(void);
     virtual ~CGameObjLoadInfo(void);
-    virtual int32 GetFileID(void) const;
+    virtual FNAME GetFileID(void) const;
     virtual bool MakeFileName(char* pszFilenameBuff) const = 0;
     const char* GetFileName(void) const;
     int32 GetDependObjInfoNum(void) const;

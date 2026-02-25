@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+    
+    <PropertyGroup>
+        <SourcePath>..\..\..\src</SourcePath>
+        <ObjPath>..\..\..\obj</ObjPath>
+        <ProjDir>$([System.IO.Path]::GetDirectoryName('$(MSBuildProjectFullPath)'))</ProjDir>
+
+        <PreprocessPath>$(ObjPath)\$(IntDir)preprocess</PreprocessPath>
+        <PreprocessPath>$(PreprocessPath.Replace($(ProjectName), '').Replace('\\', '\'))</PreprocessPath>
+        
+        <SourceDir>$([System.IO.Path]::Combine($(ProjDir), $(SourcePath)))</SourceDir>
+        <SourceDir>$([System.IO.Path]::Combine($(SourceDir), ''))\</SourceDir>    
+        
+        <PreprocessDir>$([System.IO.Path]::Combine($(ProjDir), $(PreprocessPath)))</PreprocessDir>
+        <PreprocessDir>$([System.IO.Path]::Combine($(PreprocessDir), ''))\</PreprocessDir>
+        <PreprocessDir>$(PreprocessDir.Replace($(ProjectName), '').Replace('\\', '\'))</PreprocessDir>
+
+        <ExcludeDir>
+            <!-- Example: $(SourceDir)System\**\*; -->
+        </ExcludeDir>
+
+        <PreprocessScript>../../../scripts/path2id/path2id.py</PreprocessScript>
+        <PreprocessRuleNA>preproc_rule_na.txt</PreprocessRuleNA>
+        <PreprocessRuleEU>preproc_rule_eu.txt</PreprocessRuleEU>
+
+    </PropertyGroup>
+
+</Project>

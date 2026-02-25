@@ -7,7 +7,6 @@
 #include "Game/System/DataLoader/DataLoader.hpp"
 #include "Game/System/Texture/TextureManager.hpp"
 #include "System/Common/Screen.hpp"
-#include "System/Common/File/FileID.hpp"
 
 
 /*static*/ CProcess* CUnlockSequence::Instance(void)
@@ -43,7 +42,7 @@ bool CUnlockSequence::OnAttach(const void* pParam)
     if (m_UnnnotifiedSecretID != SECRETID::ID_NONE)
     {
         CScreen::SetClearColor({ 0x00, 0x00, 0x00, 0xFF });
-        CDataLoader::Regist(FILEID::ID_UNLOCK);
+        CDataLoader::Regist(FPATH("Common/Menu/Window/Unlock/Unlock.lpac"));
         CLoadingDisplay::Start(this);
         
         m_phase = PHASE_LOAD;

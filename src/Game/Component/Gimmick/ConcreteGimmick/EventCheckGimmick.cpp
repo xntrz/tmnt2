@@ -459,7 +459,7 @@ void CAreaCheckGimmick::SetAreaParameter(AREATYPE areatype, void* pParam)
     ASSERT(pBasicParam);
 
     RwMatrix matrixRotation;
-    RwMatrixSetIdentityMacro(&matrixRotation);
+    RwMatrixSetIdentity(&matrixRotation);
     CGimmickUtils::QuaternionToRotationMatrix(&matrixRotation, &pBasicParam->m_quat);
 
     m_areatype = areatype;
@@ -498,11 +498,11 @@ void CAreaCheckGimmick::SetAreaParameter(AREATYPE areatype, void* pParam)
             aWallVertex[3].z = 0.0f;
 
             RwMatrix matrixTranslate;
-            RwMatrixSetIdentityMacro(&matrixTranslate);
+            RwMatrixSetIdentity(&matrixTranslate);
             RwMatrixTranslate(&matrixTranslate, &pWallParam->m_vPosition, rwCOMBINEREPLACE);            
             
             RwMatrix matrix;
-            RwMatrixSetIdentityMacro(&matrix);
+            RwMatrixSetIdentity(&matrix);
             Math::Matrix_Multiply(&matrix, &matrixRotation, &matrixTranslate);
             
             RwV3dTransformPoints(m_aWallVertex, aWallVertex, COUNT_OF(aWallVertex), &matrix);
@@ -549,11 +549,11 @@ void CAreaCheckGimmick::SetAreaParameter(AREATYPE areatype, void* pParam)
             aBoxVertex[7].z = pBoxParam->m_box.z * 0.5f;
 
             RwMatrix matrixTranslate;
-            RwMatrixSetIdentityMacro(&matrixTranslate);
+            RwMatrixSetIdentity(&matrixTranslate);
             RwMatrixTranslate(&matrixTranslate, &pBoxParam->m_vPosition, rwCOMBINEREPLACE);
 
             RwMatrix matrix;
-            RwMatrixSetIdentityMacro(&matrix);
+            RwMatrixSetIdentity(&matrix);
             Math::Matrix_Multiply(&matrix, &matrixRotation, &matrixTranslate);
 
             RwV3dTransformPoints(m_aBoxVertex, aBoxVertex, COUNT_OF(aBoxVertex), &matrix);

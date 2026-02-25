@@ -5,7 +5,6 @@
 #include "Game/System/Misc/Gamepad.hpp"
 #include "Game/System/Sound/GameSound.hpp"
 #include "Game/System/Texture/TextureManager.hpp"
-#include "System/Common/File/FileID.hpp"
 #include "System/Common/Screen.hpp"
 #include "System/Common/Sprite.hpp"
 
@@ -32,7 +31,7 @@ bool CComingSoonSequence::OnAttach(const void* pParam)
 {
     CTextureManager::GenerationInc();
     
-    CDataLoader::Regist(FILEID::ID_COMINGSOON);
+    CDataLoader::Regist(FPATH("Common/Menu/ComingSoon/ComingSoon.lpac"));
     
     m_eStep = STEP_READFILE;
     m_fTimer = 0.0f;
@@ -132,21 +131,15 @@ void CComingSoonSequence::OnDraw(void) const
     switch (m_eStep)
     {
     case STEP_FADEIN:
-        {
-            DrawScreen(m_fTimer);
-        }
+        DrawScreen(m_fTimer);
         break;
-        
+
     case STEP_DRAW:
-        {
-            DrawScreen(1.0f);
-        }
+        DrawScreen(1.0f);
         break;
-        
+
     case STEP_FADEOUT:
-        {
-            DrawScreen(1.0f - m_fTimer);
-        }
+        DrawScreen(1.0f - m_fTimer);
         break;
 
     default:
@@ -157,15 +150,15 @@ void CComingSoonSequence::OnDraw(void) const
 
 void CComingSoonSequence::DrawScreen(float t) const
 {
-    uint8 AlphaBasis = uint8(t * 255.0f);
-    AlphaBasis = uint8(Clamp(int32(AlphaBasis), 0, 255));
+    float alpha = Clamp(t * 255.0f, 0.0f, 255.0f);
+    uint8 alphaBasis = static_cast<uint8>(alpha);
 
     CSprite::PushRenderStates();
 
     CSprite sprite;
     sprite.SetTexture(m_pTexture);
 	sprite.SetPositionAndSize(0.0f, 0.0f, 640.0f, 480.0f);
-    sprite.SetRGBA(255, 255, 255, AlphaBasis);
+    sprite.SetRGBA(255, 255, 255, alphaBasis);
     sprite.SetUV(0.0f, 0.0f, 0.625f, 0.9375f);
     sprite.Draw();
 

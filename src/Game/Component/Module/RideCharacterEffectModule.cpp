@@ -134,7 +134,7 @@ void CRideEffectUnit::Run(void)
     ASSERT(pMatrix);
 
     RwMatrix matrix;
-    RwMatrixSetIdentityMacro(&matrix);
+    RwMatrixSetIdentity(&matrix);
     std::memcpy(&matrix, pMatrix, sizeof(matrix));
 
     RwV3d vPosition = Math::VECTOR3_ZERO;

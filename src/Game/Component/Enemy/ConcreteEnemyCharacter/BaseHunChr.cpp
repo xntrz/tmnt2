@@ -970,7 +970,11 @@ CBaseHunChr::CBaseHunChr(ENEMYID::VALUE enemyId)
         bIsAttackEffective  &&
         bIsAttackNotGuarded)
     {
-		int32 dmgAmount = static_cast<int32>(rCalc.CalcDamage(attackResult));
+        /* NOTE: when revenge mode is activated in status effect it will not broke it.
+                 So for example if make freeze effect by Karai right before revenge mode
+                 activate it will stays in freeze with NO_REACTION flag and receiving
+                 damage like a dummy during whole freeze effect - 6 sec */
+        int32 dmgAmount = static_cast<int32>(rCalc.CalcDamage(attackResult));
         AddRevengeDamage(dmgAmount);
 	};
 

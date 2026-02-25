@@ -79,7 +79,7 @@ CFallRubbleGimmick::CFallRubbleGimmick(const char* pszName, void* pParam)
     //  init pos & rot
     //    
     RwMatrix matRot;
-    RwMatrixSetIdentityMacro(&matRot);
+    RwMatrixSetIdentity(&matRot);
     CGimmickUtils::QuaternionToRotationMatrix(&matRot, &pBasicParam->m_quat);
     
     RwV3d vRotation = Math::VECTOR3_ZERO;

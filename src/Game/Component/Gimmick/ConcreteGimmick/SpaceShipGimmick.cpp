@@ -286,8 +286,8 @@ void CSpaceShipGimmick::RegistHitAttack(void)
 
     CModel* pMdl = m_model.GetModel(CNormalGimmickModel::MODELTYPE_DRAW_NORMAL);
     RpClump* pClump = pMdl->GetClump();
-    RwFrame* pFrame = RpClumpGetFrameMacro(pClump);
-    RwMatrix* pMatrix = RwFrameGetMatrixMacro(pFrame);
+    RwFrame* pFrame = RpClumpGetFrame(pClump);
+    RwMatrix* pMatrix = RwFrameGetMatrix(pFrame);
 
     for (int32 i = 0; i < COUNT_OF(s_aHitSphere[0]); ++i)
     {
@@ -421,8 +421,8 @@ void CSpaceShipGimmick::GetRandomPosInsideBody(RwV3d* pvPos) const
 
     CModel* pMdl = m_model.GetVisualModel();
     RpClump* pClump = pMdl->GetClump();
-    RwFrame* pFrame = RpClumpGetFrameMacro(pClump);
-    RwMatrix* pMatrix = RwFrameGetMatrixMacro(pFrame);
+    RwFrame* pFrame = RpClumpGetFrame(pClump);
+    RwMatrix* pMatrix = RwFrameGetMatrix(pFrame);
 
     RwV3dTransformPoint(pvPos, pvPos, pMatrix);
 };

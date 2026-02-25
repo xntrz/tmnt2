@@ -2023,10 +2023,10 @@ static void SdSetAttackEnemy(const SE_ATTACK_PARAM* pParam)
 {
     ASSERT(pCamera);
     
-    RwFrame* pFrame = RwCameraGetFrameMacro(pCamera);
+    RwFrame* pFrame = RwCameraGetFrame(pCamera);
     ASSERT(pFrame);
     
-    RwMatrix* pMatrix = RwFrameGetMatrixMacro(pFrame);
+    RwMatrix* pMatrix = RwFrameGetMatrix(pFrame);
     ASSERT(pMatrix);
 
     *pvPos = pMatrix->pos;

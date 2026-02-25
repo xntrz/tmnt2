@@ -3,14 +3,12 @@
 
 #include "Game/Component/GameData/GameData.hpp"
 #include "Game/Component/GameMain/GamePlayer.hpp"
-#include "System/Common/Sprite.hpp"
-#include "System/Common/Controller.hpp"
 #include "Game/Component/GameMain/GameProperty.hpp"
-#include "Game/Component/GameMain/GamePlayer.hpp"
 #include "Game/System/Misc/Gamepad.hpp"
 #include "Game/System/Texture/TextureManager.hpp"
 #include "System/Common/RenderState.hpp"
 #include "System/Common/Screen.hpp"
+#include "System/Common/Sprite.hpp"
 
 
 static inline bool rect_intersect(float r1_x, float r1_y, float r1_w, float r1_h,
@@ -134,14 +132,11 @@ void CGaugeStatus_Container::Period(void)
     if (m_bGaugeSetting)
     {
         uint32 digitalTrigger = 0;
-        digitalTrigger |= CController::GetDigitalTrigger(CController::CONTROLLER_UNLOCKED_ON_VIRTUAL);
-        digitalTrigger |= CController::GetDigitalTrigger(CController::CONTROLLER_LOCKED_ON_VIRTUAL);
+        digitalTrigger |= IGamepad::GetDigitalTrigger(IGamepad::CONTROLLER_UNLOCKED_ON_VIRTUAL);
+        digitalTrigger |= IGamepad::GetDigitalTrigger(IGamepad::CONTROLLER_LOCKED_ON_VIRTUAL);
 		
-        if (IGamepad::CheckFunction(digitalTrigger, IGamepad::FUNCTION_SWITCH_GAUGE) ||
-            IGamepad::CheckFunction(digitalTrigger, IGamepad::FUNCTION_SWITCH_GAUGE))
-        {
+        if (IGamepad::CheckFunction(digitalTrigger, IGamepad::FUNCTION_SWITCH_GAUGE))
             m_bWakuCheck = !m_bWakuCheck;
-        };
     }
     else
     {
@@ -484,7 +479,7 @@ void CGaugeStatus_Container::PlayerMarkerDisp(int32 nPlayerNo)
     vPlayerPos.y += fMarkerPosY;
 
     RwMatrix matrix;
-    RwMatrixSetIdentityMacro(&matrix);
+    RwMatrixSetIdentity(&matrix);
     CGameProperty::GetCameraViewMatrix(&matrix);
 
     RwV3d vScreenPos = Math::VECTOR3_ZERO;
@@ -501,7 +496,7 @@ void CGaugeStatus_Container::PlayerMarkerDisp(int32 nPlayerNo)
 
     vScreenPos.x *= screenW;
     vScreenPos.y *= screenH;
-    vScreenPos.z  = RwIm2DGetNearScreenZMacro();
+    vScreenPos.z  = RwIm2DGetNearScreenZ();
 
     enum
     {

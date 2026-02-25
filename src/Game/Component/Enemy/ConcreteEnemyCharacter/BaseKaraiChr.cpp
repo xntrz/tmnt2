@@ -676,7 +676,7 @@ void CBaseKaraiChr::CAttackCStatusObserver::ShotKunaiContinual(void)
         };
 
         RwMatrix matRot;
-        RwMatrixSetIdentityMacro(&matRot);
+        RwMatrixSetIdentity(&matRot);
         Math::Matrix_RotationYawPitchRoll(&matRot, fYaw, fPitch, 0.0f);
 
         RwV3d vecDir = Math::VECTOR3_AXIS_Z;
@@ -723,7 +723,7 @@ void CBaseKaraiChr::CAttackCStatusObserver::ShotKunaiSameTime(void)
     float fAngle = static_cast<float>(m_shotNum / 2) * m_fShotRadSize;
 
     RwMatrix matRot;
-    RwMatrixSetIdentityMacro(&matRot);
+    RwMatrixSetIdentity(&matRot);
     Math::Matrix_RotateY(&matRot, -fAngle);
 
     RwV3dTransformVector(&vecDir, &vecDir, &matRot);

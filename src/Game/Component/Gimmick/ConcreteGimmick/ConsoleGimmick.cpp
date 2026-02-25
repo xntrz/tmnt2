@@ -65,7 +65,7 @@ CConsoleGimmick::CConsoleGimmick(const char* pszName, void* pParam)
     //  Init dir
     //
     RwMatrix matrix;
-    RwMatrixSetIdentityMacro(&matrix);
+    RwMatrixSetIdentity(&matrix);
     Math::Matrix_RotateY(&matrix, vRotation.y);
 
     RwV3d vDirection = { 0.0f, 0.0f, -1.0f };

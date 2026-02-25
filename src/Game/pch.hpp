@@ -2,6 +2,8 @@
 
 #include "System/pch.hpp"
 
+#include "Game/System/Movie/MoviePreprocess.hpp"
+#include "Game/System/Sound/SoundPreprocess.hpp"
 #include "Game/System/Utils/MathFunction.hpp"
 #include "Game/System/Utils/List.hpp"
 

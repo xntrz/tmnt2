@@ -24,14 +24,16 @@ CMovie::CMovie(int32 iWidth, int32 iHeight, int32 iMaxBps, bool bUsePalMode)
                                 m_fSpriteW,
                                 m_fSpriteH);
 
-#ifdef TMNT2_BUILD_EU
-    m_sprite.SetUV(0.0f,
-                   0.0f,
-                   static_cast<float>(iWidth)  * (1.0f / 1024.0f),
-                   static_cast<float>(iHeight) * (1.0f / 512.0f));
-#else
-    m_sprite.SetUV(0.0f, 0.0f, 0.625f, 0.875f);
-#endif    
+    float mvwf = static_cast<float>(MV_WIDTH);
+    float mvhf = static_cast<float>(MV_HEIGHT);
+
+    float sprwf = static_cast<float>(iWidth);
+    float sprhf = static_cast<float>(iHeight);
+
+    float u1 = (sprwf * (1.0f / mvwf));
+    float v1 = (sprhf * (1.0f / mvhf));
+
+    m_sprite.SetUV(0.0f, 0.0f, u1, v1);
 
     m_mwply = CreateHandle(&m_pWorkArea, m_iMovieW, m_iMovieH, iMaxBps, bUsePalMode);
     if (m_mwply)
@@ -129,14 +131,17 @@ void CMovie::PopRenderState(void)
 
 RwRaster* CMovie::CreateRaster(int32 iWidth, int32 iHeight)
 {
-    RwRaster* pRaster = RwRasterCreate(iWidth, iHeight, 32, rwRASTERTYPETEXTURE | rwRASTERFORMAT8888);
+    RwUInt32 flags = rwRASTERTYPETEXTURE |
+                     rwRASTERFORMAT8888;    
+
+    RwRaster* pRaster = RwRasterCreate(iWidth, iHeight, 32, flags);
     if (!pRaster)
         return nullptr;
 
     void* pData = RwRasterLock(pRaster, 0, GetRwRasterLockFlag());
     if (pData)
     {
-        std::memset(pData, 0x00, 4 * iHeight * iWidth);
+        std::memset(pData, 0x00, ((iWidth * iHeight) * MV_PIXEL_COMP));
         RwRasterUnlock(pRaster);
     };
 
@@ -163,7 +168,8 @@ MWPLY CMovie::CreateHandle(char** ppWorkArea, int32 iWidth, int32 iHeight, int32
     cprm.max_width = iWidth;
     cprm.max_height = iHeight;
     cprm.wksize = mwPlyCalcWorkCprmSfd(&cprm);
-    cprm.work = new CriSint8[cprm.wksize];
+    if (cprm.wksize > 0)
+        cprm.work = new CriSint8[cprm.wksize];
 
     *ppWorkArea = reinterpret_cast<char*>(cprm.work);
 
@@ -194,6 +200,12 @@ bool CMovie::LoadMovieFrame(void)
 void CMovie::StartAfs(int32 partitionId, int32 fileId)
 {
     mwPlyStartAfs(m_mwply, partitionId, fileId);
+};
+
+
+void CMovie::StartFname(const char* pszFilename)
+{
+    mwPlyStartFname(m_mwply, pszFilename);
 };
 
 

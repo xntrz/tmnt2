@@ -243,8 +243,8 @@ bool CBreakableCarGimmick::smokeControl(bool bWaitErase)
                 vPosition.z = Math::RandFloatRange(-1.0f, 1.0f) * 3.0f;
                 
                 RpClump* pClump = m_model.GetModel(CNormalGimmickModel::MODELTYPE_DRAW_NORMAL)->GetClump();
-                RwFrame* pFrame = RpClumpGetFrameMacro(pClump);
-                RwMatrix* pMatrix = RwFrameGetMatrixMacro(pFrame);
+                RwFrame* pFrame = RpClumpGetFrame(pClump);
+                RwMatrix* pMatrix = RwFrameGetMatrix(pFrame);
                 
                 RwV3dTransformPoint(&vPosition, &vPosition, pMatrix);
 
@@ -343,8 +343,8 @@ bool CBreakableCarGimmick::explosionControl(void)
 
         CModel* pModel = m_model.GetModel(CNormalGimmickModel::MODELTYPE_DRAW_NORMAL);
         RpClump* pClump = pModel->GetClump();
-        RwFrame* pFrame = RpClumpGetFrameMacro(pClump);
-        RwMatrix* pMatrix = RwFrameGetMatrixMacro(pFrame);
+        RwFrame* pFrame = RpClumpGetFrame(pClump);
+        RwMatrix* pMatrix = RwFrameGetMatrix(pFrame);
 
         RwV3dTransformPoint(&vPosition, &vPosition, pMatrix);
 
@@ -391,8 +391,8 @@ void CBreakableCarGimmick::setHitAttack(void)
 
         CModel* pModel = m_model.GetModel(CNormalGimmickModel::MODELTYPE_DRAW_NORMAL);
         RpClump* pClump = pModel->GetClump();
-        RwFrame* pFrame = RpClumpGetFrameMacro(pClump);
-        RwMatrix* pMatrix = RwFrameGetMatrixMacro(pFrame);
+        RwFrame* pFrame = RpClumpGetFrame(pClump);
+        RwMatrix* pMatrix = RwFrameGetMatrix(pFrame);
 
         RwV3dTransformPoint(&vPosition, &vPosition, pMatrix);
 

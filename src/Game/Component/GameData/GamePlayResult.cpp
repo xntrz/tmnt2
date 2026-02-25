@@ -511,8 +511,11 @@ void CGamePlayResult::AddTechnicalAction(PLAYERID::VALUE idPlayer, GAMETYPES::TE
     if ((tecact >= 0) && (tecact < GAMETYPES::TECACT_MAX))
     {
         int32 nIndex = IndexOfChara(idPlayer);
-        m_CharaResult.AddTechnicalAction(nIndex, idPlayer, tecact);
-        m_StageResult.AddTechnicalAction(nIndex, idPlayer, tecact);
+        if (nIndex >= 0)
+        {
+            m_CharaResult.AddTechnicalAction(nIndex, idPlayer, tecact);
+            m_StageResult.AddTechnicalAction(nIndex, idPlayer, tecact);
+        };
     };    
 };
 
@@ -543,8 +546,6 @@ int32 CGamePlayResult::IndexOfChara(PLAYERID::VALUE idPlayer) const
         if (m_aPlayerID[i] == idPlayer)
             return i;
     };
-
-    ASSERT(false);
 
     return -1;
 };

@@ -6,15 +6,22 @@
 #include "Game/Component/GameMain/GameTypes.hpp"
 
 
+class CPlayerCommonLoadInfo final : public CGameObjLoadInfo
+{
+public:
+    CPlayerCommonLoadInfo(void) {};
+    virtual ~CPlayerCommonLoadInfo(void) {};
+    virtual bool MakeFileName(char* pszFilenameBuff) const override;
+};
+
+
 class CPlayerLoadInfo final : public CGameObjLoadInfo
 {
-private:
-    static const char* LISTFILE_PATH;
-    
+   
 public:
     CPlayerLoadInfo(PLAYERID::VALUE idPlayer, GAMETYPES::COSTUME costume);
     virtual ~CPlayerLoadInfo(void);
-    virtual int32 GetFileID(void) const override;
+    virtual FNAME GetFileID(void) const override;
     virtual bool MakeFileName(char* pszFilenameBuff) const override;
 
 private:

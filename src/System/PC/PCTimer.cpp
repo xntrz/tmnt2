@@ -16,9 +16,9 @@ public:
 class CPCTimer::CGetTimeFunctorOS final : public CPCTimer::IGetTimeFunctor
 {
 public:
-    CGetTimeFunctorOS(void);
-    virtual ~CGetTimeFunctorOS(void);
-    virtual uint32 operator()(void) const override;
+    inline CGetTimeFunctorOS(void) { timeBeginPeriod(1); };
+    inline virtual ~CGetTimeFunctorOS(void) { timeEndPeriod(1); };
+    virtual uint32 operator()(void) const override { return static_cast<uint32>(timeGetTime()); };
 };
 
 
@@ -27,41 +27,7 @@ class CPCTimer::CGetTimeFunctorCPU final : public CPCTimer::IGetTimeFunctor
 public:
     inline CGetTimeFunctorCPU(void) {};
     inline virtual ~CGetTimeFunctorCPU(void) {};
-    virtual uint32 operator()(void) const override;
-};
-
-
-//
-// *********************************************************************************
-//
-
-
-CPCTimer::CGetTimeFunctorOS::CGetTimeFunctorOS(void)
-{
-    timeBeginPeriod(1);
-};
-
-
-CPCTimer::CGetTimeFunctorOS::~CGetTimeFunctorOS(void)
-{
-    timeEndPeriod(1);
-};
-
-
-uint32 CPCTimer::CGetTimeFunctorOS::operator()(void) const
-{
-    return static_cast<uint32>(timeGetTime());
-};
-
-
-//
-// *********************************************************************************
-//
-
-
-uint32  CPCTimer::CGetTimeFunctorCPU::operator()(void) const
-{
-    return static_cast<uint32>(__rdtsc());
+    virtual uint32 operator()(void) const override { return static_cast<uint32>(__rdtsc()); };
 };
 
 
@@ -114,9 +80,9 @@ CPCTimer::CPCTimer(void)
     
     uint32 end = (*m_pGetTimerFunctor)();
 
-    m_uTimeStart              = end;
-    m_uGranularityMillisecond = (end - begin);
-    m_uGranularitySecond      = ((end - begin) / 1000);
+    m_startTime = end;
+    m_freq      = (end - begin);
+    m_freqMs    = ((end - begin) / 1000);
 
     SetThreadPriority(hCurrentThread, dwCurrentThreadPriority);
 };
@@ -137,7 +103,19 @@ CPCTimer::~CPCTimer(void)
 };
 
 
-uint32 CPCTimer::ElapsedTime(void) const
+uint32 CPCTimer::GetElapsedTime(void) const
 {
-    return ((*m_pGetTimerFunctor)() - m_uTimeStart);
+    return ((*m_pGetTimerFunctor)() - m_startTime);
+};
+
+
+uint32 CPCTimer::GetFreqMs(void) const
+{
+    return m_freqMs;
+};
+
+
+uint32 CPCTimer::GetFreq(void) const
+{
+    return m_freq;
 };

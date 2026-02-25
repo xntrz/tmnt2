@@ -23,7 +23,7 @@ CMotionController::CMotionController(CModel* pModel)
     RpHAnimHierarchy* pHierarchy = m_pModel->GetHierarchyCurrent();
     ASSERT(pHierarchy);
 
-    RwInt32 hierarchyFlags = RpHAnimHierarchyGetFlagsMacro(pHierarchy);
+    RwInt32 hierarchyFlags = RpHAnimHierarchyGetFlags(pHierarchy);
 
     RwInt32 hierarchyFlagsIn = (hierarchyFlags & (~(rpHANIMHIERARCHYUPDATELTMS | rpHANIMHIERARCHYUPDATEMODELLINGMATRICES)));
     RwInt32 hierarchyFlagsOut = hierarchyFlags;
@@ -40,7 +40,7 @@ CMotionController::CMotionController(CModel* pModel)
                                                           maxInterpKeyFrameSize);
     ASSERT(m_pOutHierarchy);
     
-    RpHAnimHierarchySetKeyFrameCallBacksMacro(m_pOutHierarchy, 1);
+    RpHAnimHierarchySetKeyFrameCallBacks(m_pOutHierarchy, 1);
     m_pOutHierarchy->parentFrame = pHierarchy->parentFrame;
 };
 
@@ -57,7 +57,6 @@ CMotionController::~CMotionController(void)
         CMotion* pMotion = &(*it);
         it = m_listMotion.erase(it);
 
-        ASSERT(pMotion);
         delete pMotion;
     };
 
@@ -204,11 +203,11 @@ void CMotionController::SetMotion(CMotion* pMotion, float fStartTime, float fEnd
 
     ASSERT(fEndTime <= pMotion->GetEndTime());
 
-    RpHAnimHierarchySetCurrentAnimMacro(pHierarchy, pAnimation);
+    RpHAnimHierarchySetCurrentAnim(pHierarchy, pAnimation);
     RpHAnimHierarchyAttach(pHierarchy);
 
     if (fStartTime > 0.0f)
-        RpHAnimHierarchyAddAnimTimeMacro(pHierarchy, fStartTime);
+        RpHAnimHierarchyAddAnimTime(pHierarchy, fStartTime);
 
     if (fEndTime <= 0.0f)
         fEndTime = pMotion->GetEndTime();
@@ -241,7 +240,7 @@ void CMotionController::UpdateMotion(float dt)
         case PLAYMODE_REPEAT:
             dt = 0.0f;
             fTime = fTime - m_fEndTime;
-            RpHAnimHierarchySetCurrentAnimTimeMacro(pHierarchy, fTime);
+            RpHAnimHierarchySetCurrentAnimTime(pHierarchy, fTime);
             break;
 
         default:
@@ -253,7 +252,7 @@ void CMotionController::UpdateMotion(float dt)
     m_fTime = fTime;
     
     if (dt > 0.0f)
-        RpHAnimHierarchyAddAnimTimeMacro(pHierarchy, dt);
+        RpHAnimHierarchyAddAnimTime(pHierarchy, dt);
 };
 
 
@@ -269,7 +268,7 @@ void CMotionController::SetTimeMotion(float fTime)
         RpHAnimHierarchy* pHierarchy = m_pModel->GetHierarchyCurrent();
         ASSERT(pHierarchy);
 
-        RpHAnimHierarchySetCurrentAnimTimeMacro(pHierarchy, fTime);
+        RpHAnimHierarchySetCurrentAnimTime(pHierarchy, fTime);
         
         m_fTime = fTime;
     };
@@ -286,10 +285,10 @@ void CMotionController::SetBlendMotion(CMotion* pMotion, float fStartTime, float
     RtAnimAnimation* pAnimation = pMotion->GetAnimation();    
     ASSERT(pAnimation);
 
-    RpHAnimHierarchySetCurrentAnimMacro(m_pInHierarchy, pAnimation);
+    RpHAnimHierarchySetCurrentAnim(m_pInHierarchy, pAnimation);
     
     if (fStartTime > 0.0f)
-        RpHAnimHierarchyAddAnimTimeMacro(pHierarchy, fStartTime);
+        RpHAnimHierarchyAddAnimTime(pHierarchy, fStartTime);
 
     RpHAnimHierarchyUpdateMatrices(m_pInHierarchy);
     
@@ -316,7 +315,7 @@ void CMotionController::UpdateBlendMotion(float dt)
 
         dt = (m_fTime / m_fBlendTime);
         
-        RpHAnimHierarchyBlendMacro(m_pOutHierarchy, pHierarchy, m_pInHierarchy, dt);
+        RpHAnimHierarchyBlend(m_pOutHierarchy, pHierarchy, m_pInHierarchy, dt);
     }
     else
     {

@@ -11,7 +11,7 @@
 #include "Game/System/Map/WorldMap.hpp"
 
 
-#define TMNT2_GUNNER_OPTIMIZE (1)
+//#define TMNT2_GUNNER_OPTIMIZE (1)
 
 
 /*static*/ CAIModerator* CBaseGunnerAI::Instance(CEnemyCharacter* pEnemyChr)
@@ -66,7 +66,8 @@ CBaseGunnerAI::CBaseGunnerAI(CEnemyCharacter* pEnemyChr)
 
 /*virtual*/ bool CBaseGunnerAI::OnActionOfWait(int32 iNo) /*override*/
 {
-    float fThinkFreq = (Characteristic().m_fThinkingFrequency * 2.0f);
+    float fThinkFreq = (Characteristic().m_fThinkingFrequency +
+                        Characteristic().m_fThinkingFrequency);
     AIOT::SetWaitOrder(ThinkOrder(), fThinkFreq);
 
     if ((ThinkOrder().GetOrder()  == CAIThinkOrder::ORDER_MOVE) &&
@@ -75,11 +76,10 @@ CBaseGunnerAI::CBaseGunnerAI(CEnemyCharacter* pEnemyChr)
         return true;
     };
 
-    float fRandZ = Math::RandFloatRange(-1.5f, 1.5f);
-    float fRandX = Math::RandFloatRange(-1.5f, 1.5f);
-    float fDistanceOfSuitable = Characteristic().m_fDistanceOfSuitable;
+    float fRandZ = Math::RandFloatRange(-1.5f, 1.5f) * Characteristic().m_fDistanceOfSuitable;
+    float fRandX = Math::RandFloatRange(-1.5f, 1.5f) * Characteristic().m_fDistanceOfSuitable;
 
-    RwV3d vecAt = { fDistanceOfSuitable * fRandX, 0.0f, fDistanceOfSuitable * fRandZ };
+    RwV3d vecAt = { fRandX, 0.0f, fRandZ };
 
     float fRatioOfMove = Characteristic().m_fRatioOfMove;
     Math::Vec3_Scale(&vecAt, &vecAt, fRatioOfMove + 0.5f);
@@ -288,7 +288,7 @@ CBaseGunnerAI::CBaseGunnerAI(CEnemyCharacter* pEnemyChr)
 	Math::Vec3_Sub(&vec, &vecBodyPosPlayer, &vecBodyPosEnemy);
 
     RwMatrix mat;
-    RwMatrixSetIdentityMacro(&mat);
+    RwMatrixSetIdentity(&mat);
     Math::Matrix_RotateY(&mat, -std::atan2(vec.x, vec.z));
     RwV3dTransformVector(&vec, &vec, &mat);
 
@@ -426,7 +426,7 @@ CBaseGunnerAI::CBaseGunnerAI(CEnemyCharacter* pEnemyChr)
         return false;
 
     float fRange = GetFrequency(CEnemyParameter::FREQUENCY_FIRE_RANGE);
-    if (fTargetDist > fRange)
+    if (fRange < fTargetDist)
         return false;
 
     float fDirMe = EnemyCharacter().Compositor().GetDirection();
@@ -454,27 +454,21 @@ CBaseGunnerAI::CBaseGunnerAI(CEnemyCharacter* pEnemyChr)
     vAt.y = 0.0f;
 
     float fDist = CEnemyUtils::GetDistance(&vPos, &vAt);
-
     float fCollRadius = EnemyCharacter().Compositor().GetCollisionParameter().m_fRadius;
 
-    return ((fCollRadius * 2.0f) >= fDist);
+    return ((fCollRadius + fCollRadius) >= fDist);
 };
 
 
 /*virtual*/ bool CBaseGunnerAI::IsTakeFire(void)
 {
-    int32 targetNo = m_targetInfo.Get();
-    CPlayerCharacter* pPlayerChr = CAIUtils::GetActivePlayer(targetNo);
-    if (pPlayerChr == nullptr)
-        return false;
-
     float fDistanceOfSuitable = Characteristic().m_fDistanceOfSuitable;
     float fTargetDist = m_targetInfo.GetDistance();
     if (fTargetDist > fDistanceOfSuitable)
         return false;
 
     float fRange = GetFrequency(CEnemyParameter::FREQUENCY_FIRE_RANGE);
-    if (fTargetDist > fRange)
+    if (fRange < fTargetDist)
         return false;
 
     float fDirMe = EnemyCharacter().Compositor().GetDirection();
@@ -486,6 +480,11 @@ CBaseGunnerAI::CBaseGunnerAI(CEnemyCharacter* pEnemyChr)
     float fRatioOfFrontView = Characteristic().m_fRatioOfFrontView;
     float fFrontView = (fRatioOfFrontView * MATH_DEG2RAD(18.0f));
     if (fDirDiff > fFrontView)
+        return false;
+
+    int32 targetNo = m_targetInfo.Get();
+    CPlayerCharacter* pPlayerChr = CAIUtils::GetActivePlayer(targetNo);
+    if (pPlayerChr == nullptr)
         return false;
 
     if (!static_cast<CBaseGeneralEnemyChr&>(EnemyCharacter()).IsStayTrajectory(pPlayerChr, fTargetDist))

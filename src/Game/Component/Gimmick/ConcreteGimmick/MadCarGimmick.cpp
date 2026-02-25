@@ -188,7 +188,7 @@ void CMadCarGimmick::PostMove(void)
         for (int32 i = 0; i < COUNT_OF(m_aCarLight); ++i)
         {
             RwMatrix matRot;
-            RwMatrixSetIdentityMacro(&matRot);
+            RwMatrixSetIdentity(&matRot);
             Math::Matrix_Rotate(&matRot, &vRotation);
 
             RwV3d vLightPos = s_aMadCarSubinfo[m_subid].m_vLightPos;
@@ -216,7 +216,7 @@ void CMadCarGimmick::PostMove(void)
         for (int32 i = 0; i < COUNT_OF(m_aCarLight); ++i)
         {            
             RwMatrix matRotY;
-            RwMatrixSetIdentityMacro(&matRotY);
+            RwMatrixSetIdentity(&matRotY);
             Math::Matrix_RotateY(&matRotY, vRotation.y);
             
             RwV3d vAttackHitCenter = Math::VECTOR3_ZERO;

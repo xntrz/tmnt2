@@ -66,7 +66,9 @@ void CSphere::Draw(void)
 {
     RenderStatePush();
 
-    uint32 flags = rwIM3D_VERTEXRGBA | rwIM3D_VERTEXXYZ | (m_pTexture ? rwIM3D_VERTEXUV : 0);
+    uint32 flags = rwIM3D_VERTEXRGBA
+                 | rwIM3D_VERTEXXYZ
+                 | rwIM3D_VERTEXUV;
 
     m_matrix.pos = m_vPosition;
     
@@ -109,11 +111,17 @@ void CSphere::SetUV(float u0, float v0, float u1, float v1)
     {
         for (int32 j = 0; j < m_nDivisionHor + 1; ++j)
         {
-            m_pVertex[m_nNumVertex].u = u0 + (j * (u1 / static_cast<float>(m_nRepetationU)));
-            m_pVertex[m_nNumVertex].v = v0 + (i * (v1 / static_cast<float>(m_nRepetationV)));
+            float _u0 = u0 + (j * (u1 / static_cast<float>(m_nRepetationU)));
+            float _v0 = v0 + (i * (v1 / static_cast<float>(m_nRepetationV)));
 
-            m_pVertex[m_nNumVertex + 1].u = u0 + (j * (u1 / static_cast<float>(m_nRepetationU)));
-            m_pVertex[m_nNumVertex + 1].v = v0 + ((i + 1) * (v1 / static_cast<float>(m_nRepetationV)));
+            float _u1 = u0 + (j * (u1 / static_cast<float>(m_nRepetationU)));
+            float _v1 = v0 + ((i + 1) * (v1 / static_cast<float>(m_nRepetationV)));
+
+            RwIm3DVertexSetU(&m_pVertex[m_nNumVertex + 0], _u0);
+            RwIm3DVertexSetV(&m_pVertex[m_nNumVertex + 0], _v0);
+
+            RwIm3DVertexSetU(&m_pVertex[m_nNumVertex + 1], _u1);
+            RwIm3DVertexSetV(&m_pVertex[m_nNumVertex + 1], _v1);
 
             m_nNumVertex += 2;
         };
@@ -131,7 +139,7 @@ void CSphere::SetScale(const RwV3d* pvScaling)
 
 void CSphere::Reset(void)
 {
-    RwMatrixSetIdentityMacro(&m_matrix);
+    RwMatrixSetIdentity(&m_matrix);
 
     if (m_bRandom)
         SetVertexRandom();
@@ -144,9 +152,8 @@ void CSphere::ResetUV(void)
 {
     m_u0 = 0.0f;
     m_v0 = 0.0f;
-
-    m_u1 = 0.0f;
-    m_v1 = 0.0f;
+    m_u1 = 1.0f;
+    m_v1 = 1.0f;
 };
 
 
@@ -159,48 +166,50 @@ void CSphere::SetVertex(void)
     {
         for (int32 j = 0; j < m_nDivisionHor + 1; ++j)
         {
+            RwIm3DVertex* pVertex = &m_pVertex[m_nNumVertex];
+
+            RwRGBA color = m_Color;
+
             float tu = (1.0f / static_cast<float>(m_nRepetationU));
             float tv = (1.0f / static_cast<float>(m_nRepetationV));
 
-            RwIm3DVertex* pVertex = &m_pVertex[m_nNumVertex];
-
-            /* vert 0 */
-            pVertex[0].objVertex.x =
+            float x0 =
                 std::sin(static_cast<float>(j) * fDeltaHorizonAngle) *
                 std::sin(static_cast<float>(i) * fDeltaVerticalAngle) * m_fRadius;
 
-            pVertex[0].objVertex.y =
+            float y0 =
                 std::cos(static_cast<float>(i) * fDeltaVerticalAngle) * m_fRadius;
-            
-            pVertex[0].objVertex.z =
+
+            float z0 =
                 std::cos(static_cast<float>(j) * fDeltaHorizonAngle) *
                 std::sin(static_cast<float>(i) * fDeltaVerticalAngle) * m_fRadius;
 
-            pVertex[0].objNormal = Math::VECTOR3_ZERO;            
+            RwIm3DVertexSetPos(&pVertex[0], x0, y0, z0);
+            RwIm3DVertexSetNormal(&pVertex[0], 0.0f, 0.0f, 0.0f);
+            RwIm3DVertexSetRGBA(&pVertex[0], color.red, color.green, color.blue, color.alpha);
+            RwIm3DVertexSetU(&pVertex[0], tu * static_cast<float>(j));
+            RwIm3DVertexSetV(&pVertex[0], tv * static_cast<float>(i));
 
-            pVertex[0].color = RWRGBALONG(m_Color.red, m_Color.green, m_Color.blue, m_Color.alpha);
-
-            pVertex[0].u = tu * j;
-            pVertex[0].u = tv * i;
-
-            /* vert 1 */
-            pVertex[1].objVertex.x =
+            float x1 =
                 std::sin(static_cast<float>(j) * fDeltaHorizonAngle) *
                 std::sin(static_cast<float>(i + 1) * fDeltaVerticalAngle) * m_fRadius;
 
-            pVertex[1].objVertex.y =
+            float y1 =
                 std::cos(static_cast<float>(i + 1) * fDeltaVerticalAngle) * m_fRadius;
 
-            pVertex[1].objVertex.z =
+            float z1 =
                 std::cos(static_cast<float>(j) * fDeltaHorizonAngle) *
                 std::sin(static_cast<float>(i + 1) * fDeltaVerticalAngle) * m_fRadius;
 
-            pVertex[1].objNormal = Math::VECTOR3_ZERO;
+            RwV3d vPos = { x1, y1, z1 };
+            RwV3d vNormal = Math::VECTOR3_ZERO;
+            Math::Vec3_Normalize(&vNormal, &vPos);
 
-            pVertex[1].color = RWRGBALONG(m_Color.red, m_Color.green, m_Color.blue, m_Color.alpha);
-
-            pVertex[1].u = tu * j;
-            pVertex[1].u = tv * (i + 1);
+            RwIm3DVertexSetPos(&pVertex[1], x1, y1, z1);
+            RwIm3DVertexSetNormal(&pVertex[1], vNormal.x, vNormal.y, vNormal.z);
+            RwIm3DVertexSetRGBA(&pVertex[1], color.red, color.green, color.blue, color.alpha);
+            RwIm3DVertexSetU(&pVertex[1], tu * static_cast<float>(j));
+            RwIm3DVertexSetV(&pVertex[1], tv * static_cast<float>(i + 1));
 
             m_nNumVertex += 2;
         };
@@ -225,29 +234,41 @@ void CSphere::SetVertexRandom(void)
 
 			if ((i == 0) || (i == m_nDivisionVer))
 			{
-                pVertexList[index].objVertex.x =
-                    m_fRadius * (std::sin(static_cast<float>(j) * fDeltaHorizonAngle) * std::sin(static_cast<float>(i) * fDeltaVerticalAngle));
+                float x =
+                    std::sin(static_cast<float>(j) * fDeltaHorizonAngle) *
+                    std::sin(static_cast<float>(i) * fDeltaVerticalAngle) * m_fRadius;
 
-				pVertexList[index].objVertex.y =            
-                    m_fRadius * (std::cos(static_cast<float>(i) * fDeltaVerticalAngle));
+                float y =
+                    std::cos(static_cast<float>(i) * fDeltaVerticalAngle) * m_fRadius;
 
-				pVertexList[index].objVertex.z =                
-                    m_fRadius * (std::cos(static_cast<float>(j) * fDeltaHorizonAngle) * std::sin(static_cast<float>(i) * fDeltaVerticalAngle));
+                float z =
+                    std::cos(static_cast<float>(j) * fDeltaHorizonAngle) *
+                    std::sin(static_cast<float>(i) * fDeltaVerticalAngle) * m_fRadius;
+
+                RwIm3DVertexSetPos(&pVertexList[index], x, y, z);
             }
 			else
-			{
-				float x = ((static_cast<float>(Math::Rand() % 20) * 0.01f) - 0.1f) * m_fRadius;
-				float y = ((static_cast<float>(Math::Rand() % 20) * 0.01f) - 0.1f) * m_fRadius;
-				float z = ((static_cast<float>(Math::Rand() % 20) * 0.01f) - 0.1f) * m_fRadius;
+            {            
+                float xx = ((static_cast<float>(Math::Rand() % 20) * 0.01f) - 0.1f) * m_fRadius;
+				float yy = ((static_cast<float>(Math::Rand() % 20) * 0.01f) - 0.1f) * m_fRadius;
+				float zz = ((static_cast<float>(Math::Rand() % 20) * 0.01f) - 0.1f) * m_fRadius;
 
-				pVertexList[index].objVertex.x =                
-                    x + (m_fRadius * (std::sin(static_cast<float>(j) * fDeltaHorizonAngle) * std::sin(static_cast<float>(i) * fDeltaVerticalAngle)));
+				float x =
+                    std::sin(static_cast<float>(j) * fDeltaHorizonAngle) *
+                    std::sin(static_cast<float>(i) * fDeltaVerticalAngle) * m_fRadius;
 
-				pVertexList[index].objVertex.y =            
-                    y + (m_fRadius * (std::cos(static_cast<float>(i) * fDeltaVerticalAngle)));
+				float y =
+                    std::cos(static_cast<float>(i) * fDeltaVerticalAngle) * m_fRadius;
 
-				pVertexList[index].objVertex.z =                
-                    z + (m_fRadius * (std::cos(static_cast<float>(j) * fDeltaHorizonAngle) * std::sin(static_cast<float>(i) * fDeltaVerticalAngle)));
+				float z =
+                    std::cos(static_cast<float>(j) * fDeltaHorizonAngle) *
+                    std::sin(static_cast<float>(i) * fDeltaVerticalAngle) * m_fRadius;
+
+                x += xx;
+                y += yy;
+                z += zz;
+
+                RwIm3DVertexSetPos(&pVertexList[index], x, y, z);
             };
         };
 
@@ -264,28 +285,32 @@ void CSphere::SetVertexRandom(void)
 			float tu = (1.0f / static_cast<float>(m_nRepetationU));
 			float tv = (1.0f / static_cast<float>(m_nRepetationV));
 
-			RwIm3DVertex* pVertex = &m_pVertex[m_nNumVertex];
-			RwIm3DVertex* pVertexFromList = &pVertexList[j + i * (m_nDivisionHor + 1)];
-			RwV3d vPosition = pVertexFromList[0].objVertex;
-			RwV3d vNormal = vPosition;
-			Math::Vec3_Normalize(&vNormal, &vNormal);
+            RwRGBA color = m_Color;
 
-			pVertex[0].objVertex = vPosition;
-			pVertex[0].objNormal = vNormal;
-            pVertex[0].color = RWRGBALONG(m_Color.red, m_Color.green, m_Color.blue, m_Color.alpha);
-			pVertex[0].u = tu * j;
-			pVertex[0].v = tv * i;
+            RwIm3DVertex* pVertex = &m_pVertex[m_nNumVertex];
+            RwIm3DVertex* pVertexFromList0 = &pVertexList[j + i * (m_nDivisionHor + 1)];
+            RwIm3DVertex* pVertexFromList1 = &pVertexList[j + ((i + 1) * (m_nDivisionHor + 1))];
 
-			pVertexFromList = &pVertexList[j + ((i + 1) * (m_nDivisionHor + 1))];
-			vPosition = pVertexFromList[0].objVertex;
-			vNormal = vPosition;
-			Math::Vec3_Normalize(&vNormal, &vNormal);
+            RwV3d vPos0 = *RwIm3DVertexGetPos(pVertexFromList0);
+            RwV3d vPos1 = *RwIm3DVertexGetPos(pVertexFromList1);
 
-			pVertex[1].objVertex = vPosition;
-			pVertex[1].objNormal = vNormal;
-            pVertex[1].color = RWRGBALONG(m_Color.red, m_Color.green, m_Color.blue, m_Color.alpha);
-			pVertex[1].u = tu * j;
-			pVertex[1].v = tv * (i + 1);
+            RwV3d vNormal0 = Math::VECTOR3_ZERO;
+			Math::Vec3_Normalize(&vNormal0, &vPos0);
+
+            RwV3d vNormal1 = Math::VECTOR3_ZERO;
+            Math::Vec3_Normalize(&vNormal1, &vPos1);
+
+            RwIm3DVertexSetPos(&pVertex[0], vPos0.x, vPos0.y, vPos0.z);
+            RwIm3DVertexSetNormal(&pVertex[0], vNormal0.x, vNormal0.y, vNormal0.z);
+            RwIm3DVertexSetRGBA(&pVertex[0], color.red, color.green, color.blue, color.alpha);
+            RwIm3DVertexSetU(&pVertex[0], tu * j);
+            RwIm3DVertexSetV(&pVertex[0], tv * i);
+
+            RwIm3DVertexSetPos(&pVertex[1], vPos1.x, vPos1.y, vPos1.z);
+            RwIm3DVertexSetNormal(&pVertex[1], vNormal1.x, vNormal1.y, vNormal1.z);
+            RwIm3DVertexSetRGBA(&pVertex[1], color.red, color.green, color.blue, color.alpha);
+            RwIm3DVertexSetU(&pVertex[1], tu * j);
+            RwIm3DVertexSetV(&pVertex[1], tv * (i + 1));
 
 			m_nNumVertex += 2;
 		};

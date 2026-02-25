@@ -559,15 +559,11 @@ void CCloth::SetVertex(RwIm3DVertex* pVertex, RwV3d* pPos, float u, float v)
 {
     ASSERT(pVertex);
 
-    pVertex->objVertex.x = pPos->x;
-    pVertex->objVertex.y = pPos->y;
-    pVertex->objVertex.z = pPos->z;
-    pVertex->objNormal.x = 0.0f;
-    pVertex->objNormal.y = 0.0f;
-    pVertex->objNormal.z = 0.0f;
-    pVertex->color = RWRGBALONGEX(m_Color);
-    pVertex->u = u;
-    pVertex->v = v;
+    RwIm3DVertexSetPos(pVertex, pPos->x, pPos->y, pPos->z);
+    RwIm3DVertexSetNormal(pVertex, 0.0f, 0.0f, 0.0f);
+    RwIm3DVertexSetRGBA(pVertex, m_Color.red, m_Color.green, m_Color.blue, m_Color.alpha);
+    RwIm3DVertexSetU(pVertex, u);
+    RwIm3DVertexSetV(pVertex, v);
 };
 
 

@@ -1,9 +1,8 @@
 #pragma once
 
 #include "Game/Component/GameMain/GameObjLoadInfo.hpp"
-
-#include "Game/Component/Player/PlayerID.hpp"
 #include "Game/Component/GameMain/GameTypes.hpp"
+#include "Game/Component/Player/PlayerID.hpp"
 
 
 class CEnbuLoadInfo final : public CGameObjLoadInfo
@@ -11,7 +10,7 @@ class CEnbuLoadInfo final : public CGameObjLoadInfo
 public:
     CEnbuLoadInfo(PLAYERID::VALUE idPlayer, GAMETYPES::COSTUME costume);
     virtual ~CEnbuLoadInfo(void);
-    virtual int32 GetFileID(void) const override;
+    virtual FNAME GetFileID(void) const override;
     virtual bool MakeFileName(char* pszFilenameBuff) const override;
 
 private:

@@ -70,11 +70,11 @@ void CItemGimmick::Draw(void) const
         return;
 
     RwMatrix matView;
-    RwMatrixSetIdentityMacro(&matView);
+    RwMatrixSetIdentity(&matView);
     CGameProperty::GetCameraViewMatrix(&matView);
 
     RwMatrix matBillboard;
-    RwMatrixSetIdentityMacro(&matBillboard);
+    RwMatrixSetIdentity(&matBillboard);
     Math::Matrix_Invert(&matBillboard, &matView);
 
     matBillboard.pos = m_vPosition;
@@ -84,7 +84,7 @@ void CItemGimmick::Draw(void) const
     RENDERSTATE_PUSH(rwRENDERSTATESRCBLEND, rwBLENDSRCALPHA);
     RENDERSTATE_PUSH(rwRENDERSTATEDESTBLEND, rwBLENDINVSRCALPHA);
     RENDERSTATE_PUSH(rwRENDERSTATECULLMODE, rwCULLMODECULLNONE);
-    RENDERSTATE_PUSH(rwRENDERSTATETEXTURERASTER, m_pTexture ? RwTextureGetRasterMacro(m_pTexture) : NULL);    
+    RENDERSTATE_PUSH(rwRENDERSTATETEXTURERASTER, m_pTexture ? RwTextureGetRaster(m_pTexture) : NULL);    
 
     const uint32 flags = rwIM3D_VERTEXRGBA
                        | rwIM3D_VERTEXXYZ
@@ -332,36 +332,35 @@ void CItemGimmick::setVertex(float fRadius, const RwRGBA& rColor)
     float sw = static_cast<float>(CScreen::Width());
     float sh = static_cast<float>(CScreen::Height());
 
-    float w = pMapCamera->GetViewRatio() * fRadius;
-    float h = (sw / sh) * w;
-    
-    m_aVertex[0].objVertex.x = w * -1.0f;
-    m_aVertex[0].objVertex.y = h;
-    m_aVertex[0].objVertex.z = 0.0f;
-    m_aVertex[0].u = 0.01f;
-    m_aVertex[0].v = 0.99f;
-    m_aVertex[0].color = RWRGBALONGEX(rColor);
+    float x = pMapCamera->GetViewRatio() * fRadius;
+    float y = (sw / sh) * x;
+    float z = 0.0f;
 
-    m_aVertex[1].objVertex.x = w * -1.0f;
-    m_aVertex[1].objVertex.y = h * -1.0f;
-    m_aVertex[1].objVertex.z = 0.0f;
-    m_aVertex[1].u = 0.01f;
-    m_aVertex[1].v = 0.01f;
-    m_aVertex[1].color = RWRGBALONGEX(rColor);
+    const float uv_pad = 0.01f;
 
-    m_aVertex[2].objVertex.x = w;
-    m_aVertex[2].objVertex.y = h;
-    m_aVertex[2].objVertex.z = 0.0f;
-    m_aVertex[2].u = 0.99f;
-    m_aVertex[2].v = 0.99f;
-    m_aVertex[2].color = RWRGBALONGEX(rColor);
+    RwIm3DVertexSetPos(&m_aVertex[0], -x, y, z);
+    RwIm3DVertexSetNormal(&m_aVertex[0], 0.0f, 0.0f, 0.0f);
+    RwIm3DVertexSetRGBA(&m_aVertex[0], rColor.red, rColor.green, rColor.blue, rColor.alpha);
+    RwIm3DVertexSetU(&m_aVertex[0], 0.0f + uv_pad);
+    RwIm3DVertexSetV(&m_aVertex[0], 1.0f - uv_pad);
 
-    m_aVertex[3].objVertex.x = w;
-    m_aVertex[3].objVertex.y = h * -1.0f;
-    m_aVertex[3].objVertex.z = 0.0f;
-    m_aVertex[3].u = 0.99f;
-    m_aVertex[3].v = 0.01f;
-    m_aVertex[3].color = RWRGBALONGEX(rColor);
+    RwIm3DVertexSetPos(&m_aVertex[1], -x, -y, z);
+    RwIm3DVertexSetNormal(&m_aVertex[1], 0.0f, 0.0f, 0.0f);
+    RwIm3DVertexSetRGBA(&m_aVertex[1], rColor.red, rColor.green, rColor.blue, rColor.alpha);
+    RwIm3DVertexSetU(&m_aVertex[1], 0.0f + uv_pad);
+    RwIm3DVertexSetV(&m_aVertex[1], 0.0f + uv_pad);
+
+    RwIm3DVertexSetPos(&m_aVertex[2], x, y, z);
+    RwIm3DVertexSetNormal(&m_aVertex[2], 0.0f, 0.0f, 0.0f);
+    RwIm3DVertexSetRGBA(&m_aVertex[2], rColor.red, rColor.green, rColor.blue, rColor.alpha);
+    RwIm3DVertexSetU(&m_aVertex[2], 1.0f - uv_pad);
+    RwIm3DVertexSetV(&m_aVertex[2], 1.0f - uv_pad);
+
+    RwIm3DVertexSetPos(&m_aVertex[3], x, -y, z);
+    RwIm3DVertexSetNormal(&m_aVertex[3], 0.0f, 0.0f, 0.0f);
+    RwIm3DVertexSetRGBA(&m_aVertex[3], rColor.red, rColor.green, rColor.blue, rColor.alpha);
+    RwIm3DVertexSetU(&m_aVertex[3], 1.0f - uv_pad);
+    RwIm3DVertexSetV(&m_aVertex[3], 0.0f + uv_pad);
 };
 
 

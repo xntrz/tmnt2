@@ -16,11 +16,11 @@ public:
 
 RpAtomic* CSetToonObjectFunctor::operator()(RpAtomic* pAtomic)
 {
-	RpGeometry* pGeometry = RpAtomicGetGeometryMacro(pAtomic);
+	RpGeometry* pGeometry = RpAtomicGetGeometry(pAtomic);
     ASSERT(pGeometry);
 
-	if (RpSkinGeometryGetSkin(pGeometry))
-		RpToonSkinAtomicSetType(pAtomic, rpSKINTYPETOON);
+    if (RpSkinGeometryGetSkin(pGeometry))
+        RpToonSkinAtomicSetType(pAtomic, rpSKINTYPETOON); // RpSkinAtomicSetType(pAtomic, rpSKINTYPETOON);
 	else
 		RpToonAtomicEnable(pAtomic);
     

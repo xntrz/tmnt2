@@ -1,6 +1,5 @@
 #pragma once
 
-#include "Game/System/Movie/MovieID.hpp"
 #include "System/Common/Process/Sequence.hpp"
 
 
@@ -28,11 +27,11 @@ public:
     void PostMovie(void);
     
 private:
-    STEP            m_step;
-    int32           m_iLabelNext;
-    int32           m_iLabelPrev;
-    int32           m_iLabelCurrent;
-    const void*     m_param;
-    float           m_fTime;
-    MOVIEID::VALUE  m_movieId;    
+    STEP        m_step;
+    int32       m_iLabelNext;
+    int32       m_iLabelPrev;
+    int32       m_iLabelCurrent;
+    const void* m_param;
+    float       m_fTime;
+    MVNAME      m_movieId;    
 };

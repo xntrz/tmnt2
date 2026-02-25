@@ -108,7 +108,7 @@ bool CPlayDemoSequence::OnAttach(const void* pParam)
     ChangeState(STATE_LOAD);
 
     RwCamera* camera = CSystem2D::Camera().GetRwCamera();
-    float fDepth = (RwCameraGetNearClipPlaneMacro(camera) * 1.01f);
+    float fDepth = (RwCameraGetNearClipPlane(camera) * 1.01f);
     Rt2dDeviceSetLayerDepth(fDepth);
 
     Math::SRand(123456);

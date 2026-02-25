@@ -565,7 +565,7 @@ void CMapCamera::UpdateManualCamera(const RwV3d* pvAt)
     m_vAt.y += m_fLookatOffsetY;
 
     RwMatrix matRotY;
-    RwMatrixSetIdentityMacro(&matRotY);
+    RwMatrixSetIdentity(&matRotY);
     Math::Matrix_RotateY(&matRotY, m_fRotY);
 
     RwV3d vecFront = Math::VECTOR3_ZERO;
@@ -786,7 +786,7 @@ void CMapCamera::LookAt(const RwV3d* pvEye, const RwV3d* pvAt, const RwV3d* pvUp
     rwMatrixSetFlags(&matrix, rwMATRIXTYPEORTHONORMAL);
 
     RwCamera* pCamera = m_pCamera->GetRwCamera();
-    RwFrame* pFrame = RwCameraGetFrameMacro(pCamera);
+    RwFrame* pFrame = RwCameraGetFrame(pCamera);
     
     if (pFrame)
         RwFrameTransform(pFrame, &matrix, rwCOMBINEREPLACE);
@@ -910,7 +910,7 @@ bool CMapCamera::IsPosVisible(const RwV3d* pvPos)
     ASSERT(m_pCamera);
     
     RwCamera* pCamera = m_pCamera->GetRwCamera();
-    RwMatrix* pViewMatrix = RwCameraGetViewMatrixMacro(pCamera);
+    RwMatrix* pViewMatrix = RwCameraGetViewMatrix(pCamera);
     
     RwV3d vScreenPos = Math::VECTOR3_ZERO;
     RwV3dTransformPoints(&vScreenPos, pvPos, 1, pViewMatrix);
@@ -920,8 +920,8 @@ bool CMapCamera::IsPosVisible(const RwV3d* pvPos)
         vScreenPos.x *= (1.0f / vScreenPos.z);
         vScreenPos.y *= (1.0f / vScreenPos.z);
 
-        float fClipNear = RwCameraGetNearClipPlaneMacro(pCamera);
-        float fClipFar  = RwCameraGetFarClipPlaneMacro(pCamera);
+        float fClipNear = RwCameraGetNearClipPlane(pCamera);
+        float fClipFar  = RwCameraGetFarClipPlane(pCamera);
 
         if ((vScreenPos.x >= 0.0f) &&
             (vScreenPos.x <= 1.0f) &&
@@ -943,7 +943,7 @@ float CMapCamera::CalcNiceZoom(RwV3d* avPos, int32 nNumPos)
     if (nNumPos <= 0)
         return 1.0f;
 
-    RwMatrix* pViewMat = RwCameraGetViewMatrixMacro(m_pCamera->GetRwCamera());
+    RwMatrix* pViewMat = RwCameraGetViewMatrix(m_pCamera->GetRwCamera());
 
     float fMaxScrnX = 0.0f;
     float fMaxScrnY = 0.0f;
@@ -957,8 +957,11 @@ float CMapCamera::CalcNiceZoom(RwV3d* avPos, int32 nNumPos)
         {
             float fTmp = (1.0f / vScrnPos.z);
 
-            vScrnPos.x = std::fabs(((vScrnPos.x * fTmp) * 2.0f) - 1.0f);
-            vScrnPos.y = std::fabs(((vScrnPos.y * fTmp) * 2.0f) - 1.0f);
+            vScrnPos.x = (vScrnPos.x * fTmp) + (vScrnPos.x * fTmp) - 1.0f;
+            vScrnPos.y = (vScrnPos.y * fTmp) + (vScrnPos.y * fTmp) - 1.0f;
+
+            vScrnPos.x = std::fabs(vScrnPos.x);
+            vScrnPos.y = std::fabs(vScrnPos.y);
 
             if (fMaxScrnX < vScrnPos.x)
                 fMaxScrnX = vScrnPos.x;

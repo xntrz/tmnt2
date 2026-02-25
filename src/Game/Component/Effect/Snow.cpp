@@ -99,7 +99,6 @@ CSnow::~CSnow(void)
 
 void CSnow::Run(void)
 {
-    RwV3d vFrameVelocity = Math::VECTOR3_ZERO;
     float dt = CGameProperty::GetElapsedTime();
     
     for (int32 i = 0; i < m_nDisplayNum; ++i)
@@ -108,26 +107,20 @@ void CSnow::Run(void)
 
         pParticle->m_fTime += dt;
 
-        RwV2d vBuffer = Math::VECTOR2_ZERO;
-        vBuffer.x = pParticle->m_vPosition.x - m_vBasisPosition.x;
-        vBuffer.y = pParticle->m_vPosition.z - m_vBasisPosition.z;
+        RwV2d vBuff = Math::VECTOR2_ZERO;
+        vBuff.x = pParticle->m_vPosition.x - m_vBasisPosition.x;
+        vBuff.y = pParticle->m_vPosition.z - m_vBasisPosition.z;
 
         bool bIsDead = (pParticle->m_fTime > pParticle->m_fLifespan);
-        bool bIsOutOfScreen = (Math::Vec2_Length(&vBuffer) > m_fRadius);        
+        bool bIsOutOfScreen = (Math::Vec2_Length(&vBuff) > m_fRadius);        
+
         if (bIsDead || bIsOutOfScreen)
             Generate(pParticle);
-        
-        Math::Vec3_Scale(
-            &vFrameVelocity,
-            &pParticle->m_vVelocity,
-            dt
-        );
 
-        Math::Vec3_Add(
-            &pParticle->m_vPosition,
-            &pParticle->m_vPosition,
-            &vFrameVelocity
-        );
+        RwV3d vFrameVelocity = Math::VECTOR3_ZERO;
+        Math::Vec3_Scale(&vFrameVelocity, &pParticle->m_vVelocity, dt);
+
+        Math::Vec3_Add(&pParticle->m_vPosition, &pParticle->m_vPosition, &vFrameVelocity);
     };
 
     if (m_bRideFlag)
@@ -151,28 +144,32 @@ void CSnow::Draw(void)
     else
         RENDERSTATE_PUSH(rwRENDERSTATETEXTURERASTER, 0);
 
-    uint32 uVertexNum = 0;
+    RwCamera* camera = CCamera::CameraCurrent();
+    RwMatrix* viewMat = RwCameraGetViewMatrix(camera);
+
     RwMatrix billboardMatrix;
-    RwMatrixSetIdentityMacro(&billboardMatrix);
+    RwMatrixSetIdentity(&billboardMatrix);
+    RwMatrixInvert(&billboardMatrix, viewMat);
 
-    RwMatrixInvert(&billboardMatrix, RwCameraGetViewMatrixMacro(CCamera::CameraCurrent()));
+    int32 nDispNum = m_nDisplayNum * static_cast<int32>(m_fVolume / 100.0f);
+    uint32 uVertexNum = 0;
 
-    int32 nDispNum = m_nDisplayNum * int32(m_fVolume / 100.0f);
-    
     for (int32 i = 0; i < nDispNum; ++i)
     {
         PARTICLE* pParticle = &m_aParticle[i];
         RwIm3DVertex* pVertex = &m_aVertex[uVertexNum];
 
-        if (SetVertex(pParticle, pVertex, &billboardMatrix, CCamera::CameraCurrent()))
+        if (SetVertex(pParticle, pVertex, &billboardMatrix, camera))
             uVertexNum += 6;        
     };
 
 	if (uVertexNum)
 	{
-		uint32 uFlags = rwIM3D_VERTEXRGBA | rwIM3D_VERTEXXYZ | rwIM3D_VERTEXUV;
+        uint32 flags = rwIM3D_VERTEXRGBA
+                     | rwIM3D_VERTEXXYZ
+                     | rwIM3D_VERTEXUV;
 
-		if (RwIm3DTransform(m_aVertex, uVertexNum, nullptr, uFlags))
+		if (RwIm3DTransform(m_aVertex, uVertexNum, nullptr, flags))
 		{
 			RwIm3DRenderPrimitive(rwPRIMTYPETRILIST);
 			RwIm3DEnd();
@@ -294,6 +291,7 @@ void CSnow::CalcWind(void)
         vDirection.y = 0.0f;
         Math::Vec3_Normalize(&vDirection, &vDirection);
         Math::Vec3_Scale(&vDirection, &vDirection, m_fSpeed);
+        
         SetWind(&vDirection);
     };
 };
@@ -303,37 +301,32 @@ void CSnow::Generate(PARTICLE* pParticle)
 {
     ASSERT(pParticle);
 
-    float fRandScale = (float(Math::Rand() % 100) * 0.01f) + 0.5f;
+    float fRandScale = (static_cast<float>(Math::Rand() % 100) * 0.01f) + 0.5f;
 
     if (m_fRadius >= 0.0f)
     {
-        pParticle->m_vPosition.x = m_vBasisPosition.x + ((Math::Rand() % uint32(m_fRadius + m_fRadius)) - m_fRadius);
-        pParticle->m_vPosition.y = m_vBasisPosition.y + (Math::Rand() % uint32(m_fHeight));
-        pParticle->m_vPosition.z = m_vBasisPosition.z + ((Math::Rand() % uint32(m_fRadius + m_fRadius)) - m_fRadius);
+        pParticle->m_vPosition.x =
+            m_vBasisPosition.x + ((Math::Rand() % static_cast<uint32>(m_fRadius + m_fRadius)) - m_fRadius);
+
+        pParticle->m_vPosition.y =
+            m_vBasisPosition.y + (Math::Rand() % static_cast<uint32>(m_fHeight));
+
+        pParticle->m_vPosition.z =
+            m_vBasisPosition.z + ((Math::Rand() % static_cast<uint32>(m_fRadius + m_fRadius)) - m_fRadius);
     };
 
     pParticle->m_vVelocity = m_vAppearVector;
-
-    pParticle->m_vVelocity.x += (float(Math::Rand() % 300) - 150.0f) * 0.001f;
-    pParticle->m_vVelocity.z += (float(Math::Rand() % 300) - 150.0f) * 0.001f;
-
-    Math::Vec3_Normalize(
-        &pParticle->m_vVelocity,
-        &pParticle->m_vVelocity
-    );
-
-    Math::Vec3_Scale(
-        &pParticle->m_vVelocity,
-        &pParticle->m_vVelocity,
-        (fRandScale * m_fSpeed)
-    );
+    pParticle->m_vVelocity.x += (static_cast<float>(Math::Rand() % 300) - 150.0f) * 0.001f;
+    pParticle->m_vVelocity.z += (static_cast<float>(Math::Rand() % 300) - 150.0f) * 0.001f;
+    Math::Vec3_Normalize(&pParticle->m_vVelocity, &pParticle->m_vVelocity);
+    Math::Vec3_Scale(&pParticle->m_vVelocity, &pParticle->m_vVelocity, (fRandScale * m_fSpeed));
 
     pParticle->m_vSize.x = m_vBasisSize.x * fRandScale;
 	pParticle->m_vSize.y = m_vBasisSize.y * fRandScale;
     
     pParticle->m_fTime = 0.0f;
     pParticle->m_Color = m_Color;
-    pParticle->m_fLifespan = (float(Math::Rand() % 30) + 70.0f) * 0.01f * m_fLiveScale;
+    pParticle->m_fLifespan = (static_cast<float>(Math::Rand() % 30) + 70.0f) * 0.01f * m_fLiveScale;
 };
 
 
@@ -343,13 +336,11 @@ bool CSnow::SetVertex(PARTICLE* pParticle, RwIm3DVertex* pVertex, RwMatrix* pMat
     ASSERT(pVertex);
     ASSERT(pMatrix);
     ASSERT(pCamera);
-    
+
+    RwMatrix* viewMat = RwCameraGetViewMatrix(pCamera);
+
     RwV3d vScPos = Math::VECTOR3_ZERO;
-    RwV3dTransformPoint(
-        &vScPos,
-        &pParticle->m_vPosition,
-        RwCameraGetViewMatrixMacro(pCamera)
-    );
+    RwV3dTransformPoint(&vScPos, &pParticle->m_vPosition, viewMat);
 
     if (vScPos.z <= 2.5f)
     {
@@ -357,8 +348,8 @@ bool CSnow::SetVertex(PARTICLE* pParticle, RwIm3DVertex* pVertex, RwMatrix* pMat
         return false;
     };
 
-    float sw = float(CScreen::Width());
-	float sh = float(CScreen::Height());
+    float sw = static_cast<float>(CScreen::Width());
+	float sh = static_cast<float>(CScreen::Height());
 
     float x = pParticle->m_vSize.x * 0.5f;
     float y = ((sw / sh) * pParticle->m_vSize.y) * 0.5f;
@@ -388,41 +379,43 @@ bool CSnow::SetVertex(PARTICLE* pParticle, RwIm3DVertex* pVertex, RwMatrix* pMat
     Math::Vec3_Add(&aPosition[2], &aPosition[2], &pParticle->m_vPosition);
     Math::Vec3_Add(&aPosition[3], &aPosition[3], &pParticle->m_vPosition);
 
-    pVertex[0].objVertex = aPosition[1];
-    pVertex[0].objNormal = Math::VECTOR3_ZERO;
-    pVertex[0].color = RWRGBALONGEX(pParticle->m_Color);
-    pVertex[0].u = 0.0f;
-    pVertex[0].v = 1.0f;
+    RwRGBA color = pParticle->m_Color;
 
-    pVertex[1].objVertex = aPosition[0];
-    pVertex[1].objNormal = Math::VECTOR3_ZERO;
-    pVertex[1].color = RWRGBALONGEX(pParticle->m_Color);
-    pVertex[1].u = 0.0f;
-    pVertex[1].v = 0.0f;
+    RwIm3DVertexSetPos(&pVertex[0], aPosition[1].x, aPosition[1].y, aPosition[1].z);
+    RwIm3DVertexSetNormal(&pVertex[0], 0.0f, 0.0f, 0.0f);
+    RwIm3DVertexSetRGBA(&pVertex[0], color.red, color.green, color.blue, color.alpha);
+    RwIm3DVertexSetU(&pVertex[0], 0.0f);
+    RwIm3DVertexSetV(&pVertex[0], 1.0f);
 
-    pVertex[2].objVertex = aPosition[3];
-    pVertex[2].objNormal = Math::VECTOR3_ZERO;
-    pVertex[2].color = RWRGBALONGEX(pParticle->m_Color);
-    pVertex[2].u = 1.0f;
-    pVertex[2].v = 1.0f;
+    RwIm3DVertexSetPos(&pVertex[1], aPosition[0].x, aPosition[0].y, aPosition[0].z);
+    RwIm3DVertexSetNormal(&pVertex[1], 0.0f, 0.0f, 0.0f);
+    RwIm3DVertexSetRGBA(&pVertex[1], color.red, color.green, color.blue, color.alpha);
+    RwIm3DVertexSetU(&pVertex[1], 0.0f);
+    RwIm3DVertexSetV(&pVertex[1], 0.0f);
 
-    pVertex[3].objVertex = aPosition[3];
-    pVertex[3].objNormal = Math::VECTOR3_ZERO;
-    pVertex[3].color = RWRGBALONGEX(pParticle->m_Color);
-    pVertex[3].u = 1.0f;
-    pVertex[3].v = 1.0f;
+    RwIm3DVertexSetPos(&pVertex[2], aPosition[3].x, aPosition[3].y, aPosition[3].z);
+    RwIm3DVertexSetNormal(&pVertex[2], 0.0f, 0.0f, 0.0f);
+    RwIm3DVertexSetRGBA(&pVertex[2], color.red, color.green, color.blue, color.alpha);
+    RwIm3DVertexSetU(&pVertex[2], 1.0f);
+    RwIm3DVertexSetV(&pVertex[2], 1.0f);
 
-    pVertex[4].objVertex = aPosition[0];
-    pVertex[4].objNormal = Math::VECTOR3_ZERO;
-    pVertex[4].color = RWRGBALONGEX(pParticle->m_Color);
-    pVertex[4].u = 0.0f;
-    pVertex[4].v = 0.0f;
+    RwIm3DVertexSetPos(&pVertex[3], aPosition[3].x, aPosition[3].y, aPosition[3].z);
+    RwIm3DVertexSetNormal(&pVertex[3], 0.0f, 0.0f, 0.0f);
+    RwIm3DVertexSetRGBA(&pVertex[3], color.red, color.green, color.blue, color.alpha);
+    RwIm3DVertexSetU(&pVertex[3], 1.0f);
+    RwIm3DVertexSetV(&pVertex[3], 1.0f);
 
-    pVertex[5].objVertex = aPosition[2];
-    pVertex[5].objNormal = Math::VECTOR3_ZERO;
-    pVertex[5].color = RWRGBALONGEX(pParticle->m_Color);
-    pVertex[5].u = 1.0f;
-    pVertex[5].v = 0.0f;
+    RwIm3DVertexSetPos(&pVertex[4], aPosition[0].x, aPosition[0].y, aPosition[0].z);
+    RwIm3DVertexSetNormal(&pVertex[4], 0.0f, 0.0f, 0.0f);
+    RwIm3DVertexSetRGBA(&pVertex[4], color.red, color.green, color.blue, color.alpha);
+    RwIm3DVertexSetU(&pVertex[4], 0.0f);
+    RwIm3DVertexSetV(&pVertex[4], 0.0f);
+
+    RwIm3DVertexSetPos(&pVertex[5], aPosition[2].x, aPosition[2].y, aPosition[2].z);
+    RwIm3DVertexSetNormal(&pVertex[5], 0.0f, 0.0f, 0.0f);
+    RwIm3DVertexSetRGBA(&pVertex[5], color.red, color.green, color.blue, color.alpha);
+    RwIm3DVertexSetU(&pVertex[5], 1.0f);
+    RwIm3DVertexSetV(&pVertex[5], 0.0f);
 
     return true;
 };
@@ -545,15 +538,17 @@ static CSnow& Snow(void)
 /*static*/ void CSnowManager::SetCameraPosition(CMapCamera* pMapCamera)
 {
     ASSERT(pMapCamera);
-    
-    RwV3d vAt = Math::VECTOR3_ZERO;
-    RwV3d vPosition = Math::VECTOR3_ZERO;
 
     RwCamera* pCamera = pMapCamera->GetRwCamera();
     ASSERT(pCamera);
 
+    RwFrame* frame = RwCameraGetFrame(pCamera);
+    RwMatrix* matrix = RwFrameGetMatrix(frame);
+
+    RwV3d vPosition = *RwMatrixGetPos(matrix);
+    
+    RwV3d vAt = Math::VECTOR3_ZERO;
     pMapCamera->GetLookat(&vAt);
-    vPosition = RwFrameGetMatrixMacro(RwCameraGetFrameMacro(pCamera))->pos;    
 
     Snow().SetCameraPosition(&vPosition);
     Snow().SetCameraInfo(&vAt, &vPosition);

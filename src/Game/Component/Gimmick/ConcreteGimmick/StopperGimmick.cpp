@@ -43,7 +43,7 @@ CStopperGimmick::CStopperGimmick(const char* pszName, void* pParam)
 
         /* init pos & rot */
         RwMatrix matrix;
-        RwMatrixSetIdentityMacro(&matrix);        
+        RwMatrixSetIdentity(&matrix);        
         CGimmickUtils::QuaternionToRotationMatrix(&matrix, &pInitParam->m_quat);
         
         RwV3d vRotation = Math::VECTOR3_ZERO;

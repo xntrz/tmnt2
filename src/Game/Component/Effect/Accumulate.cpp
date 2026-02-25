@@ -137,11 +137,11 @@ void CAccumulate::SetVertexAll(void)
     Math::Vec3_Scale(&vUnit, &vUnit, (0.05f / fLenght));
 
     RwMatrix matBillboard;
-    RwMatrixSetIdentityMacro(&matBillboard);
-    Math::Matrix_Invert(&matBillboard, RwCameraGetViewMatrixMacro(pCamera));
+    RwMatrixSetIdentity(&matBillboard);
+    Math::Matrix_Invert(&matBillboard, RwCameraGetViewMatrix(pCamera));
 
     RwV3d vMoveFront = Math::VECTOR3_ZERO;    
-    RwV3d vCameraPosition = RwFrameGetMatrixMacro(RwCameraGetFrameMacro(pCamera))->pos;
+    RwV3d vCameraPosition = RwFrameGetMatrix(RwCameraGetFrame(pCamera))->pos;
     Math::Vec3_Sub(&vMoveFront, &aPosition[1], &vCameraPosition);
     Math::Vec3_Normalize(&vMoveFront, &vMoveFront);
     Math::Vec3_Scale(&vMoveFront, &vMoveFront, -0.05f);
@@ -199,41 +199,41 @@ void CAccumulate::SetVertex(RwV3d* pvPosition, RwV3d* aSummit, RwMatrix* pMatrix
 
     RwIm3DVertex* pVertex = &m_pVertex[m_nVertexNum];
 
-    pVertex[0].objVertex = aPosition[1];
-    pVertex[0].objNormal = Math::VECTOR3_ZERO;
-    pVertex[0].color = RWRGBALONG(m_Color.red, m_Color.green, m_Color.blue, m_Color.alpha);
-    pVertex[0].u = 0.0f;
-    pVertex[0].v = 1.0f;
+    RwIm3DVertexSetPos(&pVertex[0], aPosition[1].x, aPosition[1].y, aPosition[1].z);
+    RwIm3DVertexSetNormal(&pVertex[0], 0.0f, 0.0f, 0.0f);
+    RwIm3DVertexSetRGBA(&pVertex[0], m_Color.red, m_Color.green, m_Color.blue, m_Color.alpha);
+    RwIm3DVertexSetU(&pVertex[0], 0.0f);
+    RwIm3DVertexSetV(&pVertex[0], 1.0f);
 
-    pVertex[1].objVertex = aPosition[0];
-    pVertex[1].objNormal = Math::VECTOR3_ZERO;
-    pVertex[1].color = RWRGBALONG(m_Color.red, m_Color.green, m_Color.blue, m_Color.alpha);
-    pVertex[1].u = 0.0f;
-    pVertex[1].v = 0.0f;
+    RwIm3DVertexSetPos(&pVertex[1], aPosition[0].x, aPosition[0].y, aPosition[0].z);
+    RwIm3DVertexSetNormal(&pVertex[1], 0.0f, 0.0f, 0.0f);
+    RwIm3DVertexSetRGBA(&pVertex[1], m_Color.red, m_Color.green, m_Color.blue, m_Color.alpha);
+    RwIm3DVertexSetU(&pVertex[1], 0.0f);
+    RwIm3DVertexSetV(&pVertex[1], 0.0f);
 
-    pVertex[2].objVertex = aPosition[3];
-    pVertex[2].objNormal = Math::VECTOR3_ZERO;
-    pVertex[2].color = RWRGBALONG(m_Color.red, m_Color.green, m_Color.blue, m_Color.alpha);
-    pVertex[2].u = 1.0f;
-    pVertex[2].v = 1.0f;
+    RwIm3DVertexSetPos(&pVertex[2], aPosition[3].x, aPosition[3].y, aPosition[3].z);
+    RwIm3DVertexSetNormal(&pVertex[2], 0.0f, 0.0f, 0.0f);
+    RwIm3DVertexSetRGBA(&pVertex[2], m_Color.red, m_Color.green, m_Color.blue, m_Color.alpha);
+    RwIm3DVertexSetU(&pVertex[2], 1.0f);
+    RwIm3DVertexSetV(&pVertex[2], 1.0f);
 
-    pVertex[3].objVertex = aPosition[3];
-    pVertex[3].objNormal = Math::VECTOR3_ZERO;
-    pVertex[3].color = RWRGBALONG(m_Color.red, m_Color.green, m_Color.blue, m_Color.alpha);
-    pVertex[3].u = 1.0f;
-    pVertex[3].v = 1.0f;
+    RwIm3DVertexSetPos(&pVertex[3], aPosition[3].x, aPosition[3].y, aPosition[3].z);
+    RwIm3DVertexSetNormal(&pVertex[3], 0.0f, 0.0f, 0.0f);
+    RwIm3DVertexSetRGBA(&pVertex[3], m_Color.red, m_Color.green, m_Color.blue, m_Color.alpha);
+    RwIm3DVertexSetU(&pVertex[3], 1.0f);
+    RwIm3DVertexSetV(&pVertex[3], 1.0f);
 
-    pVertex[4].objVertex = aPosition[0];
-    pVertex[4].objNormal = Math::VECTOR3_ZERO;
-    pVertex[4].color = RWRGBALONG(m_Color.red, m_Color.green, m_Color.blue, m_Color.alpha);
-    pVertex[4].u = 0.0f;
-    pVertex[4].v = 0.0f;
+    RwIm3DVertexSetPos(&pVertex[4], aPosition[0].x, aPosition[0].y, aPosition[0].z);
+    RwIm3DVertexSetNormal(&pVertex[4], 0.0f, 0.0f, 0.0f);
+    RwIm3DVertexSetRGBA(&pVertex[4], m_Color.red, m_Color.green, m_Color.blue, m_Color.alpha);
+    RwIm3DVertexSetU(&pVertex[4], 0.0f);
+    RwIm3DVertexSetV(&pVertex[4], 0.0f);
 
-    pVertex[5].objVertex = aPosition[2];
-    pVertex[5].objNormal = Math::VECTOR3_ZERO;
-    pVertex[5].color = RWRGBALONG(m_Color.red, m_Color.green, m_Color.blue, m_Color.alpha);
-    pVertex[5].u = 1.0f;
-    pVertex[5].v = 0.0f;
+    RwIm3DVertexSetPos(&pVertex[5], aPosition[2].x, aPosition[2].y, aPosition[2].z);
+    RwIm3DVertexSetNormal(&pVertex[5], 0.0f, 0.0f, 0.0f);
+    RwIm3DVertexSetRGBA(&pVertex[5], m_Color.red, m_Color.green, m_Color.blue, m_Color.alpha);
+    RwIm3DVertexSetU(&pVertex[5], 1.0f);
+    RwIm3DVertexSetV(&pVertex[5], 0.0f);
 
     m_nVertexNum += 6;
 };

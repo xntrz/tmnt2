@@ -7,7 +7,6 @@
 #include "Game/System/Misc/Timeout.hpp"
 #include "Game/System/Misc/ScreenFade.hpp"
 #include "System/Common/Screen.hpp"
-#include "System/Common/File/FileID.hpp"
 
 
 /*static*/ const CLogoDisplaySequence::LOGOPROPERTY CLogoDisplaySequence::m_aLogoProperties[] =
@@ -43,7 +42,7 @@ bool CLogoDisplaySequence::OnAttach(const void* pParam)
 {
     CTextureManager::GenerationInc();
 
-    CDataLoader::Regist(FILEID::ID_LOGO);
+    CDataLoader::Regist(FPATH("Common/Menu/Logo/Logo.lpac"));
     
 #ifdef _DEBUG
     m_phase = PHASE_RET;

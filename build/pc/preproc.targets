@@ -1,0 +1,107 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+    <Target Name="PreprocessClean" 
+            BeforeTargets="Clean" 
+            DependsOnTargets="PreprocessCheck">        
+            
+            <Message Importance="high" 
+                     Condition="Exists('$(PreprocessDir)')" 
+                     Text="Removing $(PreprocessDir)" />
+
+            <RemoveDir Directories="$(PreprocessDir)" 
+                       Condition="Exists('$(PreprocessDir)')" />
+            
+    </Target>
+    
+    <Target Name="Preprocess" 
+            BeforeTargets="ClCompile" 
+            DependsOnTargets="PreprocessCheck"
+            Condition="'$(IdFsyst)' == 'true'">
+
+        <PropertyGroup>
+            <PreprocessRule>$(PreprocessRuleNA)</PreprocessRule>
+            <AllPreprocessorDefs>@(ClCompile->'%(PreprocessorDefinitions)')</AllPreprocessorDefs>
+            <PreprocessRule Condition="$(AllPreprocessorDefs.Contains('TMNT2_BUILD_EU'))">$(PreprocessRuleEU)</PreprocessRule>
+        </PropertyGroup>
+
+        <RemoveDir Directories="$(PreprocessDir)" 
+                   Condition="Exists('$(PreprocessDir)')" />
+
+        <MakeDir Directories="$(PreprocessDir)" />    
+
+        <ItemGroup>
+            <SourceFiles Include="$(SourceDir)**\*.cpp" Exclude="$(ExcludeDir)" />
+            <SourceFiles Include="$(SourceDir)**\*.hpp" Exclude="$(ExcludeDir)" />
+            <SourceFiles Include="$(SourceDir)**\*.inl" Exclude="$(ExcludeDir)" />
+            <SourceFiles Include="$(SourceDir)**\*.h" Exclude="$(ExcludeDir)" />
+        </ItemGroup>
+
+        <Copy SourceFiles="@(SourceFiles)"
+              DestinationFolder="$(PreprocessDir)%(RecursiveDir)"
+              SkipUnchangedFiles="true" />    
+
+        <Message Importance="high" Text="Copied @(SourceFiles->Count()) .cpp and .hpp files from $(SourceDir) to $(PreprocessDir)" />
+
+        <ItemGroup>
+            <_OriginalClCompile Include="@(ClCompile)" Exclude="$(ExcludeDir)" />
+        </ItemGroup>
+
+        <ItemGroup>
+            <_OriginalClInclude Include="@(ClInclude)" Exclude="$(ExcludeDir)" />
+        </ItemGroup>
+
+        <ItemGroup>
+            <_OriginalClCompile>
+                <_OriginalIncludes>%(AdditionalIncludeDirectories)</_OriginalIncludes>
+            </_OriginalClCompile>
+        </ItemGroup>
+
+        <ItemGroup>
+            <ClCompileRenamed Include="@(_OriginalClCompile->Replace('$(SourcePath)', '$(PreprocessPath)'))">
+                <ObjectFileName>%(_OriginalClCompile.ObjectFileName)</ObjectFileName>
+                <PrecompiledHeader>%(_OriginalClCompile.PrecompiledHeader)</PrecompiledHeader>
+                <PreprocessToFile>%(_OriginalClCompile.PreprocessToFile)</PreprocessToFile>
+                <PreprocessKeepComments>%(_OriginalClCompile.PreprocessKeepComments)</PreprocessKeepComments>
+                <WarningLevel>%(_OriginalClCompile.WarningLevel)</WarningLevel>
+                <Optimization>%(_OriginalClCompile.Optimization)</Optimization>
+                <PreprocessorDefinitions>%(_OriginalClCompile.PreprocessorDefinitions)</PreprocessorDefinitions>
+                <RuntimeLibrary>%(_OriginalClCompile.RuntimeLibrary)</RuntimeLibrary>
+                <FunctionLevelLinking>%(_OriginalClCompile.FunctionLevelLinking)</FunctionLevelLinking>
+                <IntrinsicFunctions>%(_OriginalClCompile.IntrinsicFunctions)</IntrinsicFunctions>
+                <TreatWarningAsError>%(_OriginalClCompile.TreatWarningAsError)</TreatWarningAsError>
+                <DisableSpecificWarnings>%(_OriginalClCompile.DisableSpecificWarnings)</DisableSpecificWarnings>
+                <ForcedIncludeFiles>%(_OriginalClCompile.ForcedIncludeFiles)</ForcedIncludeFiles>
+            </ClCompileRenamed>
+            <ClCompile Remove="@(ClCompile)" />
+            <ClCompile Include="@(ClCompileRenamed)" />
+        </ItemGroup>
+
+        <ItemGroup>
+            <ClIncludeRenamed Include="@(_OriginalClInclude->Replace('$(SourcePath)', '$(PreprocessPath)'))"></ClIncludeRenamed>
+            <ClInclude Remove="@(ClInclude)" />
+            <ClInclude Include="@(ClIncludeRenamed)" />
+        </ItemGroup>
+
+        <ItemGroup>
+            <ClCompile>
+                <AdditionalIncludeDirectories>
+                    <!-- TODO: cant remove org source includes because its brokes paths and VS dont see them
+                               so currently only one hope that preprocess dir will be chosen first for inc -->
+                    $(PreprocessDir);%(_OriginalClCompile._OriginalIncludes)
+                </AdditionalIncludeDirectories>
+            </ClCompile>
+        </ItemGroup>
+
+        <!-- <Message Importance="high" Text="CL_INCLUDE: @(ClInclude)" /> -->
+        <!-- <Message Importance="high" Text="CL_COMPILE: @(ClCompile)" /> -->
+        <!-- <Message Importance="high" Text="INC: %(ClCompile.AdditionalIncludeDirectories)" /> -->
+        <!-- <Message Importance="high" Text="EXCLUDE: $(ExcludeDir)" /> -->
+        <!-- <Message Importance="high" Text="SOURCE DIR: $(SourceDir)" /> -->
+        <!-- <Message Importance="high" Text="PREPROC DIR: $(PreprocessDir)" /> -->
+        <!-- <Message Importance="high" Text="PREPROC RULE: $(PreprocessRule)" /> -->
+
+        <!-- Preprocess only "src/Game" dir -->
+        <Exec Command="python $(PreprocessScript) --dir $(PreprocessDir)Game --rule $(MSBuildProjectDirectory)/../$(PreprocessRule)" />
+
+    </Target>
+</Project>

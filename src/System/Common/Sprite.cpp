@@ -63,7 +63,7 @@ static inline float CosFloat(float x)
 CSprite::CSprite(void)
 : m_fX(0.0f)
 , m_fY(0.0f)
-, m_fZ(RwIm2DGetNearScreenZMacro())
+, m_fZ(RwIm2DGetNearScreenZ())
 , m_fW(static_cast<float>(CScreen::Width()))
 , m_fH(static_cast<float>(CScreen::Height()))
 , m_fOffsetX(0.5f)
@@ -175,11 +175,11 @@ void CSprite::SetTextureAndResize(RwTexture* pTexture)
 {
     SetTexture(pTexture);
     
-    RwRaster* pRwRaster = RwTextureGetRasterMacro(m_pTexture);
+    RwRaster* pRwRaster = RwTextureGetRaster(m_pTexture);
     ASSERT(pRwRaster);
     
-    m_fW = static_cast<float>(RwRasterGetWidthMacro(pRwRaster));
-    m_fH = static_cast<float>(RwRasterGetHeightMacro(pRwRaster));
+    m_fW = static_cast<float>(RwRasterGetWidth(pRwRaster));
+    m_fH = static_cast<float>(RwRasterGetHeight(pRwRaster));
 };
 
 
@@ -301,33 +301,28 @@ void CSprite::Draw(void) const
         { m_fU1, m_fV0, },
     };
 
-    float rhw = 1.0f / RwCameraGetNearClipPlaneMacro(CCamera::CameraCurrent());
+    RwCamera* camera = CCamera::CameraCurrent();
+    float rhw = 1.0f / RwCameraGetNearClipPlane(camera);
 
     for (int32 i = 0; i < COUNT_OF(aVertices); ++i)
     {
-        aVertices[i].x = xy_vertex[i].x;
-        aVertices[i].y = xy_vertex[i].y;
-        aVertices[i].z = m_fZ;
-        aVertices[i].u = uv_vertex[i].x;
-        aVertices[i].v = uv_vertex[i].y;
-        aVertices[i].rhw = rhw;
-
 #ifdef TMNT2_BUILD_EU
-
-        static_assert(COUNT_OF(aVertices) == COUNT_OF(m_aColor),
-                      "count of colors should equals to count of vertices");
-
-        aVertices[i].emissiveColor = RWRGBALONGEX(m_aColor[i]);
-
+        RwRGBA color = m_aColor[i];
 #else /* TMNT2_BUILD_EU */
-
-        aVertices[i].emissiveColor = RWRGBALONGEX(m_Color);
-
+        RwRGBA color = m_Color;
 #endif /* TMNT2_BUILD_EU */
+
+        RwIm2DVertexSetScreenX(&aVertices[i], xy_vertex[i].x);
+        RwIm2DVertexSetScreenY(&aVertices[i], xy_vertex[i].y);
+        RwIm2DVertexSetScreenZ(&aVertices[i], m_fZ);
+        RwIm2DVertexSetU(&aVertices[i], uv_vertex[i].x, rhw);
+        RwIm2DVertexSetV(&aVertices[i], uv_vertex[i].y, rhw);
+        RwIm2DVertexSetRecipCameraZ(&aVertices[i], rhw);
+        RwIm2DVertexSetIntRGBA(&aVertices[i], color.red, color.green, color.blue, color.alpha);
     };
 
     if (m_pTexture)
-        RENDERSTATE_PUSH(rwRENDERSTATETEXTURERASTER, RwTextureGetRasterMacro(m_pTexture));
+        RENDERSTATE_PUSH(rwRENDERSTATETEXTURERASTER, RwTextureGetRaster(m_pTexture));
 
     RwIm2DRenderPrimitive(rwPRIMTYPETRISTRIP, aVertices, COUNT_OF(aVertices));
 };
@@ -361,7 +356,8 @@ void CSprite::DrawRotate(void) const
         { m_fU1, m_fV0, },
     };
 
-    float rhw = 1.0f / RwCameraGetNearClipPlaneMacro(CCamera::CameraCurrent());
+    RwCamera* camera = CCamera::CameraCurrent();
+    float rhw = 1.0f / RwCameraGetNearClipPlane(camera);
 
     for (int32 i = 0; i < COUNT_OF(aVertices); ++i)
     {
@@ -371,29 +367,23 @@ void CSprite::DrawRotate(void) const
         float x = CosFloat(m_fRotate) * (tmp_x) - SinFloat(m_fRotate) * (tmp_y) + (x0 + (m_fW * 0.5f));
         float y = SinFloat(m_fRotate) * (tmp_x) + CosFloat(m_fRotate) * (tmp_y) + (y0 + (m_fH * 0.5f));
 
-        aVertices[i].x = x;
-        aVertices[i].y = y;
-        aVertices[i].z = m_fZ;
-        aVertices[i].u = uv_vertex[i].x;
-        aVertices[i].v = uv_vertex[i].y;
-        aVertices[i].rhw = rhw;
-
 #ifdef TMNT2_BUILD_EU
-
-        static_assert(COUNT_OF(aVertices) == COUNT_OF(m_aColor),
-                      "count of colors should equals to count of vertices");
-                      
-        aVertices[i].emissiveColor = RWRGBALONGEX(m_aColor[i]);
-
+        RwRGBA color = m_aColor[i];
 #else /* TMNT2_BUILD_EU */
-        
-        aVertices[i].emissiveColor = RWRGBALONGEX(m_Color);
-
+        RwRGBA color = m_Color;
 #endif /* TMNT2_BUILD_EU */
+
+        RwIm2DVertexSetScreenX(&aVertices[i], x);
+        RwIm2DVertexSetScreenY(&aVertices[i], y);
+        RwIm2DVertexSetScreenZ(&aVertices[i], m_fZ);
+        RwIm2DVertexSetU(&aVertices[i], uv_vertex[i].x, rhw);
+        RwIm2DVertexSetV(&aVertices[i], uv_vertex[i].y, rhw);
+        RwIm2DVertexSetRecipCameraZ(&aVertices[i], rhw);
+        RwIm2DVertexSetIntRGBA(&aVertices[i], color.red, color.green, color.blue, color.alpha);
     };
 
     if (m_pTexture)
-        RENDERSTATE_PUSH(rwRENDERSTATETEXTURERASTER, RwTextureGetRasterMacro(m_pTexture));
+        RENDERSTATE_PUSH(rwRENDERSTATETEXTURERASTER, RwTextureGetRaster(m_pTexture));
 
     RwIm2DRenderPrimitive(rwPRIMTYPETRISTRIP, aVertices, COUNT_OF(aVertices));
 };

@@ -173,8 +173,8 @@ RwMatrix* CNormalGimmickModel::GetMatrix(int32 idx) const
 {
     CModel* pModel = GetModel(idx);
     RpClump* pClump = pModel->GetClump();
-    RwFrame* pFrame = RpClumpGetFrameMacro(pClump);
-    RwMatrix* pMatrix = RwFrameGetMatrixMacro(pFrame);
+    RwFrame* pFrame = RpClumpGetFrame(pClump);
+    RwMatrix* pMatrix = RwFrameGetMatrix(pFrame);
     
     return pMatrix;
 };

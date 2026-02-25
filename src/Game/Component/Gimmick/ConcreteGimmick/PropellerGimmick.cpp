@@ -108,7 +108,7 @@ void CPropellerGimmick::PostMove(void)
             static_assert(COUNT_OF(s_avWingLocalPos) == nWingNum, "should equal");
 
             RwMatrix matRotZ;
-            RwMatrixSetIdentityMacro(&matRotZ);
+            RwMatrixSetIdentity(&matRotZ);
             Math::Matrix_RotateZ(&matRotZ, m_fRotation);
 
             RwV3d vWing = Math::VECTOR3_ZERO;
@@ -131,7 +131,7 @@ void CPropellerGimmick::PostMove(void)
                 //
                 //  calc local pre rotation
                 //
-                RwMatrixSetIdentityMacro(&matRotZ);
+                RwMatrixSetIdentity(&matRotZ);
                 Math::Matrix_RotateZ(&matRotZ, fPrevRotation);
 
                 RwV3d vWingPre = Math::VECTOR3_ZERO;
@@ -140,7 +140,7 @@ void CPropellerGimmick::PostMove(void)
                 //
                 //  calc local post rotation
                 //
-                RwMatrixSetIdentityMacro(&matRotZ);
+                RwMatrixSetIdentity(&matRotZ);
                 Math::Matrix_RotateZ(&matRotZ, m_fRotation);
 
                 RwV3d vWingPost = Math::VECTOR3_ZERO;

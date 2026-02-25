@@ -75,7 +75,7 @@ private:
     ASSERT(pWork);
     
     RpGeometryForAllMaterials(
-        RpAtomicGetGeometryMacro(pAtomic),
+        RpAtomicGetGeometry(pAtomic),
         pWork->m_pCallback,
         pWork->m_pData
     );

@@ -83,7 +83,7 @@ CCircleShadowModule::CCircleShadowModule(float w, float h)
 , m_pTexture(nullptr)
 , m_bEnable(true)
 {
-    RwMatrixSetIdentityMacro(&m_matrix);
+    RwMatrixSetIdentity(&m_matrix);
     
     CTextureManager::SetCurrentTextureSet("common_ef");;
     m_pTexture = CTextureManager::GetRwTexture("Shadow1");
@@ -116,49 +116,49 @@ void CCircleShadowModule::Run(void)
     if (!pCollisionResult)
         return;
 
-    float fCharacterHeight = vPosition.y - fHeight;
-    fCharacterHeight = Clamp(fCharacterHeight, 0.0f, 5.0f);
+    const float fMaxHeight = 5.0f;
 
-    float fScale = (1.0f - 0.5f * (fCharacterHeight * 0.2f));
-    uint8 uAlphaBasis = uint8(255.0f - 191.0f * (fCharacterHeight * 0.2f));
-    RwV3d vNormal = pCollisionResult->m_vNormal;
+    float fChrHeight = Clamp(vPosition.y - fHeight, 0.0f, fMaxHeight);
+    float fT = (fChrHeight / fMaxHeight);
+
+    float fScale = (1.0f - (0.5f * fT));
+    uint8 uAlphaBasis = static_cast<uint8>(255.0f - (191.0f * fT));
 	
     vPosition.y = fHeight + 0.05f;
 
+    RwV3d vNormal = pCollisionResult->m_vNormal;
     RwV3d vAxisX = Math::VECTOR3_ZERO;
     RwV3d vAxisY = Math::VECTOR3_ZERO;
     RwV3d vAxisZ = Math::VECTOR3_ZERO;
-    RwMatrix matShadow;
-    RwMatrix matTranslation;
-    RwMatrix matScaling;
-    RwMatrix matRotate;
-
-    RwMatrixSetIdentityMacro(&matShadow);
-    RwMatrixSetIdentityMacro(&matTranslation);
-    RwMatrixSetIdentityMacro(&matScaling);
-    RwMatrixSetIdentityMacro(&matRotate);
-
     Math::Vec3_Cross(&vAxisX, &Math::VECTOR3_AXIS_Z, &vNormal);
     Math::Vec3_Cross(&vAxisZ, &vNormal, &Math::VECTOR3_AXIS_X);
     Math::Vec3_Normalize(&vAxisX, &vAxisX);
     Math::Vec3_Normalize(&vAxisY, &vNormal);
     Math::Vec3_Normalize(&vAxisZ, &vAxisZ);
-    
+
+    RwMatrix matShadow;
+    RwMatrixSetIdentity(&matShadow);
     Math::Matrix_Update(&matShadow, &vAxisX, &vAxisY, &vAxisZ, &Math::VECTOR3_ZERO);
-    Math::Matrix_Scale(&matScaling, fScale, fScale, fScale);
-    Math::Matrix_RotateY(&matRotate, GetDirection());
+
+    RwMatrix matTranslation;
+    RwMatrixSetIdentity(&matTranslation);
     Math::Matrix_Translate(&matTranslation, &vPosition);
 
-    RwMatrixSetIdentityMacro(&m_matrix);
+    RwMatrix matScaling;
+    RwMatrixSetIdentity(&matScaling);
+    Math::Matrix_Scale(&matScaling, fScale, fScale, fScale);
+
+    RwMatrix matRotate;
+    RwMatrixSetIdentity(&matRotate);
+    Math::Matrix_RotateY(&matRotate, GetDirection());
+
+    RwMatrixSetIdentity(&m_matrix);
     Math::Matrix_Multiply(&m_matrix, &matScaling, &matRotate);
     Math::Matrix_Multiply(&m_matrix, &m_matrix, &matShadow);
     Math::Matrix_Multiply(&m_matrix, &m_matrix, &matTranslation);
 
-    RwRGBA VertexColor = { 0xFF, 0xFF, 0xFF, uAlphaBasis };
-    m_aVertices[0].color = RWRGBALONGEX(VertexColor);
-    m_aVertices[1].color = RWRGBALONGEX(VertexColor);
-    m_aVertices[2].color = RWRGBALONGEX(VertexColor);
-    m_aVertices[3].color = RWRGBALONGEX(VertexColor);
+    for (int32 i = 0; i < COUNT_OF(m_aVertices); ++i)
+        RwIm3DVertexSetRGBA(&m_aVertices[i], 255, 255, 255, uAlphaBasis);
 };
 
 
@@ -174,13 +174,18 @@ void CCircleShadowModule::SetSize(float w, float h)
     {
         RwIm3DVertex* pVertex = &m_aVertices[i];
 
-        pVertex->objVertex.x = (2 % (i + 1) != 0 ? -1.0f : 1.0f) * (w * 0.5f);
-        pVertex->objVertex.y = 0.0f;
-        pVertex->objVertex.z = (2.0f * (i % 2 == 0) - 1) * (h * 0.5f);
-        pVertex->objNormal = { 0 };
-        pVertex->color = 0xFFFFFFFF;
-        pVertex->u = (i / 2 ? 1.0f : 0.0f);
-        pVertex->v = (i % 2 ? 0.0f : 1.0f);
+        float x = (2 % (i + 1) != 0 ? -1.0f : 1.0f) * (w * 0.5f);
+        float y = 0.0f;
+        float z = (2.0f * (i % 2 == 0) - 1) * (h * 0.5f);
+
+        float u = (i / 2 ? 1.0f : 0.0f);
+        float v = (i % 2 ? 0.0f : 1.0f);
+
+        RwIm3DVertexSetPos(pVertex, x, y, z);
+        RwIm3DVertexSetNormal(pVertex, 0.0f, 0.0f, 0.0f);
+        RwIm3DVertexSetRGBA(pVertex, 255, 255, 255, 255);
+        RwIm3DVertexSetU(pVertex, u);
+        RwIm3DVertexSetV(pVertex, v);
     };
 };
 

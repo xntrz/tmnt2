@@ -98,6 +98,9 @@ void CDisplayOptionData::Restore(const RAWDATA& rRawData)
 
 #ifdef TARGET_PC
     m_iVideomodeCur     = rRawData.m_iVideomodeNo;
+    
+    if (m_iVideomodeCur >= CPCSpecific::GetVideomodeNum())
+        m_iVideomodeCur = CPCSpecific::GetVideomodeCur();
 #endif /* TARGET_PC */
 };
 

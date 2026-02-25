@@ -422,13 +422,16 @@ void CDebugShapeContainer::DrawSphere(SHAPE_SPHERE* pShapeSphere)
             float fDeltaX = (static_cast<float>(j) / static_cast<float>(SPHERE_DIV_X));
             float fDeltaY = (static_cast<float>(i) / static_cast<float>(SPHERE_DIV_Y));
 
-            pVertex->objVertex.x = fRadius * Math::Cos(fDeltaX * 2.0f * MATH_PI) * Math::Sin(fDeltaY * MATH_PI);
-            pVertex->objVertex.y = (fRadius * Math::Cos(fDeltaY * MATH_PI)) * pShapeSphere->m_fScaleY;
-            pVertex->objVertex.z = fRadius * Math::Sin(fDeltaX * 2.0f * MATH_PI) * Math::Sin(fDeltaY * MATH_PI);    
+            float x = fRadius * Math::Cos(fDeltaX * 2.0f * MATH_PI) * Math::Sin(fDeltaY * MATH_PI);
+            float y = (fRadius * Math::Cos(fDeltaY * MATH_PI)) * pShapeSphere->m_fScaleY;
+            float z = fRadius * Math::Sin(fDeltaX * 2.0f * MATH_PI) * Math::Sin(fDeltaY * MATH_PI);    
 
-            Math::Vec3_Add(&pVertex->objVertex, &pVertex->objVertex, &vPosition);
+            x += vPosition.x;
+            y += vPosition.y;
+            z += vPosition.z;
 
-            pVertex->color = RWRGBALONGEX(Color);
+            RwIm3DVertexSetPos(pVertex, x, y, z);
+            RwIm3DVertexSetRGBA(pVertex, Color.red, Color.green, Color.blue, Color.alpha);
         };
     };
 
@@ -479,23 +482,28 @@ void CDebugShapeContainer::DrawLine(SHAPE_LINE* pShapeLine)
 
     RwIm3DVertex aVertex[8];
 
-    for (int32 i = 0; i < COUNT_OF(aVertex); ++i)
+    const RwV3d aPos[COUNT_OF(aVertex)] =
     {
-        aVertex[i].color     = RWRGBALONGEX((i < 4 ? pShapeLine->m_ColorStart : pShapeLine->m_ColorEnd));
-        aVertex[i].objNormal = { 0.0f, 0.0f, 0.0f };
-        aVertex[i].u         = 0.0f;        
-        aVertex[i].v         = 0.0f;
+        { start.x,               start.y,                start.z },
+        { start.x + thickness,   start.y,                start.z },
+        { start.x + thickness,   start.y + thickness,    start.z },
+        { start.x,               start.y + thickness,    start.z },
+        { end.x,                 end.y,                  end.z   },
+        { end.x + thickness,     end.y,                  end.z   },
+        { end.x + thickness,     end.y + thickness,      end.z   },
+        { end.x,                 end.y + thickness,      end.z   },
     };
 
-    aVertex[0].objVertex = { start.x,               start.y,                start.z };
-    aVertex[1].objVertex = { start.x + thickness,   start.y,                start.z };
-    aVertex[2].objVertex = { start.x + thickness,   start.y + thickness,    start.z };
-    aVertex[3].objVertex = { start.x,               start.y + thickness,    start.z };
+    for (int32 i = 0; i < COUNT_OF(aVertex); ++i)
+    {        
+        RwRGBA color = (i < 4 ? pShapeLine->m_ColorStart : pShapeLine->m_ColorEnd);
 
-    aVertex[4].objVertex = { end.x,                 end.y,                  end.z };
-    aVertex[5].objVertex = { end.x + thickness,     end.y,                  end.z };
-    aVertex[6].objVertex = { end.x + thickness,     end.y + thickness,      end.z };
-    aVertex[7].objVertex = { end.x,                 end.y + thickness,      end.z };
+        RwIm3DVertexSetPos(&aVertex[i], aPos[i].x, aPos[i].y, aPos[i].z);
+        RwIm3DVertexSetNormal(&aVertex[i], 0.0f, 0.0f, 0.0f);
+        RwIm3DVertexSetRGBA(&aVertex[i], color.red, color.green, color.blue, color.alpha);
+        RwIm3DVertexSetU(&aVertex[i], 0.0f);
+        RwIm3DVertexSetV(&aVertex[i], 0.0f);
+    };
 
     RwImVertexIndex aIndex[] =
     {        
@@ -537,8 +545,11 @@ void CDebugShapeContainer::DrawPlane(SHAPE_PLANE* pShapePlane)
     
     for (int32 i = 0; i < COUNT_OF(aVertex); i++)
     {
-        aVertex[i].objVertex = pShapePlane->m_vPoint[i];
-        aVertex[i].color = RWRGBALONGEX(pShapePlane->m_Color);
+        RwV3d vPos = pShapePlane->m_vPoint[i];
+        RwRGBA color = pShapePlane->m_Color;
+
+        RwIm3DVertexSetPos(&aVertex[i], vPos.x, vPos.y, vPos.z);
+        RwIm3DVertexSetRGBA(&aVertex[i], color.red, color.green, color.blue, color.alpha);        
     };
 
     RwImVertexIndex aIndex[] =
@@ -560,8 +571,11 @@ void CDebugShapeContainer::DrawBox(SHAPE_BOX* pShapeBox)
     
     for (int32 i = 0; i < COUNT_OF(aVertex); i++)
     {
-        aVertex[i].objVertex = pShapeBox->m_vPoint[i];
-        aVertex[i].color = RWRGBALONGEX(pShapeBox->m_Color);
+        RwV3d vPos = pShapeBox->m_vPoint[i];
+        RwRGBA color = pShapeBox->m_Color;
+
+        RwIm3DVertexSetPos(&aVertex[i], vPos.x, vPos.y, vPos.z);
+        RwIm3DVertexSetRGBA(&aVertex[i], color.red, color.green, color.blue, color.alpha);
     };
     
     //             6           4
@@ -735,7 +749,7 @@ bool CDebugShapeContainer::IsShape2D(SHAPE::TYPE type) const
 bool CDebugShapeContainer::IsAnyPointOnScreen(const RwV3d* aPt, int32 nNumPt, RwV3d* pvScreenPosRet) const
 {
     RwMatrix matrixView;
-    RwMatrixSetIdentityMacro(&matrixView);
+    RwMatrixSetIdentity(&matrixView);
     CGameProperty::GetCameraViewMatrix(&matrixView);
 
     for (int32 i = 0; i < nNumPt; ++i)
@@ -884,7 +898,7 @@ static inline CDebugShapeContainer& DebugShapeContainer(void)
     RwSphere sphere;
     sphere.center = *pvecPos;
     sphere.radius = fRadius;
-    ShowSphere(&sphere);
+    ShowSphere(&sphere, rColor);
 };
 
 

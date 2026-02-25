@@ -160,7 +160,7 @@ void CBeltConveyorGimmick::SetRotation(const RwV3d* pvRotation)
     m_model.SetRotation(pvRotation);
 
     RwMatrix matRot;
-    RwMatrixSetIdentityMacro(&matRot);
+    RwMatrixSetIdentity(&matRot);
     Math::Matrix_Rotate(&matRot, pvRotation);
 
     RwV3d vDirection = Math::VECTOR3_AXIS_Z;

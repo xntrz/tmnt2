@@ -125,7 +125,7 @@ void CBandanaModule::Draw(void)
     RwCamera* pCameraCurrent = CCamera::CameraCurrent();
     ASSERT(pCameraCurrent);
 
-    RwMatrix* pViewMat = RwCameraGetViewMatrixMacro(pCameraCurrent);
+    RwMatrix* pViewMat = RwCameraGetViewMatrix(pCameraCurrent);
     ASSERT(pViewMat);
     
     RwV3d vScreenPos = Math::VECTOR3_ZERO;
@@ -133,8 +133,8 @@ void CBandanaModule::Draw(void)
 
     if (vScreenPos.z > 0.0f)
     {
-        float fClipNear = RwCameraGetNearClipPlaneMacro(pCameraCurrent);
-        float fClipFar  = RwCameraGetFarClipPlaneMacro(pCameraCurrent);
+        float fClipNear = RwCameraGetNearClipPlane(pCameraCurrent);
+        float fClipFar  = RwCameraGetFarClipPlane(pCameraCurrent);
         
         vScreenPos.x *= (1.0f / vScreenPos.z);
         vScreenPos.y *= (1.0f / vScreenPos.z);

@@ -11,7 +11,6 @@
 #include "Game/System/Sound/GameSound.hpp"
 #include "Game/System/Text/GameText.hpp"
 #include "Game/System/Texture/TextureManager.hpp"
-#include "System/Common/File/FileID.hpp"
 #include "System/Common/Controller.hpp"
 #include "System/Common/Configure.hpp"
 #include "System/Common/RenderState.hpp"
@@ -790,36 +789,36 @@ bool CResultSequence::OnAttach(const void* pParam)
     m_pResultWorkPool->ResultDataSet();
 
     const char* pszAnimName = nullptr;
-    FILEID::VALUE fileId = FILEID::ID_INVALID;
+    FNAME fileID = FNAME_INVALID;
 
     switch (m_resultType)
     {
     case GAMETYPES::RESULTTYPE_NORMAL:
         pszAnimName = "result";
-        fileId      = FILEID::ID_RESULT;
+        fileID = FPATH("Common/Result/Result.lpac");
         break;
 
     case GAMETYPES::RESULTTYPE_RIDE:
         pszAnimName = "result_r";
-        fileId      = FILEID::ID_RESULT_R;
+        fileID = FPATH("Common/Result/Result_R.lpac");
         break;
 
     case GAMETYPES::RESULTTYPE_NEXUS:        
         if (CGameData::PlayResult().GetAreaResult() == CGamePlayResult::AREARESULT_GAMECLEAR)
         {
             pszAnimName = "result_n";
-            fileId      = FILEID::ID_RESULT_N;
+            fileID = FPATH("Common/Result/Result_N.lpac");
         }
         else
         {
             pszAnimName = "result_n_lose";
-            fileId      = FILEID::ID_RESULT_N_LOSE;
+            fileID = FPATH("Common/Result/Result_N_Lose.lpac");
         };
         break;
 
     case GAMETYPES::RESULTTYPE_ENDING:
         pszAnimName = "result_e";
-        fileId      = FILEID::ID_RESULT_E;
+        fileID = FPATH("Common/Result/Result_E.lpac");
         break;
 
     default:
@@ -829,11 +828,11 @@ bool CResultSequence::OnAttach(const void* pParam)
 
 #ifdef TMNT2_BUILD_EU
     SetAnimationName("result");
-    CDataLoader::Regist(fileId);
-    return CAnim2DSequence::OnAttach(FILEID::ID_LANG_RES);
+    CDataLoader::Regist(fileID);
+    return CAnim2DSequence::OnAttach(FPATH_LANG("Language/English/Res/Res.lpac"));
 #else /* TMNT2_BUILD_EU */
     SetAnimationName(pszAnimName);
-    return CAnim2DSequence::OnAttach(fileId);
+    return CAnim2DSequence::OnAttach(fileID);
 #endif /* TMNT2_BUILD_EU */
 };
 

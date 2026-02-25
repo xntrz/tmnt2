@@ -1626,7 +1626,7 @@ bool CBaseAI6045::CDecisionUnitMove2::ThinkMoveOrderBack(void)
     float fDistStep = ((fDistanceMax - fDistanceMin) * (1.0f - fDirDiffRatio)) + fDistanceMin;
 
     RwMatrix matRotY;
-    RwMatrixSetIdentityMacro(&matRotY);
+    RwMatrixSetIdentity(&matRotY);
     Math::Matrix_RotateY(&matRotY, fRotDir);
 
     RwV3d vecStep = Math::VECTOR3_AXIS_Z;
@@ -1870,7 +1870,7 @@ bool CBaseAI6045::CDecisionUnitMove2::ThinkMoveOrderTurn(void)
     float fDistStep = ((fDistanceMax - fDistanceMin) * (1.0f - fDirDiffRatio)) + fDistanceMin;
 
     RwMatrix matRotY;
-    RwMatrixSetIdentityMacro(&matRotY);
+    RwMatrixSetIdentity(&matRotY);
     Math::Matrix_RotateY(&matRotY, fRotDir);
 
     RwV3d vecStep = Math::VECTOR3_AXIS_Z;

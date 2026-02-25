@@ -546,7 +546,7 @@ void CBaseEliteChr::CWarpBaseStatusObserver::SetTargetPos(const RwV3d* pvecTarge
         m_fTargetRot = pPlrChr->GetDirection();
 
         RwMatrix matRotY;
-        RwMatrixSetIdentityMacro(&matRotY);
+        RwMatrixSetIdentity(&matRotY);
         Math::Matrix_RotateY(&matRotY, m_fTargetRot);
 
         RwV3d vecPlrFootPos = Math::VECTOR3_ZERO;

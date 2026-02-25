@@ -261,8 +261,8 @@ void CGateGimmick::gateEffectCtrl(void)
             {
                 CModel* pModel = m_model.GetVisualModel();
                 RpClump* pClump = pModel->GetClump();
-                RwFrame* pFrame = RpClumpGetFrameMacro(pClump);
-                RwMatrix* pMatrix = RwFrameGetMatrixMacro(pFrame);
+                RwFrame* pFrame = RpClumpGetFrame(pClump);
+                RwMatrix* pMatrix = RwFrameGetMatrix(pFrame);
 
                 RwV3dTransformPoint(&vEffectPos, &pEffect->m_vEffectPos, pMatrix);
             };

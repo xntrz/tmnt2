@@ -4,7 +4,6 @@
 
 #include "Game/System/2d/GameFont.hpp"
 #include "Game/System/DataLoader/DataLoader.hpp"
-#include "System/Common/File/FileID.hpp"
 #include "System/Common/Configure.hpp"
 #include "System/Common/Screen.hpp"
 #include "System/Common/Sprite.hpp"
@@ -24,8 +23,8 @@
 
 struct MOVIETEXT_LOADINFO
 {
-    FILEID::VALUE  fileId;
-    MOVIEID::VALUE movieId;
+    FNAME  fname;
+    MVNAME mvname;
 };
 
 
@@ -49,70 +48,69 @@ struct MOVIETEXT_ELEMENT
 
 static const MOVIETEXT_LOADINFO s_aMovieTextLoadInfo[] =
 {
-    {   FILEID::ID_M01T01,      MOVIEID::ID_M01T01      }, // 0
-    {   FILEID::ID_M02N01,      MOVIEID::ID_M02N01      }, // 1
-    {   FILEID::ID_M02N02,      MOVIEID::ID_M02N02      }, // 2
-    {   FILEID::ID_M04N01,      MOVIEID::ID_M04N01      }, // 3
-    {   FILEID::ID_M05N01,      MOVIEID::ID_M05N01P     }, // 4
-    {   FILEID::ID_M06R01,      MOVIEID::ID_M06R01      }, // 5
-    {   FILEID::ID_M09N01,      MOVIEID::ID_M09N01      }, // 6
-    {   FILEID::ID_M10N01,      MOVIEID::ID_M10N01      }, // 7
-    {   FILEID::ID_M11J01,      MOVIEID::ID_M11J01      }, // 8
-    {   FILEID::ID_M12N01,      MOVIEID::ID_M12N01      }, // 9
-    {   FILEID::ID_M14N01,      MOVIEID::ID_M14N01      }, // 10
-    {   FILEID::ID_M15N01,      MOVIEID::ID_M15N01      }, // 11
-    {   FILEID::ID_M17N01,      MOVIEID::ID_M17N01      }, // 12
-    {   FILEID::ID_M18FB01,     MOVIEID::ID_M18FB01     }, // 13
-    {   FILEID::ID_M18FB02,     MOVIEID::ID_M18FB02     }, // 14
-    {   FILEID::ID_M20FB01,     MOVIEID::ID_M20FB01     }, // 15
-    {   FILEID::ID_M20FB02,     MOVIEID::ID_M20FB02     }, // 16
-    {   FILEID::ID_M21N01,      MOVIEID::ID_M21N01      }, // 17
-    {   FILEID::ID_M21N02,      MOVIEID::ID_M21N02      }, // 18
-    {   FILEID::ID_M24N01,      MOVIEID::ID_M24N01      }, // 19
-    {   FILEID::ID_M24N02,      MOVIEID::ID_M24N02      }, // 20
-    {   FILEID::ID_M25J01,      MOVIEID::ID_M25J01      }, // 21
-    {   FILEID::ID_M27N01,      MOVIEID::ID_M27N01      }, // 22
-    {   FILEID::ID_M29N01,      MOVIEID::ID_M29N01      }, // 23
-    {   FILEID::ID_M29N02,      MOVIEID::ID_M29N02      }, // 24
-    {   FILEID::ID_M30NB01,     MOVIEID::ID_M30NB01     }, // 25
-    {   FILEID::ID_M31NB01,     MOVIEID::ID_M31NB01     }, // 26
-    {   FILEID::ID_M32R01,      MOVIEID::ID_M32R01      }, // 27
-    {   FILEID::ID_M33J01,      MOVIEID::ID_M33J01      }, // 28
-    {   FILEID::ID_M38NB01,     MOVIEID::ID_M38NB01     }, // 29
-    {   FILEID::ID_M38NB02,     MOVIEID::ID_M38NB02     }, // 30
-    {   FILEID::ID_M39N01,      MOVIEID::ID_M39N01      }, // 31
-    {   FILEID::ID_M40OB01,     MOVIEID::ID_M40OB01     }, // 32
-    {   FILEID::ID_M40OB02,     MOVIEID::ID_M40OB02     }, // 33
-    {   FILEID::ID_M41NB01,     MOVIEID::ID_M41NB01     }, // 34
-    {   FILEID::ID_M42NB01,     MOVIEID::ID_M42NB01     }, // 35
-    {   FILEID::ID_M43N01,      MOVIEID::ID_M43N01      }, // 36
-    {   FILEID::ID_M44NB01,     MOVIEID::ID_M44NB01     }, // 37
-    {   FILEID::ID_M45N01,      MOVIEID::ID_M45N01      }, // 38
-    {   FILEID::ID_M45N02,      MOVIEID::ID_M45N02      }, // 39
-    {   FILEID::ID_M46R01,      MOVIEID::ID_M46R01      }, // 40
-    {   FILEID::ID_M47OB01,     MOVIEID::ID_M47OB01     }, // 41
-    {   FILEID::ID_M47OB02,     MOVIEID::ID_M47OB02     }, // 42
-    {   FILEID::ID_M48N01,      MOVIEID::ID_M48N01      }, // 43
-    {   FILEID::ID_M50NB01,     MOVIEID::ID_M50NB01     }, // 44
-    {   FILEID::ID_M50NB02,     MOVIEID::ID_M50NB02     }, // 45
-    {   FILEID::ID_M56NB01,     MOVIEID::ID_M56NB01     }, // 46
-    {   FILEID::ID_M57NB01,     MOVIEID::ID_M57NB01     }, // 47
-    {   FILEID::ID_M57NB02,     MOVIEID::ID_M57NB02     }, // 48
-    {   FILEID::ID_M58OB01,     MOVIEID::ID_M58OB01     }, // 49
-    {   FILEID::ID_M58OB02,     MOVIEID::ID_M58OB02E    }, // 50
-    {   FILEID::ID_M59S01,      MOVIEID::ID_M59S01      }, // 51
-    {   FILEID::ID_M59S02,      MOVIEID::ID_M59S02      }, // 52
-    {   FILEID::ID_M59S03,      MOVIEID::ID_M59S03      }, // 53
-    {   FILEID::ID_M60X03,      MOVIEID::ID_M60X03E     }, // 54
-    {   FILEID::ID_M62X01,      MOVIEID::ID_M62X01E     }, // 55
-
-    {   FILEID::ID_INVALID,     MOVIEID::ID_MAX         }, // 56
+    {  FPATH("Common/MovieText/M01T01.lpac"),    MVPATH("m01t01.sfd")   }, // 0
+    {  FPATH("Common/MovieText/M02N01.lpac"),    MVPATH("m02n01.sfd")   }, // 1
+    {  FPATH("Common/MovieText/M02N02.lpac"),    MVPATH("m02n02.sfd")   }, // 2
+    {  FPATH("Common/MovieText/M04N01.lpac"),    MVPATH("m04n01.sfd")   }, // 3
+    {  FPATH("Common/MovieText/M05N01.lpac"),    MVPATH("m05n01p.sfd")  }, // 4
+    {  FPATH("Common/MovieText/M06R01.lpac"),    MVPATH("m06r01.sfd")   }, // 5
+    {  FPATH("Common/MovieText/M09N01.lpac"),    MVPATH("m09n01.sfd")   }, // 6
+    {  FPATH("Common/MovieText/M10N01.lpac"),    MVPATH("m10n01.sfd")   }, // 7
+    {  FPATH("Common/MovieText/M11J01.lpac"),    MVPATH("m11j01.sfd")   }, // 8
+    {  FPATH("Common/MovieText/M12N01.lpac"),    MVPATH("m12n01.sfd")   }, // 9
+    {  FPATH("Common/MovieText/M14N01.lpac"),    MVPATH("m14n01.sfd")   },// 10
+    {  FPATH("Common/MovieText/M15N01.lpac"),    MVPATH("m15n01.sfd")   },// 11
+    {  FPATH("Common/MovieText/M17N01.lpac"),    MVPATH("m17n01.sfd")   },// 12
+    {  FPATH("Common/MovieText/M18FB01.lpac"),   MVPATH("m18fb01.sfd")  },// 13
+    {  FPATH("Common/MovieText/M18FB02.lpac"),   MVPATH("m18fb02.sfd")  },// 14
+    {  FPATH("Common/MovieText/M20FB01.lpac"),   MVPATH("m20fb01.sfd")  },// 15
+    {  FPATH("Common/MovieText/M20FB02.lpac"),   MVPATH("m20fb02.sfd")  },// 16
+    {  FPATH("Common/MovieText/M21N01.lpac"),    MVPATH("m21n01.sfd")   },// 17
+    {  FPATH("Common/MovieText/M21N02.lpac"),    MVPATH("m21n02.sfd")   },// 18
+    {  FPATH("Common/MovieText/M24N01.lpac"),    MVPATH("m24n01.sfd")   },// 19
+    {  FPATH("Common/MovieText/M24N02.lpac"),    MVPATH("m24n02.sfd")   },// 20
+    {  FPATH("Common/MovieText/M25J01.lpac"),    MVPATH("m25j01.sfd")   },// 21
+    {  FPATH("Common/MovieText/M27N01.lpac"),    MVPATH("m27n01.sfd")   },// 22
+    {  FPATH("Common/MovieText/M29N01.lpac"),    MVPATH("m29n01.sfd")   },// 23
+    {  FPATH("Common/MovieText/M29N02.lpac"),    MVPATH("m29n02.sfd")   },// 24
+    {  FPATH("Common/MovieText/M30NB01.lpac"),   MVPATH("m30nb01.sfd")  },// 25
+    {  FPATH("Common/MovieText/M31NB01.lpac"),   MVPATH("m31nb01.sfd")  },// 26
+    {  FPATH("Common/MovieText/M32R01.lpac"),    MVPATH("m32r01.sfd")   },// 27
+    {  FPATH("Common/MovieText/M33J01.lpac"),    MVPATH("m33j01.sfd")   },// 28
+    {  FPATH("Common/MovieText/M38NB01.lpac"),   MVPATH("m38nb01.sfd")  },// 29
+    {  FPATH("Common/MovieText/M38NB02.lpac"),   MVPATH("m38nb02.sfd")  },// 30
+    {  FPATH("Common/MovieText/M39N01.lpac"),    MVPATH("m39n01.sfd")   },// 31
+    {  FPATH("Common/MovieText/M40OB01.lpac"),   MVPATH("m40ob01.sfd")  },// 32
+    {  FPATH("Common/MovieText/M40OB02.lpac"),   MVPATH("m40ob02.sfd")  },// 33
+    {  FPATH("Common/MovieText/M41NB01.lpac"),   MVPATH("m41nb01.sfd")  },// 34
+    {  FPATH("Common/MovieText/M42NB01.lpac"),   MVPATH("m42nb01.sfd")  },// 35
+    {  FPATH("Common/MovieText/M43N01.lpac"),    MVPATH("m43n01.sfd")   },// 36
+    {  FPATH("Common/MovieText/M44NB01.lpac"),   MVPATH("m44nb01.sfd")  },// 37
+    {  FPATH("Common/MovieText/M45N01.lpac"),    MVPATH("m45n01.sfd")   },// 38
+    {  FPATH("Common/MovieText/M45N02.lpac"),    MVPATH("m45n02.sfd")   },// 39
+    {  FPATH("Common/MovieText/M46R01.lpac"),    MVPATH("m46r01.sfd")   },// 40
+    {  FPATH("Common/MovieText/M47OB01.lpac"),   MVPATH("m47ob01.sfd")  },// 41
+    {  FPATH("Common/MovieText/M47OB02.lpac"),   MVPATH("m47ob02.sfd")  },// 42
+    {  FPATH("Common/MovieText/M48N01.lpac"),    MVPATH("m48n01.sfd")   },// 43
+    {  FPATH("Common/MovieText/M50NB01.lpac"),   MVPATH("m50nb01.sfd")  },// 44
+    {  FPATH("Common/MovieText/M50NB02.lpac"),   MVPATH("m50nb02.sfd")  },// 45
+    {  FPATH("Common/MovieText/M56NB01.lpac"),   MVPATH("m56nb01.sfd")  },// 46
+    {  FPATH("Common/MovieText/M57NB01.lpac"),   MVPATH("m57nb01.sfd")  },// 47
+    {  FPATH("Common/MovieText/M57NB02.lpac"),   MVPATH("m57nb02.sfd")  },// 48
+    {  FPATH("Common/MovieText/M58OB01.lpac"),   MVPATH("m58ob01.sfd")  },// 49
+    {  FPATH("Common/MovieText/M58OB02.lpac"),   MVPATH("m58ob02E.sfd") },// 50
+    {  FPATH("Common/MovieText/M59S01.lpac"),    MVPATH("m59s01.sfd")   },// 51
+    {  FPATH("Common/MovieText/M59S02.lpac"),    MVPATH("m59s02.sfd")   },// 52
+    {  FPATH("Common/MovieText/M59S03.lpac"),    MVPATH("m59s03.sfd")   },// 53
+    {  FPATH("Common/MovieText/M60X03.lpac"),    MVPATH("m60x03E.sfd")  },// 54
+    {  FPATH("Common/MovieText/M62X01.lpac"),    MVPATH("m62x01E.sfd")  },// 55
+    {  FNAME_INVALID,                            MVNAME_INVALID         },
 };
 
 
 static bool                 s_bIsSubtitlesRequired = false;
 static bool                 s_bIsSubtitlesEnabled = false;
-static MOVIEID::VALUE       s_subtitlesMovieId = MOVIEID::ID_MAX;
+static MVNAME               s_textMvName = MVNAME_INVALID;
 static int32                s_elementMax = 0;
 static int32                s_elementCur = 0;
 static MOVIETEXT_ELEMENT**  s_ppMovieTextElement = nullptr;
@@ -244,7 +242,7 @@ static void DrawSubtitleText(void)
     s_bIsSubtitlesRequired = (CConfigure::GetLanguage() != TYPEDEF::CONFIG_LANG_ENGLISH);
 #endif /* _DEBUG */
 
-    s_subtitlesMovieId = MOVIEID::ID_MAX;
+    s_textMvName = MVNAME_INVALID;
 };
 
 
@@ -270,7 +268,7 @@ static void DrawSubtitleText(void)
     s_pMovieTextElementCurrent = nullptr;
     s_bIsSubtitlesRequired = false;
     s_bIsSubtitlesEnabled = false;
-    s_subtitlesMovieId = MOVIEID::ID_MAX;
+    s_textMvName = MVNAME_INVALID;
 };
 
 
@@ -330,21 +328,21 @@ static void DrawSubtitleText(void)
 };
 
 
-/*static*/ bool CMovieText::LoadFor(MOVIEID::VALUE movieId)
+/*static*/ bool CMovieText::LoadFor(MVNAME mvname)
 {
     if (!s_bIsSubtitlesRequired)
         return false;
 
-    s_subtitlesMovieId = movieId;
+    s_textMvName = mvname;
 
     for (int32 i = 0; i < COUNT_OF(s_aMovieTextLoadInfo); ++i)
     {
-        if (s_aMovieTextLoadInfo[i].movieId != movieId)
+        if (!MVNAME_EQUAL(s_aMovieTextLoadInfo[i].mvname, mvname))
             continue;
 
-        if (s_aMovieTextLoadInfo[i].fileId != FILEID::ID_INVALID)
+        if (!FNAME_EQUAL(s_aMovieTextLoadInfo[i].fname, FNAME_INVALID))
         {
-            CDataLoader::Regist(s_aMovieTextLoadInfo[i].fileId);
+            CDataLoader::Regist(s_aMovieTextLoadInfo[i].fname);
             return true;
         };
     };
@@ -379,10 +377,7 @@ static void DrawSubtitleText(void)
 
 /*static*/ void CMovieText::Update(UPDATEINFO* pUpdateInfo)
 {
-    if (!s_bIsSubtitlesRequired)
-        return;
-    
-    if (!s_bIsSubtitlesEnabled)
+    if (!(s_bIsSubtitlesRequired && s_bIsSubtitlesEnabled))
         return;
 
     ASSERT(pUpdateInfo != nullptr);
@@ -416,11 +411,16 @@ static void DrawSubtitleText(void)
 
 /*static*/ void CMovieText::Draw(void)
 {
-    if (!(s_bIsSubtitlesRequired &&
-          s_bIsSubtitlesEnabled  &&
-          s_ppMovieTextElement   &&
-          s_elementMax           &&
-          s_pMovieTextElementCurrent))
+    if (!(s_bIsSubtitlesRequired && s_bIsSubtitlesEnabled))
+        return;
+
+    if (!s_ppMovieTextElement)
+        return;
+
+    if (s_elementMax <= 0)
+        return;
+
+    if (!s_pMovieTextElementCurrent)
         return;
 
     if (s_pMovieTextElementCurrent->text[0] == UTEXT('\0'))

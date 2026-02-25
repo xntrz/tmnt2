@@ -275,7 +275,7 @@ static void CorrectDirection(RwV3d* pvPosition, RwV3d* pvVector, float fRadian)
     ASSERT(pObject);
 
     RwMatrix matRotY;
-    RwMatrixSetIdentityMacro(&matRotY);
+    RwMatrixSetIdentity(&matRotY);
     Math::Matrix_RotateY(&matRotY, fDirection);
     
     RwV3d vDirection = Math::VECTOR3_AXIS_Z;

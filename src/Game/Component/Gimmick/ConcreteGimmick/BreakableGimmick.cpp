@@ -313,8 +313,8 @@ void CBreakableGimmick::CBreakableGimmickEffect::defaultOneShotEffectRun(void)
     if (m_fIntervalTimer >= m_fInterval)
     {
         RpClump* pClump = m_pParentModel->GetClump();
-        RwFrame* pFrame = RpClumpGetFrameMacro(pClump);
-        RwMatrix* pMatrix = RwFrameGetMatrixMacro(pFrame);
+        RwFrame* pFrame = RpClumpGetFrame(pClump);
+        RwMatrix* pMatrix = RwFrameGetMatrix(pFrame);
 
         RwV3d vPosition = Math::VECTOR3_ZERO;
         RwV3dTransformPoint(&vPosition, &m_vEffectPos, pMatrix);
@@ -344,8 +344,8 @@ void CBreakableGimmick::CBreakableGimmickEffect::defaultLoopEffectRun(void)
         return;
     
     RpClump* pClump = m_pParentModel->GetClump();
-    RwFrame* pFrame = RpClumpGetFrameMacro(pClump);
-    RwMatrix* pMatrix = RwFrameGetMatrixMacro(pFrame);
+    RwFrame* pFrame = RpClumpGetFrame(pClump);
+    RwMatrix* pMatrix = RwFrameGetMatrix(pFrame);
 
     RwV3d vPosition = Math::VECTOR3_ZERO;
     RwV3dTransformPoint(&vPosition, &m_vEffectPos, pMatrix);
@@ -367,8 +367,8 @@ void CBreakableGimmick::CBreakableGimmickEffect::sprayWaterEffectRun(void)
     if (m_fIntervalTimer <= m_fInterval)
     {
         RpClump* pClump = m_pParentModel->GetClump();
-        RwFrame* pFrame = RpClumpGetFrameMacro(pClump);
-        RwMatrix* pMatrix = RwFrameGetMatrixMacro(pFrame);
+        RwFrame* pFrame = RpClumpGetFrame(pClump);
+        RwMatrix* pMatrix = RwFrameGetMatrix(pFrame);
 
         RwV3d vPosition = Math::VECTOR3_ZERO;
         RwV3dTransformPoint(&vPosition, &m_vEffectPos, pMatrix);
@@ -768,8 +768,8 @@ void CBreakableGimmick::registHitAtack(void)
                        (static_cast<float>(i) * m_fHitRadius));
 
         RpClump* pClump = m_pModel->GetModel(CNormalGimmickModel::MODELTYPE_DRAW_NORMAL)->GetClump();
-        RwFrame* pFrame = RpClumpGetFrameMacro(pClump);
-        RwMatrix* pMatrix = RwFrameGetMatrixMacro(pFrame);
+        RwFrame* pFrame = RpClumpGetFrame(pClump);
+        RwMatrix* pMatrix = RwFrameGetMatrix(pFrame);
 
         RwV3dTransformPoint(&vPosition, &vPosition, pMatrix);
 
@@ -854,8 +854,8 @@ void CBreakableGimmick::setFlyAwayParam(const CGameObject* pObj)
         {
             CModel* pChrMdl = static_cast<const CCharacter*>(pObj)->GetModel();
             RpClump* pClump = pChrMdl->GetClump();
-            RwFrame* pFrame = RpClumpGetFrameMacro(pClump);
-            RwMatrix* pMatrix = RwFrameGetMatrixMacro(pFrame);
+            RwFrame* pFrame = RpClumpGetFrame(pClump);
+            RwMatrix* pMatrix = RwFrameGetMatrix(pFrame);
 
             vVelocity = pMatrix->at;
             
@@ -871,8 +871,8 @@ void CBreakableGimmick::setFlyAwayParam(const CGameObject* pObj)
 
             CModel* pGmkMdl = m_pModel->GetModel(CNormalGimmickModel::MODELTYPE_DRAW_NORMAL);
             RpClump* pClump = pGmkMdl->GetClump();
-            RwFrame* pFrame = RpClumpGetFrameMacro(pClump);
-            RwMatrix* pMatrix = RwFrameGetMatrixMacro(pFrame);
+            RwFrame* pFrame = RpClumpGetFrame(pClump);
+            RwMatrix* pMatrix = RwFrameGetMatrix(pFrame);
 
             RwMatrix matTmp;
             RwMatrixSetIdentity(&matTmp);
@@ -893,8 +893,8 @@ void CBreakableGimmick::setFlyAwayParam(const CGameObject* pObj)
         {
             CModel* pGmkMdl = m_pModel->GetModel(CNormalGimmickModel::MODELTYPE_DRAW_NORMAL);
             RpClump* pClump = pGmkMdl->GetClump();
-            RwFrame* pFrame = RpClumpGetFrameMacro(pClump);
-            RwMatrix* pMatrix = RwFrameGetMatrixMacro(pFrame);
+            RwFrame* pFrame = RpClumpGetFrame(pClump);
+            RwMatrix* pMatrix = RwFrameGetMatrix(pFrame);
 
             vVelocity = pMatrix->at;
 

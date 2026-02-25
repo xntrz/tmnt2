@@ -207,7 +207,7 @@ void CPadConnectCheckProcess::MessageProc(void)
     {
         if (mail.m_type == PROCESSTYPES::MAIL::TYPE_MSG)
         {
-            MESSAGE* pMessage = (MESSAGE*)mail.m_param;
+            const MESSAGE* pMessage = reinterpret_cast<const MESSAGE*>(mail.m_param);
             ASSERT(pMessage);
 
             switch (pMessage->m_type)
@@ -240,47 +240,49 @@ void CPadConnectCheckProcess::DrawFilter(void) const
     RENDERSTATE_PUSH(rwRENDERSTATECULLMODE, rwCULLMODECULLNONE);
     RENDERSTATE_PUSH(rwRENDERSTATETEXTURERASTER, 0);
 
-    if (CCamera::CameraCurrent())
+    RwCamera* camera = CCamera::CameraCurrent();
+
+    if (camera != NULL)
     {
-        float z = RwIm2DGetNearScreenZMacro();
-		float rhw = 1.0f / RwCameraGetNearClipPlaneMacro(CCamera::CameraCurrent());
-        float sw = float(CScreen::Width());
-        float sh = float(CScreen::Height());
+        float x = static_cast<float>(CScreen::Width());
+        float y = static_cast<float>(CScreen::Height());
+        float z = RwIm2DGetNearScreenZ();
+        float rhw = 1.0f / RwCameraGetNearClipPlane(camera);
         RwRGBA color = { 0x00, 0x00, 0x00, 0xB0 };
-        
+
         RwIm2DVertex aVertices[4];
-        
-        aVertices[0].x = 0.0f;
-        aVertices[0].y = sh;
-        aVertices[0].z = z;
-        aVertices[0].rhw = rhw;
-        aVertices[0].emissiveColor = RWRGBALONGEX(color);
-        aVertices[0].u = 0.0f;
-        aVertices[0].v = 0.0f;
 
-        aVertices[1].x = 0.0f;
-        aVertices[1].y = 0.0f;
-        aVertices[1].z = z;
-        aVertices[1].rhw = rhw;
-        aVertices[1].emissiveColor = RWRGBALONGEX(color);
-        aVertices[1].u = 0.0f;
-        aVertices[1].v = 0.0f;
+        RwIm2DVertexSetScreenX(&aVertices[0], 0.0f);
+        RwIm2DVertexSetScreenY(&aVertices[0], y);
+        RwIm2DVertexSetScreenZ(&aVertices[0], z);
+        RwIm2DVertexSetIntRGBA(&aVertices[0], color.red, color.green, color.blue, color.alpha);
+        RwIm2DVertexSetU(&aVertices[0], 0.0f, rhw);
+        RwIm2DVertexSetV(&aVertices[0], 0.0f, rhw);
+        RwIm2DVertexSetRecipCameraZ(&aVertices[0], rhw);
 
-        aVertices[2].x = sw;
-        aVertices[2].y = sh;
-        aVertices[2].z = z;
-        aVertices[2].rhw = rhw;
-        aVertices[2].emissiveColor = RWRGBALONGEX(color);
-        aVertices[2].u = 0.0f;
-        aVertices[2].v = 0.0f;
+        RwIm2DVertexSetScreenX(&aVertices[1], 0.0f);
+        RwIm2DVertexSetScreenY(&aVertices[1], 0.0f);
+        RwIm2DVertexSetScreenZ(&aVertices[1], z);
+        RwIm2DVertexSetIntRGBA(&aVertices[1], color.red, color.green, color.blue, color.alpha);
+        RwIm2DVertexSetU(&aVertices[1], 0.0f, rhw);
+        RwIm2DVertexSetV(&aVertices[1], 0.0f, rhw);
+        RwIm2DVertexSetRecipCameraZ(&aVertices[1], rhw);
 
-        aVertices[3].x = sw;
-        aVertices[3].y = 0.0f;
-        aVertices[3].z = z;
-        aVertices[3].rhw = rhw;
-        aVertices[3].emissiveColor = RWRGBALONGEX(color);
-        aVertices[3].u = 0.0f;
-        aVertices[3].v = 0.0f;
+        RwIm2DVertexSetScreenX(&aVertices[2], x);
+        RwIm2DVertexSetScreenY(&aVertices[2], y);
+        RwIm2DVertexSetScreenZ(&aVertices[2], z);
+        RwIm2DVertexSetIntRGBA(&aVertices[2], color.red, color.green, color.blue, color.alpha);
+        RwIm2DVertexSetU(&aVertices[2], 0.0f, rhw);
+        RwIm2DVertexSetV(&aVertices[2], 0.0f, rhw);
+        RwIm2DVertexSetRecipCameraZ(&aVertices[2], rhw);
+
+        RwIm2DVertexSetScreenX(&aVertices[3], x);
+        RwIm2DVertexSetScreenY(&aVertices[3], 0.0f);
+        RwIm2DVertexSetScreenZ(&aVertices[3], z);
+        RwIm2DVertexSetIntRGBA(&aVertices[3], color.red, color.green, color.blue, color.alpha);
+        RwIm2DVertexSetU(&aVertices[3], 0.0f, rhw);
+        RwIm2DVertexSetV(&aVertices[3], 0.0f, rhw);
+        RwIm2DVertexSetRecipCameraZ(&aVertices[3], rhw);
 
         RwIm2DRenderPrimitive(rwPRIMTYPETRISTRIP, aVertices, COUNT_OF(aVertices));
     };
@@ -291,7 +293,7 @@ void CPadConnectCheckProcess::DrawFilter(void) const
     RENDERSTATE_POP(rwRENDERSTATEVERTEXALPHAENABLE);
     RENDERSTATE_POP(rwRENDERSTATEDESTBLEND);
     RENDERSTATE_POP(rwRENDERSTATESRCBLEND);
-    RENDERSTATE_POP(rwRENDERSTATEZWRITEENABLE)
+    RENDERSTATE_POP(rwRENDERSTATEZWRITEENABLE);
     RENDERSTATE_POP(rwRENDERSTATEZTESTENABLE);
 };
 

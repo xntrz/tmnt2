@@ -11,7 +11,6 @@
 #include "Game/System/DataLoader/DataLoader.hpp"
 #include "Game/System/Misc/ScreenFade.hpp"
 #include "Game/System/Text/GameText.hpp"
-#include "System/Common/File/FileID.hpp"
 #include "System/Common/Controller.hpp"
 #include "System/Common/System2D.hpp"
 #include "System/Common/TextData.hpp"
@@ -329,10 +328,10 @@ bool CNexusMenuSequence::OnAttach(const void* pParam)
     m_nexusmenu = NEXUSMENU_NONE;
 
 #ifdef TMNT2_BUILD_EU
-    CDataLoader::Regist(FILEID::ID_NEXUSMENU);
-    return CAnim2DSequence::OnAttach(FILEID::ID_LANG_NEXUSMENU);
+    CDataLoader::Regist(FPATH("Common/Nexus/NexusMenu.lpac"));
+    return CAnim2DSequence::OnAttach(FPATH_LANG("Language/English/NexusMenu/NexusMenu.lpac"));
 #else /* TMNT2_BUILD_EU */
-    return CAnim2DSequence::OnAttach(FILEID::ID_NEXUSMENU);
+    return CAnim2DSequence::OnAttach(FPATH("Common/Nexus/NexusMenu.lpac"));
 #endif /* TMNT2_BUILD_EU */
 };
 

@@ -766,10 +766,8 @@ CCommonEnemyObserver::CFlyawayStatus::CFlyawayStatus(bool bHandleCrashWallFlag)
         RwV3d vAccel = Math::VECTOR3_ZERO;
         EnemyChr().Compositor().GetAcceleration(&vAccel);
 
-        float vel = Math::Vec3_Length(&vVel);
-        float accel = Math::Vec3_Length(&vAccel);
-
-        if ((vel > 0.0f) && (accel > 0.0f))
+        if ((Math::Vec3_Length(&vVel) > 0.0f) &&
+            (Math::Vec3_Length(&vAccel) > 0.0f))
         {
             float angle = Math::ATan2(vVel.x, vVel.z) - Math::ATan2(vAccel.x, vAccel.z);
 

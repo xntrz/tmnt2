@@ -154,15 +154,15 @@ void CPipeGimmick::init(void* pParam)
     };
 
     RwMatrix matrixRotation;
-    RwMatrixSetIdentityMacro(&matrixRotation);
+    RwMatrixSetIdentity(&matrixRotation);
     CGimmickUtils::QuaternionToRotationMatrix(&matrixRotation, &pAreaBoxParam->m_quat);
     
     RwMatrix matrixTranslation;
-    RwMatrixSetIdentityMacro(&matrixTranslation);
+    RwMatrixSetIdentity(&matrixTranslation);
     RwMatrixTranslate(&matrixTranslation, &pAreaBoxParam->m_vPosition, rwCOMBINEREPLACE);
     
     RwMatrix matrix;
-    RwMatrixSetIdentityMacro(&matrix);
+    RwMatrixSetIdentity(&matrix);
     Math::Matrix_Multiply(&matrix, &matrixRotation, &matrixTranslation);
     
     RwV3dTransformPoint(&m_line.start, &vStart, &matrix);

@@ -10,6 +10,8 @@
 class CWaterSplash
 {
 private:
+    static const int32 PARTICLE_NUM = 100;
+
     struct WATERSPLASH
     {
         RwV3d m_vPosition;
@@ -31,23 +33,23 @@ public:
     void SetVertex(WATERSPLASH* pWaterSplash, RwMatrix* pMatrix, RwIm3DVertex* pVertex, RwCamera* pCamera);    
     
 private:
-    WATERSPLASH m_aWaterSplash[100];
-    int32 m_nNumWaterSplash;
-    RwIm3DVertex m_aVertex[100 * 6];
-    RwV3d m_vBasisPosition;
-    float m_fRadius;
-    RwTexture* m_pTexture;
-    RwRGBA m_Color;
-    RwV2d m_vBaseSize;
+    WATERSPLASH  m_aWaterSplash[PARTICLE_NUM];
+    int32        m_nNumWaterSplash;
+    RwIm3DVertex m_aVertex[PARTICLE_NUM * 6];
+    RwV3d        m_vBasisPosition;
+    float        m_fRadius;
+    RwTexture*   m_pTexture;
+    RwRGBA       m_color;
+    RwV2d        m_vBaseSize;
 };
 
 
 CWaterSplash::CWaterSplash(void)
-: m_nNumWaterSplash(100)
+: m_nNumWaterSplash(COUNT_OF(m_aWaterSplash))
 , m_vBasisPosition(Math::VECTOR3_ZERO)
 , m_fRadius(20.0f)
 , m_pTexture(nullptr)
-, m_Color({ 0xFF, 0xFF,0xFF, 0x78 })
+, m_color({ 0xFF, 0xFF, 0xFF, 0x78 })
 , m_vBaseSize({ 0.2f, 0.2f })
 {
     std::memset(m_aWaterSplash, 0x00, sizeof(m_aWaterSplash));
@@ -66,20 +68,26 @@ CWaterSplash::~CWaterSplash(void)
 
 void CWaterSplash::Run(void)
 {
+    float dt = CGameProperty::GetElapsedTime();
+
     for (int32 i = 0; i < m_nNumWaterSplash; ++i)
     {
         WATERSPLASH* pWaterSplash = &m_aWaterSplash[i];
 
-        pWaterSplash->m_fTime += CGameProperty::GetElapsedTime();
+        pWaterSplash->m_fTime += dt;
         
         if (pWaterSplash->m_fTime >= pWaterSplash->m_fLifespan)
             Generate(pWaterSplash);
 
-        pWaterSplash->m_uAlphaBasis =
-            uint8((pWaterSplash->m_fLifespan - pWaterSplash->m_fTime) * 1.0f / pWaterSplash->m_fLifespan * float(m_Color.alpha));
+        float ratioAlpha = (pWaterSplash->m_fLifespan - pWaterSplash->m_fTime) * (1.0f / pWaterSplash->m_fLifespan);
+        float alpha = ratioAlpha * static_cast<float>(m_color.alpha);
 
-        pWaterSplash->m_fScale =
-            pWaterSplash->m_fBaseScale + (pWaterSplash->m_fBaseScale * (pWaterSplash->m_fTime / pWaterSplash->m_fLifespan));
+        pWaterSplash->m_uAlphaBasis = static_cast<uint8>(alpha);
+
+        float ratioScale = (pWaterSplash->m_fTime / pWaterSplash->m_fLifespan);
+        float scale = pWaterSplash->m_fBaseScale + (pWaterSplash->m_fBaseScale * ratioScale);
+
+        pWaterSplash->m_fScale = scale;
     };
 };
 
@@ -97,22 +105,26 @@ void CWaterSplash::Draw(void)
     else
         RENDERSTATE_PUSH(rwRENDERSTATETEXTURERASTER, 0);
 
-    RwMatrix billboardMatrix;
-    RwMatrixSetIdentityMacro(&billboardMatrix);
+    RwCamera* camera = CCamera::CameraCurrent();
+    RwMatrix* viewMat = RwCameraGetViewMatrix(camera);
 
-    RwMatrixInvert(&billboardMatrix, RwCameraGetViewMatrixMacro(CCamera::CameraCurrent()));
+    RwMatrix billboardMatrix;
+    RwMatrixSetIdentity(&billboardMatrix);
+    RwMatrixInvert(&billboardMatrix, viewMat);
 
     for (int32 i = 0, j = 0; i < m_nNumWaterSplash; ++i, j += 6)
     {
         WATERSPLASH* pWaterSplash = &m_aWaterSplash[i];
         RwIm3DVertex* pVertex = &m_aVertex[j];
         
-        SetVertex(pWaterSplash, &billboardMatrix, pVertex, CCamera::CameraCurrent());        
+        SetVertex(pWaterSplash, &billboardMatrix, pVertex, camera);
     };
 
-    uint32 uFlags = rwIM3D_VERTEXRGBA | rwIM3D_VERTEXXYZ | rwIM3D_VERTEXUV;
+    uint32 flags = rwIM3D_VERTEXRGBA
+                 | rwIM3D_VERTEXXYZ
+                 | rwIM3D_VERTEXUV;
 
-    if (RwIm3DTransform(m_aVertex, m_nNumWaterSplash * 6, nullptr, uFlags))
+    if (RwIm3DTransform(m_aVertex, m_nNumWaterSplash * 6, nullptr, flags))
     {
         RwIm3DRenderPrimitive(rwPRIMTYPETRILIST);
         RwIm3DEnd();
@@ -147,21 +159,24 @@ void CWaterSplash::Generate(WATERSPLASH* pWaterSplash)
 {
     RwV3d vAppearPosition = m_vBasisPosition;
 
-    vAppearPosition.x += (float(Math::Rand() % uint32(m_fRadius * 20.0f)) - m_fRadius * 10.0f) * 0.1f;
-    vAppearPosition.z += (float(Math::Rand() % uint32(m_fRadius * 20.0f)) - m_fRadius * 10.0f) * 0.1f;
+    vAppearPosition.x +=
+        (static_cast<float>(Math::Rand() % static_cast<uint32>(m_fRadius * 20.0f)) - m_fRadius * 10.0f) * 0.1f;
+
+    vAppearPosition.z +=
+        (static_cast<float>(Math::Rand() % static_cast<uint32>(m_fRadius * 20.0f)) - m_fRadius * 10.0f) * 0.1f;
 
     float fMapHeight = CWorldMap::GetMapHeight(&vAppearPosition);
     vAppearPosition.y = fMapHeight;
 
-    float fScale = (float(Math::Rand() % 50) * 0.01f + 0.5f);
-    float fLifespan = (float(Math::Rand() % 10) * 0.01f + 0.1f);
+    float fScale    = (static_cast<float>(Math::Rand() % 50) * 0.01f + 0.5f);
+    float fLifespan = (static_cast<float>(Math::Rand() % 10) * 0.01f + 0.1f);
 
     pWaterSplash->m_vPosition = vAppearPosition;
     pWaterSplash->m_fBaseScale = fScale;
     pWaterSplash->m_fScale = fScale;
     pWaterSplash->m_fLifespan = fLifespan;
 	pWaterSplash->m_fTime = 0.0f;
-    pWaterSplash->m_uAlphaBasis = m_Color.alpha;
+    pWaterSplash->m_uAlphaBasis = m_color.alpha;
 };
 
 
@@ -171,16 +186,13 @@ void CWaterSplash::SetVertex(WATERSPLASH* pWaterSplash, RwMatrix* pMatrix, RwIm3
     ASSERT(pMatrix);
     ASSERT(pVertex);
     ASSERT(pCamera);
-
-    RwV2d vNowSize;
-    vNowSize.x = (m_vBaseSize.x * pWaterSplash->m_fScale);
-    vNowSize.y = (m_vBaseSize.y * pWaterSplash->m_fScale);
     
-    RwRGBA color = m_Color;
-    color.alpha = pWaterSplash->m_uAlphaBasis;
+    RwV2d vNowSize = { (m_vBaseSize.x * pWaterSplash->m_fScale),
+                       (m_vBaseSize.y * pWaterSplash->m_fScale) };
 
-    float w = float(pCamera->frameBuffer->width);
-    float h = float(pCamera->frameBuffer->height);
+    RwRaster* framebuffer = RwCameraGetRaster(pCamera);
+    float w = static_cast<float>(RwRasterGetWidth(framebuffer));
+    float h = static_cast<float>(RwRasterGetHeight(framebuffer));
 
     float x = vNowSize.x * 0.5f;
     float y = ((w / h) * vNowSize.y) * 0.5f;
@@ -209,41 +221,44 @@ void CWaterSplash::SetVertex(WATERSPLASH* pWaterSplash, RwMatrix* pMatrix, RwIm3
     Math::Vec3_Add(&aPosition[2], &aPosition[2], &pWaterSplash->m_vPosition);
     Math::Vec3_Add(&aPosition[3], &aPosition[3], &pWaterSplash->m_vPosition);
 
-    pVertex[0].objVertex = aPosition[1];
-    pVertex[0].objNormal = Math::VECTOR3_ZERO;
-    pVertex[0].color = RWRGBALONGEX(color);
-    pVertex[0].u = 0.0f;
-    pVertex[0].v = 1.0f;
+    RwRGBA color = m_color;
+    color.alpha = pWaterSplash->m_uAlphaBasis;
 
-    pVertex[1].objVertex = aPosition[0];
-    pVertex[1].objNormal = Math::VECTOR3_ZERO;
-    pVertex[1].color = RWRGBALONGEX(color);
-    pVertex[1].u = 0.0f;
-    pVertex[1].v = 0.0f;
+    RwIm3DVertexSetPos(&pVertex[0], aPosition[1].x, aPosition[1].y, aPosition[1].z);
+    RwIm3DVertexSetNormal(&pVertex[0], 0.0f, 0.0f, 0.0f);
+    RwIm3DVertexSetRGBA(&pVertex[0], color.red, color.green, color.blue, color.alpha);
+    RwIm3DVertexSetU(&pVertex[0], 0.0f);
+    RwIm3DVertexSetV(&pVertex[0], 1.0f);
 
-    pVertex[2].objVertex = aPosition[3];
-    pVertex[2].objNormal = Math::VECTOR3_ZERO;
-    pVertex[2].color = RWRGBALONGEX(color);
-    pVertex[2].u = 1.0f;
-    pVertex[2].v = 1.0f;
+    RwIm3DVertexSetPos(&pVertex[1], aPosition[0].x, aPosition[0].y, aPosition[0].z);
+    RwIm3DVertexSetNormal(&pVertex[1], 0.0f, 0.0f, 0.0f);
+    RwIm3DVertexSetRGBA(&pVertex[1], color.red, color.green, color.blue, color.alpha);
+    RwIm3DVertexSetU(&pVertex[1], 0.0f);
+    RwIm3DVertexSetV(&pVertex[1], 0.0f);
 
-    pVertex[3].objVertex = aPosition[3];
-    pVertex[3].objNormal = Math::VECTOR3_ZERO;
-    pVertex[3].color = RWRGBALONGEX(color);
-    pVertex[3].u = 1.0f;
-    pVertex[3].v = 1.0f;
+    RwIm3DVertexSetPos(&pVertex[2], aPosition[3].x, aPosition[3].y, aPosition[3].z);
+    RwIm3DVertexSetNormal(&pVertex[2], 0.0f, 0.0f, 0.0f);
+    RwIm3DVertexSetRGBA(&pVertex[2], color.red, color.green, color.blue, color.alpha);
+    RwIm3DVertexSetU(&pVertex[2], 1.0f);
+    RwIm3DVertexSetV(&pVertex[2], 1.0f);
 
-    pVertex[4].objVertex = aPosition[0];
-    pVertex[4].objNormal = Math::VECTOR3_ZERO;
-    pVertex[4].color = RWRGBALONGEX(color);
-    pVertex[4].u = 0.0f;
-    pVertex[4].v = 0.0f;
+    RwIm3DVertexSetPos(&pVertex[3], aPosition[3].x, aPosition[3].y, aPosition[3].z);
+    RwIm3DVertexSetNormal(&pVertex[3], 0.0f, 0.0f, 0.0f);
+    RwIm3DVertexSetRGBA(&pVertex[3], color.red, color.green, color.blue, color.alpha);
+    RwIm3DVertexSetU(&pVertex[3], 1.0f);
+    RwIm3DVertexSetV(&pVertex[3], 1.0f);
 
-    pVertex[5].objVertex = aPosition[2];
-    pVertex[5].objNormal = Math::VECTOR3_ZERO;
-    pVertex[5].color = RWRGBALONGEX(color);
-    pVertex[5].u = 1.0f;
-    pVertex[5].v = 0.0f;
+    RwIm3DVertexSetPos(&pVertex[4], aPosition[0].x, aPosition[0].y, aPosition[0].z);
+    RwIm3DVertexSetNormal(&pVertex[4], 0.0f, 0.0f, 0.0f);
+    RwIm3DVertexSetRGBA(&pVertex[4], color.red, color.green, color.blue, color.alpha);
+    RwIm3DVertexSetU(&pVertex[4], 0.0f);
+    RwIm3DVertexSetV(&pVertex[4], 0.0f);
+
+    RwIm3DVertexSetPos(&pVertex[5], aPosition[2].x, aPosition[2].y, aPosition[2].z);
+    RwIm3DVertexSetNormal(&pVertex[5], 0.0f, 0.0f, 0.0f);
+    RwIm3DVertexSetRGBA(&pVertex[5], color.red, color.green, color.blue, color.alpha);
+    RwIm3DVertexSetU(&pVertex[5], 1.0f);
+    RwIm3DVertexSetV(&pVertex[5], 0.0f);
 };
 
 
@@ -319,9 +334,7 @@ static inline CWaterSplash& WaterSplash(void)
         CTextureManager::SetCurrentTextureSet("rain_ef");
         pTexture = CTextureManager::GetRwTexture("raindrop");
     };
-    
-    ASSERT(pTexture);
-
+   
     WaterSplash().SetTexture(pTexture);
     StartWaterSplash();
 };

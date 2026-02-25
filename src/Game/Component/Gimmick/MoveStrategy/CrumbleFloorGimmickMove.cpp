@@ -230,8 +230,8 @@ void CCrumbleFloorGimmickMove::SetCharacterPositionFromName(const char* pszName)
 
 void CCrumbleFloorGimmickMove::SetMatrixFromClump(RpClump* pClump)
 {
-    RwFrame* pFrame = RpClumpGetFrameMacro(pClump);
-    RwMatrix* pMatrix = RwFrameGetMatrixMacro(pFrame);
+    RwFrame* pFrame = RpClumpGetFrame(pClump);
+    RwMatrix* pMatrix = RwFrameGetMatrix(pFrame);
 
     RwMatrixInvert(&m_invMat, pMatrix);
 };

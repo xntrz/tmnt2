@@ -1,11 +1,9 @@
 **/.vscode/*
 **/bin/*
-**/build/*
 **/idb/*
-**/scripts/*
+**/build/pc/vs*/*
 **/obj/*
 **/System/Common/Debug/*
-**/vendor/*
 *.csproj
 *.db
 *.user
@@ -13,6 +11,5 @@
 *.exe
 *.elf
 *.idb
-*.bat
 *.bt
 *.json

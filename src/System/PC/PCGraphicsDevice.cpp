@@ -8,6 +8,37 @@
 #include "System/Common/Screen.hpp"
 
 
+#if defined(TMNT2_RWDRV_OPENGL)
+
+#define RwDrvChangeVideoMode \
+    RwOpenGLChangeVideoMode
+
+#define RwDrvSetRefreshRate \
+    // no op
+
+#define RwDrvSetMultiSamplingLevels \
+    // no op
+
+#define RwDrvGetMaxMultiSamplingLevels() \
+    (0)
+
+#elif defined(TMNT2_RWDRV_D3D9)
+
+#define RwDrvChangeVideoMode \
+    RwD3D9ChangeVideoMode
+
+#define RwDrvSetRefreshRate \
+    RwD3D9EngineSetRefreshRate
+
+#define RwDrvSetMultiSamplingLevels \
+    RwD3D9EngineSetMultiSamplingLevels
+
+#define RwDrvGetMaxMultiSamplingLevels \
+    RwD3D9EngineGetMaxMultiSamplingLevels
+
+#endif
+
+
 struct CPCGraphicsDevice::VIDEOMODE : public RwVideoMode
 {
     int32   m_index;
@@ -67,17 +98,16 @@ struct CPCGraphicsDevice::DEVICEINFO : public RwSubSystemInfo
     const int32 iMinDepth = 16;
     const int32 iMaxDepth = 32;
     
-    if (pVideomode->width < iMinWidth || pVideomode->height < iMinHeight)
+    if ((pVideomode->width  < iMinWidth) ||
+        (pVideomode->height < iMinHeight))
         return false;
 
-    if (pVideomode->depth < iMinDepth || pVideomode->depth > iMaxDepth)
+    if ((pVideomode->depth < iMinDepth) ||
+        (pVideomode->depth > iMaxDepth))
         return false;
 
     if (!(pVideomode->flags & rwVIDEOMODEEXCLUSIVE))
         return true;
-
-    if (!(pVideomode->format & rwRASTERFORMAT8888))
-        return false;
 
     static const RwV2d s_aAspectRatio[] =
     {
@@ -131,7 +161,7 @@ bool CPCGraphicsDevice::Initialize(void)
     {
         int32 numMsLevels = m_pDeviceInfo[m_curDevice].m_numMultisamplingLvls;
 
-        RwD3D9EngineSetMultiSamplingLevels(numMsLevels ?  numMsLevels * 2 : 1);
+        RwDrvSetMultiSamplingLevels(numMsLevels ?  numMsLevels * 2 : 1);
 
         uint32 refreshRate = 60;
 #ifdef TMNT2_BUILD_EU
@@ -139,7 +169,7 @@ bool CPCGraphicsDevice::Initialize(void)
             refreshRate = 50;
 #endif /* TMNT2_BUILD_EU */
 
-        RwD3D9EngineSetRefreshRate(refreshRate);
+        RwDrvSetRefreshRate(refreshRate);
     };
 
     SetWindowRect(m_pDeviceInfo[m_curDevice].m_pModes[m_pDeviceInfo[m_curDevice].m_curMode].width,
@@ -165,13 +195,14 @@ void CPCGraphicsDevice::Terminate(void)
 
 bool CPCGraphicsDevice::Start(void)
 {
-    if (CGraphicsDevice::Start())
+    if (!CGraphicsDevice::Start())
     {
-        RwImageSetGamma(1.2f);
-        return true;
+        CPCError::ShowNoRet("Video Start Failed");
+        return false;
     };
 
-    return false;
+    RwImageSetGamma(1.2f);
+    return true;
 };
 
 
@@ -192,6 +223,15 @@ int32 CPCGraphicsDevice::ScreenWidth(void)
     ASSERT(m_curDevice >= 0);
     ASSERT(m_curDevice < m_numDevices);
 
+    if (IsFullscreenWindow())
+    {
+        RECT rc;
+        SetRectEmpty(&rc);
+        GetClientRect(CPCSpecific::m_hWnd, &rc);
+
+        return (rc.right - rc.left);
+    };
+
     int32 curMode = m_pDeviceInfo[m_curDevice].m_curMode;
 
     ASSERT(curMode >= 0);
@@ -207,6 +247,15 @@ int32 CPCGraphicsDevice::ScreenHeight(void)
     ASSERT(m_numDevices > 0);
     ASSERT(m_curDevice >= 0);
     ASSERT(m_curDevice < m_numDevices);
+
+    if (IsFullscreenWindow())
+    {
+        RECT rc;
+        SetRectEmpty(&rc);
+        GetClientRect(CPCSpecific::m_hWnd, &rc);
+
+        return (rc.bottom - rc.top);
+    };
 
     int32 curMode = m_pDeviceInfo[m_curDevice].m_curMode;
 
@@ -327,7 +376,7 @@ bool CPCGraphicsDevice::EnumerateVideomodes(void)
                              pVideomode->depth);
 
                 RwEngineSetVideoMode(j);
-                pVideomode->m_maxMultiSamplingLevels = RwD3D9EngineGetMaxMultiSamplingLevels();
+                pVideomode->m_maxMultiSamplingLevels = RwDrvGetMaxMultiSamplingLevels();
 
                 ++pDeviceInfo->m_numModes;
                 ++pVideomode;
@@ -411,7 +460,7 @@ int32 CPCGraphicsDevice::SearchAndSetVideomode(const PC::VIDEOMODE& vm, bool bSe
                 (pVideomode->height != vm.h)    ||
                 (pVideomode->depth  != vm.d))
                 continue;
-
+            
             if (!bSearchInProgress)
                 pDeviceInfo->m_curMode = j;
 
@@ -455,33 +504,45 @@ void CPCGraphicsDevice::SetWindowRect(int32 iWidth, int32 iHeight)
     {
         SetWindowLongA(hWnd, GWL_STYLE, WS_POPUP);
         SetWindowLongA(hWnd, GWL_EXSTYLE, 0);
-        SetWindowPos(hWnd, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOSIZE | SWP_NOMOVE | SWP_NOACTIVATE);
+        SetWindowPos(hWnd, HWND_TOPMOST, 0, 0, 0, 0, (SWP_NOSIZE |
+                                                      SWP_NOMOVE |
+                                                      SWP_NOACTIVATE));
     }
     else
     {
         const uint32 WndStyle = (WS_OVERLAPPEDWINDOW) ^ (WS_THICKFRAME | WS_MAXIMIZEBOX);
         const uint32 WndStyleEx = WS_EX_CLIENTEDGE;
 
-        static_assert(WndStyle == 0xCA0000, "checkout");
-        static_assert(WndStyleEx == 0x200, "checkout");
+        SetWindowLongA(hWnd, GWL_STYLE, WndStyle);
+        SetWindowLongA(hWnd, GWL_EXSTYLE, WndStyleEx);
+        SetWindowPos(hWnd, NULL, 0, 0, 0, 0, (SWP_NOACTIVATE |
+                                              SWP_NOMOVE |
+                                              SWP_NOSIZE |
+                                              SWP_NOZORDER |
+                                              SWP_FRAMECHANGED));
 
         int32 cxScreen = GetSystemMetrics(SM_CXSCREEN);
         int32 cyScreen = GetSystemMetrics(SM_CYSCREEN);
 
+        BOOL bMenu = (GetMenu(hWnd) != NULL);
+
         RECT rc;
         SetRect(&rc, 0, 0, iWidth, iHeight);
+        AdjustWindowRectEx(&rc, WndStyle, bMenu, WndStyleEx);
 
-        AdjustWindowRectEx(&rc, WndStyle, 0, WndStyleEx);
+        int32 w = (rc.right - rc.left);
+        int32 h = (rc.bottom - rc.top);
 
-        int32 w = rc.right - rc.left;
-        int32 h = rc.bottom - rc.top;
+        if (IsFullscreenWindow())
+        {
+            w = iWidth  - ((rc.right - rc.left) - iWidth);
+            h = iHeight - ((rc.bottom - rc.top) - iHeight);
+        };
 
         int32 x = Clamp((cxScreen - w) / 2, 0, cxScreen - w);
         int32 y = Clamp((cyScreen - h) / 2, 0, cyScreen - h);
-        
-        SetWindowLongA(hWnd, GWL_STYLE, WndStyle);
-        SetWindowLongA(hWnd, GWL_EXSTYLE, WndStyleEx);
-        SetWindowPos(hWnd, HWND_NOTOPMOST, x, y, w, h, SWP_NOACTIVATE);
+
+        SetWindowPos(hWnd, HWND_NOTOPMOST, x, y, w, h, (SWP_NOACTIVATE | SWP_FRAMECHANGED));
     };
 };
 
@@ -512,14 +573,14 @@ bool CPCGraphicsDevice::SetVideomode(const PC::VIDEOMODE& vm)
     if (!m_bFullscreen)
     {
         DestroyFrameBuffer();
-        RwD3D9EngineSetRefreshRate(0);
+        RwDrvSetRefreshRate(0);
     };
 
     SetWindowRect(vm.w, vm.h);
 
     bool bVideomodeChangedFlag = false;
 
-    if (RwD3D9ChangeVideoMode(Videomode()))
+    if (RwDrvChangeVideoMode(Videomode()))
     {
         bVideomodeChangedFlag = true;
 
@@ -527,7 +588,7 @@ bool CPCGraphicsDevice::SetVideomode(const PC::VIDEOMODE& vm)
         {
             int32 numMsLevels = m_pDeviceInfo[m_curDevice].m_numMultisamplingLvls;
 
-            RwD3D9EngineSetMultiSamplingLevels(numMsLevels ? numMsLevels * 2 : 1);
+            RwDrvSetMultiSamplingLevels(numMsLevels ? numMsLevels * 2 : 1);
 
             uint32 refreshRate = 60;
 #ifdef TMNT2_BUILD_EU
@@ -535,7 +596,7 @@ bool CPCGraphicsDevice::SetVideomode(const PC::VIDEOMODE& vm)
                 refreshRate = 50;
 #endif /* TMNT2_BUILD_EU */
 
-            RwD3D9EngineSetRefreshRate(refreshRate);
+            RwDrvSetRefreshRate(refreshRate);
         };
 
         if (m_bFullscreen || CreateFrameBuffer())
@@ -553,7 +614,7 @@ bool CPCGraphicsDevice::SetVideomode(const PC::VIDEOMODE& vm)
     SetWindowRect(CPCSetting::m_videomode.w, CPCSetting::m_videomode.h);
 
     if (bVideomodeChangedFlag)
-        RwD3D9ChangeVideoMode(Videomode());
+        RwDrvChangeVideoMode(Videomode());
 
     if (!m_bFullscreen)
     {
@@ -650,4 +711,28 @@ void CPCGraphicsDevice::OutputInfo(void)
             );
         };
     };    
+};
+
+
+bool CPCGraphicsDevice::IsFullscreenWindow(void) const
+{
+    if (m_bFullscreen)
+        return false; // not a windowed mode
+
+    const DEVICEINFO* pDeviceInfo = &m_pDeviceInfo[m_curDevice];
+
+    if (!pDeviceInfo->m_bModeWndExist)
+        return false; // window mode not exist
+
+    RwVideoMode vmFullscreen;
+    RwEngineGetVideoModeInfo(&vmFullscreen, pDeviceInfo->m_idxModeWnd);
+
+    RwVideoMode vmCurrent;
+    RwEngineGetVideoModeInfo(&vmCurrent, pDeviceInfo->m_pModes[pDeviceInfo->m_curMode].m_index);
+
+    if ((vmFullscreen.width == vmCurrent.width) &&
+        (vmFullscreen.height == vmCurrent.height))
+        return true; // current mode is windowed and equals to fullscreen
+
+    return false;
 };

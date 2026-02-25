@@ -16,7 +16,6 @@
 #include "Game/System/Text/GameText.hpp"
 #include "Game/System/Texture/TextureManager.hpp"
 #include "Game/ProcessList.hpp"
-#include "System/Common/File/FileID.hpp"
 #include "System/Common/Controller.hpp"
 #include "System/Common/RenderState.hpp"
 #include "System/Common/Screen.hpp"
@@ -2724,7 +2723,7 @@ void CAreaSequence::OnDraw(void) const
 
 bool CAreaSequence::AreaSelectLoad(void)
 {
-    FILEID::VALUE fileId = FILEID::ID_INVALID;
+    FNAME fileID = FNAME_INVALID;
     const char* pszAnimName = nullptr;
     
     AREAID::VALUE areaId = CGameData::Record().Area().GetCurrentSelectedArea();
@@ -2733,32 +2732,32 @@ bool CAreaSequence::AreaSelectLoad(void)
     {
     case WORLDID::ID_MNY:
         pszAnimName = "area_ny";
-        fileId      = FILEID::ID_AREA_NY;
+        fileID = FPATH("Common/Area/Area_NY.lpac");
         break;
 
     case WORLDID::ID_DHO:
         pszAnimName = "area_dho";
-        fileId      = FILEID::ID_AREA_DHO;
+        fileID = FPATH("Common/Area/Area_DHO.lpac");
         break;
 
     case WORLDID::ID_TRI:
         pszAnimName = "area_tri";
-        fileId      = FILEID::ID_AREA_TRI;
+        fileID = FPATH("Common/Area/Area_TRI.lpac");
         break;
 
     case WORLDID::ID_JPN:
         pszAnimName = "area_jpn";
-        fileId      = FILEID::ID_AREA_JPN;
+        fileID = FPATH("Common/Area/Area_JPN.lpac");
         break;
 
     case WORLDID::ID_FNY:
         pszAnimName = "area_fny";
-        fileId      = FILEID::ID_AREA_FNY;
+        fileID = FPATH("Common/Area/Area_FNY.lpac");
         break;
 
     case WORLDID::ID_KUR:
         pszAnimName = "area_kur";
-        fileId      = FILEID::ID_AREA_KUR;
+        fileID = FPATH("Common/Area/Area_KUR.lpac");
         break;
 
     default:
@@ -2768,10 +2767,10 @@ bool CAreaSequence::AreaSelectLoad(void)
 
 #ifdef TMNT2_BUILD_EU
     SetAnimationName("area");
-    CDataLoader::Regist(fileId);
-    return CAnim2DSequence::OnAttach(FILEID::ID_LANG_AREASELECT);
+    CDataLoader::Regist(fileID);
+    return CAnim2DSequence::OnAttach(FPATH_LANG("Language/English/Areaselect/Areaselect.lpac"));
 #else /* TMNT2_BUILD_EU */
     SetAnimationName(pszAnimName);
-    return CAnim2DSequence::OnAttach(fileId);
+    return CAnim2DSequence::OnAttach(fileID);
 #endif /* TMNT2_BUILD_EU */
 };

@@ -327,10 +327,10 @@ void CEnbuProc_Container::Draw2D(void)
     RENDERSTATE_PUSH(rwRENDERSTATEFOGENABLE,            false);
     RENDERSTATE_PUSH(rwRENDERSTATECULLMODE,             rwCULLMODECULLNONE);
 
-    m_sprite.SetZ(RwIm2DGetFarScreenZMacro());
+    m_sprite.SetZ(RwIm2DGetFarScreenZ());
     EnbuBgDraw();
     
-    m_sprite.SetZ(RwIm2DGetNearScreenZMacro());
+    m_sprite.SetZ(RwIm2DGetNearScreenZ());
     EnbuRankDraw();
 
     if (m_bFlagIdle)

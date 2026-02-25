@@ -1,7 +1,5 @@
 #include "EnbuLoadInfo.hpp"
 
-#include "System/Common/File/FileID.hpp"
-
 
 CEnbuLoadInfo::CEnbuLoadInfo(PLAYERID::VALUE idPlayer, GAMETYPES::COSTUME costume)
 : m_idPlayer(idPlayer)
@@ -17,9 +15,9 @@ CEnbuLoadInfo::~CEnbuLoadInfo(void)
 };
 
 
-int32 CEnbuLoadInfo::GetFileID(void) const
+FNAME CEnbuLoadInfo::GetFileID(void) const
 {
-    int32 FileID = FILEID::ID_INVALID;
+    FNAME fileID = FNAME_INVALID;
 
     switch (m_idPlayer)
     {
@@ -28,15 +26,19 @@ int32 CEnbuLoadInfo::GetFileID(void) const
             switch (m_costume)
             {
             case GAMETYPES::COSTUME_NONE:
-                FileID = FILEID::ID_ENBU_LEO;
+                fileID = FPATH("Common/Enbu/Leo/Enbu_Leo.lpac");
                 break;
 
             case GAMETYPES::COSTUME_SAMURAI:
-                FileID = FILEID::ID_ENBU_LEOEXA;
+                fileID = FPATH("Common/Enbu/Leo/Enbu_LeoExA.lpac");
                 break;
 
             case GAMETYPES::COSTUME_NEXUS:
-                FileID = FILEID::ID_ENBU_LEOEXB;
+                fileID = FPATH("Common/Enbu/Leo/Enbu_LeoExB.lpac");
+                break;
+
+            default:
+                ASSERT(false);
                 break;
             };
         }
@@ -47,15 +49,19 @@ int32 CEnbuLoadInfo::GetFileID(void) const
             switch (m_costume)
             {
             case GAMETYPES::COSTUME_NONE:
-                FileID = FILEID::ID_ENBU_RAP;
+                fileID = FPATH("Common/Enbu/Rap/Enbu_Rap.lpac");
                 break;
 
             case GAMETYPES::COSTUME_SAMURAI:
-                FileID = FILEID::ID_ENBU_RAPEXA;
+                fileID = FPATH("Common/Enbu/Rap/Enbu_RapExA.lpac");
                 break;
 
             case GAMETYPES::COSTUME_NEXUS:
-                FileID = FILEID::ID_ENBU_RAPEXB;
+                fileID = FPATH("Common/Enbu/Rap/Enbu_RapExB.lpac");
+                break;
+
+            default:
+                ASSERT(false);
                 break;
             };
         }
@@ -66,15 +72,19 @@ int32 CEnbuLoadInfo::GetFileID(void) const
             switch (m_costume)
             {
             case GAMETYPES::COSTUME_NONE:
-                FileID = FILEID::ID_ENBU_MIC;
+                fileID = FPATH("Common/Enbu/Mic/Enbu_Mic.lpac");
                 break;
 
             case GAMETYPES::COSTUME_SAMURAI:
-                FileID = FILEID::ID_ENBU_MICEXA;
+                fileID = FPATH("Common/Enbu/Mic/Enbu_MicExA.lpac");
                 break;
 
             case GAMETYPES::COSTUME_NEXUS:
-                FileID = FILEID::ID_ENBU_MICEXB;
+                fileID = FPATH("Common/Enbu/Mic/Enbu_MicExB.lpac");
+                break;
+
+            default:
+                ASSERT(false);
                 break;
             };
         }
@@ -85,34 +95,38 @@ int32 CEnbuLoadInfo::GetFileID(void) const
             switch (m_costume)
             {
             case GAMETYPES::COSTUME_NONE:
-                FileID = FILEID::ID_ENBU_DON;
+                fileID = FPATH("Common/Enbu/Don/Enbu_Don.lpac");
                 break;
 
             case GAMETYPES::COSTUME_SAMURAI:
-                FileID = FILEID::ID_ENBU_DONEXA;
+                fileID = FPATH("Common/Enbu/Don/Enbu_DonExA.lpac");
                 break;
 
             case GAMETYPES::COSTUME_NEXUS:
-                FileID = FILEID::ID_ENBU_DONEXB;
+                fileID = FPATH("Common/Enbu/Don/Enbu_DonExB.lpac");
+                break;
+
+            default:
+                ASSERT(false);
                 break;
             };
         }
         break;
 
     case PLAYERID::ID_SLA:
-        FileID = FILEID::ID_ENBU_SLS;
+        fileID = FPATH("Common/Enbu/Sls/Enbu_Sls.lpac");
         break;
 
     case PLAYERID::ID_CAS:
-        FileID = FILEID::ID_ENBU_CAS;
+        fileID = FPATH("Common/Enbu/Cas/Enbu_Cas.lpac");
         break;
 
     case PLAYERID::ID_KAR:
-        FileID = FILEID::ID_ENBU_KRI;
+        fileID = FPATH("Common/Enbu/Kri/Enbu_Kri.lpac");
         break;
 
     case PLAYERID::ID_SPL:
-        FileID = FILEID::ID_ENBU_SPL;
+        fileID = FPATH("Common/Enbu/Spl/Enbu_Spl.lpac");
         break;
 
     default:
@@ -120,7 +134,7 @@ int32 CEnbuLoadInfo::GetFileID(void) const
         break;
     };
 
-    return FileID;
+    return fileID;
 };
 
 

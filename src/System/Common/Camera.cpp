@@ -29,7 +29,7 @@
     ASSERT(pFrame);
 
     RwCameraSetFrame(pNewCamera, pFrame);
-    RwMatrixSetIdentityMacro(RwFrameGetMatrixMacro(pFrame));
+    RwMatrixSetIdentity(RwFrameGetMatrix(pFrame));
     RwCameraSetNearClipPlane(pNewCamera, TYPEDEF::DEFAULT_CLIP_NEAR);
     RwCameraSetFarClipPlane(pNewCamera, TYPEDEF::DEFAULT_CLIP_FAR);
 

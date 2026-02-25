@@ -22,7 +22,7 @@
 
 /*static*/ RtFileSystemError CRwFileSystem::rwOpen(RtFileSystem* fs, RtFile* file, const RwChar* filename, RwUInt32 flags)
 {
-    if (!static_cast<CRwFile*>(file)->m_extFile.Open(filename))
+    if (!static_cast<CRwFile*>(file)->m_extFile.open(filename))
         return RTFS_ERROR_FILENOTFOUND;
 
     file->fileSystem = fs;
@@ -33,13 +33,13 @@
 
 /*static*/ void CRwFileSystem::rwClose(RtFile* file)
 {
-    static_cast<CRwFile*>(file)->m_extFile.Close();
+    static_cast<CRwFile*>(file)->m_extFile.close();
 };
 
 
 /*static*/ RwUInt32 CRwFileSystem::rwRead(RtFile* file, void* pBuffer, RwUInt32 nBytes)
 {
-    return static_cast<CRwFile*>(file)->m_extFile.Read(pBuffer, nBytes);
+    return static_cast<CRwFile*>(file)->m_extFile.read(pBuffer, nBytes);
 };
 
 
@@ -52,19 +52,32 @@
 
 /*static*/ RtInt64 CRwFileSystem::rwSetPosition(RtFile* file, RwInt32 nOffset, RtFileSeekMethod fPosition)
 {
-    static_assert((RTFILE_POS_BEGIN - 1)    == SEEK_SET, "update me");
-    static_assert((RTFILE_POS_CURRENT - 1)  == SEEK_CUR, "update me");
-    static_assert((RTFILE_POS_END - 1)      == SEEK_END, "update me");
+    RtInt64 ret;
+    ret.supportValue = 0;
 
-    ASSERT(
-        ((fPosition - 1) >= SEEK_SET) &&
-        ((fPosition - 1) <= SEEK_END)
-    );
+    CStdFile* pFile = &static_cast<CRwFile*>(file)->m_extFile;
 
-    RtInt64 Result;
-    Result.supportValue = (static_cast<CRwFile*>(file)->m_extFile.Seek(nOffset, fPosition - 1));
+    switch (fPosition)
+    {
+    case RTFILE_POS_BEGIN:
+        pFile->seek(static_cast<uint32>(nOffset), SEEK_SET);
+        break;
 
-    return Result;
+    case RTFILE_POS_CURRENT:
+        pFile->seek(static_cast<uint32>(nOffset), SEEK_CUR);
+        break;
+
+    case RTFILE_POS_END:
+        pFile->seek(static_cast<uint32>(nOffset), SEEK_END);
+        break;
+
+    default:
+        ASSERT(false);
+        break;
+    };
+
+    ret.supportValue = pFile->tell();
+    return ret;
 };
 
 
@@ -82,19 +95,19 @@
 
 /*static*/ RwBool CRwFileSystem::rwEof(RtFile* file)
 {
-    return static_cast<CRwFile*>(file)->m_extFile.IsEof();
+    return static_cast<CRwFile*>(file)->m_extFile.eof();
 };
 
 
 /*static*/ RtFileStatus CRwFileSystem::rwGetStatus(RtFile* file)
 {
-    return (static_cast<CRwFile*>(file)->m_extFile.IsOpen() ? RTFILE_STATUS_READY : RTFILE_STATUS_CLOSED);
+    return RTFILE_STATUS_ERROR;
 };
 
 
 /*static*/ RwBool CRwFileSystem::rwExists(RtFileSystem* fs, const RwChar* filename)
 {
-    return CStdFile::IsExists(filename);
+    return CStdFile::exist(filename);
 };
 
 

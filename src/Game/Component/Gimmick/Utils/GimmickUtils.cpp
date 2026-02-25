@@ -57,10 +57,10 @@
     ASSERT(pQuat);
     ASSERT(pvAxis);
 
+    pQuat->w = Math::Cos(fRotAngle * 0.5f);
     pQuat->x = pvAxis->x * Math::Sin(fRotAngle * 0.5f);
     pQuat->y = pvAxis->y * Math::Sin(fRotAngle * 0.5f);
     pQuat->z = pvAxis->z * Math::Sin(fRotAngle * 0.5f);
-    pQuat->w = Math::Cos(fRotAngle * 0.5f);
 };
 
 
@@ -69,7 +69,7 @@
     ASSERT(pQuat);
     
     RwMatrix matrix;
-    RwMatrixSetIdentityMacro(&matrix);
+    RwMatrixSetIdentity(&matrix);
 
     QuaternionToRotationMatrix(&matrix, pQuat);
 
@@ -86,37 +86,30 @@
     if (vAt.z == 0.0f)
     {
         pvRotation->z = 0.0f;
-        pvRotation->y = -Math::ATan2(vRight.z, vRight.x);
 
         float fTmp = 1.0f - (vAt.y * vAt.y);
         if (fTmp < 0.0f)
             fTmp = 0.0f;
         
-        pvRotation->x = -Math::ATan2(
-            vAt.y,
-            Math::Sqrt(fTmp) * (vRight.y < 0.0f ? 1.0f : -1.0f)
-        );
+        pvRotation->x = -Math::ATan2(vAt.y,
+                                     Math::Sqrt(fTmp) * (vRight.y < 0.0f ? 1.0f : -1.0f));
+
+        pvRotation->y = -Math::ATan2(vRight.z, vRight.x);
     }
     else
     {
-        pvRotation->z = -Math::ATan2(
-            -vRight.y * (vAt.z <= 0.0f ? -1.0f : 1.0f),
-            vUp.y * (vAt.z <= 0.0f ? -1.0f : 1.0f)
-        );
+        pvRotation->z = -Math::ATan2(-vRight.y * (vAt.z <= 0.0f ? -1.0f : 1.0f),
+                                      vUp.y * (vAt.z <= 0.0f ? -1.0f : 1.0f));
 
         float fTmp = 1.0f - (vAt.y * vAt.y);
         if (fTmp < 0.0f)
             fTmp = 0.0f;
 
-        pvRotation->x = -Math::ATan2(
-            vAt.y,
-            Math::Sqrt(fTmp) * (vAt.z <= 0.0f ? -1.0f : 1.0f)
-        );
+        pvRotation->x = -Math::ATan2(vAt.y,
+                                     Math::Sqrt(fTmp) * (vAt.z <= 0.0f ? -1.0f : 1.0f));
 
-        pvRotation->y = -Math::ATan2(
-            -vAt.x * (vAt.z <= 0.0f ? -1.0f : 1.0f),
-            vAt.z * (vAt.z <= 0.0f ? -1.0f : 1.0f)
-        );
+        pvRotation->y = -Math::ATan2(-vAt.x * (vAt.z <= 0.0f ? -1.0f : 1.0f),
+                                      vAt.z * (vAt.z <= 0.0f ? -1.0f : 1.0f));
     };
 };
 
@@ -214,7 +207,7 @@
 /*static*/ bool CGimmickUtils::IsPositionVisible(const RwV3d* pvPos)
 {
     RwMatrix matrix;
-    RwMatrixSetIdentityMacro(&matrix);
+    RwMatrixSetIdentity(&matrix);
     CGameProperty::GetCameraViewMatrix(&matrix);
     
     RwV3d vScreenPos = Math::VECTOR3_ZERO;
@@ -245,7 +238,7 @@
     if (bTestZ)
     {
         RwMatrix matrix;
-        RwMatrixSetIdentityMacro(&matrix);
+        RwMatrixSetIdentity(&matrix);
         CGameProperty::GetCameraViewMatrix(&matrix);
 
         RwV3d vScreenPos = Math::VECTOR3_ZERO;

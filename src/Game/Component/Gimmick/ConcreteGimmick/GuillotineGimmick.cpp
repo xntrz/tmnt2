@@ -217,8 +217,8 @@ void CGuillotineGimmick::setHitAttackChain(void)
 
     CModel* pModel = m_model.GetModel(CNormalGimmickModel::MODELTYPE_DRAW_NORMAL);
     RpClump* pClump = pModel->GetClump();
-    RwFrame* pFrame = RpClumpGetFrameMacro(pClump);
-    RwMatrix* pMatrix = RwFrameGetMatrixMacro(pFrame);
+    RwFrame* pFrame = RpClumpGetFrame(pClump);
+    RwMatrix* pMatrix = RwFrameGetMatrix(pFrame);
 
     RwV3d vHitPos = m_vHitSpherePos;
     vHitPos.y += (m_fHitRadius + 0.5f);
@@ -241,8 +241,8 @@ void CGuillotineGimmick::setHitAttackCrane(void)
 {
     CModel* pModel = m_model.GetModel(CNormalGimmickModel::MODELTYPE_DRAW_NORMAL);
     RpClump* pClump = pModel->GetClump();
-    RwFrame* pFrame = RpClumpGetFrameMacro(pClump);
-    RwMatrix* pMatrix = RwFrameGetMatrixMacro(pFrame);
+    RwFrame* pFrame = RpClumpGetFrame(pClump);
+    RwMatrix* pMatrix = RwFrameGetMatrix(pFrame);
 
     RwSphere hitSphere = { Math::VECTOR3_ZERO, m_fHitRadius };
     RwV3dTransformPoint(&hitSphere.center, &m_vHitSpherePos, pMatrix);
@@ -262,8 +262,8 @@ void CGuillotineGimmick::setHitAttackGuillotine(void)
 
     CModel* pModel = m_model.GetModel(CNormalGimmickModel::MODELTYPE_DRAW_NORMAL);
     RpClump* pClump = pModel->GetClump();
-    RwFrame* pFrame = RpClumpGetFrameMacro(pClump);
-    RwMatrix* pMatrix = RwFrameGetMatrixMacro(pFrame);
+    RwFrame* pFrame = RpClumpGetFrame(pClump);
+    RwMatrix* pMatrix = RwFrameGetMatrix(pFrame);
 
     for (int32 i = 0; i < COUNT_OF(s_aHitSphere); ++i)
     {

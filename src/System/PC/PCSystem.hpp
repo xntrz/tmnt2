@@ -9,8 +9,9 @@ class CPCFramework;
 class CPCSystem
 {
 public:
-    static const char* WNDNAME;
-    
+    static const TCHAR* WND_CLASS;
+    static const TCHAR* WND_NAME;
+
 public:
     static CPCSystem& Instance(void);
     

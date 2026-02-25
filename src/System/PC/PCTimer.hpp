@@ -13,15 +13,14 @@ public:
 
     CPCTimer(void);
     virtual ~CPCTimer(void);
-    uint32 ElapsedTime(void) const;
-
-    inline uint32 GranularitySecond(void) const { return m_uGranularitySecond; };
-    inline uint32 GranularityMillisecond(void) const { return m_uGranularityMillisecond; };
+    uint32 GetElapsedTime(void) const;
+    uint32 GetFreqMs(void) const;
+    uint32 GetFreq(void) const;
     
 private:
     static CPCTimer* m_pInstance;
-    uint32 m_uTimeStart;
-    uint32 m_uGranularitySecond;
-    uint32 m_uGranularityMillisecond;
+    uint32           m_startTime;
+    uint32           m_freqMs;
+    uint32           m_freq;
     IGetTimeFunctor* m_pGetTimerFunctor;
 };

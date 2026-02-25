@@ -599,7 +599,7 @@ CHARACTERTYPES::ATTACKRESULTTYPE CEnemyCharacter::OnDamage(CCharacterAttackCalcu
                         vecVel.z = std::fabs(fVel);
                 
                         RwMatrix matRotY;
-                        RwMatrixSetIdentityMacro(&matRotY);                        
+                        RwMatrixSetIdentity(&matRotY);                        
                         Math::Matrix_RotateY(&matRotY, Compositor().GetDirection() + MATH_PI);
                         RwV3dTransformVector(&vecVel, &vecVel, &matRotY);
 

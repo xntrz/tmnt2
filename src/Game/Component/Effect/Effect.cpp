@@ -59,7 +59,7 @@ void CEffect::Run(void)
         if (m_bTraceDirection)
         {
             RwMatrix matRot;
-            RwMatrixSetIdentityMacro(&matRot);
+            RwMatrixSetIdentity(&matRot);
 
             Math::Matrix_Update(&matRot,
                                 &Math::VECTOR3_AXIS_X,
@@ -231,7 +231,7 @@ void CEffect::SetDirection(float fDirection)
     ASSERT(m_pParticleSet);
 
     RwMatrix matRot;
-    RwMatrixSetIdentityMacro(&matRot);
+    RwMatrixSetIdentity(&matRot);
 
     Math::Matrix_Update(&matRot,
                         &Math::VECTOR3_AXIS_X,

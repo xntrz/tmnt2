@@ -128,8 +128,8 @@ CAnimation2D::CCenterStringObject::SetCenterAllStringObjectCallback(Rt2dObject* 
         float fWidth = Rt2dFontGetStringWidth(CGameFont::GetFontObj(), pszText, fHeight);
 
         RwMatrix* pMatrix = Rt2dObjectGetMTM(object);
-        RwV3d vTranslation = pMatrix->pos;
         
+        RwV3d vTranslation = *RwMatrixGetPos(pMatrix);
         vTranslation.x = fWidth * -0.5f - static_cast<RwV3d*>(data)->x;
         
         RwMatrixTranslate(pMatrix, &vTranslation, rwCOMBINEREPLACE);
@@ -269,38 +269,36 @@ void CAnimation2D::Start(void)
 	RwV2d ystep = Math::VECTOR2_ZERO;
 	RwV2d origin = Math::VECTOR2_ZERO;
 	Rt2dDeviceGetStep(&xstep, &ystep, &origin);
-    
-    Rt2dBBox* pBBox = Rt2dMaestroGetBBox(m_pMaestro);
-    ASSERT(pBBox);
+
+    float scrw = static_cast<float>(CScreen::Width());
+    float scrh = static_cast<float>(CScreen::Height());
+    Rt2dBBox* bbox = Rt2dMaestroGetBBox(m_pMaestro);
 
     RwV2d scale = Math::VECTOR2_ZERO;
-    scale.x = ((xstep.y + xstep.x) * static_cast<float>(CScreen::Width()))  / pBBox->w;
-    scale.y = ((ystep.y + ystep.x) * static_cast<float>(CScreen::Height())) / pBBox->h;
+    scale.x = ((xstep.y + xstep.x) * scrw) / bbox->w;
+    scale.y = ((ystep.y + ystep.x) * scrh) / bbox->h;
 
     RwV2d translation = Math::VECTOR2_ZERO;
-	translation.x =  ((CSprite::m_fVirtualScreenW - pBBox->w) * 0.5f) + origin.x;
-	translation.y = (((CSprite::m_fVirtualScreenH - pBBox->h) * 0.5f) + pBBox->h) + origin.y;
+    translation.x = (scrw / scale.x * xstep.x - bbox->w) * 0.5f + origin.x;
+    translation.y = (scrh / scale.y * ystep.y - bbox->h) * 0.5f + bbox->h + origin.y;
 	
     Rt2dObject* pScene = Rt2dMaestroGetScene(m_pMaestro);
     ASSERT(pScene);
 
     Rt2dObjectMTMScale(pScene, scale.x, scale.y);
 	Rt2dObjectMTMTranslate(pScene, translation.x, translation.y);
-
-	SetHandler();
+    Rt2dSceneUpdateLTM(pScene);
+    
+    SetHandler();
 	SetInterpolateAll(true);
 	m_menuController.CheckButtonLabelList(m_pMaestro);
 	m_menuSound.CheckSoundLabelList(m_pMaestro);
-	CheckStringObject();
+    CheckStringObject();
 
-    Rt2dSceneUpdateLTM(pScene);
-	Rt2dCTMSetIdentity();
-
-	m_iMessageIndex = -1;
+    m_iMessageIndex = -1;
 
 	Rt2dMaestroAddDeltaTime(m_pMaestro, 0.0f);
-	Rt2dMaestroUpdateAnimations(m_pMaestro);
-	Rt2dMaestroProcessMessages(m_pMaestro);
+    Rt2dMaestroUpdateAnimations(m_pMaestro);
 };
 
 
@@ -604,7 +602,7 @@ void CAnimation2D::SetInterpolateAll(bool bSet)
 {
     ASSERT(m_pMaestro);
 
-    Rt2dMaestroForAllAnimations(m_pMaestro, &CAnimation2D::AllAnimSetInterpolateCallback, (void*)(&bSet));
+    Rt2dMaestroForAllAnimations(m_pMaestro, &CAnimation2D::AllAnimSetInterpolateCallback, &bSet);
 };
 
 
@@ -768,8 +766,6 @@ void CAnimation2D::SetCenterAllStrings(void)
                                                                     Rt2dAnimProps* props,
                                                                     void* pData)
 {
-    ASSERT(pData);
-    
     Rt2dAnimSetInterpolate(anim, static_cast<RwBool>(pData != nullptr));
     return maestro;
 };

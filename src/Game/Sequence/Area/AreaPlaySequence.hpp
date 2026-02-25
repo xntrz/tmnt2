@@ -3,7 +3,6 @@
 #include "System/Common/Process/Sequence.hpp"
 
 #include "Game/Component/GameMain/StageID.hpp"
-#include "Game/System/Movie/MovieID.hpp"
 
 
 class CAreaPlaySequence final : public CSequence
@@ -40,13 +39,13 @@ private:
     void callResultSequence(void);
     void callEnbuSequence(void);
     void callUnlockSequence(void);
-    void callMovieSequence(MOVIEID::VALUE idMovie);
+    void callMovieSequence(MVNAME mvname);
 
 private:
-    STAGEID::VALUE m_idLastStage;
-    STEP m_step;
-    int32 m_substep;
+    STAGEID::VALUE  m_idLastStage;
+    STEP            m_step;
+    int32           m_substep;
 #ifdef _DEBUG
-    bool m_bSkipAllMovies;
+    bool            m_bSkipAllMovies;
 #endif
 };

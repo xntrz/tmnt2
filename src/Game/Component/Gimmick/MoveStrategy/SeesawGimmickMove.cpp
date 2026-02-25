@@ -28,7 +28,7 @@ CSeesawGimmickMove::CSeesawGimmickMove(void)
     
     m_fMoment       = 0.0f;
 
-    RwMatrixSetIdentityMacro(&m_invMat);
+    RwMatrixSetIdentity(&m_invMat);
 
     for (int32 i = 0; i < COUNT_OF(m_avPosition); ++i)
         m_avPosition[i] = Math::VECTOR3_ZERO;
@@ -132,8 +132,8 @@ void CSeesawGimmickMove::SetCharacterPositionFromName(const char* pszName)
 
 void CSeesawGimmickMove::SetMatrixFromClump(RpClump* pClump)
 {
-    RwFrame* pFrame = RpClumpGetFrameMacro(pClump);
-    RwMatrix* pMatrix = RwFrameGetMatrixMacro(pFrame);
+    RwFrame* pFrame = RpClumpGetFrame(pClump);
+    RwMatrix* pMatrix = RwFrameGetMatrix(pFrame);
 
     RwMatrixInvert(&m_invMat, pMatrix);
 };

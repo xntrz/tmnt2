@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Game/Component/GameMain/StageID.hpp"
+#include "Game/Component/GameMain/MapID.hpp"
 
 
 class CStageBaseSequence;
@@ -64,7 +65,9 @@ public:
         STEP_FADEOUT,
         STEP_END,
     };
-    
+
+    static const float DISPINFO_SEC;
+
 public:
     virtual void OnAttach(CStageBaseSequence* pSeq, const void* pParam) override;
     virtual void OnDetach(CStageBaseSequence* pSeq) override;
@@ -98,4 +101,37 @@ private:
     float m_fTime;
     STEP m_step;
     bool m_bPause;
+};
+
+
+class CLoadTestSeqState : public IStageSeqState
+{
+public:
+    CLoadTestSeqState(MAPID::VALUE idMap);
+    CLoadTestSeqState(STAGEID::VALUE idStage);
+    virtual void OnAttach(CStageBaseSequence* pSeq, const void* pParam) override;
+    virtual void OnDetach(CStageBaseSequence* pSeq) override;
+    virtual bool OnMove(CStageBaseSequence* pSeq) override;
+    void loadData(void);
+    void loadSound(void);
+
+protected:
+    MAPID::VALUE m_idMap;
+    int32 m_step;
+    STAGEID::VALUE m_idStage;
+};
+
+
+class CPlayTestSeqState : public IStageSeqState
+{
+public:
+    CPlayTestSeqState(bool bEnableGauge);
+    virtual void OnAttach(CStageBaseSequence* pSeq, const void* pParam) override;
+    virtual void OnDetach(CStageBaseSequence* pSeq) override;
+    virtual bool OnMove(CStageBaseSequence* pSeq) override;
+    void AddPlayer(int32 iPlayerNo = -1);
+
+protected:
+    bool m_bEnableGauge;
+    int32 m_nPlayerNum;
 };

@@ -83,47 +83,50 @@ void CScreenFade::CScreenFadeController::Draw(void) const
     if (!(IsFading() || IsDrawing()))
         return;
 
-    if (!CCamera::CameraCurrent())
+    RwCamera* camera = CCamera::CameraCurrent();
+
+    if (camera == NULL)
         return;
 
-    RwIm2DVertex aVertices[4];
-    float w = float(CScreen::Width());
-    float h = float(CScreen::Height());
+    float x = static_cast<float>(CScreen::Width());
+    float y = static_cast<float>(CScreen::Height());
 	float z = RwIm2DGetNearScreenZ();
-	float rhw = 1.0f / RwCameraGetNearClipPlane(CCamera::CameraCurrent());
-    uint32 color = RWRGBALONG(m_color.red, m_color.green, m_color.blue, m_color.alpha);
-    
-    aVertices[0].x = 0.0f;
-    aVertices[0].y = h;
-    aVertices[0].z = z;
-    aVertices[0].rhw = rhw;
-    aVertices[0].emissiveColor = color;
-	aVertices[0].u = 0.0f;
-	aVertices[0].v = 0.0f;
+    float rhw = 1.0f / RwCameraGetNearClipPlane(camera);
+    RwRGBA color = m_color;
 
-    aVertices[1].x = 0.0f;
-    aVertices[1].y = 0.0f;
-    aVertices[1].z = z;
-    aVertices[1].rhw = rhw;
-    aVertices[1].emissiveColor = color;
-	aVertices[1].u = 0.0f;
-	aVertices[1].v = 0.0f;
+    RwIm2DVertex aVertices[4];
 
-    aVertices[2].x = w;
-    aVertices[2].y = h;
-    aVertices[2].z = z;
-    aVertices[2].rhw = rhw;
-    aVertices[2].emissiveColor = color;
-	aVertices[2].u = 0.0f;
-	aVertices[2].v = 0.0f;
+    RwIm2DVertexSetScreenX(&aVertices[0], 0.0f);
+    RwIm2DVertexSetScreenY(&aVertices[0], y);
+    RwIm2DVertexSetScreenZ(&aVertices[0], z);
+    RwIm2DVertexSetIntRGBA(&aVertices[0], color.red, color.green, color.blue, color.alpha);
+    RwIm2DVertexSetU(&aVertices[0], 0.0f, rhw);
+    RwIm2DVertexSetV(&aVertices[0], 0.0f, rhw);
+    RwIm2DVertexSetRecipCameraZ(&aVertices[0], rhw);
 
-    aVertices[3].x = w;
-    aVertices[3].y = 0.0f;
-    aVertices[3].z = z;
-    aVertices[3].rhw = rhw;
-    aVertices[3].emissiveColor = color;
-	aVertices[3].u = 0.0f;
-	aVertices[3].v = 0.0f;
+    RwIm2DVertexSetScreenX(&aVertices[1], 0.0f);
+    RwIm2DVertexSetScreenY(&aVertices[1], 0.0f);
+    RwIm2DVertexSetScreenZ(&aVertices[1], z);
+    RwIm2DVertexSetIntRGBA(&aVertices[1], color.red, color.green, color.blue, color.alpha);
+    RwIm2DVertexSetU(&aVertices[1], 0.0f, rhw);
+    RwIm2DVertexSetV(&aVertices[1], 0.0f, rhw);
+    RwIm2DVertexSetRecipCameraZ(&aVertices[1], rhw);
+
+    RwIm2DVertexSetScreenX(&aVertices[2], x);
+    RwIm2DVertexSetScreenY(&aVertices[2], y);
+    RwIm2DVertexSetScreenZ(&aVertices[2], z);
+    RwIm2DVertexSetIntRGBA(&aVertices[2], color.red, color.green, color.blue, color.alpha);
+    RwIm2DVertexSetU(&aVertices[2], 0.0f, rhw);
+    RwIm2DVertexSetV(&aVertices[2], 0.0f, rhw);
+    RwIm2DVertexSetRecipCameraZ(&aVertices[2], rhw);
+
+    RwIm2DVertexSetScreenX(&aVertices[3], x);
+    RwIm2DVertexSetScreenY(&aVertices[3], 0.0f);
+    RwIm2DVertexSetScreenZ(&aVertices[3], z);
+    RwIm2DVertexSetIntRGBA(&aVertices[3], color.red, color.green, color.blue, color.alpha);
+    RwIm2DVertexSetU(&aVertices[3], 0.0f, rhw);
+    RwIm2DVertexSetV(&aVertices[3], 0.0f, rhw);
+    RwIm2DVertexSetRecipCameraZ(&aVertices[3], rhw);
 
     CSystem2D::PushRenderState();
 	RwRenderStateSet(rwRENDERSTATETEXTURERASTER, nullptr);
@@ -148,8 +151,6 @@ void CScreenFade::CScreenFadeController::Start(float fFadeTime, bool bDraw)
 
 /*static*/ bool CScreenFade::Initialize(void)
 {
-    ASSERT(!m_pScreenFade);
-    
     if (!m_pScreenFade)
         m_pScreenFade = new CScreenFadeController;
 
@@ -159,8 +160,6 @@ void CScreenFade::CScreenFadeController::Start(float fFadeTime, bool bDraw)
 
 /*static*/ void CScreenFade::Terminate(void)
 {
-    ASSERT(m_pScreenFade);
-
     if (m_pScreenFade)
     {
         delete m_pScreenFade;
@@ -171,13 +170,15 @@ void CScreenFade::CScreenFadeController::Start(float fFadeTime, bool bDraw)
 
 /*static*/ void CScreenFade::Period(void)
 {
-    (m_pScreenFade ? m_pScreenFade->Period() : (void)0);
+    if (m_pScreenFade)
+        m_pScreenFade->Period();
 };
 
 
 /*static*/ void CScreenFade::Draw(void)
 {
-    (m_pScreenFade ? m_pScreenFade->Draw() : (void)0);
+    if (m_pScreenFade)
+        m_pScreenFade->Draw();
 };
 
 

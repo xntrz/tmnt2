@@ -248,7 +248,10 @@ void CMessageContainer::drawWindow(void)
     if (CCamera::CameraCurrent())
     {
         for (int32 i = 0; i < COUNT_OF(m_aVertices); ++i)
-            m_aVertices[i].emissiveColor = RWRGBALONGEX(m_aVerticesColor[i]);
+        {
+            RwRGBA color = m_aVerticesColor[i];
+            RwIm2DVertexSetIntRGBA(&m_aVertices[i], color.red, color.green, color.blue, color.alpha);
+        };
 
         RwIm2DRenderPrimitive(rwPRIMTYPETRISTRIP, m_aVertices, COUNT_OF(m_aVertices));
     };
@@ -297,26 +300,32 @@ void CMessageContainer::vertexColorLinerMove(bool bFadeInFlag)
 {
     for (int32 i = 0; i < COUNT_OF(m_aVerticesColor); ++i)
     {
-        RwRGBA colorStart = (bFadeInFlag ? s_initialVertexRGBA                   : s_aLastVerexRGBA[i + 6 * m_stageKind]);
-        RwRGBA colorEnd   = (bFadeInFlag ? s_aLastVerexRGBA[i + 6 * m_stageKind] : s_initialVertexRGBA);        
+        RwRGBA colorStart = (bFadeInFlag ? s_initialVertexRGBA :
+                                           s_aLastVerexRGBA[i + 6 * m_stageKind]);
+        
+        RwRGBA colorEnd = (bFadeInFlag ? s_aLastVerexRGBA[i + 6 * m_stageKind] :
+                                         s_initialVertexRGBA);
 
-        colorLinerMove(&m_aVerticesColor[i].red,    colorStart.red,     colorEnd.red);
-        colorLinerMove(&m_aVerticesColor[i].green,  colorStart.green,   colorEnd.green);
-        colorLinerMove(&m_aVerticesColor[i].blue,   colorStart.blue,    colorEnd.blue);
-        colorLinerMove(&m_aVerticesColor[i].alpha,  colorStart.alpha,   colorEnd.alpha); 
+        colorLinerMove(&m_aVerticesColor[i].red, colorStart.red, colorEnd.red);
+        colorLinerMove(&m_aVerticesColor[i].green, colorStart.green, colorEnd.green);
+        colorLinerMove(&m_aVerticesColor[i].blue, colorStart.blue, colorEnd.blue);
+        colorLinerMove(&m_aVerticesColor[i].alpha, colorStart.alpha, colorEnd.alpha);;
     };
 };
 
 
 void CMessageContainer::stringColorLinerMove(bool bFadeInFlag)
 {
-    RwRGBA colorStart = (bFadeInFlag ? s_initialTextRGBA : s_lastTextRGBA);
-    RwRGBA colorEnd   = (bFadeInFlag ? s_lastTextRGBA    : s_initialTextRGBA);
+    RwRGBA colorStart = (bFadeInFlag ? s_initialTextRGBA :
+                                       s_lastTextRGBA);
+    
+    RwRGBA colorEnd = (bFadeInFlag ? s_lastTextRGBA :
+                                     s_initialTextRGBA);
 
-    colorLinerMove(&m_msgColor.red,     colorStart.red,     colorEnd.red);
-    colorLinerMove(&m_msgColor.green,   colorStart.green,   colorEnd.green);
-    colorLinerMove(&m_msgColor.blue,    colorStart.blue,    colorEnd.blue);
-    colorLinerMove(&m_msgColor.alpha,   colorStart.alpha,   colorEnd.alpha);
+    colorLinerMove(&m_msgColor.red, colorStart.red, colorEnd.red);
+    colorLinerMove(&m_msgColor.green, colorStart.green, colorEnd.green);
+    colorLinerMove(&m_msgColor.blue, colorStart.blue, colorEnd.blue);
+    colorLinerMove(&m_msgColor.alpha, colorStart.alpha, colorEnd.alpha);
 };
 
 
@@ -328,8 +337,12 @@ void CMessageContainer::messageSet(void)
     float x = (s_vBasePosition.x + s_vStringBoxOffset.x);
     float y = (s_vBasePosition.y + s_vStringBoxOffset.y);
 
-    m_msgBBox.x =  (x * (fScrW / TYPEDEF::VSCR_W)) * (CSprite::m_fVirtualScreenW / fScrW) - -CSprite::m_fVirtualScreenX;
-    m_msgBBox.y = ((y * (fScrH / TYPEDEF::VSCR_H)) * (CSprite::m_fVirtualScreenH / fScrH) - -CSprite::m_fVirtualScreenY) * -1.0f;
+    m_msgBBox.x =
+        (x * (fScrW / TYPEDEF::VSCR_W)) * (CSprite::m_fVirtualScreenW / fScrW) - -CSprite::m_fVirtualScreenX;
+    
+    m_msgBBox.y =
+        ((y * (fScrH / TYPEDEF::VSCR_H)) * (CSprite::m_fVirtualScreenH / fScrH) - -CSprite::m_fVirtualScreenY) * -1.0f;
+    
     m_msgBBox.w = s_vStringBoxWH.x;
     m_msgBBox.h = getStringBoxHeight();
 };
@@ -359,8 +372,6 @@ void CMessageContainer::vertexSet(void)
 
     float y0 = fOfsY + (fScrH - fOfsY);
     float y1 = fOfsY + (0.1f * (fScrH - fOfsY));
-
-    float z = RwIm2DGetNearScreenZMacro();
     
     RwV2d aPos[] =
     {
@@ -373,27 +384,36 @@ void CMessageContainer::vertexSet(void)
     };
 
     static_assert(COUNT_OF(aPos) == COUNT_OF(m_aVertices), "update table");
-    
+
+    float z = RwIm2DGetNearScreenZ();
+    float rhw = 1.0f;
+
     for (int32 i = 0; i < COUNT_OF(aPos); ++i)
     {
-        m_aVertices[i].x = aPos[i].x * (fScrW / TYPEDEF::VSCR_W); // to real screen pos
-		m_aVertices[i].y = aPos[i].y * (fScrH / TYPEDEF::VSCR_H); // to real screen pos
-        m_aVertices[i].z = z;
+        float x = aPos[i].x * (fScrW / TYPEDEF::VSCR_W); // to real screen pos
+		float y = aPos[i].y * (fScrH / TYPEDEF::VSCR_H); // to real screen pos
+
+        RwIm2DVertexSetScreenX(&m_aVertices[i], x);
+        RwIm2DVertexSetScreenY(&m_aVertices[i], y);
+        RwIm2DVertexSetScreenZ(&m_aVertices[i], z);
+        RwIm2DVertexSetU(&m_aVertices[i], 0.0f, rhw);
+        RwIm2DVertexSetV(&m_aVertices[i], 0.0f, rhw);
+        RwIm2DVertexSetRecipCameraZ(&m_aVertices[i], rhw);
     };
 };
 
 
 void CMessageContainer::rsPush(void)
 {
-    RENDERSTATE_PUSH(rwRENDERSTATEZTESTENABLE,       false);
-    RENDERSTATE_PUSH(rwRENDERSTATEZWRITEENABLE,      false);
-    RENDERSTATE_PUSH(rwRENDERSTATESRCBLEND,          rwBLENDSRCALPHA);
-    RENDERSTATE_PUSH(rwRENDERSTATEDESTBLEND,         rwBLENDINVSRCALPHA);
+    RENDERSTATE_PUSH(rwRENDERSTATEZTESTENABLE, false);
+    RENDERSTATE_PUSH(rwRENDERSTATEZWRITEENABLE, false);
+    RENDERSTATE_PUSH(rwRENDERSTATESRCBLEND, rwBLENDSRCALPHA);
+    RENDERSTATE_PUSH(rwRENDERSTATEDESTBLEND, rwBLENDINVSRCALPHA);
     RENDERSTATE_PUSH(rwRENDERSTATEVERTEXALPHAENABLE, true);
-    RENDERSTATE_PUSH(rwRENDERSTATEFOGENABLE,         false);
-    RENDERSTATE_PUSH(rwRENDERSTATEFOGCOLOR,          0);
-    RENDERSTATE_PUSH(rwRENDERSTATECULLMODE,          rwCULLMODECULLNONE);
-    RENDERSTATE_PUSH(rwRENDERSTATETEXTURERASTER,     0);
+    RENDERSTATE_PUSH(rwRENDERSTATEFOGENABLE, false);
+    RENDERSTATE_PUSH(rwRENDERSTATEFOGCOLOR, 0);
+    RENDERSTATE_PUSH(rwRENDERSTATECULLMODE, rwCULLMODECULLNONE);
+    RENDERSTATE_PUSH(rwRENDERSTATETEXTURERASTER, 0);
 };
 
 

@@ -10,16 +10,18 @@
 #include "Game/System/Misc/SoftwareReset.hpp"
 #include "Game/System/Misc/Timeout.hpp"
 #include "Game/System/Misc/PadConnectCheck.hpp"
-#include "Game/System/Movie/MovieID.hpp"
 #include "Game/System/Movie/MovieManager.hpp"
 #include "Game/System/Sound/GameSound.hpp"
 #include "Game/System/Texture/TextureManager.hpp"
 #include "Game/System/Text/GameText.hpp"
 #include "Game/ProcessList.hpp"
 #include "System/Common/Screen.hpp"
-#include "System/Common/File/FileID.hpp"
 #include "System/Common/Configure.hpp"
 #include "System/Common/SystemText.hpp"
+
+
+#define MVPATH_OP1 (MVPATH("OP_TMNT1.sfd"))
+#define MVPATH_OP2 (MVPATH("OP_TMNT2.sfd"))
 
 
 /*static*/ CProcess* CGameMainSequence::Instance(void)
@@ -35,7 +37,7 @@ CGameMainSequence::CGameMainSequence(void)
 , m_iLabelCurrent(PROCESSTYPES::LABEL_EOL)
 , m_param(nullptr)
 , m_fTime(0.0f)
-, m_movieId(MOVIEID::ID_OP_TMNT1)
+, m_movieId(MVPATH_OP1)
 {
     ;
 };
@@ -66,14 +68,15 @@ bool CGameMainSequence::OnAttach(const void* pParam)
 
     if (!CLoadingDisplay::Initialize(this))
         return false;
-
-    CDataLoader::Regist(FILEID::ID_STRINGS);
-    CDataLoader::Regist(FILEID::ID_FONT);
+    
+    CDataLoader::Regist(FPATH_LANG("Language/English/Text/Text.lpac"));
+    CDataLoader::Regist(FPATH("Common/Fonts/Fonts.lpac"));
+    
     CGameData::Initialize();
     EnableStickToDirButton(true);
 
     m_fTime = 0.0f;
-    m_movieId = MOVIEID::ID_OP_TMNT2;
+    m_movieId = MVPATH_OP2;
     m_step = STEP_LOAD_TEXTURE;
 
     return true;
@@ -212,7 +215,8 @@ int32 CGameMainSequence::Branch(int32 iLabel)
             if (idAreaNow == AREAID::HOME)
                 return PROCLABEL_SEQ_HOME;
             else
-                return (idAreaNow >= AREAID::NORMALMAX) ? PROCLABEL_SEQ_AREA : PROCLABEL_SEQ_AREAPLAY;        
+                return (idAreaNow >= AREAID::NORMALMAX) ? PROCLABEL_SEQ_AREA :
+                                                          PROCLABEL_SEQ_AREAPLAY;
         }
 		break;
 
@@ -223,7 +227,8 @@ int32 CGameMainSequence::Branch(int32 iLabel)
 #ifdef _DEBUG
         return PROCLABEL_SEQ_TITLE;
 #else /* _DEBUG */
-        return (CConfigure::GetLaunchMode() != TYPEDEF::CONFIG_LAUNCH_NORMAL ? PROCLABEL_SEQ_TITLE : PROCLABEL_SEQ_MOVIE);
+        return (CConfigure::GetLaunchMode() != TYPEDEF::CONFIG_LAUNCH_NORMAL ? PROCLABEL_SEQ_TITLE :
+                                                                               PROCLABEL_SEQ_MOVIE);
 #endif /* _DEBUG */
 
     case PROCLABEL_SEQ_TITLE:
@@ -252,7 +257,8 @@ int32 CGameMainSequence::Branch(int32 iLabel)
             switch (arearesult)
             {
             case CGamePlayResult::AREARESULT_GAMECLEAR:
-                return (CGameData::Record().Area().GetCurrentSelectedArea() == AREAID::ID_AREA58) ? PROCLABEL_SEQ_ENDING : PROCLABEL_SEQ_AREA;                
+                return (CGameData::Record().Area().GetCurrentSelectedArea() == AREAID::ID_AREA58) ? PROCLABEL_SEQ_ENDING :
+                                                                                                    PROCLABEL_SEQ_AREA;
 
             case CGamePlayResult::AREARESULT_GAMEOVER:
                 return PROCLABEL_SEQ_AREA;
@@ -298,10 +304,10 @@ void CGameMainSequence::PreMovie(void)
     CMovieManager::PreCreateMovieInstance(m_movieId);
     CScreenFade::BlackIn(0.0f);
 
-    if (m_movieId == MOVIEID::ID_OP_TMNT1)
-        m_movieId = MOVIEID::ID_OP_TMNT2;
+    if (MVNAME_EQUAL(m_movieId, MVPATH_OP1))
+        m_movieId = MVPATH_OP2;
     else
-        m_movieId = MOVIEID::ID_OP_TMNT1;
+        m_movieId = MVPATH_OP1;
 };
 
 

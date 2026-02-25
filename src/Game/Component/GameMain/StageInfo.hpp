@@ -6,7 +6,6 @@
 #include "GameTypes.hpp"
 
 #include "Game/Component/Enemy/EnemyID.hpp"
-#include "Game/System/Movie/MovieID.hpp"
 
 
 class CStageInfo
@@ -28,7 +27,7 @@ public:
     };
 
 public:
-    static int32 GetFileID(STAGEID::VALUE idStage);
+    static FNAME GetFileID(STAGEID::VALUE idStage);
     static MAPID::VALUE GetMapID(STAGEID::VALUE idStage);
     static int32 GetBgmNo(STAGEID::VALUE idStage);
     static AREAID::VALUE GetAreaID(STAGEID::VALUE idStage);
@@ -38,9 +37,9 @@ public:
     static float GetObjectSleepDistance(STAGEID::VALUE idStage);
     static ENEMYID::VALUE GetGaugeEnemyID(STAGEID::VALUE idStage, int32 iEnemyIndex);
     static bool IsBossGaugeNecessary(STAGEID::VALUE idStage);
-    static MOVIEID::VALUE GetStageInMovieID(STAGEID::VALUE idStage);
+    static MVNAME GetStageInMovieID(STAGEID::VALUE idStage);
     static bool IsPlayMovieOfStageIn(STAGEID::VALUE idStage);
-    static MOVIEID::VALUE GetStageOutMovieID(STAGEID::VALUE idStage);
+    static MVNAME GetStageOutMovieID(STAGEID::VALUE idStage);
     static bool IsPlayMovieOfStageOut(STAGEID::VALUE idStage);
     static IMPLEMENT GetImplementProgress(STAGEID::VALUE idStage);
 };

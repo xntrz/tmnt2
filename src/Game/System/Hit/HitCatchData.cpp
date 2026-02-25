@@ -191,13 +191,10 @@ const RwV3d* CHitCatchData::GetHitPos(void)
     case CHitAttackData::SHAPE_SPHERE:
         {
             const RwSphere* pSphere = m_pHitAttackData->GetSphere();
-
+            float fDist = m_shape.m_sphere.radius / (pSphere->radius + m_shape.m_sphere.radius);
+            
             Math::Vec3_Sub(&m_vHitPos, &pSphere->center, &m_shape.m_sphere.center);
-            Math::Vec3_Multiply(
-                &m_vHitPos,
-                &m_vHitPos,
-                m_shape.m_sphere.radius / (pSphere->radius + m_shape.m_sphere.radius)
-            );
+            Math::Vec3_Scale(&m_vHitPos, &m_vHitPos, fDist);
             Math::Vec3_Add(&m_vHitPos, &m_vHitPos, &m_shape.m_sphere.center);
         }
         break;
@@ -209,7 +206,7 @@ const RwV3d* CHitCatchData::GetHitPos(void)
             fDist = Clamp(fDist, 0.0f, 1.0f);
 
             Math::Vec3_Sub(&m_vHitPos, &pLine->end, &pLine->start);
-            Math::Vec3_Multiply(&m_vHitPos, &m_vHitPos, fDist);
+            Math::Vec3_Scale(&m_vHitPos, &m_vHitPos, fDist);
             Math::Vec3_Add(&m_vHitPos, &m_vHitPos, &pLine->start);
         }
         break;

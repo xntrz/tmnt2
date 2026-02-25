@@ -374,7 +374,7 @@ void CBaseFlyingEnemyChr::CMoveStatusObserver::Direction(const RwV3d* vecPos, co
 void CBaseFlyingEnemyChr::CMoveStatusObserver::Velocity(const RwV3d* vecPos, const RwV3d* vecAt)
 {
     RwMatrix matRot;
-    RwMatrixSetIdentityMacro(&matRot);
+    RwMatrixSetIdentity(&matRot);
     Math::Matrix_RotationYawPitchRoll(&matRot, m_fDirection, 0.0f, 0.0f);
 
     RwV3d vecVelocity = { 0.0f, 0.0f, m_fMoveSpeed };

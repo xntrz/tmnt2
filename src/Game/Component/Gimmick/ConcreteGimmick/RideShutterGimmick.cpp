@@ -35,7 +35,7 @@ CRideShutterGimmick::CRideShutterGimmick(const char* pszName, void* pParam)
     ASSERT(pModelAtari);
 
     RwMatrix mat;
-    RwMatrixSetIdentityMacro(&mat);
+    RwMatrixSetIdentity(&mat);
     CGimmickUtils::QuaternionToRotationMatrix(&mat, &pInitParam->m_quat);
 
     RwV3d vRotation = Math::VECTOR3_ZERO;

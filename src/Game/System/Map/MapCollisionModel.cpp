@@ -78,15 +78,15 @@ private:
     param.m_attribute           = MAPTYPES::ATTRIBUTE_UNKNOWN;
     param.m_fDistance           = TYPEDEF::FLOAT_MAX;
     param.m_pPrimitiveVelocity  = pWork->m_pPrimitiveVelocity;
-    param.m_pGeometry           = RpAtomicGetGeometryMacro(atomic);
-    param.m_mapobj.m_pLTM       = RwFrameGetLTM(RpAtomicGetFrameMacro(atomic));
+    param.m_pGeometry           = RpAtomicGetGeometry(atomic);
+    param.m_mapobj.m_pLTM       = RwFrameGetLTM(RpAtomicGetFrame(atomic));
     param.m_mapobj.m_vVelocity  = *pWork->m_pVelocity;
     param.m_mapobj.m_vRotate    = *pWork->m_pRotate;
     param.m_mapobj.m_type       = pWork->m_type;
     std::strcpy(param.m_mapobj.m_szGimmickObjName, pWork->m_szGimmickObjName);
 
     RwMatrix matInvLTM;
-    RwMatrixSetIdentityMacro(&matInvLTM);
+    RwMatrixSetIdentity(&matInvLTM);
     Math::Matrix_Invert(&matInvLTM, param.m_mapobj.m_pLTM);
 
     RwV3d vInvVel = Math::VECTOR3_ZERO;
@@ -154,15 +154,15 @@ private:
 {
     ASSERT(pszName);
     ASSERT(nMaterialID >= 0);
-    ASSERT(nMaterialID < RpGeometryGetNumMaterialsMacro(pGeometry));
+    ASSERT(nMaterialID < RpGeometryGetNumMaterials(pGeometry));
 
-    RpMaterial* pMaterial = RpGeometryGetMaterialMacro(pGeometry, nMaterialID);
+    RpMaterial* pMaterial = RpGeometryGetMaterial(pGeometry, nMaterialID);
     if (pMaterial)
     {
-        RwTexture* pMaterialTex = RpMaterialGetTextureMacro(pMaterial);
+        RwTexture* pMaterialTex = RpMaterialGetTexture(pMaterial);
         if (pMaterialTex)
         {
-            const char* pszTextureName = RwTextureGetNameMacro(pMaterialTex);
+            const char* pszTextureName = RwTextureGetName(pMaterialTex);
 
             ASSERT(pszTextureName);
             std::strcpy(pszName, pszTextureName);
@@ -174,9 +174,9 @@ private:
 /*static*/ void CMapCollisionModelContainer::GetMaterialColor(RwRGBA& rColor, int32 nMaterialID, RpGeometry* pGeometry)
 {
     ASSERT(nMaterialID >= 0);
-    ASSERT(nMaterialID < RpGeometryGetNumMaterialsMacro(pGeometry));
+    ASSERT(nMaterialID < RpGeometryGetNumMaterials(pGeometry));
 
-    rColor = RpGeometryGetMaterialMacro(pGeometry, nMaterialID)->color;
+    rColor = RpGeometryGetMaterial(pGeometry, nMaterialID)->color;
 };
 
 
@@ -563,8 +563,8 @@ bool CMapCollisionModelContainer::CheckModelCollision(RpIntersection* pIntersect
             continue;
 
         RpClump*  pClump  = pModelInfo->m_pClump;
-        RwFrame*  pFrame  = RpClumpGetFrameMacro(pClump);
-        RwMatrix* pMatrix = RwFrameGetMatrixMacro(pFrame);
+        RwFrame*  pFrame  = RpClumpGetFrame(pClump);
+        RwMatrix* pMatrix = RwFrameGetMatrix(pFrame);
 
         if (CheckModelBoundingSphere(&pMatrix->pos, pModelInfo->m_fRadius, pIntersection))
         {
@@ -587,14 +587,14 @@ bool CMapCollisionModelContainer::CheckModelCollision(RpIntersection* pIntersect
                 ASSERT(m_CollisionResult.m_mapobj.m_pLTM);
 
                 RwMatrix matLTM;
-                RwMatrixSetIdentityMacro(&matLTM);
+                RwMatrixSetIdentity(&matLTM);
                 std::memcpy(&matLTM, m_CollisionResult.m_mapobj.m_pLTM, sizeof(matLTM));
 
                 RwV3dTransformPoint(&m_CollisionResult.m_vClosestPt, &m_CollisionResult.m_vClosestPt, &matLTM);
                 matLTM.pos = Math::VECTOR3_ZERO;
                 RwV3dTransformPoint(&m_CollisionResult.m_vNormal, &m_CollisionResult.m_vNormal, &matLTM);
 
-                m_CollisionResult.m_mapobj.m_pLTM = RwFrameGetLTM(RpClumpGetFrameMacro(pClump));
+                m_CollisionResult.m_mapobj.m_pLTM = RwFrameGetLTM(RpClumpGetFrame(pClump));
 
                 bResult = true;
             };

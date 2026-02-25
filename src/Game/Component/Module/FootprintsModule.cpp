@@ -50,7 +50,7 @@ static_assert(COUNT_OF(s_aFootprintsInfo) == PLAYERID::ID_MAX, "update me");
 void CFootprintsModule::WORK::Clear(void)
 {
     m_vPosition = Math::VECTOR3_ZERO;
-    RwMatrixSetIdentityMacro(&m_matrix);
+    RwMatrixSetIdentity(&m_matrix);
     m_foottype = FOOTTYPE_LEFT;
     m_uAlphaBasis = 0xFF;
 };
@@ -66,8 +66,6 @@ CFootprintsModule::CFootprintsModule(CPlayerCharacter* pPlayerChr, const RwV2d* 
 , m_lastFoottype(FOOTTYPE_LEFT)
 , m_fTime(0.0f)
 {
-    ASSERT(m_pPlayerChr);
-    
     for (int32 i = 0; i < COUNT_OF(m_aWork); ++i)
     {
         m_aWork[i].Clear();
@@ -115,7 +113,7 @@ void CFootprintsModule::Run(void)
 
                 float fDirection = m_pPlayerChr->GetDirection();
 
-                if (m_lastFoottype)
+                if (m_lastFoottype == FOOTTYPE_RIGHT)
                 {
                     vPosition.x += m_fRadius * (Math::Sin(fDirection - MATH_PI05));
                     vPosition.z += m_fRadius * (Math::Cos(fDirection - MATH_PI05));                    
@@ -145,7 +143,7 @@ void CFootprintsModule::Run(void)
 
                 float fDirection = m_pPlayerChr->GetDirection();
 
-                if (m_lastFoottype)
+                if (m_lastFoottype == FOOTTYPE_RIGHT)
                 {
                     vPosition.x += m_fRadius * (Math::Sin(fDirection - MATH_PI05));
                     vPosition.z += m_fRadius * (Math::Cos(fDirection - MATH_PI05));
@@ -206,12 +204,9 @@ void CFootprintsModule::Stamp(const RwV3d* pvPosition, float fDirection, FOOTTYP
         
         RwV3d vAxisY = Math::VECTOR3_ZERO;
         Math::Vec3_Normalize(&vAxisY, &pCollisionResult->m_vNormal);
-
-        WORK* pWork = GetWork();
-        ASSERT(pWork);
         
         RwMatrix matView;
-        RwMatrixSetIdentityMacro(&matView);        
+        RwMatrixSetIdentity(&matView);
         Math::Matrix_Update(&matView,
                             &vAxisX,
                             &vAxisY,
@@ -219,10 +214,13 @@ void CFootprintsModule::Stamp(const RwV3d* pvPosition, float fDirection, FOOTTYP
                             &Math::VECTOR3_ZERO);
 
         RwMatrix matRotY;
-        RwMatrixSetIdentityMacro(&matRotY);
+        RwMatrixSetIdentity(&matRotY);
         Math::Matrix_RotateY(&matRotY, fDirection);
 
-        RwMatrixSetIdentityMacro(&pWork->m_matrix);
+        WORK* pWork = GetWork();
+        ASSERT(pWork);
+
+        RwMatrixSetIdentity(&pWork->m_matrix);
         Math::Matrix_Multiply(&pWork->m_matrix, &pWork->m_matrix, &matRotY);
         Math::Matrix_Multiply(&pWork->m_matrix, &pWork->m_matrix, &matView);
 
@@ -274,52 +272,46 @@ void CFootprintsModule::SetVertex(void)
         RwRGBA color = { 0xFF, 0xFF, 0xFF, 0xFF };
         color.alpha = it.m_uAlphaBasis;
         
-        float u0 = 1.0f;
-        float u1 = 0.0f;
+        float u0 = (it.m_foottype == FOOTTYPE_LEFT ? 0.0f : 1.0f);
+        float u1 = (it.m_foottype == FOOTTYPE_LEFT ? 1.0f : 0.0f);
 
-        if (!it.m_foottype)
-        {
-            u0 = 0.0f;
-            u1 = 1.0f;
-        };
+        RwIm3DVertex* pVertex = &m_aVertex[nVertexIndex];
 
-        RwIm3DVertex* pVertex = &m_aVertex[ nVertexIndex ];
+        RwIm3DVertexSetPos(&pVertex[0], aPosition[1].x, aPosition[1].y, aPosition[1].z);
+        RwIm3DVertexSetNormal(&pVertex[0], 0.0f, 0.0f, 0.0f);
+        RwIm3DVertexSetRGBA(&pVertex[0], color.red, color.green, color.blue, color.alpha);
+        RwIm3DVertexSetU(&pVertex[0], u1);
+        RwIm3DVertexSetV(&pVertex[0], 1.0f);
 
-        pVertex[0].objVertex = aPosition[1];
-        pVertex[0].objNormal = Math::VECTOR3_ZERO;
-        pVertex[0].color = RWRGBALONGEX(color);
-        pVertex[0].u = u1;
-        pVertex[0].v = 1.0f;
+        RwIm3DVertexSetPos(&pVertex[1], aPosition[0].x, aPosition[0].y, aPosition[0].z);
+        RwIm3DVertexSetNormal(&pVertex[1], 0.0f, 0.0f, 0.0f);
+        RwIm3DVertexSetRGBA(&pVertex[1], color.red, color.green, color.blue, color.alpha);
+        RwIm3DVertexSetU(&pVertex[1], u1);
+        RwIm3DVertexSetV(&pVertex[1], 0.0f);
 
-        pVertex[1].objVertex = aPosition[0];
-        pVertex[1].objNormal = Math::VECTOR3_ZERO;
-        pVertex[1].color = RWRGBALONGEX(color);
-        pVertex[1].u = u1;
-        pVertex[1].v = 0.0f;
+        RwIm3DVertexSetPos(&pVertex[2], aPosition[3].x, aPosition[3].y, aPosition[3].z);
+        RwIm3DVertexSetNormal(&pVertex[2], 0.0f, 0.0f, 0.0f);
+        RwIm3DVertexSetRGBA(&pVertex[2], color.red, color.green, color.blue, color.alpha);
+        RwIm3DVertexSetU(&pVertex[2], u0);
+        RwIm3DVertexSetV(&pVertex[2], 1.0f);
 
-        pVertex[2].objVertex = aPosition[3];
-        pVertex[2].objNormal = Math::VECTOR3_ZERO;
-        pVertex[2].color = RWRGBALONGEX(color);
-        pVertex[2].u = u0;
-        pVertex[2].v = 1.0f;
+        RwIm3DVertexSetPos(&pVertex[3], aPosition[3].x, aPosition[3].y, aPosition[3].z);
+        RwIm3DVertexSetNormal(&pVertex[3], 0.0f, 0.0f, 0.0f);
+        RwIm3DVertexSetRGBA(&pVertex[3], color.red, color.green, color.blue, color.alpha);
+        RwIm3DVertexSetU(&pVertex[3], u0);
+        RwIm3DVertexSetV(&pVertex[3], 1.0f);
 
-        pVertex[3].objVertex = aPosition[3];
-        pVertex[3].objNormal = Math::VECTOR3_ZERO;
-        pVertex[3].color = RWRGBALONGEX(color);
-        pVertex[3].u = u0;
-        pVertex[3].v = 1.0f;
+        RwIm3DVertexSetPos(&pVertex[4], aPosition[0].x, aPosition[0].y, aPosition[0].z);
+        RwIm3DVertexSetNormal(&pVertex[4], 0.0f, 0.0f, 0.0f);
+        RwIm3DVertexSetRGBA(&pVertex[4], color.red, color.green, color.blue, color.alpha);
+        RwIm3DVertexSetU(&pVertex[4], u1);
+        RwIm3DVertexSetV(&pVertex[4], 0.0f);
 
-        pVertex[4].objVertex = aPosition[0];
-        pVertex[4].objNormal = Math::VECTOR3_ZERO;
-        pVertex[4].color = RWRGBALONGEX(color);
-        pVertex[4].u = u1;
-        pVertex[4].v = 0.0f;
-
-        pVertex[5].objVertex = aPosition[2];
-        pVertex[5].objNormal = Math::VECTOR3_ZERO;
-        pVertex[5].color = RWRGBALONGEX(color);
-        pVertex[5].u = u0;
-        pVertex[5].v = 0.0f;
+        RwIm3DVertexSetPos(&pVertex[5], aPosition[2].x, aPosition[2].y, aPosition[2].z);
+        RwIm3DVertexSetNormal(&pVertex[5], 0.0f, 0.0f, 0.0f);
+        RwIm3DVertexSetRGBA(&pVertex[5], color.red, color.green, color.blue, color.alpha);
+        RwIm3DVertexSetU(&pVertex[5], u0);
+        RwIm3DVertexSetV(&pVertex[5], 0.0f);
 
         nVertexIndex += 6;
     };
@@ -334,7 +326,7 @@ void CFootprintsModule::DrawFootprints(void)
     RENDERSTATE_PUSH(rwRENDERSTATEFOGENABLE, false);
     RENDERSTATE_PUSH(rwRENDERSTATEVERTEXALPHAENABLE, true);
     RENDERSTATE_PUSH(rwRENDERSTATECULLMODE, rwCULLMODECULLNONE);
-    RENDERSTATE_PUSH(rwRENDERSTATETEXTURERASTER, (m_pTexture ? RwTextureGetRasterMacro(m_pTexture) : NULL));
+    RENDERSTATE_PUSH(rwRENDERSTATETEXTURERASTER, (m_pTexture ? RwTextureGetRaster(m_pTexture) : NULL));
 
     uint32 flags = rwIM3D_VERTEXRGBA
                  | rwIM3D_VERTEXXYZ
@@ -358,7 +350,7 @@ void CFootprintsModule::DrawFootprints(void)
 
 CFootprintsModule::WORK* CFootprintsModule::GetWork(void)
 {
-    WORK* pRet = nullptr;
+    WORK* pWork = nullptr;
     
     if (m_nDispNum >= COUNT_OF(m_aWork))
     {
@@ -368,7 +360,7 @@ CFootprintsModule::WORK* CFootprintsModule::GetWork(void)
         m_listWorkAlloc.erase(pNode);
         m_listWorkAlloc.push_front(pNode);
 
-        pRet = pNode;
+        pWork = pNode;
     }
     else
     {
@@ -378,14 +370,12 @@ CFootprintsModule::WORK* CFootprintsModule::GetWork(void)
         m_listWorkPool.erase(pNode);
         m_listWorkAlloc.push_front(pNode);
 
-        pRet = pNode;
+        pWork = pNode;
         ++m_nDispNum;
     };
 
-    ASSERT(pRet);
+    if (pWork)
+        pWork->m_uAlphaBasis = 0xFF;
 
-    if (pRet)
-        pRet->m_uAlphaBasis = 0xFF;
-
-    return pRet;
+    return pWork;
 };

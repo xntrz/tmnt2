@@ -7,7 +7,7 @@ class CPCGraphicsDevice;
 class CPCFrameTimer
 {
 public:
-    CPCFrameTimer(CPCGraphicsDevice& device);
+    CPCFrameTimer(const CPCGraphicsDevice& device);
     virtual ~CPCFrameTimer(void);
     void Update(void);
     void Sync(void);

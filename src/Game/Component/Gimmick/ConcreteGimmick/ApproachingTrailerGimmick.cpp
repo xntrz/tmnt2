@@ -262,7 +262,7 @@ bool CApproachingTrailerGimmick::CAttackAimingShot::Move(void)
         RwMatrix* pModeling = m_pTrailer->GetNormalModel()->GetMatrix(CNormalGimmickModel::MODELTYPE_DRAW_NORMAL);
         
         RwMatrix ltm;
-        RwMatrixSetIdentityMacro(&ltm);
+        RwMatrixSetIdentity(&ltm);
         Math::Matrix_Invert(&ltm, pModeling);
 
         RwV3d vLocal = Math::VECTOR3_ZERO;
@@ -382,7 +382,7 @@ bool CApproachingTrailerGimmick::CAttackCenterLinearShot::Move(void)
         RwMatrix* pModeling = m_pTrailer->GetNormalModel()->GetMatrix(CNormalGimmickModel::MODELTYPE_DRAW_NORMAL);
 
         RwMatrix ltm;
-        RwMatrixSetIdentityMacro(&ltm);
+        RwMatrixSetIdentity(&ltm);
         Math::Matrix_Invert(&ltm, pModeling);
 
         RwV3d vLocal = Math::VECTOR3_ZERO;
@@ -462,7 +462,7 @@ bool CApproachingTrailerGimmick::CAttackSurroundShot::Move(void)
     RwMatrix* pModeling = m_pTrailer->GetNormalModel()->GetMatrix(CNormalGimmickModel::MODELTYPE_DRAW_NORMAL);
 
     RwMatrix ltm;
-    RwMatrixSetIdentityMacro(&ltm);
+    RwMatrixSetIdentity(&ltm);
     Math::Matrix_Invert(&ltm, pModeling);
 
     RwV3d vLocal = Math::VECTOR3_ZERO;
@@ -550,7 +550,7 @@ bool CApproachingTrailerGimmick::CAttackThreePointShot::Move(void)
         RwMatrix* pModeling = m_pTrailer->GetNormalModel()->GetMatrix(CNormalGimmickModel::MODELTYPE_DRAW_NORMAL);
 
         RwMatrix ltm;
-        RwMatrixSetIdentityMacro(&ltm);
+        RwMatrixSetIdentity(&ltm);
         Math::Matrix_Invert(&ltm, pModeling);
 
         RwV3d vLocal = Math::VECTOR3_ZERO;

@@ -863,7 +863,7 @@ void CThrowingGimmick::updateKagaribiFireEffect(void)
         m_pThrowingMove->GetPosition(&vPosition);
         
         RwMatrix matrix;
-        RwMatrixSetIdentityMacro(&matrix);
+        RwMatrixSetIdentity(&matrix);
         Math::Matrix_Rotate(&matrix, &vRotation);
         
         RwV3d vEffectOfs = { 0.0f, 2.0f, 0.0f };

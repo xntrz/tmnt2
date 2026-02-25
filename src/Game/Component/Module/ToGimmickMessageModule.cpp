@@ -138,7 +138,7 @@ bool CToGimmickMessageModule::DirectionCheck(void)
     Math::Vec3_Normalize(&vToGimmickDirection, &vToGimmickDirection);
 
     RwMatrix matRotY;
-    RwMatrixSetIdentityMacro(&matRotY);
+    RwMatrixSetIdentity(&matRotY);
     Math::Matrix_RotateY(&matRotY, m_pPlayerCharacter->GetDirection());
 
     RwV3d vCharacterDirection = Math::VECTOR3_AXIS_Z;
@@ -302,7 +302,7 @@ bool CConsoleCharacterToGimmickMessageModule::DirectionCheck(void)
     Math::Vec3_Normalize(&vecConsoleDir, &vecConsoleDir);
 
     RwMatrix matRotY;
-    RwMatrixSetIdentityMacro(&matRotY);
+    RwMatrixSetIdentity(&matRotY);
     Math::Matrix_RotateY(&matRotY, m_pPlayerCharacter->GetDirection());
 
     RwV3d vecChrDir = Math::VECTOR3_AXIS_Z;

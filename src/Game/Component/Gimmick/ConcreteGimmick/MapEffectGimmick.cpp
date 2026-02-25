@@ -183,7 +183,7 @@ CMapEffectGimmick::CMapEffectGimmick(const char* pszName, void* pParam)
     m_vPosition = pBasic->m_vPosition;
     
     RwMatrix matrix;
-    RwMatrixSetIdentityMacro(&matrix);
+    RwMatrixSetIdentity(&matrix);
     CGimmickUtils::QuaternionToRotationMatrix(&matrix, &pBasic->m_quat);
     RwV3dTransformPoint(&m_vDirection, &Math::VECTOR3_AXIS_Z, &matrix);
     

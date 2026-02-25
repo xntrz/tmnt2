@@ -1,12 +1,15 @@
 #include "GameLoader.hpp"
+
+#include "Game/Component/Enemy/Enemy.hpp"
+#include "Game/System/DataLoader/DataLoader.hpp"
+
 #include "LoadInfo/PlayerLoadInfo.hpp"
 #include "LoadInfo/RidePlayerLoadInfo.hpp"
-#include "LoadInfo/StageCommonLoadInfo.hpp"
 #include "LoadInfo/StageLoadInfo.hpp"
 #include "LoadInfo/EnbuLoadInfo.hpp"
-
-#include "System/Common/File/FileID.hpp"
-#include "Game/System/DataLoader/DataLoader.hpp"
+#include "LoadInfo/EnemyLoadInfo.hpp"
+#include "LoadInfo/EffectLoadInfo.hpp"
+#include "LoadInfo/MapLoadInfo.hpp"
 
 
 /*static*/ CGameLoader& CGameLoader::Instance(void)
@@ -37,26 +40,10 @@ void CGameLoader::loadObjectRecursive(CGameObjLoadInfo& rInfo, int32 nDepth)
     for (int32 i = 0; i < rInfo.GetDependObjInfoNum(); ++i)
         loadObjectRecursive(rInfo.GetDependObjInfo(i), nDepth + 1);
 
-    switch (m_mode)
-    {
-    case MODE_NORMAL:
-        {
-            int32 fid = rInfo.GetFileID();
-            if (fid != FILEID::ID_INVALID)
-                CDataLoader::Regist(fid);
-        }
-        break;
-
-    case MODE_MAKE_INTERGRAL_LIST:
-        {
-            ASSERT(false);
-        }
-        break;
-
-    default:
-        ASSERT(false);
-        break;
-    };
+    FNAME fileID = rInfo.GetFileID();
+    
+    if (!FNAME_EQUAL(fileID, FNAME_INVALID))
+        CDataLoader::Regist(fileID);
 };
 
 
@@ -103,17 +90,28 @@ void CGameLoader::loadObjectRecursive(CGameObjLoadInfo& rInfo, int32 nDepth)
 
 /*static*/ void CGameLoader::LoadEnemy(ENEMYID::VALUE idEnemy)
 {
-    ;
+    int32 i = 0;
+    EFFECTID::VALUE idEffect = CEnemy::GetNeededEffect(idEnemy, i);
+    while (idEffect != EFFECTID::ID_UNKNOWN)
+    {
+        LoadEffect(idEffect);
+        idEffect = CEnemy::GetNeededEffect(idEnemy, ++i);
+    };
+
+    CEnemyLoadInfo info(idEnemy);
+    Instance().loadObjectRecursive(info);
 };
 
 
 /*static*/ void CGameLoader::LoadEffect(EFFECTID::VALUE idEffect)
 {
-    ;
+    CEffectLoadInfo info(idEffect);
+    Instance().loadObjectRecursive(info);
 };
 
 
 /*static*/ void CGameLoader::LoadMap(MAPID::VALUE idMap)
 {
-    ;
+    CMapLoadInfo info(idMap);
+    Instance().loadObjectRecursive(info);
 };

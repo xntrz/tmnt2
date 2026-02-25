@@ -128,7 +128,7 @@ C057UtromSaucer::CFireStatusObserver::Observing(void) /*override*/
     float fPith = m_vecOrderAt.x;
 
     RwMatrix matRot;
-    RwMatrixSetIdentityMacro(&matRot);
+    RwMatrixSetIdentity(&matRot);
     Math::Matrix_RotationYawPitchRoll(&matRot, fYaw, fPith, 0.0f);
 
     RwV3d vecDir = Math::VECTOR3_AXIS_Z;
@@ -210,7 +210,7 @@ C057UtromSaucer::CDeathStatusObserver::Observing(void) /*override*/
         if (hEffect)
         {
             RwMatrix matRot;
-            RwMatrixSetIdentityMacro(&matRot);
+            RwMatrixSetIdentity(&matRot);
             Math::Matrix_RotationYawPitchRoll(&matRot, 0.0f, -MATH_DEG2RAD(90.0f), 0.0f);
 
             CEffectManager::SetDirection(hEffect, &matRot);

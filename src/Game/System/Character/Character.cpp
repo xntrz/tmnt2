@@ -932,7 +932,7 @@ void CCharacter::SetDirectionFromVector(const RwV3d* pvTargetDirection)
     if (Math::Vec3_Length(&vTargetDirection) > 0.0f)
     {
         RwMatrix matrix;        
-        RwMatrixSetIdentityMacro(&matrix);
+        RwMatrixSetIdentity(&matrix);
         Math::Matrix_RotateY(&matrix, m_fDirection);
         
         RwV3d vDirection = Math::VECTOR3_ZERO;
@@ -964,7 +964,7 @@ void CCharacter::SetDirectionFromModelRotate(void)
 void CCharacter::RotateVectorByDirection(RwV3d* pvOut, const RwV3d* pvIn) const
 {
     RwMatrix matrixRotY;    
-    RwMatrixSetIdentityMacro(&matrixRotY);
+    RwMatrixSetIdentity(&matrixRotY);
     
     Math::Matrix_RotateY(&matrixRotY, m_fDirection);
     RwV3dTransformVector(pvOut, pvIn, &matrixRotY);

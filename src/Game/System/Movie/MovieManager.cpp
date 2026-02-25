@@ -3,6 +3,7 @@
 #include "MovieText.hpp"
 
 #include "Game/System/DataLoader/DataLoader.hpp"
+#include "System/Common/File/FileData.hpp"
 #include "System/Common/Configure.hpp"
 #include "System/Common/Movie.hpp"
 
@@ -13,8 +14,8 @@
 #endif
 
 
-static CMovie*          s_pMovie  = nullptr;
-static MOVIEID::VALUE   s_movieId = MOVIEID::ID_INVALID;
+/*static*/ CMovie* CMovieManager::s_pMovie = nullptr;
+/*static*/ MVNAME CMovieManager::s_preCreateMvName = MVNAME_INVALID;
 
 
 /*static*/ void CMovieManager::Initialize(void)
@@ -29,39 +30,35 @@ static MOVIEID::VALUE   s_movieId = MOVIEID::ID_INVALID;
 };
 
 
-/*static*/ void CMovieManager::PreCreateMovieInstance(MOVIEID::VALUE movieId)
+/*static*/ void CMovieManager::PreCreateMovieInstance(MVNAME mvname)
 {
-    ASSERT(CMovieDataManager::IsValidMovieID(movieId));
+    ASSERT(CMovieDataManager::IsValidMovie(mvname));
 
-    if (!CMovieDataManager::IsValidMovieID(movieId))
+    if (!CMovieDataManager::IsValidMovie(mvname))
     {
         s_pMovie = nullptr;
         return;
     };
 
-    s_movieId = movieId;
+    s_preCreateMvName = mvname;
 
     ASSERT(!s_pMovie);
 
-    int32 width       = 640;
-    int32 height      = 448;
-    int32 bps         = ((1024 * 512) * 4);
-    bool  bUsePalMode = false;
-
+    bool bUsePalMode = false;
 #ifdef TMNT2_BUILD_EU
     if (CConfigure::GetTVMode() == TYPEDEF::CONFIG_TV_PAL)
         bUsePalMode = true;
 #endif /* TMNT2_BUILD_EU */
 
 #ifdef TARGET_PC
-    s_pMovie = new CPCMovie(width, height, bps, bUsePalMode);
+    s_pMovie = new CPCMovie(640, 448, MV_BPS, bUsePalMode);
 #else
 #error Not implemented for current target
 #endif
 
 #ifdef TMNT2_BUILD_EU
     CMovieText::Initialize();
-    CMovieText::LoadFor(movieId);
+    CMovieText::LoadFor(mvname);
 #endif /* TMNT2_BUILD_EU */
 };
 
@@ -79,8 +76,8 @@ static MOVIEID::VALUE   s_movieId = MOVIEID::ID_INVALID;
         delete s_pMovie;
         s_pMovie = nullptr;
     };
-    
-    s_movieId = MOVIEID::ID_INVALID;
+
+    s_preCreateMvName = MVNAME_INVALID;
 };
 
 
@@ -90,9 +87,9 @@ static MOVIEID::VALUE   s_movieId = MOVIEID::ID_INVALID;
 };
 
 
-/*static*/ MOVIEID::VALUE CMovieManager::GetMovieID(void)
+/*static*/ MVNAME CMovieManager::GetMovieID(void)
 {
-    return s_movieId;
+    return s_preCreateMvName;
 };
 
 
@@ -117,10 +114,26 @@ static MOVIEID::VALUE   s_movieId = MOVIEID::ID_INVALID;
     if (!s_pMovie)
         return;
 
-    int32 partitionId = CMovieDataManager::GetPartitionID(s_movieId);
-    int32 fileId      = CMovieDataManager::GetFileID(s_movieId);
+#ifdef TMNT2_IDFSYST
+    const CMovieDataManager::MOVIE_DATA* pMovieData = CMovieDataManager::GetMovieData(s_preCreateMvName);
+    ASSERT(pMovieData != nullptr);
 
-    s_pMovie->StartAfs(partitionId, fileId);
+    s_pMovie->StartAfs(pMovieData->ptid, pMovieData->fid);
+#else /* TMNT2_IDFSYST */
+    if (CFileAccessFname::IsExist(s_preCreateMvName))
+    {
+        s_pMovie->StartFname(s_preCreateMvName);
+        OUTPUT("Playing \"%s\" movie from disc\n", s_preCreateMvName);
+    }
+    else
+    {        
+        const CMovieDataManager::MOVIE_DATA* pMovieData = CMovieDataManager::GetMovieDataName(s_preCreateMvName);
+        ASSERT(pMovieData != nullptr);
+
+        s_pMovie->StartAfs(pMovieData->ptid, pMovieData->fid);
+        OUTPUT("Playing \"%s\" movie from AFS\n", s_preCreateMvName);
+    };
+#endif /* TMNT2_IDFSYST */
     
 #ifdef TMNT2_BUILD_EU
     CMovieText::OnLoadEnd();

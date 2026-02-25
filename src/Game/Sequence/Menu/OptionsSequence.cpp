@@ -17,7 +17,6 @@
 #include "System/Common/Controller.hpp"
 #include "System/Common/Sprite.hpp"
 #include "System/Common/System2D.hpp"
-#include "System/Common/File/FileID.hpp"
 #include "System/Common/RenderState.hpp"
 #include "System/Common/Screen.hpp"
 
@@ -3216,7 +3215,7 @@ bool COptionsSequence::OnAttach(const void* pParam)
         s_pOptions->Attach();
     };
 
-    return CAnim2DSequence::OnAttach(FILEID::ID_OPTIONS_PS2);
+    return CAnim2DSequence::OnAttach(FPATH("Common/Menu/Option/Options_PS2.lpac"));
 };
 
 

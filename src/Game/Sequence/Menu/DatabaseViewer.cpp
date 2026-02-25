@@ -16,14 +16,13 @@
 #include "System/Common/Controller.hpp"
 #include "System/Common/Sprite.hpp"
 #include "System/Common/System2D.hpp"
-#include "System/Common/File/FileID.hpp"
 #include "System/Common/RenderState.hpp"
 #include "System/Common/Screen.hpp"
 
 
 struct DBVIEWERINFO
 {
-    FILEID::VALUE fileId;
+    FNAME         fileId;
     int32         numTexture;
     const char*   pszTxdName;
     const char*   pszTexPrefix;
@@ -32,62 +31,62 @@ struct DBVIEWERINFO
 
 static const DBVIEWERINFO s_aDBViewerInfo[] =
 {
-    { FILEID::ID_INVALID,       -1, nullptr,    nullptr },
+    { FNAME_INVALID,                                            -1,     nullptr,        nullptr     },
 
     //
     //  Characters
     //
-    { FILEID::ID_DB_LEO_A,      10, "db_leo_A",     "db_ch_la_" },
-    { FILEID::ID_DB_LEO_B,      10, "db_leo_B",     "db_ch_lb_" },
-    { FILEID::ID_DB_SLA,        10, "db_sla",       "db_ch_sl_" },
-    { FILEID::ID_DB_RAP_A,      10, "db_rap_A",     "db_ch_ra_" },
-    { FILEID::ID_DB_RAP_B,      10, "db_rap_B",     "db_ch_rb_" },
-    { FILEID::ID_DB_CAS,        10, "db_cas",       "db_ch_ca_" },
-    { FILEID::ID_DB_MIC_A,      10, "db_mic_A",     "db_ch_ma_" },
-    { FILEID::ID_DB_MIC_B,      10, "db_mic_B",     "db_ch_mb_" },
-    { FILEID::ID_DB_KAR,        10, "db_kar",       "db_ch_ka_" },
-    { FILEID::ID_DB_DON_A,      10, "db_don_A",     "db_ch_da_" },
-    { FILEID::ID_DB_DON_B,      10, "db_don_B",     "db_ch_db_" },
-    { FILEID::ID_DB_SPL,        10, "db_spl",       "db_ch_sp_" },
-    { FILEID::ID_DB_APL,        10, "db_apl",       "db_ch_ap_" },
-    { FILEID::ID_DB_MIYAMOTO,   2,  "db_miyamoto",  "db_en_mi_" },
+    { FPATH("Common/Menu/Database/Character/DB_Leo_A.lpac"),    10,     "db_leo_A",     "db_ch_la_" },
+    { FPATH("Common/Menu/Database/Character/DB_Leo_B.lpac"),    10,     "db_leo_B",     "db_ch_lb_" },
+    { FPATH("Common/Menu/Database/Character/DB_Sla.lpac"),      10,     "db_sla",       "db_ch_sl_" },
+    { FPATH("Common/Menu/Database/Character/DB_Rap_A.lpac"),    10,     "db_rap_A",     "db_ch_ra_" },
+    { FPATH("Common/Menu/Database/Character/DB_Rap_B.lpac"),    10,     "db_rap_B",     "db_ch_rb_" },
+    { FPATH("Common/Menu/Database/Character/DB_Cas.lpac"),      10,     "db_cas",       "db_ch_ca_" },
+    { FPATH("Common/Menu/Database/Character/DB_Mic_A.lpac"),    10,     "db_mic_A",     "db_ch_ma_" },
+    { FPATH("Common/Menu/Database/Character/DB_Mic_B.lpac"),    10,     "db_mic_B",     "db_ch_mb_" },
+    { FPATH("Common/Menu/Database/Character/DB_Kar.lpac"),      10,     "db_kar",       "db_ch_ka_" },
+    { FPATH("Common/Menu/Database/Character/DB_Don_A.lpac"),    10,     "db_don_A",     "db_ch_da_" },
+    { FPATH("Common/Menu/Database/Character/DB_Don_B.lpac"),    10,     "db_don_B",     "db_ch_db_" },
+    { FPATH("Common/Menu/Database/Character/DB_Spl.lpac"),      10,     "db_spl",       "db_ch_sp_" },
+    { FPATH("Common/Menu/Database/Character/DB_Apl.lpac"),      10,     "db_apl",       "db_ch_ap_" },
+    { FPATH("Common/Menu/Database/Enemy/DB_Miyamoto.lpac"),      2,     "db_miyamoto",  "db_en_mi_" },
 
     //
     //  Enemies
     //
-    { FILEID::ID_DB_SHREDDER,   10, "db_shredder",  "db_en_sh_" },
-    { FILEID::ID_DB_DORAKO,     2,  "db_dorako",    "db_en_do_" },
-    { FILEID::ID_DB_RATS,       2,  "db_rats",      "db_en_ra_" },
-    { FILEID::ID_DB_TRAXIMUS,   2,  "db_traximus",  "db_en_tr_" },
-    { FILEID::ID_DB_LEATHER,    2,  "db_leather",   "db_en_le_" },
-    { FILEID::ID_DB_FOOT,       2,  "db_foot",      "db_en_el_" },
-    { FILEID::ID_DB_SPASMO,     2,  "db_spasmo",    "db_en_sp_" },
-    { FILEID::ID_DB_HUN,        2,  "db_hun",       "db_en_hu_" },
-    { FILEID::ID_DB_ULTIMATE,   2,  "db_ultimate",  "db_en_ul_" },
-    { FILEID::ID_DB_ZAKO_A,     10, "db_zako_A",    "db_en_za_" },
-    { FILEID::ID_DB_ZAKO_B,     10, "db_zako_B",    "db_en_zb_" },
-    { FILEID::ID_DB_OTHERS,     10, "db_others",    "db_en_ot_" },
+    { FPATH("Common/Menu/Database/Enemy/DB_Shredder.lpac"),     10,     "db_shredder",  "db_en_sh_" },
+    { FPATH("Common/Menu/Database/Enemy/DB_Dorako.lpac"),        2,     "db_dorako",    "db_en_do_" },
+    { FPATH("Common/Menu/Database/Enemy/DB_Rats.lpac"),          2,     "db_rats",      "db_en_ra_" },
+    { FPATH("Common/Menu/Database/Enemy/DB_Traximus.lpac"),      2,     "db_traximus",  "db_en_tr_" },
+    { FPATH("Common/Menu/Database/Enemy/DB_Leather.lpac"),       2,     "db_leather",   "db_en_le_" },
+    { FPATH("Common/Menu/Database/Enemy/DB_Foot.lpac"),          2,     "db_foot",      "db_en_el_" },
+    { FPATH("Common/Menu/Database/Enemy/DB_Spasmo.lpac"),        2,     "db_spasmo",    "db_en_sp_" },
+    { FPATH("Common/Menu/Database/Enemy/DB_Hun.lpac"),           2,     "db_hun",       "db_en_hu_" },
+    { FPATH("Common/Menu/Database/Enemy/DB_Ultimate.lpac"),      2,     "db_ultimate",  "db_en_ul_" },
+    { FPATH("Common/Menu/Database/Enemy/DB_Zako_A.lpac"),       10,     "db_zako_A",    "db_en_za_" },
+    { FPATH("Common/Menu/Database/Enemy/DB_Zako_B.lpac"),       10,     "db_zako_B",    "db_en_zb_" },
+    { FPATH("Common/Menu/Database/Enemy/DB_Others.lpac"),       10,     "db_others",    "db_en_ot_" },
 
     //
     //  Background arts
     //
-    { FILEID::ID_DB_NY,         5,  "db_ny",        "db_bg_ny_" },
-    { FILEID::ID_DB_DHOONIB,    5,  "db_dhoonib",   "db_bg_dh_" },
-    { FILEID::ID_DB_JAPAN,      5,  "db_japan",     "db_bg_ja_" },
-    { FILEID::ID_DB_KURAIYAMA,  5,  "db_kuraiyama", "db_bg_ku_" },
-    { FILEID::ID_DB_DIMENSION,  5,  "db_dimension", "db_bg_bn_" },
-    { FILEID::ID_DB_VEHICLE,    10, "db_vehicle",   "db_bg_ve_" },
-    { FILEID::ID_DB_ANIME,      10, "db_anime",     "db_bg_sb_" },
-    { FILEID::ID_DB_CG,         10, "db_cg",        "db_bg_cg_" },
+    { FPATH("Common/Menu/Database/BG/DB_NY.lpac"),               5,     "db_ny",        "db_bg_ny_" },
+    { FPATH("Common/Menu/Database/BG/DB_DHoonib.lpac"),          5,     "db_dhoonib",   "db_bg_dh_" },
+    { FPATH("Common/Menu/Database/BG/DB_Japan.lpac"),            5,     "db_japan",     "db_bg_ja_" },
+    { FPATH("Common/Menu/Database/BG/DB_Kuraiyama.lpac"),        5,     "db_kuraiyama", "db_bg_ku_" },
+    { FPATH("Common/Menu/Database/BG/DB_Dimension.lpac"),        5,     "db_dimension", "db_bg_bn_" },
+    { FPATH("Common/Menu/Database/BG/DB_Vehicle.lpac"),         10,     "db_vehicle",   "db_bg_ve_" },
+    { FPATH("Common/Menu/Database/BG/DB_Anime.lpac"),           10,     "db_anime",     "db_bg_sb_" },
+    { FPATH("Common/Menu/Database/BG/DB_CG.lpac"),              10,     "db_cg",        "db_bg_cg_" },
 
     //
     //  Others
     //
-    { FILEID::ID_DB_PLAY_A,     8,  "db_play_A",    "db_et_pa_" },
-    { FILEID::ID_DB_PLAY_B,     12, "db_play_B",    "db_et_pb_" },
-    { FILEID::ID_DB_PLAY_C,     10, "db_play_C",    "db_et_pc_" },
-    { FILEID::ID_DB_PLAY_D,     11, "db_play_D",    "db_et_pd_" },
-    { FILEID::ID_DB_GALLERY,    11, "db_gallery",   "db_et_ga_" },
+    { FPATH("Common/Menu/Database/Etc/DB_Play_A.lpac"),          8,     "db_play_A",    "db_et_pa_" },
+    { FPATH("Common/Menu/Database/Etc/DB_Play_B.lpac"),         12,     "db_play_B",    "db_et_pb_" },
+    { FPATH("Common/Menu/Database/Etc/DB_Play_C.lpac"),         10,     "db_play_C",    "db_et_pc_" },
+    { FPATH("Common/Menu/Database/Etc/DB_Play_D.lpac"),         11,     "db_play_D",    "db_et_pd_" },
+    { FPATH("Common/Menu/Database/Etc/DB_Gallery.lpac"),        11,     "db_gallery",   "db_et_ga_" },
 };
 
 
@@ -174,23 +173,21 @@ CDatabaseViewer_Container::~CDatabaseViewer_Container(void)
 void CDatabaseViewer_Container::Initialize(void)
 {
     m_iDbViewerNo = CDatabaseSequence::GetDBViewerNo();
-    ASSERT(m_iDbViewerNo >= 0);
-    ASSERT(m_iDbViewerNo < COUNT_OF(s_aDBViewerInfo));
 
-    CDataLoader::Regist(s_aDBViewerInfo[m_iDbViewerNo].fileId);
+    CDataLoader::Regist(DBViewerInfo(m_iDbViewerNo).fileId);
 
-    m_iTexNum               = s_aDBViewerInfo[m_iDbViewerNo].numTexture;
-    m_bSettingFlag          = false;
-    m_eMovedir              = MOVEDIR_NONE;
-    m_iImgCursor            = 0;
-    m_bFlagImgChange        = false;
-    m_bFlagImgZoom          = false;
-    m_vImgPos               = Math::VECTOR2_ZERO;
-    m_bFlagCancelZoom       = false;
-    m_uAppearAnimCnt        = 0;
-    m_uArrowAnimCnt         = 0;
+    m_iTexNum = DBViewerInfo(m_iDbViewerNo).numTexture;
+    m_bSettingFlag = false;
+    m_eMovedir = MOVEDIR_NONE;
+    m_iImgCursor = 0;
+    m_bFlagImgChange = false;
+    m_bFlagImgZoom = false;
+    m_vImgPos = Math::VECTOR2_ZERO;
+    m_bFlagCancelZoom = false;
+    m_uAppearAnimCnt = 0;
+    m_uArrowAnimCnt = 0;
     m_bFlagArrowAnimReverse = false;
-    m_fImageZoom            = 1.0f;
+    m_fImageZoom = 1.0f;
 
     if (!CGameData::Record().Database().IsItemRead(DBITEMID::VALUE(m_iDbViewerNo)))
         CGameData::Record().Database().SetItemRead(DBITEMID::VALUE(m_iDbViewerNo));
@@ -343,16 +340,8 @@ bool CDatabaseViewer_Container::Run(void)
                 CGameSound::PlaySE(SDCODE_SE(0x1001));
                 m_bFlagCancelZoom = true;
                 m_uCancelAnimCnt = 0;
-
-                float x = m_vImgPos.x;
-                if (x < 0.0f)
-                    x = -x;
-                
-                float y = m_vImgPos.y;
-                if (y < 0.0f)
-                    y = -y;
-
-                m_vCancelStartPos = { x , y };                
+                m_vCancelStartPos = { std::fabs(m_vImgPos.x),
+                                      std::fabs(m_vImgPos.y) };
             };
         };
     }

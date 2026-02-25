@@ -350,7 +350,7 @@ void CAreaPlaySequence::callUnlockSequence(void)
 };
 
 
-void CAreaPlaySequence::callMovieSequence(MOVIEID::VALUE idMovie)
+void CAreaPlaySequence::callMovieSequence(MVNAME mvname)
 {
 #ifdef _DEBUG
     if (m_bSkipAllMovies)
@@ -358,6 +358,6 @@ void CAreaPlaySequence::callMovieSequence(MOVIEID::VALUE idMovie)
 #endif /* _DEBUG */
     
     CScreenFade::BlackIn(0.0f);
-    Call(PROCLABEL_SEQ_MOVIE, reinterpret_cast<const void*>(idMovie));
+    Call(PROCLABEL_SEQ_MOVIE, reinterpret_cast<const void*>(mvname));
 };
 

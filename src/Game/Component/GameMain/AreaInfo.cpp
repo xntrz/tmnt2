@@ -180,80 +180,80 @@ static const AREAINFO& AreaInfo(AREAID::VALUE idArea)
 };
 
 
-/*static*/ MOVIEID::VALUE CAreaInfo::GetAreaOutMovieID(AREAID::VALUE idArea)
+/*static*/ MVNAME CAreaInfo::GetAreaOutMovieID(AREAID::VALUE idArea)
 {
     switch (idArea)
     {
     case AREAID::ID_AREA02:
-        return MOVIEID::VALUE(5);
+        return MVPATH("m02n02.sfd");
 
     case AREAID::ID_AREA06:
-        return MOVIEID::VALUE(9);
+        return MVPATH("m06r01.sfd");
 
     case AREAID::ID_AREA11:
-        return MOVIEID::VALUE(12);
+        return MVPATH("m11j01.sfd");
 
     case AREAID::ID_AREA14:
-        return MOVIEID::VALUE(14);
+        return MVPATH("m14n01.sfd");
 
     case AREAID::ID_AREA21:
-        return MOVIEID::VALUE(23);
+        return MVPATH("m21n02.sfd");
 
     case AREAID::ID_AREA24:
-        return MOVIEID::VALUE(25);
+        return MVPATH("m24n02.sfd");
 
     case AREAID::ID_AREA27:
     case AREAID::ID_AREA28:
-        return MOVIEID::VALUE(27);
+        return MVPATH("m27n01.sfd");
 
     case AREAID::ID_AREA29:
-        return MOVIEID::VALUE(29);
+        return MVPATH("m29n02.sfd");
 
     case AREAID::ID_AREA30:
-        return MOVIEID::VALUE(31);
+        return MVPATH("m30nb01.sfd");
 
     case AREAID::ID_AREA31:
-        return MOVIEID::VALUE(33);
+        return MVPATH("m31nb01.sfd");
 
     case AREAID::ID_AREA32:
-        return MOVIEID::VALUE(34);
+        return MVPATH("m32r01.sfd");
 
     case AREAID::ID_AREA38:
-        return MOVIEID::VALUE(37);
+        return MVPATH("m38nb02.sfd");
 
     case AREAID::ID_AREA40:
-        return MOVIEID::VALUE(40);
+        return MVPATH("m40ob02.sfd");
 
     case AREAID::ID_AREA42:
-        return MOVIEID::VALUE(43);
+        return MVPATH("m42nb01.sfd");
 
     case AREAID::ID_AREA44:
-        return MOVIEID::VALUE(46);
+        return MVPATH("m44nb01.sfd");
 
     case AREAID::ID_AREA45:
-        return MOVIEID::VALUE(48);
+        return MVPATH("m45n02.sfd");
 
     case AREAID::ID_AREA46:
-        return MOVIEID::VALUE(49);
+        return MVPATH("m46r01.sfd");
 
     case AREAID::ID_AREA47:
-        return MOVIEID::VALUE(51);
+        return MVPATH("m47ob02.sfd");
 
     case AREAID::ID_AREA50:
-        return MOVIEID::VALUE(55);
+        return MVPATH("m50nb02.sfd");
 
     case AREAID::ID_AREA57:
-        return MOVIEID::VALUE(67);
+        return MVPATH("m57nb02.sfd");
 
     default:
-        return MOVIEID::ID_MAX;
+        return MVNAME_INVALID;
     };
 };
 
 
 /*static*/ bool CAreaInfo::IsPlayMovieOfAreaOut(AREAID::VALUE idArea)
 {
-    return (GetAreaOutMovieID(idArea) != MOVIEID::ID_MAX);
+    return (!MVNAME_EQUAL(GetAreaOutMovieID(idArea), MVNAME_INVALID));
 };
 
 

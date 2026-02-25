@@ -704,10 +704,10 @@ bool CTestSoundSequence::SurCtrlTestProc(void)
     CGameSound::PlayPositionSE(&m_stereoTest.vSoundSrcPos, m_stereoTest.seCode, m_stereoTest.seCodeId);
 
     /* update distance */
-    RwFrame* pFrame = RwCameraGetFrameMacro(m_stereoTest.pCamera);
+    RwFrame* pFrame = RwCameraGetFrame(m_stereoTest.pCamera);
     if (pFrame)
     {
-        RwMatrix* pMat = RwFrameGetMatrixMacro(pFrame);
+        RwMatrix* pMat = RwFrameGetMatrix(pFrame);
         
         RwV3d vCameraPos = pMat->pos;
         RwV3d vSoundPos = m_stereoTest.vSoundSrcPos;
@@ -741,10 +741,10 @@ void CTestSoundSequence::SurCtrlTestStart(int32 seCode)
     {
         RwFrameSetIdentity(pFrame);
 
-        RwMatrix* pMat = RwFrameGetMatrixMacro(pFrame);
+        RwMatrix* pMat = RwFrameGetMatrix(pFrame);
         pMat->pos = vCenterPos;
 
-        RwCameraSetFrameMacro(pCamera, pFrame);
+        RwCameraSetFrame(pCamera, pFrame);
     };
 
     /* init test */
@@ -783,10 +783,10 @@ void CTestSoundSequence::SurCtrlTestStop(void)
 
     if (m_stereoTest.pCamera)
     {
-        RwFrame* pFrame = RwCameraGetFrameMacro(m_stereoTest.pCamera);
+        RwFrame* pFrame = RwCameraGetFrame(m_stereoTest.pCamera);
         if (pFrame)
         {
-            RwCameraSetFrameMacro(m_stereoTest.pCamera, nullptr);
+            RwCameraSetFrame(m_stereoTest.pCamera, nullptr);
             RwFrameDestroy(pFrame);
         };
 

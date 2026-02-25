@@ -48,7 +48,7 @@ CParticle::CParticle(void)
     m_vAxisY = Math::VECTOR3_ZERO;
     m_vAxisZ = Math::VECTOR3_ZERO;    
     std::memset(&m_InitTransition, 0x00, sizeof(m_InitTransition));
-    RwMatrixSetIdentityMacro(&m_InitTransition.m_matrix);
+    RwMatrixSetIdentity(&m_InitTransition.m_matrix);
     m_InitTransition.data = &m_InitTransition;
     m_type = PEFINFO::PARTICLETYPE_BILLBOARD;
     m_blend = PEFINFO::BLENDTYPE_ADD;
@@ -407,14 +407,14 @@ void CParticle::Draw(RwCamera* pCamera)
     RenderStatePush();
     SortZ(pCamera);
 
-    RwMatrix* pMatModeling = RwFrameGetMatrixMacro(RwCameraGetFrameMacro(pCamera));
+    RwMatrix* pMatModeling = RwFrameGetMatrix(RwCameraGetFrame(pCamera));
     ASSERT(pMatModeling);
 
-    RwMatrix* pMatView = RwCameraGetViewMatrixMacro(pCamera);
+    RwMatrix* pMatView = RwCameraGetViewMatrix(pCamera);
     ASSERT(pMatView);
 
     RwMatrix matBillboard;
-    RwMatrixSetIdentityMacro(&matBillboard);
+    RwMatrixSetIdentity(&matBillboard);
     Math::Matrix_Invert(&matBillboard, pMatView);
     
     for (TRANSITION& it : m_listTransitionAlloc)
@@ -438,7 +438,7 @@ void CParticle::Draw(RwCamera* pCamera)
                 TransitionScale(pTransition);
 
                 RwMatrix matrix;
-                RwMatrixSetIdentityMacro(&matrix);
+                RwMatrixSetIdentity(&matrix);
                 Math::Matrix_Update(&matrix, &m_vAxisX, &m_vAxisY, &m_vAxisZ, &Math::VECTOR3_ZERO);
                 RwMatrixTransform(&pTransition->m_matrix, &matrix, rwCOMBINEPOSTCONCAT);
 
@@ -453,7 +453,7 @@ void CParticle::Draw(RwCamera* pCamera)
                 TransitionScale(pTransition);
 
                 RwMatrix matrix;
-                RwMatrixSetIdentityMacro(&matrix);
+                RwMatrixSetIdentity(&matrix);
                 Math::Matrix_Update(&matrix, &m_vAxisX, &m_vAxisY, &m_vAxisZ, &Math::VECTOR3_ZERO);
                 RwMatrixTransform(&pTransition->m_matrix, &matrix, rwCOMBINEPOSTCONCAT);
 
@@ -569,7 +569,7 @@ void CParticle::SetVector(const RwV3d* pvAxisX, const RwV3d* pvAxisY, const RwV3
     ASSERT(pvAxisZ);
     
     RwMatrix matrix;
-    RwMatrixSetIdentityMacro(&matrix);
+    RwMatrixSetIdentity(&matrix);
     
     RwV3d vBuff = Math::VECTOR3_ZERO;
     Math::Matrix_Update(&matrix, pvAxisX, pvAxisY, pvAxisZ, &vBuff);
@@ -651,7 +651,7 @@ void CParticle::RenderStatePush(void)
     RENDERSTATE_PUSH(rwRENDERSTATECULLMODE, rwCULLMODECULLNONE);
 
     if (m_pMyTexture)
-        RENDERSTATE_PUSH(rwRENDERSTATETEXTURERASTER, RwTextureGetRasterMacro(m_pMyTexture));
+        RENDERSTATE_PUSH(rwRENDERSTATETEXTURERASTER, RwTextureGetRaster(m_pMyTexture));
     else
         RENDERSTATE_PUSH(rwRENDERSTATETEXTURERASTER, 0);
 };
@@ -726,8 +726,11 @@ void CParticle::SetColorToVertex(const RwRGBA& color)
     for (int32 i = 0, j = 0; i < m_nPointNum + 1; ++i, j += 2)
     {
         ASSERT(j <= m_nVertexNum);
-        s_aVertexForCylinder[j + 0].color = RWRGBALONGEX(color);
-        s_aVertexForCylinder[j + 1].color = RWRGBALONGEX(color);
+
+        RwIm3DVertex* pVertex = &s_aVertexForCylinder[j];
+
+        RwIm3DVertexSetRGBA(&pVertex[0], color.red, color.green, color.blue, color.alpha);
+        RwIm3DVertexSetRGBA(&pVertex[1], color.red, color.green, color.blue, color.alpha);
     };
 };
 
@@ -761,10 +764,10 @@ void CParticle::SetVertexInfo(RwIm3DVertex* aVertexList, RwCamera* pCamera, TRAN
     {
     case PEFINFO::CLIPPINGTYPE_CAMERADISTANCE:
         {
-            RwMatrix* pMatModeling = RwFrameGetMatrixMacro(RwCameraGetFrameMacro(pCamera));            
-            ASSERT(pMatModeling);
+            RwFrame* frame = RwCameraGetFrame(pCamera);
+            RwMatrix* modeling = RwFrameGetMatrix(frame); // inverse of view matrix
 
-            RwV3d vCameraPos = pMatModeling->pos;
+            RwV3d vCameraPos = *RwMatrixGetPos(modeling);
 
             RwV3d vDist = Math::VECTOR3_ZERO;
             Math::Vec3_Sub(&vDist, &vCameraPos, &pTransition->m_vPositionNow);
@@ -777,11 +780,13 @@ void CParticle::SetVertexInfo(RwIm3DVertex* aVertexList, RwCamera* pCamera, TRAN
         
     case PEFINFO::CLIPPINGTYPE_INCLUDEDCAMERA:
         {
-            float fFar = RwCameraGetFarClipPlaneMacro(pCamera);
-            float fNear = RwCameraGetNearClipPlaneMacro(pCamera);
-            
+            float fFar = RwCameraGetFarClipPlane(pCamera);
+            float fNear = RwCameraGetNearClipPlane(pCamera);
+
+            RwMatrix* viewMat = RwCameraGetViewMatrix(pCamera); // view projection matrix
+
             RwV3d vScreenPos = Math::VECTOR3_ZERO;
-            RwV3dTransformPoint(&vScreenPos, &pTransition->m_vPositionNow, RwCameraGetViewMatrixMacro(pCamera));
+            RwV3dTransformPoint(&vScreenPos, &pTransition->m_vPositionNow, viewMat);
             
             if (vScreenPos.z > 0.0f)
             {
@@ -815,12 +820,12 @@ void CParticle::SetVertexInfo(RwIm3DVertex* aVertexList, RwCamera* pCamera, TRAN
     }
     else
     {
-        RwRaster* pFrameBuffer = RwCameraGetRasterMacro(pCamera);
-        ASSERT(pFrameBuffer);
+        RwRaster* framebuffer = RwCameraGetRaster(pCamera);
+        const RwV2d* view = RwCameraGetViewWindow(pCamera);
 
-        float fWidth  = static_cast<float>(pFrameBuffer->width);
-        float fHeight = static_cast<float>(pFrameBuffer->height);
-        float fViewRatio = CMapCamera::m_fDefaultViewSize / RwCameraGetViewWindowMacro(pCamera)->x;
+        float fWidth  = static_cast<float>(RwRasterGetWidth(framebuffer));
+        float fHeight = static_cast<float>(RwRasterGetHeight(framebuffer));
+        float fViewRatio = CMapCamera::m_fDefaultViewSize / view->x;
         
         w = fViewRatio * pTransition->m_vSizeNow.x;
         h = (fWidth / fHeight) * (fViewRatio * pTransition->m_vSizeNow.y);
@@ -851,49 +856,45 @@ void CParticle::SetVertexInfo(RwIm3DVertex* aVertexList, RwCamera* pCamera, TRAN
     Math::Vec3_Add(&aPos[2], &aPos[2], &pTransition->m_vPositionNow);
     Math::Vec3_Add(&aPos[3], &aPos[3], &pTransition->m_vPositionNow);
 
+    RwRGBA color = pTransition->m_ColorNow;
+
     RwIm3DVertex* pVertex = &aVertexList[uStartPos];
 
-    pVertex[0].objVertex.x = aPos[1].x;
-    pVertex[0].objVertex.y = aPos[1].y;
-    pVertex[0].objVertex.z = aPos[1].z;
-    pVertex[0].u = m_u0;
-    pVertex[0].v = m_v1;
-    pVertex[0].color =  RWRGBALONGEX(pTransition->m_ColorNow);
+    RwIm3DVertexSetPos(&pVertex[0], aPos[1].x, aPos[1].y, aPos[1].z);
+    RwIm3DVertexSetNormal(&pVertex[0], 0.0f, 0.0f, 0.0f);
+    RwIm3DVertexSetRGBA(&pVertex[0], color.red, color.green, color.blue, color.alpha);
+    RwIm3DVertexSetU(&pVertex[0], m_u0);
+    RwIm3DVertexSetV(&pVertex[0], m_v1);
 
-    pVertex[1].objVertex.x = aPos[0].x;
-    pVertex[1].objVertex.y = aPos[0].y;
-    pVertex[1].objVertex.z = aPos[0].z;
-    pVertex[1].u = m_u0;
-    pVertex[1].v = m_v0;
-    pVertex[1].color = RWRGBALONGEX(pTransition->m_ColorNow);
+    RwIm3DVertexSetPos(&pVertex[1], aPos[0].x, aPos[0].y, aPos[0].z);
+    RwIm3DVertexSetNormal(&pVertex[1], 0.0f, 0.0f, 0.0f);
+    RwIm3DVertexSetRGBA(&pVertex[1], color.red, color.green, color.blue, color.alpha);
+    RwIm3DVertexSetU(&pVertex[1], m_u0);
+    RwIm3DVertexSetV(&pVertex[1], m_v0);
 
-    pVertex[2].objVertex.x = aPos[3].x;
-    pVertex[2].objVertex.y = aPos[3].y;
-    pVertex[2].objVertex.z = aPos[3].z;
-    pVertex[2].u = m_u1;
-    pVertex[2].v = m_v1;
-    pVertex[2].color = RWRGBALONGEX(pTransition->m_ColorNow);
+    RwIm3DVertexSetPos(&pVertex[2], aPos[3].x, aPos[3].y, aPos[3].z);
+    RwIm3DVertexSetNormal(&pVertex[2], 0.0f, 0.0f, 0.0f);
+    RwIm3DVertexSetRGBA(&pVertex[2], color.red, color.green, color.blue, color.alpha);
+    RwIm3DVertexSetU(&pVertex[2], m_u1);
+    RwIm3DVertexSetV(&pVertex[2], m_v1);
 
-    pVertex[3].objVertex.x = aPos[3].x;
-    pVertex[3].objVertex.y = aPos[3].y;
-    pVertex[3].objVertex.z = aPos[3].z;
-    pVertex[3].u = m_u1;
-    pVertex[3].v = m_v1;
-    pVertex[3].color = RWRGBALONGEX(pTransition->m_ColorNow);
+    RwIm3DVertexSetPos(&pVertex[3], aPos[3].x, aPos[3].y, aPos[3].z);
+    RwIm3DVertexSetNormal(&pVertex[3], 0.0f, 0.0f, 0.0f);
+    RwIm3DVertexSetRGBA(&pVertex[3], color.red, color.green, color.blue, color.alpha);
+    RwIm3DVertexSetU(&pVertex[3], m_u1);
+    RwIm3DVertexSetV(&pVertex[3], m_v1);
 
-    pVertex[4].objVertex.x = aPos[0].x;
-    pVertex[4].objVertex.y = aPos[0].y;
-    pVertex[4].objVertex.z = aPos[0].z;
-    pVertex[4].u = m_u0;
-    pVertex[4].v = m_v0;
-    pVertex[4].color = RWRGBALONGEX(pTransition->m_ColorNow);
+    RwIm3DVertexSetPos(&pVertex[4], aPos[0].x, aPos[0].y, aPos[0].z);
+    RwIm3DVertexSetNormal(&pVertex[4], 0.0f, 0.0f, 0.0f);
+    RwIm3DVertexSetRGBA(&pVertex[4], color.red, color.green, color.blue, color.alpha);
+    RwIm3DVertexSetU(&pVertex[4], m_u0);
+    RwIm3DVertexSetV(&pVertex[4], m_v0);
 
-    pVertex[5].objVertex.x = aPos[2].x;
-    pVertex[5].objVertex.y = aPos[2].y;
-    pVertex[5].objVertex.z = aPos[2].z;
-    pVertex[5].u = m_u1;
-    pVertex[5].v = m_v0;
-    pVertex[5].color = RWRGBALONGEX(pTransition->m_ColorNow);
+    RwIm3DVertexSetPos(&pVertex[5], aPos[2].x, aPos[2].y, aPos[2].z);
+    RwIm3DVertexSetNormal(&pVertex[5], 0.0f, 0.0f, 0.0f);
+    RwIm3DVertexSetRGBA(&pVertex[5], color.red, color.green, color.blue, color.alpha);
+    RwIm3DVertexSetU(&pVertex[5], m_u1);
+    RwIm3DVertexSetV(&pVertex[5], m_v0);
 
     m_nNowUseNum += 6;
 };
@@ -908,9 +909,11 @@ void CParticle::DrawVertex(RwCamera* pCamera)
 
     if (m_nNowUseNum >= 6)
     {
-        const uint32 uFlags = rwIM3D_VERTEXRGBA | rwIM3D_VERTEXXYZ | rwIM3D_VERTEXUV;
+        const uint32 flags = rwIM3D_VERTEXRGBA
+                           | rwIM3D_VERTEXXYZ
+                           | rwIM3D_VERTEXUV;
 
-        if (RwIm3DTransform(s_aVertex, m_nNowUseNum, nullptr, uFlags))
+        if (RwIm3DTransform(s_aVertex, m_nNowUseNum, nullptr, flags))
         {
             RwIm3DRenderPrimitive(rwPRIMTYPETRILIST);
             RwIm3DEnd();
@@ -937,29 +940,31 @@ void CParticle::CreateCylinder(float fTopRadius, float fBottomRadius, int32 nPoi
     
     for (int32 i = 0, j = 0; i < (m_nPointNum + 1); ++i, j += 2)
     {
+        RwRGBA color = m_InitTransition.m_Color;
+
         float tu = (1.0f / float(m_nPointNum) * float(m_nRepetitionNum) * i);
+
+        float x0 = Math::Sin(float(i) * fDeltaSegAngle) * m_fTopRadius;
+        float y0 = m_fHeight;
+        float z0 = Math::Cos(float(i) * fDeltaSegAngle) * m_fTopRadius;
+
+        float x1 = Math::Sin(float(i) * fDeltaSegAngle) * m_fBottomRadius;
+        float y1 = 0.0f;
+        float z1 = Math::Cos(float(i) * fDeltaSegAngle) * m_fBottomRadius;
 
         RwIm3DVertex* pVertex = &s_aVertexForCylinder[j];
 
-        pVertex[0].objVertex.x = Math::Sin(float(i) * fDeltaSegAngle) * m_fTopRadius;
-        pVertex[0].objVertex.y = m_fHeight;
-        pVertex[0].objVertex.z = Math::Cos(float(i) * fDeltaSegAngle) * m_fTopRadius;
-        pVertex[0].objNormal.x = 0.0f;
-        pVertex[0].objNormal.y = 0.0f;
-        pVertex[0].objNormal.z = 0.0f;
-        pVertex[0].u = tu;
-        pVertex[0].v = 0.0f;
-        pVertex[0].color = RWRGBALONGEX(m_InitTransition.m_Color);
+        RwIm3DVertexSetPos(&pVertex[0], x0, y0, z0);
+        RwIm3DVertexSetNormal(&pVertex[0], 0.0f, 0.0f, 0.0f);
+        RwIm3DVertexSetRGBA(&pVertex[0], color.red, color.green, color.blue, color.alpha);
+        RwIm3DVertexSetU(&pVertex[0], tu);
+        RwIm3DVertexSetV(&pVertex[0], 0.0f);
 
-        pVertex[1].objVertex.x = Math::Sin(float(i) * fDeltaSegAngle) * m_fBottomRadius;
-        pVertex[1].objVertex.y = 0.0f;
-        pVertex[1].objVertex.z = Math::Cos(float(i) * fDeltaSegAngle) * m_fBottomRadius;
-        pVertex[1].objNormal.x = 0.0f;
-        pVertex[1].objNormal.y = 0.0f;
-        pVertex[1].objNormal.z = 0.0f;
-        pVertex[1].u = tu;
-        pVertex[1].v = 1.0f;
-        pVertex[1].color = RWRGBALONGEX(m_InitTransition.m_Color);
+        RwIm3DVertexSetPos(&pVertex[1], x1, y1, z1);
+        RwIm3DVertexSetNormal(&pVertex[1], 0.0f, 0.0f, 0.0f);
+        RwIm3DVertexSetRGBA(&pVertex[1], color.red, color.green, color.blue, color.alpha);
+        RwIm3DVertexSetU(&pVertex[1], tu);
+        RwIm3DVertexSetV(&pVertex[1], 1.0f);
     };
 };
 
@@ -974,10 +979,12 @@ void CParticle::DrawModel(RwMatrix* pMatrix)
 {
     ASSERT(pMatrix);
     
-    uint32 uFlags = rwIM3D_VERTEXRGBA | rwIM3D_VERTEXXYZ | rwIM3D_VERTEXUV;
-    
+    uint32 flags = rwIM3D_VERTEXRGBA
+                 | rwIM3D_VERTEXXYZ
+                 | rwIM3D_VERTEXUV;
+
     RENDERSTATE_PUSH(rwRENDERSTATECULLMODE, rwCULLMODECULLFRONT);
-    if (RwIm3DTransform(s_aVertexForCylinder, m_nVertexNum, pMatrix, uFlags))
+    if (RwIm3DTransform(s_aVertexForCylinder, m_nVertexNum, pMatrix, flags))
     {
         RwIm3DRenderPrimitive(rwPRIMTYPETRISTRIP);
         RwIm3DEnd();
@@ -985,7 +992,7 @@ void CParticle::DrawModel(RwMatrix* pMatrix)
     RENDERSTATE_POP(rwRENDERSTATECULLMODE);
     
     RENDERSTATE_PUSH(rwRENDERSTATECULLMODE, rwCULLMODECULLBACK);
-    if (RwIm3DTransform(s_aVertexForCylinder, m_nVertexNum, pMatrix, uFlags))
+    if (RwIm3DTransform(s_aVertexForCylinder, m_nVertexNum, pMatrix, flags))
     {
         RwIm3DRenderPrimitive(rwPRIMTYPETRISTRIP);
         RwIm3DEnd();
@@ -1232,7 +1239,7 @@ float CParticle::GetSortZ(RwCamera* pCamera, RwV3d* pvPosition)
     ASSERT(pvPosition);
 
     RwV3d vScreenPos = Math::VECTOR3_ZERO;
-    RwV3dTransformPoint(&vScreenPos, pvPosition, RwCameraGetViewMatrixMacro(pCamera));
+    RwV3dTransformPoint(&vScreenPos, pvPosition, RwCameraGetViewMatrix(pCamera));
 
     return vScreenPos.z;
 };

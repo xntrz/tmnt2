@@ -1,9 +1,16 @@
 #include "PlayerLoadInfo.hpp"
 
-#include "System/Common/File/FileID.hpp"
+
+bool CPlayerCommonLoadInfo::MakeFileName(char* pszFilenameBuff) const
+{
+    std::sprintf(pszFilenameBuff, "Common/Player/PlayerCommon.list");
+    return true;
+};
 
 
-/*static*/ const char* CPlayerLoadInfo::LISTFILE_PATH = "Common/Player/";
+//
+// *********************************************************************************
+//
 
 
 CPlayerLoadInfo::CPlayerLoadInfo(PLAYERID::VALUE idPlayer, GAMETYPES::COSTUME costume)
@@ -20,9 +27,9 @@ CPlayerLoadInfo::~CPlayerLoadInfo(void)
 };
 
 
-int32 CPlayerLoadInfo::GetFileID(void) const
+FNAME CPlayerLoadInfo::GetFileID(void) const
 {
-    int32 FileID = FILEID::ID_INVALID;
+    FNAME fileID = FNAME_INVALID;
     
     switch (m_idPlayer)
     {
@@ -31,15 +38,19 @@ int32 CPlayerLoadInfo::GetFileID(void) const
             switch (m_costume)
             {
             case GAMETYPES::COSTUME_NONE:
-                FileID = FILEID::ID_LEONARDO;
+                fileID = FPATH("Common/Player/Leonardo/Leonardo.lpac");
                 break;
                 
             case GAMETYPES::COSTUME_SAMURAI:
-                FileID = FILEID::ID_LEONARDO_EXA;
+                fileID = FPATH("Common/Player/Leonardo/Leonardo_ExA.lpac");
                 break;
                 
             case GAMETYPES::COSTUME_NEXUS:
-                FileID = FILEID::ID_LEONARDO_EXB;
+                fileID = FPATH("Common/Player/Leonardo/Leonardo_ExB.lpac");
+                break;
+
+            default:
+                ASSERT(false);
                 break;
             };
         }
@@ -50,15 +61,19 @@ int32 CPlayerLoadInfo::GetFileID(void) const
             switch (m_costume)
             {
             case GAMETYPES::COSTUME_NONE:
-                FileID = FILEID::ID_RAPHAEL;
+                fileID = FPATH("Common/Player/Raphael/Raphael.lpac");
                 break;
 
             case GAMETYPES::COSTUME_SAMURAI:
-                FileID = FILEID::ID_RAPHAEL_EXA;
+                fileID = FPATH("Common/Player/Raphael/Raphael_ExA.lpac");
                 break;
 
             case GAMETYPES::COSTUME_NEXUS:
-                FileID = FILEID::ID_RAPHAEL_EXB;
+                fileID = FPATH("Common/Player/Raphael/Raphael_ExB.lpac");
+                break;
+
+            default:
+                ASSERT(false);
                 break;
             };
         }
@@ -69,15 +84,19 @@ int32 CPlayerLoadInfo::GetFileID(void) const
             switch (m_costume)
             {
             case GAMETYPES::COSTUME_NONE:
-                FileID = FILEID::ID_MICHELANGERO;
+                fileID = FPATH("Common/Player/Michelangero/Michelangero.lpac");
                 break;
 
             case GAMETYPES::COSTUME_SAMURAI:
-                FileID = FILEID::ID_MICHELANGERO_EXA;
+                fileID = FPATH("Common/Player/Michelangero/Michelangero_ExA.lpac");
                 break;
 
             case GAMETYPES::COSTUME_NEXUS:
-                FileID = FILEID::ID_MICHELANGERO_EXB;
+                fileID = FPATH("Common/Player/Michelangero/Michelangero_ExB.lpac");
+                break;
+
+            default:
+                ASSERT(false);
                 break;
             };
         }
@@ -88,34 +107,38 @@ int32 CPlayerLoadInfo::GetFileID(void) const
             switch (m_costume)
             {
             case GAMETYPES::COSTUME_NONE:
-                FileID = FILEID::ID_DONATELLO;
+                fileID = FPATH("Common/Player/Donatello/Donatello.lpac");
                 break;
 
             case GAMETYPES::COSTUME_SAMURAI:
-                FileID = FILEID::ID_DONATELLO_EXA;
+                fileID = FPATH("Common/Player/Donatello/Donatello_ExA.lpac");
                 break;
 
             case GAMETYPES::COSTUME_NEXUS:
-                FileID = FILEID::ID_DONATELLO_EXB;
+                fileID = FPATH("Common/Player/Donatello/Donatello_ExB.lpac");
+                break;
+
+            default:
+                ASSERT(false);
                 break;
             };
         }
         break;
         
     case PLAYERID::ID_SLA:
-        FileID = FILEID::ID_SLASHUUR;
+        fileID = FPATH("Common/Player/Slashuur/Slashuur.lpac");
         break;
 
     case PLAYERID::ID_CAS:
-        FileID = FILEID::ID_CASEY;
+        fileID = FPATH("Common/Player/Casey/Casey.lpac");
         break;
-        
+
     case PLAYERID::ID_KAR:
-        FileID = FILEID::ID_KARAI;
+        fileID = FPATH("Common/Player/Karai/Karai.lpac");
         break;
-        
+
     case PLAYERID::ID_SPL:
-        FileID = FILEID::ID_SPLINTER;
+        fileID = FPATH("Common/Player/Splinter/Splinter.lpac");
         break;
 
     default:
@@ -123,28 +146,29 @@ int32 CPlayerLoadInfo::GetFileID(void) const
         break;        
     };
 
-    return FileID;
+    return fileID;
 };
 
 
 bool CPlayerLoadInfo::MakeFileName(char* pszFilenameBuff) const
 {
     pszFilenameBuff[0] = '\0';
-    
+
+    const char* pszListFilePath = "Common/Player/";
     const char* pszPlayerName = PLAYERID::GetName(m_idPlayer);
     
     switch (m_costume)
     {
     case GAMETYPES::COSTUME_NONE:
-        std::sprintf(pszFilenameBuff, "%s%s/%s.list", LISTFILE_PATH, pszPlayerName, pszPlayerName);
+        std::sprintf(pszFilenameBuff, "%s%s/%s.list", pszListFilePath, pszPlayerName, pszPlayerName);
         break;
 
     case GAMETYPES::COSTUME_SAMURAI:
-        std::sprintf(pszFilenameBuff, "%s%s/%s_EXa.list", LISTFILE_PATH, pszPlayerName, pszPlayerName);
+        std::sprintf(pszFilenameBuff, "%s%s/%s_EXa.list", pszListFilePath, pszPlayerName, pszPlayerName);
         break;
 
     case GAMETYPES::COSTUME_NEXUS:
-        std::sprintf(pszFilenameBuff, "%s%s/%s_EXb.list", LISTFILE_PATH, pszPlayerName, pszPlayerName);
+        std::sprintf(pszFilenameBuff, "%s%s/%s_EXb.list", pszListFilePath, pszPlayerName, pszPlayerName);
         break;
 
     default:

@@ -63,7 +63,7 @@ void C078EliteFootC::CSpearStatusObserver::YariShot(const RwV3d* pvecYariPos)
     float fDir = CPlayerWatcher::GetDirection(&vecFootPos, pvecYariPos);
 
     RwMatrix matRotY;
-    RwMatrixSetIdentityMacro(&matRotY);
+    RwMatrixSetIdentity(&matRotY);
     Math::Matrix_RotateY(&matRotY, fDir);
 
     /* center spear */

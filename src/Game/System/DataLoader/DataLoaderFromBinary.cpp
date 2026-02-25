@@ -92,7 +92,7 @@ public:
 public:
     CDataLoaderFromBinary(void);
     virtual ~CDataLoaderFromBinary(void);
-    virtual void Eval(void* pBufferOrg, uint32 sizeBuffer) override;
+    virtual void Eval(void* pBufferOrg, uint32 sizeBuffer, const void* fid) override;
 
 private:
     IItemReader* m_apItemReader[READERTYPE::TYPE_MAX];
@@ -490,7 +490,7 @@ CDataLoaderFromBinary::~CDataLoaderFromBinary(void)
 };
 
 
-void CDataLoaderFromBinary::Eval(void* pBufferOrg, uint32 sizeBuffer)
+void CDataLoaderFromBinary::Eval(void* pBufferOrg, uint32 sizeBuffer, const void* fid)
 {
     uint8* pBuffer = static_cast<uint8*>(pBufferOrg)
                     + sizeof(CFileHeader)
@@ -501,7 +501,7 @@ void CDataLoaderFromBinary::Eval(void* pBufferOrg, uint32 sizeBuffer)
     {
         CChunkHeader chunkHeader;
         chunkHeader.m_pHeader       = reinterpret_cast<CChunkHeader::HEADER*>(pBuffer);
-        chunkHeader.m_pExtraHeader  = reinterpret_cast<CChunkHeader::HEADER*>(pBuffer + sizeof(CChunkHeader::HEADER));
+        chunkHeader.m_pExtraHeader  = (pBuffer + sizeof(CChunkHeader::HEADER));
 
         pBuffer += (sizeof(CChunkHeader::HEADER) * 2);
 
@@ -512,13 +512,6 @@ void CDataLoaderFromBinary::Eval(void* pBufferOrg, uint32 sizeBuffer)
 
             if (m_apItemReader[j]->GetType() != static_cast<READERTYPE::VALUE>(chunkHeader.m_pHeader->m_uType))
                 continue;
-
-            //OUTPUT(
-            //	"reading file %-20s\t\t(%-20s -- 0x%x)\n",
-            //	ChunkHeader.m_pHeader->m_szName,
-            //	m_apItemReader[j]->GetLabel(),
-            //	m_apItemReader[j]->GetType()
-            //);
 
             m_apItemReader[j]->Eval(&chunkHeader, pBuffer);
         };

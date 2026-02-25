@@ -19,7 +19,6 @@
 #include "Game/System/Misc/DebugShape.hpp"
 #include "Game/System/Misc/ScreenFade.hpp"
 #include "Game/System/Misc/RenderStateManager.hpp"
-#include "System/Common/File/FileID.hpp"
 #include "System/Common/Screen.hpp"
 #include "System/Common/Controller.hpp"
 #include "System/Common/Camera.hpp"
@@ -78,7 +77,7 @@ bool CEnbuSequence::OnAttach(const void* pParam)
     CGameLoader::LoadEnbu(CEnbuProc::GetEnbuMvp(), CEnbuProc::GetEnbuCostume());
 
 #ifdef TMNT2_BUILD_EU    
-    CDataLoader::Regist(FILEID::ID_LANG_ENBU_RANK);
+    CDataLoader::Regist(FPATH_LANG("Language/English/Enbu_Rank/Enbu_Rank.lpac"));
 #endif /* TMNT2_BUILD_EU */
     
     CGameData::Attribute().SetInteractive(true);
@@ -158,7 +157,7 @@ void CEnbuSequence::OnMove(bool bRet, const void* pReturnValue)
 
                 RwFrameRotate(pFrame, &Math::VECTOR3_AXIS_X, 150.0f, rwCOMBINEREPLACE);
                 RwFrameRotate(pFrame, &Math::VECTOR3_AXIS_Y, 0.0f, rwCOMBINEPOSTCONCAT);
-                RpLightSetFrameMacro(m_pLight, pFrame);
+                RpLightSetFrame(m_pLight, pFrame);
                 
                 m_pCamera = CCamera::GetCamera();
                 ASSERT(m_pCamera);
@@ -195,7 +194,7 @@ void CEnbuSequence::OnMove(bool bRet, const void* pReturnValue)
 
 
             RwMatrix matrix;
-            RwMatrixSetIdentityMacro(&matrix);
+            RwMatrixSetIdentity(&matrix);
             Math::Matrix_RotateY(&matrix, m_fCameraRotY);
 
             RwV3d vEye = Math::VECTOR3_ZERO;
@@ -211,7 +210,7 @@ void CEnbuSequence::OnMove(bool bRet, const void* pReturnValue)
             Math::Matrix_LookAt(&matrix, &vEye, &vAt, &Math::VECTOR3_AXIS_Y);
             
             RwCamera* pCamera = m_pCamera->GetRwCamera();
-            RwFrame* pFrame = RwCameraGetFrameMacro(pCamera);
+            RwFrame* pFrame = RwCameraGetFrame(pCamera);
             RwFrameTransform(pFrame, &matrix, rwCOMBINEREPLACE);
 
             if (CController::GetDigital(CController::CONTROLLER_LOCKED_ON_VIRTUAL, CController::DIGITAL_OK))

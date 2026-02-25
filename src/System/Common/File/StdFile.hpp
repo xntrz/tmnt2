@@ -1,21 +1,21 @@
 #pragma once
 
-#include "AdxFile.hpp"
+#include "File.hpp"
 
 
-class CStdFile final : public CAdxFileISO
+class CStdFile final : public CFile
 {
 public:
-    static bool IsExists(const char* pszFilename);
+    static bool exist(const char* pszFilename);
 
     CStdFile(void);
     virtual ~CStdFile(void);
-    virtual bool Open(const char* pszFilename) override;
-    virtual void Close(void) override;
-    virtual uint32 Read(void* buff, uint32 size);
-    virtual bool IsEof(void);
-    virtual uint32 Seek(uint32 offset, int32 type);
-    virtual bool IsOpen(void);
+    bool open(const char* pszFilename);
+    void close(void);
+    uint32 read(void* buff, uint32 size);
+    bool eof(void) const;
+    uint32 seek(uint32 offset, int32 type);
+    uint32 tell(void) const;
 
 private:
     uint32 m_uPosition;

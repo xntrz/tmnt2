@@ -241,8 +241,8 @@ void CDoorGimmick::doorMoveOperate(void)
 
         CModel* pMdl = m_apModel[i];
         RpClump* pClump = pMdl->GetClump();
-        RwFrame* pFrame = RpClumpGetFrameMacro(pClump);
-        RwMatrix* pMatrix = RwFrameGetMatrixMacro(pFrame);
+        RwFrame* pFrame = RpClumpGetFrame(pClump);
+        RwMatrix* pMatrix = RwFrameGetMatrix(pFrame);
 
         if (i == 1)
             fMoveVolume *= -1.0f;

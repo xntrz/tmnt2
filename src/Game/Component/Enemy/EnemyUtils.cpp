@@ -580,7 +580,10 @@ float CEnemyUtils::CKnockBackControl::GetPlayerNumRate(void) const
 {
     ASSERT(pos);
     ASSERT(at);
-	ASSERT(!(Math::FEqual(at->x, pos->x) && Math::FEqual(at->z, pos->z)));
+
+    if ((pos->x == at->x) &&
+        (pos->z == at->z))
+        return 0.0f;
 
     return Math::ATan2(at->x - pos->x,
                        at->z - pos->z);
@@ -905,7 +908,7 @@ float CEnemyUtils::CKnockBackControl::GetPlayerNumRate(void) const
 /*static*/ void CEnemyUtils::RotateVectorByDirection(RwV3d* vec, float fDir)
 {
     RwMatrix matRotY;
-    RwMatrixSetIdentityMacro(&matRotY);
+    RwMatrixSetIdentity(&matRotY);
     Math::Matrix_RotateY(&matRotY, fDir);
     RwV3dTransformVector(vec, vec, &matRotY);
 };
@@ -1245,7 +1248,7 @@ CEnemyTracer6045::CEnemyTracer6045(const CCharacterCompositor* pChrCompositor, C
     float fRotY = (fDirDiff <= 0.0f ? -MATH_DEG2RAD(90.0f) : MATH_DEG2RAD(90.0f));
 
     RwMatrix matRotY;
-    RwMatrixSetIdentityMacro(&matRotY);
+    RwMatrixSetIdentity(&matRotY);
     Math::Matrix_RotateY(&matRotY, fRotY);
 
     RwV3d vecExt = Math::VECTOR3_ZERO;

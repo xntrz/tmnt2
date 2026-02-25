@@ -422,7 +422,7 @@ void CCharacterAttackCalculator::CalcDirection(void)
     Math::Vec3_Normalize(&m_vDirection, &m_vDirection);
     
     RwMatrix matrix;
-    RwMatrixSetIdentityMacro(&matrix);
+    RwMatrixSetIdentity(&matrix);
     Math::Matrix_RotateY(&matrix, m_rCharacter.GetDirection());    
 
     if (Math::Vec3_Dot(&m_vDirection, &matrix.at) >= 0.0f)

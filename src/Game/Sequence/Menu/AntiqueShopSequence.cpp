@@ -17,7 +17,6 @@
 #include "System/Common/Sprite.hpp"
 #include "System/Common/Screen.hpp"
 #include "System/Common/System2D.hpp"
-#include "System/Common/File/FileID.hpp"
 #include "System/Common/SystemTime.hpp"
 #include "System/Common/TextData.hpp"
 
@@ -1366,7 +1365,7 @@ bool CAntiqueShopSequence::OnAttach(const void* pParam)
 
     m_bUnlockCheckState = false;
 
-    return CAnim2DSequence::OnAttach(FILEID::ID_ANTIQUE_PS2);
+    return CAnim2DSequence::OnAttach(FPATH("Common/Menu/AntiqueShop/Antique_PS2.lpac"));
 };
 
 

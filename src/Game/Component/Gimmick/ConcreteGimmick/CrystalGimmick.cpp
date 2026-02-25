@@ -99,7 +99,7 @@ CCrystalGimmick::CCrystalGimmick(const char* pszName, void* pParam)
     std::strcpy(m_szTargetName, pInitParam->m_szTargetGimmick);
 
     RwMatrix rotMat;
-    RwMatrixSetIdentityMacro(&rotMat);
+    RwMatrixSetIdentity(&rotMat);
     CGimmickUtils::QuaternionToRotationMatrix(&rotMat, &pInitParam->m_quat);
 
     RwV3d vRotation = Math::VECTOR3_ZERO;
@@ -274,8 +274,8 @@ void CCrystalGimmick::setHitAttack(void)
 {
     CModel* pMdl = m_model.GetModel(CNormalGimmickModel::MODELTYPE_DRAW_NORMAL);
     RpClump* pClump = pMdl->GetClump();
-    RwFrame* pFrame = RpClumpGetFrameMacro(pClump);
-    RwMatrix* pMatrix = RwFrameGetMatrixMacro(pFrame);
+    RwFrame* pFrame = RpClumpGetFrame(pClump);
+    RwMatrix* pMatrix = RwFrameGetMatrix(pFrame);
 
     RwSphere hitSphere = { Math::VECTOR3_ZERO, 1.0f };
     RwV3dTransformPoint(&hitSphere.center, &hitSphere.center, pMatrix);

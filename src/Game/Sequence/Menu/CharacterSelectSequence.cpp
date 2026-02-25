@@ -18,7 +18,6 @@
 #include "System/Common/Sprite.hpp"
 #include "System/Common/Screen.hpp"
 #include "System/Common/System2D.hpp"
-#include "System/Common/File/FileID.hpp"
 #include "System/Common/RenderState.hpp"
 #include "System/Common/TextData.hpp"
 
@@ -1170,10 +1169,10 @@ bool CCharacterSelectSequence::OnAttach(const void* pParam)
     m_pWorkPool->LimitCheck();
     
 #ifdef TMNT2_BUILD_EU
-    CDataLoader::Regist(FILEID::ID_CHARSELECT);
-    return CAnim2DSequence::OnAttach(FILEID::ID_LANG_CHARSELECT);
+    CDataLoader::Regist(FPATH("Common/Menu/CharacterSelect/CharSelect.lpac"));
+    return CAnim2DSequence::OnAttach(FPATH_LANG("Language/English/CharSelect/CharSelect.lpac"));
 #else /* TMNT2_BUILD_EU */
-    return CAnim2DSequence::OnAttach(FILEID::ID_CHARSELECT);
+    return CAnim2DSequence::OnAttach(FPATH("Common/Menu/CharacterSelect/CharSelect.lpac"));
 #endif /* TMNT2_BUILD_EU */
 };
 

@@ -80,7 +80,7 @@ CBaseFlyingEnemyAI::CBaseFlyingEnemyAI(CEnemyCharacter* pEnemyChr)
 /*virtual*/ bool CBaseFlyingEnemyAI::IsHitWall(float fDirection)
 {
     RwMatrix matRotY;
-    RwMatrixSetIdentityMacro(&matRotY);
+    RwMatrixSetIdentity(&matRotY);
     Math::Matrix_RotateY(&matRotY, fDirection);
 
     float fRadius = EnemyCharacter().Compositor().GetCollisionParameter().m_fRadius;

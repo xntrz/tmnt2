@@ -1,0 +1,19 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+    <Target Name="PreprocessCheck" 
+            BeforeTargets="PreBuildEvent">
+        
+        <ItemGroup>
+            <ClCompileItems Include="@(ClCompile)" />
+        </ItemGroup>    
+
+        <PropertyGroup>
+            <ClPreprocessorDefinitions>%(ClCompileItems.PreprocessorDefinitions)</ClPreprocessorDefinitions>
+            <IdFsyst>false</IdFsyst>
+            <IdFsyst Condition="'$(ClPreprocessorDefinitions)' != '' and $(ClPreprocessorDefinitions.Contains('TMNT2_IDFSYST'))">true</IdFsyst>
+        </PropertyGroup>    
+
+        <!-- <Message Text="PreprocessorDefinitions: $(ClPreprocessorDefinitions)" Importance="high" /> -->
+
+    </Target>
+</Project>

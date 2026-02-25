@@ -212,7 +212,7 @@ CBaseStoneBiterChr::CSideMoveStatusObserver::Observing(void) /*override*/
     EnemyChr().Compositor().RotateVectorByDirection(&vecNewVelocity, &vecNewVelocity);
 
     RwMatrix matRotY;
-    RwMatrixSetIdentityMacro(&matRotY);
+    RwMatrixSetIdentity(&matRotY);
     Math::Matrix_RotateY(&matRotY, m_fMoveAngle);
 
     RwV3dTransformVector(&vecNewVelocity, &vecNewVelocity, &matRotY);

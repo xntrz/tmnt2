@@ -12,6 +12,8 @@ public:
         TYPE_RED = 0,
         TYPE_PINK,
         TYPE_TRANSPARENT,
+
+        TYPENUM,
     };
 
 public:

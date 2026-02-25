@@ -20,12 +20,8 @@
 
 /*static*/ void CBarrierModule::DrawAll(void)
 {
-    RENDERSTATE_PUSH(rwRENDERSTATEZTESTENABLE, false);
-
     for (CBarrierModule& it : m_listDraw)
         it.DrawBarrier();
-
-    RENDERSTATE_POP(rwRENDERSTATEZTESTENABLE);
 };
 
 
@@ -51,7 +47,7 @@ CBarrierModule::CBarrierModule(CTracer* pTracer, CGameObject* pObject, float fRa
     m_fRadius = fRadius;
     m_pTracer = pTracer;
     m_pObject = pObject;
-    m_pBarrierSphere = new CSphere(m_fRadius, 16, 16, 4, 6, { 0xFF, 0xFF, 0xFF, 0x80 });
+    m_pBarrierSphere = new CSphere(m_fRadius, 16, 16, 4, 16, { 0xFF, 0xFF, 0xFF, 0x80 });
     m_state = STATE_SLEEP;
 
     CTextureManager::SetCurrentTextureSet("common_ef");
@@ -211,7 +207,13 @@ void CBarrierModule::Draw(void)
 void CBarrierModule::DrawBarrier(void)
 {
     if (m_bDisplay)
+    {
+        RENDERSTATE_PUSH(rwRENDERSTATEZWRITEENABLE, false);
+
         m_pBarrierSphere->Draw();
+
+        RENDERSTATE_POP(rwRENDERSTATEZWRITEENABLE);
+    };
 };
 
 

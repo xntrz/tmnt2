@@ -2,7 +2,6 @@
 
 #include "Game/Component/GameData/GameData.hpp"
 #include "Game/System/Movie/MovieManager.hpp"
-#include "Game/System/Movie/MovieID.hpp"
 #include "System/Common/Movie.hpp"
 #include "System/Common/Controller.hpp"
 
@@ -30,7 +29,7 @@ CMovieSequence::~CMovieSequence(void)
 
 bool CMovieSequence::OnAttach(const void* pParam)
 {
-    OUTPUT("%s. MovieID: %d\n", __FUNCTION__, reinterpret_cast<int32>(pParam));
+    OUTPUT("%s. MovieID: %" PRImvn "\n", __FUNCTION__, mvname_cast(pParam));
     
     m_bOwner = false;
     m_bLoadEndFlag = false;
@@ -40,9 +39,7 @@ bool CMovieSequence::OnAttach(const void* pParam)
     {
         m_bOwner = true;
 
-        MOVIEID::VALUE movieId = static_cast<MOVIEID::VALUE>(reinterpret_cast<int32>(pParam));
-        CMovieManager::PreCreateMovieInstance(movieId);
-        
+        CMovieManager::PreCreateMovieInstance(mvname_cast(pParam));        
         m_pMovie = CMovieManager::GetMovieInstance();
     };
 

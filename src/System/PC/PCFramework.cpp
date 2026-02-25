@@ -13,8 +13,9 @@
 
 #include "File/PCFileManager.hpp"
 
-#include "System/Common/Screen.hpp"
 #include "System/Common/Process/ProcessDispatcher.hpp"
+#include "System/Common/Configure.hpp"
+#include "System/Common/Screen.hpp"
 
 
 class CPCFramework::CFrameSkipController final
@@ -45,8 +46,8 @@ CPCFramework::CFrameSkipController::CFrameSkipController(void)
 , m_bSkip(false)
 , m_bEnable(false)
 {
-    m_uFrametime = (CPCTimer::Instance().GranularityMillisecond() / uint32(CScreen::Framerate()));
-    m_uFrametimeTimeout = (CPCTimer::Instance().GranularityMillisecond() / uint32(CScreen::Framerate() * 0.5f));
+    m_uFrametime = (CPCTimer::Instance().GetFreq() / static_cast<uint32>(CScreen::Framerate()));
+    m_uFrametimeTimeout = (CPCTimer::Instance().GetFreq() / static_cast<uint32>(CScreen::Framerate() * 0.5f));
 
     SetEnable(true);
 };
@@ -54,9 +55,11 @@ CPCFramework::CFrameSkipController::CFrameSkipController(void)
 
 void CPCFramework::CFrameSkipController::Sync(void)
 {    
-    uint32 uTimeNow     = CPCTimer::Instance().ElapsedTime();
+    uint32 uTimeNow     = CPCTimer::Instance().GetElapsedTime();
     uint32 uTimeSkipped = (m_uTime + (m_nNumSkip * m_uFrametime));    
-    uint32 uTimeElapsed = (uTimeSkipped >= uTimeNow) ? (uTimeNow + TYPEDEF::UINT32_MAX - uTimeSkipped) : (uTimeNow - uTimeSkipped);
+    
+    uint32 uTimeElapsed = (uTimeSkipped >= uTimeNow) ? (uTimeNow + TYPEDEF::UINT32_MAX - uTimeSkipped) :
+                                                       (uTimeNow - uTimeSkipped);
 
     bool bEnable        = (m_bEnable);
     bool bMaySkip       = (m_nNumSkip < 5);
@@ -83,7 +86,7 @@ void CPCFramework::CFrameSkipController::SetEnable(bool bState)
 {
     if (m_bEnable != bState)
     {
-        m_uTime     = CPCTimer::Instance().ElapsedTime();
+        m_uTime     = CPCTimer::Instance().GetElapsedTime();
         m_nNumSkip  = 0;
         m_bSkip     = false;
     };
@@ -136,7 +139,14 @@ bool CPCFramework::Initialize(void)
     m_pClockDevice = new CPCClockDevice;
     m_pPCGraphicsDevice = new CPCGraphicsDevice;
     m_pGraphicsDevice = m_pPCGraphicsDevice;
+#ifdef _DEBUG
+    if (CConfigure::CheckArg("readlog"))
+        m_pFileManager = new CPCFileManagerReadLog;
+    else
+        m_pFileManager = new CPCFileManager;
+#else /* _DEBUG */
     m_pFileManager = new CPCFileManager;
+#endif /* _DEBUG */
     m_pInputsDevice = new CPCInputsDevice;
     m_pPCSoundDevice = new CPCSoundDevice;
     m_pFrameSkipController = new CFrameSkipController;

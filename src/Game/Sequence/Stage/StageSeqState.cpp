@@ -3,16 +3,17 @@
 
 #include "Game/Component/Gauge/GaugeInformation.hpp"
 #include "Game/Component/Gauge/GaugeResult.hpp"
-#include "Game/Component/GameMain/GameProperty.hpp"
 #include "Game/Component/GameData/GameData.hpp"
+#include "Game/Component/GameMain/GameProperty.hpp"
+#include "Game/Component/GameMain/GamePlayer.hpp"
 #include "Game/Component/GameMain/StageInfo.hpp"
 #include "Game/Component/GameMain/GameLoader.hpp"
+#include "Game/Component/Gimmick/GimmickManager.hpp"
 #include "Game/System/DataLoader/DataLoader.hpp"
 #include "Game/System/Sound/GameSound.hpp"
 #include "Game/System/Map/MapCamera.hpp"
 #include "Game/System/Misc/ScreenFade.hpp"
 #include "System/Common/Controller.hpp"
-#include "System/Common/File/FileID.hpp"
 
 
 /*static*/ CDummyStageState* CDummyStageState::Instance(void)
@@ -94,16 +95,16 @@ void CLoadStageSeqState::LoadData(void)
     LoadStageCommon();
 
 #ifdef TMNT2_BUILD_EU
-    CDataLoader::Regist(FILEID::ID_LANG_GAUGE_EU);
+    CDataLoader::Regist(FPATH_LANG("Language/English/Gauge_EU/Gauge_EU.lpac"));
 
     switch (CStageInfo::GetMode(m_idStage))
     {
     case GAMETYPES::STAGEMODE_HOME:
-        CDataLoader::Regist(FILEID::ID_LANG_HOME_EU);
+        CDataLoader::Regist(FPATH_LANG("Language/English/Home_EU/Home_EU.lpac"));
         break;
 
     case GAMETYPES::STAGEMODE_RIDE:
-        CDataLoader::Regist(FILEID::ID_LANG_RIDE_EU);
+        CDataLoader::Regist(FPATH_LANG("Language/English/Ride_EU/Ride_EU.lpac"));
         break;
 
     default:
@@ -131,6 +132,9 @@ void CLoadStageSeqState::LoadStage(void)
 //
 // *********************************************************************************
 //
+
+
+/*static*/ const float CIntroStageSeqState::DISPINFO_SEC = 30.0f;
 
 
 void CIntroStageSeqState::OnAttach(CStageBaseSequence* pSeq, const void* pParam)
@@ -176,9 +180,9 @@ bool CIntroStageSeqState::OnMove(CStageBaseSequence* pSeq)
 
             int32 iController = CGameData::Attribute().GetVirtualPad();
             if (CController::GetDigitalTrigger(iController, CController::DIGITAL_OK))
-                m_fTime += 30.0f;
+                m_fTime += DISPINFO_SEC;
 
-            if (m_fTime >= 30.0f)
+            if (m_fTime >= DISPINFO_SEC)
             {
                 CScreenFade::BlackOut();
                 m_step = STEP_FADEOUT;
@@ -193,6 +197,9 @@ bool CIntroStageSeqState::OnMove(CStageBaseSequence* pSeq)
             if (!CScreenFade::IsFading())
                 m_step = STEP_END;
         }
+        break;
+
+    default:
         break;
     };
     
@@ -323,7 +330,179 @@ bool CPlayStageSeqState::OnMove(CStageBaseSequence* pSeq)
                 m_step = STEP_END;
         }
         break;
+
+    default:
+        break;
     };
 
     return (m_step >= STEP_END);
+};
+
+
+//
+// *********************************************************************************
+//
+
+
+CLoadTestSeqState::CLoadTestSeqState(MAPID::VALUE idMap)
+: m_idMap(idMap)
+, m_step(0)
+, m_idStage(STAGEID::ID_NONE)
+{
+    ;
+};
+
+
+CLoadTestSeqState::CLoadTestSeqState(STAGEID::VALUE idStage)
+: m_idMap(MAPID::ID_NONE)
+, m_step(0)
+, m_idStage(idStage)
+{
+    ;
+};
+
+
+void CLoadTestSeqState::OnAttach(CStageBaseSequence* pSeq, const void* pParam)
+{
+    m_step = 0;
+    loadSound();
+};
+
+
+void CLoadTestSeqState::OnDetach(CStageBaseSequence* pSeq)
+{
+    pSeq->Stage().Start();
+};
+
+
+bool CLoadTestSeqState::OnMove(CStageBaseSequence* pSeq)
+{
+    switch (m_step)
+    {
+    case 0:
+        {
+            if (!CGameSound::IsLoadEnd())
+                break;
+
+            loadData();
+            ++m_step;
+        }
+        break;
+
+    case 1:
+        {
+            CDataLoader::Period();
+
+            if (CDataLoader::IsLoadEnd())
+                ++m_step;
+        }
+        break;
+
+    default:
+        break;
+    };
+
+    return (m_step >= 2);
+};
+
+
+void CLoadTestSeqState::loadData(void)
+{
+    if ((m_idMap == MAPID::ID_M06R) ||
+        (m_idMap == MAPID::ID_M13R) ||
+        (m_idMap == MAPID::ID_M22R) ||
+        (m_idMap == MAPID::ID_M32R) ||
+        (m_idMap == MAPID::ID_M46R))
+    {
+        CGameLoader::LoadStageCommonData(GAMETYPES::STAGEMODE_RIDE);
+    }
+    else
+    {
+        CGameLoader::LoadStageCommonData(GAMETYPES::STAGEMODE_NORMAL);
+    };
+
+    int32 nPlayerInfoNum = CGameData::PlayParam().GetCharaInfoNum();
+    for (int32 i = 0; i < nPlayerInfoNum; ++i)
+    {
+        const CGamePlayParam::CHARAINFO& chrinfo = CGameData::PlayParam().CharaInfo(i);
+        CGameLoader::LoadPlayer(chrinfo.m_CharacterID, chrinfo.m_Costume);
+    };
+
+    if (m_idMap != MAPID::ID_NONE)
+        CGameLoader::LoadMap(m_idMap);
+    else
+        CGameLoader::LoadStage(m_idStage);
+};
+
+
+void CLoadTestSeqState::loadSound(void)
+{
+    CGameSound::StageBefore(CGameData::PlayParam().GetStage());
+};
+
+
+//
+// *********************************************************************************
+//
+
+
+CPlayTestSeqState::CPlayTestSeqState(bool bEnableGauge)
+: m_nPlayerNum(0)
+, m_bEnableGauge(bEnableGauge)
+{
+    ;
+};
+
+
+void CPlayTestSeqState::OnAttach(CStageBaseSequence* pSeq, const void* pParam)
+{
+    if (m_bEnableGauge)
+        pSeq->Stage().AddGauge();
+
+    pSeq->Stage().AddStageObjects();
+    pSeq->Stage().GetMapCamera()->SetCameraMode(CMapCamera::MODE_AUTOCHANGE);
+
+    if (CGameProperty::GetPlayerNum() > 1)
+        pSeq->Stage().GetMapCamera()->SetPathMode(CMapCamera::PATHMODE_MULTIPLAYER);
+    else
+        pSeq->Stage().GetMapCamera()->SetPathMode(CMapCamera::PATHMODE_SINGLEPLAYER);
+
+    CScreenFade::BlackIn();
+};
+
+
+void CPlayTestSeqState::OnDetach(CStageBaseSequence* pSeq)
+{
+    ;
+};
+
+
+bool CPlayTestSeqState::OnMove(CStageBaseSequence* pSeq)
+{
+    uint32 digital = CController::DIGITAL_SELECT | CController::DIGITAL_START;
+
+    if ((CController::GetDigital(CController::CONTROLLER_LOCKED_ON_VIRTUAL) == digital) ||
+        (CController::GetDigital(CController::CONTROLLER_UNLOCKED_ON_VIRTUAL) == digital))
+        return true;
+
+    return false;
+};
+
+
+void CPlayTestSeqState::AddPlayer(int32 iPlayerNo)
+{
+    int32 nPlayerMax = CGameData::PlayParam().GetPlayerNum();
+    if (m_nPlayerNum < nPlayerMax)
+    {
+        const CGamePlayParam::CHARAINFO& chrInfo = CGameData::PlayParam().CharaInfo(m_nPlayerNum);
+
+        CGameProperty::AddPlayerCharacter(chrInfo.m_iPlayerNo, chrInfo.m_CharacterID, chrInfo.m_Costume);
+
+        const CGamePlayParam::PLAYERCONTEXT& playerCtx = CGameData::PlayParam().PlayerContext(chrInfo.m_iPlayerNo);
+        CGameProperty::Player(chrInfo.m_iPlayerNo)->LoadContext(playerCtx);
+
+        CGimmickManager::SetPlayerStartPosition(chrInfo.m_iPlayerNo, true);
+
+        ++m_nPlayerNum;
+    };
 };

@@ -20,7 +20,7 @@ CAmbientLightModule::CAmbientLightModule(CCharacter* pCharacter)
 	
 	RwRGBA colorModel = pModel->GetColor();
     
-    RwRGBARealFromRwRGBAMacro(&m_ColorTo, &colorModel);
+    RwRGBARealFromRwRGBA(&m_ColorTo, &colorModel);
     m_ColorFrom = m_ColorTo;
 };
 
@@ -33,10 +33,10 @@ void CAmbientLightModule::Run(void)
 	RwRGBA colorModel = m_pCharacter->GetModel()->GetColor();
 
 	RwRGBAReal colorGroundReal;
-	RwRGBARealFromRwRGBAMacro(&colorGroundReal, &colorGround);
+	RwRGBARealFromRwRGBA(&colorGroundReal, &colorGround);
 
 	RwRGBAReal colorModelReal;
-	RwRGBARealFromRwRGBAMacro(&colorModelReal, &colorModel);
+	RwRGBARealFromRwRGBA(&colorModelReal, &colorModel);
 
 	if ((colorGroundReal.red   != m_ColorTo.red)    &&
 		(colorGroundReal.green != m_ColorTo.green) 	&&
@@ -54,7 +54,7 @@ void CAmbientLightModule::Run(void)
 
 		if (t == 0.0f)
 		{
-			RwRGBAFromRwRGBARealMacro(&colorModelNew, &m_ColorFrom);
+			RwRGBAFromRwRGBAReal(&colorModelNew, &m_ColorFrom);
 		}
 		else if (t < 0.5)
 		{
@@ -64,11 +64,11 @@ void CAmbientLightModule::Run(void)
 			color.blue  = ((m_ColorTo.blue  - m_ColorFrom.blue)  * (t / 0.5f)) + m_ColorFrom.blue;
 			color.alpha = 0;
 
-			RwRGBAFromRwRGBARealMacro(&colorModelNew, &color);
+			RwRGBAFromRwRGBAReal(&colorModelNew, &color);
 		}
 		else
 		{
-			RwRGBAFromRwRGBARealMacro(&colorModelNew, &m_ColorTo);
+			RwRGBAFromRwRGBAReal(&colorModelNew, &m_ColorTo);
 		};
 
 		colorModelNew.alpha = 0xFF;

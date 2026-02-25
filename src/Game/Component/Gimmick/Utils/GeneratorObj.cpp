@@ -294,8 +294,10 @@ const CEnemySetData::ENEMYDATA& CEnemySetData::GetEnemyData(int32 nIndex)
 
 void CEnemyGeneratorBase::GENERATEPOINT::Init(GIMMICKPARAM::GIMMICK_BASIC* pParam)
 {
-    m_vPos  = pParam->m_vPosition;
-    m_fRotY = Math::ACos(pParam->m_quat.w) * 2.0f;
+    m_vPos = pParam->m_vPosition;
+
+    float c = Math::ACos(pParam->m_quat.w);
+    m_fRotY = c + c;
     
     if (pParam->m_quat.y < 0.0f)
         m_fRotY = -m_fRotY;
@@ -395,17 +397,13 @@ bool CEnemyGeneratorBase::IsActive(void) const
         (m_state == STATE_NONE))
         return false;
 
-    if (m_nSuspendCount)
-        return false;
-
-    if (m_bAutoActivate)
+    if (m_nSuspendCount <= 0)
     {
-        float fDist = CGimmickUtils::CalcNearestPlayerDistance(&m_origin.m_vPos);
-        if (fDist >= m_fActivateDistance)
-            return false;
-    };    
+        if (!m_bAutoActivate || (CGimmickUtils::CalcNearestPlayerDistance(&m_origin.m_vPos) < m_fActivateDistance))
+            return true;
+    };
 
-    return true;
+    return false;
 };
 
 

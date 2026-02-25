@@ -44,11 +44,9 @@ static void OutputCommon(bool ln, const char* fname, int32 fline, const char* fo
 
     if (TestOptFlag(PCDEBUG_FLAG_DISP_TFL))
     {
-        offset = std::sprintf(
-            szOutputBuffer,
-            "[%02d:%02d:%02d.%03.0f][%s::%d]: ",
-            st.wHour, st.wMinute, st.wSecond, static_cast<float>(st.wMilliseconds), fname, fline
-        );
+        offset = std::sprintf(szOutputBuffer,
+                              "[%02d:%02d:%02d.%03.0f][%s::%d]: ",
+                              st.wHour, st.wMinute, st.wSecond, static_cast<float>(st.wMilliseconds), fname, fline);
     };
     
     int32 Result = std::vsprintf(&szOutputBuffer[offset], format, vl);
@@ -134,7 +132,7 @@ static void OutputCommon(bool ln, const char* fname, int32 fline, const char* fo
     SetWindowPos(CPCSpecific::m_hWnd, HWND_BOTTOM, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE);
     CPCSpecific::DisplayCursor(true);
 
-    int32 iResult = MessageBoxA(NULL, szFatalBuffer, CPCSystem::WNDNAME, Flags);
+    int32 iResult = MessageBox(NULL, szFatalBuffer, CPCSystem::WND_NAME, Flags);
 #ifdef _DEBUG    
     if (iResult == IDOK)
         __debugbreak();

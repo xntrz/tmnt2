@@ -242,7 +242,7 @@ C080UltimateNinja::CScatterKnifeMgr::MakeTargetData(RwV3d* pvecTargetPos,
     Utils6034::MakeXByDirection(&vecLeft, &vecFront, &Math::VECTOR3_AXIS_Y);
 
     RwMatrix matRotY;
-    RwMatrixSetIdentityMacro(&matRotY);
+    RwMatrixSetIdentity(&matRotY);
     Math::Matrix_RotateY(&matRotY, MATH_DEG2RAD(iRollRate));
 
     RwV3dTransformVector(pvecTargetDir, &vecLeft, &matRotY);

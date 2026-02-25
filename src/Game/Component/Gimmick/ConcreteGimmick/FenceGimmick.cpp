@@ -180,8 +180,8 @@ void CFenceGimmick::EffectCallAtBreak(void)
 
     CModel* pMdl = m_model.GetModel(CNormalGimmickModel::MODELTYPE_DRAW_NORMAL);
     RpClump* pClump = pMdl->GetClump();
-    RwFrame* pFrame = RpClumpGetFrameMacro(pClump);
-    RwMatrix* pMatrix = RwFrameGetMatrixMacro(pFrame);
+    RwFrame* pFrame = RpClumpGetFrame(pClump);
+    RwMatrix* pMatrix = RwFrameGetMatrix(pFrame);
 
     RwV3dTransformPoints(avBreakPos, avBreakPos, COUNT_OF(avBreakPos), pMatrix);
 
@@ -196,7 +196,7 @@ void CFenceGimmick::EffectCallAtBreak(void)
 void CFenceGimmick::SetVelocityAtBreak(const CGameObject* pObj)
 {
     RwMatrix matRotY;
-    RwMatrixSetIdentityMacro(&matRotY);
+    RwMatrixSetIdentity(&matRotY);
     
     switch (pObj->GetType())
     {

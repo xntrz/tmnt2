@@ -39,15 +39,15 @@ static inline void checkWallJump(CMapCollision::COLLISIONPARAM* pCollisionParam,
     ASSERT(pWorldCollision);
     ASSERT(pszName);
     ASSERT(nMaterialID >= 0);
-    ASSERT(nMaterialID < RpWorldGetNumMaterialsMacro(pWorldCollision));
+    ASSERT(nMaterialID < RpWorldGetNumMaterials(pWorldCollision));
 
-	RpMaterial* pMaterial = RpWorldGetMaterialMacro(pWorldCollision, nMaterialID);
+	RpMaterial* pMaterial = RpWorldGetMaterial(pWorldCollision, nMaterialID);
 	if (pMaterial)
 	{
-		RwTexture* pMaterialTex = RpMaterialGetTextureMacro(pMaterial);
+		RwTexture* pMaterialTex = RpMaterialGetTexture(pMaterial);
 		if (pMaterialTex)
 		{
-			const char* pszTextureName = RwTextureGetNameMacro(pMaterialTex);
+			const char* pszTextureName = RwTextureGetName(pMaterialTex);
             ASSERT(pszTextureName);
             
             std::strcpy(pszName, pszTextureName);
@@ -60,9 +60,9 @@ static inline void checkWallJump(CMapCollision::COLLISIONPARAM* pCollisionParam,
 {
     ASSERT(pWorldCollision);
     ASSERT(nMaterialID >= 0);
-    ASSERT(nMaterialID < RpWorldGetNumMaterialsMacro(pWorldCollision));
+    ASSERT(nMaterialID < RpWorldGetNumMaterials(pWorldCollision));
 
-    rColor = RpWorldGetMaterialMacro(pWorldCollision, nMaterialID)->color;
+    rColor = RpWorldGetMaterial(pWorldCollision, nMaterialID)->color;
 };
 
 

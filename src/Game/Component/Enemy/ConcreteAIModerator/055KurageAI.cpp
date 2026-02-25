@@ -91,7 +91,7 @@ C055KurageAI::C055KurageAI(CEnemyCharacter* pEnemyChr)
     vecDir.z = (fRand * fDistanceOfSuitable);
 
     RwMatrix matRotY;
-    RwMatrixSetIdentityMacro(&matRotY);
+    RwMatrixSetIdentity(&matRotY);
     Math::Matrix_RotateY(&matRotY, (m_fDirection + MATH_PI));
     RwV3dTransformVector(&vecDir, &vecDir, &matRotY);
 
@@ -201,7 +201,7 @@ C055KurageAI::C055KurageAI(CEnemyCharacter* pEnemyChr)
         float fRandRot = (Math::RandFloat() * MATH_PI2);
 
         RwMatrix matRot;
-        RwMatrixSetIdentityMacro(&matRot);
+        RwMatrixSetIdentity(&matRot);
         Math::Matrix_RotationYawPitchRoll(&matRot, fRandRot, 0.0f, 0.0f);
         RwV3dTransformVector(&vecDir, &vecDir, &matRot);
 

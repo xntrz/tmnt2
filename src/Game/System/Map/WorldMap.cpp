@@ -17,6 +17,12 @@
 
 #include "rppvs.h"
 
+#if defined(TARGET_PC) && \
+    defined(TMNT2_RWDRV_D3D9)
+#include <d3d9.h>
+#endif /* defined(TARGET_PC) && \
+          defined(TMNT2_RWDRV_D3D9) */
+
 
 class CWorldMapManager
 {
@@ -109,7 +115,7 @@ void CWorldMapManager::OnLoaded(void)
         };
         
         RwMatrix matrix;
-        RwMatrixSetIdentityMacro(&matrix);
+        RwMatrixSetIdentity(&matrix);
         Math::Matrix_Rotate(&matrix, &vRotation);
 
         SetDirectionLightMatrix(&matrix);
@@ -216,12 +222,12 @@ void CWorldMapManager::SetWorldMapEnvironment(void)
 {
     CreateLight();
 
-    RwUInt32 worldFlags = RpWorldGetFlagsMacro(m_pWorld);
+    RwUInt32 worldFlags = RpWorldGetFlags(m_pWorld);
 
     worldFlags &= (~rpWORLDLIGHT);
     worldFlags |= rpWORLDPRELIT;
 
-    RpWorldSetFlagsMacro(m_pWorld, worldFlags);
+    RpWorldSetFlags(m_pWorld, worldFlags);
 };
 
 
@@ -277,9 +283,9 @@ void CWorldMapManager::CreateLight(void)
 
         RpWorldAddLight(m_pWorld, m_pLightAmbient);
 
-        RwUInt8 lightFlags = RpLightGetFlagsMacro(m_pLightAmbient);;
+        RwUInt8 lightFlags = RpLightGetFlags(m_pLightAmbient);;
         lightFlags &= (~rpLIGHTLIGHTWORLD);
-        RpLightSetFlagsMacro(m_pLightAmbient, lightFlags);
+        RpLightSetFlags(m_pLightAmbient, lightFlags);
     };
 
     m_pLightDirection = RpLightCreate(rpLIGHTDIRECTIONAL);
@@ -298,18 +304,24 @@ void CWorldMapManager::CreateLight(void)
 
             RpWorldAddLight(m_pWorld, m_pLightDirection);
 
-            RwUInt8 lightFlags = RpLightGetFlagsMacro(m_pLightDirection);
+            RwUInt8 lightFlags = RpLightGetFlags(m_pLightDirection);
             lightFlags &= (~rpLIGHTLIGHTWORLD);
-            RpLightSetFlagsMacro(m_pLightDirection, lightFlags);            
+            RpLightSetFlags(m_pLightDirection, lightFlags);            
         };
+
     };
 
-#ifdef TARGET_PC
-    //D3DRS_AMBIENT
-    RwD3D9SetRenderState(139, 0xFFFFFFFF);
-#else
-#error Not implemented for current target
+#if defined(TARGET_PC)
+    RwUInt32 color = RWRGBALONG(255, 255, 255, 255);
+
+#if defined(TMNT2_RWDRV_OPENGL)
+    //RwOpenGLEnable(rwGL_LIGHTING);
+    //glLightModeli(GL_LIGHT_MODEL_AMBIENT, color);
+#elif defined(TMNT2_RWDRV_D3D9)
+    RwD3D9SetRenderState(D3DRS_AMBIENT, color);
 #endif
+
+#endif /* defined(TARGET_PC) */
 };
 
 
@@ -350,8 +362,10 @@ void CWorldMapManager::Draw(CWorldMap::DRAWTYPE drawtype)
     {
         if (m_pMapInfo->m_foginfo.m_bEnable)
         {
+            RwRGBA color = m_pMapInfo->m_foginfo.m_Color;
+            
             RENDERSTATE_PUSH(rwRENDERSTATEFOGENABLE, true);
-            RENDERSTATE_PUSH(rwRENDERSTATEFOGCOLOR, RWRGBALONGEX(m_pMapInfo->m_foginfo.m_Color));
+            RENDERSTATE_PUSH(rwRENDERSTATEFOGCOLOR, RWRGBALONG(color.red, color.green, color.blue, color.alpha));
             RENDERSTATE_PUSH(rwRENDERSTATEFOGTYPE, rwFOGTYPELINEAR);
         }
         else
@@ -387,7 +401,7 @@ void CWorldMapManager::Draw(CWorldMap::DRAWTYPE drawtype)
                     RwCamera* pCameraCurrent = CCamera::CameraCurrent();
                     if (pCameraCurrent)
                     {
-                        RwFrame* pFrame = RwCameraGetFrameMacro(pCameraCurrent);
+                        RwFrame* pFrame = RwCameraGetFrame(pCameraCurrent);
                         RwMatrix* pLTM = RwFrameGetLTM(pFrame);
 
                         RpPVSSetViewPosition(m_pWorld, &pLTM->pos);
@@ -438,7 +452,7 @@ void CWorldMapManager::SetDirectionLightMatrix(RwMatrix* pMatrix)
     if (!m_pLightDirection)
         return;
     
-    RwFrame* pFrame = RpLightGetFrameMacro(m_pLightDirection);
+    RwFrame* pFrame = RpLightGetFrame(m_pLightDirection);
     if (!pFrame)
         return;
 
@@ -743,14 +757,14 @@ bool CWorldMapManager::CheckCollisionCharacterHeight(RwV3d* pPos, RwV3d* pNewPos
                 if (pCollisionResult->m_mapobj.m_pLTM && !Math::Vec3_Equal(&pCollisionResult->m_mapobj.m_vRotate, &Math::VECTOR3_ZERO))
                 {
                     RwMatrix invLTM;
-                    RwMatrixSetIdentityMacro(&invLTM);
+                    RwMatrixSetIdentity(&invLTM);
                     RwMatrixInvert(&invLTM, pCollisionResult->m_mapobj.m_pLTM);
 
                     RwV3d vLocalPos = Math::VECTOR3_ZERO;
                     RwV3dTransformPoint(&vLocalPos, pNewPos, &invLTM);
 
                     RwMatrix matrix;
-                    RwMatrixSetIdentityMacro(&matrix);
+                    RwMatrixSetIdentity(&matrix);
                     Math::Matrix_Rotate(&matrix, &pCollisionResult->m_mapobj.m_vRotate);
                     
 					RwV3d vAfterPos = Math::VECTOR3_ZERO;

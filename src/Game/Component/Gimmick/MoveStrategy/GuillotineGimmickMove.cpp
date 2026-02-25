@@ -18,7 +18,7 @@ CGuillotineGimmickMove::CGuillotineGimmickMove(const INITPARAM* pInitParam)
 , m_collisionResult()
 , m_ePendulumState()
 {
-    RwMatrixSetIdentityMacro(&m_matFulcrumPoint);
+    RwMatrixSetIdentity(&m_matFulcrumPoint);
 
     std::memset(&m_collisionResult, 0, sizeof(m_collisionResult));
 
@@ -44,7 +44,7 @@ CGuillotineGimmickMove::~CGuillotineGimmickMove(void)
 CGuillotineGimmickMove::RESULT CGuillotineGimmickMove::OnMove(float dt)
 {
     RwMatrix mat;
-    RwMatrixSetIdentityMacro(&mat);
+    RwMatrixSetIdentity(&mat);
     Math::Matrix_AffineTransformation(&mat, nullptr, &m_vRotation, &m_vPosition);
 
     RwV3d vDltPos = Math::VECTOR3_ZERO;

@@ -167,7 +167,7 @@ void C037TriceratonFlyingHarness::CMoveStatusObserver::Direction(const RwV3d* ve
 void C037TriceratonFlyingHarness::CMoveStatusObserver::Velocity(const RwV3d* vecPos, const RwV3d* vecAt)
 {
     RwMatrix matRot;
-    RwMatrixSetIdentityMacro(&matRot);
+    RwMatrixSetIdentity(&matRot);
     Math::Matrix_RotationYawPitchRoll(&matRot, m_fDirection, 0.0f, 0.0f);
 
     RwV3d vecVelocity = { 0.0f, 0.0f, m_fMoveSpeed };
@@ -286,7 +286,7 @@ C037TriceratonFlyingHarness::CFireStatusObserver::Observing(void) /*override*/
         Math::Vec3_Sub(&vec, &vecBodyPosPlayer, &vecBodyPosEnemy);
 
         RwMatrix matRotY;
-        RwMatrixSetIdentityMacro(&matRotY);
+        RwMatrixSetIdentity(&matRotY);
         Math::Matrix_RotateY(&matRotY, -std::atan2(vec.x, vec.z));
         RwV3dTransformVector(&vec, &vec, &matRotY);
 
@@ -311,7 +311,7 @@ C037TriceratonFlyingHarness::CFireStatusObserver::Observing(void) /*override*/
         float fYaw = (fDir + fConvergence);
 
         RwMatrix matDir;
-        RwMatrixSetIdentityMacro(&matDir);
+        RwMatrixSetIdentity(&matDir);
         Math::Matrix_RotationYawPitchRoll(&matDir, fYaw, -fPitch, 0.0f);
 
         RwV3d vecDir = Math::VECTOR3_AXIS_Z;
@@ -604,7 +604,7 @@ C037TriceratonFlyingHarness::C037TriceratonFlyingHarness(void)
         float fDir = Compositor().GetDirection();
 
         RwMatrix matDir;
-        RwMatrixSetIdentityMacro(&matDir);
+        RwMatrixSetIdentity(&matDir);
         Math::Matrix_RotationYawPitchRoll(&matDir, fDir, -MATH_DEG2RAD(72.0f), 0.0f);
 
         CEffectManager::SetDirection(m_hEngineEffect, &matDir);

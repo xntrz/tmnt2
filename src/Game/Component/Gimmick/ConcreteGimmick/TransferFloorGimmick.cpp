@@ -98,7 +98,7 @@ CLinearTransferFloorGimmick::CLinearTransferFloorGimmick(const char* pszName, vo
     m_model.SetModel(CNormalGimmickModel::MODELTYPE_DRAW_NORMAL, pModel);
     
     RwMatrix matrix;
-    RwMatrixSetIdentityMacro(&matrix);    
+    RwMatrixSetIdentity(&matrix);    
     CGimmickUtils::QuaternionToRotationMatrix(&matrix, &pInitParam->m_quat);
     
     RwV3d vRotation = Math::VECTOR3_ZERO;
@@ -170,7 +170,7 @@ CPathTransferFloorGimmick::CPathTransferFloorGimmick(const char* pszName, void* 
     m_model.SetModel(CNormalGimmickModel::MODELTYPE_DRAW_NORMAL, pModel);
     
     RwMatrix matrix;
-    RwMatrixSetIdentityMacro(&matrix);
+    RwMatrixSetIdentity(&matrix);
     CGimmickUtils::QuaternionToRotationMatrix(&matrix, &pInitParam->m_quat);
     
     RwV3d vRotation = Math::VECTOR3_ZERO;
@@ -259,7 +259,7 @@ CRotateTransferFloorGimmick::CRotateTransferFloorGimmick(const char* pszName, vo
     //  init movement
     //
     RwMatrix matRot;
-    RwMatrixSetIdentityMacro(&matRot);
+    RwMatrixSetIdentity(&matRot);
     CGimmickUtils::QuaternionToRotationMatrix(&matRot, &pInitParam->m_quat);
 
     m_pRotateMove = new CRotateTransferFloorGimmickMove;

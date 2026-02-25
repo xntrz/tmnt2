@@ -671,7 +671,7 @@ CBaseGeneralEnemyChr::CDeathMechStatusObserver::Observing(void) /*override*/
         if (hEffect)
         {
             RwMatrix matRot;
-            RwMatrixSetIdentityMacro(&matRot);
+            RwMatrixSetIdentity(&matRot);
             Math::Matrix_RotationYawPitchRoll(&matRot, 0.0f, -MATH_DEG2RAD(90.0f), 0.0f);
 
             CEffectManager::SetDirection(hEffect, &matRot);

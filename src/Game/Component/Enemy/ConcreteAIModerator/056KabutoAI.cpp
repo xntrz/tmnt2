@@ -68,7 +68,7 @@ C056KabutoAI::C056KabutoAI(CEnemyCharacter* pEnemyChr)
     Math::Vec3_Sub(&vec, &vecBodyPosPlayer, &vecBodyPosEnemy);
 
     RwMatrix matRotY;
-    RwMatrixSetIdentityMacro(&matRotY);
+    RwMatrixSetIdentity(&matRotY);
     Math::Matrix_RotateY(&matRotY, -std::atan2(vec.x, vec.z));
 
     RwV3dTransformVector(&vec, &vec, &matRotY);

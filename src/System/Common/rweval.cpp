@@ -10,8 +10,6 @@ static RwCameraEndUpdateFunc cameraEndUpdate = NULL;
 static RwCamera*
 rwNoEvalCameraEndUpdate(RwCamera* camera)
 {
-    extern void* RwEngineInstance;
-
     RwStandardFunc CameraEndUpdateFunc = RWSRCGLOBAL(stdFunc[rwSTANDARDCAMERAENDUPDATE]);
     ASSERT(CameraEndUpdateFunc != NULL);
 

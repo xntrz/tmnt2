@@ -56,10 +56,7 @@ bool CGraphicsDevice::Initialize(void)
         &CMemory::rwcalloc
     };
 
-    const RwUInt32 rwRESOURCESDEFAULTARENASIZE = (4 << 20);
-    static_assert(rwRESOURCESDEFAULTARENASIZE == 0x400000, "retail checkout");
-
-    if (!RwEngineInit(&memfuncs, 0x0, rwRESOURCESDEFAULTARENASIZE))
+    if (!RwEngineInit(&memfuncs, rwENGINEINITFREELISTS, rwRESOURCESDEFAULTARENASIZE))
     {
         OUTPUT("RwEngineInit failed");
         return false;
@@ -274,25 +271,32 @@ bool CGraphicsDevice::CreateFrameBuffer(void)
     ASSERT(!m_pFrameBuffer);
     ASSERT(!m_pZBuffer);
 
-    RwVideoMode Videomode = { 0 };
-    RwEngineGetVideoModeInfo(&Videomode, RwEngineGetCurrentVideoMode());
+    int32 vmCurrent = RwEngineGetCurrentVideoMode();
 
-    int32 vmw = Videomode.width;
-    int32 vmh = Videomode.height;
+    RwVideoMode vmInfoCurrent;
+    RwEngineGetVideoModeInfo(&vmInfoCurrent, vmCurrent);
 
-    if (ScreenWidth() < vmw)
-        vmw = ScreenWidth();
+    int32 vmw = vmInfoCurrent.width;
+    int32 vmh = vmInfoCurrent.height;
 
-    if (ScreenHeight() < vmh)
-        vmh = ScreenHeight();
+    int32 scw = ScreenWidth();
+    int32 sch = ScreenHeight();
+
+    if (scw < vmw)
+        vmw = scw;
+
+    if (sch < vmh)
+        vmh = sch;
 
     m_pFrameBuffer = RwRasterCreate(vmw, vmh, 0, rwRASTERTYPECAMERA);
     ASSERT(m_pFrameBuffer);
+
     if (!m_pFrameBuffer)
         return false;
 
     m_pZBuffer = RwRasterCreate(vmw, vmh, 0, rwRASTERTYPEZBUFFER);
     ASSERT(m_pZBuffer);
+
     if (!m_pZBuffer)
     {
         RwRasterDestroy(m_pFrameBuffer);
@@ -302,8 +306,8 @@ bool CGraphicsDevice::CreateFrameBuffer(void)
 
     if (m_pCamera)
     {
-        RwCameraSetRasterMacro(m_pCamera, m_pFrameBuffer);
-        RwCameraSetZRasterMacro(m_pCamera, m_pZBuffer);
+        RwCameraSetRaster(m_pCamera, m_pFrameBuffer);
+        RwCameraSetZRaster(m_pCamera, m_pZBuffer);
     };
 
     return true;
@@ -314,14 +318,14 @@ void CGraphicsDevice::DestroyFrameBuffer(void)
 {
     if (m_pZBuffer)
     {
-        RwCameraSetZRasterMacro(m_pCamera, nullptr);
+        RwCameraSetZRaster(m_pCamera, nullptr);
         RwRasterDestroy(m_pZBuffer);
         m_pZBuffer = nullptr;
     };
 
     if (m_pFrameBuffer)
     {
-        RwCameraSetRasterMacro(m_pCamera, nullptr);
+        RwCameraSetRaster(m_pCamera, nullptr);
         RwRasterDestroy(m_pFrameBuffer);
         m_pFrameBuffer = nullptr;
     };
@@ -338,8 +342,8 @@ bool CGraphicsDevice::CreateCamera(void)
     
     m_pCamera->endUpdate = rwevalGetCameraEndUpdateFunc();
 
-    RwCameraSetRasterMacro(m_pCamera, m_pFrameBuffer);
-    RwCameraSetZRasterMacro(m_pCamera, m_pZBuffer);
+    RwCameraSetRaster(m_pCamera, m_pFrameBuffer);
+    RwCameraSetZRaster(m_pCamera, m_pZBuffer);
 
     RwFrame* pRwFrame = RwFrameCreate();
     if (!pRwFrame)
@@ -349,7 +353,7 @@ bool CGraphicsDevice::CreateCamera(void)
         return false;
     };
 
-    RwCameraSetFrameMacro(m_pCamera, pRwFrame);
+    RwCameraSetFrame(m_pCamera, pRwFrame);
     RwFrameSetIdentity(pRwFrame);
     RwCameraSetNearClipPlane(m_pCamera, TYPEDEF::DEFAULT_CLIP_NEAR);
     RwCameraSetFarClipPlane(m_pCamera, TYPEDEF::DEFAULT_CLIP_FAR);

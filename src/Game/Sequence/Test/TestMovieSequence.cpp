@@ -7,7 +7,6 @@
 #include "Game/System/Misc/Gamepad.hpp"
 #include "Game/System/Misc/ScreenFade.hpp"
 #include "Game/System/Movie/MovieDataManager.hpp"
-#include "Game/System/Movie/MovieID.hpp"
 #include "Game/ProcessList.hpp"
 
 
@@ -38,8 +37,13 @@ bool CTestMovieSequence::OnAttach(const void* pParam)
     m_menu.DigitalOK(IPad::DIGITAL_START);
     m_menu.DigitalCANCEL(IPad::DIGITAL_SELECT);
 
-    for (int32 i = MOVIEID::ID_START; i < MOVIEID::ID_MAX; ++i)
-        m_menu.AddTrigger(CMovieDataManager::GetLabel(MOVIEID::VALUE(i)));
+    int32 mvDataNum = CMovieDataManager::GetMovieDataNum();
+    for (int32 i = 0; i < mvDataNum; ++i)
+    {
+        m_menu.AddTrigger(CMovieDataManager::GetMovieData(i)->pszFilename,
+                          nullptr,
+            const_cast<char*>(CMovieDataManager::GetMovieData(i)->pszFilename));
+    };
 
     return true;
 };
@@ -58,8 +62,8 @@ void CTestMovieSequence::OnMove(bool bRet, const void* pReturnValue)
     CDebugMenuCtrl::RESULT Result = m_menu.GetResult();
     switch (Result)
     {
-    case CDebugMenuCtrl::RESULT_OK:
-        Call(PROCLABEL_SEQ_MOVIE, reinterpret_cast<const void*>(m_menu.GetSelect()));
+    case CDebugMenuCtrl::RESULT_OK:        
+        Call(PROCLABEL_SEQ_MOVIE, m_menu.GetItemParam());
         break;
 
     case CDebugMenuCtrl::RESULT_CANCEL:

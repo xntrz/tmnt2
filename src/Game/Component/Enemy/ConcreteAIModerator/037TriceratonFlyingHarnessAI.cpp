@@ -72,7 +72,7 @@ C037TriceratonFlyingHarnessAI::C037TriceratonFlyingHarnessAI(CEnemyCharacter* pE
     vecDir.z = (fRand * fDistanceOfSuitable);
 
     RwMatrix matRotY;
-    RwMatrixSetIdentityMacro(&matRotY);
+    RwMatrixSetIdentity(&matRotY);
     Math::Matrix_RotateY(&matRotY, (m_fDirection + MATH_PI));
     RwV3dTransformVector(&vecDir, &vecDir, &matRotY);
 
@@ -180,7 +180,7 @@ C037TriceratonFlyingHarnessAI::C037TriceratonFlyingHarnessAI(CEnemyCharacter* pE
         float fRot = (Math::RandFloat() * MATH_PI2);
 
         RwMatrix matDir;
-        RwMatrixSetIdentityMacro(&matDir);
+        RwMatrixSetIdentity(&matDir);
         Math::Matrix_RotationYawPitchRoll(&matDir, fRot, 0.0f, 0.0f);
         RwV3dTransformVector(&vecDir, &vecDir, &matDir);
 

@@ -57,13 +57,13 @@ void CHomeSprite::SetTextureAndVirtualSize(RwTexture* pTexture)
 {
     ASSERT(pTexture);
 
-    RwRaster* pRaster = RwTextureGetRasterMacro(pTexture);
+    RwRaster* pRaster = RwTextureGetRaster(pTexture);
     ASSERT(pRaster);
     
     SetTexture(pTexture);
 
-    Resize(static_cast<float>(RwRasterGetWidthMacro(pRaster)), 
-		   static_cast<float>(RwRasterGetHeightMacro(pRaster)));
+    Resize(static_cast<float>(RwRasterGetWidth(pRaster)), 
+		   static_cast<float>(RwRasterGetHeight(pRaster)));
 };
 
 

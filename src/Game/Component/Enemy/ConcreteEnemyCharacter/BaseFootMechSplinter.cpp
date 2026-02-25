@@ -843,7 +843,7 @@ void CBaseFootMechSplinter::CAttackShotStatusObserver::CalcDirectionPitch(RwV3d*
     float fPitch = std::atan2(y, z);
 
     RwMatrix matRotX;
-    RwMatrixSetIdentityMacro(&matRotX);
+    RwMatrixSetIdentity(&matRotX);
     Math::Matrix_RotateX(&matRotX, fPitch);
 
     RwV3dTransformVector(pvecDirection, pvecDirection, &matRotX);

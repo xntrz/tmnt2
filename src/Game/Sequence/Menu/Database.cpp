@@ -10,7 +10,6 @@
 #include "Game/System/Text/GameText.hpp"
 #include "Game/System/Texture/TextureManager.hpp"
 #include "Game/ProcessList.hpp"
-#include "System/Common/File/FileID.hpp"
 #include "System/Common/Controller.hpp"
 #include "System/Common/RenderState.hpp"
 #include "System/Common/Sprite.hpp"
@@ -856,7 +855,7 @@ bool CDatabase::OnAttach(const void* pParam)
     m_iSelWindowType = CDatabase_Container::WNDTYPE_EXIT;
     m_bGotoViewerFlag = false;
     
-    return CAnim2DSequence::OnAttach(FILEID::ID_DATABASE);
+    return CAnim2DSequence::OnAttach(FPATH("Common/Menu/Database/Database.lpac"));
 };
 
 

@@ -66,7 +66,8 @@ CBaseGrapplerAI::CBaseGrapplerAI(CEnemyCharacter* pEnemyChr)
 
 /*virtual*/ bool CBaseGrapplerAI::OnActionOfWait(int32 iNo) /*override*/
 {
-    float fThinkFreq = (Characteristic().m_fThinkingFrequency * 2.0f);
+    float fThinkFreq = (Characteristic().m_fThinkingFrequency +
+                        Characteristic().m_fThinkingFrequency);
     AIOT::SetWaitOrder(ThinkOrder(), fThinkFreq);
 
     if ((ThinkOrder().GetOrder()  == CAIThinkOrder::ORDER_MOVE) &&
@@ -75,11 +76,10 @@ CBaseGrapplerAI::CBaseGrapplerAI(CEnemyCharacter* pEnemyChr)
         return true;
     };
 
-    float fRandZ = Math::RandFloatRange(-1.5f, 1.5f);
-	float fRandX = Math::RandFloatRange(-1.5f, 1.5f);
-    float fDistOfSuitable = Characteristic().m_fDistanceOfSuitable;
+    float fRandZ = Math::RandFloatRange(-1.5f, 1.5f) * Characteristic().m_fDistanceOfSuitable;
+	float fRandX = Math::RandFloatRange(-1.5f, 1.5f) * Characteristic().m_fDistanceOfSuitable;
 
-    RwV3d vecAt = { fDistOfSuitable * fRandX, 0.0f, fDistOfSuitable * fRandZ };
+    RwV3d vecAt = { fRandX, 0.0f, fRandZ };
 
     float fRatioOfMove = Characteristic().m_fRatioOfMove;
     Math::Vec3_Scale(&vecAt, &vecAt, fRatioOfMove + 0.5f);
@@ -336,30 +336,6 @@ CBaseGrapplerAI::CBaseGrapplerAI(CEnemyCharacter* pEnemyChr)
 
 /*virtual*/ CBaseGrapplerAI::UNDERACTION CBaseGrapplerAI::OnUnderWait(void) /*override*/
 {
-    /*
-     *  TODO rework to custom code or leave it as in retail game next three lines.
-     *
-     *  Next 3 lines of code makes enemy "jitter" on the edge of patrol radius.
-     *
-     *  For example enemy ran to the player and get out of patrol area while exec order and next lines makes
-     *  enemy thinkover then we get to the CBaseGrapplerAI::OnActionOfRun so basically all fine until
-     *  next think tick - CBaseGeneralEnemyAI::OnUnderMove calls "OnUnderWait" before process so we go here again
-     *  and enemy STILL is out side patrol area and order is set to MOVE from the "OnActionOfRun"!
-     *  This makes enemy do sequence of "Move once-Think-Move once-Think-..." each think cycle, also this cause
-     *  ridiculous situations in retail game when player stays infront of enemy and enemy just trying to return
-     *  patrol area by starting rotating for 1 pixel then think again and so on.
-     *  (try it in enemy AI testbed by enabling showing all AI areas and AI order info in debug menu)
-     *
-     *  This could be done faster via order RUN to corner point inside patrol area. So probably to fix this jitter
-     *  behaviour is to order RUN to random position inside patrol area instead MOVE in the "OnActionOfRun" then
-     *  override "OnUnderRun" for CBaseGrapplerAI and check when enemy reached this point by "IsMoveEndForTargetPosition"
-     *  then return THINKOVER from "OnUnderRun".
-     *
-     *  (Also required to change CBaseGrapplerEnemyChr::CMoveStatusObserver::Observing, and IsMoveEndForTargetPosition
-     *   to check OrderRun() insted OrderMove())
-     * 
-     *  (NOTE 2: Also this related to all flying AI because this is copy pasted to their AI too - see CBaseBatAI for example)
-     */
     CAIThinkOrder::ORDER order = ThinkOrder().GetOrder();
     if ((order == CAIThinkOrder::ORDER_MOVE) && IsOutsidePatrolArea())
         return UNDERACTIONS_THINKOVER;
@@ -433,10 +409,9 @@ CBaseGrapplerAI::CBaseGrapplerAI(CEnemyCharacter* pEnemyChr)
     vAt.y = 0.0f;
 
     float fDist = CEnemyUtils::GetDistance(&vPos, &vAt);
-
     float fCollRadius = EnemyCharacter().Compositor().GetCollisionParameter().m_fRadius;
 
-    return ((fCollRadius * 2.0f) >= fDist);
+    return ((fCollRadius + fCollRadius) >= fDist);
 };
 
 
@@ -493,7 +468,8 @@ CBaseGrapplerAI::CBaseGrapplerAI(CEnemyCharacter* pEnemyChr)
 
 /*virtual*/ bool CBaseGrapplerAI::IsTakeRunAttack(void)
 {
-    float fDistOfSuitable = Characteristic().m_fDistanceOfSuitable * 2.0f;
+    float fDistOfSuitable = (Characteristic().m_fDistanceOfSuitable +
+                             Characteristic().m_fDistanceOfSuitable);
 
 	RwV3d vAt = { 0.0f, 0.0f, fDistOfSuitable };
     EnemyCharacter().Compositor().RotateVectorByDirection(&vAt, &vAt);
@@ -558,9 +534,6 @@ CBaseGrapplerAI::CBaseGrapplerAI(CEnemyCharacter* pEnemyChr)
     if (pPlayerChr == nullptr)
         return false;
 
-    if (!m_targetInfo.TestState(CAIUtils::PLAYER_STATE_ATTACK))
-        return false;
-
     float fDistOfSuitable = Characteristic().m_fDistanceOfSuitable;
     float fTargetDist = m_targetInfo.GetDistance();
     if (fTargetDist > fDistOfSuitable)
@@ -576,6 +549,9 @@ CBaseGrapplerAI::CBaseGrapplerAI(CEnemyCharacter* pEnemyChr)
     float fFrontView = (fRatioOfFrontView * MATH_DEG2RAD(90.0f));
 
     if (fFrontView < fDirDiff)
+        return false;
+
+    if (!m_targetInfo.TestState(CAIUtils::PLAYER_STATE_ATTACK))
         return false;
 
     float fDirPlayer = pPlayerChr->GetDirection();

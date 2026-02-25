@@ -180,7 +180,7 @@ namespace Utils6034
             fRot *= -1.0f;
 
         RwMatrix matRotY;
-        RwMatrixSetIdentityMacro(&matRotY);
+        RwMatrixSetIdentity(&matRotY);
         Math::Matrix_RotateY(&matRotY, fRot);
 
         RwV3dTransformVector(&vecDist, &vecDist, &matRotY);
