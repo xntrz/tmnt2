@@ -19,7 +19,7 @@ public:
     static void Initialize(void);
     static void Terminate(void);
     static void Period(void);
-    static bool CheckModelCollision(RpIntersection* pIntersection, RwV3d* pVelocity);
+    static bool CheckModelCollision(struct RpIntersection* pIntersection, RwV3d* pVelocity);
     static uint32 RegistCollisionModel(RpClump* pClump, const char* pszName, MAPTYPES::GIMMICKTYPE type);
     static uint32 RegistCollisionModel(RpClump* pClump);
     static void RemoveCollisionModel(uint32 hAtari);

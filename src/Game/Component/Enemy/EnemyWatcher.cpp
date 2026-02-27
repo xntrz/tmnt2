@@ -300,7 +300,7 @@ int32 CEnemyWatcher::GetFreePlayerNo(int32 iPlayerPurposeMax /*= -1*/)
 
     ASSERT(Search(m_pEnemyChr->GetOwner()));
 
-    int32 aPlayerPurposeNum[GAMETYPES::PLAYERS_MAX] = { 0 };
+    int32 aPlayerPurposeNum[GAMETYPES::PLAYERS_MAX] = {};
 
     CEnemyContainer::CServeEnemy* pServeEnemy = CEnemyContainer::Instance().FindFirst();
     while (pServeEnemy)

@@ -697,7 +697,7 @@ void CMapCamera::UpdateSetCamera(const RwV3d* pvAt)
     else
         Math::Vec3_Lerp(&m_vAt, &m_vAt, &vAt, 0.4f);
 
-	int32 cameraId = -1;
+    int32 cameraId = -1;
 
     if (!std::strcmp(m_szCameraAreaName, ""))
     {

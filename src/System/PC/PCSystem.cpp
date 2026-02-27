@@ -88,11 +88,11 @@ bool CPCSystem::Initialize(void)
     //
     //  Set sticky keys
     //
-    m_stickyKeys        = { 0 };
+    m_stickyKeys        = {};
     m_stickyKeys.cbSize = sizeof(m_stickyKeys);
     SystemParametersInfo(SPI_GETSTICKYKEYS, sizeof(m_stickyKeys), &m_stickyKeys, 0);
 
-    STICKYKEYS stickyKeys = { 0 };
+    STICKYKEYS stickyKeys = {};
     stickyKeys.cbSize   = sizeof(stickyKeys);
     stickyKeys.dwFlags  = (m_stickyKeys.dwFlags & (~SKF_HOTKEYACTIVE));
     SystemParametersInfo(SPI_SETSTICKYKEYS, sizeof(stickyKeys), &stickyKeys, 0);
@@ -100,11 +100,11 @@ bool CPCSystem::Initialize(void)
     //
     //  Set toggle keys
     //
-    m_toggleKeys        = { 0 };
+    m_toggleKeys        = {};
     m_toggleKeys.cbSize = sizeof(m_toggleKeys);
     SystemParametersInfo(SPI_GETTOGGLEKEYS, sizeof(m_toggleKeys), &m_toggleKeys, 0);
 
-    TOGGLEKEYS toggleKeys = { 0 };
+    TOGGLEKEYS toggleKeys = {};
     toggleKeys.cbSize   = sizeof(toggleKeys);
     toggleKeys.dwFlags  = (m_toggleKeys.dwFlags & (~(TKF_HOTKEYACTIVE | TKF_TOGGLEKEYSON)));
     SystemParametersInfo(SPI_SETTOGGLEKEYS, sizeof(toggleKeys), &toggleKeys, 0);
@@ -112,11 +112,11 @@ bool CPCSystem::Initialize(void)
     //
     //  Set filter keys
     //
-    m_filterKeys        = { 0 };
+    m_filterKeys        = {};
     m_filterKeys.cbSize = sizeof(m_filterKeys);
     SystemParametersInfo(SPI_GETFILTERKEYS, sizeof(m_filterKeys), &m_filterKeys, 0);
 
-    FILTERKEYS filterKeys   = { 0 };
+    FILTERKEYS filterKeys   = {};
     filterKeys.cbSize       = sizeof(filterKeys);
     filterKeys.iWaitMSec    = m_filterKeys.iWaitMSec;
     filterKeys.iRepeatMSec  = m_filterKeys.iRepeatMSec;
@@ -170,7 +170,7 @@ void CPCSystem::Terminate(void)
 
 bool CPCSystem::Run(void)
 {
-    MSG msg = { 0 };
+    MSG msg = {};
 
     if (PeekMessage(&msg, 0, 0, 0, PM_REMOVE))
     {
@@ -227,7 +227,7 @@ bool CPCSystem::CheckOS(void)
         /*  OSVERSION_WIN_XP_OR_ABOVE   */  true,
     };
 
-    OSVERSIONINFO osver = { 0 };
+    OSVERSIONINFO osver = {};
     osver.dwOSVersionInfoSize = sizeof(osver);
 
     if (!GetVersionEx(&osver))
@@ -273,7 +273,7 @@ bool CPCSystem::CheckOS(void)
                 return s_abOsCompatibilityTable[OSVERSION_WIN_NT];
             };
 
-            OSVERSIONINFOEX osverex = { 0 };
+            OSVERSIONINFOEX osverex = {};
             osverex.dwOSVersionInfoSize = sizeof(osverex);
 
             if (GetVersionEx(reinterpret_cast<OSVERSIONINFO*>(&osverex)))
@@ -411,7 +411,7 @@ bool CPCSystem::WindowCreate(void)
     };
 #endif /* defined(TMNT2_SINGLE_INSTANCE) */
 
-    WNDCLASSEX wc = { 0 };
+    WNDCLASSEX wc = {};
     wc.cbSize = sizeof(wc);
     wc.style = CS_OWNDC;
     wc.lpfnWndProc = WndProc;

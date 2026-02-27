@@ -4,8 +4,10 @@
 #include "System/Common/Controller.hpp"
 
 #ifdef TARGET_PC
-#include "System/PC/PCSpecific.hpp"
-#endif
+#include "System/PC/PCTypedefs.hpp"
+#endif /* TARGET_PC */
+
+#include "rtfsyst.h"
 
 
 class CPadStream::CPadFileStream
@@ -59,7 +61,7 @@ protected:
 };
 
 
-#ifdef TARGET_PC
+#if defined(TARGET_PC)
 class CPadStream::CPCPadFileStream final : public CPadStream::CPadFileStream
 {
 public:
@@ -69,15 +71,12 @@ public:
     virtual void SetPacked(int32 iController) override;
     virtual void GetPacked(void) override;
 };
-#else
-#error Not implemented for current target
-#endif
-
+#endif /* defined(TARGET_PC) */
 
 
 CPadStream::CPadFileStream::CPadFileStream(void)
 : m_pPacked(nullptr)
-, m_packed({ 0 })
+, m_packed({})
 , m_uDigital(0)
 , m_uDigitalOld(0)
 , m_uTrigger(0)
@@ -93,14 +92,14 @@ CPadStream::CPadFileStream::CPadFileStream(void)
 
 CPadStream::CPadFileStream::~CPadFileStream(void)
 {
-#ifdef _DEBUG    
+#ifdef _DEBUG
     if (m_pRecBuff)
     {
         delete[] m_pRecBuff;
         m_pRecBuff = nullptr;
         m_uRecBuffSize = 0;
     };
-#endif
+#endif /* _DEBUG */
     
     if (m_pFile)
     {
@@ -120,12 +119,11 @@ void CPadStream::CPadFileStream::SetPacked(int32 iController)
 {
     ASSERT(m_pPacked);
 
+    uint32 digital = CController::GetDigital(iController);
 #ifdef TARGET_PS2
-    m_pPacked->m_uDigital = Convert(uint16(CController::GetDigital(iController)));
-#elif TARGET_PC
-    m_pPacked->m_uDigital = CController::GetDigital(iController);
+    m_pPacked->m_uDigital = Convert(static_cast<uint16>(digital));
 #else
-#error Not implemented for current target
+    m_pPacked->m_uDigital = digital;
 #endif    
     m_pPacked->m_iAnalogX = CController::GetAnalog(iController, CController::ANALOG_LSTICK_X);
     m_pPacked->m_iAnalogY = CController::GetAnalog(iController, CController::ANALOG_LSTICK_Y);
@@ -137,12 +135,10 @@ void CPadStream::CPadFileStream::GetPacked(void)
     ASSERT(m_pPacked);
 
 #ifdef TARGET_PS2
-    m_uDigital = Convert(uint32(m_pPacked->m_uDigital));
-#elif TARGET_PC
-    m_uDigital = m_pPacked->m_uDigital;
+    m_uDigital = Convert(static_cast<uint32>(m_pPacked->m_uDigital));
 #else
-#error Not implemented for current target
-#endif    
+    m_uDigital = m_pPacked->m_uDigital;
+#endif
     m_uTrigger    = m_uDigital & ~(m_uDigitalOld);
     m_uDigitalOld = m_uDigital;
     m_iAnalogX    = m_pPacked->m_iAnalogX;
@@ -222,7 +218,7 @@ void CPadStream::CPadFileStream::AllocBuffer(uint32 uBuffSize)
 #ifdef _DEBUG
     m_uRecBuffSize = uBuffSize;
     m_pRecBuff = new uint8[m_uRecBuffSize];
-#endif    
+#endif /* _DEBUG */
 };
 
 
@@ -341,11 +337,9 @@ bool CPadStream::Open(MODE mode, STAGEID::VALUE idStage, int32 iController)
     CPadFileStream::FILEMODE filemode = (mode == MODE_RECORD) ? CPadFileStream::FILEMODE_RECORD :
                                                                 CPadFileStream::FILEMODE_PLAY;
 
-#ifdef TARGET_PC
+#if defined(TARGET_PC)
     m_pStream = new CPCPadFileStream(filemode, idStage, iController);
-#else
-#error Not implemented for current target
-#endif
+#endif /* defined(TARGET_PC) */
 
     return (m_pStream != nullptr);
 };

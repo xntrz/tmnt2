@@ -23,7 +23,7 @@ public:
 
 private:
     static CGameObject*   m_pRunningObject;
-    char                  m_szObjName[GAMEOBJECTTYPES::NAME_MAX];
+    char                  m_szObjName[GAMEOBJECTTYPES::GO_NAME_MAX];
     GAMEOBJECTTYPE::VALUE m_objtype;
     GAMEOBJECTTYPES::FLAG m_oflag;
     uint32                m_hObject;

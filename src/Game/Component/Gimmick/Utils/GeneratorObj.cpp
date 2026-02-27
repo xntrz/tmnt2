@@ -107,7 +107,7 @@ bool CGenEnemyManipTable::MANIP::IsOutOfSight(void)
         if (!pModel->IsClippingEnable())
             return false;
 
-        RwSphere BSphere = { 0 };
+        RwSphere BSphere = {};
         pModel->CalcCurrentBoundingSphere(&BSphere);
 
         if (CGimmickUtils::IsPositionVisible(&BSphere.center, BSphere.radius, false))
@@ -115,7 +115,7 @@ bool CGenEnemyManipTable::MANIP::IsOutOfSight(void)
     }
     else
     {
-        RwSphere BSphere = { 0 };
+        RwSphere BSphere = {};
         pEnemy->GetPosition(&BSphere.center);
 
         if (CGimmickUtils::IsPositionVisible(&BSphere.center))
@@ -634,7 +634,7 @@ bool CSettingEnemyGenerator::OnGenerate(CGenEnemyManipTable::MANIP* pManip, int3
 
 void CSettingEnemyGenerator::Init(const RwV3d& rvPos, float fRotY, int32 nEnemyNum, float fEnemyRange, bool bAutoActivate)
 {
-    INITPARAM InitParam = { 0 };
+    INITPARAM InitParam = {};
     InitParam.m_bAutoActivate       = bAutoActivate;
     InitParam.m_nTotalEnemy         = nEnemyNum;
     InitParam.m_nAliveEnemyMax      = nEnemyNum;
@@ -652,7 +652,7 @@ void CSettingEnemyGenerator::Init(const RwV3d& rvPos, float fRotY, int32 nEnemyN
 
 void CSettingEnemyGenerator::Init(GIMMICKPARAM::GIMMICK_ENEMY_PLACE* pParam, int32 nEnemyNum, bool bAutoActivate)
 {
-    INITPARAM InitParam = { 0 };
+    INITPARAM InitParam = {};
     InitParam.m_bAutoActivate       = bAutoActivate;
     InitParam.m_nTotalEnemy         = nEnemyNum;
     InitParam.m_nAliveEnemyMax      = nEnemyNum;
@@ -792,7 +792,7 @@ bool CSingleEnemyGenerator::OnGenerate(CGenEnemyManipTable::MANIP* pManip, int32
 
 void CSingleEnemyGenerator::Init(GIMMICKPARAM::GIMMICK_ENEMY_APPEARANCE_SINGLE* pParam, bool bAutoActivate)
 {
-    INITPARAM InitParam = { 0 };
+    INITPARAM InitParam = {};
     InitParam.m_bAutoActivate       = bAutoActivate;
     InitParam.m_nTotalEnemy         = pParam->m_numTotal;
     InitParam.m_nAliveEnemyMax      = pParam->m_numAppearMax;
@@ -847,7 +847,7 @@ bool CMultipleEnemyGenerator::OnGenerate(CGenEnemyManipTable::MANIP* pManip, int
 
 void CMultipleEnemyGenerator::Init(GIMMICKPARAM::GIMMICK_ENEMY_APPEARANCE_MULTIPLE* pParam, bool bAutoActivate)
 {
-    INITPARAM InitParam = { 0 };
+    INITPARAM InitParam = {};
     InitParam.m_bAutoActivate       = bAutoActivate;
     InitParam.m_nTotalEnemy         = pParam->m_numTotal;
     InitParam.m_nAliveEnemyMax      = pParam->m_numAppearanceEnemyMax;

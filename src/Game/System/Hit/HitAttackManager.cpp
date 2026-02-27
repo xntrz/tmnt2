@@ -873,7 +873,7 @@ static inline CHitAttackContainer& HitAttackContainer(void)
 #ifdef _DEBUG
     if (CHitDebug::SHOW_HIT_ATTACK)
     {
-        RwSphere sphere = { 0 };
+        RwSphere sphere = {};
         
         switch (pHitAttack->GetShape())
         {
@@ -903,7 +903,7 @@ static inline CHitAttackContainer& HitAttackContainer(void)
 #ifdef _DEBUG
     if (CHitDebug::SHOW_HIT_CATCH)
     {
-        RwSphere sphere = { 0 };
+        RwSphere sphere = {};
 
         switch (pHitCatch->GetShape())
         {

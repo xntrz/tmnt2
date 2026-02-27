@@ -768,6 +768,9 @@ void CDebugMenuCtrl::handleOk(void)
                 pItemTrigger->Callback(pItemTrigger->Param);
         }
         break;
+
+    default:
+        break;
     };
 };
 

@@ -1,6 +1,8 @@
 #include "MotionManager.hpp"
 #include "Motion.hpp"
 
+#include "rtanim.h"
+
 
 class CHAnimationContainer
 {

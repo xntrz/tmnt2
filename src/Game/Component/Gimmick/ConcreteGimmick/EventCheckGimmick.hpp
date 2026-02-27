@@ -22,7 +22,7 @@ public:
 
 protected:
     PRIVATESTATE m_privatestate;
-    char m_szTargetName[GAMEOBJECTTYPES::NAME_MAX];
+    char m_szTargetName[GAMEOBJECTTYPES::GO_NAME_MAX];
 };
 
 
@@ -61,7 +61,7 @@ public:
 protected:
     MODE m_mode;
     int32 m_nTargetDefeatNum;
-    char m_szGeneratorName[GAMEOBJECTTYPES::NAME_MAX];
+    char m_szGeneratorName[GAMEOBJECTTYPES::GO_NAME_MAX];
     bool m_bCheckCompleteFlag;
 };
 
@@ -100,7 +100,7 @@ protected:
     static bool isPointReverseSidePlane(RwV3d* pvPos, RwV3d* pvPlanePos, RwV3d* pvNormal);
 
 protected:
-    char m_szTargetGimmickName[GAMEOBJECTTYPES::NAME_MAX];
+    char m_szTargetGimmickName[GAMEOBJECTTYPES::GO_NAME_MAX];
     AREATYPE m_areatype;
     NUMBERTYPE m_numbertype;
     bool m_bInsideAreaSomeone;
@@ -170,7 +170,7 @@ public:
     virtual bool CheckEvent(void) override;
 
 private:
-    char m_szObserveTarget[GAMEOBJECTTYPES::NAME_MAX];
+    char m_szObserveTarget[GAMEOBJECTTYPES::GO_NAME_MAX];
 };
 
 

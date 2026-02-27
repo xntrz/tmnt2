@@ -4,13 +4,11 @@
 class CMotion : public CListNode<CMotion>
 {
 public:
-    CMotion(const char* pszName, RtAnimAnimation* pHAnimation);
-    
-    inline ~CMotion(void) {};
-    
-    inline const char* GetName(void) const              { return m_pszName; };
-    inline RtAnimAnimation* GetAnimation(void) const    { return m_pHAnimation; };
-    inline float GetEndTime(void) const                 { return m_pHAnimation->duration; };
+    CMotion(const char* pszName, RtAnimAnimation* pHAnimation);    
+    ~CMotion(void) {};
+    const char* GetName(void) const;
+    RtAnimAnimation* GetAnimation(void) const;
+    float GetEndTime(void) const;
 
 private:
     const char* m_pszName;

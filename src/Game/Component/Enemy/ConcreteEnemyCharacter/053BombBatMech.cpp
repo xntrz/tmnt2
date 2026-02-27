@@ -169,7 +169,8 @@ C053BombBatMech::CBodyBlowStatusObserver::Observing(void) /*override*/
 };
 
 
-/*virtual*/ bool C053BombBatMech::CBodyBlowStatusObserver::OnMotionChange(int32 idOld, int32 idNew) /*override*/
+/*virtual*/ bool
+C053BombBatMech::CBodyBlowStatusObserver::OnMotionChange(int32 idOld, int32 idNew) /*override*/
 {
     if (idOld == MOTIONID_IDLE)
     {

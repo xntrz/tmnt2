@@ -5,8 +5,8 @@
 #include "System/Common/RenderState.hpp"
 
 
-static RwIm3DVertex s_aVertexForCylinder[CParticle::VERTEXNUM] = { 0 };
-static RwIm3DVertex s_aVertex[300] = { 0 };
+static RwIm3DVertex s_aVertexForCylinder[CParticle::VERTEXNUM] = {};
+static RwIm3DVertex s_aVertex[300] = {};
 
 
 CParticle::CParticle(void)
@@ -33,10 +33,14 @@ CParticle::CParticle(void)
     m_fColorDecayG = 0.0f;
     m_fColorDecayB = 0.0f;
     m_fColorDecayA = 0.0f;
-    m_fColorDecayBuffer[4] = { 0.0f };
+    m_fColorDecayBuffer[0] = 0.0f;
+    m_fColorDecayBuffer[1] = 0.0f;
+    m_fColorDecayBuffer[2] = 0.0f;
+    m_fColorDecayBuffer[3] = 0.0f;
     m_fSizeDecayWidth = 0.0f;
     m_fSizeDecayHeight = 0.0f;
-    m_fSizeDecayBuffer[2] = { 0.0f };
+    m_fSizeDecayBuffer[0] = 0.0f;
+    m_fSizeDecayBuffer[1] = 0.0f;
     m_vScaleDecay = Math::VECTOR3_ZERO;
     m_vScaleDecayBuffer = Math::VECTOR3_ZERO;
     m_nVertexNum = 0;

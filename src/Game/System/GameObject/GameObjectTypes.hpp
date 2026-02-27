@@ -3,7 +3,7 @@
 
 namespace GAMEOBJECTTYPES
 {
-    const int32 NAME_MAX = 16;
+    const int32 GO_NAME_MAX = 16;
 
     enum FLAG : uint32
     {

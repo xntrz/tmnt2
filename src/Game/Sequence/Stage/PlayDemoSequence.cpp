@@ -77,7 +77,7 @@ bool CPlayDemoSequence::OnAttach(const void* pParam)
 
     CGameSound::Stop();
 
-    for (m_iStageIndex; m_iStageIndex < COUNT_OF(m_aStageTable); ++m_iStageIndex)
+    for (m_iStageIndex = 0; m_iStageIndex < COUNT_OF(m_aStageTable); ++m_iStageIndex)
     {
         if (m_idStage == m_aStageTable[m_iStageIndex].m_idStage)
             break;

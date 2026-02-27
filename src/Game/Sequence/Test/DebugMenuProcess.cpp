@@ -721,9 +721,13 @@ void CDebugMenuProcess::Draw(void) const
         s_pDebugMenuHelpFont->Position(0, 0);
 
         /* get key name and transform it to upper case format */
-        const char* pszKeyName = CPCSpecific::GetKeyName(MENU_ACTIVATE_KEY);
+        const char* pszKeyName = "NO_KEY";
+
+#if defined(TARGET_PC)
+        pszKeyName = CPCSpecific::GetKeyName(MENU_ACTIVATE_KEY);
         ASSERT(pszKeyName, "key is invalid or not allowed");
-        
+#endif /* defined(TARGET_PC) */     
+
         char szKeyBuffer[32];
         szKeyBuffer[0] = '\0';
 

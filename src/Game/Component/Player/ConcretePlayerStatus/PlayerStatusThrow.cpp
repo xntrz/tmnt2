@@ -733,7 +733,7 @@ namespace PlayerStatus
             CModel* pModel = rPlayerChr.GetModel();
             ASSERT(pModel);
 
-            CCharacter::MSG_LIFT_INFO liftinfo = { 0 };
+            CCharacter::MSG_LIFT_INFO liftinfo = {};
             liftinfo.m_vPosition    = *pModel->GetBonePositionFromID(3);
             liftinfo.m_fDirection   = rPlayerChr.GetDirection();
             liftinfo.m_iStatus      = rPlayerChr.GetStatus();

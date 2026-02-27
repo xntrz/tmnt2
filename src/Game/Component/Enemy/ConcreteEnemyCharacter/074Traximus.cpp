@@ -577,7 +577,8 @@ C074Traximus::C074Traximus(void)
 
 /*virtual*/ bool C074Traximus::OnMessageCanChangingAerial(float fHeight) /*override*/
 {
-    if (GetStatus() == C074Traximus::STATUS_ATTACK_JUMP_AERIAL)
+    int32 status = static_cast<int32>(GetStatus());
+    if (status == C074Traximus::STATUS_ATTACK_JUMP_AERIAL)
         return false;
 
     return CEnemyCharacter::OnMessageCanChangingAerial(fHeight);
@@ -598,7 +599,7 @@ C074Traximus::C074Traximus(void)
 
 /*virtual*/ void C074Traximus::OnMessageTouchdown(float fHeight) /*override*/
 {
-    ENEMYTYPES::STATUS statusNow = GetStatus();
+    int32 statusNow = static_cast<int32>(GetStatus());
 
     if ((statusNow == C074Traximus::STATUS_ATTACK_JUMP_READY) ||
         (statusNow == ENEMYTYPES::STATUS_TOUCHDOWN))

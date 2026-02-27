@@ -1,6 +1,6 @@
 #pragma once
 
-#ifdef TARGET_PC
+#if defined(TARGET_PC)
 
 #include "OptionTypes.hpp"
 
@@ -39,4 +39,4 @@ private:
     uint32 m_auButtonAssign[OPTIONTYPES::KEYFUNCMAX - 4];   // exclude up/down/left/right
 };
 
-#endif /* TARGET_PC */
+#endif /* defined(TARGET_PC) */

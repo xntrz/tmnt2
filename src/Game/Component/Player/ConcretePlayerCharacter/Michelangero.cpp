@@ -140,7 +140,7 @@ CMichelangero::CMichelangero(GAMETYPES::COSTUME costume)
 	//		2 - left sword
     //
     
-    CPlayerCharacter::PARAMETER parameter = { 0 };
+    CPlayerCharacter::PARAMETER parameter = {};
     parameter.m_chrparameter.m_bToon            = true;
     parameter.m_chrparameter.m_pszModelName     = "michelangero";
     parameter.m_chrparameter.m_pszMotionSetName = "michelangero";

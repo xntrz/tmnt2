@@ -298,7 +298,7 @@
 
 IPhysicalController::IPhysicalController(void)
 {
-    m_info = { 0 };
+    m_info = {};
     m_info.m_eState = CController::STATE_MAX;
 
     uint32 aDigitalMapping[] =
@@ -367,7 +367,7 @@ void IPhysicalController::Update(void)
     //
     //	Apply analog mapping
     //
-    int16 aAnalog[CController::ANALOG_NUM] = { 0 };
+    int16 aAnalog[CController::ANALOG_NUM] = {};
     
     for (int32 i = 0; i < COUNT_OF(aAnalog); ++i)
         aAnalog[i] = m_info.m_aAnalog[m_aAnalogMapping[i]];

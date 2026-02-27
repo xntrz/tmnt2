@@ -111,7 +111,7 @@ float CMotionParameter::GetNextChainMotionConnectTime(const char* pszNextMotion)
     if (!m_pChainMotionParameter)
         return 0.0f;
 
-	return m_pChainMotionParameter->GetNextChainMotionConnectTime(pszNextMotion);
+    return m_pChainMotionParameter->GetNextChainMotionConnectTime(pszNextMotion);
 };
 
 

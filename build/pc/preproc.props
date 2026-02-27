@@ -3,19 +3,11 @@
     
     <PropertyGroup>
         <SourcePath>..\..\..\src</SourcePath>
-        <ObjPath>..\..\..\obj</ObjPath>
         <ProjDir>$([System.IO.Path]::GetDirectoryName('$(MSBuildProjectFullPath)'))</ProjDir>
-
-        <PreprocessPath>$(ObjPath)\$(IntDir)preprocess</PreprocessPath>
-        <PreprocessPath>$(PreprocessPath.Replace($(ProjectName), '').Replace('\\', '\'))</PreprocessPath>
         
         <SourceDir>$([System.IO.Path]::Combine($(ProjDir), $(SourcePath)))</SourceDir>
         <SourceDir>$([System.IO.Path]::Combine($(SourceDir), ''))\</SourceDir>    
         
-        <PreprocessDir>$([System.IO.Path]::Combine($(ProjDir), $(PreprocessPath)))</PreprocessDir>
-        <PreprocessDir>$([System.IO.Path]::Combine($(PreprocessDir), ''))\</PreprocessDir>
-        <PreprocessDir>$(PreprocessDir.Replace($(ProjectName), '').Replace('\\', '\'))</PreprocessDir>
-
         <ExcludeDir>
             <!-- Example: $(SourceDir)System\**\*; -->
         </ExcludeDir>

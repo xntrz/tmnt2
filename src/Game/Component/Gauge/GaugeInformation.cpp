@@ -755,7 +755,7 @@ void CGaugeInformation_Container::DispBattleNexusInfoSub(void)
     if (!m_bNexusDispFlag)
         return;
 
-	InfoDispRenderStatePush();
+    InfoDispRenderStatePush();
     
     float SpriteW = 512.0f;
     float SpriteH = 128.0f;
@@ -952,7 +952,7 @@ void CGaugeInformation_Container::BossGaugeDrawSub(int32 no)
     if (!pBossGaugeInfo->m_bEnable)
         return;
 
-	float fOfsY = 30.0f;
+    float fOfsY = 30.0f;
 	if (!no)
 		fOfsY = 0.0f;
 

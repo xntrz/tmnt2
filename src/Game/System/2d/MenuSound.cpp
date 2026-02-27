@@ -2,6 +2,8 @@
 
 #include "Game/System/Sound/GameSound.hpp"
 
+#include "rt2danim.h"
+
 
 /*static*/ const char* CMenuSound::m_apszSoundLabel[] =
 {

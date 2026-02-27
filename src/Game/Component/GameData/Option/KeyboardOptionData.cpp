@@ -1,6 +1,6 @@
 #include "KeyboardOptionData.hpp"
 
-#ifdef TARGET_PC
+#if defined(TARGET_PC)
 
 #include "Game/Component/GameData/GameData.hpp"
 #include "System/Common/Controller.hpp"
@@ -230,4 +230,4 @@ OPTIONTYPES::KEYFUNC CKeyboardOptionData::findFunction(int32 key) const
     return OPTIONTYPES::KEYFUNCMAX;
 };
 
-#endif /* TARGET_PC */
+#endif /* defined(TARGET_PC) */

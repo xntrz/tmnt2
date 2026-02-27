@@ -79,8 +79,6 @@ void CGamepadOptionData::Apply(void)
 #elif defined(TARGET_PC)
     IGamepad::AppendButtonFunction(iController, IGamepad::DIGITAL_R3,       IGamepad::FUNCTION_SWITCH_CAM);
     IGamepad::AppendButtonFunction(iController, IGamepad::DIGITAL_L3,       IGamepad::FUNCTION_SWITCH_GAUGE);
-#else
-#error Not implemented for current target
 #endif    
 
 #ifdef TARGET_PC

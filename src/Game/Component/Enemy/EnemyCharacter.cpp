@@ -177,11 +177,11 @@ CEnemyCharacter::CEnemyCharacter(ENEMYID::VALUE idEnemy)
 , m_bRunning(false)
 , m_bRunningAI(false)
 {
-    char szName[GAMEOBJECTTYPES::NAME_MAX];
+    char szName[GAMEOBJECTTYPES::GO_NAME_MAX];
     szName[0] = '\0';
 
     std::sprintf(szName, "%s_%04d", ENEMYID::GetExtName(m_ID), CEnemy::m_iUniqueCount);
-    ASSERT(std::strlen(szName) < GAMEOBJECTTYPES::NAME_MAX);
+    ASSERT(std::strlen(szName) < GAMEOBJECTTYPES::GO_NAME_MAX);
 
     CCharacterCompositor* pChrCompositor = new CCharacterCompositor(szName, CCharacter::TYPE_ENEMY, *this);
 

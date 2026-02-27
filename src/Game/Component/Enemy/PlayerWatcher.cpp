@@ -177,8 +177,7 @@ uint32 CPlayerStateWatcher::Sub_GetAttackFlag(PLAYERTYPES::STATUS eStatus, PLAYE
     uint32 uFlag = 0;
 
     if (((eStatus >= PLAYERTYPES::STATUS_ATTACK_A) && (eStatus < PLAYERTYPES::STATUS_ATTACK_JUMP))
-        && (eStatus != PLAYERTYPES::STATUS_ATTACK_B_CHARGE)
-        || (eStatus == PLAYERTYPES::STATUS_THROWN_COMBINATION))
+        && ((eStatus != PLAYERTYPES::STATUS_ATTACK_B_CHARGE) || (eStatus == PLAYERTYPES::STATUS_THROWN_COMBINATION)))
     {
         uFlag |= PLAYER_WATCH_ATTACK;
     };
@@ -762,7 +761,7 @@ bool CPlayerWatcher::IsPlayerWithinRange(int32 iPlayerIndex, float fLength)
     if (iPlayerIndex != -1)
         return (GetDistanceFromPlayer(iPlayerIndex, &m_vMyPos) <= fLength);
 
-	return false;
+    return false;
 };
 
 

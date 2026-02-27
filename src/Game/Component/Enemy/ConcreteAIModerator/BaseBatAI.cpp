@@ -321,7 +321,7 @@ CBaseBatAI::CBaseBatAI(CEnemyCharacter* pEnemyChr)
     if (!pPlayerChr)
         return false;
 
-	float fRadius = pPlayerChr->GetCollisionParameter().m_fRadius;
+    float fRadius = pPlayerChr->GetCollisionParameter().m_fRadius;
 
     RwV3d vecFootPosPlayer = Math::VECTOR3_ZERO;
     pPlayerChr->GetFootPosition(&vecFootPosPlayer);

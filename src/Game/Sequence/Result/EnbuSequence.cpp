@@ -170,7 +170,7 @@ void CEnbuSequence::OnMove(bool bRet, const void* pReturnValue)
 #ifdef TARGET_PC
                 CToonManager::SetTextureSet("toonPC");
 #else /* TARGET_ PC */
-#error Not implemented for current target
+//#error Not implemented for current target
 #endif /* TARGET_ PC */
                 CEnbuProc::Settings();
 

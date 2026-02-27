@@ -9,7 +9,7 @@ struct ENEMYINFO
     ENEMYID::VALUE  m_eID;
     const char*     m_pszName;
     GAMETEXT        m_dispNameId;
-    char            m_szExtName[GAMEOBJECTTYPES::NAME_MAX];
+    char            m_szExtName[GAMEOBJECTTYPES::GO_NAME_MAX];
     bool            m_bImplemented;
 };
 

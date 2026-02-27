@@ -9,9 +9,7 @@
 
 #ifdef TARGET_PC
 #include "System/PC/PCMovie.hpp"
-#else
-#error Not implemented for current target
-#endif
+#endif /* TARGET_PC */
 
 
 /*static*/ CMovie* CMovieManager::s_pMovie = nullptr;
@@ -52,9 +50,7 @@
 
 #ifdef TARGET_PC
     s_pMovie = new CPCMovie(640, 448, MV_BPS, bUsePalMode);
-#else
-#error Not implemented for current target
-#endif
+#endif /* TARGET_PC */
 
 #ifdef TMNT2_BUILD_EU
     CMovieText::Initialize();

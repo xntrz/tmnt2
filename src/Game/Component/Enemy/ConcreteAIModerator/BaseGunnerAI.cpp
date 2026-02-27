@@ -340,7 +340,7 @@ CBaseGunnerAI::CBaseGunnerAI(CEnemyCharacter* pEnemyChr)
     
     CMapCamera* pMapCamera = CGameProperty::GetMapCamera();
 
-    RwSphere sphere = { 0 };
+    RwSphere sphere = {};
     sphere.center = vecBodyPosEnemy;
     sphere.radius = EnemyCharacter().Compositor().GetCollisionParameter().m_fRadius;
 

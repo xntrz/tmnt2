@@ -257,7 +257,7 @@ void CDatabaseViewer_Container::Setting(void)
     char szTexPrefix[256];
     szTexPrefix[0] = '\0';
 
-    std::sprintf(szTexPrefix, DBViewerInfo(m_iDbViewerNo).pszTexPrefix);
+    std::sprintf(szTexPrefix, "%s", DBViewerInfo(m_iDbViewerNo).pszTexPrefix);
 
 #ifdef TMNT2_BUILD_EU
     int32 indexStart = 8;

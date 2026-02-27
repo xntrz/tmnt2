@@ -97,7 +97,7 @@ CSlashuur::CSlashuur(GAMETYPES::COSTUME costume)
 	//		3 - weapon
 	//
 
-    CPlayerCharacter::PARAMETER parameter = { 0 };
+    CPlayerCharacter::PARAMETER parameter = {};
     parameter.m_chrparameter.m_bToon            = true;
     parameter.m_chrparameter.m_pszModelName     = "slashuur";
     parameter.m_chrparameter.m_pszMotionSetName = "slashuur";

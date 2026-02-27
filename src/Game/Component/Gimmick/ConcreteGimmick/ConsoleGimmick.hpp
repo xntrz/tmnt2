@@ -41,7 +41,7 @@ protected:
     float               m_fTimer;
     RwV3d               m_vPosition;
     RwV3d               m_vDirection;
-    char                m_szTargetGimmickName[GAMEOBJECTTYPES::NAME_MAX];
+    char                m_szTargetGimmickName[GAMEOBJECTTYPES::GO_NAME_MAX];
     int32               m_nHitNum;
     float               m_fInvinT;
 };

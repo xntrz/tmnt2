@@ -21,8 +21,8 @@ public:
 
 protected:
     PRIVATESTATE m_privatestate;
-    char         m_szEventGimmick[GAMEOBJECTTYPES::NAME_MAX];
-    char         m_szTargetGimmick[GAMEOBJECTTYPES::NAME_MAX];
+    char         m_szEventGimmick[GAMEOBJECTTYPES::GO_NAME_MAX];
+    char         m_szTargetGimmick[GAMEOBJECTTYPES::GO_NAME_MAX];
 };
 
 
@@ -35,7 +35,7 @@ protected:
         const char* GetName(void) const;
         CGimmick* GetGimmick(void) const;
 
-        char m_szName[GAMEOBJECTTYPES::NAME_MAX];
+        char m_szName[GAMEOBJECTTYPES::GO_NAME_MAX];
     };
 
 public:
@@ -98,7 +98,7 @@ protected:
     RwV3d   m_vPosition;
     RwV3d   m_vRotation;
     float   m_fRotationY;
-    char    m_szSenderGimmick[GAMEOBJECTTYPES::NAME_MAX];
+    char    m_szSenderGimmick[GAMEOBJECTTYPES::GO_NAME_MAX];
 };
 
 
@@ -128,7 +128,7 @@ protected:
 public:
     CSEGimmick(const char* pszName, void* pParam);
 	virtual ~CSEGimmick(void);
-	virtual void GetPosition(RwV3d* pvPosition) const;
+    virtual void GetPosition(RwV3d* pvPosition) const override;
 	virtual void PostMove(void) override;
     virtual void OnReceiveEvent(const char* pszSender, GIMMICKTYPES::EVENTTYPE eventtype) override;
     void startSE(void);
@@ -274,5 +274,5 @@ public:
     virtual void OnReceiveEvent(const char* pszSender, GIMMICKTYPES::EVENTTYPE eventtype) override;
 
 protected:
-    char m_szTargetGimmick[GAMEOBJECTTYPES::NAME_MAX];
+    char m_szTargetGimmick[GAMEOBJECTTYPES::GO_NAME_MAX];
 };

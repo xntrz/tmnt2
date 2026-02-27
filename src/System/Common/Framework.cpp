@@ -7,11 +7,9 @@
 #include "Process/ProcessDispatcher.hpp"
 #include "File/FileManager.hpp"
 
-#ifdef TARGET_PC
+#if defined(TARGET_PC)
 #include "System/PC/PCFramework.hpp"
-#else
-#error Not implemented for current target
-#endif
+#endif /* defined(TARGET_PC) */
 
 
 extern const PROCESSTYPES::PROCESS g_aProcessList[];
@@ -21,11 +19,9 @@ extern const PROCESSTYPES::PROCESS g_aProcessList[];
 {
     CFramework* pFramework = nullptr;
 
-#ifdef TARGET_PC
+#if defined(TARGET_PC)
     pFramework = new CPCFramework;
-#else
-#error Not implemented for current target
-#endif
+#endif /* defined(TARGET_PC) */
 
     return pFramework;
 };
@@ -81,7 +77,7 @@ bool CFramework::Initialize(void)
     ASSERT(m_pInputsDevice);
     ASSERT(m_pFileManager);
     ASSERT(!m_pProcessDispatcher);
-
+    
     if (!m_pGraphicsDevice->Initialize())
         return false;
 

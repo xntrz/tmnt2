@@ -1,42 +1,52 @@
 #pragma once
 
 #include "rwcore.h"
-#include "rpworld.h"
 #include "rt2d.h"
-#include "rtfsyst.h"
-#include "rtpitexd.h"
-#include "rt2danim.h"
-#include "rtanim.h"
-#include "rphanim.h"
-#include "rpskin.h"
-#include "rpcollis.h"
+
+// rtanim.h fwd
+typedef struct RtAnimAnimation  RtAnimAnimation;
+
+// rphanim.h fwd
+typedef struct RpHAnimHierarchy RpHAnimHierarchy;
+
+// rt2danim.h fwd
+typedef struct Rt2dMaestro      Rt2dMaestro;
+typedef struct Rt2dAnim         Rt2dAnim;
+typedef struct Rt2dAnimProps    Rt2dAnimProps;
+typedef struct Rt2dMessage      Rt2dMessage;
 
 #if (defined(TARGET_PC))
-#define rwRESOURCESDEFAULTARENASIZE (4 << 20)
+#define rwRESOURCESDEFAULTARENASIZE (4 << 20) // 4 MB
 #else
-#error Not implemented for current target
+#define rwRESOURCESDEFAULTARENASIZE (3 << 20) // 3 MB
 #endif
 
-#include <cstdlib>
-#include <cstring>
-#include <cinttypes>
 #include <string>
 #include <vector>
-#include <limits>
-#include <algorithm>
 #include <cmath>
+#include <cfloat> // FLT_MIN/MAX, FLT_EPSILON
+#include <climits> // INT_MIN/MAX etc
+
+#ifdef _DEBUG
+#include <inttypes.h> // PRId32 etc
+#endif /* _DEBUG */
 
 #ifdef TARGET_PC
 
 typedef unsigned char       uint8;
 typedef unsigned short      uint16;
 typedef unsigned int        uint32;
-typedef unsigned __int64    uint64;
 typedef signed char         int8;
 typedef signed short        int16;
 typedef signed int          int32;
-typedef signed __int64      int64;
 typedef wchar_t             wchar;
+#if defined(_MSC_VER)
+typedef signed __int64      int64;
+typedef unsigned __int64    uint64;
+#else /* defined(_MSC_VER) */
+typedef signed long long    int64;
+typedef unsigned long long  uint64;
+#endif /* defined(_MSC_VER) */
 
 #define UTEXT(text)	L##text
 
@@ -54,7 +64,7 @@ typedef wchar_t             wchar;
 #define ALIGN_ROUND_UP(v, a) 			(((v) + ((a) - 1u)) & ~((a) - 1u))
 #define ALIGN(v, a) 					(ALIGN_ROUND_UP(v, a))
 
-#define BITSOF(var)		            	(sizeof(var) << 3)
+#define BITSOF(var)		            	static_cast<int32>(sizeof(var) << 3)
 
 #ifdef UINT8_MAX
 #undef UINT8_MAX
@@ -71,7 +81,6 @@ typedef wchar_t             wchar;
 #ifdef UINT64_MAX
 #undef UINT64_MAX
 #endif
-
 
 #ifdef min
 #undef min
@@ -148,24 +157,24 @@ namespace TYPEDEF
 	static const float 	VSCR_X 		= -(VSCR_W * 0.5f);	// virtual screen x
 	static const float 	VSCR_Y		= -(VSCR_H * 0.5f);	// virtual screen y
 
-	static const float 	FLOAT_MIN 	= std::numeric_limits<float>::min();
-	static const float 	FLOAT_MAX 	= std::numeric_limits<float>::max();
+    static const float  FLOAT_MIN = FLT_MIN;
+    static const float  FLOAT_MAX = FLT_MAX;
 
-	static const uint8 	UINT8_MIN 	= std::numeric_limits<uint8>::min();
-	static const uint8 	UINT8_MAX 	= std::numeric_limits<uint8>::max();
-    static const uint16 UINT16_MIN 	= std::numeric_limits<uint16>::min();
-	static const uint16 UINT16_MAX 	= std::numeric_limits<uint16>::max();
-	static const uint32 UINT32_MIN 	= std::numeric_limits<uint32>::min();
-	static const uint32 UINT32_MAX 	= std::numeric_limits<uint32>::max();
-	static const uint64 UINT64_MIN 	= std::numeric_limits<uint64>::min();
-	static const uint64 UINT64_MAX 	= std::numeric_limits<uint64>::max();
-    
-	static const int8 	SINT8_MIN 	= std::numeric_limits<int8>::min();
-	static const int8 	SINT8_MAX 	= std::numeric_limits<int8>::max();
-	static const int16 	SINT16_MIN 	= std::numeric_limits<int16>::min();
-	static const int16 	SINT16_MAX 	= std::numeric_limits<int16>::max();
-	static const int32 	SINT32_MIN 	= std::numeric_limits<int32>::min();
-	static const int32 	SINT32_MAX 	= std::numeric_limits<int32>::max();
-	static const int64 	SINT64_MIN 	= std::numeric_limits<int64>::min();
-	static const int64 	SINT64_MAX 	= std::numeric_limits<int64>::max();
+    static const uint8  UINT8_MIN  = 0u;
+    static const uint8  UINT8_MAX  = UCHAR_MAX;
+    static const uint16 UINT16_MIN = 0u;
+    static const uint16 UINT16_MAX = USHRT_MAX;
+    static const uint32 UINT32_MIN = 0u;
+    static const uint32 UINT32_MAX = UINT_MAX;
+    static const uint64 UINT64_MIN = 0ull;
+    static const uint64 UINT64_MAX = ULLONG_MAX;
+
+    static const int8   SINT8_MIN  = SCHAR_MIN;
+    static const int8   SINT8_MAX  = SCHAR_MAX;
+    static const int16  SINT16_MIN = SHRT_MIN;
+    static const int16  SINT16_MAX = SHRT_MAX;
+    static const int32  SINT32_MIN = INT_MIN;
+    static const int32  SINT32_MAX = INT_MAX;
+    static const int64  SINT64_MIN = LLONG_MIN;
+    static const int64  SINT64_MAX = LLONG_MAX;
 };

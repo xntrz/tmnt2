@@ -138,7 +138,7 @@ bool CAnim2DSequence::OnAttach(int32 iFileID)
     if (m_bDisplayLoading)
         CLoadingDisplay::Start(this);
 
-	m_animStep = ANIMSTEP_READFILE;
+    m_animStep = ANIMSTEP_READFILE;
 
     return true;
 };
@@ -153,7 +153,7 @@ bool CAnim2DSequence::OnAttach(const char* pszFilename)
     if (m_bDisplayLoading)
         CLoadingDisplay::Start(this);
     
-	m_animStep = ANIMSTEP_READFILE;
+    m_animStep = ANIMSTEP_READFILE;
 
     return true;
 };

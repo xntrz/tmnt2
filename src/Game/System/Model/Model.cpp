@@ -3,6 +3,8 @@
 #include "Game/System/Misc/RenderStateManager.hpp"
 #include "System/Common/Camera.hpp"
 
+#include "rpskin.h"
+
 
 class CCalcBoundingSphereFunctor : public CModel::IAtomicCallbackFunctor
 {

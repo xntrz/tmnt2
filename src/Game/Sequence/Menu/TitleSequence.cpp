@@ -162,7 +162,7 @@ void CTitleSequence::OnMove(bool bRet, const void* pReturnValue)
 
 void CTitleSequence::OnDraw(void) const
 {
-	if ((m_phase == PHASE_CHOICE) && (AnimStep() == ANIMSTEP_DRAW))
+	if ((m_phase == PHASE_START) && (AnimStep() == ANIMSTEP_DRAW))
 		Animation2D().SetCenterAllStrings();
 	
 	CAnim2DSequence::OnDraw();
@@ -171,50 +171,55 @@ void CTitleSequence::OnDraw(void) const
           (m_phase == PHASE_CHOICE_WARNING)))
         return;
 
-	if (CSystem2D::BeginScene())
-	{
-		const float fOffsetY = 80.0f;
-		const float fHeight = 20.0f;
-		float x = 0.0f;
-		float y = fOffsetY;
+    if (CSystem2D::BeginScene())
+    {
+        const float fOffsetY = 80.0f;
+        const float fHeight = 20.0f;
+        float x = 0.0f;
+        float y = fOffsetY;
 
-		for (int32 i = 0; i < COUNT_OF(m_aMenuItemInfoTable); ++i)
-		{
-			const MENUITEMINFO* pMenuItemInfo = &m_aMenuItemInfoTable[i];
-			
-			if (!pMenuItemInfo->m_bVisible)
-				continue;
+        for (int32 i = 0; i < COUNT_OF(m_aMenuItemInfoTable); ++i)
+        {
+            const MENUITEMINFO* pMenuItemInfo = &m_aMenuItemInfoTable[i];
 
-			CGameFont::SetHeight(fHeight);
+            if (!pMenuItemInfo->m_bVisible)
+                continue;
 
-			if (m_iCurrentSelect == i)
-			{
-				CGameFont::SetRGBA(uint8(127.0f - Math::Cos(m_fTimer * 4.0f) * 127.0f),
-					               255,
-					               uint8(127.0f - Math::Cos(m_fTimer * 4.0f) * 127.0f),
-					               255);
-			}
-			else if (pMenuItemInfo->m_bEnabled)
-			{
-				CGameFont::SetRGBA(255, 255, 0, 255);
-			}
-			else
-			{
-				CGameFont::SetRGBA(96, 96, 0, 255);
-			};
+            CGameFont::SetHeight(fHeight);
 
-			const wchar* pwszText = CGameText::GetText(pMenuItemInfo->m_textId);
-			x = CGameFont::GetStringWidth(pwszText, fHeight) * -0.5f;
+            if (m_iCurrentSelect == i)
+            {
+                RwUInt8 rb = static_cast<RwUInt8>( 127.0f - (Math::Cos(m_fTimer * 4.0f) * 127.0f) );
 
-			CGameFont::SetHeight(fHeight);
-			CGameFont::Show(pwszText, x, y);
+                RwRGBA color;
+                color.red   = rb;
+                color.green = 255;
+                color.blue  = rb;
+                color.alpha = 255;
 
-			y += fHeight;
-			y += 10.0f;
-		};
+                CGameFont::SetRGBA(color);
+            }
+            else if (pMenuItemInfo->m_bEnabled)
+            {
+                CGameFont::SetRGBA(255, 255, 0, 255);
+            }
+            else
+            {
+                CGameFont::SetRGBA(96, 96, 0, 255);
+            };
 
-		CSystem2D::EndScene();
-	};
+            const wchar* pwszText = CGameText::GetText(pMenuItemInfo->m_textId);
+            x = CGameFont::GetStringWidth(pwszText, fHeight) * -0.5f;
+
+            CGameFont::SetHeight(fHeight);
+            CGameFont::Show(pwszText, x, y);
+
+            y += fHeight;
+            y += 10.0f;
+        };
+
+        CSystem2D::EndScene();
+    };
 };
 
 

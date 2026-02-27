@@ -7,6 +7,8 @@
 #include "System/Common/System2D.hpp"
 #include "System/Common/TextData.hpp"
 
+#include "rt2danim.h"
+
 
 /*static*/ CAnimation2DLoader::LoadAnimationData CAnimation2DLoader::m_aList[FILEMAX] =
 {
@@ -645,13 +647,12 @@ void CAnimation2D::KeyInfoChange_Sub(Rt2dObject* pScene)
         {
         case rt2DOBJECTTYPEOBJECTSTRING:
             {
-#ifdef TARGET_PC
-                static const char GUARD[]   = "Guard";
-                static const char ATTACK[]  = "WeakAttack";
-                static const char JUMP[]    = "Jump";
+                static const char GUARD[] = "Guard";
+                static const char ATTACK[] = "WeakAttack";
+                static const char JUMP[] = "Jump";
 
                 bool bIsTextChanged = false;
-                int32 nWritePos = 0;
+                uint64 nWritePos = 0;
 
                 char szBuff[256];
                 szBuff[0] = '\0';
@@ -687,9 +688,6 @@ void CAnimation2D::KeyInfoChange_Sub(Rt2dObject* pScene)
                         break;
                     };
                 };
-#else /* TARGET_PC */
-#error Not implemented for current target
-#endif /* TARGET_PC */
 
                 ASSERT(nWritePos < sizeof(szBuff));
 				szBuff[nWritePos] = '\0';

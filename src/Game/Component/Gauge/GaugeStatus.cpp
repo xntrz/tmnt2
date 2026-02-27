@@ -113,8 +113,8 @@ CGaugeStatus_Container::CGaugeStatus_Container(void)
 , m_fWakuStartY(0.0f)
 , m_fCondStartX(0.0f)
 , m_fCondStartY(0.0f)
-, m_timer({ 0 })
-, m_counter({ 0 })
+, m_timer({})
+, m_counter({})
 {
     std::memset(m_aScreenPosBuff, 0x00, sizeof(m_aScreenPosBuff));
     std::memset(m_aZako, 0x00, sizeof(m_aZako));

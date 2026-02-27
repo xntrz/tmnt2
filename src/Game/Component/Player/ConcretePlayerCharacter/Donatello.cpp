@@ -385,7 +385,7 @@ CDonatello::CDonatello(GAMETYPES::COSTUME costume)
 	//		2 - model
     //
     
-    CPlayerCharacter::PARAMETER parameter = { 0 };
+    CPlayerCharacter::PARAMETER parameter = {};
     parameter.m_chrparameter.m_bToon            = true;
     parameter.m_chrparameter.m_pszModelName     = "donatello";
     parameter.m_chrparameter.m_pszMotionSetName = "donatello";

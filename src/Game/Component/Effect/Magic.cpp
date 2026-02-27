@@ -23,10 +23,10 @@
 CMagic::CMagic(const char* pszName)
 : CEffect(pszName)
 , m_feature(MAGICTYPES::FEATURE_NONE)
-, m_collisionBody({ 0 })
-, m_collisionAttack({ 0 })
-, m_movement({ 0 })
-, m_locusinfo({ 0 })
+, m_collisionBody({})
+, m_collisionAttack({})
+, m_movement({})
+, m_locusinfo({})
 , m_fLivetime(0.0f)
 , m_fNowTime(0.0f)
 , m_fHitTimingStart(0.0f)
@@ -337,8 +337,8 @@ void CMagic::SetParameter(CMagicParameter* pMagicParameter)
     if (pMagicParameter->m_pszVanishMagicName)
         std::strcpy(m_szVanishMagicName, pMagicParameter->m_pszVanishMagicName);
 
-	if (pMagicParameter->m_fScale != 1.0f)
-		SetScale(pMagicParameter->m_fScale);
+    if (pMagicParameter->m_fScale != 1.0f)
+        SetScale(pMagicParameter->m_fScale);
 
     m_feature           = pMagicParameter->m_feature;
     m_collisionBody     = pMagicParameter->m_collisionBody;
@@ -706,7 +706,7 @@ bool CMagic::CheckBody(void)
         RwV3d vMyPrevPosition = Math::VECTOR3_ZERO;
         Math::Vec3_Sub(&vMyPrevPosition, &vMyPosition, &vFrameVelocity);
 
-        RwLine line = { 0 };
+        RwLine line = {};
         line.end = vMyPosition;
         line.start = vMyPrevPosition;
 

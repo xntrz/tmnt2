@@ -82,7 +82,7 @@ void CRideRockGimmick::PostMove(void)
     if (m_fBlendRate < 0.0f)
         m_fBlendRate = 0.0f;
 
-    RwRGBA materialColor = { 0 };
+    RwRGBA materialColor = {};
     materialColor.red   = static_cast<RwUInt8>(m_defaultColor.red   * (1.0f - m_fBlendRate) + m_damageColor.red     * m_fBlendRate);
     materialColor.green = static_cast<RwUInt8>(m_defaultColor.green * (1.0f - m_fBlendRate) + m_damageColor.green   * m_fBlendRate);
     materialColor.blue  = static_cast<RwUInt8>(m_defaultColor.blue  * (1.0f - m_fBlendRate) + m_damageColor.blue    * m_fBlendRate);

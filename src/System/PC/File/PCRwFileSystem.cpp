@@ -3,6 +3,7 @@
 #include "System/Common/Configure.hpp"
 #include "System/PC/PCTypedefs.hpp"
 
+#include "rtfsyst.h"
 #include "rtfsystwin32.h"
 
 

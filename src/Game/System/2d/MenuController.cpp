@@ -3,6 +3,8 @@
 #include "Game/Component/GameData/GameData.hpp"
 #include "Game/System/Misc/Gamepad.hpp"
 
+#include "rt2danim.h"
+
 
 /*static*/ const char* CMenuController::m_apszButtonLabel[] =
 {
@@ -367,7 +369,7 @@ void CMenuController::FlashUnlockKeyEnable(bool bEnable)
     ButtonByLabelPacket* pPacket = static_cast<ButtonByLabelPacket*>(pData);
     ASSERT(pPacket);
 
-    Rt2dMessage msg = { 0 };    
+    Rt2dMessage msg = {};    
     msg.messageType = rt2dMESSAGETYPEBUTTONBYLABEL;
     msg.index       = -1;
     msg.intParam1   = pPacket->btnId;

@@ -28,143 +28,143 @@ struct GIMMICKINFOTABLE
 //
 //  SYSTEM
 //
-static GIMMICKSUBINFO s_aSubInfo_GMSANDSWI[]    = { { 0 } };
-static GIMMICKSUBINFO s_aSubInfo_GMSGROUP[]     = { { 0 } };
-static GIMMICKSUBINFO s_aSubInfo_GMSGCLEAR[]    = { { 0 } };
-static GIMMICKSUBINFO s_aSubInfo_GMSGOVER[]     = { { 0 } };
-static GIMMICKSUBINFO s_aSubInfo_GMSMOVIE[]     = { { 0 } };
-static GIMMICKSUBINFO s_aSubInfo_GMSCAMERA[]    = { { 0 } };
-static GIMMICKSUBINFO s_aSubInfo_GMSEVCAM[]     = { { 0 } };
-static GIMMICKSUBINFO s_aSubInfo_GMSSOUND[]     = { { 0 } };
-static GIMMICKSUBINFO s_aSubInfo_GMSWALL[]      = { { 0 } };
-static GIMMICKSUBINFO s_aSubInfo_GMSFALLPT[]    = { { 0 } };
-static GIMMICKSUBINFO s_aSubInfo_GMSRESET[]     = { { 0 } };
-static GIMMICKSUBINFO s_aSubInfo_GMSHELP[]      = { { 0 } };
-static GIMMICKSUBINFO s_aSubInfo_GMSTUTO[]      = { { 0 } };
-static GIMMICKSUBINFO s_aSubInfo_GMSEKILL[]     = { { 0 } };
+static GIMMICKSUBINFO s_aSubInfo_GMSANDSWI[]    = { {} };
+static GIMMICKSUBINFO s_aSubInfo_GMSGROUP[]     = { {} };
+static GIMMICKSUBINFO s_aSubInfo_GMSGCLEAR[]    = { {} };
+static GIMMICKSUBINFO s_aSubInfo_GMSGOVER[]     = { {} };
+static GIMMICKSUBINFO s_aSubInfo_GMSMOVIE[]     = { {} };
+static GIMMICKSUBINFO s_aSubInfo_GMSCAMERA[]    = { {} };
+static GIMMICKSUBINFO s_aSubInfo_GMSEVCAM[]     = { {} };
+static GIMMICKSUBINFO s_aSubInfo_GMSSOUND[]     = { {} };
+static GIMMICKSUBINFO s_aSubInfo_GMSWALL[]      = { {} };
+static GIMMICKSUBINFO s_aSubInfo_GMSFALLPT[]    = { {} };
+static GIMMICKSUBINFO s_aSubInfo_GMSRESET[]     = { {} };
+static GIMMICKSUBINFO s_aSubInfo_GMSHELP[]      = { {} };
+static GIMMICKSUBINFO s_aSubInfo_GMSTUTO[]      = { {} };
+static GIMMICKSUBINFO s_aSubInfo_GMSEKILL[]     = { {} };
 
 
 //
 //  EVENT
 //
-static GIMMICKSUBINFO s_aSubInfo_GMEPDEAD []    = { { 0 } };
-static GIMMICKSUBINFO s_aSubInfo_GMETIME[]      = { { 0 } };
-static GIMMICKSUBINFO s_aSubInfo_GMEEBRK[]      = { { 0 } };
-static GIMMICKSUBINFO s_aSubInfo_GMEEBRKAL[]    = { { 0 } };
-static GIMMICKSUBINFO s_aSubInfo_GMEPWALL[]     = { { 0 } };
-static GIMMICKSUBINFO s_aSubInfo_GMEPSPHER[]    = { { 0 } };
-static GIMMICKSUBINFO s_aSubInfo_GMEPVOLUM[]    = { { 0 } };
-static GIMMICKSUBINFO s_aSubInfo_GMEGBRK[]      = { { 0 } };
-static GIMMICKSUBINFO s_aSubInfo_GMEEWALL[]     = { { 0 } };
-static GIMMICKSUBINFO s_aSubInfo_GMEUTRVOL[]    = { { 0 } };
-static GIMMICKSUBINFO s_aSubInfo_GMEDONLSR[]    = { { 0 } };
-static GIMMICKSUBINFO s_aSubInfo_GMERRSPHR[]    = { { 0 } };
-static GIMMICKSUBINFO s_aSubInfo_GMEFTWALL[]    = { { 0 } };
+static GIMMICKSUBINFO s_aSubInfo_GMEPDEAD []    = { {} };
+static GIMMICKSUBINFO s_aSubInfo_GMETIME[]      = { {} };
+static GIMMICKSUBINFO s_aSubInfo_GMEEBRK[]      = { {} };
+static GIMMICKSUBINFO s_aSubInfo_GMEEBRKAL[]    = { {} };
+static GIMMICKSUBINFO s_aSubInfo_GMEPWALL[]     = { {} };
+static GIMMICKSUBINFO s_aSubInfo_GMEPSPHER[]    = { {} };
+static GIMMICKSUBINFO s_aSubInfo_GMEPVOLUM[]    = { {} };
+static GIMMICKSUBINFO s_aSubInfo_GMEGBRK[]      = { {} };
+static GIMMICKSUBINFO s_aSubInfo_GMEEWALL[]     = { {} };
+static GIMMICKSUBINFO s_aSubInfo_GMEUTRVOL[]    = { {} };
+static GIMMICKSUBINFO s_aSubInfo_GMEDONLSR[]    = { {} };
+static GIMMICKSUBINFO s_aSubInfo_GMERRSPHR[]    = { {} };
+static GIMMICKSUBINFO s_aSubInfo_GMEFTWALL[]    = { {} };
 
 
 //
 //  GENERATOR
 //
-static GIMMICKSUBINFO s_aSubInfo_GMGSET[]       = { { 0 } };
-static GIMMICKSUBINFO s_aSubInfo_GMGGROUND[]    = { { 0 } };
-static GIMMICKSUBINFO s_aSubInfo_GMGAIR[]       = { { 0 } };
-static GIMMICKSUBINFO s_aSubInfo_GMGEGG[]       = { { 0 } };
-static GIMMICKSUBINFO s_aSubInfo_GMGCAVE[]      = { { 0 } };
-static GIMMICKSUBINFO s_aSubInfo_GMGDOOR[]      = { { 0 } };
-static GIMMICKSUBINFO s_aSubInfo_GMGCAR[]       = { { 0 } };
-static GIMMICKSUBINFO s_aSubInfo_GMGSSHIPS[]    = { { 0 } };
+static GIMMICKSUBINFO s_aSubInfo_GMGSET[]       = { {} };
+static GIMMICKSUBINFO s_aSubInfo_GMGGROUND[]    = { {} };
+static GIMMICKSUBINFO s_aSubInfo_GMGAIR[]       = { {} };
+static GIMMICKSUBINFO s_aSubInfo_GMGEGG[]       = { {} };
+static GIMMICKSUBINFO s_aSubInfo_GMGCAVE[]      = { {} };
+static GIMMICKSUBINFO s_aSubInfo_GMGDOOR[]      = { {} };
+static GIMMICKSUBINFO s_aSubInfo_GMGCAR[]       = { {} };
+static GIMMICKSUBINFO s_aSubInfo_GMGSSHIPS[]    = { {} };
 
 
 //
 //  NORMAL
 //
-static GIMMICKSUBINFO s_aSubInfo_GMNTHROW[]     = { { 0 } };
-static GIMMICKSUBINFO s_aSubInfo_GMNITEMBX[]    = { { 0 } };
-static GIMMICKSUBINFO s_aSubInfo_GMNBRKCAR[]    = { { 0 } };
-static GIMMICKSUBINFO s_aSubInfo_GMNBRKOBJ[]    = { { 0 } };
-static GIMMICKSUBINFO s_aSubInfo_GMNROLOBJ[]    = { { 0 } };
-static GIMMICKSUBINFO s_aSubInfo_GMNMVFLLI[]    = { { 0 } };
-static GIMMICKSUBINFO s_aSubInfo_GMNMVFLPA[]    = { { 0 } };
-static GIMMICKSUBINFO s_aSubInfo_GMNMVFLRO[]    = { { 0 } };
-static GIMMICKSUBINFO s_aSubInfo_GMNCONSOL[]    = { { 0 } };
-static GIMMICKSUBINFO s_aSubInfo_GMNSWITCH[]    = { { 0 } };
-static GIMMICKSUBINFO s_aSubInfo_GMNSWIPIL[]    = { { 0 } };
-static GIMMICKSUBINFO s_aSubInfo_GMNBRKPIL[]    = { { 0 } };
-static GIMMICKSUBINFO s_aSubInfo_GMNSHKPIL[]    = { { 0 } };
-static GIMMICKSUBINFO s_aSubInfo_GMNNORPIL[]    = { { 0 } };
-static GIMMICKSUBINFO s_aSubInfo_GMNRAPROC[]    = { { 0 } };
-static GIMMICKSUBINFO s_aSubInfo_GMNLEOS[]      = { { 0 } };
-static GIMMICKSUBINFO s_aSubInfo_GMNLEOM[]      = { { 0 } };
-static GIMMICKSUBINFO s_aSubInfo_GMNLEOL[]      = { { 0 } };
-static GIMMICKSUBINFO s_aSubInfo_GMNGRASS[]     = { { 0 } };
-static GIMMICKSUBINFO s_aSubInfo_GMNCRYSTL[]    = { { 0 } };
-static GIMMICKSUBINFO s_aSubInfo_GMNGUILLO[]    = { { 0 } };
-static GIMMICKSUBINFO s_aSubInfo_GMNSEESAW[]    = { { 0 } };
-static GIMMICKSUBINFO s_aSubInfo_GMNFALOBJ[]    = { { 0 } };
-static GIMMICKSUBINFO s_aSubInfo_GMNMETEO[]     = { { 0 } };
-static GIMMICKSUBINFO s_aSubInfo_GMNDOOR[]      = { { 0 } };
-static GIMMICKSUBINFO s_aSubInfo_GMNUTROM[]     = { { 0 } };
-static GIMMICKSUBINFO s_aSubInfo_GMNLASER[]     = { { 0 } };
-static GIMMICKSUBINFO s_aSubInfo_GMNMINE[]      = { { 0 } };
-static GIMMICKSUBINFO s_aSubInfo_GMNBELCON[]    = { { 0 } };
-static GIMMICKSUBINFO s_aSubInfo_GMNSTOPER[]    = { { 0 } };
+static GIMMICKSUBINFO s_aSubInfo_GMNTHROW[]     = { {} };
+static GIMMICKSUBINFO s_aSubInfo_GMNITEMBX[]    = { {} };
+static GIMMICKSUBINFO s_aSubInfo_GMNBRKCAR[]    = { {} };
+static GIMMICKSUBINFO s_aSubInfo_GMNBRKOBJ[]    = { {} };
+static GIMMICKSUBINFO s_aSubInfo_GMNROLOBJ[]    = { {} };
+static GIMMICKSUBINFO s_aSubInfo_GMNMVFLLI[]    = { {} };
+static GIMMICKSUBINFO s_aSubInfo_GMNMVFLPA[]    = { {} };
+static GIMMICKSUBINFO s_aSubInfo_GMNMVFLRO[]    = { {} };
+static GIMMICKSUBINFO s_aSubInfo_GMNCONSOL[]    = { {} };
+static GIMMICKSUBINFO s_aSubInfo_GMNSWITCH[]    = { {} };
+static GIMMICKSUBINFO s_aSubInfo_GMNSWIPIL[]    = { {} };
+static GIMMICKSUBINFO s_aSubInfo_GMNBRKPIL[]    = { {} };
+static GIMMICKSUBINFO s_aSubInfo_GMNSHKPIL[]    = { {} };
+static GIMMICKSUBINFO s_aSubInfo_GMNNORPIL[]    = { {} };
+static GIMMICKSUBINFO s_aSubInfo_GMNRAPROC[]    = { {} };
+static GIMMICKSUBINFO s_aSubInfo_GMNLEOS[]      = { {} };
+static GIMMICKSUBINFO s_aSubInfo_GMNLEOM[]      = { {} };
+static GIMMICKSUBINFO s_aSubInfo_GMNLEOL[]      = { {} };
+static GIMMICKSUBINFO s_aSubInfo_GMNGRASS[]     = { {} };
+static GIMMICKSUBINFO s_aSubInfo_GMNCRYSTL[]    = { {} };
+static GIMMICKSUBINFO s_aSubInfo_GMNGUILLO[]    = { {} };
+static GIMMICKSUBINFO s_aSubInfo_GMNSEESAW[]    = { {} };
+static GIMMICKSUBINFO s_aSubInfo_GMNFALOBJ[]    = { {} };
+static GIMMICKSUBINFO s_aSubInfo_GMNMETEO[]     = { {} };
+static GIMMICKSUBINFO s_aSubInfo_GMNDOOR[]      = { {} };
+static GIMMICKSUBINFO s_aSubInfo_GMNUTROM[]     = { {} };
+static GIMMICKSUBINFO s_aSubInfo_GMNLASER[]     = { {} };
+static GIMMICKSUBINFO s_aSubInfo_GMNMINE[]      = { {} };
+static GIMMICKSUBINFO s_aSubInfo_GMNBELCON[]    = { {} };
+static GIMMICKSUBINFO s_aSubInfo_GMNSTOPER[]    = { {} };
 
 
 //
 //  RIDE
 //
-static GIMMICKSUBINFO s_aSubInfo_GMRFLAG[]      = { { 0 } };
-static GIMMICKSUBINFO s_aSubInfo_GMRTHNDER[]    = { { 0 } };
-static GIMMICKSUBINFO s_aSubInfo_GMRASTRID[]    = { { 0 } };
-static GIMMICKSUBINFO s_aSubInfo_GMRSHUTTR[]    = { { 0 } };
+static GIMMICKSUBINFO s_aSubInfo_GMRFLAG[]      = { {} };
+static GIMMICKSUBINFO s_aSubInfo_GMRTHNDER[]    = { {} };
+static GIMMICKSUBINFO s_aSubInfo_GMRASTRID[]    = { {} };
+static GIMMICKSUBINFO s_aSubInfo_GMRSHUTTR[]    = { {} };
 
 
 //
 //  OTHER
 //
-static GIMMICKSUBINFO s_aSubInfo_GMNITEM[]      = { { 0 } };
+static GIMMICKSUBINFO s_aSubInfo_GMNITEM[]      = { {} };
 
 
 //
 //  MAP
 //
-static GIMMICKSUBINFO s_aSubInfo_GMNLIGHT[]     = { { 0 } };
-static GIMMICKSUBINFO s_aSubInfo_GMNWEATHER[]   = { { 0 } };
-static GIMMICKSUBINFO s_aSubInfo_GMNSMOKE[]     = { { 0 } };
-static GIMMICKSUBINFO s_aSubInfo_GMNFLAME[]     = { { 0 } };
-static GIMMICKSUBINFO s_aSubInfo_GMNSTEAM[]     = { { 0 } };
-static GIMMICKSUBINFO s_aSubInfo_GMNSPARK[]     = { { 0 } };
-static GIMMICKSUBINFO s_aSubInfo_GMNMOTH[]      = { { 0 } };
-static GIMMICKSUBINFO s_aSubInfo_GMNFISH[]      = { { 0 } };
-static GIMMICKSUBINFO s_aSubInfo_GMNBUBBLE[]    = { { 0 } };
-static GIMMICKSUBINFO s_aSubInfo_GMNMIST[]      = { { 0 } };
-static GIMMICKSUBINFO s_aSubInfo_GMNSPLASH[]    = { { 0 } };
-static GIMMICKSUBINFO s_aSubInfo_GMNEXP[]       = { { 0 } };
+static GIMMICKSUBINFO s_aSubInfo_GMNLIGHT[]     = { {} };
+static GIMMICKSUBINFO s_aSubInfo_GMNWEATHER[]   = { {} };
+static GIMMICKSUBINFO s_aSubInfo_GMNSMOKE[]     = { {} };
+static GIMMICKSUBINFO s_aSubInfo_GMNFLAME[]     = { {} };
+static GIMMICKSUBINFO s_aSubInfo_GMNSTEAM[]     = { {} };
+static GIMMICKSUBINFO s_aSubInfo_GMNSPARK[]     = { {} };
+static GIMMICKSUBINFO s_aSubInfo_GMNMOTH[]      = { {} };
+static GIMMICKSUBINFO s_aSubInfo_GMNFISH[]      = { {} };
+static GIMMICKSUBINFO s_aSubInfo_GMNBUBBLE[]    = { {} };
+static GIMMICKSUBINFO s_aSubInfo_GMNMIST[]      = { {} };
+static GIMMICKSUBINFO s_aSubInfo_GMNSPLASH[]    = { {} };
+static GIMMICKSUBINFO s_aSubInfo_GMNEXP[]       = { {} };
 
 
 //
 //  KOYUU
 //
-static GIMMICKSUBINFO s_aSubInfo_GMKM12N[]      = { { 0 } };
-static GIMMICKSUBINFO s_aSubInfo_GMKM02N[]      = { { 0 } };
-static GIMMICKSUBINFO s_aSubInfo_GMKM05N[]      = { { 0 } };
-static GIMMICKSUBINFO s_aSubInfo_GMKM38B[]      = { { 0 } };
-static GIMMICKSUBINFO s_aSubInfo_GMKM38MAN[]    = { { 0 } };
-static GIMMICKSUBINFO s_aSubInfo_GMKM17N[]      = { { 0 } };
-static GIMMICKSUBINFO s_aSubInfo_GMKM43N[]      = { { 0 } };
-static GIMMICKSUBINFO s_aSubInfo_GMKM28NGR[]    = { { 0 } };
-static GIMMICKSUBINFO s_aSubInfo_GMKM28NPT[]    = { { 0 } };
-static GIMMICKSUBINFO s_aSubInfo_GMKM28NPR[]    = { { 0 } };
-static GIMMICKSUBINFO s_aSubInfo_GMKM58OB[]     = { { 0 } };
-static GIMMICKSUBINFO s_aSubInfo_GMKM58OBR[]    = { { 0 } };
-static GIMMICKSUBINFO s_aSubInfo_GMKM58OBRM[]   = { { 0 } };
-static GIMMICKSUBINFO s_aSubInfo_GMKM44N[]      = { { 0 } };
-static GIMMICKSUBINFO s_aSubInfo_GMKM44NM[]     = { { 0 } };
-static GIMMICKSUBINFO s_aSubInfo_GMKM50NB[]     = { { 0 } };
-static GIMMICKSUBINFO s_aSubInfo_GMKM23N[]      = { { 0 } };
-static GIMMICKSUBINFO s_aSubInfo_GMKM04N[]      = { { 0 } };
-static GIMMICKSUBINFO s_aSubInfo_GMKM20F[]      = { { 0 } };
-static GIMMICKSUBINFO s_aSubInfo_GMKM53F[]      = { { 0 } };
+static GIMMICKSUBINFO s_aSubInfo_GMKM12N[]      = { {} };
+static GIMMICKSUBINFO s_aSubInfo_GMKM02N[]      = { {} };
+static GIMMICKSUBINFO s_aSubInfo_GMKM05N[]      = { {} };
+static GIMMICKSUBINFO s_aSubInfo_GMKM38B[]      = { {} };
+static GIMMICKSUBINFO s_aSubInfo_GMKM38MAN[]    = { {} };
+static GIMMICKSUBINFO s_aSubInfo_GMKM17N[]      = { {} };
+static GIMMICKSUBINFO s_aSubInfo_GMKM43N[]      = { {} };
+static GIMMICKSUBINFO s_aSubInfo_GMKM28NGR[]    = { {} };
+static GIMMICKSUBINFO s_aSubInfo_GMKM28NPT[]    = { {} };
+static GIMMICKSUBINFO s_aSubInfo_GMKM28NPR[]    = { {} };
+static GIMMICKSUBINFO s_aSubInfo_GMKM58OB[]     = { {} };
+static GIMMICKSUBINFO s_aSubInfo_GMKM58OBR[]    = { {} };
+static GIMMICKSUBINFO s_aSubInfo_GMKM58OBRM[]   = { {} };
+static GIMMICKSUBINFO s_aSubInfo_GMKM44N[]      = { {} };
+static GIMMICKSUBINFO s_aSubInfo_GMKM44NM[]     = { {} };
+static GIMMICKSUBINFO s_aSubInfo_GMKM50NB[]     = { {} };
+static GIMMICKSUBINFO s_aSubInfo_GMKM23N[]      = { {} };
+static GIMMICKSUBINFO s_aSubInfo_GMKM04N[]      = { {} };
+static GIMMICKSUBINFO s_aSubInfo_GMKM20F[]      = { {} };
+static GIMMICKSUBINFO s_aSubInfo_GMKM53F[]      = { {} };
 
 
 static const GIMMICKINFO s_infoSystemGimmick[] =
@@ -311,7 +311,8 @@ static const GIMMICKINFO s_infoKoyuuGimmick[] =
 
 static const GIMMICKINFO s_infoDummyGimmick[] =
 {
-    { "", }
+    { "", CGimmickInfo::PARAMTYPE_NONE, CGimmickInfo::DRAWPRI_PRECHARA, 0, nullptr },
+
 };
 
 

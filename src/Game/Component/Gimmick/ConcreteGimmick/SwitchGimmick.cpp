@@ -95,7 +95,7 @@ CSwitchGimmick::CSwitchGimmick(const char* pszName, void* pParam)
         RwV3d vPosition = Math::VECTOR3_ZERO;
         pModel->GetPosition(&vPosition);
         
-        RwSphere hitSphere = { 0 };
+        RwSphere hitSphere = {};
         hitSphere.center = vPosition;
         hitSphere.radius = 0.75f;
         

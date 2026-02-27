@@ -1,6 +1,7 @@
 #include "ModelToon.hpp"
 #include "ToonManager.hpp"
 
+#include "rpskin.h"
 #include "rptoon.h"
 
 
@@ -20,7 +21,7 @@ RpAtomic* CSetToonObjectFunctor::operator()(RpAtomic* pAtomic)
     ASSERT(pGeometry);
 
     if (RpSkinGeometryGetSkin(pGeometry))
-        RpToonSkinAtomicSetType(pAtomic, rpSKINTYPETOON); // RpSkinAtomicSetType(pAtomic, rpSKINTYPETOON);
+        RpSkinAtomicSetType(pAtomic, rpSKINTYPETOON); // RpToonSkinAtomicSetType(pAtomic, rpSKINTYPETOON); // 
 	else
 		RpToonAtomicEnable(pAtomic);
     

@@ -1300,7 +1300,7 @@ CBaseEliteAI::CAIBehaviorGuard::CAIBehaviorGuard(bool bAvoidAttack)
     if (m_bAvoidAttack)
         AIParam().SetCounterAttack(ELITEAI::AIBEHAVIORNAME::AVOID_ATTACK);
 
-	return RESULT_END;
+    return RESULT_END;
 };
 
 

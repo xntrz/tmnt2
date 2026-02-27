@@ -924,8 +924,10 @@ C081Spasmosaur::CSpitStatusObserver::Observing(void) /*override*/
         EnemyChr().Compositor().GetBonePosition(&vecMouthPos, 5, &MOUTH_OFFSET);
         Math::Vec3_Add(&vecMouthPos, &vecMouthPos, &vecMyPos);
 
-        bool bSpitBind = (Status() == C081Spasmosaur::STATUS_SPIT_OPEN_BIND) ||
-                         (Status() == C081Spasmosaur::STATUS_SPIT_CLOSE_BIND);
+        int32 statusNow = static_cast<int32>(Status());
+
+        bool bSpitBind = (statusNow == C081Spasmosaur::STATUS_SPIT_OPEN_BIND) ||
+                         (statusNow == C081Spasmosaur::STATUS_SPIT_CLOSE_BIND);
         if (bSpitBind)
         {
             RwV3d vecDir = { std::sin(fDir), 0.15f, std::cos(fDir) };

@@ -173,7 +173,7 @@ void CGrassGimmick::waiting(void)
     //
     //  Update attack
     //
-    RwSphere hitSphere = { 0 };
+    RwSphere hitSphere = {};
     hitSphere.radius = kindinfo().m_fHitRadius;
     m_pGrassMove->GetPosition(&hitSphere.center);
     hitSphere.center.y += 0.8f;

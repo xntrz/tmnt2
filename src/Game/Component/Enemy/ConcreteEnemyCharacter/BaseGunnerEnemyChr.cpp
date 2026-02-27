@@ -142,7 +142,8 @@ CBaseGunnerEnemyChr::CFireStatusObserver::Observing(void) /*override*/
 };
 
 
-/*virtual*/ bool CBaseGunnerEnemyChr::CFireStatusObserver::OnMotionChange(int32 idOld, int32 idNew)
+/*virtual*/ bool
+CBaseGunnerEnemyChr::CFireStatusObserver::OnMotionChange(int32 idOld, int32 idNew) /*override*/
 {
     if (idOld == MOTIONID_FIRE)
     {

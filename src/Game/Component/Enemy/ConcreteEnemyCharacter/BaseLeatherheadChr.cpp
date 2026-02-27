@@ -156,7 +156,7 @@ CBaseLeatherheadChr::CThinkingStatusObserver::Observing(void) /*override*/
     else
         EnemyChr().Compositor().ChangeMotion(BASELEATHERHEAD::MOTIONNAMES::IDLE_1, true);
 
-	m_fTime = 0.0f;
+    m_fTime = 0.0f;
 };
 
 

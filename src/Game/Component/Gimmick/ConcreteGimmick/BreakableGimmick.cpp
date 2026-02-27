@@ -51,8 +51,8 @@ static const CBreakableGimmick::DETAILPARAM s_aDetailParam[] =
     { EFFECTID::ID_UNKNOWN,         1.0f,   1.0f, { 0.0f,       3.5f,   -0.2f   }},
     { EFFECTID::ID_ALL_DOWNSMOKE,   0.0f,   1.0f, { 0.0f,       1.0f,   0.0f    }},
     { EFFECTID::ID_ALL_DOWNSMOKE,   0.0f,   1.0f, { 0.0f,       1.0f,   0.0f    }},
-    { EFFECTID::ID_UNKNOWN,         1.0f,   1.0f,               { 0 }           },
-    { EFFECTID::ID_UNKNOWN,         1.0f,   1.0f,               { 0 }           },
+    { EFFECTID::ID_UNKNOWN,         1.0f,   1.0f,               {}           },
+    { EFFECTID::ID_UNKNOWN,         1.0f,   1.0f,               {}           },
 
     { EFFECTID::ID_SPRAYWTER,       0.05f,  1.0f, { 0.1f,       1.0f,   0.0f    }},
     { EFFECTID::ID_SPRAYWTER,       0.05f,  1.0f, { 0.2f,       1.0f,   0.3f    }},
@@ -63,8 +63,8 @@ static const CBreakableGimmick::DETAILPARAM s_aDetailParam[] =
     { EFFECTID::ID_SPARK_SLOW,      0.0f,   0.6f, { 0.0f,       3.5f,   -0.2f   }},
     { EFFECTID::ID_UNKNOWN,         0.0f,   1.0f, { 0.0f,       1.0f,   0.0f    }},
     { EFFECTID::ID_UNKNOWN,         0.0f,   1.0f, { 0.0f,       1.0f,   0.0f    }},
-    { EFFECTID::ID_SHRD_ELEC,       0.0f,   0.8f,               { 0 }           },
-    { EFFECTID::ID_SHRD_ELEC,       0.0f,   0.8f,               { 0 }           },
+    { EFFECTID::ID_SHRD_ELEC,       0.0f,   0.8f,               {}           },
+    { EFFECTID::ID_SHRD_ELEC,       0.0f,   0.8f,               {}           },
 };
 
 

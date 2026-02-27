@@ -570,11 +570,11 @@ void CGameStage::updateResultData(void)
     if (CStageInfo::GetMode(m_idStage) == GAMETYPES::STAGEMODE_RIDE)
         return;
 
-	if (CGameProperty::GetPlayerNum() > 0)
-	{
-		CGameData::PlayResult().SetStageClearSecond(m_fTimer);
-		CGameData::PlayResult().SetRemainedHP(CGameProperty::Player(0)->GetHP());
-	};
+    if (CGameProperty::GetPlayerNum() > 0)
+    {
+        CGameData::PlayResult().SetStageClearSecond(m_fTimer);
+        CGameData::PlayResult().SetRemainedHP(CGameProperty::Player(0)->GetHP());
+    };
 };
 
 

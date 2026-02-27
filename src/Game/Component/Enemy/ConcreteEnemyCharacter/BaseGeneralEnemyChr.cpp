@@ -880,12 +880,12 @@ CBaseGeneralEnemyChr::GetMovableType(RwV3d* pVecAt) const
         return false;
 
     /* init sphere */
-    RwSphere sphere = { 0 };
+    RwSphere sphere = {};
     sphere.radius = pPlayerChr->GetCollisionParameter().m_fRadius;
     pPlayerChr->GetBodyPosition(&sphere.center);
 
     /* init line */
-    RwLine line = { 0 };
+    RwLine line = {};
     Compositor().GetBodyPosition(&line.start);
 
     line.end = { 0.0f, 0.0f, fRange };

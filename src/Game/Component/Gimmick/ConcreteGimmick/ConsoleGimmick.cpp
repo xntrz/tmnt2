@@ -105,7 +105,7 @@ void CConsoleGimmick::PostMove(void)
         {
             if (m_fInvinT <= 0.0f)
             {
-                RwSphere hitSphere = { 0 };
+                RwSphere hitSphere = {};
                 hitSphere.center = m_vPosition;
                 hitSphere.center.y += 0.75f;
                 hitSphere.radius = 0.0005f;

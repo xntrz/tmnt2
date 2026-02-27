@@ -68,20 +68,24 @@ void CSaveLoadSystem::Start(CSaveLoad::TYPE type)
 
     m_pData = new CSaveLoadData;
     m_pFrame = new CSaveLoadFrame;
+
     m_pFlow = CSaveLoadFlow::Create(TypeToMode(type), m_pFrame, m_pData);
-	m_pFlow->Initialize();
+    if (m_pFlow != nullptr)
+        m_pFlow->Initialize();
 };
 
 
 void CSaveLoadSystem::Stop(void)
 {
-    ASSERT(m_pFlow);
     ASSERT(m_pFrame);
     ASSERT(m_pData);
 
-	m_pFlow->Terminate();
-    CSaveLoadFlow::Destroy(m_pFlow);
-    m_pFlow = nullptr;
+    if (m_pFlow != nullptr)
+    {
+        m_pFlow->Terminate();
+        CSaveLoadFlow::Destroy(m_pFlow);
+        m_pFlow = nullptr;
+    };
 
     delete m_pFrame;
     m_pFrame = nullptr;
@@ -93,6 +97,9 @@ void CSaveLoadSystem::Stop(void)
 
 bool CSaveLoadSystem::Run(void)
 {
+    if (m_pFlow == nullptr)
+        return true;
+    
     return m_pFlow->Run();
 };
 

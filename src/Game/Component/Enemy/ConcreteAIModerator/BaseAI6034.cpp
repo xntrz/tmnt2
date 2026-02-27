@@ -21,6 +21,8 @@
 #include "Game/System/Misc/DebugShape.hpp"
 #endif /* _DEBUG */
 
+#include <algorithm> // std::sort
+
 
 namespace Utils6034
 {

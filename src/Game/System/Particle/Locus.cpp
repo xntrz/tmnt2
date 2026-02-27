@@ -3,7 +3,7 @@
 #include "System/Common/RenderState.hpp"
 
 
-static RwIm3DVertex s_aVertex[CLocus::POINTSET_MAX * 4] = { 0 };
+static RwIm3DVertex s_aVertex[CLocus::POINTSET_MAX * 4] = {};
 
 
 CLocus::CLocus(int32 nNumPoint, const RwRGBA& color)
@@ -53,8 +53,8 @@ void CLocus::Draw(void)
         return;
 
     int32 nNumVertices = 0;
-    RwV3d aCompletionListHigh[POINTSET_MAX * 2] = { 0 };
-    RwV3d aCompletionListLow[POINTSET_MAX * 2] = { 0 };
+    RwV3d aCompletionListHigh[POINTSET_MAX * 2] = {};
+    RwV3d aCompletionListLow[POINTSET_MAX * 2] = {};
 
     if (!m_bCompletion)
     {

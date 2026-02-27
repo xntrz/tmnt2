@@ -356,8 +356,6 @@ void CUnicodeFont::Flow(const wchar* pwszString, float fHeight, Rt2dBBox* pBBox,
     static wchar s_wszTempBuffer[256 * 256];
     s_wszTempBuffer[0] = UTEXT('\0');
 
-    ASSERT(CTextData::StrLen(pwszString) < sizeof(s_wszTempBuffer));
-
     CTextData::StrCpy(s_wszTempBuffer, pwszString);
 
     Rt2dFont* pResult = Rt2dFontFlow(m_pFont, reinterpret_cast<RwChar*>(s_wszTempBuffer), fHeight, pBBox, format, m_pBrush);
@@ -372,7 +370,7 @@ void CUnicodeFont::FlowEx(const wchar* pwszString,
                           Rt2dJustificationType format)
 {
     wchar wszBuff[CStringParser::BUFF_SIZE] = { UTEXT('\0') };
-    Rt2dBBox BBox = { 0.0f };
+    Rt2dBBox BBox = {};
 
     BBox.x = pBBox->x;
     BBox.y = pBBox->y;

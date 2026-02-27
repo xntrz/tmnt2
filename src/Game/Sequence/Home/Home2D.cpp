@@ -241,7 +241,7 @@ void CHome2DContainer::DrawArrow(HOMETYPES::DOORPOSITION doorposition)
     if (doorstatus == HOMETYPES::DOORSTATUS_CLOSE)
         return;
 
-	HOMETYPES::DOORKIND doorkind = m_pHomeCamera->GetDoorKind(doorposition);
+    HOMETYPES::DOORKIND doorkind = m_pHomeCamera->GetDoorKind(doorposition);
 
     switch (doorstatus)
     {

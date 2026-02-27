@@ -349,7 +349,7 @@ void CFallGimmick::setHitAttack(void)
     if (!m_bAttack)
         return;
     
-    RwSphere hitSphere = { 0 };
+    RwSphere hitSphere = {};
     hitSphere.radius = m_aSubInfo[m_eSubid].m_fAttackRadius;
     m_pFallMove->GetPosition(&hitSphere.center);
 

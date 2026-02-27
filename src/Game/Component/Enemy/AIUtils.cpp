@@ -15,6 +15,8 @@
 #include "Game/System/Misc/DebugShape.hpp"
 #endif /* _DEBUG */
 
+#include <algorithm> // std::sort
+
 
 static int32 s_iNearerPlayerDataNum = 0;
 static CAIUtils::NEARER_PLAYERDATA s_aPlayerDataList[GAMETYPES::PLAYERS_MAX];
@@ -676,7 +678,7 @@ CAIUtils::CheckMoveLine(const RwV3d* ptStart,
         SAFEPOINTNUM,
     };
 
-    RwV3d avecSafePoint[THICKLINE_NUM][SAFEPOINTNUM] = { Math::VECTOR3_ZERO };
+    RwV3d avecSafePoint[THICKLINE_NUM][SAFEPOINTNUM] = { { Math::VECTOR3_ZERO } };
     int32 type = SAFEPOINT_INVALID;
     int32 escapePointNo = -1;
     float fDistMin = 99999.0f;

@@ -9,7 +9,7 @@
 class CToonManagerImplement
 {
 public:
-	static const int32 NAME_MAX = 16;
+	static const int32 TEX_NAME_MAX = 16;
 
 public:
     CToonManagerImplement(void);
@@ -19,7 +19,7 @@ public:
     void SetTextureSet(const char* pszName);
 
 private:
-    char                  m_szTextureSetName[NAME_MAX];
+    char                  m_szTextureSetName[TEX_NAME_MAX];
     RpToonPaint*          m_apRpToonPaint[CToonManager::PATTERN_MAX];
     CToonManager::PATTERN m_patternCurrent;
     CList<CModelToon>     m_listModel;
@@ -104,7 +104,7 @@ void CToonManagerImplement::SetTextureSet(const char* pszName)
         "pat05",
 	};
 
-    ASSERT(std::strlen(pszName) < NAME_MAX);
+    ASSERT(std::strlen(pszName) < TEX_NAME_MAX);
 	std::strcpy(m_szTextureSetName, pszName);
 	
 	CTextureManager::SetCurrentTextureSet(m_szTextureSetName);

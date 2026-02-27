@@ -33,6 +33,9 @@ FNAME CStageCommonLoadInfo::GetFileID(void) const
     case GAMETYPES::STAGEMODE_NEXUS:
         fileID = FPATH("common/stage/stcommon_n.lpac");
         break;
+
+    default:
+        break;
     };
 
     return fileID;

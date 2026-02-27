@@ -32,7 +32,7 @@ struct ENEMYPARAM
 };
 
 
-static ENEMYPARAM s_aEnemyParam[ENEMYPARAM_MAX] = { 0 };
+static ENEMYPARAM s_aEnemyParam[ENEMYPARAM_MAX] = {};
 
 
 static inline void Rate(uint8* pFreqParam, float fRate)

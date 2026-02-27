@@ -23,13 +23,13 @@ namespace GIMMICKPARAM
 
     struct GIMMICK_BASIC : public GIMMICK_COMMON_HEAD
     {
-        ;
+        
     };
 
     struct GIMMICK_GROUP : public GIMMICK_BASIC
     {
         int32 m_nGimmickNum;
-        char m_aszGimmickName[0][16];
+        char m_aszGimmickName[1][16];
     };
 
     struct GIMMICK_TERMS : public GIMMICK_BASIC

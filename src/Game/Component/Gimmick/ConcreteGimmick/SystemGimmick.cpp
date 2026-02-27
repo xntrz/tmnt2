@@ -694,7 +694,7 @@ void CInvisibleWallGimmick::termCollision(void)
 
 /*static*/ void CReplaceGimmick::ReplacePlayer(int32 nPlayerNo, const RwV3d* pvPosition, bool bBlink)
 {
-    char szSearchGimmickName[GAMEOBJECTTYPES::NAME_MAX];
+    char szSearchGimmickName[GAMEOBJECTTYPES::GO_NAME_MAX];
     szSearchGimmickName[0] = '\0';
 
     const char* pszBaseName = CGimmickInfo::GetBaseName(GIMMICKID::ID_S_RESET);
@@ -707,7 +707,7 @@ void CInvisibleWallGimmick::termCollision(void)
 
 /*static*/ void CReplaceGimmick::SetPlayerStartPosition(int32 nPlayerNo, const RwV3d* pvPosition, bool bBlink)
 {
-    char szSearchGimmickName[GAMEOBJECTTYPES::NAME_MAX];
+    char szSearchGimmickName[GAMEOBJECTTYPES::GO_NAME_MAX];
     szSearchGimmickName[0] = '\0';
 
     const char* pszBaseName = CGimmickInfo::GetBaseName(GIMMICKID::ID_S_RESET);
@@ -860,9 +860,9 @@ void CReplaceGimmick::OnReplacePlayer(int32 nPlayerNo, bool bBlink)
     else
         vPosition.y = fHeight;
 
-	IGamePlayer* pGamePlayer = CGameProperty::GetGamePlayer(nPlayerNo);
-	pGamePlayer->Relocation(&vPosition, m_fRotationY, bBlink);
-	pGamePlayer->Release();
+    IGamePlayer* pGamePlayer = CGameProperty::GetGamePlayer(nPlayerNo);
+    pGamePlayer->Relocation(&vPosition, m_fRotationY, bBlink);
+    pGamePlayer->Release();
 };
 
 

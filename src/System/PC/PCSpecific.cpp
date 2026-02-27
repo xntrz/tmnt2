@@ -4,6 +4,7 @@
 #include "PCPhysicalController.hpp"
 
 #include <cctype> // std::toupper
+#include <algorithm> // std::replace
 
 
 struct KEYINFO

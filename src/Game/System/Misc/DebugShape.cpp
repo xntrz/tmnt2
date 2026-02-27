@@ -92,7 +92,7 @@ public:
     void Draw2D(void);
     void ShowSphere(const RwSphere* pSphere, const RwRGBA& rColor);
     void ShowLine(const RwLine* pLine, const RwRGBA& rColorStart, const RwRGBA& rColorEnd);
-    void ShowPlane(const RwV3d aPoint[8], const RwRGBA& rColor);
+    void ShowPlane(const RwV3d aPoint[4], const RwRGBA& rColor);
     void ShowBox(const RwV3d aPoint[8], const RwRGBA& rColor);
     void ShowLabel(const RwV3d* pvPosition, const char* pszLabel, const RwRGBA& rColor, float fHeight);
     SHAPE* ShapeAlloc(SHAPE::TYPE type);
@@ -182,8 +182,8 @@ void CDebugShapeContainer::Run(float dt)
     for (SHAPE& it : m_listShapeAlloc3D)
         it.m_fTime += dt;
 
-	for (SHAPE& it : m_listShapeAlloc2D)
-		it.m_fTime += dt;
+    for (SHAPE& it : m_listShapeAlloc2D)
+        it.m_fTime += dt;
 };
 
 
@@ -403,8 +403,8 @@ void CDebugShapeContainer::DrawSphere(SHAPE_SPHERE* pShapeSphere)
     if (!IsAnyPointOnScreen(&pShapeSphere->m_vPosition, 1))
         return;
 
-    RwIm3DVertex aVertex[(SPHERE_DIV_X + 1) * (SPHERE_DIV_Y + 1)] = { 0 };
-    RwImVertexIndex aIndex[(SPHERE_DIV_X * SPHERE_DIV_Y) * 6] = { 0 };    
+    RwIm3DVertex aVertex[(SPHERE_DIV_X + 1) * (SPHERE_DIV_Y + 1)] = {};
+    RwImVertexIndex aIndex[(SPHERE_DIV_X * SPHERE_DIV_Y) * 6] = {};    
     int32 nVertexNum = 0;
     int32 nIndexNum = 0;
     
@@ -541,7 +541,7 @@ void CDebugShapeContainer::DrawPlane(SHAPE_PLANE* pShapePlane)
     if (!IsAnyPointOnScreen(pShapePlane->m_vPoint, COUNT_OF(pShapePlane->m_vPoint)))
         return;
 
-    RwIm3DVertex aVertex[4] = { 0 };
+    RwIm3DVertex aVertex[4] = {};
     
     for (int32 i = 0; i < COUNT_OF(aVertex); i++)
     {
@@ -567,7 +567,7 @@ void CDebugShapeContainer::DrawBox(SHAPE_BOX* pShapeBox)
     if (!IsAnyPointOnScreen(pShapeBox->m_vPoint, COUNT_OF(pShapeBox->m_vPoint)))
         return;
 
-    RwIm3DVertex aVertex[8] = { 0 };
+    RwIm3DVertex aVertex[8] = {};
     
     for (int32 i = 0; i < COUNT_OF(aVertex); i++)
     {
@@ -690,8 +690,8 @@ void CDebugShapeContainer::Flush(void)
     if (!m_nVertexNum)
         return;
 
-	if (!m_nIndexNum)
-		return;
+    if (!m_nIndexNum)
+        return;
     
     const uint32 uFlags = rwIM3D_VERTEXXYZ | rwIM3D_VERTEXRGBA;
     

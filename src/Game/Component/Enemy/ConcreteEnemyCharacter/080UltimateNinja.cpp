@@ -1125,7 +1125,7 @@ C080UltimateNinja::C080UltimateNinja(void)
 
 /*virtual*/ bool C080UltimateNinja::OnMessageCanChangingAerial(float fHeight) /*override*/
 {
-    ENEMYTYPES::STATUS statusNow = GetStatus();
+    int32 statusNow = static_cast<int32>(GetStatus());
 
     if ((statusNow == C080UltimateNinja::STATUS_ATTACK_JUMP_READY) ||
         (statusNow == C080UltimateNinja::STATUS_ATTACK_JUMP_AERIAL) ||
@@ -1141,14 +1141,16 @@ C080UltimateNinja::C080UltimateNinja(void)
 {
     if (!TestFlag(ENEMYTYPES::FLAG_DEATH_STATUS))
     {
-        if (GetStatus() == C080UltimateNinja::STATUS_ATTACK_JUMP_AERIAL)
+        int32 statusNow = static_cast<int32>(GetStatus());
+
+        if (statusNow == C080UltimateNinja::STATUS_ATTACK_JUMP_AERIAL)
         {
             bool bResult = SetStatus(ENEMYTYPES::STATUS_TOUCHDOWN);
             ASSERT(bResult);
             return;
         };
 
-        if (GetStatus() == C080UltimateNinja::STATUS_ATTACK_DRAGON_AERIAL)
+        if (statusNow == C080UltimateNinja::STATUS_ATTACK_DRAGON_AERIAL)
         {
             bool bResult = SetStatus(C080UltimateNinja::STATUS_ATTACK_DRAGON_TOUCHDOWN);
             ASSERT(bResult);

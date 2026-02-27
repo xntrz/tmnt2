@@ -25,11 +25,12 @@ newoption {
 rwos    = "win"
 rwsdk   = "rwsdk37/%{rwos}"
 rwdrv   = _OPTIONS["rwdrv"]
-dir_bin = "%{wks.location}/../../../bin/%{rwdrv}/%{cfg.buildcfg}"
-dir_obj = "%{wks.location}/../../../obj/%{rwdrv}/%{cfg.buildcfg}"
-dir_src = "%{wks.location}/../../../src"
-dir_lib = "%{wks.location}/../../../vendor"
-dir_pch = "%{prj.location}/../../../src"
+dir_root = "%{wks.location}/../../.."
+dir_bin  = "%{dir_root}/bin/pc/%{rwdrv}/%{cfg.buildcfg}"
+dir_obj  = "%{dir_root}/obj/pc/%{rwdrv}/%{cfg.buildcfg}"
+dir_src  = "%{dir_root}/src"
+dir_lib  = "%{dir_root}/vendor"
+dir_src_pmk = "../../src" -- same as dir_src but relative premake5 script
 
 
 config_types = {
@@ -164,8 +165,8 @@ function project_base_initialize()
    kind "WindowedApp"
    --warnings "High"
    removefiles { 
-      "src/System/Common/MemPool.*", -- unused in PC version
-      "src/System/Common/Debug/**.*", -- TODO
+      dir_src_pmk .. "/System/Common/MemPool.*", -- unused in PC version
+      dir_src_pmk .. "/System/Web/**"
    }
    includedirs {  
       "$(DXSDK_DIR)Include",
@@ -178,8 +179,8 @@ function project_base_initialize()
    }
    resincludedirs { "%{dir_src}/System/PC" }
    forceincludes "Game\\pch.hpp"
-   pchheader ("Game/pch.hpp")
-   pchsource ("../../src/Game/pch.cpp") -- must be relative to the premake5 script
+   pchheader ( "Game/pch.hpp" )
+   pchsource ( path.join(dir_src_pmk, "Game/pch.cpp") ) -- must be relative to the premake5 script
    files {    
       "%{dir_src}/System/**.rc",
    }
@@ -188,17 +189,20 @@ function project_base_initialize()
       "dinput8.lib",
       "dxguid.lib",
       "dsound.lib",
+      
       -- win32
       "winmm.lib",
       "ksuser.lib",
+
       -- cri
       "cri_adxpcx86_dsound8.lib",
       "cri_mwsfdpcx86.lib",
       --"cri_adxpcx86_xaudio2.lib",
       
-      -- rw
+      -- rwcore
       "rwcore.lib",
       
+      -- rw plugins
       "rpcollis.lib",
       "rphanim.lib",
       "rplodatm.lib",
@@ -210,6 +214,7 @@ function project_base_initialize()
       "rpuvanim.lib",
       "rpworld.lib",
       
+      -- rw tools
       "rt2d.lib",
       "rt2danim.lib",
       "rtanim.lib",
@@ -257,7 +262,7 @@ externalrule "preproc"
 project "TMNT2"
    project_base_initialize()   
    filter { "configurations:"..getConfigsRelease() }
-      removefiles {  "src/Game/Sequence/Test/**" }   
+      removefiles { dir_src_pmk .. "/Game/Sequence/Test/**" }
    filter { "configurations:"..getConfigsAllEU() }
       defines { "TMNT2_BUILD_EU" }   
    filter{}

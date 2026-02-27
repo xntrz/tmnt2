@@ -59,7 +59,7 @@ CGuillotineGimmick::CGuillotineGimmick(const char* pszName, void* pParam)
     //
     //  init movement
     //
-    CGuillotineGimmickMove::INITPARAM moveParam = { 0 };
+    CGuillotineGimmickMove::INITPARAM moveParam = {};
     moveParam.m_fTheta          = 0.0f;
     moveParam.m_fOnceTheta      = MATH_DEG2RAD(pGuilloParam->m_fAmplitude);
     moveParam.m_fMaxMove        = pGuilloParam->m_fRoundTime;
@@ -226,7 +226,7 @@ void CGuillotineGimmick::setHitAttackChain(void)
     int32 numAttack = static_cast<int32>((m_vFulcrumVector.y * 0.5f) - m_fHitRadius);
     for (int32 i = 0; i < numAttack; ++i)
     {
-        RwSphere hitSphere = { 0 };
+        RwSphere hitSphere = {};
         RwV3dTransformPoint(&hitSphere.center, &vHitPos, pMatrix);
         hitSphere.radius = 0.5f;
 
@@ -267,7 +267,7 @@ void CGuillotineGimmick::setHitAttackGuillotine(void)
 
     for (int32 i = 0; i < COUNT_OF(s_aHitSphere); ++i)
     {
-        RwSphere hitSphere = { 0 };
+        RwSphere hitSphere = {};
         RwV3dTransformPoint(&hitSphere.center, &s_aHitSphere[i].center, pMatrix);
         hitSphere.radius = s_aHitSphere[i].radius;
 

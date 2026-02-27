@@ -152,7 +152,7 @@ CRaphael::CRaphael(GAMETYPES::COSTUME costume)
 	//		2 - left sword
     //
     
-    CPlayerCharacter::PARAMETER parameter = { 0 };
+    CPlayerCharacter::PARAMETER parameter = {};
     parameter.m_chrparameter.m_bToon            = true;
     parameter.m_chrparameter.m_pszModelName     = "raphael";
     parameter.m_chrparameter.m_pszMotionSetName = "raphael";

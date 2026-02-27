@@ -323,96 +323,96 @@ static const RwRGBA s_ColorWhite    = { 0xFF, 0xFF, 0xFF, 0xFF };
 #endif /* TMNT2_BUILD_EU */
 
 
-static const FontData_t s_DummyFont = { 0 };
-static const FontData_t s_TitleFont = { true, GAMETEXT_OP_TIT, { FONT_TITLE_X_POS, FONT_TITLE_Y_POS }, (FONT_HEIGHT_SCALE * 1.5f), s_ColorGreen };
+static const FontData_t s_DummyFont = {};
+static const FontData_t s_TitleFont = { true, GAMETEXT_OP_TIT, { FONT_TITLE_X_POS, FONT_TITLE_Y_POS }, (FONT_HEIGHT_SCALE * 1.5f), s_ColorGreen, nullptr };
 
 
 static const FontData_t s_aOptionFont[] =
 {
-    { true, GAMETEXT_OP_GAME,   { FONT_OPTION_X_POS(0), FONT_OPTION_Y_POS(0)   }, FONT_HEIGHT_SCALE, s_ColorOrange },
-    { true, GAMETEXT_OP_SOUND,  { FONT_OPTION_X_POS(1), FONT_OPTION_Y_POS(1)   }, FONT_HEIGHT_SCALE, s_ColorOrange },
-    { true, GAMETEXT_OP_DISP,   { FONT_OPTION_X_POS(2), FONT_OPTION_Y_POS(2)   }, FONT_HEIGHT_SCALE, s_ColorOrange },
-    { true, GAMETEXT_OP_CTRL,   { FONT_OPTION_X_POS(3), FONT_OPTION_Y_POS(3)   }, FONT_HEIGHT_SCALE, s_ColorOrange },
-    { true, GAMETEXT_OP_PW,     { FONT_OPTION_X_POS(4), FONT_OPTION_Y_POS(4)   }, FONT_HEIGHT_SCALE, s_ColorOrange },
-    { true, GAMETEXT_OP_DEF,    { FONT_OPTION_X_POS(5), FONT_OPTION_Y_POS(5)   }, FONT_HEIGHT_SCALE, s_ColorPurple },
-    { true, GAMETEXT_OP_EXIT,   { -223.0f,              FONT_OPTION_EXIT_Y_POS }, FONT_HEIGHT_SCALE, s_ColorOrange },
-    { 0 },
+    { true, GAMETEXT_OP_GAME,   { FONT_OPTION_X_POS(0), FONT_OPTION_Y_POS(0)   }, FONT_HEIGHT_SCALE, s_ColorOrange, nullptr },
+    { true, GAMETEXT_OP_SOUND,  { FONT_OPTION_X_POS(1), FONT_OPTION_Y_POS(1)   }, FONT_HEIGHT_SCALE, s_ColorOrange, nullptr },
+    { true, GAMETEXT_OP_DISP,   { FONT_OPTION_X_POS(2), FONT_OPTION_Y_POS(2)   }, FONT_HEIGHT_SCALE, s_ColorOrange, nullptr },
+    { true, GAMETEXT_OP_CTRL,   { FONT_OPTION_X_POS(3), FONT_OPTION_Y_POS(3)   }, FONT_HEIGHT_SCALE, s_ColorOrange, nullptr },
+    { true, GAMETEXT_OP_PW,     { FONT_OPTION_X_POS(4), FONT_OPTION_Y_POS(4)   }, FONT_HEIGHT_SCALE, s_ColorOrange, nullptr },
+    { true, GAMETEXT_OP_DEF,    { FONT_OPTION_X_POS(5), FONT_OPTION_Y_POS(5)   }, FONT_HEIGHT_SCALE, s_ColorPurple, nullptr },
+    { true, GAMETEXT_OP_EXIT,   { -223.0f,              FONT_OPTION_EXIT_Y_POS }, FONT_HEIGHT_SCALE, s_ColorOrange, nullptr },
+    {},
 };
 
 static const FontData_t s_aGameFont[] =
 {
-    { true, GAMETEXT_OP_GAME_DIFF,  { FONT_GAME_X_POS(0), FONT_GAME_Y_POS(0) }, FONT_HEIGHT_SCALE, s_ColorOrange },
-    { true, GAMETEXT_OP_GAME_SAVE,  { FONT_GAME_X_POS(1), FONT_GAME_Y_POS(1) }, FONT_HEIGHT_SCALE, s_ColorOrange },
-    { true, GAMETEXT_OP_OK,         { -223.0f,            26.0f              }, FONT_HEIGHT_SCALE, s_ColorOrange },
-    { 0 },
+    { true, GAMETEXT_OP_GAME_DIFF,  { FONT_GAME_X_POS(0), FONT_GAME_Y_POS(0) }, FONT_HEIGHT_SCALE, s_ColorOrange, nullptr },
+    { true, GAMETEXT_OP_GAME_SAVE,  { FONT_GAME_X_POS(1), FONT_GAME_Y_POS(1) }, FONT_HEIGHT_SCALE, s_ColorOrange, nullptr },
+    { true, GAMETEXT_OP_OK,         { -223.0f,            26.0f              }, FONT_HEIGHT_SCALE, s_ColorOrange, nullptr },
+    {},
 };
 
 static const FontData_t s_aSoundFont[] =
 {
-    { true, GAMETEXT_OP_SOUND_MODE,     { FONT_SOUND_X_POS(0), FONT_SOUND_Y_POS(0)  }, FONT_HEIGHT_SCALE, s_ColorOrange },
-    { true, GAMETEXT_OP_SOUND_V_BGM,    { FONT_SOUND_X_POS(1), FONT_SOUND_Y_POS(1)  }, FONT_HEIGHT_SCALE, s_ColorOrange },
-    { true, GAMETEXT_OP_SOUND_V_SE,     { FONT_SOUND_X_POS(2), FONT_SOUND_Y_POS(2)  }, FONT_HEIGHT_SCALE, s_ColorOrange },
-    { true, GAMETEXT_OP_SOUND_V_VOX,    { FONT_SOUND_X_POS(3), FONT_SOUND_Y_POS(3)  }, FONT_HEIGHT_SCALE, s_ColorOrange },
-    { true, GAMETEXT_OP_OK,             { -223.0f,             26.0f                }, FONT_HEIGHT_SCALE, s_ColorOrange },
-    { 0 },
+    { true, GAMETEXT_OP_SOUND_MODE,     { FONT_SOUND_X_POS(0), FONT_SOUND_Y_POS(0)  }, FONT_HEIGHT_SCALE, s_ColorOrange, nullptr },
+    { true, GAMETEXT_OP_SOUND_V_BGM,    { FONT_SOUND_X_POS(1), FONT_SOUND_Y_POS(1)  }, FONT_HEIGHT_SCALE, s_ColorOrange, nullptr },
+    { true, GAMETEXT_OP_SOUND_V_SE,     { FONT_SOUND_X_POS(2), FONT_SOUND_Y_POS(2)  }, FONT_HEIGHT_SCALE, s_ColorOrange, nullptr },
+    { true, GAMETEXT_OP_SOUND_V_VOX,    { FONT_SOUND_X_POS(3), FONT_SOUND_Y_POS(3)  }, FONT_HEIGHT_SCALE, s_ColorOrange, nullptr },
+    { true, GAMETEXT_OP_OK,             { -223.0f,             26.0f                }, FONT_HEIGHT_SCALE, s_ColorOrange, nullptr },
+    {},
 };
 
 static const FontData_t s_aDisplayFont[] =
 {
-    { true, GAMETEXT_OP_DISP_HITFX, { FONT_DISPLAY_X_POS(0), FONT_DISPLAY_Y_POS(0) }, FONT_HEIGHT_SCALE, s_ColorOrange },
-    { true, GAMETEXT_OP_DISP_MARK,  { FONT_DISPLAY_X_POS(1), FONT_DISPLAY_Y_POS(1) }, FONT_HEIGHT_SCALE, s_ColorOrange },
-    { true, GAMETEXT_OP_DISP_HELP,  { FONT_DISPLAY_X_POS(2), FONT_DISPLAY_Y_POS(2) }, FONT_HEIGHT_SCALE, s_ColorOrange },
-    { true, GAMETEXT_OP_DISP_RESO,  { FONT_DISPLAY_X_POS(3), FONT_DISPLAY_Y_POS(3) }, FONT_HEIGHT_SCALE, s_ColorOrange },
-    { true, GAMETEXT_OP_OK,         { -223.0f,               26.0f                 }, FONT_HEIGHT_SCALE, s_ColorOrange },
-    { 0 },
+    { true, GAMETEXT_OP_DISP_HITFX, { FONT_DISPLAY_X_POS(0), FONT_DISPLAY_Y_POS(0) }, FONT_HEIGHT_SCALE, s_ColorOrange, nullptr },
+    { true, GAMETEXT_OP_DISP_MARK,  { FONT_DISPLAY_X_POS(1), FONT_DISPLAY_Y_POS(1) }, FONT_HEIGHT_SCALE, s_ColorOrange, nullptr },
+    { true, GAMETEXT_OP_DISP_HELP,  { FONT_DISPLAY_X_POS(2), FONT_DISPLAY_Y_POS(2) }, FONT_HEIGHT_SCALE, s_ColorOrange, nullptr },
+    { true, GAMETEXT_OP_DISP_RESO,  { FONT_DISPLAY_X_POS(3), FONT_DISPLAY_Y_POS(3) }, FONT_HEIGHT_SCALE, s_ColorOrange, nullptr },
+    { true, GAMETEXT_OP_OK,         { -223.0f,               26.0f                 }, FONT_HEIGHT_SCALE, s_ColorOrange, nullptr },
+    {},
 };
 
 static const FontData_t s_aPadConfigFont[] =
 {
-    { true, GAMETEXT_OP_CTRL_FUNC_1_PC, { FONT_PAD_X_POS(0),  FONT_PAD_Y_POS(0)  }, FONT_HEIGHT_SCALE, s_ColorOrange	},
-    { true, GAMETEXT_OP_CTRL_FUNC_2,    { FONT_PAD_X_POS(1),  FONT_PAD_Y_POS(1)  }, FONT_HEIGHT_SCALE, s_ColorOrange	},
-    { true, GAMETEXT_OP_CTRL_FUNC_3_PC, { FONT_PAD_X_POS(2),  FONT_PAD_Y_POS(2)  }, FONT_HEIGHT_SCALE, s_ColorOrange	},
-    { true, GAMETEXT_OP_CTRL_FUNC_4,    { FONT_PAD_X_POS(3),  FONT_PAD_Y_POS(3)  }, FONT_HEIGHT_SCALE, s_ColorOrange	},
-    { true, GAMETEXT_OP_CTRL_FUNC_5,    { FONT_PAD_X_POS(4),  FONT_PAD_Y_POS(4)  }, FONT_HEIGHT_SCALE, s_ColorOrange	},
-    { true, GAMETEXT_OP_CTRL_FUNC_6,    { FONT_PAD_X_POS(5),  FONT_PAD_Y_POS(5)  }, FONT_HEIGHT_SCALE, s_ColorOrange	},
-    { true, GAMETEXT_OP_CTRL_FUNC_7,    { FONT_PAD_X_POS(6),  FONT_PAD_Y_POS(6)  }, FONT_HEIGHT_SCALE, s_ColorOrange	},
-    { true, GAMETEXT_OP_CTRL_RST,       { FONT_PAD_X_POS(7),  FONT_PAD_Y_POS(7)  }, FONT_HEIGHT_SCALE, s_ColorCyan	    },
-    { true, GAMETEXT_OP_CTRL_VIB,       { FONT_PAD_X_POS(9),  FONT_PAD_Y_POS(9)  }, FONT_HEIGHT_SCALE, s_ColorOrange	},
-    { true, GAMETEXT_OP_CTRL_DEF,       { FONT_PAD_X_POS(10), FONT_PAD_Y_POS(10) }, FONT_HEIGHT_SCALE, s_ColorPurple	},
-    { true, GAMETEXT_OP_OK,             { -223.0f,            26.0f              }, FONT_HEIGHT_SCALE, s_ColorOrange	},
-    { 0 },
+    { true, GAMETEXT_OP_CTRL_FUNC_1_PC, { FONT_PAD_X_POS(0),  FONT_PAD_Y_POS(0)  }, FONT_HEIGHT_SCALE, s_ColorOrange, nullptr	},
+    { true, GAMETEXT_OP_CTRL_FUNC_2,    { FONT_PAD_X_POS(1),  FONT_PAD_Y_POS(1)  }, FONT_HEIGHT_SCALE, s_ColorOrange, nullptr	},
+    { true, GAMETEXT_OP_CTRL_FUNC_3_PC, { FONT_PAD_X_POS(2),  FONT_PAD_Y_POS(2)  }, FONT_HEIGHT_SCALE, s_ColorOrange, nullptr	},
+    { true, GAMETEXT_OP_CTRL_FUNC_4,    { FONT_PAD_X_POS(3),  FONT_PAD_Y_POS(3)  }, FONT_HEIGHT_SCALE, s_ColorOrange, nullptr	},
+    { true, GAMETEXT_OP_CTRL_FUNC_5,    { FONT_PAD_X_POS(4),  FONT_PAD_Y_POS(4)  }, FONT_HEIGHT_SCALE, s_ColorOrange, nullptr	},
+    { true, GAMETEXT_OP_CTRL_FUNC_6,    { FONT_PAD_X_POS(5),  FONT_PAD_Y_POS(5)  }, FONT_HEIGHT_SCALE, s_ColorOrange, nullptr	},
+    { true, GAMETEXT_OP_CTRL_FUNC_7,    { FONT_PAD_X_POS(6),  FONT_PAD_Y_POS(6)  }, FONT_HEIGHT_SCALE, s_ColorOrange, nullptr	},
+    { true, GAMETEXT_OP_CTRL_RST,       { FONT_PAD_X_POS(7),  FONT_PAD_Y_POS(7)  }, FONT_HEIGHT_SCALE, s_ColorCyan,   nullptr   },
+    { true, GAMETEXT_OP_CTRL_VIB,       { FONT_PAD_X_POS(9),  FONT_PAD_Y_POS(9)  }, FONT_HEIGHT_SCALE, s_ColorOrange, nullptr	},
+    { true, GAMETEXT_OP_CTRL_DEF,       { FONT_PAD_X_POS(10), FONT_PAD_Y_POS(10) }, FONT_HEIGHT_SCALE, s_ColorPurple, nullptr	},
+    { true, GAMETEXT_OP_OK,             { -223.0f,            26.0f              }, FONT_HEIGHT_SCALE, s_ColorOrange, nullptr	},
+    {},
 };
 
 static const FontData_t s_aKeyboardConfigFont[] =
 {
-    { true, GAMETEXT_OP_CTRL_FUNC_1_PC,     { FONT_KEYBOARD_X_POS(0),  FONT_KEYBOARD_Y_POS(0)  }, (FONT_HEIGHT_SCALE * 0.75f), s_ColorOrange	},
-    { true, GAMETEXT_OP_CTRL_FUNC_2,        { FONT_KEYBOARD_X_POS(1),  FONT_KEYBOARD_Y_POS(1)  }, (FONT_HEIGHT_SCALE * 0.75f), s_ColorOrange	},
-    { true, GAMETEXT_OP_CTRL_FUNC_3_PC,     { FONT_KEYBOARD_X_POS(2),  FONT_KEYBOARD_Y_POS(2)  }, (FONT_HEIGHT_SCALE * 0.75f), s_ColorOrange	},
-    { true, GAMETEXT_OP_CTRL_FUNC_4,        { FONT_KEYBOARD_X_POS(3),  FONT_KEYBOARD_Y_POS(3)  }, (FONT_HEIGHT_SCALE * 0.75f), s_ColorOrange	},
-    { true, GAMETEXT_OP_CTRL_FUNC_5,        { FONT_KEYBOARD_X_POS(4),  FONT_KEYBOARD_Y_POS(4)  }, (FONT_HEIGHT_SCALE * 0.75f), s_ColorOrange	},
-    { true, GAMETEXT_OP_CTRL_FUNC_6,        { FONT_KEYBOARD_X_POS(5),  FONT_KEYBOARD_Y_POS(5)  }, (FONT_HEIGHT_SCALE * 0.75f), s_ColorOrange	},
-    { true, GAMETEXT_OP_CTRL_FUNC_7,        { FONT_KEYBOARD_X_POS(6),  FONT_KEYBOARD_Y_POS(6)  }, (FONT_HEIGHT_SCALE * 0.75f), s_ColorOrange	},
-    { true, GAMETEXT_OP_CTRL_FUNC_8_PC,     { FONT_KEYBOARD_X_POS(7),  FONT_KEYBOARD_Y_POS(7)  }, (FONT_HEIGHT_SCALE * 0.75f), s_ColorOrange	},
-    { true, GAMETEXT_OP_CTRL_FUNC_9_PC,     { FONT_KEYBOARD_X_POS(8),  FONT_KEYBOARD_Y_POS(8)  }, (FONT_HEIGHT_SCALE * 0.75f), s_ColorOrange	},
-    { true, GAMETEXT_OP_CTRL_FUNC_10_PC,    { FONT_KEYBOARD_X_POS(9),  FONT_KEYBOARD_Y_POS(9)  }, (FONT_HEIGHT_SCALE * 0.75f), s_ColorOrange	},
-    { true, GAMETEXT_OP_CTRL_FUNC_11_PC,    { FONT_KEYBOARD_X_POS(10), FONT_KEYBOARD_Y_POS(10) }, (FONT_HEIGHT_SCALE * 0.75f), s_ColorOrange	},
-    { true, GAMETEXT_OP_CTRL_FUNC_12,       { FONT_KEYBOARD_X_POS(11), FONT_KEYBOARD_Y_POS(11) }, (FONT_HEIGHT_SCALE * 0.75f), s_ColorOrange	},
-    { true, GAMETEXT_OP_CTRL_FUNC_13,       { FONT_KEYBOARD_X_POS(12), FONT_KEYBOARD_Y_POS(12) }, (FONT_HEIGHT_SCALE * 0.75f), s_ColorOrange	},
-    { true, GAMETEXT_OP_CTRL_RST,           { FONT_KEYBOARD_X_POS(13), FONT_KEYBOARD_Y_POS(13) }, (FONT_HEIGHT_SCALE * 0.75f), s_ColorCyan	    },
-    { true, GAMETEXT_OP_CTRL_DEF,           { FONT_KEYBOARD_X_POS(16), FONT_KEYBOARD_Y_POS(16) }, (FONT_HEIGHT_SCALE * 0.75f), s_ColorPurple	},
-    { true, GAMETEXT_OP_OK,                 { -223.0f,                 26.0f                   }, (FONT_HEIGHT_SCALE * 0.75f), s_ColorOrange	},
-    { 0 },
+    { true, GAMETEXT_OP_CTRL_FUNC_1_PC,     { FONT_KEYBOARD_X_POS(0),  FONT_KEYBOARD_Y_POS(0)  }, (FONT_HEIGHT_SCALE * 0.75f), s_ColorOrange, nullptr	},
+    { true, GAMETEXT_OP_CTRL_FUNC_2,        { FONT_KEYBOARD_X_POS(1),  FONT_KEYBOARD_Y_POS(1)  }, (FONT_HEIGHT_SCALE * 0.75f), s_ColorOrange, nullptr	},
+    { true, GAMETEXT_OP_CTRL_FUNC_3_PC,     { FONT_KEYBOARD_X_POS(2),  FONT_KEYBOARD_Y_POS(2)  }, (FONT_HEIGHT_SCALE * 0.75f), s_ColorOrange, nullptr	},
+    { true, GAMETEXT_OP_CTRL_FUNC_4,        { FONT_KEYBOARD_X_POS(3),  FONT_KEYBOARD_Y_POS(3)  }, (FONT_HEIGHT_SCALE * 0.75f), s_ColorOrange, nullptr	},
+    { true, GAMETEXT_OP_CTRL_FUNC_5,        { FONT_KEYBOARD_X_POS(4),  FONT_KEYBOARD_Y_POS(4)  }, (FONT_HEIGHT_SCALE * 0.75f), s_ColorOrange, nullptr	},
+    { true, GAMETEXT_OP_CTRL_FUNC_6,        { FONT_KEYBOARD_X_POS(5),  FONT_KEYBOARD_Y_POS(5)  }, (FONT_HEIGHT_SCALE * 0.75f), s_ColorOrange, nullptr	},
+    { true, GAMETEXT_OP_CTRL_FUNC_7,        { FONT_KEYBOARD_X_POS(6),  FONT_KEYBOARD_Y_POS(6)  }, (FONT_HEIGHT_SCALE * 0.75f), s_ColorOrange, nullptr	},
+    { true, GAMETEXT_OP_CTRL_FUNC_8_PC,     { FONT_KEYBOARD_X_POS(7),  FONT_KEYBOARD_Y_POS(7)  }, (FONT_HEIGHT_SCALE * 0.75f), s_ColorOrange, nullptr	},
+    { true, GAMETEXT_OP_CTRL_FUNC_9_PC,     { FONT_KEYBOARD_X_POS(8),  FONT_KEYBOARD_Y_POS(8)  }, (FONT_HEIGHT_SCALE * 0.75f), s_ColorOrange, nullptr	},
+    { true, GAMETEXT_OP_CTRL_FUNC_10_PC,    { FONT_KEYBOARD_X_POS(9),  FONT_KEYBOARD_Y_POS(9)  }, (FONT_HEIGHT_SCALE * 0.75f), s_ColorOrange, nullptr	},
+    { true, GAMETEXT_OP_CTRL_FUNC_11_PC,    { FONT_KEYBOARD_X_POS(10), FONT_KEYBOARD_Y_POS(10) }, (FONT_HEIGHT_SCALE * 0.75f), s_ColorOrange, nullptr	},
+    { true, GAMETEXT_OP_CTRL_FUNC_12,       { FONT_KEYBOARD_X_POS(11), FONT_KEYBOARD_Y_POS(11) }, (FONT_HEIGHT_SCALE * 0.75f), s_ColorOrange, nullptr	},
+    { true, GAMETEXT_OP_CTRL_FUNC_13,       { FONT_KEYBOARD_X_POS(12), FONT_KEYBOARD_Y_POS(12) }, (FONT_HEIGHT_SCALE * 0.75f), s_ColorOrange, nullptr	},
+    { true, GAMETEXT_OP_CTRL_RST,           { FONT_KEYBOARD_X_POS(13), FONT_KEYBOARD_Y_POS(13) }, (FONT_HEIGHT_SCALE * 0.75f), s_ColorCyan,   nullptr   },
+    { true, GAMETEXT_OP_CTRL_DEF,           { FONT_KEYBOARD_X_POS(16), FONT_KEYBOARD_Y_POS(16) }, (FONT_HEIGHT_SCALE * 0.75f), s_ColorPurple, nullptr	},
+    { true, GAMETEXT_OP_OK,                 { -223.0f,                 26.0f                   }, (FONT_HEIGHT_SCALE * 0.75f), s_ColorOrange, nullptr	},
+    {},
 };
 
 
-static const FontData_t s_ResolutionFont = { true, GAMETEXT_EMPTY,              { FONT_RESO_X_POS,      FONT_RESO_Y_POS     }, FONT_HEIGHT_SCALE, s_ColorOrange };
-static const FontData_t s_HelpOkFont     = { true, GAMETEXT_HELP_FUNC_SELECT,   { FONT_HELP_YES_X_POS,  FONT_HELP_YES_Y_POS }, FONT_HEIGHT_SCALE, s_ColorWhite  };
-static const FontData_t s_HelpCancelFont = { true, GAMETEXT_HELP_FUNC_BACK,     { FONT_HELP_NO_X_POS,   FONT_HELP_NO_Y_POS  }, FONT_HEIGHT_SCALE, s_ColorWhite  };
-static const FontData_t s_PadDecideFont  = { true, GAMETEXT_OP_CTRL_DECIDE,     { FONT_DECIDE_X_POS,    FONT_DECIDE_Y_POS   }, FONT_HEIGHT_SCALE, s_ColorWhite  };
-static const FontData_t s_SureFont       = { true, GAMETEXT_OP_DEF_MSG,         { FONT_SURE_X_POS,      FONT_SURE_Y_POS     }, FONT_HEIGHT_SCALE, s_ColorWhite  };
-static const FontData_t s_PasswordOkFont = { true, GAMETEXT_OP_OK,              { FONT_PWOK_X_POS,      FONT_PWOK_Y_POS     }, FONT_HEIGHT_SCALE, s_ColorOrange };
-static const FontData_t s_SelectPadMsg   = { true, GAMETEXT_OP_CTRL_PAD,        { FONT_SELPAD_X_POS,    FONT_SELPAD_Y_POS   }, FONT_HEIGHT_SCALE, s_ColorWhite  };
-static const FontData_t s_SelectKeyMsg   = { true, GAMETEXT_OP_CTRL_KEY,        { FONT_SELKEY_X_POS,    FONT_SELKEY_Y_POS   }, FONT_HEIGHT_SCALE, s_ColorWhite  };
+static const FontData_t s_ResolutionFont = { true, GAMETEXT_EMPTY,              { FONT_RESO_X_POS,      FONT_RESO_Y_POS     }, FONT_HEIGHT_SCALE, s_ColorOrange, nullptr };
+static const FontData_t s_HelpOkFont     = { true, GAMETEXT_HELP_FUNC_SELECT,   { FONT_HELP_YES_X_POS,  FONT_HELP_YES_Y_POS }, FONT_HEIGHT_SCALE, s_ColorWhite, nullptr };
+static const FontData_t s_HelpCancelFont = { true, GAMETEXT_HELP_FUNC_BACK,     { FONT_HELP_NO_X_POS,   FONT_HELP_NO_Y_POS  }, FONT_HEIGHT_SCALE, s_ColorWhite, nullptr };
+static const FontData_t s_PadDecideFont  = { true, GAMETEXT_OP_CTRL_DECIDE,     { FONT_DECIDE_X_POS,    FONT_DECIDE_Y_POS   }, FONT_HEIGHT_SCALE, s_ColorWhite, nullptr };
+static const FontData_t s_SureFont       = { true, GAMETEXT_OP_DEF_MSG,         { FONT_SURE_X_POS,      FONT_SURE_Y_POS     }, FONT_HEIGHT_SCALE, s_ColorWhite, nullptr };
+static const FontData_t s_PasswordOkFont = { true, GAMETEXT_OP_OK,              { FONT_PWOK_X_POS,      FONT_PWOK_Y_POS     }, FONT_HEIGHT_SCALE, s_ColorOrange, nullptr };
+static const FontData_t s_SelectPadMsg   = { true, GAMETEXT_OP_CTRL_PAD,        { FONT_SELPAD_X_POS,    FONT_SELPAD_Y_POS   }, FONT_HEIGHT_SCALE, s_ColorWhite, nullptr };
+static const FontData_t s_SelectKeyMsg   = { true, GAMETEXT_OP_CTRL_KEY,        { FONT_SELKEY_X_POS,    FONT_SELKEY_Y_POS   }, FONT_HEIGHT_SCALE, s_ColorWhite, nullptr };
 
 
 static const char* s_apszPasswordMark[] =
@@ -571,7 +571,7 @@ static const ButtonName_t s_aPadButtonName[] =
     { CController::DIGITAL_L2,      GAMETEXT_OP_CTRL_PAD_BTN_6 },
     { CController::DIGITAL_R1,      GAMETEXT_OP_CTRL_PAD_BTN_7 },
     { CController::DIGITAL_R2,      GAMETEXT_OP_CTRL_PAD_BTN_8 },
-    { 0 },
+    {},
 };
 
 
@@ -661,7 +661,9 @@ public:
 
 private:
     CGamepadOptionData::RAWDATA m_GamepadOptionData;
+#ifdef TARGET_PC
     CKeyboardOptionData::RAWDATA m_KeyboardOptionData;
+#endif /* TARGET_PC */
     int32 m_IndexMax;
     int32 m_IndexMaxNext;
     int32 m_VideomodeNum;
@@ -733,7 +735,9 @@ private:
 
 COptions::COptions(void)
 : m_GamepadOptionData()
+#ifdef TARGET_PC
 , m_KeyboardOptionData()
+#endif /* TARGET_PC */
 , m_IndexMax(0)
 , m_IndexMaxNext(0)
 , m_VideomodeNum(0)
@@ -1072,8 +1076,10 @@ void COptions::Draw(void)
 
 void COptions::Initialize(void)
 {
-    m_GamepadOptionData = { 0 };
-    m_KeyboardOptionData = { 0 };
+    m_GamepadOptionData = {};
+#ifdef TARGET_PC    
+    m_KeyboardOptionData = {};
+#endif /* TARGET_PC */
     m_EffectIn = 30;
     m_EffectOut = 30;
     m_EffectTime = 15;
@@ -2237,20 +2243,20 @@ void COptions::CfgKeyboard(void)
 {
     static const FontData_t s_aKeyboardButtonFont[14] =
     {
-        { true, GAMETEXT_EMPTY, { FONT_KEYBOARD_BTN_X_POS(0),  FONT_KEYBOARD_BTN_Y_POS(0)  }, (FONT_HEIGHT_SCALE * 0.75f), s_ColorOrange },
-        { true, GAMETEXT_EMPTY, { FONT_KEYBOARD_BTN_X_POS(1),  FONT_KEYBOARD_BTN_Y_POS(1)  }, (FONT_HEIGHT_SCALE * 0.75f), s_ColorOrange },
-        { true, GAMETEXT_EMPTY, { FONT_KEYBOARD_BTN_X_POS(2),  FONT_KEYBOARD_BTN_Y_POS(2)  }, (FONT_HEIGHT_SCALE * 0.75f), s_ColorOrange },
-        { true, GAMETEXT_EMPTY, { FONT_KEYBOARD_BTN_X_POS(3),  FONT_KEYBOARD_BTN_Y_POS(3)  }, (FONT_HEIGHT_SCALE * 0.75f), s_ColorOrange },
-        { true, GAMETEXT_EMPTY, { FONT_KEYBOARD_BTN_X_POS(4),  FONT_KEYBOARD_BTN_Y_POS(4)  }, (FONT_HEIGHT_SCALE * 0.75f), s_ColorOrange },
-        { true, GAMETEXT_EMPTY, { FONT_KEYBOARD_BTN_X_POS(5),  FONT_KEYBOARD_BTN_Y_POS(5)  }, (FONT_HEIGHT_SCALE * 0.75f), s_ColorOrange },
-        { true, GAMETEXT_EMPTY, { FONT_KEYBOARD_BTN_X_POS(6),  FONT_KEYBOARD_BTN_Y_POS(6)  }, (FONT_HEIGHT_SCALE * 0.75f), s_ColorOrange },
-        { true, GAMETEXT_EMPTY, { FONT_KEYBOARD_BTN_X_POS(7),  FONT_KEYBOARD_BTN_Y_POS(7)  }, (FONT_HEIGHT_SCALE * 0.75f), s_ColorOrange },
-        { true, GAMETEXT_EMPTY, { FONT_KEYBOARD_BTN_X_POS(8),  FONT_KEYBOARD_BTN_Y_POS(8)  }, (FONT_HEIGHT_SCALE * 0.75f), s_ColorOrange },
-        { true, GAMETEXT_EMPTY, { FONT_KEYBOARD_BTN_X_POS(9),  FONT_KEYBOARD_BTN_Y_POS(9)  }, (FONT_HEIGHT_SCALE * 0.75f), s_ColorOrange },
-        { true, GAMETEXT_EMPTY, { FONT_KEYBOARD_BTN_X_POS(10), FONT_KEYBOARD_BTN_Y_POS(10) }, (FONT_HEIGHT_SCALE * 0.75f), s_ColorOrange },
-        { true, GAMETEXT_EMPTY, { FONT_KEYBOARD_BTN_X_POS(11), FONT_KEYBOARD_BTN_Y_POS(11) }, (FONT_HEIGHT_SCALE * 0.75f), s_ColorOrange },
-        { true, GAMETEXT_EMPTY, { FONT_KEYBOARD_BTN_X_POS(12), FONT_KEYBOARD_BTN_Y_POS(12) }, (FONT_HEIGHT_SCALE * 0.75f), s_ColorOrange },
-        { 0 },
+        { true, GAMETEXT_EMPTY, { FONT_KEYBOARD_BTN_X_POS(0),  FONT_KEYBOARD_BTN_Y_POS(0)  }, (FONT_HEIGHT_SCALE * 0.75f), s_ColorOrange, nullptr },
+        { true, GAMETEXT_EMPTY, { FONT_KEYBOARD_BTN_X_POS(1),  FONT_KEYBOARD_BTN_Y_POS(1)  }, (FONT_HEIGHT_SCALE * 0.75f), s_ColorOrange, nullptr },
+        { true, GAMETEXT_EMPTY, { FONT_KEYBOARD_BTN_X_POS(2),  FONT_KEYBOARD_BTN_Y_POS(2)  }, (FONT_HEIGHT_SCALE * 0.75f), s_ColorOrange, nullptr },
+        { true, GAMETEXT_EMPTY, { FONT_KEYBOARD_BTN_X_POS(3),  FONT_KEYBOARD_BTN_Y_POS(3)  }, (FONT_HEIGHT_SCALE * 0.75f), s_ColorOrange, nullptr },
+        { true, GAMETEXT_EMPTY, { FONT_KEYBOARD_BTN_X_POS(4),  FONT_KEYBOARD_BTN_Y_POS(4)  }, (FONT_HEIGHT_SCALE * 0.75f), s_ColorOrange, nullptr },
+        { true, GAMETEXT_EMPTY, { FONT_KEYBOARD_BTN_X_POS(5),  FONT_KEYBOARD_BTN_Y_POS(5)  }, (FONT_HEIGHT_SCALE * 0.75f), s_ColorOrange, nullptr },
+        { true, GAMETEXT_EMPTY, { FONT_KEYBOARD_BTN_X_POS(6),  FONT_KEYBOARD_BTN_Y_POS(6)  }, (FONT_HEIGHT_SCALE * 0.75f), s_ColorOrange, nullptr },
+        { true, GAMETEXT_EMPTY, { FONT_KEYBOARD_BTN_X_POS(7),  FONT_KEYBOARD_BTN_Y_POS(7)  }, (FONT_HEIGHT_SCALE * 0.75f), s_ColorOrange, nullptr },
+        { true, GAMETEXT_EMPTY, { FONT_KEYBOARD_BTN_X_POS(8),  FONT_KEYBOARD_BTN_Y_POS(8)  }, (FONT_HEIGHT_SCALE * 0.75f), s_ColorOrange, nullptr },
+        { true, GAMETEXT_EMPTY, { FONT_KEYBOARD_BTN_X_POS(9),  FONT_KEYBOARD_BTN_Y_POS(9)  }, (FONT_HEIGHT_SCALE * 0.75f), s_ColorOrange, nullptr },
+        { true, GAMETEXT_EMPTY, { FONT_KEYBOARD_BTN_X_POS(10), FONT_KEYBOARD_BTN_Y_POS(10) }, (FONT_HEIGHT_SCALE * 0.75f), s_ColorOrange, nullptr },
+        { true, GAMETEXT_EMPTY, { FONT_KEYBOARD_BTN_X_POS(11), FONT_KEYBOARD_BTN_Y_POS(11) }, (FONT_HEIGHT_SCALE * 0.75f), s_ColorOrange, nullptr },
+        { true, GAMETEXT_EMPTY, { FONT_KEYBOARD_BTN_X_POS(12), FONT_KEYBOARD_BTN_Y_POS(12) }, (FONT_HEIGHT_SCALE * 0.75f), s_ColorOrange, nullptr },
+        {},
     };
 
     static_assert((COUNT_OF(s_aKeyboardButtonFont) - 1) == COUNT_OF(s_aKeybordButtonFunction), "update me");
@@ -2307,16 +2313,16 @@ void COptions::CfgGamepad(void)
 {
     static const FontData_t s_aPadButtonFont[10] =
     {
-        { true, GAMETEXT_EMPTY, { FONT_PAD_BTN_X_POS(0), FONT_PAD_BTN_Y_POS(0) }, FONT_HEIGHT_SCALE, s_ColorOrange },
-        { true, GAMETEXT_EMPTY, { FONT_PAD_BTN_X_POS(1), FONT_PAD_BTN_Y_POS(1) }, FONT_HEIGHT_SCALE, s_ColorOrange },
-        { true, GAMETEXT_EMPTY, { FONT_PAD_BTN_X_POS(2), FONT_PAD_BTN_Y_POS(2) }, FONT_HEIGHT_SCALE, s_ColorOrange },
-        { true, GAMETEXT_EMPTY, { FONT_PAD_BTN_X_POS(3), FONT_PAD_BTN_Y_POS(3) }, FONT_HEIGHT_SCALE, s_ColorOrange },
-        { true, GAMETEXT_EMPTY, { FONT_PAD_BTN_X_POS(4), FONT_PAD_BTN_Y_POS(4) }, FONT_HEIGHT_SCALE, s_ColorOrange },
-        { true, GAMETEXT_EMPTY, { FONT_PAD_BTN_X_POS(5), FONT_PAD_BTN_Y_POS(5) }, FONT_HEIGHT_SCALE, s_ColorOrange },
-        { true, GAMETEXT_EMPTY, { FONT_PAD_BTN_X_POS(6), FONT_PAD_BTN_Y_POS(6) }, FONT_HEIGHT_SCALE, s_ColorOrange },
-        { true, GAMETEXT_EMPTY, { FONT_PAD_BTN_X_POS(8), FONT_PAD_BTN_Y_POS(8) }, FONT_HEIGHT_SCALE, s_ColorOrange },
-        { true, GAMETEXT_EMPTY, { FONT_PAD_BTN_X_POS(9), FONT_PAD_BTN_Y_POS(9) }, FONT_HEIGHT_SCALE, s_ColorOrange },
-        { 0 },
+        { true, GAMETEXT_EMPTY, { FONT_PAD_BTN_X_POS(0), FONT_PAD_BTN_Y_POS(0) }, FONT_HEIGHT_SCALE, s_ColorOrange, nullptr },
+        { true, GAMETEXT_EMPTY, { FONT_PAD_BTN_X_POS(1), FONT_PAD_BTN_Y_POS(1) }, FONT_HEIGHT_SCALE, s_ColorOrange, nullptr },
+        { true, GAMETEXT_EMPTY, { FONT_PAD_BTN_X_POS(2), FONT_PAD_BTN_Y_POS(2) }, FONT_HEIGHT_SCALE, s_ColorOrange, nullptr },
+        { true, GAMETEXT_EMPTY, { FONT_PAD_BTN_X_POS(3), FONT_PAD_BTN_Y_POS(3) }, FONT_HEIGHT_SCALE, s_ColorOrange, nullptr },
+        { true, GAMETEXT_EMPTY, { FONT_PAD_BTN_X_POS(4), FONT_PAD_BTN_Y_POS(4) }, FONT_HEIGHT_SCALE, s_ColorOrange, nullptr },
+        { true, GAMETEXT_EMPTY, { FONT_PAD_BTN_X_POS(5), FONT_PAD_BTN_Y_POS(5) }, FONT_HEIGHT_SCALE, s_ColorOrange, nullptr },
+        { true, GAMETEXT_EMPTY, { FONT_PAD_BTN_X_POS(6), FONT_PAD_BTN_Y_POS(6) }, FONT_HEIGHT_SCALE, s_ColorOrange, nullptr },
+        { true, GAMETEXT_EMPTY, { FONT_PAD_BTN_X_POS(8), FONT_PAD_BTN_Y_POS(8) }, FONT_HEIGHT_SCALE, s_ColorOrange, nullptr },
+        { true, GAMETEXT_EMPTY, { FONT_PAD_BTN_X_POS(9), FONT_PAD_BTN_Y_POS(9) }, FONT_HEIGHT_SCALE, s_ColorOrange, nullptr },
+        {},
     };
 
     static_assert((COUNT_OF(s_aPadButtonFont) - 3) == COUNT_OF(s_aPadButtonFunction), "update me");

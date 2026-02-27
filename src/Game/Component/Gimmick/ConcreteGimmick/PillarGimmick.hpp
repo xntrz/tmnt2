@@ -82,6 +82,6 @@ private:
     RwV3d m_vOrgPosition;
     STATE m_eState;
     int32 m_nRidePlayer;
-    char m_aszOnPlayerName[GAMETYPES::PLAYERS_MAX][GAMEOBJECTTYPES::NAME_MAX];
-    char m_aszPreOnPlayerName[GAMETYPES::PLAYERS_MAX][GAMEOBJECTTYPES::NAME_MAX];
+    char m_aszOnPlayerName[GAMETYPES::PLAYERS_MAX][GAMEOBJECTTYPES::GO_NAME_MAX];
+    char m_aszPreOnPlayerName[GAMETYPES::PLAYERS_MAX][GAMEOBJECTTYPES::GO_NAME_MAX];
 };

@@ -12,9 +12,7 @@
     
 #ifdef TARGET_PC
     pFlow = new CPCSaveLoadFlow(mode, pFrame, pData);
-#else
-#error Not implemented for current target
-#endif
+#endif /* TARGET_PC */
 
     return pFlow;
 };

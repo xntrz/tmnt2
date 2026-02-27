@@ -98,5 +98,5 @@ extern const PROCESSTYPES::PROCESS g_aProcessList[] =
     { PROCLABEL_TIMEOUT,                PROCESSTYPES::PRIORITY_NORMAL - 2,  CTimeoutProcess::Instance           },
     { PROCLABEL_PADCONNECTCHECK,        PROCESSTYPES::PRIORITY_NORMAL + 1,  CPadConnectCheckProcess::Instance   },
 
-    { PROCESSTYPES::LABEL_EOL }
+    { PROCESSTYPES::LABEL_EOL, 0, nullptr }
 };

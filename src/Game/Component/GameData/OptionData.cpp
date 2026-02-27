@@ -128,10 +128,12 @@ CDisplayOptionData& COptionData::Display(void)
 };
 
 
+#if defined(TARGET_PC)
 CKeyboardOptionData& COptionData::Keyboard(void)
 {
     return m_keyboard;
 };
+#endif /* defined(TARGET_PC) */
 
 
 CGamepadOptionData& COptionData::Gamepad(int32 controller)

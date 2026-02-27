@@ -125,7 +125,7 @@ public:
 
 /*static*/ uint32 CVoiceChooseTool::MakePlayerIdArrayMask(int32 count, PLAYERID::VALUE aPlayerId[])
 {
-    ASSERT(count < (sizeof(uint32) << 3), "count should be less than bitsof(uint32)");
+    ASSERT(count < BITSOF(uint32), "count should be less than bitsof(uint32)");
     ASSERT(aPlayerId != nullptr);
 
     uint32 result = 0;
@@ -143,7 +143,7 @@ public:
     public:                                                                                     \
         virtual int32 GetVoiceID(PLAYERID::VALUE idPlayer) override                             \
         {                                                                                       \
-            CVoiceChooseTool::VOICELIST VoiceList[] =  { ##__VA_ARGS__ };                       \
+            CVoiceChooseTool::VOICELIST VoiceList[] =  { __VA_ARGS__ };                         \
             int32 VoiceListSize = COUNT_OF(VoiceList);                                          \
             CVoiceChooseTool::MakeExistListFromVoiceList(&VoiceListSize, idPlayer, VoiceList);  \
             return CVoiceChooseTool::GetVoiceID(&VoiceListSize, VoiceList);                     \
@@ -169,7 +169,7 @@ public:
             CVoiceChooseTool::GetExistCharacter(&numPlayerIdExists, aPlayerIdExists);                               \
             uint32 maskExists = CVoiceChooseTool::MakePlayerIdArrayMask(numPlayerIdExists, aPlayerIdExists);        \
             /* get check player character mask */                                                                   \
-            PLAYERID::VALUE aPlayerIdCheck [] = ##__VA_ARGS__;                                                      \
+            PLAYERID::VALUE aPlayerIdCheck [] = __VA_ARGS__;                                                        \
             uint32 maskCheck = CVoiceChooseTool::MakePlayerIdArrayMask(COUNT_OF(aPlayerIdCheck), aPlayerIdCheck);   \
             /* now check if all characters of voice code is exists on the stage */                                  \
             if ((maskExists & maskCheck) == maskCheck)                                                              \

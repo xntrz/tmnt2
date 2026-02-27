@@ -364,9 +364,11 @@ CEffect* CEffectContainer::Search(const char* pszName)
 {
     CEffect* pEffect = m_pListCommonEffectPool->GetEffect(pszName);
     if (!pEffect)
+    {
         pEffect = m_pListAttachedEffectPool->GetEffect(pszName);
-
-	return pEffect;
+    };
+    
+    return pEffect;
 };
 
 
@@ -547,7 +549,9 @@ static inline CEffect* EffectFromHandle(uint32 hEffect)
 
     CEffect* pEffect = EffectContainer().Search(pszName);
     if (!pEffect)
+    {
         return 0;
+    };
 
 	CEffect* pEffectPlay = pEffect->Clone();
     ASSERT(pEffectPlay);

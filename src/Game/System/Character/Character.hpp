@@ -43,7 +43,7 @@ public:
 
     struct COLLISION_GIMMICK_INFO
     {
-        char m_szGimmickObjName[GAMEOBJECTTYPES::NAME_MAX];
+        char m_szGimmickObjName[GAMEOBJECTTYPES::GO_NAME_MAX];
         MAPTYPES::GIMMICKTYPE m_type;
     };
 
@@ -77,7 +77,7 @@ public:
 
     struct LIFT_INFO
     {
-        char m_szLiftObjectName[GAMEOBJECTTYPES::NAME_MAX];
+        char m_szLiftObjectName[GAMEOBJECTTYPES::GO_NAME_MAX];
         int32 m_iStatus;
         int32 m_iDamage;
         bool m_bLiftSuccess;

@@ -133,9 +133,9 @@ void CSprite::SetRGB(uint8 r, uint8 g, uint8 b)
 {
 #ifdef TMNT2_BUILD_EU
     for (int32 i = 0; i < COUNT_OF(m_aColor); ++i)
-        m_aColor[i] = { r, g, b };
+        m_aColor[i] = { r, g, b, m_aColor[i].alpha };
 #else /* TMNT2_BUILD_EU */
-    m_Color = { r, g, b };
+    m_Color = { r, g, b, m_Color.alpha };
 #endif /* TMNT2_BUILD_EU */
 };
 

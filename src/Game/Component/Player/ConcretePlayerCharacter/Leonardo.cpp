@@ -111,7 +111,7 @@ CLeonardo::CLeonardo(GAMETYPES::COSTUME costume)
     //		5 - bag left sowrd handle
     //
     
-    CPlayerCharacter::PARAMETER parameter = { 0 };
+    CPlayerCharacter::PARAMETER parameter = {};
     parameter.m_chrparameter.m_bToon            = true;
     parameter.m_chrparameter.m_pszModelName     = "leonardo";
     parameter.m_chrparameter.m_pszMotionSetName = "leonardo";

@@ -98,11 +98,11 @@ private:
     uint32 m_hParentObj;
     CTracer* m_pTarget;
     float m_fChangeSize;
-    char m_szBaseEffectName[GAMEOBJECTTYPES::NAME_MAX];
-    char m_szAppearEffectName[GAMEOBJECTTYPES::NAME_MAX];
-    char m_szVanishEffectName[GAMEOBJECTTYPES::NAME_MAX];
-    char m_szReflectEffectName[GAMEOBJECTTYPES::NAME_MAX];
-    char m_szVanishMagicName[GAMEOBJECTTYPES::NAME_MAX];
+    char m_szBaseEffectName[GAMEOBJECTTYPES::GO_NAME_MAX];
+    char m_szAppearEffectName[GAMEOBJECTTYPES::GO_NAME_MAX];
+    char m_szVanishEffectName[GAMEOBJECTTYPES::GO_NAME_MAX];
+    char m_szReflectEffectName[GAMEOBJECTTYPES::GO_NAME_MAX];
+    char m_szVanishMagicName[GAMEOBJECTTYPES::GO_NAME_MAX];
     CLocus* m_apLocus[LOCUSKINDNUM];
     float m_fInitBodyRadius;
     float m_fInitAttackRadius;

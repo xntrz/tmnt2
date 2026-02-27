@@ -6,7 +6,7 @@
 
 void CPCClockDevice::GetDateTime(CTimeObj& timeobj)
 {
-    SYSTEMTIME sysTime = { 0 };
+    SYSTEMTIME sysTime = {};
     GetLocalTime(&sysTime);
     
     timeobj.Init(static_cast<int32>(sysTime.wYear),

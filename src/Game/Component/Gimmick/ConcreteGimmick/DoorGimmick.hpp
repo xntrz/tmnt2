@@ -22,9 +22,9 @@ public:
     CDoorGimmick(const char* pszName, void* pParam);
     virtual ~CDoorGimmick(void);
     virtual void Run(void) override;
-    virtual void Draw(void) const;
-    virtual bool Query(CGimmickQuery* pQuery) const;
-    virtual void OnReceiveEvent(const char* pszSender, GIMMICKTYPES::EVENTTYPE eventtype);
+    virtual void Draw(void) const override;
+    virtual bool Query(CGimmickQuery* pQuery) const override;
+    virtual void OnReceiveEvent(const char* pszSender, GIMMICKTYPES::EVENTTYPE eventtype) override;
     void forceGenerateEnd(void);
     void doorMoveOperate(void);
 

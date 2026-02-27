@@ -668,7 +668,7 @@ CBaseChr6045::CBaseChr6045(ENEMYID::VALUE enemyId)
     if (pParameter->m_pfnAIInstance)
         m_pAIModerator = reinterpret_cast<CBaseAI6045*>(&CEnemyCharacter::AIModerator());
 	
-	return bResult;
+    return bResult;
 };
 
 

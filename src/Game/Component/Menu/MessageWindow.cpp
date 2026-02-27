@@ -108,9 +108,6 @@ CMessageWindow::~CMessageWindow(void)
 
 void CMessageWindow::SetColor(COLOR color)
 {
-    ASSERT(color >= 0);
-    ASSERT(color < COUNT_OF(m_aColorTable));
-
     m_aSprite[0].SetRGBA(m_aColorTable[color]);
     m_aSprite[1].SetRGBA(m_aColorTable[color]);
     m_aSprite[2].SetRGBA(m_aColorTable[color]);

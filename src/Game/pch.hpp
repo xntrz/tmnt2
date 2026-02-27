@@ -34,7 +34,7 @@ struct _underlying_type_uint { typedef typename _underlying_type_size<sizeof(T)>
 
 
 #if (__cplusplus >= 201402)
-#define ENUM_FLAG_OP_CONSTEXPR constexpr
+#define ENUM_FLAG_OP_CONSTEXPR 
 #else
 #define ENUM_FLAG_OP_CONSTEXPR
 #endif 
@@ -81,5 +81,5 @@ struct _underlying_type_uint { typedef typename _underlying_type_size<sizeof(T)>
     {                                                                       \
         using type = typename _underlying_type_uint<T>::type;               \
         return (T&)(((type&)a) ^= ((type)b));                               \
-    };                                                          
+    }
 

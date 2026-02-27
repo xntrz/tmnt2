@@ -22,7 +22,7 @@
 
 /*static*/ CRideCharacter* CRideCharacter::New(PLAYERID::VALUE idChr, CRidePlayer* pRidePlayer, GAMETYPES::COSTUME costume)
 {
-    char szPlayerName[GAMEOBJECTTYPES::NAME_MAX];
+    char szPlayerName[GAMEOBJECTTYPES::GO_NAME_MAX];
     szPlayerName[0] = '\0';
 
     std::strcpy(szPlayerName, PLAYERID::GetName(idChr));
@@ -51,7 +51,7 @@ CRideCharacter::CRideCharacter(const char* pszName, PLAYERID::VALUE idPlayer, CR
     m_aScore[RIDETYPES::SCOREKIND_GOLD] = 0;
     m_aScore[RIDETYPES::SCOREKIND_SILVER] = 0;
 
-    CPlayerCharacter::PARAMETER parameter = { 0 };
+    CPlayerCharacter::PARAMETER parameter = {};
     parameter.m_chrparameter.m_bToon = true;
     parameter.m_chrparameter.m_pszModelName = PLAYERID::GetName(idPlayer);
     parameter.m_chrparameter.m_pszMotionSetName = PLAYERID::GetName(idPlayer);
@@ -843,7 +843,7 @@ CRideCharacter::HIT_SPHERE_KIND CRideCharacter::CheckHit(RwV3d& rvVelocityPerFra
     {
         for (int32 i = 0; i < HIT_SPHERE_KIND_NUM; ++i)
         {
-            RwSphere sphere = { 0 };
+            RwSphere sphere = {};
             GetHitSphere(&sphere, HIT_SPHERE_KIND(i));
 
             if (CWorldMap::CheckCollisionSphereMove(&sphere.center, sphere.radius, &rvVelocityPerFrame, CWorldMap::CHECKFLAG_NONE))

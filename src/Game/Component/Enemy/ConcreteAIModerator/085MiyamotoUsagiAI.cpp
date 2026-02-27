@@ -737,7 +737,7 @@ C085MiyamotoUsagiAI::C085MiyamotoUsagiAI(CEnemyCharacter* pEnemyChr)
 
 /*virtual*/ void C085MiyamotoUsagiAI::OnStatusEnd(ENEMYTYPES::STATUS statusEnd) /*override*/
 {
-    if (statusEnd != C085MiyamotoUsagi::STATUS_MUTEKI)
+    if (static_cast<int32>(statusEnd) != C085MiyamotoUsagi::STATUS_MUTEKI)
     {
         if ((AIParam().GetAttackCountDamage() >= USAGIAI::COUNTER_ATTACK_REACTION_DAMAGE) ||
             AIParam().PlayerWatcher().IsShootShuriken(16.0f))

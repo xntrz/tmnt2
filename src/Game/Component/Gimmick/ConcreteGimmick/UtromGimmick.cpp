@@ -221,7 +221,7 @@ CUtromGimmick::CUtromGimmick(const char* pszName, void* pParam)
             //
             //  update catch hit
             //
-            RwSphere hitSphere = { 0 };
+            RwSphere hitSphere = {};
             m_pUtromMove->GetPosition(&hitSphere.center);
             hitSphere.radius = m_pUtromMove->GetRadius();
         
@@ -509,7 +509,7 @@ CUtromAreaCheckGimmick::CUtromAreaCheckGimmick(const char* pszName, void* pParam
 
 void CUtromAreaCheckGimmick::AreaCheckInit(void)
 {
-    char szObjName[GAMEOBJECTTYPES::NAME_MAX];
+    char szObjName[GAMEOBJECTTYPES::GO_NAME_MAX];
     szObjName[0] = '\0';
 
     std::sprintf(szObjName, "%s_A", CGimmickInfo::GetBaseName(GIMMICKID::ID_N_UTROM));

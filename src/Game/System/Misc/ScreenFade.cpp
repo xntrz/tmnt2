@@ -44,9 +44,9 @@ private:
 
 
 CScreenFade::CScreenFadeController::CScreenFadeController(void)
-: m_color({ 0 })
-, m_colorStart({ 0 })
-, m_colorEnd({ 0 })
+: m_color({})
+, m_colorStart({})
+, m_colorEnd({})
 , m_fFadeTime(0.0f)
 , m_fTime(0.0f)
 , m_bIsFading(false)
@@ -154,7 +154,7 @@ void CScreenFade::CScreenFadeController::Start(float fFadeTime, bool bDraw)
     if (!m_pScreenFade)
         m_pScreenFade = new CScreenFadeController;
 
-	return true;
+    return true;
 };
 
 

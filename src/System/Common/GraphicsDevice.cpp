@@ -22,7 +22,7 @@
 #include "rptoon.h"
 
 
-/*static*/ const RwRGBA CGraphicsDevice::DEFAULT_CLEAR_COLOR = { 0 };
+/*static*/ const RwRGBA CGraphicsDevice::DEFAULT_CLEAR_COLOR = { 0x00, 0x00, 0x00, 0x00 };
 
 
 CGraphicsDevice::CGraphicsDevice(void)

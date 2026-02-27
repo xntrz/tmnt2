@@ -3,6 +3,8 @@
 
 #include "Game/System/Hit/Intersection.hpp"
 
+#include "rpcollis.h"
+
 
 class CMapCollisionModelContainer
 {
@@ -69,7 +71,7 @@ private:
 
     COLLISIONWORK* pWork = static_cast<COLLISIONWORK*>(pData);
 
-    RpIntersection rpIntersect = { 0 };    
+    RpIntersection rpIntersect = {};    
     std::memcpy(&rpIntersect, pWork->m_pRpIntersection, sizeof(rpIntersect));
 
     CMapCollisionModel::COLLISIONPARAM_MODEL param;    
@@ -403,7 +405,7 @@ CMapCollisionModelContainer::CollisionBBoxCallback(RpIntersection* pIntersection
 
 /*static*/ bool CMapCollisionModelContainer::TestSphereAndVerticalLine(RwV3d* pvPos, float fRadius, RpIntersection* pIntersection)
 {
-    RwSphere sphere = { 0 };
+    RwSphere sphere = {};
     sphere.center = *pvPos;
     sphere.radius = fRadius;
 
@@ -413,7 +415,7 @@ CMapCollisionModelContainer::CollisionBBoxCallback(RpIntersection* pIntersection
 
 /*static*/ bool CMapCollisionModelContainer::TestSphereAndLine(RwV3d* pvPos, float fRadius, RpIntersection* pIntersection)
 {
-    RwSphere sphere = { 0 };
+    RwSphere sphere = {};
     sphere.center = *pvPos;
     sphere.radius = fRadius;
     
@@ -568,7 +570,7 @@ bool CMapCollisionModelContainer::CheckModelCollision(RpIntersection* pIntersect
 
         if (CheckModelBoundingSphere(&pMatrix->pos, pModelInfo->m_fRadius, pIntersection))
         {
-            COLLISIONWORK work = { 0 };
+            COLLISIONWORK work = {};
 
             work.m_type             = pModelInfo->m_type;
             work.m_pRotate          = &pModelInfo->m_vRotation;

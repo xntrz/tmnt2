@@ -846,7 +846,7 @@ void CThrowingGimmick::updateModule(void)
             bool bIsThrown = (m_state == STATE_THROWN);
             bool bIsAtariModelEmpty = (std::strcmp(m_pKindinfo->m_pszAtariModelName, ATARI_NAME_EMPTY) == 0);
 
-            pCircleShadowMod->SetEnable(bIsWaiting && bIsAtariModelEmpty || bIsLifted || bIsThrown);
+            pCircleShadowMod->SetEnable((bIsWaiting && bIsAtariModelEmpty) || bIsLifted || bIsThrown);
         };
     };
 };
@@ -891,7 +891,7 @@ void CThrowingGimmick::createItem(void)
     param.m_id = GIMMICKID::ID_N_ITEM;
     param.m_subid = 0;
     param.m_size = sizeof(param);
-    param.m_quat = { 0 };
+    param.m_quat = {};
     param.m_vPosition = vPosition;
 	param.m_nItem = m_nItem;
 

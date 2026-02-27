@@ -16,6 +16,7 @@ public:
     };
     
     class CPadFileStream;
+    class CStubFileStream;
     class CPCPadFileStream;
 
 public:

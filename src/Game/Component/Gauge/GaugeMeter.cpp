@@ -305,7 +305,7 @@ void CGaugeMeter_Container::GaugeMeterDraw(void)
 {
     RENDERSTATE_PUSH(rwRENDERSTATETEXTURERASTER, RwTextureGetRaster(m_apTexture[3]));
 
-    int32 vertex_list[4] = { 0 };
+    int32 vertex_list[4] = {};
     vertex_list[0] = 0;
     vertex_list[1] = 1;
 
@@ -344,7 +344,7 @@ void CGaugeMeter_Container::GaugeMeterDraw(void)
 
 void CGaugeMeter_Container::GaugeMeterVertexSet(int32 nVertexNum, int32 aVertexList [])
 {
-    RwIm2DVertex aVertices[4] = { 0 };
+    RwIm2DVertex aVertices[4] = {};
 
     float fScale = 64.0f;
 

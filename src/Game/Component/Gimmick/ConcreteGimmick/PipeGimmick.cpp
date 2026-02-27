@@ -20,7 +20,7 @@ CPipeGimmick::CPipeGimmick(const char* pszName, void* pParam)
 , m_fTimer(0.0f)
 , m_subid(0)
 , m_state(STATE_NONE)
-, m_line({ 0 })
+, m_line({})
 , m_hMagic(0)
 {
     init(pParam);
@@ -185,7 +185,7 @@ void CPipeGimmick::waiting(void)
     RwV3d vPosition = m_line.start;
     for (int32 i = 0; i < nCheckNum; ++i)
     {
-        RwSphere hitSphere = { 0 };
+        RwSphere hitSphere = {};
         hitSphere.center = vPosition;
         hitSphere.radius = 0.5f;
 

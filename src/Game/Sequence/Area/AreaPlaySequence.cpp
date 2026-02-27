@@ -340,6 +340,9 @@ void CAreaPlaySequence::callEnbuSequence(void)
 	case GAMETYPES::STAGEMODE_RIDE:
         Call(PROCLABEL_SEQ_ENBU);
         break;
+
+    default:
+        break;
     };
 };
 

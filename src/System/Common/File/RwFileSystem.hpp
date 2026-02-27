@@ -2,6 +2,8 @@
 
 #include "StdFile.hpp"
 
+#include "rtfsyst.h"
+
 
 class CRwFileSystem final : public RtFileSystem
 {

@@ -36,7 +36,7 @@ void CAtomicDisplayControlModule::Run(void)
     int32 nNumDrawAtomic = pMPController->GetNumDrawAtomicData(fPrevTime, fNowTime);
     for (int32 i = 0; i < nNumDrawAtomic; ++i)
     {
-        CMotionParameterController::DRAW_ATOMIC DrawAtomic = { 0 };
+        CMotionParameterController::DRAW_ATOMIC DrawAtomic = {};
         pMPController->GetDrawAtomicData(i, &DrawAtomic);
         
         m_pModel->SetPartsDrawEnable(DrawAtomic.m_nAtomic, DrawAtomic.m_bDraw);

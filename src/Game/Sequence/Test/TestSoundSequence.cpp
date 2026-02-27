@@ -15,7 +15,13 @@
 #include "System/Common/Controller.hpp"
 #include "System/Common/Screen.hpp"
 
+#pragma push_macro("new")
+#pragma push_macro("delete")
+#undef new
+#undef delete
 #include <deque>
+#pragma pop_macro("delete")
+#pragma pop_macro("new")
 
 
 #define REQ_POST(type, ...) \

@@ -15,8 +15,10 @@ struct TMNT2_SAVE_DATA
 static_assert(std::is_pod<TMNT2_SAVE_DATA>::value, "TMNT2_SAVE_DATA should be POD type");
 
 
+#if defined(TARGET_PC)
+
 /*
- *  data size checkouts for retail game saveload compatibility
+ *  data size checkouts for retail PC game saveload compatibility
  */
 
 // game option
@@ -38,3 +40,5 @@ CHECK_SIZE(CGameRecord::RAWDATA,         0x464);
 
 // save data
 CHECK_SIZE(TMNT2_SAVE_DATA, 0x578); // 1400
+
+#endif /* defined(TARGET_PC) */

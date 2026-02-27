@@ -10,6 +10,8 @@
 #include "System/Common/SystemText.hpp"
 #include "System/Common/TextData.hpp"
 
+#include "rtfsyst.h"
+
 
 static CSaveLoadFrameBase* s_pSaveloadFrame = nullptr;
 static CSaveLoadDataBase* s_pSaveloadData = nullptr;

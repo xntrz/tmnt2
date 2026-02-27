@@ -395,8 +395,8 @@ CGameObjectContainer::GAMEOBJECTWORK* CGameObjectContainer::FindObjectWork(uint3
     if (pWork->counter != static_cast<int32>(handle.parts.counter))
         return nullptr;
     
-	if (!pWork->object)
-		return nullptr;
+    if (!pWork->object)
+        return nullptr;
 
     ASSERT(pWork->object->GetHandle() == hObject);
 	ASSERT(pWork->object->GetType() == static_cast<GAMEOBJECTTYPE::VALUE>(handle.parts.type));
@@ -536,7 +536,7 @@ inline CGameObject* CGameObjectContainer::GetNextFromList(CList<GAMEOBJECTWORK, 
     GAMEOBJECTWORK* pWork = FindObjectWork(hObject);
     ASSERT(pWork);
 
-    auto it = ++CList<GAMEOBJECTWORK, TAG>::iterator(&list, pWork);
+    auto it = ++typename CList<GAMEOBJECTWORK, TAG>::iterator(&list, pWork);
     auto itEnd = list.end();
     if (it != itEnd)
         return (*it).object;

@@ -52,22 +52,22 @@ static const SHOTINFO s_aShotInfo[] =
 {
     /* model name |  power | speed | hit radius | radius | gravity | target                                  |  reflection    | effect trace                  | effect hit                | effect vanish           | hit magic             | locus */
     /*----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------*/
-    {  "",           0,      0.0f,      0.0f,      0.0f,    0.0f,    CHitAttackData::TARGET_NONE,               false,          EFFECTID::ID_UNKNOWN,           EFFECTID::ID_UNKNOWN,       EFFECTID::ID_UNKNOWN,     MAGICID::ID_UNKNOWN,    { 0 } },
+    {  "",           0,      0.0f,      0.0f,      0.0f,    0.0f,    CHitAttackData::TARGET_NONE,               false,          EFFECTID::ID_UNKNOWN,           EFFECTID::ID_UNKNOWN,       EFFECTID::ID_UNKNOWN,     MAGICID::ID_UNKNOWN,    {} },
     {  "arrow",      5,      72.0f,     0.1f,      0.1f,    0.1f,    CHitAttackData::TARGET_PLAYER_GIMMICK,     true,           EFFECTID::ID_UNKNOWN,           EFFECTID::ID_UNKNOWN,       EFFECTID::ID_UNKNOWN,     MAGICID::ID_UNKNOWN,    { { 0xFF, 0xFF, 0xFF, 0xFF }, 0x40, 4 } },
-    {  "arrow",      5,      72.0f,     0.1f,      0.1f,    0.1f,    CHitAttackData::TARGET_PLAYER_GIMMICK,     true,           EFFECTID::ID_FIRE_ARROWSHOT,    EFFECTID::ID_UNKNOWN,       EFFECTID::ID_UNKNOWN,     MAGICID::ID_KO_EXPL,    { 0 } },
-    {  "arrow",      5,      72.0f,     0.1f,      0.1f,    0.1f,    CHitAttackData::TARGET_PLAYER_GIMMICK,     true,           EFFECTID::ID_SLEEP_ARROWSHOT,   EFFECTID::ID_UNKNOWN,       EFFECTID::ID_UNKNOWN,     MAGICID::ID_SLEEPGAS_2, { 0 } },
-    {  "grenade",    20,     36.0f,     0.1f,      0.1f,    0.1f,    CHitAttackData::TARGET_PLAYER_GIMMICK,     false,          EFFECTID::ID_UNKNOWN,           EFFECTID::ID_UNKNOWN,       EFFECTID::ID_UNKNOWN,     MAGICID::ID_EXPL_B1,    { 0 } },
-    {  "bomb",       20,     0.0f,      0.1f,      0.1f,    0.1f,    CHitAttackData::TARGET_PLAYER_GIMMICK,     false,          EFFECTID::ID_UNKNOWN,           EFFECTID::ID_UNKNOWN,       EFFECTID::ID_UNKNOWN,     MAGICID::ID_EXPL_B1,    { 0 } },
+    {  "arrow",      5,      72.0f,     0.1f,      0.1f,    0.1f,    CHitAttackData::TARGET_PLAYER_GIMMICK,     true,           EFFECTID::ID_FIRE_ARROWSHOT,    EFFECTID::ID_UNKNOWN,       EFFECTID::ID_UNKNOWN,     MAGICID::ID_KO_EXPL,    {} },
+    {  "arrow",      5,      72.0f,     0.1f,      0.1f,    0.1f,    CHitAttackData::TARGET_PLAYER_GIMMICK,     true,           EFFECTID::ID_SLEEP_ARROWSHOT,   EFFECTID::ID_UNKNOWN,       EFFECTID::ID_UNKNOWN,     MAGICID::ID_SLEEPGAS_2, {} },
+    {  "grenade",    20,     36.0f,     0.1f,      0.1f,    0.1f,    CHitAttackData::TARGET_PLAYER_GIMMICK,     false,          EFFECTID::ID_UNKNOWN,           EFFECTID::ID_UNKNOWN,       EFFECTID::ID_UNKNOWN,     MAGICID::ID_EXPL_B1,    {} },
+    {  "bomb",       20,     0.0f,      0.1f,      0.1f,    0.1f,    CHitAttackData::TARGET_PLAYER_GIMMICK,     false,          EFFECTID::ID_UNKNOWN,           EFFECTID::ID_UNKNOWN,       EFFECTID::ID_UNKNOWN,     MAGICID::ID_EXPL_B1,    {} },
     {  "shuriken",   5,      54.0f,     0.2f,      0.2f,    0.1f,    CHitAttackData::TARGET_ENEMY_GIMMICK,      true,           EFFECTID::ID_UNKNOWN,           EFFECTID::ID_UNKNOWN,       EFFECTID::ID_UNKNOWN,     MAGICID::ID_UNKNOWN,    { { 0x80, 0x80, 0xFF, 0xFF }, 0x40, 4 } },
     {  "shuriken",   5,      54.0f,     0.2f,      0.2f,    0.1f,    CHitAttackData::TARGET_PLAYER,             true,           EFFECTID::ID_UNKNOWN,           EFFECTID::ID_UNKNOWN,       EFFECTID::ID_UNKNOWN,     MAGICID::ID_UNKNOWN,    { { 0x80, 0x80, 0xFF, 0xFF }, 0x40, 4 } },
     {  "kunai",      5,      54.0f,     0.1f,      0.1f,    0.1f,    CHitAttackData::TARGET_ENEMY_GIMMICK,      true,           EFFECTID::ID_UNKNOWN,           EFFECTID::ID_UNKNOWN,       EFFECTID::ID_UNKNOWN,     MAGICID::ID_UNKNOWN,    { { 0x80, 0x80, 0xFF, 0xFF }, 0x40, 4 } },
     {  "kunai",      5,      54.0f,     0.1f,      0.1f,    0.1f,    CHitAttackData::TARGET_PLAYER,             true,           EFFECTID::ID_UNKNOWN,           EFFECTID::ID_UNKNOWN,       EFFECTID::ID_UNKNOWN,     MAGICID::ID_UNKNOWN,    { { 0x80, 0x80, 0xFF, 0xFF }, 0x40, 4 } },
     {  "pack",       5,      54.0f,     0.1f,      0.1f,    0.1f,    CHitAttackData::TARGET_ENEMY_GIMMICK,      false,          EFFECTID::ID_UNKNOWN,           EFFECTID::ID_UNKNOWN,       EFFECTID::ID_UNKNOWN,     MAGICID::ID_UNKNOWN,    { { 0x80, 0x80, 0xFF, 0xFF }, 0x40, 4 } },
     {  "shuriken",   5,      54.0f,     0.6f,      0.2f,    0.1f,    CHitAttackData::TARGET_PLAYER_GIMMICK,     true,           EFFECTID::ID_UNKNOWN,           EFFECTID::ID_UNKNOWN,       EFFECTID::ID_UNKNOWN,     MAGICID::ID_UNKNOWN,    { { 0x80, 0x80, 0xFF, 0xFF }, 0x40, 4 } },
-    {  "fundou",     5,      54.0f,     0.3f,      0.3f,    0.1f,    CHitAttackData::TARGET_PLAYER_GIMMICK,     false,          EFFECTID::ID_UNKNOWN,           EFFECTID::ID_UNKNOWN,       EFFECTID::ID_UNKNOWN,     MAGICID::ID_UNKNOWN,    { 0 } },
-    {  "scyth",      10,     0.0f,      0.6f,      0.4f,    0.0f,    CHitAttackData::TARGET_PLAYER_GIMMICK,     false,          EFFECTID::ID_SICKLE_WARP,       EFFECTID::ID_UNKNOWN,       EFFECTID::ID_SICKLE_WARP, MAGICID::ID_UNKNOWN,    { 0 } },
-    {  "spear",      5,      0.0f,      0.4f,      0.2f,    0.0f,    CHitAttackData::TARGET_PLAYER_GIMMICK,     false,          EFFECTID::ID_UNKNOWN,           EFFECTID::ID_UNKNOWN,       EFFECTID::ID_UNKNOWN,     MAGICID::ID_UNKNOWN,    { 0 } },
-    {  "ride_shot",  5,      120.0f,    0.4f,      0.2f,    0.0f,    CHitAttackData::TARGET_ENEMY_GIMMICK,      false,          EFFECTID::ID_UNKNOWN,           EFFECTID::ID_LASER_HIT_ALL, EFFECTID::ID_UNKNOWN,     MAGICID::ID_UNKNOWN,    { 0 } },
+    {  "fundou",     5,      54.0f,     0.3f,      0.3f,    0.1f,    CHitAttackData::TARGET_PLAYER_GIMMICK,     false,          EFFECTID::ID_UNKNOWN,           EFFECTID::ID_UNKNOWN,       EFFECTID::ID_UNKNOWN,     MAGICID::ID_UNKNOWN,    {} },
+    {  "scyth",      10,     0.0f,      0.6f,      0.4f,    0.0f,    CHitAttackData::TARGET_PLAYER_GIMMICK,     false,          EFFECTID::ID_SICKLE_WARP,       EFFECTID::ID_UNKNOWN,       EFFECTID::ID_SICKLE_WARP, MAGICID::ID_UNKNOWN,    {} },
+    {  "spear",      5,      0.0f,      0.4f,      0.2f,    0.0f,    CHitAttackData::TARGET_PLAYER_GIMMICK,     false,          EFFECTID::ID_UNKNOWN,           EFFECTID::ID_UNKNOWN,       EFFECTID::ID_UNKNOWN,     MAGICID::ID_UNKNOWN,    {} },
+    {  "ride_shot",  5,      120.0f,    0.4f,      0.2f,    0.0f,    CHitAttackData::TARGET_ENEMY_GIMMICK,      false,          EFFECTID::ID_UNKNOWN,           EFFECTID::ID_LASER_HIT_ALL, EFFECTID::ID_UNKNOWN,     MAGICID::ID_UNKNOWN,    {} },
 };
 
 
@@ -813,7 +813,7 @@ void CShot::CheckAttack(void)
 
         if (m_id == SHOTID::ID_RIDE)
         {
-            RwLine line = { 0 };
+            RwLine line = {};
             line.start = m_vPosition;
             line.end = vObjPos;
 
@@ -822,7 +822,7 @@ void CShot::CheckAttack(void)
         }
         else
         {
-            RwSphere sphere = { 0 };
+            RwSphere sphere = {};
             SetHitSphere(&sphere);
 
             hitAttack.SetShape(CHitAttackData::SHAPE_SPHERE);
@@ -854,7 +854,7 @@ void CShot::CheckAttack(void)
 
     if (m_bReflection)
     {
-        RwSphere sphere = { 0 };
+        RwSphere sphere = {};
         SetHitSphere(&sphere);
 
         CHitCatchData hitCatch;

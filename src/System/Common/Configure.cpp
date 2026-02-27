@@ -39,7 +39,7 @@ static char s_argkey = '-';
             {
                 size_t lenArg = std::strlen(pszArg);
                 size_t lenArgV = static_cast<size_t>(end - &arg[1]);
-                if (!std::strncmp(&arg[1], pszArg, std::min(lenArg, lenArgV)))
+                if (!std::strncmp(&arg[1], pszArg, Min(lenArg, lenArgV)))
                     return true;
             }
             else

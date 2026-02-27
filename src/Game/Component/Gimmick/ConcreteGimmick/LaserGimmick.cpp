@@ -70,7 +70,7 @@ void CLaserGimmickModel::Draw(void) const
         { { -0.5,   -0.5,   -0.5,   },  0.0, 1.0, },
     };
 
-    RwIm3DVertex aVertex[10] = { 0 };
+    RwIm3DVertex aVertex[10] = {};
 
     RwV3d vScale = { 0.05f, m_fNorm, 0.05f };
     RwV3d vRotation = Math::VECTOR3_ZERO;
@@ -169,7 +169,7 @@ CLaserGimmick::CLaserGimmick(const char* pszName, void* pParam)
 , m_vDirection(Math::VECTOR3_ZERO)
 , m_fNorm(0.0f)
 , m_bSwitch(false)
-, m_line({ 0 })
+, m_line({})
 , m_type(0)
 {
     GIMMICKPARAM::GIMMICK_AREA_BOX* pInitParam = static_cast<GIMMICKPARAM::GIMMICK_AREA_BOX*>(pParam);

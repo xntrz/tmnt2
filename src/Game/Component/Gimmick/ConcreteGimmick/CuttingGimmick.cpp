@@ -276,7 +276,7 @@ void CCuttingGimmick::waiting(void)
 {
     if (m_fInvinsibleTimer <= 0.0f)
     {        
-        RwSphere hitSphere = { 0 };
+        RwSphere hitSphere = {};
         m_pCuttingMove->GetPosition(&hitSphere.center);
         hitSphere.center.y += 1.0f;
         hitSphere.radius = kindinfo().m_fHitRadius;

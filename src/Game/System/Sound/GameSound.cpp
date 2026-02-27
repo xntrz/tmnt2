@@ -256,6 +256,9 @@ static void SdSetDamage(const SE_DAMAGE_PARAM* pParam)
                 case STAGEID::ID_ST60X_C10:                    
                     Code = SDCODE_SE(0x1107);
                     break;
+
+                default:
+                    break;
                 }
                 break;
                 
@@ -814,6 +817,9 @@ static void SdSetDamage(const SE_DAMAGE_PARAM* pParam)
             };
         }
         break;  // GAMEOBJECTTYPE::CHARACTER
+
+    default:
+        break;
     };
 
     CGameSound::PlayPositionSE(&pParam->Pos, Code, 0);
@@ -1104,7 +1110,7 @@ static void SdSetAttackEnemy(const SE_ATTACK_PARAM* pParam)
 /*static*/ int32 CGameSound::m_nVoiceConfig = 0;
 /*static*/ CGameSound::MODE CGameSound::m_mode = CGameSound::MODE_STEREO;
 /*static*/ RwCamera* CGameSound::m_pCamera = nullptr;
-/*static*/ CGameSound::VOICE_HIST CGameSound::m_aVoiceHist[2] = { 0 };
+/*static*/ CGameSound::VOICE_HIST CGameSound::m_aVoiceHist[2] = {};
 /*static*/ int32 CGameSound::m_nVoiceHistSide = 0;
 /*static*/ CGameSound::LOOP_SE CGameSound::m_aLoopSe [] =
 {
@@ -1777,11 +1783,11 @@ static void SdSetAttackEnemy(const SE_ATTACK_PARAM* pParam)
     if (pObjAttacker->GetType() != GAMEOBJECTTYPE::CHARACTER)
         return;
     
-	const CCharacter* pAttacker = reinterpret_cast<const CCharacter*>(pObjAttacker);
-	if ((pAttacker->GetCharacterType() != CCharacter::TYPE_PLAYER))
-		return;
+    const CCharacter* pAttacker = reinterpret_cast<const CCharacter*>(pObjAttacker);
+    if ((pAttacker->GetCharacterType() != CCharacter::TYPE_PLAYER))
+        return;
 	
-	const CGimmick* pDefender = reinterpret_cast<const CGimmick*>(pObjDefender);
+    const CGimmick* pDefender = reinterpret_cast<const CGimmick*>(pObjDefender);
 
     if ((pDefender->GetID() == GIMMICKID::ID_G_SSHIPS) ||
 		(pDefender->GetID() == GIMMICKID::ID_N_BRKCAR))

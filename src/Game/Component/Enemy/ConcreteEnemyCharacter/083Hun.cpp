@@ -87,7 +87,7 @@ C083Hun::C083Hun(void)
     bool bIsInBurstMode = (m_bBurstModeActie);
     bool bIsDead = (TestFlag(ENEMYTYPES::FLAG_DEATH_STATUS));
     bool bIsHpHigh = (fHpRatio > 0.3f);
-    bool bIsDown = (GetStatus() == BASEHUN::STATUS_BURST_FLYAWAY);
+    bool bIsDown = (static_cast<int32>(GetStatus()) == BASEHUN::STATUS_BURST_FLYAWAY);
 
     if (bIsInBurstMode || bIsDead || bIsHpHigh || bIsDown)
     {

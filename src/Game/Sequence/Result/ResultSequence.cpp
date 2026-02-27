@@ -517,7 +517,7 @@ void CResultWorkPool::CrystalGrowingDraw(void)
         GAMETEXT_RES_GROW_WHITE_1,
     };
 
-    Rt2dBBox bbox = { 0 };
+    Rt2dBBox bbox = {};
     bbox.x = -250.0f;
     bbox.y = fOfsY - 130.0f;
     bbox.w = 500.0f;
@@ -564,11 +564,11 @@ void CResultWorkPool::CrystalGrowingDraw(void)
     {
         int32 aComboTexIndex[5][5] =
         {
-            0, 0, 2, -1, -1,    // AAC
-            0, 0, 1,  1, -1,    // AABB
-            0, 0, 1,  2, -1,    // AABC
-            0, 0, 1,  1,  1,    // AABBB
-            0, 0, 1,  1,  2,    // AABBC
+            { 0, 0, 2, -1, -1, }, // AAC
+            { 0, 0, 1,  1, -1, }, // AABB
+            { 0, 0, 1,  2, -1, }, // AABC
+            { 0, 0, 1,  1,  1, }, // AABBB
+            { 0, 0, 1,  1,  2, }, // AABBC
         };
 
         float wh = Math::LinearTween(384.0f, -256.0f, float(m_auAnimCnt[0]), fDuration);

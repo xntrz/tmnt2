@@ -174,9 +174,9 @@ namespace PlayerStatus
     {
     public:
         virtual bool IsEnableChangeStatus(PLAYERTYPES::STATUS status) override;
-        virtual void OnAttach(void);
-        virtual void OnDetach(void);
-        virtual void OnRun(void);
+        virtual void OnAttach(void) override;
+        virtual void OnDetach(void) override;
+        virtual void OnRun(void) override;
         bool IsEnd(void) const;
 
     protected:
@@ -188,21 +188,21 @@ namespace PlayerStatus
     class CDindle : public CStatusDamage
     {
     public:
-        virtual void OnAttach(void);
+        virtual void OnAttach(void) override;
     };
 
 
     class CStun : public CStatusDamage
     {
     public:
-        virtual void OnAttach(void);
+        virtual void OnAttach(void) override;
     };
 
 
     class CSleep : public CStatusDamage
     {
     public:
-        virtual void OnAttach(void);
+        virtual void OnAttach(void) override;
     };
 
 
@@ -210,13 +210,13 @@ namespace PlayerStatus
     {
     public:
         virtual bool IsEnableChangeStatus(PLAYERTYPES::STATUS status) override;
-        virtual void OnAttach(void);
+        virtual void OnAttach(void) override;
     };
 
 
     class CFreeze : public CStatusDamage
     {
     public:
-        virtual void OnAttach(void);
+        virtual void OnAttach(void) override;
     };
 };

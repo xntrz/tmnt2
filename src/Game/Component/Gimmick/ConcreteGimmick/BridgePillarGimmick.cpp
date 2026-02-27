@@ -216,7 +216,7 @@ void CBridgePillarGimmick::waiting(void)
 {
     if (m_fInvincibleTimer <= 0.0f)
     {
-        RwSphere hitSphere = { 0 };
+        RwSphere hitSphere = {};
         hitSphere.radius = 1.0f;
 
         ASSERT(m_pCuttingMove);

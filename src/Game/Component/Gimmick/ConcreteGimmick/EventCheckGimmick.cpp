@@ -253,7 +253,7 @@ CAreaCheckGimmick::CAreaCheckGimmick(const char* pszName, void* pParam)
 , m_numbertype(NUMBERTYPE_SOMEONE)
 , m_bInsideAreaSomeone(false)
 , m_bInsideAreaAll(false)
-, m_sphere({ 0 })    
+, m_sphere({})    
 {
     std::memset(m_aWallVertex, 0x00, sizeof(m_aWallVertex));
     std::memset(m_aBoxVertex, 0x00, sizeof(m_aBoxVertex));
@@ -311,7 +311,7 @@ void CAreaCheckGimmick::Draw(void) const
                     &vNormal
                 );
 
-                RwLine line = { 0 };
+                RwLine line = {};
                 GetPosition(&line.start);
 
                 line.start.y =
@@ -477,7 +477,7 @@ void CAreaCheckGimmick::SetAreaParameter(AREATYPE areatype, void* pParam)
     case AREATYPE_WALL:
         {
             GIMMICKPARAM::GIMMICK_TERMS_AREA_WALL* pWallParam = static_cast<GIMMICKPARAM::GIMMICK_TERMS_AREA_WALL*>(pParam);
-            RwV3d aWallVertex[4] = { 0 };
+            RwV3d aWallVertex[4] = {};
 
             static_assert(COUNT_OF(aWallVertex) == COUNT_OF(m_aWallVertex), "update me");
 
@@ -512,7 +512,7 @@ void CAreaCheckGimmick::SetAreaParameter(AREATYPE areatype, void* pParam)
     case AREATYPE_BOX:
         {
             GIMMICKPARAM::GIMMICK_TERMS_AREA_BOX* pBoxParam = static_cast<GIMMICKPARAM::GIMMICK_TERMS_AREA_BOX*>(pParam);
-            RwV3d aBoxVertex[8] = { 0 };
+            RwV3d aBoxVertex[8] = {};
 
             static_assert(COUNT_OF(aBoxVertex) == COUNT_OF(m_aBoxVertex), "update me");
 
@@ -621,7 +621,7 @@ bool CAreaCheckGimmick::isReverseSideWall(RwV3d* pvPosition)
     if (!isPointReverseSidePlane(pvPosition, &m_aWallVertex[0], &vNormal))
         return false;
 
-    RwV3d* aTriVertex[3] = { 0 };
+    RwV3d* aTriVertex[3] = {};
     aTriVertex[0] = &m_aWallVertex[0];
     aTriVertex[1] = &m_aWallVertex[1];
     aTriVertex[2] = &m_aWallVertex[2];

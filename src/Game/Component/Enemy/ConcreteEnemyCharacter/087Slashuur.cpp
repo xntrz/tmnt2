@@ -25,6 +25,8 @@
 #include "Game/System/Sound/GameSound.hpp"
 #include "Game/System/Sound/MessageManager.hpp"
 
+#include <algorithm> // std::sort
+
 
 #define HPSTEAL_AMOUNT (30) // last phase area drain 
 

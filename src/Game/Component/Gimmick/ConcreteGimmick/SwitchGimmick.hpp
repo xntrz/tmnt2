@@ -34,7 +34,7 @@ public:
     void onSwitchChange(void);
 
 protected:
-    char                m_szTargetGimmickName[GAMEOBJECTTYPES::NAME_MAX];
+    char                m_szTargetGimmickName[GAMEOBJECTTYPES::GO_NAME_MAX];
     SWITCHTYPE          m_switchtype;
     SWITCHSTATE         m_switchstate;
     CNormalGimmickModel m_model;

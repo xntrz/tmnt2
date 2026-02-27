@@ -13,7 +13,7 @@ class CBodyHitData;
 class CGimmickMotion;
 
 
-class CUtromGimmick final : public CGimmick
+class CUtromGimmick : public CGimmick
 {
 private:
     friend class CUtromAreaCheckGimmick;

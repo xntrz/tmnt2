@@ -324,7 +324,7 @@ static STAGEID::VALUE GetEnemyCharacterStageId(ENEMYID::VALUE enemyId)
 
 /*static*/ CEnemy* CEnemy::New(const ENEMYTYPES::CREATEINFO* pCreateInfo)
 {
-    char szEnemyName[GAMEOBJECTTYPES::NAME_MAX];
+    char szEnemyName[GAMEOBJECTTYPES::GO_NAME_MAX];
     szEnemyName[0] = '\0';
     
     std::sprintf(szEnemyName, "e%03d_%04d", pCreateInfo->m_idEnemy, m_iUniqueCount);
@@ -339,7 +339,7 @@ static STAGEID::VALUE GetEnemyCharacterStageId(ENEMYID::VALUE enemyId)
                pCreateInfo->m_vPosition.y,
                pCreateInfo->m_vPosition.z);
 
-        RwSphere sphere = { 0 };
+        RwSphere sphere = {};
         sphere.center = pCreateInfo->m_vPosition;
         sphere.radius = 0.5f;
 

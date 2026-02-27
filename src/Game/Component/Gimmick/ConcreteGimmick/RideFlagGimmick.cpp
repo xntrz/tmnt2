@@ -10,8 +10,8 @@
 #include "Game/System/Model/Model.hpp"
 
 
-/*static*/ int32 CRideFlagGimmick::m_iCounter[FLAGTYPENUM] = { 0 };
-/*static*/ int32 CRideFlagGimmick::m_iRestCounter[FLAGTYPENUM] = { 0 };
+/*static*/ int32 CRideFlagGimmick::m_iCounter[FLAGTYPENUM] = {};
+/*static*/ int32 CRideFlagGimmick::m_iRestCounter[FLAGTYPENUM] = {};
 
 
 /*static*/ void CRideFlagGimmick::Initialize(void)

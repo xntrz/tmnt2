@@ -49,7 +49,7 @@ void CAmbientLightModule::Run(void)
 
 	if (m_bEnable)
 	{
-		RwRGBA colorModelNew = { 0 };
+		RwRGBA colorModelNew = {};
 		float t = m_fElapsedTime;
 
 		if (t == 0.0f)

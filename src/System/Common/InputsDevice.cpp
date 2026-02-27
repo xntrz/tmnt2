@@ -166,11 +166,11 @@ void CInputsDevice::ExchangePhysicalController(int32 iController1, int32 iContro
 
 void CInputsDevice::SyncVirtualController(void)
 {
-    m_aInfoVController[0] = { 0 };
+    m_aInfoVController[0] = {};
     m_aInfoVController[0].m_iPhysicalPort	= CController::CONTROLLER_LOCKED_ON_VIRTUAL;
     m_aInfoVController[0].m_eState			= CController::STATE_CONNECT;
     
-    m_aInfoVController[1] = { 0 };
+    m_aInfoVController[1] = {};
     m_aInfoVController[1].m_iPhysicalPort	= CController::CONTROLLER_UNLOCKED_ON_VIRTUAL;
     m_aInfoVController[1].m_eState			= CController::STATE_CONNECT;
 

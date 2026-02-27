@@ -9,7 +9,7 @@
 #define DEFAULT_GRAVITY_DAMS    (DEFAULT_GRAVITY_MS / 10.0f)
 
 
-static RwIm3DVertex s_aVertices[100] = { 0 };
+static RwIm3DVertex s_aVertices[100] = {};
 
 
 CCloth::CCloth(void)
@@ -264,7 +264,7 @@ void CCloth::CreateCloth(void)
                 if ((i || (m_nDivisionWidth != j)) &&
                     (j || (m_nDivisionHeight != i)))
                 {
-                    if (j && (m_nDivisionWidth != j) || !i || (i == m_nDivisionHeight))
+                    if ((j && (m_nDivisionWidth != j)) || !i || (i == m_nDivisionHeight))
                         fMass = 6.0f;
                     else
                         fMass = 3.0f;

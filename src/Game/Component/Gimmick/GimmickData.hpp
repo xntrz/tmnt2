@@ -10,7 +10,7 @@ public:
 
     struct GIMMICKDATA : public GIMMICKPARAM::GIMMICK_BASIC
     {
-        ;
+        
     };
 
 

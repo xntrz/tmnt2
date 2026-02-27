@@ -151,7 +151,7 @@ void CBarrierModule::Run(void)
         m_pBarrierSphere->SetScale(&vScale);
         m_pBarrierSphere->SetPosition(&vPosition);
 
-        RwSphere sphere = { 0 };
+        RwSphere sphere = {};
         sphere.center = vPosition;
         sphere.radius = (m_fRadius * m_fScale);
 

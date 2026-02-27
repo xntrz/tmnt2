@@ -1,5 +1,7 @@
 #include "TextureManager.hpp"
 
+#include "rtpitexd.h"
+
 
 #ifdef _DEBUG
 #define TEXTURE_SET_NUM (256)
@@ -14,7 +16,7 @@ private:
     class CTextureSet : public CListNode<CTextureSet>
     {
     private:
-        static const int32 NAME_MAX = 16;
+        static const int32 TEX_NAME_MAX = 16;
         
     public:
         static RwTexture* SetLinearFilterCallback(RwTexture* pRwTexture, void* pData);
@@ -34,7 +36,7 @@ private:
         int32 Generation(void) const;
 
     protected:
-        char m_szName[NAME_MAX];
+        char m_szName[TEX_NAME_MAX];
         RwTexDictionary* m_pRwTexDictionary;
         int32 m_iGeneration;
     };

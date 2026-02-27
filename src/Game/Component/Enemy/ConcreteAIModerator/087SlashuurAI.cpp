@@ -17,6 +17,8 @@
 #include "Game/System/Misc/Gamepad.hpp"
 #endif /* _DEBUG */
 
+#include <algorithm> // std::sort
+
 
 #define DISTANCE_NEAR                   (4.325f)
 #define DISTANCE_MIDDLE                 (DISTANCE_NEAR * 2.0f)

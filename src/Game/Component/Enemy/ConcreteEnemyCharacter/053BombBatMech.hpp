@@ -20,7 +20,7 @@ public:
         virtual void OnStart(void) override;
         virtual RESULT Observing(void) override;
         virtual ENEMYTYPES::STATUS OnEnd(void) override;
-        virtual bool OnMotionChange(int32 idOld, int32 idNew);
+        virtual bool OnMotionChange(int32 idOld, int32 idNew) override;
 
     private:
         float m_fTimer;

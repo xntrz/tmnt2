@@ -304,6 +304,9 @@ void CTimeoutProcess::Move(void)
                 execTimeout();
         }
         break;
+
+    default:
+        break;
     };
 };
 

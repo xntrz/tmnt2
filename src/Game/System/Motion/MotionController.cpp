@@ -4,6 +4,8 @@
 
 #include "Game/System/Model/Model.hpp"
 
+#include "rphanim.h"
+
 
 CMotionController::CMotionController(CModel* pModel)
 : m_pCurrentMotion(nullptr)
@@ -113,7 +115,7 @@ float CMotionController::GetCurrentMotionEndTime(void) const
     if (m_pCurrentMotion)
         return m_pCurrentMotion->GetEndTime();
 
-	return 0.0f;
+    return 0.0f;
 };
 
 

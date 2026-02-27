@@ -30,7 +30,7 @@ void CRwFileSystemManager::Terminate(void)
     {
         m_pFileSystem->Terminate();
         RtFSManagerUnregister(m_pFileSystem);
-        //RwFree(m_pFileSystem);
+        
         m_pFileSystem = nullptr;
     };
 

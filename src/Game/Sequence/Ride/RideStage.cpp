@@ -250,7 +250,7 @@ static inline CRideStageContainer& RideStageContainer(void)
     if (!s_pRideStageContainer)
         s_pRideStageContainer = new CRideStageContainer;
 
-	SetMoveLimit();
+    SetMoveLimit();
     CRideFlagGimmick::Initialize();
 };
 

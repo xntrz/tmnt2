@@ -589,7 +589,7 @@ void CMagicManager::CParameter::SetSoundPlay(bool bSet)
     if (!pMagic)
         return 0;
 
-	CMagic* pMagicPlay = pMagic->Clone();
+    CMagic* pMagicPlay = pMagic->Clone();
     ASSERT(pMagicPlay);
 
     pMagicPlay->SetPosition(pvPosition);

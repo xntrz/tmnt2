@@ -294,6 +294,9 @@ HOMETYPES::DOORSTATUS CHomeCamera::GetDoorStatus(HOMETYPES::DOORKIND doorkind) c
                         Result = HOMETYPES::DOORSTATUS_OPEN;
                 }
                 break;
+
+            default:
+                break;
             };
         }
         break;
@@ -316,6 +319,9 @@ HOMETYPES::DOORSTATUS CHomeCamera::GetDoorStatus(HOMETYPES::DOORKIND doorkind) c
                         Result = HOMETYPES::DOORSTATUS_OPEN;
                 }
                 break;
+
+            default:
+                break;
             };
         }
         break;
@@ -337,6 +343,9 @@ HOMETYPES::DOORSTATUS CHomeCamera::GetDoorStatus(HOMETYPES::DOORKIND doorkind) c
                     else
                         Result = HOMETYPES::DOORSTATUS_OPEN;
                 }
+                break;
+
+            default:
                 break;
             };
         }

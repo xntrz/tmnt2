@@ -128,8 +128,8 @@
         if (*pszPath == '/')
             *pszPath = '\\';
 #else /* TARGET_PC */
-        if (*Path == '\\')
-            *Path = '/';
+        if (*pszPath == '\\')
+            *pszPath = '/';
 #endif /* TARGET_PC */
         ++pszPath;
     };

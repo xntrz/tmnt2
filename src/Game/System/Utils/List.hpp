@@ -97,6 +97,9 @@ public:
             ;
         };
 
+        
+        iterator_base& operator=(const iterator_base& other) = default;
+
 
         inline bool is_end(void)
         {

@@ -11,7 +11,7 @@
 /*static*/ CFenceGimmickManager* CFenceGimmickManager::m_pInstance = nullptr;
 
 /*static*/ CFenceGimmickManager::ATTACKERINFO*
-CFenceGimmickManager::m_paPlayerInfo[GAMETYPES::PLAYERS_MAX] = { 0 };
+CFenceGimmickManager::m_paPlayerInfo[GAMETYPES::PLAYERS_MAX] = {};
 
 
 /*static*/ void CFenceGimmickManager::Initialize(void)

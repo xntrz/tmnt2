@@ -205,8 +205,6 @@ CPathTransferFloorGimmickMove::RESULT CPathTransferFloorGimmickMove::OnMove(floa
 					PASSINGWAY_GO,	// PASSINGWAY_BACK
 				};
 
-				ASSERT((m_passingway >= 0) && (m_passingway < COUNT_OF(aPassingwayInvTbl)));
-
                 m_fTimer = 0.0f;
 				m_passingway = aPassingwayInvTbl[m_passingway];
 				m_phase = (m_type != 2 ? PHASE_STOP : PHASE_NONE);

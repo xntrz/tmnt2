@@ -95,7 +95,7 @@ CCrystalGimmick::CCrystalGimmick(const char* pszName, void* pParam)
 {
     GIMMICKPARAM::GIMMICK_TERMS* pInitParam = static_cast<GIMMICKPARAM::GIMMICK_TERMS*>(pParam);
 
-    ASSERT(std::strlen(pInitParam->m_szTargetGimmick) < GAMEOBJECTTYPES::NAME_MAX);
+    ASSERT(std::strlen(pInitParam->m_szTargetGimmick) < GAMEOBJECTTYPES::GO_NAME_MAX);
     std::strcpy(m_szTargetName, pInitParam->m_szTargetGimmick);
 
     RwMatrix rotMat;

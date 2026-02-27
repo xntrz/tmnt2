@@ -75,7 +75,7 @@ void CStageBaseSequence::OnMove(bool bRet, const void* pReturnValue)
     if (runState())
         OnStateDetached(m_state);
 
-	m_GameStage.Period();
+    m_GameStage.Period();
     
     if (GetState() >= STATE_END)
         Ret();

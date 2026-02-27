@@ -51,7 +51,7 @@ CPCTimer::CPCTimer(void)
     ASSERT(!m_pInstance);
     m_pInstance = this;
 
-    int Registers[4] = { 0 };   // EAX, EBX, ECX, EDX
+    int Registers[4] = {};   // EAX, EBX, ECX, EDX
     int Function = 1;           // EAX=1: Processor Info and Feature Bits
     __cpuid(Registers, Function);
 

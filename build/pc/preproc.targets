@@ -19,6 +19,14 @@
             Condition="'$(IdFsyst)' == 'true'">
 
         <PropertyGroup>
+            <!-- NOTE: $(IntDir) is changed to real only in target exec -->
+            <ObjPath>$(IntDir)</ObjPath> 
+            <PreprocessPath>$(ObjPath)\preprocess</PreprocessPath>
+            <PreprocessPath>$(PreprocessPath.Replace($(ProjectName), '').Replace('\\', '\'))</PreprocessPath>        
+            <PreprocessDir>$([System.IO.Path]::Combine($(ProjDir), $(PreprocessPath)))</PreprocessDir>
+            <PreprocessDir>$([System.IO.Path]::Combine($(PreprocessDir), ''))\</PreprocessDir>
+            <PreprocessDir>$(PreprocessDir.Replace($(ProjectName), '').Replace('\\', '\'))</PreprocessDir>
+
             <PreprocessRule>$(PreprocessRuleNA)</PreprocessRule>
             <AllPreprocessorDefs>@(ClCompile->'%(PreprocessorDefinitions)')</AllPreprocessorDefs>
             <PreprocessRule Condition="$(AllPreprocessorDefs.Contains('TMNT2_BUILD_EU'))">$(PreprocessRuleEU)</PreprocessRule>

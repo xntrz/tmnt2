@@ -1,5 +1,7 @@
 #include "ProcessMemory.hpp"
 
+#include "System/Common/Memory.hpp"
+
 
 CProcessMemory::CProcessMemory(void)
 {
@@ -7,15 +9,15 @@ CProcessMemory::CProcessMemory(void)
 };
 
 
-void* CProcessMemory::Alloc(uint32 size)
+void* CProcessMemory::Alloc(size_t size)
 {
-    return new int8[size];
+    return CMemory::malloc(size, __FILE__, __LINE__);
 };
 
 
 void CProcessMemory::Free(void* mem)
 {
-    delete[] mem;
+    CMemory::free(mem);
 };
 
 

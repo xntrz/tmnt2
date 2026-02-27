@@ -2,6 +2,8 @@
 
 #include "WorldMap.hpp"
 
+#include "rpcollis.h"
+
 
 class CMapCollision
 {

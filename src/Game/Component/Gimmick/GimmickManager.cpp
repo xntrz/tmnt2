@@ -24,7 +24,7 @@ private:
     struct EVENT_PARAM
     {
         GIMMICKTYPES::EVENT_ARGS m_args;
-        char m_szTargetName[GAMEOBJECTTYPES::NAME_MAX];
+        char m_szTargetName[GAMEOBJECTTYPES::GO_NAME_MAX];
 
         void Init(const char* pszTargetName, const char* pszSenderName, GIMMICKTYPES::EVENTTYPE type, void* pParam);
     };

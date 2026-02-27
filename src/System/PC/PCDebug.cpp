@@ -37,7 +37,7 @@ static void OutputCommon(bool ln, const char* fname, int32 fline, const char* fo
     char szOutputBuffer[4096 * 4];
     szOutputBuffer[0] = '\0';
     
-    SYSTEMTIME st = { 0 };
+    SYSTEMTIME st = {};
     GetLocalTime(&st);
 
     int32 offset = 0;

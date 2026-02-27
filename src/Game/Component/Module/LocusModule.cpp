@@ -173,11 +173,11 @@ void CLocusModule::DrawLocus(void)
     
     ASSERT(nNumLocus <= LOCUS_NUM_MAX);
 
-    LOCUSPARAMETER aLocusParameter[LOCUS_NUM_MAX] = { 0 };
+    LOCUSPARAMETER aLocusParameter[LOCUS_NUM_MAX] = {};
 
     for (int32 i = 0; i < nNumLocus; ++i)
     {
-        CMotionParameterController::LOCUSPARAMETER MPLocusParameter = { 0 };
+        CMotionParameterController::LOCUSPARAMETER MPLocusParameter = {};
         
         pMPController->GetLocusParameter(i, &MPLocusParameter);
         
@@ -222,7 +222,7 @@ void CLocusModuleForCharacter::Run(void)
     int32 nNumDrawLocus = pMPController->GetNumDrawLocusData(fPrevTime, fNowTime);
     for (int32 i = 0; i < nNumDrawLocus; ++i)
     {
-        CMotionParameterController::DRAW_LOCUS DrawLocus = { 0 };
+        CMotionParameterController::DRAW_LOCUS DrawLocus = {};
         pMPController->GetDrawLocusData(i, &DrawLocus);
 
         if (DrawLocus.m_bDraw)

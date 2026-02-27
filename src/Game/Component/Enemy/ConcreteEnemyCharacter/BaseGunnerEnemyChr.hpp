@@ -57,7 +57,7 @@ public:
         virtual RESULT Observing(void) override;
         virtual ENEMYTYPES::STATUS OnEnd(void) override;
         virtual void Update(void) override;
-        virtual bool OnMotionChange(int32 idOld, int32 idNew);
+        virtual bool OnMotionChange(int32 idOld, int32 idNew) override;
         virtual void Fire(void);
 
     private:

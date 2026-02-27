@@ -87,7 +87,7 @@ static void RwDebugMsgEndpoint(RwDebugType type, const RwChar* string)
 
 /*stat*/ void CDebug::Assert(const char* expression, const char* fname, int32 fline, const char* format, ...)
 {
-    static char buff[4096] = { 0 };
+    static char buff[4096] = {};
 
     int32 written = std::sprintf(
         buff,

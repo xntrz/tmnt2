@@ -15,64 +15,64 @@ struct CTextData::HEADER
 
 /*static*/ int32 CTextData::StrCmp(const wchar* pString1, const wchar* pString2)
 {
-#ifdef TARGET_PC
+//#ifdef TARGET_PC
     return std::wcscmp(pString1, pString2);
-#else
-#error Not implemented for current target
-#endif
+//#else
+//#error Not implemented for current target
+//#endif
 };
 
 
 /*static*/ int32 CTextData::StrLen(const wchar* pString)
 {
-#ifdef TARGET_PC
+//#ifdef TARGET_PC
     return std::wcslen(pString);
-#else
-#error Not implemented for current target
-#endif
+//#else
+//#error Not implemented for current target
+//#endif
 };
 
 
 /*static*/ void CTextData::StrCpy(wchar* pDestString, const wchar* pSrcString)
 {
-#ifdef TARGET_PC
+//#ifdef TARGET_PC
     std::wcscpy(pDestString, pSrcString);
-#else
-#error Not implemented for current target
-#endif
+//#else
+//#error Not implemented for current target
+//#endif
 };
 
 
 /*static*/ void CTextData::StrCat(wchar* pDestString, const wchar* pSrcString)
 {
-#ifdef TARGET_PC
+//#ifdef TARGET_PC
     std::wcscat(pDestString, pSrcString);
-#else
-#error Not implemented for current target
-#endif
+//#else
+//#error Not implemented for current target
+//#endif
 };
 
 
 /*static*/ void CTextData::Sprintf(wchar* pDest, const wchar* pFormat, ...)
 {
-#ifdef TARGET_PC
+//#ifdef TARGET_PC
     va_list vl;
     va_start(vl, pFormat);
-    std::vswprintf(pDest, pFormat, vl);
+    std::vswprintf(pDest, 4096, pFormat, vl);
     va_end(vl);
-#else
-#error Not implemented for current target
-#endif
+//#else
+//#error Not implemented for current target
+//#endif
 };
 
 
 /*static*/ void CTextData::ToMultibyte(char* dst, size_t dstlen, const wchar* src)
 {
-#ifdef TARGET_PC
+//#ifdef TARGET_PC
     std::wcstombs(dst, src, dstlen);
-#else
-#error Not implemented for current target
-#endif
+//#else
+//#error Not implemented for current target
+//#endif
 };
 
 

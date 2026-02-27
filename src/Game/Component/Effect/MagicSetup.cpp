@@ -73,7 +73,7 @@ static void SetDonatelloLaser(void)
                                 | MAGICTYPES::FEATURE_ATTACK
                                 | MAGICTYPES::FEATURE_BODY;
 
-    MAGICTYPES::LOCUSINFO locusinfo = { 0 };
+    MAGICTYPES::LOCUSINFO locusinfo = {};
     locusinfo.m_Color       = { 0x99, 0x33, 0xFF, 0xFF };
     locusinfo.m_uAlphaBasis = 0x80;
     locusinfo.m_nNumPoint   = 20;
@@ -564,7 +564,7 @@ static void SetPillarOfLight(void)
     CMagicParameter param;
     param.SetBaseEffectName(EFFECTID::GetNameFromID(EFFECTID::ID_DRK_PILLAR));
     param.SetFeature(feature);
-    param.SetCollisionAttack(2.0f, 30, CHitAttackData::ANTIGUARD_INVALID, CHitAttackData::STATUS_FLYAWAY);
+    param.SetCollisionAttack(&vOffset, 2.0f, 30, CHitAttackData::ANTIGUARD_INVALID, CHitAttackData::STATUS_FLYAWAY);
     param.SetLive(1.5f);
     param.SetHitTiming(0.3f, 1.1f);
 
@@ -587,7 +587,7 @@ static void SetRodBeam(void)
                                 | MAGICTYPES::FEATURE_ATTACK
                                 | MAGICTYPES::FEATURE_BODY;
 
-    MAGICTYPES::LOCUSINFO locusInfo = { 0 };
+    MAGICTYPES::LOCUSINFO locusInfo = {};
     locusInfo.m_nNumPoint   = 20;
     locusInfo.m_Color       = { 0x67, 0x4D, 0xFF, 0xFF };
     locusInfo.m_uAlphaBasis = 0x80;
@@ -720,7 +720,7 @@ static void SetLaserBlue(void)
                                 | MAGICTYPES::FEATURE_BODY;
 
 
-    MAGICTYPES::LOCUSINFO locusinfo = { 0 };
+    MAGICTYPES::LOCUSINFO locusinfo = {};
     locusinfo.m_nNumPoint   = 12;
     locusinfo.m_Color       = { 0x00, 0x20, 0xFF, 0xFF };
     locusinfo.m_uAlphaBasis = 0x80;
@@ -760,7 +760,7 @@ static void SetLaserRed(void)
                                 | MAGICTYPES::FEATURE_ATTACK
                                 | MAGICTYPES::FEATURE_BODY;
 
-    MAGICTYPES::LOCUSINFO locusinfo = { 0 };
+    MAGICTYPES::LOCUSINFO locusinfo = {};
     locusinfo.m_nNumPoint   = 12;
     locusinfo.m_Color       = { 0xFF, 0x20, 0xFF, 0xFF };   // SetLaserRed ???
     locusinfo.m_uAlphaBasis = 0x80;
@@ -910,7 +910,7 @@ static void SetLaserCommon(void)
                                 | MAGICTYPES::FEATURE_ATTACK
                                 | MAGICTYPES::FEATURE_BODY;
 
-    MAGICTYPES::LOCUSINFO locusinfo = { 0 };
+    MAGICTYPES::LOCUSINFO locusinfo = {};
     locusinfo.m_nNumPoint   = 12;
     locusinfo.m_Color       = { 0xFF, 0xFF, 0x0, 0xFF };
     locusinfo.m_uAlphaBasis = 0x80;

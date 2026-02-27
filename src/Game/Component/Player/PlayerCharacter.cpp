@@ -71,7 +71,7 @@ static const char* CorrectNameFromDuplicate(const char* pszName)
      *  to avoid broke some mechanics that relate on object find by name (e.g. party throw)
      */
 
-    static char s_szNameCorrectionBuff[GAMEOBJECTTYPES::NAME_MAX];
+    static char s_szNameCorrectionBuff[GAMEOBJECTTYPES::GO_NAME_MAX];
     s_szNameCorrectionBuff[0] = '\0';
 
     std::strcpy(s_szNameCorrectionBuff, pszName);
@@ -148,12 +148,12 @@ CPlayerCharacter::CPlayerCharacter(const char* pszName, PLAYERID::VALUE idPlayer
 , m_nPlayerNo(-1)
 , m_nPadID(-1)
 , m_nNumWallJump(0)
-, m_attackparameter({ 0 })
+, m_attackparameter({})
 , m_attribute(PLAYERTYPES::ATTRIBUTE_NONE)
 , m_pflag(PLAYERTYPES::FLAG_NONE)
 , m_pStateMachine(nullptr)
 , m_chargephase(PLAYERTYPES::CHARGEPHASE_ZERO)
-, m_feature({ 0 })
+, m_feature({})
 , m_vReplacepoint(Math::VECTOR3_ZERO)
 , m_bActive(false)
 {
@@ -643,7 +643,7 @@ void CPlayerCharacter::OnSteppedDeathFloor(void)
     if (m_collisionGroundInfo.m_attribute == MAPTYPES::ATTRIBUTE_DOBON)
         CEffectManager::Play(EFFECTID::ID_ALL_W_DOBON, &m_vPosition);
 
-	CGameEvent::SetPlayerFallen(m_nPlayerNo);
+    CGameEvent::SetPlayerFallen(m_nPlayerNo);
 };
 
 
@@ -853,7 +853,7 @@ void CPlayerCharacter::OnAttach(CPlayerCharacter* pBeforeCharacter, bool bChange
             pToGimmickMod->SetPrevGimmickObjName("");
     };
 
-    PLAYERTYPES::ATTRIBUTETIME attributeTime = { 0 };
+    PLAYERTYPES::ATTRIBUTETIME attributeTime = {};
     pBeforeCharacter->GetAttributeTime(&attributeTime);
     SetAttributeTime(&attributeTime);
 

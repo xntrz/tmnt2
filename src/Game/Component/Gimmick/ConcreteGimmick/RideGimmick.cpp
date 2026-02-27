@@ -66,7 +66,7 @@ void CRideGimmick::PostMove(void)
 
     if (IsProcess(PROCESSTYPE_ATTACK))
     {
-        RwSphere hitSphere = { 0 };
+        RwSphere hitSphere = {};
         hitSphere.center = { vPosition.x, vPosition.y + m_fOffset, vPosition.z };
         hitSphere.radius = m_fRadius;
 

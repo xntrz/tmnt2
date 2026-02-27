@@ -23,7 +23,7 @@
 #define SPRITE_RADIUS (0.6f)
 
 
-static RwIm3DVertex s_aVertex[4] = { 0 };
+static RwIm3DVertex s_aVertex[4] = {};
 
 
 CItemGimmick::CItemGimmick(const char* pszName, void* pParam)

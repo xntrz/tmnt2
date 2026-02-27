@@ -96,7 +96,7 @@ CKarai::CKarai(GAMETYPES::COSTUME costume)
 	//		3 - right sword
     //
     
-    CPlayerCharacter::PARAMETER parameter = { 0 };
+    CPlayerCharacter::PARAMETER parameter = {};
     parameter.m_chrparameter.m_bToon            = true;
     parameter.m_chrparameter.m_pszModelName     = "karai";
     parameter.m_chrparameter.m_pszMotionSetName = "karai";
