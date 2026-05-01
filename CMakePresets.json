@@ -1,0 +1,97 @@
+{
+    "version": 3,
+    "configurePresets": [
+        {
+            "name": "base-win",
+            "hidden": true,
+            "description": "Base for Windows (VS) builds",
+            "binaryDir": "${sourceDir}/build/win_${presetName}",
+            "architecture": {
+                "value": "Win32",
+                "strategy": "set"
+            },
+            "condition": {
+                "type": "equals",
+                "lhs": "${hostSystemName}",
+                "rhs": "Windows"
+            }
+        },
+        {
+            "name": "base-web",
+            "hidden": true,
+            "description": "Base for Web (Emscripten) builds",
+            "generator": "Unix Makefiles",
+            "binaryDir": "${sourceDir}/build/web",
+            "cacheVariables": {
+                "CMAKE_TOOLCHAIN_FILE": "$env{EMSDK}/upstream/emscripten/cmake/Modules/Platform/Emscripten.cmake"
+            },
+            "condition": {
+                "type": "const",
+                "value": true
+            }
+        },
+        {
+            "name": "vs2022",
+            "displayName": "Visual Studio 2022",
+            "inherits": "base-win",
+            "generator": "Visual Studio 17 2022"
+        },
+        {
+            "name": "vs2019",
+            "displayName": "Visual Studio 2019",
+            "inherits": "base-win",
+            "generator": "Visual Studio 16 2019"
+        },
+        {
+            "name": "vs2017",
+            "displayName": "Visual Studio 2017",
+            "inherits": "base-win",
+            "generator": "Visual Studio 15 2017"
+        },
+        {
+            "name": "vs2015",
+            "displayName": "Visual Studio 2015",
+            "inherits": "base-win",
+            "generator": "Visual Studio 14 2015"
+        },
+        {
+            "name": "web-debug",
+            "inherits": "base-web",
+            "cacheVariables": { "CMAKE_BUILD_TYPE": "Debug" }
+        },
+        {
+            "name": "web-release",
+            "inherits": "base-web",
+            "cacheVariables": { "CMAKE_BUILD_TYPE": "Release" }
+        }
+    ],
+    "buildPresets": [
+        { "name": "base-debug",          "hidden": true, "configuration": "Debug"           },
+        { "name": "base-release",        "hidden": true, "configuration": "Release"         },
+        { "name": "base-relwithdebinfo", "hidden": true, "configuration": "RelWithDebInfo"  },
+        { "name": "base-minsizerel",     "hidden": true, "configuration": "MinSizeRel"      },
+
+        { "name": "vs2022-debug",           "inherits": "base-debug",           "configurePreset": "vs2022" },
+        { "name": "vs2022-release",         "inherits": "base-release",         "configurePreset": "vs2022" },
+        { "name": "vs2022-relwithdebinfo",  "inherits": "base-relwithdebinfo",  "configurePreset": "vs2022" },
+        { "name": "vs2022-minsizerel",      "inherits": "base-minsizerel",      "configurePreset": "vs2022" },
+
+        { "name": "vs2019-debug",           "inherits": "base-debug",           "configurePreset": "vs2019" },
+        { "name": "vs2019-release",         "inherits": "base-release",         "configurePreset": "vs2019" },
+        { "name": "vs2019-relwithdebinfo",  "inherits": "base-relwithdebinfo",  "configurePreset": "vs2019" },
+        { "name": "vs2019-minsizerel",      "inherits": "base-minsizerel",      "configurePreset": "vs2019" },
+
+        { "name": "vs2017-debug",           "inherits": "base-debug",           "configurePreset": "vs2017" },
+        { "name": "vs2017-release",         "inherits": "base-release",         "configurePreset": "vs2017" },
+        { "name": "vs2017-relwithdebinfo",  "inherits": "base-relwithdebinfo",  "configurePreset": "vs2017" },
+        { "name": "vs2017-minsizerel",      "inherits": "base-minsizerel",      "configurePreset": "vs2017" },
+        
+        { "name": "vs2015-debug",           "inherits": "base-debug",           "configurePreset": "vs2015" },
+        { "name": "vs2015-release",         "inherits": "base-release",         "configurePreset": "vs2015" },
+        { "name": "vs2015-relwithdebinfo",  "inherits": "base-relwithdebinfo",  "configurePreset": "vs2015" },
+        { "name": "vs2015-minsizerel",      "inherits": "base-minsizerel",      "configurePreset": "vs2015" },
+
+        { "name": "web-debug",              "inherits": "base-debug",           "configurePreset": "web-debug"   },
+        { "name": "web-release",            "inherits": "base-release",         "configurePreset": "web-release" }
+    ]
+}
