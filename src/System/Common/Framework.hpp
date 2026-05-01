@@ -1,9 +1,9 @@
 #pragma once
 
-
 class CMemory;
 class CGraphicsDevice;
 class CInputsDevice;
+class CSoundDevice;
 class CFileManager;
 class IClockDevice;
 class CProcessDispatcher;
@@ -31,6 +31,7 @@ protected:
     CMemory* m_pMemory;
     CGraphicsDevice* m_pGraphicsDevice;
     CInputsDevice* m_pInputsDevice;
+    CSoundDevice* m_pSoundDevice;
     CFileManager* m_pFileManager;
     IClockDevice* m_pClockDevice;
     CProcessDispatcher* m_pProcessDispatcher;

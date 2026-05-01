@@ -3,10 +3,26 @@
 
 #if (defined(TARGET_PC))
 
-    #if (defined(TMNT2_BUILD_EU))
-        #include "FnameTable_PC_EU.hpp"
-    #else
-        #include "FnameTable_PC_NA.hpp"
+    #if (defined(TMNT2_TRIAL))
+        #include "FnameTable_PC_TRIAL.hpp"
+    #else 
+        #if (defined(TMNT2_BUILD_EU))
+            #include "FnameTable_PC_EU.hpp"
+        #else
+            #include "FnameTable_PC_NA.hpp"
+        #endif
+    #endif
+
+#elif (defined(TARGET_WEB))
+
+    #if (defined(TMNT2_TRIAL))
+        #include "FnameTable_PC_TRIAL.hpp"
+    #else 
+        #if (defined(TMNT2_BUILD_EU))
+            #include "FnameTable_PC_EU.hpp"
+        #else
+            #include "FnameTable_PC_NA.hpp"
+        #endif
     #endif
 
 #else 

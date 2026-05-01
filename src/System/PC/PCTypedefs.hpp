@@ -4,14 +4,30 @@
 #define WIN32_LEAN_AND_MEAN
 #endif /* !defined(WIN32_LEAN_AND_MEAN) */
 
-#if !defined(WIN32_EXTRA_LEAN)
-#define WIN32_EXTRA_LEAN
-#endif /* !defined(WIN32_EXTRA_LEAN) */
-
-#if !defined(VC_EXTRALEAN)
 #define VC_EXTRALEAN
-#endif /* !defined(VC_EXTRALEAN) */
+#define NOMINMAX
 
+//#define NOGDI
+//#define NOUSER
+//#define NOMSG
+//#define NOSYSMETRICS
+#define NOATOM
+#define NOOPENFILE
+#define NOSCROLL
+#define NOTEXTMETRIC
+#define NOWH
+#define NORASTEROPS
+#define NOGDICAPMASKS
+#define NOMETAFILE
+
+#define NOSERVICE
+#define NOMCX
+#define NOCOMM
+#define NOKANJI
+#define NOCRYPT
+#define NOMIDL
+#define NOIMAGE
+#define NOTAPE
 
 #include <Windows.h>
 #include <tchar.h>
@@ -49,4 +65,3 @@ do                                                          \
     GetModulePathSplit(Drive, Directory, nullptr, nullptr); \
     std::sprintf(Path, "%s%s", Drive, Directory);           \
 } while (0)
-

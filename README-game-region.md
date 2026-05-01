@@ -1,0 +1,2 @@
+> # Game region
+Retail PC game has 2 build types first one for North America (NA) and second one for Europe (EU). Both of them have minor changes for UI and some for gameplay. If you have some or all of the following files in your game assets directory: `TMNTF.DAT`, `TMNTG.DAT`, `TMNTI.DAT`, `TMNTS.DAT` - you have EU version, otherwise NA.

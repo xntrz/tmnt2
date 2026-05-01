@@ -13,6 +13,6 @@ public:
     void Sync(void);
 
 private:
-    uint32 m_uFrametime;
-    uint32 m_uSyncTime;
+    uint64 m_uFrametime;
+    uint64 m_uSyncTime;
 };

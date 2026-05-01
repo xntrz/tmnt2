@@ -110,6 +110,12 @@ static CGraphicsDevice* s_pDevice = nullptr;
 };
 
 
+/*static*/ void CScreen::TimerStride(float fTimerStride)
+{
+    s_fTimerStride = fTimerStride;
+};
+
+
 /*static*/ float CScreen::TimerStride(void)
 {
     return s_fTimerStride;

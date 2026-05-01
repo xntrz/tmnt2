@@ -88,11 +88,6 @@ static char s_argkey = '-';
 
 /*static*/ void CConfigure::SetLaunchMode(TYPEDEF::CONFIG_LAUNCH launch)
 {
-    ASSERT((launch == TYPEDEF::CONFIG_LAUNCH_NORMAL)   ||
-           (launch == TYPEDEF::CONFIG_LAUNCH_ARCADE)   ||
-           (launch == TYPEDEF::CONFIG_LAUNCH_TVCHANGE) ||
-           (launch == TYPEDEF::CONFIG_LAUNCH_DASHBOARD));
-    
     m_launchMode = launch;
 };
 
@@ -105,12 +100,6 @@ static char s_argkey = '-';
 
 /*static*/ void CConfigure::SetLanguage(TYPEDEF::CONFIG_LANG lang)
 {
-    ASSERT((lang == TYPEDEF::CONFIG_LANG_ENGLISH) ||
-           (lang == TYPEDEF::CONFIG_LANG_GERMAN)  ||
-           (lang == TYPEDEF::CONFIG_LANG_FRENCH)  ||
-           (lang == TYPEDEF::CONFIG_LANG_SPANISH) ||
-           (lang == TYPEDEF::CONFIG_LANG_ITALIAN));
-
     m_language = lang;
 };
 
@@ -123,9 +112,6 @@ static char s_argkey = '-';
 
 /*static*/ void CConfigure::SetTVMode(TYPEDEF::CONFIG_TV tvMode)
 {
-    ASSERT((tvMode == TYPEDEF::CONFIG_TV_NTSC) ||
-           (tvMode == TYPEDEF::CONFIG_TV_PAL));
-
     m_tvMode = tvMode;
 };
 

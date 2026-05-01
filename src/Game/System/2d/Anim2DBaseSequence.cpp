@@ -222,7 +222,7 @@ CAnimation2D& CAnim2DSequence::Animation2D(void)
 };
 
 
-CAnimation2D& CAnim2DSequence::Animation2D(void) const
+const CAnimation2D& CAnim2DSequence::Animation2D(void) const
 {
     ASSERT(m_pAnimation2D);
     return *m_pAnimation2D;

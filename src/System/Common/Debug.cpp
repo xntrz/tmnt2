@@ -12,10 +12,11 @@ static void RwDebugMsgEndpoint(RwDebugType type, const RwChar* string)
         //if (!s_bRwDebugAssertSupressFlag)
         //    ASSERT(false, string);
         //else
-        //    OUTPUT("[rwDEBUGASSERT] %s\n", string);
+            //OUTPUT("[rwDEBUGASSERT] %s\n", string);
         break;
 
     case RwDebugType::rwDEBUGTRACE:
+        //OUTPUT("[rwDEBUGTRACE] %s\n", string);
         break;
         
     case RwDebugType::rwDEBUGMESSAGE:
@@ -23,7 +24,7 @@ static void RwDebugMsgEndpoint(RwDebugType type, const RwChar* string)
         break;
         
     case RwDebugType::rwDEBUGERROR:
-        OUTPUT("[rwDEBUGERROR] %s\n", string);
+        //OUTPUT("[rwDEBUGERROR] %s\n", string);
         break;
 
     default:

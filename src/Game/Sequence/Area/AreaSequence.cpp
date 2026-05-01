@@ -1144,7 +1144,7 @@ void CAreaWorkPool::AreaSelectGuide(void)
         const wchar* pwszText = CSystemText::GetText(SYSTEXT_GAME_DISC);
 
         wchar wszBuffer[1024];
-        wszBuffer[0] = UTEXT('\0');
+        wszBuffer[0] = UCHAR('\0');
         
         CTextData::Sprintf(wszBuffer, pwszText, CAreaInfo::GetDiscNo(m_areaNow));
         

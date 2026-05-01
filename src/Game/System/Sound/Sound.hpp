@@ -24,5 +24,5 @@ void SoundSet(int32 Code);
 void SoundSetEx(int32 Code, uint32 Param1, uint32 Param2, uint32 Param3);
 bool SoundPlaybackCheck(int32 Code);
 bool SoundVoiceBusyCheck(void);
-bool SoundGetLoadInfo(void);
+int32 SoundGetLoadInfo(void);
 int32 SoundVoxCodeCheck(int32 SrvNo);

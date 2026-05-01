@@ -6,7 +6,8 @@ class CCamera
 public:
     static CCamera* GetCamera(void);
     static RwCamera* CloneCamera(RwCamera* pRwCamera);
-    
+    static void FramebufferChanged(void);
+
     CCamera(RwCamera* pRwCamera);
     virtual ~CCamera(void);
     bool BeginScene(void);
@@ -22,6 +23,7 @@ public:
 private:
     static RwCamera* m_pCameraCurrent;
     static RwCamera* m_pCameraDefault;
+    static RwCamera* m_aCamera[32];
     RwCamera*        m_pCamera;
     RwCamera*        m_pCameraOld;
 };

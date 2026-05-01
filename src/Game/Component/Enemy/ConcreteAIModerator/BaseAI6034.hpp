@@ -100,8 +100,8 @@ namespace Utils6034
         virtual void* RepRwRealloc(void* mem, size_t size, uint32 hint) override;
         virtual void* RepRwCalloc(size_t objSize, size_t size, uint32 hint) override;
         virtual size_t AllocatedSize(void) override;
-        void PushGlobal(void);
-        void PopGlobal(void);
+        NOINLINE void PushGlobal(void);
+        NOINLINE void PopGlobal(void);
 
     protected:
         int32           m_iNodeSize;

@@ -9,25 +9,146 @@ class CPCTimer::IGetTimeFunctor
 {
 public:
     inline virtual ~IGetTimeFunctor(void) {};
-    virtual uint32 operator()(void) const = 0;
+    virtual uint64 operator()(void) const = 0;
 };
 
 
 class CPCTimer::CGetTimeFunctorOS final : public CPCTimer::IGetTimeFunctor
 {
 public:
-    inline CGetTimeFunctorOS(void) { timeBeginPeriod(1); };
-    inline virtual ~CGetTimeFunctorOS(void) { timeEndPeriod(1); };
-    virtual uint32 operator()(void) const override { return static_cast<uint32>(timeGetTime()); };
+    CGetTimeFunctorOS(void);
+    virtual ~CGetTimeFunctorOS(void);
+    virtual uint64 operator()(void) const override;
 };
 
 
 class CPCTimer::CGetTimeFunctorCPU final : public CPCTimer::IGetTimeFunctor
 {
 public:
-    inline CGetTimeFunctorCPU(void) {};
-    inline virtual ~CGetTimeFunctorCPU(void) {};
-    virtual uint32 operator()(void) const override { return static_cast<uint32>(__rdtsc()); };
+    static bool IsAvailable(void);
+
+    CGetTimeFunctorCPU(void);
+    virtual ~CGetTimeFunctorCPU(void);
+    virtual uint64 operator()(void) const override;
+};
+
+
+class CPCTimer::CGetTimeFunctorQPS final : public CPCTimer::IGetTimeFunctor
+{
+public:
+    static bool IsAvailable(void);
+    static uint64 GetFrequency(void);
+
+    CGetTimeFunctorQPS(void);
+    virtual ~CGetTimeFunctorQPS(void);
+    virtual uint64 operator()(void) const override;
+
+private:
+    static LARGE_INTEGER m_freq;
+};
+
+
+//
+// *********************************************************************************
+//
+
+
+CPCTimer::CGetTimeFunctorOS::CGetTimeFunctorOS(void)
+{
+    timeBeginPeriod(1);
+};
+
+
+CPCTimer::CGetTimeFunctorOS::~CGetTimeFunctorOS(void)
+{
+    timeEndPeriod(1);
+};
+
+
+uint64 CPCTimer::CGetTimeFunctorOS::operator()(void) const
+{
+    return static_cast<uint32>(timeGetTime());
+};
+
+
+//
+// *********************************************************************************
+//
+
+
+/*static*/ bool CPCTimer::CGetTimeFunctorCPU::IsAvailable(void)
+{
+    int Registers[4] = {}; // EAX, EBX, ECX, EDX
+    int Function = 1;      // EAX=1: Processor Info and Feature Bits
+
+    __cpuid(Registers, Function);
+
+    if ((Registers[3] & (1 << 4)) != 0) //  EDX bit 4 - tsc - Time Stamp Counter and RDTSC instruction
+        return true;
+
+    return false;
+};
+
+
+CPCTimer::CGetTimeFunctorCPU::CGetTimeFunctorCPU(void)
+{
+    ;
+};
+
+
+CPCTimer::CGetTimeFunctorCPU::~CGetTimeFunctorCPU(void)
+{
+    ;
+};
+
+
+uint64 CPCTimer::CGetTimeFunctorCPU::operator()(void) const
+{
+    return static_cast<uint64>(__rdtsc());
+};
+
+
+//
+// *********************************************************************************
+//
+
+
+/*static*/ LARGE_INTEGER CPCTimer::CGetTimeFunctorQPS::m_freq = {};
+
+
+/*static*/ bool CPCTimer::CGetTimeFunctorQPS::IsAvailable(void)
+{    
+    if (QueryPerformanceFrequency(&m_freq))
+        return true;
+
+    return false;
+};
+
+
+/*static*/ uint64 CPCTimer::CGetTimeFunctorQPS::GetFrequency(void)
+{
+    return static_cast<uint64>(m_freq.QuadPart);
+};
+
+
+CPCTimer::CGetTimeFunctorQPS::CGetTimeFunctorQPS(void)
+{
+    ;
+};
+
+
+CPCTimer::CGetTimeFunctorQPS::~CGetTimeFunctorQPS(void)
+{
+    ;
+};
+
+
+uint64 CPCTimer::CGetTimeFunctorQPS::operator()(void) const
+{
+    LARGE_INTEGER counter = {};
+    QueryPerformanceCounter(&counter);
+
+    return static_cast<uint64>(counter.QuadPart);
 };
 
 
@@ -47,42 +168,47 @@ public:
 
 
 CPCTimer::CPCTimer(void)
+: m_startTime(0)
+, m_ticksPerMSec(0)
+, m_ticksPerSec(0)
+, m_pGetTimerFunctor(nullptr)
+, m_bIsUseQPS(false)
 {
-    ASSERT(!m_pInstance);
     m_pInstance = this;
 
-    int Registers[4] = {};   // EAX, EBX, ECX, EDX
-    int Function = 1;           // EAX=1: Processor Info and Feature Bits
-    __cpuid(Registers, Function);
-
-    if ((Registers[3] & (1 << 4)) != 0) //  EDX bit 4 - tsc - Time Stamp Counter and RDTSC instruction
+    if (CGetTimeFunctorQPS::IsAvailable())
+    {
+        m_pGetTimerFunctor = new CGetTimeFunctorQPS;
+        m_bIsUseQPS = true;
+    }
+    else if (CGetTimeFunctorCPU::IsAvailable())
+    {
         m_pGetTimerFunctor = new CGetTimeFunctorCPU;
+    }
     else
+    {
         m_pGetTimerFunctor = new CGetTimeFunctorOS;
-
-    ASSERT(m_pGetTimerFunctor);
+    };
 
     HANDLE hCurrentThread = GetCurrentThread();
     DWORD dwCurrentThreadPriority = GetThreadPriority(hCurrentThread);
     SetThreadPriority(hCurrentThread, THREAD_PRIORITY_TIME_CRITICAL);
     
-    uint32 time = timeGetTime();
-    uint32 timeNow = 0;
+    DWORD time = timeGetTime();
+    DWORD timeNow = 0;
     do
     {
         timeNow = timeGetTime();
     } while (time == timeNow);
 
-    uint32 begin = (*m_pGetTimerFunctor)();
-    
+    uint64 begin = (*m_pGetTimerFunctor)();
     while ((timeGetTime() - timeNow) < 1000)
-        ;
-    
-    uint32 end = (*m_pGetTimerFunctor)();
+        ;    
+    uint64 end = (*m_pGetTimerFunctor)();
 
     m_startTime = end;
-    m_freq      = (end - begin);
-    m_freqMs    = ((end - begin) / 1000);
+    m_ticksPerSec = (m_bIsUseQPS ? CGetTimeFunctorQPS::GetFrequency() : (end - begin));
+    m_ticksPerMSec = (m_ticksPerSec / 1000);
 
     SetThreadPriority(hCurrentThread, dwCurrentThreadPriority);
 };
@@ -90,9 +216,6 @@ CPCTimer::CPCTimer(void)
 
 CPCTimer::~CPCTimer(void)
 {
-    ASSERT(m_pInstance);
-    ASSERT(m_pInstance == this);
-
     if (m_pGetTimerFunctor)
     {
         delete m_pGetTimerFunctor;
@@ -103,19 +226,19 @@ CPCTimer::~CPCTimer(void)
 };
 
 
-uint32 CPCTimer::GetElapsedTime(void) const
+uint64 CPCTimer::GetElapsedTime(void) const
 {
     return ((*m_pGetTimerFunctor)() - m_startTime);
 };
 
 
-uint32 CPCTimer::GetFreqMs(void) const
+uint64 CPCTimer::GetFreqMs(void) const
 {
-    return m_freqMs;
+    return m_ticksPerMSec;
 };
 
 
-uint32 CPCTimer::GetFreq(void) const
+uint64 CPCTimer::GetFreq(void) const
 {
-    return m_freq;
+    return m_ticksPerSec;
 };

@@ -90,3 +90,9 @@
 #endif /* _DEBUG */
     return mem;
 };
+
+
+/*static*/ size_t CMemory::allocatedSize(void)
+{
+    return Instance().AllocatedSize();
+};

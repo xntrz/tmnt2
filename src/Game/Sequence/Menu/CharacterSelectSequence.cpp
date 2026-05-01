@@ -798,7 +798,7 @@ void CPlayerSelectWorkPool::DrawDecideCheck(void)
     CGameFont::Show(CGameText::GetText(GAMETEXT_EU_HELP_1), -200.0f, -50.0f);    
 #else /* TMNT2_BUILD_EU */
     wchar wszBuffer[256];
-    wszBuffer[0] = UTEXT('\0');
+    wszBuffer[0] = UCHAR('\0');
 
     const wchar* pwszOk = CGameText::GetText(GAMETEXT_MENU_HELP);
     const wchar* pwszCancel = CGameText::GetText(GAMETEXT_HELP_FUNC_BACK);
@@ -1156,13 +1156,16 @@ CCharacterSelectSequence::~CCharacterSelectSequence(void)
 
 bool CCharacterSelectSequence::OnAttach(const void* pParam)
 {
+    CSystem2D::SetLayerDepth(1.01f);
+
     m_pWorkPool = new CPlayerSelectWorkPool;
     m_pWorkPool->Attach();
 
-#ifdef BUILD_TRIAL
+#ifdef TMNT2_TRIAL
     CTimeoutProcess::Enable(this, true);
     CTimeoutProcess::Start(this);
-#endif    
+#endif /* TMNT2_TRIAL */
+    
     CGameData::Attribute().SetInteractive(true);
     
     UnlockAllControllers();
@@ -1189,6 +1192,8 @@ void CCharacterSelectSequence::OnDetach(void)
         delete m_pWorkPool;
         m_pWorkPool = nullptr;
     };
+
+    CSystem2D::SetLayerDepth(1.0f);
 };
 
 

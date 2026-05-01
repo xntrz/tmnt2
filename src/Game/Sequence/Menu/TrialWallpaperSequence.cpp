@@ -63,6 +63,8 @@ void CTrialWallpaperSequence::OnMove(bool bRet, const void* pReturnValue)
 
             m_sprite.SetTexture(m_pTexture);
             m_sprite.SetPositionAndSize(0.0f, 0.0f, 1024.0f, 512.0f);
+
+            m_eStep = STEP_FADEIN;
         }
         break;
 

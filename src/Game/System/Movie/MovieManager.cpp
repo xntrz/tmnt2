@@ -52,6 +52,9 @@
     s_pMovie = new CPCMovie(640, 448, MV_BPS, bUsePalMode);
 #endif /* TARGET_PC */
 
+    if (!s_pMovie)
+        return;
+    
 #ifdef TMNT2_BUILD_EU
     CMovieText::Initialize();
     CMovieText::LoadFor(mvname);
@@ -61,14 +64,11 @@
 
 /*static*/ void CMovieManager::DeleteMovieInstance(void)
 {
+    if (s_pMovie)
+    {
 #ifdef TMNT2_BUILD_EU
     CMovieText::Terminate();
 #endif /* TMNT2_BUILD_EU */
-    
-    ASSERT(s_pMovie);
-    
-    if (s_pMovie)
-    {
         delete s_pMovie;
         s_pMovie = nullptr;
     };

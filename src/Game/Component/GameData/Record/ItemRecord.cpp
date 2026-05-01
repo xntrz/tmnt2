@@ -394,25 +394,25 @@ bool CItemRecord::IsComebackProcessed(void) const
 
 void CItemRecord::ForceSetCrystalNum(GAMETYPES::CRYSTALTYPE crytype, int32 num)
 {
-#ifdef _DEBUG    
+//#ifdef _DEBUG    
     int32 cryMax = getCrystalMax(crytype);
     for (int32 i = 0; i < cryMax; ++i)
     {
         bool state = (i >= num ? false : true);
         setCrystalFlag(crytype, i, state);
     };
-#endif /* _DEBUG */    
+//#endif /* _DEBUG */    
 };
 
 
 void CItemRecord::ForceSetCrystalNum(int32 num)
 {
-#ifdef _DEBUG    
+//#ifdef _DEBUG    
     ForceSetCrystalNum(GAMETYPES::CRYSTALTYPE_RED, num);
     ForceSetCrystalNum(GAMETYPES::CRYSTALTYPE_GREEN, num);
     ForceSetCrystalNum(GAMETYPES::CRYSTALTYPE_WHITE, num);
     ForceSetCrystalNum(GAMETYPES::CRYSTALTYPE_ORANGE, num);
-#endif /* _DEBUG */    
+//#endif /* _DEBUG */    
 };
 
 

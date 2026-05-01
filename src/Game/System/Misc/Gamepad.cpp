@@ -91,13 +91,17 @@
     {
         static const uint32 aVibMax[] =
         {
-//#ifdef TARGET_PC
+#if defined(TARGET_PC)
             0x3FFF,
             0x7FFF,
             0xBFFF,
-//#else
-//#error Not implemented for current target
-//#endif
+#elif defined(TARGET_WEB)
+            0xFFFF,
+            0xFFFF,
+            0xFFFF,
+#else
+#error Not implemented for current target
+#endif
         };
 
         static_assert(COUNT_OF(aVibMax) == VIBRATIONTYPE_MAX, "update me");

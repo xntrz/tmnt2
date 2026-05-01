@@ -1,19 +1,21 @@
 #pragma once
 
+#include "System/Common/SoundDevice.hpp"
+
 #include <Windows.h>
 #include <mmsystem.h>
 #include <dsound.h>
 
 
-class CPCSoundDevice
+class CPCSoundDevice final : public CSoundDevice
 {
 public:
     CPCSoundDevice(void);
-    virtual ~CPCSoundDevice(void) {};
-    bool Initialize(void);
-    void Terminate(void);
-    bool InitializeLib(void);
-    void TerminateLib(void);
+    virtual ~CPCSoundDevice(void);
+    virtual bool Initialize(void) override;
+    virtual void Terminate(void) override;
+    virtual bool StartupFramework(void) override;
+    virtual void ShutdownFramework(void) override;
     
 private:
     uint8* m_pSoundHeap;

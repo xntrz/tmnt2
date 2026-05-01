@@ -508,10 +508,10 @@ void CAreaMenu_Container::AreaInfoMenuDraw_Sub(void)
         {
 #ifdef TMNT2_BUILD_EU
             static wchar s_wszEpisodeBuffer[128];
-            s_wszEpisodeBuffer[0]   = UTEXT('\0');
+            s_wszEpisodeBuffer[0]   = UCHAR('\0');
             
             static wchar s_wszEpisodeNoBuffer[128];
-            s_wszEpisodeNoBuffer[0] = UTEXT('\0');
+            s_wszEpisodeNoBuffer[0] = UCHAR('\0');
 
             CGameFont::ConvertToUnicode(s_wszEpisodeNoBuffer, CAreaInfo::GetEpisode(idAreaCur));
             
@@ -537,10 +537,10 @@ void CAreaMenu_Container::AreaInfoMenuDraw_Sub(void)
             CGameFont::Flow(CAreaInfo::GetDispName(idAreaCur), &bbox);
 #else /* TMNT2_BUILD_EU */
             static wchar s_wszEpisodeBuffer[128];
-            s_wszEpisodeBuffer[0]   = UTEXT('\0');
+            s_wszEpisodeBuffer[0]   = UCHAR('\0');
             
             static wchar s_wszEpisodeNoBuffer[128];
-            s_wszEpisodeNoBuffer[0] = UTEXT('\0');
+            s_wszEpisodeNoBuffer[0] = UCHAR('\0');
 
             CGameFont::ConvertToUnicode(s_wszEpisodeNoBuffer, CAreaInfo::GetEpisode(idAreaCur));
             
@@ -567,7 +567,7 @@ void CAreaMenu_Container::AreaInfoMenuDraw_Sub(void)
                 RwUInt8 alphaBasis = 255;
                 bool bIsAreaHasUntakenAntiq = !CGameData::Record().Antique().IsAntiqueTaken(idAntique);
 
-#ifdef _TEST
+#ifdef TMNT2_TEST
                 /* test walkthrough only */
                 for (int32 i = GAMETYPES::CRYSTALTYPE_NONE + 1; i < GAMETYPES::CRYSTALTYPE_NUM; ++i)
                 {
@@ -580,7 +580,7 @@ void CAreaMenu_Container::AreaInfoMenuDraw_Sub(void)
                         alphaBasis = 128;
                     };                
                 };                
-#endif /* _TEST */
+#endif /* TMNT2_TEST */
 
                 if (bIsAreaHasUntakenAntiq)
                 {

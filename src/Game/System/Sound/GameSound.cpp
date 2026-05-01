@@ -1174,7 +1174,7 @@ static void SdSetAttackEnemy(const SE_ATTACK_PARAM* pParam)
 
 /*static*/ bool CGameSound::IsLoadEnd(void)
 {
-    return !SoundGetLoadInfo();
+    return (SoundGetLoadInfo() == 0);
 };
 
 

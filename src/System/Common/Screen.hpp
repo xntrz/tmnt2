@@ -18,6 +18,7 @@ public:
     static void ResetClearColor(void);
     static void OnFlip(void);
     static float Framerate(void);
+    static void TimerStride(float fTimerStride);
     static float TimerStride(void);
     static float TimeElapsed(void);
     static int32 Width(void);

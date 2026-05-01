@@ -5,6 +5,7 @@
 
 #include "System/Common/SaveLoad/SaveLoadData.hpp"
 #include "System/Common/SaveLoad/SaveLoadFrame.hpp"
+#include "System/Common/File/Filename.hpp"
 #include "System/Common/Configure.hpp"
 #include "System/Common/Screen.hpp"
 #include "System/Common/SystemText.hpp"
@@ -82,7 +83,7 @@ static CSaveLoadDataBase* s_pSaveloadData = nullptr;
     /*  all text that obtained via GetMsg() or GetTitle()
         is copied into caller buffer so its fine to it here */
     static wchar s_wszTextBuff[1024];
-    s_wszTextBuff[0] = UTEXT('\0');
+    s_wszTextBuff[0] = UCHAR('\0');
 
     const wchar* pwszString = CSystemText::GetText(s_aSystextMsgTable[id]);
     CTextData::StrCpy(s_wszTextBuff, pwszString);
@@ -273,7 +274,7 @@ void CPCSaveLoadManagerBase::SyncTime(void)
 };
 
 
-void CPCSaveLoadManagerBase::MakeFilePath(char* pszFilepathBuff) const
+void CPCSaveLoadManagerBase::MakeFilePath(char* pszFilepathBuff, size_t buffSize) const
 {
     char szMyPath[MAX_PATH];
     szMyPath[0] = '\0';
@@ -281,20 +282,27 @@ void CPCSaveLoadManagerBase::MakeFilePath(char* pszFilepathBuff) const
     const char* pszAfsPath = nullptr;
     if (CConfigure::CheckArgValue("afspath", &pszAfsPath))
     {
-        std::strcpy(szMyPath, pszAfsPath);
-        
-        size_t len = std::strlen(szMyPath);
-        size_t remain = (sizeof(szMyPath) - len);
+        size_t len = std::strlen(pszAfsPath);
 
-        if ((szMyPath[len - 1] != '/') && (remain >= 2))
-            std::strcat(szMyPath, "/");
+        if (len > 0 &&
+            (pszAfsPath[len - 1] != '/') &&
+            (pszAfsPath[len - 1] != '\\'))
+        {
+            std::snprintf(szMyPath, sizeof(szMyPath), "%s/", pszAfsPath);
+        }
+        else
+        {
+            std::strcpy(szMyPath, pszAfsPath);
+        };
+
+        CFilename::ConvPathPlatform(szMyPath);
     }
     else
     {
         GetModulePath(szMyPath);
     };
 
-    std::sprintf(pszFilepathBuff, "%s%s", szMyPath, FILENAME);
+    std::snprintf(pszFilepathBuff, buffSize, "%s%s", szMyPath, FILENAME);
 };
 
 
@@ -305,7 +313,7 @@ bool CPCSaveLoadManagerBase::CheckFileExist(void) const
     char szFilepath[MAX_PATH];
     szFilepath[0] = '\0';
 
-    MakeFilePath(szFilepath);
+    MakeFilePath(szFilepath, sizeof(szFilepath));
 
     void* hFile = RwFopen(szFilepath, "r");
     if (hFile)
@@ -465,7 +473,7 @@ bool CPCLoadManager::FileLoad(void) const
     char szFilepath[MAX_PATH];
     szFilepath[0] = '\0';
 
-    MakeFilePath(szFilepath);
+    MakeFilePath(szFilepath, sizeof(szFilepath));
 
     void* hFile = RwFopen(szFilepath, "r");
     if (!hFile)
@@ -477,7 +485,7 @@ bool CPCLoadManager::FileLoad(void) const
 
     if (uFileSize)
     {
-        void* pFileData = new char[uFileSize];    
+        uint8* pFileData = new uint8[uFileSize];
         if (pFileData)
         {
             uint32 uReaded = static_cast<uint32>(RwFread(pFileData, sizeof(uint8), static_cast<size_t>(uFileSize), hFile));
@@ -584,7 +592,7 @@ bool CPCSaveManager::FileSave(void) const
     char szFilepath[MAX_PATH];
     szFilepath[0] = '\0';
 
-    MakeFilePath(szFilepath);
+    MakeFilePath(szFilepath, sizeof(szFilepath));
 
     void* hFile = RwFopen(szFilepath, "w+");
     if (!hFile)

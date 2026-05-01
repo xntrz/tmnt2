@@ -219,9 +219,7 @@ RpAtomic* CSetLightingEnableFunctor::operator()(RpAtomic* pAtomic)
 
 RpMaterial* CReplaceMaterialColorFunctor::operator()(RpMaterial* pMaterial)
 {
-    RpMaterialSetColor(pMaterial, &m_MaterialColor);
-
-    return pMaterial;
+    return RpMaterialSetColor(pMaterial, &m_MaterialColor);
 };
 
 
@@ -246,7 +244,7 @@ RwFrame* CGetHierarchyFunctor::operator()(RwFrame* pFrame)
 CModel::CModel(const char* pszName, RpClump* pClump)
 : m_vPosition(Math::VECTOR3_ZERO)
 , m_vRotation(Math::VECTOR3_ZERO)
-, m_MaterialColor({ 0xFF, 0xFF,0xFF,0xFF })
+, m_MaterialColor({ 0xFF, 0xFF, 0xFF, 0xFF })
 , m_BSphere({ { Math::VECTOR3_ZERO }, 0.0f })
 , m_vBSphereOffset(Math::VECTOR3_ZERO)
 , m_pszName(pszName)
@@ -447,7 +445,7 @@ void CModel::SetPartsDrawEnable(int32 index, bool bEnable)
     RpAtomic* pAtomic = GetAtomicFromIndex(index);    
     ASSERT(pAtomic);
 
-    RwUInt8 atomicFlags = RpAtomicGetFlags(pAtomic);
+    RwUInt32 atomicFlags = RpAtomicGetFlags(pAtomic);
     if (bEnable)
         atomicFlags |= rpATOMICRENDER;
     else

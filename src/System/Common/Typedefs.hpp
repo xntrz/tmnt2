@@ -1,5 +1,22 @@
 #pragma once
 
+#if !defined(TARGET_PC)
+#undef _MSC_VER
+#undef _WIN32
+#undef WIN32
+#undef _WIN64
+#undef WIN64
+#undef __MINGW32__
+#undef __MINGW64__
+#undef __MSVCRT__
+#undef __WIN32
+#undef __WIN32__
+#undef __WIN64
+#undef __WIN64__
+#undef __WINNT
+#undef __WINNT__
+#endif /* !defined(TARGET_PC) */
+
 #include "rwcore.h"
 #include "rt2d.h"
 
@@ -15,6 +32,24 @@ typedef struct Rt2dAnim         Rt2dAnim;
 typedef struct Rt2dAnimProps    Rt2dAnimProps;
 typedef struct Rt2dMessage      Rt2dMessage;
 
+#if defined(TMNT2_RWDRV_D3D9)
+
+#ifdef RwIm3DVertexSetRGBA
+#undef RwIm3DVertexSetRGBA
+#endif /* RwIm3DVertexSetRGBA */
+
+#define RwIm3DVertexSetRGBA(_vert, _r, _g, _b, _a)  \
+MACRO_START                                         \
+{                                                   \
+    ((_vert)->color = (RwUInt32)((_a) << 24) |      \
+                                ((_r) << 16) |      \
+                                ((_g) << 8)  |      \
+                                ((_b)));            \
+}                                                   \
+MACRO_STOP
+
+#endif /* defined(TMNT2_RWDRV_D3D9) */
+
 #if (defined(TARGET_PC))
 #define rwRESOURCESDEFAULTARENASIZE (4 << 20) // 4 MB
 #else
@@ -26,10 +61,7 @@ typedef struct Rt2dMessage      Rt2dMessage;
 #include <cmath>
 #include <cfloat> // FLT_MIN/MAX, FLT_EPSILON
 #include <climits> // INT_MIN/MAX etc
-
-#ifdef _DEBUG
 #include <inttypes.h> // PRId32 etc
-#endif /* _DEBUG */
 
 #ifdef TARGET_PC
 
@@ -48,9 +80,27 @@ typedef signed long long    int64;
 typedef unsigned long long  uint64;
 #endif /* defined(_MSC_VER) */
 
-#define UTEXT(text)	L##text
+#define UTEXT(text)	        reinterpret_cast<const wchar*>(L##text)
+#define UCHAR(ch)           static_cast<wchar>(L##ch)
 
 #endif /* TARGET_PC */
+
+#ifdef TARGET_WEB
+
+typedef unsigned char       uint8;
+typedef unsigned short      uint16;
+typedef unsigned int        uint32;
+typedef signed char         int8;
+typedef signed short        int16;
+typedef signed int          int32;
+typedef unsigned short      wchar;
+typedef signed long long    int64;
+typedef unsigned long long  uint64;
+
+#define UTEXT(text)	        reinterpret_cast<const wchar*>(u##text)
+#define UCHAR(ch)           static_cast<wchar>(u##ch)
+
+#endif /* TARGET_WEB */
 
 #include "MemoryStd.hpp"
 #include "Debug.hpp"
@@ -89,6 +139,24 @@ typedef unsigned long long  uint64;
 #ifdef max
 #undef max
 #endif
+
+#if defined(_MSC_VER)
+    #include <intrin.h>
+    #define MEMORY_BARRIER() _ReadWriteBarrier()
+#elif defined(__GNUC__) || defined(__clang__)
+    #define MEMORY_BARRIER() asm volatile("" ::: "memory")
+#else
+    #define MEMORY_BARRIER()
+#endif
+
+#if defined(_MSC_VER)
+    #define NOINLINE __declspec(noinline)
+#elif defined(__GNUC__) || defined(__clang__)
+    #define NOINLINE __attribute__((noinline))
+#else
+    #define NOINLINE
+#endif
+
 
 template<class T>
 inline T Clamp(T val, T min, T max)
@@ -177,4 +245,7 @@ namespace TYPEDEF
     static const int32  SINT32_MAX = INT_MAX;
     static const int64  SINT64_MIN = LLONG_MIN;
     static const int64  SINT64_MAX = LLONG_MAX;
+
+    static const size_t SIZE_T_MIN = 0u;
+    static const size_t SIZE_T_MAX = SIZE_MAX;
 };

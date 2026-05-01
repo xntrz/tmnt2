@@ -38,6 +38,47 @@
 
 #endif
 
+#define NOASM
+#if defined(TMNT2_RWDRV_OPENGL)
+
+//
+//  There is a problem to run prebuild RWSDK37 with opengl driver
+//  all code from baprocfp.obj for some reason is placed in data segment 
+//  instead code segment so change protection to EXEC for this
+// 
+
+
+extern "C" void _rwProcessorInitialize(void);
+extern "C" void _rwProcessorRelease(void);
+extern "C" void _rwProcessorForceSinglePrecision(void);
+
+
+static bool 
+FixPrebuiltOpenglRwSDK37(void)
+{
+#if !defined(NOASM)
+    SYSTEM_INFO sysInfo = {};
+    GetSystemInfo(&sysInfo);
+
+    DWORD dwPageSize = sysInfo.dwPageSize;
+    DWORD dwNewProt = PAGE_EXECUTE_WRITECOPY;
+    DWORD dwOldProt[3] = {};
+    BOOL bResult[3] = {};
+
+    bResult[0] = VirtualProtect(&_rwProcessorInitialize, dwPageSize, dwNewProt, &dwOldProt[0]);
+    bResult[1] = VirtualProtect(&_rwProcessorRelease, dwPageSize, dwNewProt, &dwOldProt[1]);
+    bResult[2] = VirtualProtect(&_rwProcessorForceSinglePrecision, dwPageSize, dwNewProt, &dwOldProt[2]);
+
+    return (bResult[0] &&
+            bResult[1] &&
+            bResult[2]);
+#else /* !defined(NOASM) */
+    return true;
+#endif /* !defined(NOASM) */
+};
+
+#endif /* defined(TMNT2_RWDRV_OPENGL) */
+
 
 struct CPCGraphicsDevice::VIDEOMODE : public RwVideoMode
 {
@@ -195,6 +236,10 @@ void CPCGraphicsDevice::Terminate(void)
 
 bool CPCGraphicsDevice::Start(void)
 {
+#if defined(TMNT2_RWDRV_OPENGL)
+    FixPrebuiltOpenglRwSDK37();
+#endif /* defined(TMNT2_RWDRV_OPENGL) */
+    
     if (!CGraphicsDevice::Start())
     {
         CPCError::ShowNoRet("Video Start Failed");

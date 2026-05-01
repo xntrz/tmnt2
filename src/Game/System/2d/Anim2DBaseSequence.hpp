@@ -35,7 +35,7 @@ public:
     bool IsDrawing(void) const;
     void SetAnimationName(const char* pszAnimName);
     CAnimation2D& Animation2D(void);
-    CAnimation2D& Animation2D(void) const;
+    const CAnimation2D& Animation2D(void) const;
     ANIMSTEP AnimStep(void) const;
     void EnableLoadingDisplay(bool bEnable);
 

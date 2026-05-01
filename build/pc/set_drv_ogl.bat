@@ -1,1 +1,0 @@
-set ARG_RWDRV=--rwdrv=opengl

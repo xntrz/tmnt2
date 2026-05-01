@@ -13,6 +13,7 @@
 #include "Game/System/GameObject/GameObjectManager.hpp"
 #include "Game/System/GameObject/GameObject.hpp"
 #include "Game/System/Misc/RenderStateManager.hpp"
+#include "System/Common/RenderState.hpp"
 
 
 class CGimmickEventDispatcher
@@ -259,6 +260,11 @@ void CGimmickContainer::Draw(int32 nPriority)
 
     CRenderStateManager::SetDefault();
 
+    RENDERSTATE_PUSH(rwRENDERSTATETEXTURERASTER, 0);
+    RENDERSTATE_PUSH(rwRENDERSTATECULLMODE, rwCULLMODECULLNONE);
+    RENDERSTATE_PUSH(rwRENDERSTATETEXTUREADDRESSU, rwTEXTUREADDRESSCLAMP);
+    RENDERSTATE_PUSH(rwRENDERSTATETEXTUREADDRESSV, rwTEXTUREADDRESSCLAMP);
+
     CList<GIMMICKWORK>& rDrawList = m_listDraw[nPriority];
     for (GIMMICKWORK& it : rDrawList)
     {
@@ -268,6 +274,10 @@ void CGimmickContainer::Draw(int32 nPriority)
         if (!pGimmick->IsSleep())
             pGimmick->Draw();
     };
+
+    RENDERSTATE_POP(rwRENDERSTATETEXTUREADDRESSV);
+    RENDERSTATE_POP(rwRENDERSTATETEXTUREADDRESSU);
+    RENDERSTATE_POP(rwRENDERSTATECULLMODE);
 
     Unlock();
 };

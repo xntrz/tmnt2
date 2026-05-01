@@ -30,12 +30,15 @@ static bool s_bNormalGamePAI = false;
 //
 static void CallSeq(void* param)
 {
-    switch (int32(param))
+    switch (reinterpret_cast<int32>(param))
     {
     case -1:
         CDbgUnlockProcess::Launch(s_pDebugMainSeq, CDbgUnlockProcess::UNLOCKFLAG_ALL);
+        s_pDebugMainSeq->Ret(reinterpret_cast<const void*>(PROCLABEL_SEQ_SAVELOADCHECK));
+        break;
+
     case 0:
-        s_pDebugMainSeq->Jump(PROCLABEL_SEQ_SAVELOADCHECK);
+        s_pDebugMainSeq->Ret(reinterpret_cast<const void*>(PROCLABEL_SEQ_SAVELOADCHECK));
         break;
 
     case -2:
@@ -43,7 +46,7 @@ static void CallSeq(void* param)
         break;
 
     default:
-        s_pDebugMainSeq->Call(int32(param));
+        s_pDebugMainSeq->Call(reinterpret_cast<int32>(param));
         break;
     };
 };
@@ -70,7 +73,7 @@ static void CallSeq(void* param)
 //
 static void CallArea(void* param)
 {
-    uint32 AreaParam = uint32(param);
+    uint32 AreaParam = reinterpret_cast<uint32>(param);
 
     AREAID::VALUE idArea = AREAID::VALUE(CallAreaParamGetAreaId(AreaParam));
     //ASSERT(idArea >= AREAID::NORMALSTART);
@@ -151,8 +154,6 @@ CDebugMainSequence::~CDebugMainSequence(void)
 
 bool CDebugMainSequence::OnAttach(const void* pParam)
 {
-    CDebugMenuProcess::Initialize(this);
-    
     LockControllersWithKeyboardPriority();
     CGameData::Attribute().SetVirtualPad(CController::CONTROLLER_LOCKED_ON_VIRTUAL);
 
@@ -167,7 +168,18 @@ bool CDebugMainSequence::OnAttach(const void* pParam)
     m_menu.AddTrigger("Test pad",               CallSeq,        PROCLABEL_SEQ_TESTPAD);
     m_menu.AddTrigger("Test enemmy",            CallSeq,        PROCLABEL_SEQ_TESTENEMYSEL);
     m_menu.AddSeparator();
-    m_menu.AddInt("Call area map view", 0, 7, 1, 0, { "NY", "ZERO", "DHO", "TRI", "JPN", "FNY", "KURA" }, [](int32 nValue, bool bTrigger) {    
+    m_menu.AddBool("Debug menu", [](bool value, bool bTrigger) {
+        static bool s_bEnabled = false;
+        if (s_bEnabled != value)
+        {
+            s_bEnabled = value;
+            if (s_bEnabled)
+                CDebugMenuProcess::Initialize(s_pDebugMainSeq);
+            else
+                CDebugMenuProcess::Terminate(s_pDebugMainSeq);
+        };
+    });
+    m_menu.AddInt("Call area map view", 0, 7, 1, 0, { "NY", "ZERO", "DHO", "TRI", "JPN", "FNY", "KURA" }, [](int32 nValue, bool bTrigger) {
         const AREAID::VALUE idAreaOfWorld[] =
         {
             AREAID::ID_AREA01,  // ny
@@ -212,7 +224,7 @@ bool CDebugMainSequence::OnAttach(const void* pParam)
     //m_menu.AddTrigger("slashuur 1 test",        CallArea,       CallAreaParamMake(AREAID::ID_AREA20, 1, 0));    // factory
     //m_menu.AddTrigger("slashuur 2 test",        CallArea,       AREAID::ID_AREA50); // air
     //m_menu.AddTrigger("slashuur 3 test",        CallArea,       CallAreaParamMake(AREAID::ID_AREA60_D, 7, 0)); // tourney
-    //m_menu.AddTrigger("karai 1 test",           CallArea,       AREAID::ID_AREA57); // ship
+    m_menu.AddTrigger("karai 1 test",           CallArea,       AREAID::ID_AREA57); // ship
     //m_menu.AddTrigger("karai 2 test",           CallArea,       CallAreaParamMake(AREAID::ID_AREA60_C, 8, 0)); // tourney
     //m_menu.AddTrigger("SNOW ride test",         CallArea,       AREAID::ID_AREA13);
     //m_menu.AddTrigger("TRICERATOR ride test",   CallArea,       AREAID::ID_AREA32);

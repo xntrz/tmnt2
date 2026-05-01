@@ -44,10 +44,10 @@ static inline float CosFloat(float x)
 
 /*static*/ void CSprite::PushRenderStates(void)
 {
-    RENDERSTATE_PUSH(rwRENDERSTATEZTESTENABLE,  false);
+    RENDERSTATE_PUSH(rwRENDERSTATEZTESTENABLE, false);
     RENDERSTATE_PUSH(rwRENDERSTATEZWRITEENABLE, false);
-    RENDERSTATE_PUSH(rwRENDERSTATEFOGENABLE,    false);
-    RENDERSTATE_PUSH(rwRENDERSTATECULLMODE,     rwCULLMODECULLNONE);
+    RENDERSTATE_PUSH(rwRENDERSTATEFOGENABLE, false);
+    RENDERSTATE_PUSH(rwRENDERSTATECULLMODE, rwCULLMODECULLNONE);
 };
 
 
@@ -233,8 +233,8 @@ void CSprite::Resize(float w, float h)
     ASSERT(m_fVirtualScreenW != 0.0f);
     ASSERT(m_fVirtualScreenH != 0.0f);
 
-    float scaleW = static_cast<float>(CScreen::Width()) / VIRTUALSCREEN_DEFAULT_W;
-    float scaleH = static_cast<float>(CScreen::Height()) / VIRTUALSCREEN_DEFAULT_H;
+    float scaleW = static_cast<float>(CScreen::Width()) / m_fVirtualScreenW;
+    float scaleH = static_cast<float>(CScreen::Height()) / m_fVirtualScreenH;
 
     m_fW = (w * scaleW);
     m_fH = (h * scaleH);
@@ -246,8 +246,8 @@ void CSprite::ResizeStrict(float w, float h)
     ASSERT(m_fVirtualScreenW != 0.0f);
     ASSERT(m_fVirtualScreenH != 0.0f);
 
-    float scaleW = static_cast<float>(CScreen::Width()) / VIRTUALSCREEN_DEFAULT_W;
-    float scaleH = static_cast<float>(CScreen::Height()) / VIRTUALSCREEN_DEFAULT_H;
+    float scaleW = static_cast<float>(CScreen::Width()) / m_fVirtualScreenW;
+    float scaleH = static_cast<float>(CScreen::Height()) / m_fVirtualScreenH;
 
     float scale = Min(scaleW, scaleH);
 

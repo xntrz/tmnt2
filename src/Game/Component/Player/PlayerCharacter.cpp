@@ -1310,8 +1310,9 @@ PLAYERTYPES::FLAG CPlayerCharacter::CheckAttackConnect(PLAYERTYPES::FLAG mask)
 bool CPlayerCharacter::CheckChargeTime(float fTime, PLAYERTYPES::CHARGEPHASE* chargephase)
 {
     bool bResult = false;
-    
     int32 chargeLevel = CGameData::Record().Secret().GetChargeLevel();
+    
+    m_chargephase = PLAYERTYPES::CHARGEPHASE_ZERO;
 
     if (((fTime >= 3.0f) || TestAttribute(PLAYERTYPES::ATTRIBUTE_CHARGE_TIME_CUT)) && (chargeLevel >= 2))
     {

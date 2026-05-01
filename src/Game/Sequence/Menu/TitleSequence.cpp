@@ -69,10 +69,10 @@ bool CTitleSequence::OnAttach(const void* pParam)
 	UnlockAllControllers();
 	CGameData::Attribute().SetVirtualPad(CController::CONTROLLER_UNLOCKED_ON_VIRTUAL);
 
-#ifdef BUILD_TRIAL
+#ifdef TMNT2_TRIAL
 	CTimeoutProcess::Enable(this, true);
 	CTimeoutProcess::Start(this);
-#endif
+#endif /* TMNT2_TRIAL */
 
     bool bResult = CAnim2DSequence::OnAttach(FPATH("Common/Menu/Title/Title.lpac"));
     CDataLoader::Regist(FPATH("Common/Menu/Title/Title2.lpac"));
@@ -112,11 +112,12 @@ void CTitleSequence::OnMove(bool bRet, const void* pReturnValue)
 			switch (m_phase)
 			{
 			case PHASE_NONE:
-				m_phase = PHASE_START;
-				break;
+                Animation2D().SetCenterAllStrings();
+                m_phase = PHASE_START;
+                break;
 
-			case PHASE_START:
-				CheckPressStart();
+            case PHASE_START:
+                CheckPressStart();
 				UpdateTimers();
 				UpdateDemo();
 				break;
@@ -156,16 +157,16 @@ void CTitleSequence::OnMove(bool bRet, const void* pReturnValue)
         break;
     };
 
-	CAnim2DSequence::OnMove(bRet, pReturnValue);
+    CAnim2DSequence::OnMove(bRet, pReturnValue);
 };
 
 
 void CTitleSequence::OnDraw(void) const
 {
-	if ((m_phase == PHASE_START) && (AnimStep() == ANIMSTEP_DRAW))
-		Animation2D().SetCenterAllStrings();
-	
 	CAnim2DSequence::OnDraw();
+
+    if (AnimStep() != ANIMSTEP_DRAW)
+        return;
 
     if (!((m_phase == PHASE_CHOICE) ||
           (m_phase == PHASE_CHOICE_WARNING)))
@@ -192,9 +193,9 @@ void CTitleSequence::OnDraw(void) const
                 RwUInt8 rb = static_cast<RwUInt8>( 127.0f - (Math::Cos(m_fTimer * 4.0f) * 127.0f) );
 
                 RwRGBA color;
-                color.red   = rb;
+                color.red = rb;
                 color.green = 255;
-                color.blue  = rb;
+                color.blue = rb;
                 color.alpha = 255;
 
                 CGameFont::SetRGBA(color);
@@ -391,8 +392,8 @@ void CTitleSequence::UpdateDemo(void)
 	
 	if (m_fTimer > fElapsedTimeForDemo)
 	{
-		m_nextSeq = NEXT_SEQUENCE_DEMO;
-		BeginFadeOut();
+		//m_nextSeq = NEXT_SEQUENCE_DEMO;
+		//BeginFadeOut();
 	};
 };
 
@@ -411,17 +412,28 @@ int32 CTitleSequence::GetSelectByItemIndex(int32 iItemIndex) const
 
 void CTitleSequence::SetMenuItem(void)
 {
-#ifdef TARGET_PC
+#if defined(TARGET_PC)
 	m_aMenuItemInfoTable[MENUITEMID_QUIT].m_bEnabled = true;
 	m_aMenuItemInfoTable[MENUITEMID_QUIT].m_bVisible = true;
-#else /* TARGET_PC */
-	if (CGameData::Record().Secret().IsUnlockedSecret(SECRETID::ID_HOME_ARCADEGAME))
-	{
-		m_aMenuItemInfoTable[MENUITEMID_ARCADE].m_bEnabled = true;
-		m_aMenuItemInfoTable[MENUITEMID_ARCADE].m_bVisible = true;
-	};
-#endif /* TARGET_PC */
-	m_aMenuItemInfoTable[MENUITEMID_GAME_CONTINUE].m_bEnabled = (!CGameData::IsNewGame());
+#elif defined(TARGET_WEB)
+    m_aMenuItemInfoTable[MENUITEMID_QUIT].m_bEnabled = false;
+    m_aMenuItemInfoTable[MENUITEMID_QUIT].m_bVisible = false;
+    m_aMenuItemInfoTable[MENUITEMID_ARCADE].m_bEnabled = false;
+    m_aMenuItemInfoTable[MENUITEMID_ARCADE].m_bVisible = false;
+#else
+    if (CGameData::Record().Secret().IsUnlockedSecret(SECRETID::ID_HOME_ARCADEGAME))
+    {
+        m_aMenuItemInfoTable[MENUITEMID_ARCADE].m_bEnabled = true;
+        m_aMenuItemInfoTable[MENUITEMID_ARCADE].m_bVisible = true;
+    };
+#endif
+
+#ifdef TMNT2_TRIAL
+    m_aMenuItemInfoTable[MENUITEMID_OPTIONS].m_bEnabled = false;
+    m_aMenuItemInfoTable[MENUITEMID_OPTIONS].m_bVisible = true;
+#endif /* TMNT2_TRIAL */
+
+    m_aMenuItemInfoTable[MENUITEMID_GAME_CONTINUE].m_bEnabled = (!CGameData::IsNewGame());
 };
 
 

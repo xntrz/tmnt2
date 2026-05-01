@@ -32,6 +32,9 @@ public:
 
 private:
     RpLight* m_pLight;
+#if defined(TMNT2_RWDRV_OPENGL)
+    RpLight* m_pLightAmbient;
+#endif /* defined(TMNT2_RWDRV_OPENGL) */
     RpWorld* m_pWorld;
     CCamera* m_pCamera;
     STEP     m_step;

@@ -11,17 +11,17 @@ CPCFrameTimer::CPCFrameTimer(const CPCGraphicsDevice& device)
 : m_uFrametime(0)
 , m_uSyncTime(0)
 {
-    float fRefreshRate = 60.0f;
+    double dRefreshRate = 60.0;
 #ifdef TMNT2_BUILD_EU
     if ((CConfigure::GetTVMode() == TYPEDEF::CONFIG_TV_PAL) && device.IsPalMode())
-        fRefreshRate = 50.0f;
+        dRefreshRate = 50.0;
 #endif /* TMNT2_BUILD_EU */
 
-    uint32 ms = CPCTimer::Instance().GetFreqMs();
-    uint32 sec = CPCTimer::Instance().GetFreq();
+    uint64 ticksPerSec = CPCTimer::Instance().GetFreq();
+    uint64 ticksPerMSec = CPCTimer::Instance().GetFreqMs();
     
-    m_uFrametime  = static_cast<uint32>(static_cast<float>(ms) / fRefreshRate);
-    m_uFrametime -= (m_uFrametime % sec);
+    m_uFrametime  = static_cast<uint64>(static_cast<double>(ticksPerSec) / dRefreshRate);
+    m_uFrametime -= (m_uFrametime % ticksPerMSec);
 
     Sync();
 };
@@ -35,14 +35,14 @@ CPCFrameTimer::~CPCFrameTimer(void)
 
 void CPCFrameTimer::Update(void)
 {
-    uint32 uTimeNow = CPCTimer::Instance().GetElapsedTime();
-    uint32 uTimeElapsed = uTimeNow - m_uSyncTime;
+    uint64 uTimeNow = CPCTimer::Instance().GetElapsedTime();
+    uint64 uTimeElapsed = uTimeNow - m_uSyncTime;
 
     if (uTimeElapsed < m_uFrametime)
     {
-        uint32 uSleepTime = (m_uFrametime - uTimeElapsed) / CPCTimer::Instance().GetFreqMs();
+        uint64 uSleepTime = (m_uFrametime - uTimeElapsed) / CPCTimer::Instance().GetFreqMs();
         if (uSleepTime > 4)
-            Sleep(uSleepTime - 1);
+            Sleep(static_cast<DWORD>(uSleepTime - 1));
 
         while ((CPCTimer::Instance().GetElapsedTime() - m_uSyncTime) < m_uFrametime)
             Sleep(0);

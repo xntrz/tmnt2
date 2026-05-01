@@ -32,6 +32,9 @@
 
 CEnbuSequence::CEnbuSequence(void)
 : m_pLight(nullptr)
+#if defined(TMNT2_RWDRV_OPENGL)
+, m_pLightAmbient(nullptr)
+#endif /* defined(TMNT2_RWDRV_OPENGL) */
 , m_pWorld(nullptr)
 , m_pCamera(nullptr)
 , m_step(STEP_INIT)
@@ -48,6 +51,9 @@ CEnbuSequence::CEnbuSequence(void)
 CEnbuSequence::~CEnbuSequence(void)
 {
     ASSERT(!m_pLight);
+#if defined(TMNT2_RWDRV_OPENGL)
+    ASSERT(!m_pLightAmbient);
+#endif /* defined(TMNT2_RWDRV_OPENGL) */
     ASSERT(!m_pWorld);
     ASSERT(!m_pCamera);
 };
@@ -80,16 +86,12 @@ bool CEnbuSequence::OnAttach(const void* pParam)
     CDataLoader::Regist(FPATH_LANG("Language/English/Enbu_Rank/Enbu_Rank.lpac"));
 #endif /* TMNT2_BUILD_EU */
     
-    CGameData::Attribute().SetInteractive(true);
-
     return true;
 };
 
 
 void CEnbuSequence::OnDetach(void)
 {
-    CGameData::Attribute().SetInteractive(false);
-
     CGameSound::FadeOut(CGameSound::FADESPEED_NORMAL);
 
     CEnbuProc::Terminate();
@@ -117,6 +119,15 @@ void CEnbuSequence::OnDetach(void)
         m_pLight = nullptr;
     };
 
+#if defined(TMNT2_RWDRV_OPENGL)
+    if (m_pLightAmbient)
+    {
+        RpWorldRemoveLight(m_pWorld, m_pLightAmbient);
+        RpLightDestroy(m_pLightAmbient);
+        m_pLightAmbient = nullptr;
+    };
+#endif /* defined(TMNT2_RWDRV_OPENGL) */
+
 	if (m_pCamera)
 	{
 		RpWorldRemoveCamera(m_pWorld, m_pCamera->GetRwCamera());
@@ -140,6 +151,8 @@ void CEnbuSequence::OnMove(bool bRet, const void* pReturnValue)
         {
             if (CDataLoader::IsLoadEnd())
             {
+                CGameData::Attribute().SetInteractive(true);
+
                 RwBBox bbox =
                 {
                     {  100.0f,  100.0f,  100.0f  },
@@ -167,11 +180,32 @@ void CEnbuSequence::OnMove(bool bRet, const void* pReturnValue)
                 RpWorldAddCamera(m_pWorld, m_pCamera->GetRwCamera());
                 RpWorldAddLight(m_pWorld, m_pLight);
 
-#ifdef TARGET_PC
-                CToonManager::SetTextureSet("toonPC");
-#else /* TARGET_ PC */
-//#error Not implemented for current target
-#endif /* TARGET_ PC */
+#if defined(TMNT2_RWDRV_OPENGL)
+                m_pLightAmbient = RpLightCreate(rpLIGHTAMBIENT);
+                if (m_pLightAmbient)
+                {
+                    RwRGBAReal lightColor = { 0.6f, 0.6f, 0.6f, 1.0f };
+                    RpLightSetColor(m_pLightAmbient, &lightColor);
+
+                    RwUInt8 lightFlags = RpLightGetFlags(m_pLightAmbient);
+                    lightFlags &= (~rpLIGHTLIGHTWORLD);
+                    RpLightSetFlags(m_pLightAmbient, lightFlags);
+
+                    RpWorldAddLight(m_pWorld, m_pLightAmbient);
+                };
+#endif /* defined(TMNT2_RWDRV_OPENGL) */
+
+                const char* pszTextureSet = nullptr;
+#if defined(TARGET_PS2)
+                pszTextureSet = "toon";
+#elif (defined(TARGET_PC) || \
+       defined(TARGET_WEB))
+                pszTextureSet = "toonPC";
+#else
+#error Not implemented for current target
+#endif
+                CToonManager::SetTextureSet(pszTextureSet);
+
                 CEnbuProc::Settings();
 
                 SetEnbuCameraInit();
@@ -191,7 +225,6 @@ void CEnbuSequence::OnMove(bool bRet, const void* pReturnValue)
         {
             CEnbuProc::Period();
             EnbuCameraProc();
-
 
             RwMatrix matrix;
             RwMatrixSetIdentity(&matrix);
@@ -213,8 +246,9 @@ void CEnbuSequence::OnMove(bool bRet, const void* pReturnValue)
             RwFrame* pFrame = RwCameraGetFrame(pCamera);
             RwFrameTransform(pFrame, &matrix, rwCOMBINEREPLACE);
 
-            if (CController::GetDigital(CController::CONTROLLER_LOCKED_ON_VIRTUAL, CController::DIGITAL_OK))
+            if (CController::GetDigitalTrigger(CController::CONTROLLER_LOCKED_ON_VIRTUAL, CController::DIGITAL_OK))
             {
+                CGameData::Attribute().SetInteractive(false);
                 CScreenFade::BlackOut();
                 CGameSound::FadeOut(CGameSound::FADESPEED_SLOW);
                 m_step = STEP_END;

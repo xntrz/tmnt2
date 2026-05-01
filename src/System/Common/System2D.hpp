@@ -14,5 +14,10 @@ public:
     static void PushRenderState(void);
     static void PopRenderState(void);
     static bool Reset(void);
-    static CCamera& Camera(void);
+    static void SetLayerDepth(float fDepth);
+
+private:
+    static CCamera* m_pDefaultCamera;
+    static CCamera* m_pCurrentCamera;
+    static uint32 m_uReferenceCount;
 };

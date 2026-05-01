@@ -12,8 +12,9 @@ public:
 	static void* rwmalloc(size_t size, uint32 hint);
     static void rwfree(void* mem);
     static void* rwrealloc(void* mem, size_t size, uint32 hint);
-	static void* rwcalloc(size_t objSize, size_t size, uint32 hint);
-	
+    static void* rwcalloc(size_t objSize, size_t size, uint32 hint);
+    static size_t allocatedSize(void);
+
 	inline CMemory(void) {};
 	inline virtual ~CMemory(void) {};
     virtual void* RepAlloc(size_t size, const char* fname, int fline) = 0;

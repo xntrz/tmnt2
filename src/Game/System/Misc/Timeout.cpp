@@ -81,8 +81,8 @@ bool CTimeoutProcess::CTimerObj::IsTimeUp(void)
 {
     if (isActive())
         return (m_fTargetSec <= m_fElapsedTime);
-    else
-        return false;
+    
+    return false;
 };
 
 
@@ -122,22 +122,24 @@ bool CTimeoutProcess::CNonInputTimer::isInputOccured(void)
         CController::GetDigital(CController::CONTROLLER_UNLOCKED_ON_VIRTUAL))
         return true;
 
-    int32 PadCnt = CController::Max();
-    for (int32 i = 0; i < PadCnt; ++i)
+    int32 controllerMax = CController::Max();
+    for (int32 i = 0; i < controllerMax; ++i)
     {
-        if (CController::IsLocked(i))
+        if (!CController::IsLocked(i))
+            continue;
+        
+        if (CController::GetState(i) == CController::STATE_CONNECT)
         {
-            if (CController::GetState(i) == CController::STATE_CONNECT)
-            {
-                int16 AnalogX = CController::GetAnalog(i, CController::ANALOG_LSTICK_X);
-                int16 AnalogY = CController::GetAnalog(i, CController::ANALOG_LSTICK_Y);
+            int16 lx = CController::GetAnalog(i, CController::ANALOG_LSTICK_X);
+            int16 ly = CController::GetAnalog(i, CController::ANALOG_LSTICK_Y);
 
-                if ((AnalogX > ANALOG_RESPONSE_MIN) || (AnalogX < -ANALOG_RESPONSE_MIN))
-                    return true;
-                
-                if ((AnalogY > ANALOG_RESPONSE_MIN) || (AnalogY < -ANALOG_RESPONSE_MIN))
-                    return true;
-            };
+            if ((lx > ANALOG_RESPONSE_MIN) ||
+                (lx < -ANALOG_RESPONSE_MIN))
+                return true;
+
+            if ((ly > ANALOG_RESPONSE_MIN) ||
+                (ly < -ANALOG_RESPONSE_MIN))
+                return true;
         };
     };
 
@@ -213,12 +215,10 @@ bool CTimeoutProcess::CNonInputTimer::isInputOccured(void)
 
 /*static*/ bool CTimeoutProcess::postPrivateMessage(CProcess* pSender, MESSAGE* pMessage)
 {
-    bool bResult = false;
-
     if (pSender->Info().IsProcessExist(PROCLABEL_TIMEOUT))
-        bResult = pSender->Mail().Send(PROCLABEL_TIMEOUT, PROCESSTYPES::MAIL::TYPE_MSG, pMessage);
+        return pSender->Mail().Send(PROCLABEL_TIMEOUT, PROCESSTYPES::MAIL::TYPE_MSG, pMessage);
 
-    return bResult;
+    return false;
 };
 
 
@@ -242,14 +242,10 @@ CTimeoutProcess::~CTimeoutProcess(void)
 
 bool CTimeoutProcess::Attach(void)
 {
-    m_iRootSeqLabel = PROCLABEL_SEQ_GAMEMAIN;
-
     m_apTimer[0] = new CTimerObj;
-    ASSERT(m_apTimer[0]);
     m_apTimer[0]->SetTime(TIMEOUT_SEC_TOTAL);
 
     m_apTimer[1] = new CNonInputTimer;
-    ASSERT(m_apTimer[1]);
     m_apTimer[1]->SetTime(TIMEOUT_SEC_NONINPUT);
 
     resetObject();
@@ -282,10 +278,10 @@ void CTimeoutProcess::Move(void)
         {
             for (int32 i = 0; i < COUNT_OF(m_apTimer); ++i)
             {
-                if (!m_apTimer[i])
-                    continue;
-
                 CTimerObj* pTimer = m_apTimer[i];
+
+                if (!pTimer)
+                    continue;
 
                 pTimer->Update(CGameData::Attribute().IsInteractive());
                 if (pTimer->IsTimeUp())
@@ -322,9 +318,15 @@ void CTimeoutProcess::execTimeout(void)
     int32 iRootSeqLabel = m_iRootSeqLabel;
     resetObject();
 
-    int32 iCurrentSeq = CSequence::GetCurrently();
-    CSequence& SeqProc = (CSequence&)Info().Process(iCurrentSeq);
-    SeqProc.Kill(iRootSeqLabel);
+    int32 iCurrentSeqLabel = CSequence::GetCurrently();
+    CSequence& seq = static_cast<CSequence&>(Info().Process(iCurrentSeqLabel));
+
+    int32 iCallSeqLabel = PROCLABEL_SEQ_GAMEMAIN;
+#ifdef _DEBUG
+    iCallSeqLabel = PROCLABEL_SEQ_DBGMAIN;
+#endif /* _DEBUG */
+
+    seq.Kill(iRootSeqLabel, reinterpret_cast<const void*>(iCallSeqLabel));
 };
 
 
@@ -336,7 +338,9 @@ void CTimeoutProcess::messageProc(void)
     {
         if (mail.m_type == PROCESSTYPES::MAIL::TYPE_MSG)
         {
-            MESSAGE* pMessage = (MESSAGE*)mail.m_param;
+            const MESSAGE* pMessage =
+                reinterpret_cast<const MESSAGE*>(mail.m_param);
+
             ASSERT(pMessage);
 
             switch (pMessage->m_type)
@@ -349,21 +353,15 @@ void CTimeoutProcess::messageProc(void)
                 break;
 
             case MESSAGE::TYPE_RESET:
-                {
-                    resetObject();
-                }
+                resetObject();
                 break;
 
             case MESSAGE::TYPE_ENABLE:
-                {
-                    m_bEnable = pMessage->m_param.m_bEnable;
-                }
+                m_bEnable = pMessage->m_param.m_bEnable;
                 break;
 
             case MESSAGE::TYPE_INTERACTIVE:
-                {
-                    m_bInteractive = pMessage->m_param.m_bInteractive;
-                }
+                m_bInteractive = pMessage->m_param.m_bInteractive;
                 break;
 
             default:
@@ -383,7 +381,10 @@ void CTimeoutProcess::resetObject(void)
     m_bInteractive = false;
 
     for (int32 i = 0; i < COUNT_OF(m_apTimer); ++i)
-        m_apTimer[i]->Reset();
+    {
+        if (m_apTimer[i])
+            m_apTimer[i]->Reset();
+    };
 };
 
 

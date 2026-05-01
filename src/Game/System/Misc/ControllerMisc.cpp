@@ -1,8 +1,12 @@
 #include "ControllerMisc.hpp"
 #include "Gamepad.hpp"
 
-#ifdef TARGET_PC
+#if defined(TARGET_PC)
 #include "System/PC/PCSpecific.hpp"
+#elif defined(TARGET_WEB)
+#include "System/Web/WebSpecific.hpp"
+#else
+#error Not implemented for current target
 #endif /* TARGET_PC */
 
 
@@ -77,8 +81,13 @@ void EnableStickToDirButton(bool bEnable)
 
     for (int32 i = 0; i < iControllerMax; ++i)
     {
-#ifdef TARGET_PC
+#if defined(TARGET_PC)
         if (IGamepad::GetPhysicalPort(i) == CPCSpecific::GetKeyboradPort())
+            IGamepad::EnableStickToDigitalMapping(i, IGamepad::STICK_LEFT, false);
+        else
+            IGamepad::EnableStickToDigitalMapping(i, IGamepad::STICK_LEFT, bEnable);
+#elif defined(TARGET_WEB)
+        if (IGamepad::GetPhysicalPort(i) == CWebSpecific::GetKeyboradPort())
             IGamepad::EnableStickToDigitalMapping(i, IGamepad::STICK_LEFT, false);
         else
             IGamepad::EnableStickToDigitalMapping(i, IGamepad::STICK_LEFT, bEnable);
@@ -91,8 +100,10 @@ void EnableStickToDirButton(bool bEnable)
 
 bool ControllerIsKeyboard(int32 iController)
 {
-#ifdef TARGET_PC
+#if defined(TARGET_PC)
     return (CPCSpecific::GetKeyboradPort() == IGamepad::GetPhysicalPort(iController));
+#elif defined(TARGET_WEB)
+    return (CWebSpecific::GetKeyboradPort() == IGamepad::GetPhysicalPort(iController));
 #else
     return false;
 #endif    

@@ -82,9 +82,9 @@ void CDrawModelBlock::Push(void)
 
 void CDrawModelBlock::Pop(void)
 {
-    RwRenderStateSet(rwRENDERSTATETEXTUREADDRESSU, (void*)m_textureAddressU);
-    RwRenderStateSet(rwRENDERSTATETEXTUREADDRESSU, (void*)m_textureAddressV);
-    RwRenderStateSet(rwRENDERSTATEVERTEXALPHAENABLE, (void*)m_bVertexAlpha);
+    RwRenderStateSet(rwRENDERSTATETEXTUREADDRESSU, reinterpret_cast<void*>(m_textureAddressU));
+    RwRenderStateSet(rwRENDERSTATETEXTUREADDRESSU, reinterpret_cast<void*>(m_textureAddressV));
+    RwRenderStateSet(rwRENDERSTATEVERTEXALPHAENABLE, reinterpret_cast<void*>(m_bVertexAlpha));
 };
 
 

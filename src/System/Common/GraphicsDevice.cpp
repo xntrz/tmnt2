@@ -48,13 +48,11 @@ CGraphicsDevice::~CGraphicsDevice(void)
 
 bool CGraphicsDevice::Initialize(void)
 {
-    RwMemoryFunctions memfuncs =
-    {
-        &CMemory::rwmalloc,
-        &CMemory::rwfree,
-        &CMemory::rwrealloc,
-        &CMemory::rwcalloc
-    };
+    RwMemoryFunctions memfuncs = {};
+    memfuncs.rwmalloc   = &CMemory::rwmalloc;
+    memfuncs.rwfree     = &CMemory::rwfree;
+    memfuncs.rwrealloc  = &CMemory::rwrealloc;
+    memfuncs.rwcalloc   = &CMemory::rwcalloc;
 
     if (!RwEngineInit(&memfuncs, rwENGINEINITFREELISTS, rwRESOURCESDEFAULTARENASIZE))
     {
@@ -72,8 +70,9 @@ bool CGraphicsDevice::Initialize(void)
         return false;
     };
 
-    RwEngineOpenParams params;
+    RwEngineOpenParams params = {};
     params.displayID = Configure();
+
     if (!RwEngineOpen(&params))
     {
         OUTPUT("RwEngineOpen failed");
@@ -120,13 +119,13 @@ bool CGraphicsDevice::Start(void)
     RtCharsetOpen();
 #endif /* RWDEBUG */  
 
-    if (!RwImageRegisterImageFormat("bmp", RtBMPImageRead, 0))
+    if (!RwImageRegisterImageFormat("bmp", RtBMPImageRead, nullptr))
     {
         OUTPUT("RwImageRegisterImageFormat 'bmp' failed");
         return false;
     };
 
-    if (!RwImageRegisterImageFormat("png", RtPNGImageRead, 0))
+    if (!RwImageRegisterImageFormat("png", RtPNGImageRead, nullptr))
     {
         OUTPUT("RwImageRegisterImageFormat 'png' failed");
         return false;
@@ -213,7 +212,8 @@ void CGraphicsDevice::Flip(void)
 
 void CGraphicsDevice::SetFlipInterval(int32 nVsyncCount)
 {
-    if (nVsyncCount >= 0 && nVsyncCount <= 2)
+    if ((nVsyncCount >= 0) &&
+        (nVsyncCount <= 2))
     {
         m_iFlipInterval = nVsyncCount;
         CScreen::DeviceChanged();
@@ -308,6 +308,8 @@ bool CGraphicsDevice::CreateFrameBuffer(void)
     {
         RwCameraSetRaster(m_pCamera, m_pFrameBuffer);
         RwCameraSetZRaster(m_pCamera, m_pZBuffer);
+
+        CCamera::FramebufferChanged();
     };
 
     return true;

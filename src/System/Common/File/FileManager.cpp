@@ -58,44 +58,60 @@ void CFileManager::Sync(void)
     if (m_stat != STAT_BUSY)
         return;
 
-    FILE_STAT fstat = m_pAccessData->SyncStat();
-    switch (fstat)
+    if (m_pAccessData)
     {
-    case FILE_STAT_ERROR:
+        FILE_STAT fstat = m_pAccessData->SyncStat();
+        switch (fstat)
         {
-            char szErrBuf[256];
-            szErrBuf[0] = '\0';
-
-            std::sprintf(szErrBuf, "Failed to read file: \"%s\"", CFileAccess::GetLastFilename());
-            Error(szErrBuf);
-
-            m_pAccessData->Close();
-            m_pAccessData->ReleaseBuff();
-
-            OpenFile(m_pAccessData, m_id);
-        }
-        break;
-
-    case FILE_STAT_READEND:
-        {
-            ReadEnd(m_pAccessData);
-            m_pAccessData->Close();
-
-            if (m_readQueue.is_empty())
+        case FILE_STAT_ERROR:
             {
-                m_stat = STAT_READY;
-                break;
-            };
+                char szErrBuf[256];
+                szErrBuf[0] = '\0';
 
+                std::sprintf(szErrBuf, "Failed to read file: \"%s\" (%d)", CFileAccess::GetLastFilename(), m_id);
+                Error(szErrBuf);
+
+                m_pAccessData->Close();
+                m_pAccessData->ReleaseBuff();
+
+                OpenFile(m_pAccessData, m_id);
+            }
+            break;
+
+        case FILE_STAT_READEND:
+            {
+                ReadEnd(m_pAccessData);
+
+                m_pAccessData->Close();
+                m_pAccessData = nullptr;
+
+                if (!m_readQueue.is_empty())
+                {
+                    READ_REQUEST request = m_readQueue.front();
+                    m_readQueue.pop();
+
+                    OpenFile(request.pData, request.id);
+                };
+            }
+            break;
+
+        default:
+            break;
+        };
+    }
+    else
+    {
+        if (!m_readQueue.is_empty())
+        {
             READ_REQUEST request = m_readQueue.front();
             m_readQueue.pop();
 
             OpenFile(request.pData, request.id);
         }
-        break;
-
-    default:
-        break;
+        else
+        {
+            m_stat = STAT_READY;
+        };
     };
 };
 
@@ -110,32 +126,16 @@ void CFileManager::ReadDataRequest(CFileAccess* pData, int32 id /*= -1*/)
 {
     ASSERT(pData);
 
-    switch (m_stat)
-    {
-    case STAT_READY:
-        {
-            OpenFile(pData, id);
-            m_stat = STAT_BUSY;
-        }
-        break;
+    READ_REQUEST request;
+    request.pData = pData;
+    request.id = id;
 
-    case STAT_BUSY:
-        {
-            READ_REQUEST request;
-            request.pData = pData;
-            request.id = id;
+    ASSERT(!m_readQueue.is_full());
+    m_readQueue.push(request);
 
-            ASSERT(!m_readQueue.is_full());
-            m_readQueue.push(request);
+    pData->SetAwait();
 
-            pData->SetAwait();
-        }
-        break;
-
-    default:
-        ASSERT(false);
-        break;
-    };
+    m_stat = STAT_BUSY;
 };
 
 

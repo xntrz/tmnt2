@@ -24,7 +24,7 @@ static_assert(std::is_pod<TMNT2_SAVE_DATA>::value, "TMNT2_SAVE_DATA should be PO
 // game option
 CHECK_SIZE(CDisplayOptionData::RAWDATA,  0x8);
 CHECK_SIZE(CGamepadOptionData::RAWDATA,  0x20);
-CHECK_SIZE(CKeyboardOptionData::RAWDATA, 0x34);
+CHECK_SIZE(IKeyboardOptionData::RAWDATA, 0x34);
 CHECK_SIZE(CPlayOptionData::RAWDATA,     0x8);
 CHECK_SIZE(CSoundOptionData::RAWDATA,    0x10);
 CHECK_SIZE(COptionData::RAWDATA,         0x114);

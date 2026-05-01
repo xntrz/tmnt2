@@ -1,7 +1,7 @@
 #pragma once
 
 #include "System/Common/Memory.hpp"
-
+#include "System/Common/MemPool.hpp"
 
 class CPCMemoryDefault final : public CMemory
 {
@@ -39,5 +39,24 @@ private:
     int32 m_iRwMemBlock;
     void* m_hHeap;
     void* m_hRwHeap;
+    CMemory* m_pPrev;
+};
+
+
+class CPCMemoryPool final : public CMemory
+{
+public:
+    CPCMemoryPool(void);
+    virtual ~CPCMemoryPool(void);
+    virtual void* RepAlloc(size_t size, const char* fname, int fline) override;
+    virtual void RepFree(void* mem) override;
+    virtual void* RepRwAlloc(size_t size, uint32 hint) override;
+    virtual void RepRwFree(void* mem) override;
+    virtual void* RepRwRealloc(void* mem, size_t size, uint32 hint) override;
+    virtual void* RepRwCalloc(size_t objSize, size_t size, uint32 hint) override;
+    virtual size_t AllocatedSize(void) override;
+
+private:
+    CMemPool m_pool;
     CMemory* m_pPrev;
 };

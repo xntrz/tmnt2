@@ -10,89 +10,12 @@
 #include "PCClockDevice.hpp"
 #include "PCSoundDevice.hpp"
 #include "PCError.hpp"
+#include "PCFrameSkipController.hpp"
 
 #include "File/PCFileManager.hpp"
 
 #include "System/Common/Process/ProcessDispatcher.hpp"
 #include "System/Common/Configure.hpp"
-#include "System/Common/Screen.hpp"
-
-
-class CPCFramework::CFrameSkipController final
-{
-public:
-    CFrameSkipController(void);
-    void Sync(void);
-    void SetEnable(bool bState);
-
-    inline bool IsEnabled(void) const { return m_bEnable; };
-    inline bool IsSkip(void) const { return m_bSkip; };
-
-private:
-    uint32 m_uTime;
-    uint32 m_uFrametime;
-    uint32 m_uFrametimeTimeout;
-    int32 m_nNumSkip;
-    bool m_bSkip;
-    bool m_bEnable;
-};
-
-
-CPCFramework::CFrameSkipController::CFrameSkipController(void)
-: m_uTime(0)
-, m_uFrametime(0)
-, m_uFrametimeTimeout(0)
-, m_nNumSkip(0)
-, m_bSkip(false)
-, m_bEnable(false)
-{
-    m_uFrametime = (CPCTimer::Instance().GetFreq() / static_cast<uint32>(CScreen::Framerate()));
-    m_uFrametimeTimeout = (CPCTimer::Instance().GetFreq() / static_cast<uint32>(CScreen::Framerate() * 0.5f));
-
-    SetEnable(true);
-};
-
-
-void CPCFramework::CFrameSkipController::Sync(void)
-{    
-    uint32 uTimeNow     = CPCTimer::Instance().GetElapsedTime();
-    uint32 uTimeSkipped = (m_uTime + (m_nNumSkip * m_uFrametime));    
-    
-    uint32 uTimeElapsed = (uTimeSkipped >= uTimeNow) ? (uTimeNow + TYPEDEF::UINT32_MAX - uTimeSkipped) :
-                                                       (uTimeNow - uTimeSkipped);
-
-    bool bEnable        = (m_bEnable);
-    bool bMaySkip       = (m_nNumSkip < 5);
-    bool bFrameTimeout  = (uTimeElapsed > m_uFrametimeTimeout);
-
-    if (bEnable && bMaySkip && bFrameTimeout)
-    {
-        m_bSkip = true;
-        ++m_nNumSkip;
-    }
-    else
-    {
-        m_bSkip     = false;
-        m_nNumSkip  = 0;
-        m_uTime     = uTimeNow;
-
-        if (uTimeElapsed > m_uFrametime)
-            m_uTime -= (((uTimeElapsed - m_uFrametime) / 2) % uTimeElapsed);
-    };
-};
-
-
-void CPCFramework::CFrameSkipController::SetEnable(bool bState)
-{
-    if (m_bEnable != bState)
-    {
-        m_uTime     = CPCTimer::Instance().GetElapsedTime();
-        m_nNumSkip  = 0;
-        m_bSkip     = false;
-    };
-
-    m_bEnable = bState;
-};
 
 
 /*static*/ CPCFramework* CPCFramework::m_pInstance = nullptr;
@@ -126,8 +49,11 @@ CPCFramework::~CPCFramework(void)
 
 bool CPCFramework::Initialize(void)
 {
-    m_pMemory = new CPCMemory;
-    
+    if (CConfigure::CheckArg("mp"))
+        m_pMemory = new CPCMemoryPool;
+    else
+        m_pMemory = new CPCMemory;
+
     m_pSystem = new CPCSystem(this);
     if (!m_pSystem->Initialize())
     {
@@ -149,7 +75,7 @@ bool CPCFramework::Initialize(void)
 #endif /* _DEBUG */
     m_pInputsDevice = new CPCInputsDevice;
     m_pPCSoundDevice = new CPCSoundDevice;
-    m_pFrameSkipController = new CFrameSkipController;
+    m_pFrameSkipController = new CPCFrameSkipController;
 
     if (!m_pPCSoundDevice->Initialize())
     {
@@ -158,7 +84,7 @@ bool CPCFramework::Initialize(void)
         return false;
     };
 
-    if (!m_pPCSoundDevice->InitializeLib())
+    if (!m_pPCSoundDevice->StartupFramework())
     {
         OUTPUT("lib sound init failed\n");
         CPCError::ShowNoRet("Sound framework initialize failed");
@@ -190,7 +116,7 @@ void CPCFramework::Terminate(void)
 
     if (m_pPCSoundDevice)
     {
-        m_pPCSoundDevice->TerminateLib();
+        m_pPCSoundDevice->ShutdownFramework();
         m_pPCSoundDevice->Terminate();
         delete m_pPCSoundDevice;
         m_pPCSoundDevice = nullptr;

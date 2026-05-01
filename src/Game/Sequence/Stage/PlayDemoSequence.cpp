@@ -107,16 +107,14 @@ bool CPlayDemoSequence::OnAttach(const void* pParam)
              (or after 1000 tick when map effect gimmick is disabled) */
     ChangeState(STATE_LOAD);
 
-    RwCamera* camera = CSystem2D::Camera().GetRwCamera();
-    float fDepth = (RwCameraGetNearClipPlane(camera) * 1.01f);
-    Rt2dDeviceSetLayerDepth(fDepth);
+    CSystem2D::SetLayerDepth(1.01f);
 
     Math::SRand(123456);
 
-#ifdef BUILD_TRIAL
+#ifdef TMNT2_TRIAL
     CTimeoutProcess::Enable(this, true);
     CTimeoutProcess::Start(this);
-#endif    
+#endif /* TMNT2_TRIAL */
     
     return true;
 };

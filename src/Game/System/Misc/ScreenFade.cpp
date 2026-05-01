@@ -6,6 +6,13 @@
 #include "System/Common/Screen.hpp"
 #include "System/Common/System2D.hpp"
 #include "System/Common/Camera.hpp"
+#include "System/Common/Memory.hpp"
+
+#if defined(TARGET_PC)
+#include "System/PC/PCTimer.hpp"
+#elif defined(TARGET_WEB)
+#include <emscripten.h>
+#endif
 
 
 class CScreenFade::CScreenFadeController final
@@ -265,6 +272,9 @@ void CScreenFade::CScreenFadeController::Start(float fFadeTime, bool bDraw)
 
 
 CScreenFadeProcess::CScreenFadeProcess(void)
+#if defined(_DEBUG) || defined(TMNT2_TEST)
+: m_font()
+#endif /* defined(_DEBUG) || defined(TMNT2_TEST) */
 {
     ;
 };
@@ -304,4 +314,72 @@ void CScreenFadeProcess::Draw(void) const
     CMessageWindow::DrawNormal();
     CScreenFade::Draw();
     CMessageWindow::DrawFront();
+    DrawTestData();
+};
+
+
+void CScreenFadeProcess::DrawTestData(void) const
+{
+#if defined(_DEBUG) || defined(TMNT2_TEST)
+    m_font.Color({ 0xFF, 0xFF, 0xFF, 0xFF });
+    m_font.Background({ 0x00, 0x00, 0x00, 0xFF });
+    m_font.SetAutoStep(0, 20);
+    m_font.Position(CScreen::Width() - 270,
+                    CScreen::Height() - 40);
+
+//#if defined(TARGET_WEB)
+    static double s_dPrevT = 0.0;
+    static int32 s_iFramesNum = 0;
+    static int32 s_iFramesPerSec = 0;
+
+    double dNowT = NowTimeMS();
+    double dElapsedT = (dNowT - s_dPrevT);
+    
+    if (dElapsedT >= 1000.0)
+    {
+        s_dPrevT = dNowT;
+        s_iFramesPerSec = s_iFramesNum;
+        s_iFramesNum = 0;
+    }
+    else
+    {
+        ++s_iFramesNum;
+    };
+
+    char szFpsText[256];
+    std::sprintf(szFpsText, "FPS:    %d (%f)", s_iFramesPerSec, CScreen::TimerStride());
+
+    size_t memUsed = CMemory::allocatedSize();
+    char szMemoryShortText[256];
+    CDebugUtils::FormatBytesSize(memUsed, szMemoryShortText);
+
+    char szMemoryLongText[256];
+    CDebugUtils::FormatThousands(memUsed, szMemoryLongText);
+
+    char szMemoryText[256];
+    std::sprintf(szMemoryText, "MEMORY: %s (%s)", szMemoryShortText, szMemoryLongText);
+
+    m_font.Print(szFpsText);
+    m_font.Print(szMemoryText);
+//#endif /* defined(TARGET_WEB) */
+
+#endif /* defined(_DEBUG) || defined(TMNT2_TEST) */
+};
+
+
+double CScreenFadeProcess::NowTimeMS(void) const
+{
+#if defined(_DEBUG) || defined(TMNT2_TEST)
+
+#if defined(TARGET_PC)
+    return static_cast<double>(CPCTimer::Instance().GetElapsedTime() / CPCTimer::Instance().GetFreqMs());
+#elif defined(TARGET_WEB)
+    return emscripten_get_now();
+#endif
+
+#else /* defined(_DEBUG) || defined(TMNT2_TEST) */
+    
+    return 0.0;
+
+#endif /* defined(_DEBUG) || defined(TMNT2_TEST) */
 };

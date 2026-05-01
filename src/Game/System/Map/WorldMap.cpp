@@ -17,11 +17,13 @@
 
 #include "rppvs.h"
 
-#if defined(TARGET_PC) && \
-    defined(TMNT2_RWDRV_D3D9)
+#if defined(TARGET_PC) && defined(TMNT2_RWDRV_D3D9)
 #include <d3d9.h>
-#endif /* defined(TARGET_PC) && \
-          defined(TMNT2_RWDRV_D3D9) */
+#endif /* defined(TARGET_PC) && defined(TMNT2_RWDRV_D3D9) */
+
+
+static const RwRGBAReal AMBIENT_LIGHT_COLOR = { 0.6f, 0.6f, 0.6f, 1.0f };
+static const RwRGBAReal DIRECTIONAL_LIGHT_COLOR = { 1.0f, 1.0f, 1.0f, 1.0f };
 
 
 class CWorldMapManager
@@ -120,7 +122,9 @@ void CWorldMapManager::OnLoaded(void)
 
         SetDirectionLightMatrix(&matrix);
 
-        CRenderStateManager::SetFogParam(bool(m_pMapInfo->m_foginfo.m_bEnable > 0),  m_pMapInfo->m_foginfo.m_Color);
+        CRenderStateManager::SetFogParam(m_pMapInfo->m_foginfo.m_bEnable != 0,
+                                         m_pMapInfo->m_foginfo.m_Color);
+
         CScreen::SetClearColor(m_pMapInfo->m_foginfo.m_Color);
 
         switch (m_pMapInfo->m_weather)
@@ -143,8 +147,8 @@ void CWorldMapManager::OnLoaded(void)
         CScreen::SetClearColor({ 0x00, 0x00, 0x00, 0x00 });
     };
 
-    SetDirectionLightColor({ 1.0f, 1.0f, 1.0f, 1.0f });
-    SetAmbientLightColor({ 0.6f, 0.6f, 0.6f, 1.0f });
+    SetDirectionLightColor(DIRECTIONAL_LIGHT_COLOR);
+    SetAmbientLightColor(AMBIENT_LIGHT_COLOR);
 
     if (m_hUVAnim)
         CUVAnim::InitUVAnim(m_hUVAnim);    
@@ -274,54 +278,43 @@ void CWorldMapManager::CreateLight(void)
     ASSERT(!m_pLightDirection);
 
     m_pLightAmbient = RpLightCreate(rpLIGHTAMBIENT);
-    ASSERT(m_pLightAmbient);
-
     if (m_pLightAmbient)
     {
-        RwRGBAReal lightColor = { 0.6f, 0.6f, 0.6f, 1.0f };
+        RwRGBAReal lightColor = AMBIENT_LIGHT_COLOR;
         RpLightSetColor(m_pLightAmbient, &lightColor);
 
-        RpWorldAddLight(m_pWorld, m_pLightAmbient);
-
-        RwUInt8 lightFlags = RpLightGetFlags(m_pLightAmbient);;
+        RwUInt32 lightFlags = RpLightGetFlags(m_pLightAmbient);;
         lightFlags &= (~rpLIGHTLIGHTWORLD);
         RpLightSetFlags(m_pLightAmbient, lightFlags);
+
+        RpWorldAddLight(m_pWorld, m_pLightAmbient);
     };
 
     m_pLightDirection = RpLightCreate(rpLIGHTDIRECTIONAL);
-    ASSERT(m_pLightDirection);
-
     if (m_pLightDirection)
     {
         RwFrame* pFrame = RwFrameCreate();
         if (pFrame)
         {
-            RwRGBAReal lightColor = { 1.0f, 1.0f, 1.0f, 1.0f };
+            RwRGBAReal lightColor = DIRECTIONAL_LIGHT_COLOR;
+            RpLightSetColor(m_pLightDirection, &lightColor);
+
             RwFrameRotate(pFrame, &Math::VECTOR3_AXIS_X, 45.0f, rwCOMBINEREPLACE);
             RwFrameRotate(pFrame, &Math::VECTOR3_AXIS_Y, 45.0f, rwCOMBINEPOSTCONCAT);
             RpLightSetFrame(m_pLightDirection, pFrame);
-            RpLightSetColor(m_pLightDirection, &lightColor);
 
-            RpWorldAddLight(m_pWorld, m_pLightDirection);
-
-            RwUInt8 lightFlags = RpLightGetFlags(m_pLightDirection);
+            RwUInt32 lightFlags = RpLightGetFlags(m_pLightDirection);
             lightFlags &= (~rpLIGHTLIGHTWORLD);
-            RpLightSetFlags(m_pLightDirection, lightFlags);            
+            RpLightSetFlags(m_pLightDirection, lightFlags);
+            
+            RpWorldAddLight(m_pWorld, m_pLightDirection);
         };
-
     };
 
-#if defined(TARGET_PC)
+#if defined(TARGET_PC) && defined(TMNT2_RWDRV_D3D9)
     RwUInt32 color = RWRGBALONG(255, 255, 255, 255);
-
-#if defined(TMNT2_RWDRV_OPENGL)
-    //RwOpenGLEnable(rwGL_LIGHTING);
-    //glLightModeli(GL_LIGHT_MODEL_AMBIENT, color);
-#elif defined(TMNT2_RWDRV_D3D9)
     RwD3D9SetRenderState(D3DRS_AMBIENT, color);
-#endif
-
-#endif /* defined(TARGET_PC) */
+#endif /* defined(TARGET_PC) && defined(TMNT2_RWDRV_D3D9) */
 };
 
 

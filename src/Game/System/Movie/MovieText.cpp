@@ -423,7 +423,7 @@ static void DrawSubtitleText(void)
     if (!s_pMovieTextElementCurrent)
         return;
 
-    if (s_pMovieTextElementCurrent->text[0] == UTEXT('\0'))
+    if (s_pMovieTextElementCurrent->text[0] == UCHAR('\0'))
         return;
 
     DrawSubtitleBorder();

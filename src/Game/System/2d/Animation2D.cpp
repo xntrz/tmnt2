@@ -23,7 +23,7 @@
 
 /*static*/ void CAnimation2DLoader::Open(const char* pszName, void* pBuffer, uint32 uBufferSize)
 {
-    ASSERT(strlen(pszName) < NAMEMAX);
+    ASSERT(std::strlen(pszName) < NAMEMAX);
     ASSERT(m_iFileNum < FILEMAX);
 
     Rt2dFontSetPath("Common/Fonts/");
@@ -265,12 +265,12 @@ void CAnimation2D::ReadBuffer(void* pBuffer, uint32 uBufferSize)
 
 void CAnimation2D::Start(void)
 {
-	ASSERT(m_pMaestro);
+    ASSERT(m_pMaestro);
 
-	RwV2d xstep = Math::VECTOR2_ZERO;
-	RwV2d ystep = Math::VECTOR2_ZERO;
-	RwV2d origin = Math::VECTOR2_ZERO;
-	Rt2dDeviceGetStep(&xstep, &ystep, &origin);
+    RwV2d xstep = Math::VECTOR2_ZERO;
+    RwV2d ystep = Math::VECTOR2_ZERO;
+    RwV2d origin = Math::VECTOR2_ZERO;
+    Rt2dDeviceGetStep(&xstep, &ystep, &origin);
 
     float scrw = static_cast<float>(CScreen::Width());
     float scrh = static_cast<float>(CScreen::Height());
@@ -283,23 +283,27 @@ void CAnimation2D::Start(void)
     RwV2d translation = Math::VECTOR2_ZERO;
     translation.x = (scrw / scale.x * xstep.x - bbox->w) * 0.5f + origin.x;
     translation.y = (scrh / scale.y * ystep.y - bbox->h) * 0.5f + bbox->h + origin.y;
-	
+
     Rt2dObject* pScene = Rt2dMaestroGetScene(m_pMaestro);
     ASSERT(pScene);
 
+#if defined(TMNT2_RWDRV_OPENGL)
+    Rt2dSceneForAllChildren(pScene, &CAnimation2D::SetLightAllShapeObjectCallback, nullptr);
+#endif /* defined(TMNT2_RWDRV_OPENGL) */
+
     Rt2dObjectMTMScale(pScene, scale.x, scale.y);
-	Rt2dObjectMTMTranslate(pScene, translation.x, translation.y);
+    Rt2dObjectMTMTranslate(pScene, translation.x, translation.y);
     Rt2dSceneUpdateLTM(pScene);
-    
+
     SetHandler();
-	SetInterpolateAll(true);
-	m_menuController.CheckButtonLabelList(m_pMaestro);
-	m_menuSound.CheckSoundLabelList(m_pMaestro);
+    SetInterpolateAll(true);
+    m_menuController.CheckButtonLabelList(m_pMaestro);
+    m_menuSound.CheckSoundLabelList(m_pMaestro);
     CheckStringObject();
 
     m_iMessageIndex = -1;
 
-	Rt2dMaestroAddDeltaTime(m_pMaestro, 0.0f);
+    Rt2dMaestroAddDeltaTime(m_pMaestro, 0.0f);
     Rt2dMaestroUpdateAnimations(m_pMaestro);
 };
 
@@ -402,11 +406,11 @@ bool CAnimation2D::SetText(const char* pszOrgString, const char* pszNewString)
 
 #ifdef TMNT2_BUILD_EU
     wchar wszOrgStr[512];
-    wszOrgStr[0] = UTEXT('\0');
+    wszOrgStr[0] = UCHAR('\0');
     CGameFont::ConvertToUnicode(wszOrgStr, pszOrgString);
 
     wchar wszNewStr[512];
-    wszNewStr[0] = UTEXT('\0');
+    wszNewStr[0] = UCHAR('\0');
     CGameFont::ConvertToUnicode(wszNewStr, pszNewString);
 
     return SetStringObjectText(pScene, wszOrgStr, wszNewStr);
@@ -431,7 +435,7 @@ bool CAnimation2D::SetText(const char* pszOrgString, const wchar* pwszNewString)
     return SetStringObjectText(pScene, pszOrgString, szNewString);
 #else /* !defined(TMNT2_BUILD_EU) */    
     wchar wszOrgStr[512];
-    wszOrgStr[0] = UTEXT('\0');
+    wszOrgStr[0] = UCHAR('\0');
     CGameFont::ConvertToUnicode(wszOrgStr, pszOrgString);
 
     return SetStringObjectText(pScene, wszOrgStr, pwszNewString);
@@ -505,7 +509,7 @@ bool CAnimation2D::SetStringObjectText(Rt2dObject* pScene, const wchar* pwszOrgS
                 ASSERT(pszString);
 
                 wchar wszStringW[512];
-                wszStringW[0] = UTEXT('\0');
+                wszStringW[0] = UCHAR('\0');
                 CGameFont::ConvertToUnicode(wszStringW, pszString);
 
                 if (!CTextData::StrCmp(wszStringW, pwszOrgString))
@@ -746,7 +750,7 @@ void CAnimation2D::SetCenterAllStrings(void)
         Rt2dObjectStringSetText(object, pszText);      
 #else /* TMNT2_BUILD_EU */
         wchar wszBuff[128];
-        wszBuff[0] = UTEXT('\0');
+        wszBuff[0] = UCHAR('\0');
         CGameFont::ConvertToUnicode(wszBuff, pszText);
 
         Rt2dObjectStringSetText(object, reinterpret_cast<const RwChar*>(wszBuff));    
@@ -768,3 +772,34 @@ void CAnimation2D::SetCenterAllStrings(void)
     return maestro;
 };
 
+
+#if defined(TMNT2_RWDRV_OPENGL)
+
+/*static*/ Rt2dObject*
+CAnimation2D::SetLightAllShapeObjectCallback(Rt2dObject* object, Rt2dObject* parent, void* data)
+{
+    if (Rt2dObjectIsScene(object))
+    {
+        Rt2dSceneForAllChildren(object, &CAnimation2D::SetLightAllShapeObjectCallback, data);
+    }
+    else if (Rt2dObjectIsShape(object))
+    {
+        _rt2dShape* shape = &object->data.shape;
+        if (shape->atomic != nullptr)
+        {
+            RpGeometry* pGeometry = RpAtomicGetGeometry(shape->atomic);
+            RwUInt32 flags = RpGeometryGetFlags(pGeometry);
+
+            flags &= (~rpGEOMETRYPRELIT);
+
+            flags |= (rpGEOMETRYLIGHT |
+                      rpGEOMETRYMODULATEMATERIALCOLOR);
+
+            RpGeometrySetFlags(pGeometry, flags);
+        };
+    };
+
+    return object;
+};
+
+#endif /* defined(TMNT2_RWDRV_OPENGL) */

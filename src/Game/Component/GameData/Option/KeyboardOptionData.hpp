@@ -1,11 +1,9 @@
 #pragma once
 
-#if defined(TARGET_PC)
-
 #include "OptionTypes.hpp"
 
 
-class CKeyboardOptionData
+class IKeyboardOptionData
 {
 public:
     struct RAWDATA
@@ -14,29 +12,18 @@ public:
     };
 
 public:
-    CKeyboardOptionData(void);
-    ~CKeyboardOptionData(void);
-    void Initialize(void);
-    void Terminate(void);
-    void SetDefault(void);
-    void Apply(void);
-    bool IsValid(void) const;
-    void Snapshot(RAWDATA& rRawData) const;
-    void Restore(const RAWDATA& rRawData);
-    void AssignKey(OPTIONTYPES::KEYFUNC func, int32 iDIKey);
-    bool AssignDownKey(OPTIONTYPES::KEYFUNC func);
-    int32 GetAssignedKey(OPTIONTYPES::KEYFUNC func) const;
-    const char* GetKeyName(int32 iDIKey) const;
-    void AssignButton(void);
-    
-private:
-    void assignDefaultKey(void);
-    void assignDefaultButton(void);
-    OPTIONTYPES::KEYFUNC findFunction(int32 key) const;
-
-private:
-    int32 m_aiKeyAssign[OPTIONTYPES::KEYFUNCMAX];
-    uint32 m_auButtonAssign[OPTIONTYPES::KEYFUNCMAX - 4];   // exclude up/down/left/right
+    IKeyboardOptionData(void) {};
+    virtual ~IKeyboardOptionData(void) {};
+    virtual void Initialize(void) = 0;
+    virtual void Terminate(void) = 0;
+    virtual void SetDefault(void) = 0;
+    virtual void Apply(void) = 0;
+    virtual bool IsValid(void) const = 0;
+    virtual void Snapshot(RAWDATA& rRawData) const = 0;
+    virtual void Restore(const RAWDATA& rRawData) = 0;
+    virtual void AssignKey(OPTIONTYPES::KEYFUNC func, int32 iDIKey) = 0;
+    virtual bool AssignDownKey(OPTIONTYPES::KEYFUNC func) = 0;
+    virtual int32 GetAssignedKey(OPTIONTYPES::KEYFUNC func) const = 0;
+    virtual const char* GetKeyName(int32 iDIKey) const = 0;
+    virtual void AssignButton(void) = 0;
 };
-
-#endif /* defined(TARGET_PC) */

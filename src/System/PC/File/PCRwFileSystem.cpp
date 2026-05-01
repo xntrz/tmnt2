@@ -4,7 +4,11 @@
 #include "System/PC/PCTypedefs.hpp"
 
 #include "rtfsyst.h"
+
+/* check if "rtfsystwin32.h" already inlined in "rtfsyst.h" */
+#if !(defined(WIN_FS_MAX_PATH_LENGTH) || defined(WIN_SECTOR_SIZE))
 #include "rtfsystwin32.h"
+#endif /* !(defined(WIN_FS_MAX_PATH_LENGTH) || defined(WIN_SECTOR_SIZE)) */
 
 
 bool CPCRwFileSystem::Initialize(void)

@@ -2,6 +2,8 @@
 
 #include "Game/Sequence/MovieSequence.hpp"
 #include "Game/Sequence/GameMainSequence.hpp"
+#include "Game/Sequence/TrialGameMainSequence.hpp"
+#include "Game/Sequence/Menu/TrialWallpaperSequence.hpp"
 #include "Game/Sequence/Menu/LogoSequence.hpp"
 #include "Game/Sequence/Menu/TitleSequence.hpp"
 #include "Game/Sequence/Menu/PreArcade.hpp"
@@ -34,6 +36,7 @@
 #include "Game/System/Misc/ScreenFade.hpp"
 #include "Game/System/Misc/LoadingDisplay.hpp"
 #include "Game/System/Misc/SoftwareReset.hpp"
+#include "Game/System/Misc/TouchController.hpp"
 
 #ifdef _DEBUG
 #include "Game/Sequence/Test/DebugMainSequence.hpp"
@@ -44,7 +47,11 @@
 #include "Game/Sequence/Test/EnemyTestSequence.hpp"
 #include "Game/Sequence/Test/DebugMenuProcess.hpp"
 #include "Game/Sequence/Test/DbgUnlockProcess.hpp"
-#endif
+#endif /* _DEBUG */
+
+#ifdef TMNT2_TRIAL
+#define CGameMainSequence CTrialGameMainSequence
+#endif /* TMNT2_TRIAL */
 
 
 extern const PROCESSTYPES::PROCESS g_aProcessList[] =
@@ -92,11 +99,16 @@ extern const PROCESSTYPES::PROCESS g_aProcessList[] =
     { PROCLABEL_SEQ_SAVELOADMENULOAD,   PROCESSTYPES::PRIORITY_NORMAL,      CSaveLoadMenuLoadSequence::Instance },
     { PROCLABEL_SEQ_SAVELOADAUTO,       PROCESSTYPES::PRIORITY_NORMAL,      CSaveLoadAutoSequence::Instance     },
     { PROCLABEL_SEQ_COMINGSOON,         PROCESSTYPES::PRIORITY_NORMAL,      CComingSoonSequence::Instance       },
+    { PROCLABEL_SEQ_TR_PADINFO,         PROCESSTYPES::PRIORITY_NORMAL,      CTrialControlInformation::Instance  },
+    { PROCLABEL_SEQ_TR_COMINGSOON,      PROCESSTYPES::PRIORITY_NORMAL,      CTrialComingSoon::Instance          },
     { PROCLABEL_SCREENFADE,             PROCESSTYPES::PRIORITY_NORMAL + 2,  CScreenFadeProcess::Instance		},
     { PROCLABEL_LOADDISP,               PROCESSTYPES::PRIORITY_NORMAL + 2,  CLoadingDisplay::Instance           },
     { PROCLABEL_SOFTWARERESET,          PROCESSTYPES::PRIORITY_NORMAL - 2,  CSoftwareResetProcess::Instance		},
     { PROCLABEL_TIMEOUT,                PROCESSTYPES::PRIORITY_NORMAL - 2,  CTimeoutProcess::Instance           },
     { PROCLABEL_PADCONNECTCHECK,        PROCESSTYPES::PRIORITY_NORMAL + 1,  CPadConnectCheckProcess::Instance   },
+#if defined(TARGET_WEB)
+    { PROCLABEL_TOUCHCONTROLLER,        PROCESSTYPES::PRIORITY_NORMAL + 3,  CTouchControllerProcess::Instance   },
+#endif /* defined(TARGET_WEB) */
 
     { PROCESSTYPES::LABEL_EOL, 0, nullptr }
 };

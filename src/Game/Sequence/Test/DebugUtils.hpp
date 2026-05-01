@@ -1,8 +1,16 @@
 #pragma once
 
-#ifdef _DEBUG
+#if defined(_DEBUG) || defined(TMNT2_TEST)
 
 #include "rtcharse.h"
+
+
+class CDebugUtils
+{
+public:
+    static void FormatThousands(size_t size, char* pszTextBuf);
+    static void FormatBytesSize(size_t size, char* pszTextBuf);
+};
 
 
 class CDebugFontCtrl
@@ -245,4 +253,4 @@ private:
 };
 
 
-#endif /* _DEBUG */
+#endif /* defined(_DEBUG) || defined(TMNT2_TEST) */

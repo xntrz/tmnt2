@@ -1,6 +1,10 @@
 #include "SaveLoadFlow.hpp"
 
+#if defined(TARGET_PC)
 #include "System/PC/SaveLoad/PCSaveLoadFlow.hpp"
+#elif defined(TARGET_WEB)
+#include "System/Web/SaveLoad/WebSaveLoadFlow.hpp"
+#endif
 
 
 /*static*/ bool CSaveLoadFlow::m_bNewSave = false;
@@ -10,9 +14,11 @@
 {
     CSaveLoadFlow* pFlow = nullptr;
     
-#ifdef TARGET_PC
+#if defined(TARGET_PC)
     pFlow = new CPCSaveLoadFlow(mode, pFrame, pData);
-#endif /* TARGET_PC */
+#elif defined(TARGET_WEB)
+    pFlow = new CWebSaveLoadFlow(mode, pFrame, pData);
+#endif
 
     return pFlow;
 };

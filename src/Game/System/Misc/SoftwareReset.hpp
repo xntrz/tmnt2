@@ -19,16 +19,18 @@ public:
             TYPE_MODE = 0,
             TYPE_ENABLE,
             TYPE_ROOTSEQ,
+            TYPE_RESPOSNE,
         };
 
         union PARAM
         {
-            bool m_bEnable;
+            bool  m_bEnable;
             int32 m_iRootSeqLabel;
-            MODE m_mode;
+            MODE  m_mode;
+            float m_fResponse;
         };
 
-        TYPE m_type;
+        TYPE  m_type;
         PARAM m_param;
     };
     
@@ -37,6 +39,7 @@ public:
     static bool Initialize(CProcess* pSender, MODE mode);
     static void Terminate(CProcess* pSender);
     static void SetEnable(CProcess* pSender, bool bState);
+    static void SetResponse(CProcess* pSender, float fResponse);
 
     CSoftwareResetProcess(void);
     virtual ~CSoftwareResetProcess(void);
@@ -46,15 +49,15 @@ public:
     virtual void Draw(void) const override;
 
 private:
-    static bool postPrivateMessage(CProcess* pSender, MESSAGE* pMsg);
     void execReset(void);
     void messageProc(void);
     void clear(MODE mode);
     
 private:
-    static bool m_bEnable;
-    static float m_fResetResponseSec;
-    float m_fKeyTimer;
-    int32 m_iRootSeqLabel;
-    MODE m_mode;
+    static int32    m_iRefCount;
+    static bool     m_bEnable;
+    static float    m_fResetResponseSec;
+    float           m_fKeyTimer;
+    int32           m_iRootSeqLabel;
+    MODE            m_mode;
 };

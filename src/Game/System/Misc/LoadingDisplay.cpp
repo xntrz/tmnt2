@@ -50,12 +50,10 @@
 
 /*static*/ bool CLoadingDisplay::postPrivateMessage(CProcess* pSender, MESSAGE* pMessage)
 {
-    bool bResult = false;
-    
     if (pSender->Info().IsProcessExist(PROCLABEL_LOADDISP))
-        bResult = pSender->Mail().Send(PROCLABEL_LOADDISP, PROCESSTYPES::MAIL::TYPE_MSG, pMessage);
+        return pSender->Mail().Send(PROCLABEL_LOADDISP, PROCESSTYPES::MAIL::TYPE_MSG, pMessage);
     
-    return bResult;
+    return false;
 };
 
 
@@ -76,8 +74,6 @@ CLoadingDisplay::~CLoadingDisplay(void)
 
 bool CLoadingDisplay::Attach(void)
 {
-    ASSERT(Info().State() == PROCESSTYPES::STATE_START);
-
     m_mode = MODE_NORMAL;
     m_state = STATE_NONE;
     m_fPhase = 0.0f;
@@ -115,7 +111,7 @@ void CLoadingDisplay::Draw(void) const
     const wchar* pwszPhase = nullptr;
     wchar wszBuffer[32];
     
-    wszBuffer[0] = UTEXT('\0');
+    wszBuffer[0] = UCHAR('\0');
 
     if (m_fPhase >= (MATH_PI * 1.5f))
         pwszPhase = UTEXT("...");
@@ -141,13 +137,14 @@ void CLoadingDisplay::Draw(void) const
 void CLoadingDisplay::messageProc(void)
 {
     PROCESSTYPES::MAIL mail;
-    
     while (Mail().Recv(mail))
     {
         if (mail.m_type == PROCESSTYPES::MAIL::TYPE_MSG)
         {
-            MESSAGE* pMessage = (MESSAGE*)mail.m_param;
-            ASSERT(pMessage);
+            const MESSAGE* pMessage =
+                reinterpret_cast<const MESSAGE*>(mail.m_param);
+
+            ASSERT(pMessage != nullptr);
 
             switch (pMessage->m_type)
             {

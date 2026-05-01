@@ -362,7 +362,9 @@ static const FontData_t s_aDisplayFont[] =
     { true, GAMETEXT_OP_DISP_HITFX, { FONT_DISPLAY_X_POS(0), FONT_DISPLAY_Y_POS(0) }, FONT_HEIGHT_SCALE, s_ColorOrange, nullptr },
     { true, GAMETEXT_OP_DISP_MARK,  { FONT_DISPLAY_X_POS(1), FONT_DISPLAY_Y_POS(1) }, FONT_HEIGHT_SCALE, s_ColorOrange, nullptr },
     { true, GAMETEXT_OP_DISP_HELP,  { FONT_DISPLAY_X_POS(2), FONT_DISPLAY_Y_POS(2) }, FONT_HEIGHT_SCALE, s_ColorOrange, nullptr },
+#ifdef TARGET_PC
     { true, GAMETEXT_OP_DISP_RESO,  { FONT_DISPLAY_X_POS(3), FONT_DISPLAY_Y_POS(3) }, FONT_HEIGHT_SCALE, s_ColorOrange, nullptr },
+#endif /* TARGET_PC */    
     { true, GAMETEXT_OP_OK,         { -223.0f,               26.0f                 }, FONT_HEIGHT_SCALE, s_ColorOrange, nullptr },
     {},
 };
@@ -508,7 +510,9 @@ static OPTIONMODE s_aNextModeDisplay[] =
     OPTIONMODE_EFFECT,
     OPTIONMODE_MARKER,
     OPTIONMODE_WINDOW,
+#ifdef TARGET_PC
     OPTIONMODE_RESOLUTION,
+#endif /* TARGET_PC */    
     OPTIONMODE_DISPLAY_OK
 };
 
@@ -661,9 +665,9 @@ public:
 
 private:
     CGamepadOptionData::RAWDATA m_GamepadOptionData;
-#ifdef TARGET_PC
-    CKeyboardOptionData::RAWDATA m_KeyboardOptionData;
-#endif /* TARGET_PC */
+#if defined(TMNT2_FEATURE_KEYBOARD)
+    IKeyboardOptionData::RAWDATA m_KeyboardOptionData;
+#endif /* defined(TMNT2_FEATURE_KEYBOARD) */
     int32 m_IndexMax;
     int32 m_IndexMaxNext;
     int32 m_VideomodeNum;
@@ -735,9 +739,9 @@ private:
 
 COptions::COptions(void)
 : m_GamepadOptionData()
-#ifdef TARGET_PC
+#if defined(TMNT2_FEATURE_KEYBOARD)
 , m_KeyboardOptionData()
-#endif /* TARGET_PC */
+#endif /* defined(TMNT2_FEATURE_KEYBOARD) */
 , m_IndexMax(0)
 , m_IndexMaxNext(0)
 , m_VideomodeNum(0)
@@ -1019,6 +1023,7 @@ void COptions::Draw(void)
                         m_PasswordOk.ScreenPos.y);
     };
 
+#ifdef TARGET_PC    
     if (m_ResolutionFont.Flag)
     {
         CGameFont::SetHeightScaled(m_ResolutionFont.Height);
@@ -1027,6 +1032,7 @@ void COptions::Draw(void)
                         m_ResolutionFont.ScreenPos.x,
                         m_ResolutionFont.ScreenPos.y);
     };
+#endif /* TARGET_PC */
 
 #ifdef TMNT2_BUILD_EU
     CSystem2D::PushRenderState();
@@ -1077,9 +1083,9 @@ void COptions::Draw(void)
 void COptions::Initialize(void)
 {
     m_GamepadOptionData = {};
-#ifdef TARGET_PC    
+#if defined(TMNT2_FEATURE_KEYBOARD)
     m_KeyboardOptionData = {};
-#endif /* TARGET_PC */
+#endif /* defined(TMNT2_FEATURE_KEYBOARD) */
     m_EffectIn = 30;
     m_EffectOut = 30;
     m_EffectTime = 15;
@@ -1300,7 +1306,6 @@ void COptions::ArrowDisp(int32 Line, bool bWide /*= false*/)
     if (bWide)
         fLeftOfsX = -102.0f;
 #endif /* TMNT2_BUILD_EU */
-
     
     SpriteData_t* ArrowLeft  = &m_Switch[(Line * 2) + 0];
     ArrowLeft->Flag = true;
@@ -1604,14 +1609,14 @@ bool COptions::SettingProc(void)
                 else
                 {   
                     m_eOptionMode = OPTIONMODE_SELECTPAD;
-#ifdef TARGET_PC                    
+#if defined(TMNT2_FEATURE_KEYBOARD)
                     if (ControllerIsKeyboard(configPad))
                         CGameData::Option().Keyboard().Snapshot(m_KeyboardOptionData);
                     else
                         CGameData::Option().Gamepad(m_ConfigPad).Snapshot(m_GamepadOptionData);
-#else /* TARGET_PC */
+#else /* defined(TMNT2_FEATURE_KEYBOARD) */
                     CGameData::Option().Gamepad(m_ConfigPad).Snapshot(m_GamepadOptionData);
-#endif /* TARGET_PC */              
+#endif /* defined(TMNT2_FEATURE_KEYBOARD) */
                 };
             };
         }
@@ -1621,7 +1626,7 @@ bool COptions::SettingProc(void)
         {
             m_NextWindowTextId = GAMETEXT_OP_CTRL;
 
-#ifdef TARGET_PC            
+#if defined(TMNT2_FEATURE_KEYBOARD)
             if (ControllerIsKeyboard(m_ConfigPad))
             {
                 m_eOptionModeNext = OPTIONMODE_KEYBOARD;
@@ -1638,13 +1643,13 @@ bool COptions::SettingProc(void)
 
                 SetPadSprite("op_pipe_config_pad");
             };
-#else /* TARGET_PC */
+#else /* defined(TMNT2_FEATURE_KEYBOARD) */
             m_eOptionModeNext = OPTIONMODE_GAMEPAD;
             m_pFontDataNext   = s_aPadConfigFont;
             m_IndexMaxNext    = COUNT_OF(s_aPadConfigFont) - 2;
             
             SetPadSprite("op_pipe_config_pad");
-#endif /* TARGET_PC */
+#endif /* defined(TMNT2_FEATURE_KEYBOARD) */
             
             m_SelectPad.Sprite.SetAlpha(0);
 
@@ -1762,7 +1767,7 @@ bool COptions::SettingProc(void)
         }
         break;
 
-#ifdef TARGET_PC        
+#if defined(TMNT2_FEATURE_KEYBOARD)     
     case OPTIONMODE_KEYBOARD:
         {
             m_WindowTitle.TextId = GAMETEXT_OP_CTRL;
@@ -1849,7 +1854,7 @@ bool COptions::SettingProc(void)
             SwitchClear();
         }
         break;
-#endif /* TARGET_PC */
+#endif /* defined(TMNT2_FEATURE_KEYBOARD) */
         
     case OPTIONMODE_CONTROLLER_OK:
         {
@@ -1954,10 +1959,10 @@ bool COptions::SettingProc(void)
                         CGameData::Option().Gamepad(i).Apply();
                     };
 
-#ifdef TARGET_PC
+#if defined(TMNT2_FEATURE_KEYBOARD)
                     CGameData::Option().Keyboard().SetDefault();
                     CGameData::Option().Keyboard().Apply();
-#endif /* TARGET_PC */
+#endif /* defined(TMNT2_FEATURE_KEYBOARD) */
                 };
 
                 m_bDefaultYes = false;

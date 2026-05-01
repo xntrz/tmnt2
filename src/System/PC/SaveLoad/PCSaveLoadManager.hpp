@@ -89,7 +89,7 @@ public:
     void SetSubStep(int32 substep);
     void SetMessage(CPCSaveLoadManager::MESSAGEID msgid);
     void SyncTime(void);
-    void MakeFilePath(char* pszFilepathBuff) const;
+    void MakeFilePath(char* pszFilepathBuff, size_t buffSize) const;
     bool CheckFileExist(void) const;
     
 protected:

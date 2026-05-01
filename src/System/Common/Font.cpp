@@ -7,20 +7,20 @@
 
 /*static*/ bool CStringParser::IsSeparator(const wchar* pwszString)
 {
-    return (*pwszString == UTEXT(' '));
+    return (*pwszString == UCHAR(' '));
 };
 
 
 /*static*/ bool CStringParser::IsNull(const wchar* pwszString)
 {
-    return (*pwszString == UTEXT('\0'));
+    return (*pwszString == UCHAR('\0'));
 };
 
 
 /*static*/ bool CStringParser::IsNewLine(const wchar* pwszString)
 {
-    return  (*pwszString == UTEXT('\r')) ||
-            (*pwszString == UTEXT('\n'));
+    return  (*pwszString == UCHAR('\r')) ||
+            (*pwszString == UCHAR('\n'));
 };
 
 
@@ -70,28 +70,28 @@
 {
     int32 iSize = 0;
     
-    if (pSrc[0] == UTEXT('\n'))
+    if (pSrc[0] == UCHAR('\n'))
     {
-        pDst[0] = UTEXT('\n');
-        pDst[1] = UTEXT('\0');
+        pDst[0] = UCHAR('\n');
+        pDst[1] = UCHAR('\0');
         iSize = 1;
     }
-    else if (pSrc[0] == UTEXT('\r'))
+    else if (pSrc[0] == UCHAR('\r'))
     {
-        pDst[0] = UTEXT('\r');
+        pDst[0] = UCHAR('\r');
         iSize = 1;
 
-        if (pSrc[1] == UTEXT('\n'))
+        if (pSrc[1] == UCHAR('\n'))
         {
-            pDst[1] = UTEXT('\n');
+            pDst[1] = UCHAR('\n');
             iSize = 2;
         };
 
-        pDst[iSize] = UTEXT('\0');
+        pDst[iSize] = UCHAR('\0');
     }
     else
     {
-        pDst[0] = UTEXT('\0');
+        pDst[0] = UCHAR('\0');
     };
 
     return iSize;
@@ -179,7 +179,7 @@ Rt2dFont* CFont::GetFontObj(void) const
         ++nConvertedChars;
     };
 
-    *dst = UTEXT('\0');
+    *dst = UCHAR('\0');
 
     return nConvertedChars;
 };
@@ -204,10 +204,10 @@ int32 CUnicodeFont::GetDisplayLineString(wchar* dst,
                                          float fWidth,
                                          int32 count) const
 {
-    dst[0] = UTEXT('\0');
+    dst[0] = UCHAR('\0');
 
     wchar wszTmpBuff[128];
-    wszTmpBuff[0] = UTEXT('\0');
+    wszTmpBuff[0] = UCHAR('\0');
     
     float fStringWidthBuff = 0.0f;
     const wchar* ptr = &src[CStringParser::ExtractSeparator(wszTmpBuff, src, COUNT_OF(wszTmpBuff))];
@@ -215,7 +215,7 @@ int32 CUnicodeFont::GetDisplayLineString(wchar* dst,
     for (int32 dstCnt = (count - 1); dstCnt > 0; )
     {
         wchar wszTextBuffer[128];
-        wszTextBuffer[0] = UTEXT('\0');
+        wszTextBuffer[0] = UCHAR('\0');
 
         int32 cntSep = CStringParser::ExtractSeparator(wszTmpBuff, ptr, COUNT_OF(wszTmpBuff));
         CTextData::StrCpy(wszTextBuffer, wszTmpBuff);
@@ -262,7 +262,7 @@ int32 CUnicodeFont::GetDisplayLineString(wchar* dst,
 int32 CUnicodeFont::CountFlowLine(const wchar* pwszString, float fHeight, float fWidth)
 {
     wchar wszBuff[128];
-    wszBuff[0] = UTEXT('\0');
+    wszBuff[0] = UCHAR('\0');
 
     int32 lineNum = 0;
 
@@ -289,8 +289,8 @@ void CUnicodeFont::SetIntergapSpacing(float fSpacing)
 
 void CUnicodeFont::Show(const char* pszString, float fHeight, float x, float y)
 {
-    static wchar s_wszTempBuffer[256 * 256];
-    s_wszTempBuffer[0] = UTEXT('\0');
+    static wchar s_wszTempBuffer[256 * 64];
+    s_wszTempBuffer[0] = UCHAR('\0');
 
     ASSERT(std::strlen(pszString) < COUNT_OF(s_wszTempBuffer));
 
@@ -353,8 +353,8 @@ void CUnicodeFont::Flow(const wchar* pwszString, float fHeight, Rt2dBBox* pBBox,
     ASSERT(m_pFont);
     ASSERT(pwszString);
 
-    static wchar s_wszTempBuffer[256 * 256];
-    s_wszTempBuffer[0] = UTEXT('\0');
+    static wchar s_wszTempBuffer[256 * 64];
+    s_wszTempBuffer[0] = UCHAR('\0');
 
     CTextData::StrCpy(s_wszTempBuffer, pwszString);
 
@@ -369,7 +369,7 @@ void CUnicodeFont::FlowEx(const wchar* pwszString,
                           const Rt2dBBox* pBBox,
                           Rt2dJustificationType format)
 {
-    wchar wszBuff[CStringParser::BUFF_SIZE] = { UTEXT('\0') };
+    wchar wszBuff[CStringParser::BUFF_SIZE] = { UCHAR('\0') };
     Rt2dBBox BBox = {};
 
     BBox.x = pBBox->x;

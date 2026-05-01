@@ -1,8 +1,52 @@
 #include "MemPool.hpp"
 
 
+/*static*/ size_t
+CMemPool::Align(size_t value, size_t align)
+{
+    return (value + (align - 1)) & ~(align - 1);
+};
+
+
+/*static*/ size_t
+CMemPool::GetBlockMaxCount(size_t memSize)
+{
+    return (memSize - sizeof(MEMPOOL)) / sizeof(MEMBLK);
+};
+
+
+/*static*/ void
+CMemPool::CreateAndAttach(CMemPool& pool, void* mem, size_t size,
+                          size_t alignment, size_t blockPercent)
+{
+    uintptr_t memblkStart = reinterpret_cast<uintptr_t>(mem);
+    size_t memblkMemSize = (size * blockPercent) / 100;
+    size_t memblkCount = GetBlockMaxCount(memblkMemSize);
+
+    pool.Create(reinterpret_cast<void*>(memblkStart), memblkCount, alignment);
+
+    uintptr_t memStart = memblkStart + memblkMemSize;
+    memStart = Align(memStart, alignment);
+
+    memblkMemSize = (memStart - memblkStart);
+
+    size_t memSize = (size - memblkMemSize);
+    memSize = ((memSize / alignment) * alignment);
+
+    pool.AttachMemory(reinterpret_cast<void*>(memStart), memSize);
+};
+
+
+/*static*/ void*
+CMemPool::DetachAndDestroy(CMemPool& pool)
+{
+    pool.DetachMemory();
+    return pool.Destroy();
+};
+
+
 CMemPool::CMemPool(void)
-: m_pHeap(nullptr)
+: m_pMemPool(nullptr)
 {
 	;
 };
@@ -14,66 +58,47 @@ CMemPool::~CMemPool(void)
 };
 
 
-bool CMemPool::Create(void* memory, uint32 memorySize, uint32 alignment)
+void CMemPool::Create(void* memblkPoolAddr, size_t memblkCount, size_t alignment)
 {
-	m_pHeap = (MEMPOOL*)memory;
-	m_pHeap->m_align = alignment;
-	m_pHeap->m_poolSize = memorySize;
-	m_pHeap->m_pPool = (MEMBLK*)((int8*)m_pHeap + sizeof(MEMPOOL));
+    m_pMemPool = reinterpret_cast<MEMPOOL*>(memblkPoolAddr);
+	m_pMemPool->align = alignment;
+	m_pMemPool->memblkCount = memblkCount;
+	m_pMemPool->memblkPool = reinterpret_cast<MEMBLK*>(reinterpret_cast<uintptr_t>(m_pMemPool) + sizeof(MEMPOOL));
+	m_pMemPool->addr = nullptr;
+	m_pMemPool->size = 0;
+	m_pMemPool->sizeUpper = 0;
+	m_pMemPool->memblkFirstFreeEnd = nullptr;
 
-	m_pHeap->m_pMemory = nullptr;
-	m_pHeap->m_memorySize = 0;
+    initMemBlkList(&m_pMemPool->listMemblkNone, MEMBLK::STATE_NONE);
+    initMemBlkList(&m_pMemPool->listMemblkFree, MEMBLK::STATE_FREE);
+    initMemBlkList(&m_pMemPool->listMemblkAlloc, MEMBLK::STATE_ALLOC);
 
-	m_pHeap->m_upperSize = 0;
-	m_pHeap->m_pFirstFree = nullptr;
-
-	m_pHeap->m_listMemblkNone.m_memory = nullptr;
-	m_pHeap->m_listMemblkNone.m_memorySize = 0;
-	m_pHeap->m_listMemblkNone.m_next = m_pHeap->m_listMemblkNone.m_prev = nullptr;
-	m_pHeap->m_listMemblkNone.m_state = MEMBLK::STATE_NONE;
-	m_pHeap->m_listMemblkNone.m_iRefCount = 0;
-
-	m_pHeap->m_listMemblkFree.m_memory = nullptr;
-	m_pHeap->m_listMemblkFree.m_memorySize = 0;
-	m_pHeap->m_listMemblkFree.m_next = m_pHeap->m_listMemblkFree.m_prev = nullptr;
-	m_pHeap->m_listMemblkFree.m_state = MEMBLK::STATE_FREE;
-	m_pHeap->m_listMemblkFree.m_iRefCount = 0;
-
-	m_pHeap->m_listMemblkAlloc.m_memory = nullptr;
-	m_pHeap->m_listMemblkAlloc.m_memorySize = 0;
-	m_pHeap->m_listMemblkAlloc.m_next = m_pHeap->m_listMemblkAlloc.m_prev = nullptr;
-	m_pHeap->m_listMemblkAlloc.m_state = MEMBLK::STATE_ALLOC;
-	m_pHeap->m_listMemblkAlloc.m_iRefCount = 0;
-
-	for (int32 i = m_pHeap->m_poolSize - 1; i >= 0; --i)
+	for (int32 i = (m_pMemPool->memblkCount - 1); i >= 0; --i)
 	{
-		MEMBLK* t = &m_pHeap->m_pPool[i];
-		MEMBLK* memblk = getMemBlk(i);
-		setMemBlk(memblk, MEMBLK::STATE_NONE, nullptr, 0);
-		addMemBlk(&m_pHeap->m_listMemblkNone, memblk);
+        MEMBLK* memblk = getMemBlk(i);
+        
+        setMemBlk(memblk, MEMBLK::STATE_NONE, nullptr, 0);
+		addMemBlk(&m_pMemPool->listMemblkNone, memblk);
 	};
-
-	return true;
 };
 
 
 void* CMemPool::Destroy(void)
 {
-	return m_pHeap;
+	return m_pMemPool;
 };
 
 
-bool CMemPool::AttachMemory(void* memory, uint32 memorySize)
+void CMemPool::AttachMemory(void* addr, size_t size)
 {
-	m_pHeap->m_pMemory = memory;
-	m_pHeap->m_memorySize = memorySize;
+	m_pMemPool->addr = addr;
+	m_pMemPool->size = size;
 
-	MEMBLK* memblk = m_pHeap->m_listMemblkNone.m_next;
-	setMemBlk(memblk, MEMBLK::STATE_FREE, memory, memorySize);
-	removeMemBlk(memblk);
+    MEMBLK* memblk = getMemblkListHead(&m_pMemPool->listMemblkNone);
+    
+    remMemBlk(memblk);
+    setMemBlk(memblk, MEMBLK::STATE_FREE, addr, size);
 	addFreeLinkList(memblk);
-
-	return true;
 };
 
 
@@ -81,215 +106,225 @@ void* CMemPool::DetachMemory(void)
 {
 	Output();
 
-	if (m_pHeap->m_listMemblkAlloc.m_next)
-	{
-		return nullptr;
-	}
-	else
-	{
-		void* memory = m_pHeap->m_pMemory;
-		m_pHeap->m_pMemory = nullptr;
-		m_pHeap->m_memorySize = 0;
-		return memory;
-	};
+	if (m_pMemPool->listMemblkAlloc.next)
+        return nullptr;
+    
+    void* addr = m_pMemPool->addr;
+
+    m_pMemPool->addr = nullptr;
+    m_pMemPool->size = 0;
+
+    return addr;
 };
 
 
-void* CMemPool::Alloc(uint32 size)
+void* CMemPool::Alloc(size_t size)
 {
-	size = alignmentSize(size, m_pHeap->m_align);
-	MEMBLK* memblkEmpty = m_pHeap->m_listMemblkNone.m_next;
-	if (size && memblkEmpty)
-	{
-		MEMBLK* memblk = nullptr;
-		for (memblk = m_pHeap->m_listMemblkFree.m_next; memblk; memblk = memblk->m_next)
-		{
-			if (memblk->m_memorySize >= size)
-				break;
-		};
+    if (!size)
+        return nullptr;
+    
+    if (isMemblkListEmpty(&m_pMemPool->listMemblkNone))
+        return nullptr;
 
-		if (memblk)
-		{
-			removeMemBlk(memblkEmpty);
-			addMemBlk(&m_pHeap->m_listMemblkAlloc, memblkEmpty);
-			setMemBlk(memblkEmpty, MEMBLK::STATE_ALLOC, memblk->m_memory, size);
-			memblkEmpty->m_iRefCount = 0;
-			if (size == memblk->m_memorySize)
-			{
-				removeFreeLinkList(memblk);
-				setMemBlk(memblk, MEMBLK::STATE_NONE, nullptr, 0);
-				addMemBlk(&m_pHeap->m_listMemblkNone, memblk);
-			}
-			else
-			{
-				memblk->m_memory = (int8*)memblk->m_memory + size;
-				memblk->m_memorySize -= size;
-			};
+    size = Align(size, m_pMemPool->align);
 
-			return memblkEmpty;
-		};
-	};
+    MEMBLK* memblkList = getMemblkListHead(&m_pMemPool->listMemblkFree);
+    MEMBLK* memblkFree = searchFitMemBlk(memblkList, size, false);
 
-	return nullptr;
+    if (!memblkFree)
+        return nullptr;
+
+    MEMBLK* memblkAlloc = getMemblkListHead(&m_pMemPool->listMemblkNone);
+
+    remMemBlk(memblkAlloc);
+    addMemBlk(&m_pMemPool->listMemblkAlloc, memblkAlloc);
+    setMemBlk(memblkAlloc, MEMBLK::STATE_MOVABLE, memblkFree->addr, size);
+    memblkAlloc->refCount = 0;
+
+    if (size == memblkFree->size)
+    {
+        remFreeLinkList(memblkFree);
+        setMemBlk(memblkFree, MEMBLK::STATE_NONE, nullptr, 0);
+        addMemBlk(&m_pMemPool->listMemblkNone, memblkFree);
+    }
+    else
+    {
+        memblkFree->addr =
+            reinterpret_cast<void*>(reinterpret_cast<uintptr_t>(memblkFree->addr) + size);
+        
+        memblkFree->size -= size;
+    };
+
+    return memblkAlloc;
 };
 
 
-bool CMemPool::Free(void* memory)
+bool CMemPool::Free(void* mem)
 {
-	if (memory)
-	{
-		MEMBLK* memblk = (MEMBLK*)memory;
-		if(memblk->m_state == MEMBLK::STATE_ALLOC)
-		{
-			removeMemBlk(memblk);
-			memblk->m_state = MEMBLK::STATE_FREE;
-			addFreeLinkList(memblk);
+    if (!mem)
+        return false;
 
-			return true;
-		};
-	};
+    MEMBLK* memblk = reinterpret_cast<MEMBLK*>(mem);
+    if (memblk->state == MEMBLK::STATE_MOVABLE)
+    {
+        remMemBlk(memblk);
+        memblk->state = MEMBLK::STATE_FREE;
+        addFreeLinkList(memblk);
+
+        return true;
+    };
+
+    return false;
+};
+
+
+void* CMemPool::AllocFixed(size_t size)
+{
+	void* mem = Alloc(size);
+	if (mem)
+        return Lock(mem);
+    
+    return nullptr;
+};
+
+
+bool CMemPool::FreeFixed(void* mem)
+{
+    if (!mem)
+        return false;
+    
+    MEMBLK* memblk = searchMemBlk(mem, MEMBLK::STATE_FIXED);
+    if (memblk)
+    {
+        Unlock(memblk);
+        return Free(memblk);
+    };
 
 	return false;
 };
 
 
-void* CMemPool::AllocFixed(uint32 size)
+void* CMemPool::AllocUpper(size_t size)
 {
-	void* pResult = Alloc(size);
-	if (pResult)
-		return Lock(pResult);
-	else
-		return nullptr;
+    if (!size)
+        return nullptr;
+
+    if (isMemblkListEmpty(&m_pMemPool->listMemblkNone))
+        return nullptr;
+
+    size = Align(size, m_pMemPool->align);
+
+    MEMBLK* memblkList = m_pMemPool->memblkFirstFreeEnd;
+    MEMBLK* memblkFree = searchFitMemBlk(memblkList, size, true);
+
+    if (!memblkFree)
+        return nullptr;
+
+    MEMBLK* memblkAlloc = getMemblkListHead(&m_pMemPool->listMemblkNone);
+
+    void* addr =
+        reinterpret_cast<void*>(reinterpret_cast<uintptr_t>(memblkFree->addr) + memblkFree->size - size);
+
+    remMemBlk(memblkAlloc);
+    addMemBlk(&m_pMemPool->listMemblkAlloc, memblkAlloc);
+    setMemBlk(memblkAlloc, MEMBLK::STATE_UPPER, addr, size);
+
+    if (size == memblkFree->size)
+    {
+        remFreeLinkList(memblkFree);
+        setMemBlk(memblkFree, MEMBLK::STATE_NONE, nullptr, 0);
+        addMemBlk(&m_pMemPool->listMemblkNone, memblkFree);
+    }
+    else
+    {
+        memblkFree->size -= size;
+    };
+
+    m_pMemPool->sizeUpper += size;
+
+    return memblkAlloc->addr;
 };
 
 
-bool CMemPool::FreeFixed(void* memory)
+bool CMemPool::FreeUpper(void* mem)
 {
-	if (memory)
-	{
-		MEMBLK* memblk = searchMemBlk(memory, MEMBLK::STATE_FIXED);
-		if (memblk)
-		{
-			Unlock(memblk);
-			Free(memblk);
+    if (!mem)
+        return false;
+    
+    MEMBLK* memblk = searchMemBlk(mem, MEMBLK::STATE_UPPER);
+    if (!memblk)
+        return false;
 
-			return true;
-		};
-	};
+    if ((memblk->state == MEMBLK::STATE_FREE) ||
+        (memblk->state == MEMBLK::STATE_NONE))
+        return false;
 
-	return false;
+    m_pMemPool->sizeUpper -= memblk->size;
+    
+    remMemBlk(memblk);
+    memblk->state = MEMBLK::STATE_FREE;
+    addFreeLinkList(memblk);
+
+    return true;
 };
 
 
-void* CMemPool::AllocUpper(uint32 size)
+void* CMemPool::Lock(void* mem)
 {
-	size = alignmentSize(size, m_pHeap->m_align);
-	MEMBLK* memblkEmpty = m_pHeap->m_listMemblkNone.m_next;
-	if (size && memblkEmpty)
-	{
-		MEMBLK* memblk = nullptr;
-		for (memblk = m_pHeap->m_pFirstFree; memblk; memblk = memblk->m_prev)
-		{
-			if (memblk->m_memorySize >= size)
-				break;
-		};
+    if (!mem)
+        return nullptr;
+    
+    MEMBLK* memblk = reinterpret_cast<MEMBLK*>(mem);
+    if ((memblk->state == MEMBLK::STATE_MOVABLE) ||
+        (memblk->state == MEMBLK::STATE_FIXED))
+    {
+        memblk->state = MEMBLK::STATE_FIXED;
+        ++memblk->refCount;
 
-		if (memblk)
-		{
-			removeMemBlk(memblkEmpty);
-			addMemBlk(&m_pHeap->m_listMemblkAlloc, memblkEmpty);
-			setMemBlk(
-				memblkEmpty, 
-				MEMBLK::STATE_UPPER, 
-				(void*)((int8*)memblk->m_memory + memblk->m_memorySize - size),
-				size
-			);
-			if (size == memblk->m_memorySize)
-			{
-				removeFreeLinkList(memblk);
-				setMemBlk(memblk, MEMBLK::STATE_NONE, nullptr, 0);
-				addMemBlk(&m_pHeap->m_listMemblkNone, memblk);
-			}
-			else
-			{
-				memblk->m_memorySize -= size;
-			};
-
-			m_pHeap->m_upperSize += size;
-			return memblkEmpty->m_memory;
-		};
-	};
+        return memblk->addr;
+    };
 
 	return nullptr;
 };
 
 
-bool CMemPool::FreeUpper(void* memory)
+void CMemPool::Unlock(void* mem)
 {
-	if (memory)
+	if (mem)
 	{
-		MEMBLK* memblk = searchMemBlk(memory, MEMBLK::STATE_UPPER);
-		if (memblk && memblk->m_state > MEMBLK::STATE_FREE)
-		{
-			m_pHeap->m_upperSize -= memblk->m_memorySize;
-			removeMemBlk(memblk);
-			memblk->m_state = MEMBLK::STATE_FREE;
-			addFreeLinkList(memblk);
+        MEMBLK* memblk = reinterpret_cast<MEMBLK*>(mem);
+        if (memblk->state != MEMBLK::STATE_FIXED)
+            return;
 
-			return true;
-		};
-	};
-
-	return false;
-};
-
-
-void* CMemPool::Lock(void* memory)
-{
-	if (memory)
-	{
-		MEMBLK* memblk = (MEMBLK*)memory;
-		if (memblk->m_state == MEMBLK::STATE_ALLOC ||
-			memblk->m_state == MEMBLK::STATE_FIXED)
-		{
-			memblk->m_state = MEMBLK::STATE_FIXED;
-			++memblk->m_iRefCount;
-
-			return memblk->m_memory;
-		};
-	};
-
-	return nullptr;
-};
-
-
-void CMemPool::Unlock(void* memory)
-{
-	if (memory)
-	{
-		MEMBLK* memblk = (MEMBLK*)memory;
-		if (memblk->m_state > MEMBLK::STATE_ALLOC && !--memblk->m_iRefCount)
-			memblk->m_state = MEMBLK::STATE_ALLOC;		
-	};
+        if (memblk->refCount > 0)
+        {
+            if (!--memblk->refCount)
+                memblk->state = MEMBLK::STATE_MOVABLE;
+        };
+    };
 };
 
 
 bool CMemPool::Compaction(void)
 {
-	MEMBLK* memblk = &m_pHeap->m_listMemblkFree;
+    MEMBLK* memblk = getMemblkListHead(&m_pMemPool->listMemblkFree);
 	while (memblk)
 	{
-		MEMBLK* memblkNext = memblk->m_next;
-		if (memblkNext && (void*)((int8*)memblk->m_memory + memblk->m_memorySize) == memblkNext->m_memory)
+        MEMBLK* memblkNext = memblk->next;
+
+        void* addr =
+            reinterpret_cast<void*>(reinterpret_cast<uintptr_t>(memblk->addr) + memblk->size);
+        
+        if (memblkNext && (addr == memblkNext->addr))
 		{
-			memblk->m_memorySize += memblkNext->m_memorySize;
-			removeFreeLinkList(memblkNext);
+			memblk->size += memblkNext->size;
+			remFreeLinkList(memblkNext);
 			setMemBlk(memblkNext, MEMBLK::STATE_NONE, nullptr, 0);
-			addMemBlk(&m_pHeap->m_listMemblkNone, memblkNext);
+			addMemBlk(&m_pMemPool->listMemblkNone, memblkNext);
 		}
 		else
 		{
-			memblk = memblk->m_next;
+			memblk = memblk->next;
 		};
 	};
 
@@ -299,55 +334,69 @@ bool CMemPool::Compaction(void)
 
 bool CMemPool::CollectGarbage(void)
 {
-	MEMBLK* memblkFree = &m_pHeap->m_listMemblkFree;
+    MEMBLK* memblkFree = getMemblkListHead(&m_pMemPool->listMemblkFree);
 	while (memblkFree)
 	{
-		MEMBLK* memblkUsing = &m_pHeap->m_listMemblkAlloc;
-		while (memblkUsing)
+        MEMBLK* memblkAlloc = getMemblkListHead(&m_pMemPool->listMemblkAlloc);
+		while (memblkAlloc)
 		{
-			if (memblkUsing->m_state == MEMBLK::STATE_ALLOC				&&
-				memblkFree->m_memorySize >= memblkUsing->m_memorySize	&&
-				memblkFree->m_memory < memblkUsing->m_memory)
-				break;
+            if ((memblkAlloc->state == MEMBLK::STATE_MOVABLE) &&
+                (memblkFree->size >= memblkAlloc->size) &&
+                (memblkFree->addr < memblkAlloc->addr))
+            {
+                break;
+            };
 
-			memblkUsing = memblkUsing->m_next;
+			memblkAlloc = memblkAlloc->next;
 		};
 
-		MEMBLK* memblkEmpty = m_pHeap->m_listMemblkNone.m_next;
-		if (memblkUsing && memblkEmpty)
-		{
-			for (uint32 i = 0; i < memblkUsing->m_memorySize; i++)
-				((int8*)memblkFree->m_memory)[i] = ((int8*)memblkUsing->m_memory)[i];
+        MEMBLK* memblkTemp = getMemblkListHead(&m_pMemPool->listMemblkNone);
+		if (memblkAlloc && memblkTemp)
+        {
+            std::memmove(memblkFree->addr,
+                         memblkAlloc->addr,
+                         memblkAlloc->size);
 
-			removeMemBlk(memblkEmpty);
-			setMemBlk(memblkEmpty, MEMBLK::STATE_FREE, memblkUsing->m_memory, memblkUsing->m_memorySize);
-			addFreeLinkList(memblkEmpty);
-			memblkUsing->m_memory = memblkFree->m_memory;
-			memblkFree->m_memory = ((int8*)memblkFree->m_memory + memblkUsing->m_memorySize);
-			memblkFree->m_memorySize -= memblkUsing->m_memorySize;
+			remMemBlk(memblkTemp);
+			setMemBlk(memblkTemp, MEMBLK::STATE_FREE, memblkAlloc->addr, memblkAlloc->size);
+            addFreeLinkList(memblkTemp);
+            
+            memblkAlloc->addr = memblkFree->addr;
 
-			if (!memblkFree->m_memorySize)
+            memblkFree->addr =
+                reinterpret_cast<void*>(reinterpret_cast<uintptr_t>(memblkFree->addr) + memblkAlloc->size);
+
+            ASSERT(memblkFree->size >= memblkAlloc->size);
+            memblkFree->size -= memblkAlloc->size;
+
+            if (!memblkFree->size)
 			{
-				memblkFree = memblkFree->m_next;
-
-				removeFreeLinkList(memblkFree);
+                MEMBLK* memblkNext = memblkFree->next;
+                
+                remFreeLinkList(memblkFree);
 				setMemBlk(memblkFree, MEMBLK::STATE_NONE, nullptr, 0);
-				addMemBlk(&m_pHeap->m_listMemblkNone, memblkFree);
-			};
+                addMemBlk(&m_pMemPool->listMemblkNone, memblkFree);
+
+                memblkFree = memblkNext;
+            };
 		}
 		else
 		{
-			MEMBLK* memblkNext = memblkFree->m_next;
-			if (memblkNext && (void*)((int8*)memblkFree->m_memory + memblkFree->m_memorySize) == memblkNext->m_memory)
+            MEMBLK* memblkNext = memblkFree->next;
+
+            void* addr =
+                reinterpret_cast<void*>(reinterpret_cast<uintptr_t>(memblkFree->addr) + memblkFree->size);
+
+            if (memblkNext && (addr == memblkNext->addr))
 			{
-				memblkFree->m_memorySize += memblkNext->m_memorySize;
-				removeFreeLinkList(memblkNext);
+				memblkFree->size += memblkNext->size;
+				remFreeLinkList(memblkNext);
 				setMemBlk(memblkNext, MEMBLK::STATE_NONE, nullptr, 0);
-				addMemBlk(&m_pHeap->m_listMemblkNone, memblkNext);
+				addMemBlk(&m_pMemPool->listMemblkNone, memblkNext);
 			}
 			else
 			{
-				memblkFree = memblkFree->m_next;
+				memblkFree = memblkFree->next;
 			};
 		};
 	};
@@ -356,37 +405,37 @@ bool CMemPool::CollectGarbage(void)
 };
 
 
-bool CMemPool::MemWalk(MEMENTRY* mementry)
+bool CMemPool::MemWalk(MEMENTRY* mementry) const
 {
-	MEMBLK* memblk = nullptr;
+	const MEMBLK* memblk = nullptr;
 
-	if (mementry->m_memory)
+	if (mementry->addr)
 	{
-		memblk = &m_pHeap->m_listMemblkAlloc;
+        memblk = getMemblkListHead(&m_pMemPool->listMemblkAlloc);
 		while (memblk)
 		{
-			if (memblk->m_memory == mementry->m_memory)
+			if (memblk->addr == mementry->addr)
 			{
-				memblk = memblk->m_next;
+				memblk = memblk->next;
 				break;
 			};
 
-			memblk = memblk->m_next;
+			memblk = memblk->next;
 		};
 	}
 	else
 	{
-		memblk = m_pHeap->m_listMemblkAlloc.m_next;
+		memblk = m_pMemPool->listMemblkAlloc.next;
 	};
 
 	if (memblk)
 	{
-		mementry->m_memory = memblk->m_memory;
-		mementry->m_memorySize = memblk->m_memorySize;
-		mementry->m_state = memblk->m_state;
+		mementry->addr = memblk->addr;
+		mementry->size = memblk->size;
+        mementry->state = memBlockToMemEntryState(memblk->state);
 	};
 
-	return (!!memblk);
+	return (memblk != nullptr);
 };
 
 
@@ -396,222 +445,346 @@ void CMemPool::Output(void) const
 };
 
 
-uint32 CMemPool::GetAllocSize(void) const
+size_t CMemPool::GetAllocSize(void) const
 {
-	uint32 result = 0;
+    size_t allocSize = 0;
 
-	MEMBLK* memblk = &m_pHeap->m_listMemblkFree;
+	MEMBLK* memblk = &m_pMemPool->listMemblkFree;
 	while (memblk)
 	{
-		if (memblk->m_memorySize >= result)
-			result = memblk->m_memorySize;
+        if (memblk->size >= allocSize)
+            allocSize = memblk->size;
 
-		memblk = memblk->m_next;
+		memblk = memblk->next;
 	};
 
-	return result;
+    return allocSize;
 };
 
 
-uint32 CMemPool::GetAllocatedSize(void) const
+size_t CMemPool::GetAllocatedSize(void) const
 {
-	uint32 result = 0;
+    size_t allocatedSize = 0;
 
-	MEMBLK* memblk = &m_pHeap->m_listMemblkAlloc;
+	MEMBLK* memblk = &m_pMemPool->listMemblkAlloc;
 	while (memblk)
 	{
-		if(memblk->m_state != MEMBLK::STATE_UPPER)
-			result += memblk->m_memorySize;
+        if (memblk->state != MEMBLK::STATE_UPPER)
+            allocatedSize += memblk->size;
 
-		memblk = memblk->m_next;
+		memblk = memblk->next;
 	};
 
 	Output();
 
-	return result;
+    return allocatedSize;
 };
 
 
-uint32 CMemPool::GetAllocatedUpperSize(void) const
+size_t CMemPool::GetAllocatedUpperSize(void) const
 {
-	return m_pHeap->m_upperSize;
+	return m_pMemPool->sizeUpper;
 };
 
 
-uint32 CMemPool::GetFreeSize(void) const
+size_t CMemPool::GetFreeSize(void) const
 {
-	uint32 result = 0;
+    size_t freeSize = 0;
 
-	MEMBLK* memblk = &m_pHeap->m_listMemblkFree;
+	MEMBLK* memblk = &m_pMemPool->listMemblkFree;
 	while (memblk)
 	{
-		result += memblk->m_memorySize;
-		memblk = memblk->m_next;
+		freeSize += memblk->size;
+		memblk = memblk->next;
 	};
 
-	return result;
+    return freeSize;
 };
 
 
-uint32 CMemPool::GetMemPoolMax(uint32 size) const
+size_t CMemPool::GetSize(void* mem) const
 {
-	return (size - sizeof(MEMPOOL)) / sizeof(MEMBLK);
+    if (!mem)
+        return 0;
+
+    MEMBLK* memblk = reinterpret_cast<MEMBLK*>(mem);
+
+    if ((memblk->state == MEMBLK::STATE_FREE) ||
+        (memblk->state == MEMBLK::STATE_NONE))
+        return 0;
+
+    return memblk->size;
 };
 
 
-uint32 CMemPool::GetSize(void* memory) const
+size_t CMemPool::GetSizeFixed(void* mem) const
 {
-	if (memory)
-	{
-		MEMBLK* memblk = (MEMBLK*)memory;		
-		if (memblk->m_state > MEMBLK::STATE_FREE)
-			return memblk->m_memorySize;		
-	};
-
-	return -1;
-};
-
-
-uint32 CMemPool::GetSizeFixed(void* memory) const
-{
-	MEMBLK* memblk = &m_pHeap->m_listMemblkAlloc;
+	MEMBLK* memblk = &m_pMemPool->listMemblkAlloc;
 	while (memblk)
 	{
-		if (memblk->m_memory == memblk)
-			return memblk->m_memorySize;
+		if (memblk->addr == mem)
+			return memblk->size;
 
-		memblk = memblk->m_next;
+		memblk = memblk->next;
 	};
 
-	return -1;
+    return 0;
 };
 
 
-uint32 CMemPool::GetTotalSize(void) const
+size_t CMemPool::GetTotalSize(void) const
 {
-	return m_pHeap->m_memorySize;
+	return m_pMemPool->size;
 };
 
 
-void CMemPool::addMemBlk(MEMBLK* dst, MEMBLK* src)
+void CMemPool::initMemBlkList(MEMBLK* list, MEMBLK::STATE state)
 {
-	if (dst)
+    list->addr = nullptr;
+    list->size = 0;
+    list->next = nullptr;
+    list->prev = nullptr;
+    list->state = state;
+    list->refCount = 0;
+};
+
+
+void CMemPool::addMemBlk(MEMBLK* memblk, MEMBLK* memblkAdd)
+{
+	if (memblk)
 	{
-		src->m_next = dst->m_next;
-		src->m_prev = dst;
-		if (dst->m_next)
-			dst->m_next->m_prev = src;
-		dst->m_next = src;
+		memblkAdd->next = memblk->next;
+        memblkAdd->prev = memblk;
+        
+        if (memblk->next)
+            memblk->next->prev = memblkAdd;
+        
+        memblk->next = memblkAdd;
 	}
 	else
 	{
-		src->m_next = src->m_prev = nullptr;
-	};
+        memblkAdd->next = nullptr;        
+        memblkAdd->prev = nullptr;
+    };
 };
 
 
-void CMemPool::removeMemBlk(MEMBLK* memblk)
+void CMemPool::remMemBlk(MEMBLK* memblk)
 {
-	if (memblk->m_next)
-		memblk->m_next->m_prev = memblk->m_prev;
-	if (memblk->m_prev)
-		memblk->m_prev->m_next = memblk->m_next;
+	if (memblk->next)
+        memblk->next->prev = memblk->prev;
+    
+    if (memblk->prev)
+		memblk->prev->next = memblk->next;
 
-	memblk->m_next = memblk->m_prev = nullptr;
+    memblk->next = nullptr;
+    memblk->prev = nullptr;
 };
 
 
-void CMemPool::setMemBlk(MEMBLK* memblk, MEMBLK::STATE state, void* mem, uint32 size)
+void CMemPool::setMemBlk(MEMBLK* memblk, MEMBLK::STATE state, void* mem, size_t size)
 {
-	memblk->m_memory = mem;
-	memblk->m_memorySize = size;
-	memblk->m_state = state;
+	memblk->addr = mem;
+	memblk->size = size;
+	memblk->state = state;
 };
 
 
-CMemPool::MEMBLK* CMemPool::searchMemBlk(void* mem, MEMBLK::STATE state) const
+CMemPool::MEMBLK* CMemPool::searchMemBlk(void* addr, MEMBLK::STATE state) const
 {
 	MEMBLK* memblk = nullptr;
 
 	switch (state)
 	{
 	case MEMBLK::STATE_NONE:
-		memblk = &m_pHeap->m_listMemblkNone;
+		memblk = &m_pMemPool->listMemblkNone;
 		break;
 
 	case MEMBLK::STATE_FREE:
-		memblk = &m_pHeap->m_listMemblkFree;
+		memblk = &m_pMemPool->listMemblkFree;
 		break;
 
-	case MEMBLK::STATE_ALLOC:
+    case MEMBLK::STATE_MOVABLE:
 	case MEMBLK::STATE_FIXED:
 	case MEMBLK::STATE_UPPER:
-		memblk = &m_pHeap->m_listMemblkAlloc;
-		break;
-	};
+    case MEMBLK::STATE_ALLOC:
+		memblk = &m_pMemPool->listMemblkAlloc;
+        break;
+
+    default:
+        ASSERT(false);
+        break;
+    };
 
 	while (memblk)
 	{
-		if (memblk->m_state == state && memblk->m_memory == mem)
-			return memblk;
+        if ((memblk->state == state) &&
+            (memblk->addr  == addr))
+        {
+            return memblk;
+        };
 
-		memblk = memblk->m_next;
+		memblk = memblk->next;
 	};
 
 	return nullptr;
 };
 
 
+CMemPool::MEMBLK* CMemPool::searchFitMemBlk(MEMBLK* list, size_t size, bool bReverse) const
+{
+    return searchFirstFitMemBlk(list, size, bReverse);
+    //return searchBestFitMemBlk(list, size, bReverse);
+    //return searchWorstFitMemBlk(list, size, bReverse);
+};
+
+
+CMemPool::MEMBLK* CMemPool::searchFirstFitMemBlk(MEMBLK* list, size_t size, bool bReverse) const
+{
+    size_t nextOffset = bReverse ? offsetof(MEMBLK, prev) :
+                                   offsetof(MEMBLK, next);
+
+    MEMBLK* memblk = list;
+    while (memblk)
+    {
+        if (memblk->size >= size)
+            return memblk;
+
+        memblk = *reinterpret_cast<MEMBLK**>(reinterpret_cast<uintptr_t>(memblk) + nextOffset);
+    };
+
+    return nullptr;
+};
+
+
+CMemPool::MEMBLK* CMemPool::searchBestFitMemBlk(MEMBLK* list, size_t size, bool bReverse) const
+{
+    size_t nextOffset = bReverse ? offsetof(MEMBLK, prev) :
+                                   offsetof(MEMBLK, next);
+
+    MEMBLK* memblkBest = nullptr;
+    MEMBLK* memblk = list;
+    while (memblk)
+    {
+        if (memblk->size >= size)
+        {
+            if (!memblkBest || (memblk->size < memblkBest->size))
+            {
+                memblkBest = memblk;
+
+                if (memblkBest->size == size)
+                    break;
+            };
+        };
+
+        memblk = *reinterpret_cast<MEMBLK**>(reinterpret_cast<uintptr_t>(memblk) + nextOffset);
+    };
+
+    return memblkBest;
+};
+
+
+CMemPool::MEMBLK* CMemPool::searchWorstFitMemBlk(MEMBLK* list, size_t size, bool bReverse) const
+{
+    size_t nextOffset = bReverse ? offsetof(MEMBLK, prev) :
+                                   offsetof(MEMBLK, next);
+
+    MEMBLK* memblkWorst = nullptr;
+    MEMBLK* memblk = list;
+    while (memblk)
+    {
+        if (memblk->size >= size)
+        {
+            if (!memblkWorst || (memblk->size > memblkWorst->size))
+                memblkWorst = memblk;
+        };
+
+        memblk = *reinterpret_cast<MEMBLK**>(reinterpret_cast<uintptr_t>(memblk) + nextOffset);
+    };
+
+    return memblkWorst;
+};
+
+
 CMemPool::MEMBLK* CMemPool::getMemBlk(int32 idx) const
 {
-	return &((MEMBLK*)m_pHeap->m_pPool)[idx];
+    return &m_pMemPool->memblkPool[idx];
 };
 
 
 void CMemPool::addFreeLinkList(MEMBLK* memblk)
 {
-	MEMBLK* memblkFree = &m_pHeap->m_listMemblkFree;
+	MEMBLK* memblkFree = &m_pMemPool->listMemblkFree;
 	while (memblkFree)
 	{
-		if (!memblkFree->m_next)
+		if (!memblkFree->next)
 		{
 			addMemBlk(memblkFree, memblk);
-			m_pHeap->m_pFirstFree = memblk;
+			m_pMemPool->memblkFirstFreeEnd = memblk;
 			break;
 		};
 
-		if (memblkFree->m_memory < memblk->m_memory && memblk->m_memory < memblkFree->m_next->m_memory)
-		{
+        if ((memblkFree->addr < memblk->addr) &&
+            (memblk->addr < memblkFree->next->addr))
+        {
 			addMemBlk(memblkFree, memblk);
 			break;
 		};
 
-		memblkFree = memblkFree->m_next;
+		memblkFree = memblkFree->next;
 	};
 
 	if (memblkFree)
-	{
-		if ((int8*)memblkFree->m_memory + memblkFree->m_memorySize == memblk->m_memory)
-		{
-			memblkFree->m_memorySize += memblk->m_memorySize;
-			removeFreeLinkList(memblk);
+    {
+        void* addr =
+            reinterpret_cast<void*>(reinterpret_cast<uintptr_t>(memblkFree->addr) + memblkFree->size);
+
+        if (addr == memblk->addr)
+        {
+			memblkFree->size += memblk->size;
+			remFreeLinkList(memblk);
 			setMemBlk(memblk, MEMBLK::STATE_NONE, nullptr, 0);
-			addMemBlk(&m_pHeap->m_listMemblkNone, memblk);
+			addMemBlk(&m_pMemPool->listMemblkNone, memblk);
 		};
 	};
 };
 
 
-void CMemPool::removeFreeLinkList(MEMBLK* memblk)
+void CMemPool::remFreeLinkList(MEMBLK* memblk)
 {
-	if (!memblk->m_next)
-		m_pHeap->m_pFirstFree = memblk->m_prev;
+	if (!memblk->next)
+		m_pMemPool->memblkFirstFreeEnd = memblk->prev;
 
-	removeMemBlk(memblk);
+	remMemBlk(memblk);
 };
 
 
-uint32 CMemPool::alignmentSize(uint32 size, uint32 align) const
+CMemPool::MEMBLK* CMemPool::getMemblkListHead(MEMBLK* list)
 {
-	return (size + (align - 1)) & ~(align - 1);
+    return list->next;
+};
+
+
+const CMemPool::MEMBLK* CMemPool::getMemblkListHead(const MEMBLK* list) const
+{
+    return list->next;
+};
+
+
+CMemPool::MEMBLK* CMemPool::getMemblkListTail(MEMBLK* list)
+{
+    return list->prev;
+};
+
+
+bool CMemPool::isMemblkListEmpty(CMemPool::MEMBLK* list) const
+{
+    return (list->next == nullptr);
+};
+
+
+CMemPool::MEMENTRY::STATE
+CMemPool::memBlockToMemEntryState(MEMBLK::STATE state) const
+{
+    return static_cast<MEMENTRY::STATE>(state);
 };

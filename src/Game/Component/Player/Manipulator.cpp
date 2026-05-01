@@ -664,7 +664,7 @@ void CManipulator::AnalyzeInputVector(RwV3d& rvInputVector, float& rfInputVector
     
     rfInputVectorLength = Math::Vec3_Length(&rvInputVector);
 
-#ifdef TARGET_PC
+#if defined(TARGET_PC) || defined(TARGET_WEB)
     uint32 digitalMovementMask = CController::DIGITAL_LUP
                                | CController::DIGITAL_LDOWN
                                | CController::DIGITAL_LLEFT
@@ -691,7 +691,7 @@ void CManipulator::AnalyzeInputVector(RwV3d& rvInputVector, float& rfInputVector
     rvInputVector.y = 0.0f;
     rvInputVector.z = yDigital;
     rfInputVectorLength = 1.0f;
-#endif /* TARGET_PC */
+#endif /* defined(TARGET_PC) || defined(TARGET_WEB) */
 };
 
 

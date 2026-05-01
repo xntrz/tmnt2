@@ -3,6 +3,8 @@
 #include "PCGraphicsDevice.hpp"
 #include "PCPhysicalController.hpp"
 
+#include "System/Common/Font.hpp"
+
 #include <cctype> // std::toupper
 #include <algorithm> // std::replace
 
@@ -297,7 +299,7 @@ static bool KeyInfoInitializer(void)
             ++pszPtr;
         };
 
-        std::mbstowcs(pKeyInfo->wszKeyNameUC, pKeyInfo->szKeyNameUC, COUNT_OF(pKeyInfo->wszKeyNameUC));
+        CUnicodeFont::ConvertToUnicode(pKeyInfo->wszKeyNameUC, pKeyInfo->szKeyNameUC);
     };
     
     return true;

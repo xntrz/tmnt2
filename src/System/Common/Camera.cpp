@@ -5,6 +5,7 @@
 
 /*static*/ RwCamera* CCamera::m_pCameraCurrent = nullptr;
 /*static*/ RwCamera* CCamera::m_pCameraDefault = nullptr;
+/*static*/ RwCamera* CCamera::m_aCamera[32];
 
 
 /*static*/ CCamera* CCamera::GetCamera(void)
@@ -44,16 +45,49 @@
 };
 
 
+/*static*/ void CCamera::FramebufferChanged(void)
+{
+    for (int32 i = 0; i < COUNT_OF(m_aCamera); ++i)
+    {
+        if ((m_aCamera[i] != nullptr) &&
+            (m_aCamera[i] != m_pCameraDefault))
+        {
+            RwRaster* fb = RwCameraGetRaster(m_pCameraDefault);
+            RwRaster* zb = RwCameraGetZRaster(m_pCameraDefault);
+
+            RwCameraSetRasterMacro(m_aCamera[i], fb);
+            RwCameraSetZRasterMacro(m_aCamera[i], zb);
+        };
+    };
+};
+
+
 CCamera::CCamera(RwCamera* pRwCamera)
 : m_pCamera(pRwCamera)
 , m_pCameraOld(nullptr)
 {
-    ;
+    for (int32 i = 0; i < COUNT_OF(m_aCamera); ++i)
+    {
+        if (m_aCamera[i] == nullptr)
+        {
+            m_aCamera[i] = pRwCamera;
+            break;
+        };
+    };
 };
 
 
 CCamera::~CCamera(void)
 {
+    for (int32 i = 0; i < COUNT_OF(m_aCamera); ++i)
+    {
+        if (m_aCamera[i] == m_pCamera)
+        {
+            m_aCamera[i] = nullptr;
+            break;
+        };
+    };
+
     RwFrame* pFrame = RwCameraGetFrame(m_pCamera);
     ASSERT(pFrame);
     

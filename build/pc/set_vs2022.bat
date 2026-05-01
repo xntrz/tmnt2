@@ -1,1 +1,0 @@
-set ARG_VS=vs2022

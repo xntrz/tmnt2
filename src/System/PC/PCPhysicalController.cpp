@@ -451,7 +451,7 @@ void CPCGamepadController::Update(void)
 
     uint32 digital = 0;
 
-    if (LOWORD(m_joystate.rgdwPOV[0]) != WORD(0xFFFF))
+    if (LOWORD(m_joystate.rgdwPOV[0]) != static_cast<WORD>(0xFFFF))
     {
         uint32 PovDigital[] =
         {
@@ -465,7 +465,7 @@ void CPCGamepadController::Update(void)
             CController::DIGITAL_LLEFT 	| CController::DIGITAL_LUP,
         };
 
-        int32 Index = int32(m_joystate.rgdwPOV[0] / 4500);
+        int32 Index = static_cast<int32>(m_joystate.rgdwPOV[0] / 4500);
         
         if (Index >= 0 && Index < COUNT_OF(PovDigital))
             digital |= PovDigital[Index];
@@ -507,16 +507,19 @@ void CPCGamepadController::Update(void)
                 m_joystate.rglSlider[0] = m_joystate.lZ;
             }
             break;
+
+        default:
+            break;
         };
     };
 #endif /* _DEBUG */	
 
-    const int32 DEADZONE = int32(float(TYPEDEF::SINT16_MAX) * 0.25f);
+    const LONG DEADZONE = static_cast<LONG>( (static_cast<float>(TYPEDEF::SINT16_MAX) * 0.25f) );
 
-    m_info.m_aAnalog[CController::ANALOG_LSTICK_X] 	= int16(ClampValue(m_joystate.lX, DEADZONE));
-    m_info.m_aAnalog[CController::ANALOG_LSTICK_Y] 	= int16(ClampValue(-1 - m_joystate.lY, DEADZONE));
-    m_info.m_aAnalog[CController::ANALOG_RSTICK_X] 	= int16(ClampValue(m_joystate.lRz, DEADZONE));
-    m_info.m_aAnalog[CController::ANALOG_RSTICK_Y] 	= int16(ClampValue(-1 - m_joystate.rglSlider[0], DEADZONE));
+    m_info.m_aAnalog[CController::ANALOG_LSTICK_X] 	= static_cast<int16>(ClampValue(m_joystate.lX, DEADZONE));
+    m_info.m_aAnalog[CController::ANALOG_LSTICK_Y] 	= static_cast<int16>(ClampValue(-1 - m_joystate.lY, DEADZONE));
+    m_info.m_aAnalog[CController::ANALOG_RSTICK_X] 	= static_cast<int16>(ClampValue(m_joystate.lRz, DEADZONE));
+    m_info.m_aAnalog[CController::ANALOG_RSTICK_Y] 	= static_cast<int16>(ClampValue(-1 - m_joystate.rglSlider[0], DEADZONE));
     m_info.m_aAnalog[CController::ANALOG_RUP] 		= (digital & CController::DIGITAL_RUP 	? TYPEDEF::SINT16_MAX : 0);
     m_info.m_aAnalog[CController::ANALOG_RDOWN] 	= (digital & CController::DIGITAL_RDOWN ? TYPEDEF::SINT16_MAX : 0);
     m_info.m_aAnalog[CController::ANALOG_RLEFT] 	= (digital & CController::DIGITAL_RLEFT ? TYPEDEF::SINT16_MAX : 0);
@@ -537,20 +540,27 @@ void CPCGamepadController::Update(void)
         {
             if (pJoystickState->m_bVibrationFeature && pJoystickState->m_pVibrationEffect)
             {
-                int32 type = int32(m_info.m_uVibMax);
-                int32 direction[2] = { int32(m_info.m_uVibMax), int32(m_info.m_uVibMax) };
+                DICONSTANTFORCE constantForce = {};
+                constantForce.lMagnitude = static_cast<LONG>(m_info.m_uVibMax);
 
-                DIEFFECT effect;
-                std::memset(&effect, 0x00, sizeof(effect));
+                LONG direction[2] = { static_cast<LONG>(m_info.m_uVibMax),
+                                      static_cast<LONG>(m_info.m_uVibMax) };
+
+                DIEFFECT effect = {};
                 effect.dwSize = sizeof(effect);
                 effect.dwFlags = DIEFF_CARTESIAN | DIEFF_OBJECTOFFSETS;
-                effect.lpEnvelope = 0;
+                effect.lpEnvelope = nullptr;
                 effect.dwStartDelay = 0;
-                effect.cbTypeSpecificParams = sizeof(type);
-                effect.lpvTypeSpecificParams = &type;
-                effect.rglDirection = LPLONG(direction);
+                effect.cbTypeSpecificParams = sizeof(constantForce);
+                effect.lpvTypeSpecificParams = &constantForce;
+                effect.cAxes = pJoystickState->m_numAxes;
+                effect.rglDirection = direction;
 
-                pJoystickState->m_pVibrationEffect->SetParameters(&effect, DIEP_START | DIEP_DIRECTION | DIEP_TYPESPECIFICPARAMS);
+                DWORD flags = DIEP_START
+                            | DIEP_DIRECTION
+                            | DIEP_TYPESPECIFICPARAMS;
+
+                pJoystickState->m_pVibrationEffect->SetParameters(&effect, flags);
 
                 m_info.m_bVibrate = true;
             };
@@ -592,8 +602,7 @@ static BOOL FAR PASCAL EnumAxisCallback(LPCDIDEVICEOBJECTINSTANCE lpObject, LPVO
     JOYSTICKSTATE* pJoystickState = static_cast<JOYSTICKSTATE*>(lpParameter);
     ASSERT(pJoystickState);
 
-    DIPROPRANGE range;
-    memset(&range, 0x00, sizeof(range));
+    DIPROPRANGE range = {};
     range.lMin = TYPEDEF::SINT16_MIN;
     range.lMax = TYPEDEF::SINT16_MAX;
     range.diph.dwObj = lpObject->dwType;
@@ -627,8 +636,8 @@ static BOOL FAR PASCAL EnumDeviceCallback(LPCDIDEVICEINSTANCE lpDevice, LPVOID l
         return TRUE;
 
     JOYSTICKSTATE* pJoystickState = new JOYSTICKSTATE;
+    std::memset(pJoystickState, 0, sizeof(*pJoystickState));
 
-    std::memset(pJoystickState, 0x00, sizeof(*pJoystickState));
     _tcscpy(pJoystickState->m_tszName, lpDevice->tszProductName);
     pJoystickState->m_guid = lpDevice->guidInstance;	
 #ifdef _DEBUG
@@ -656,13 +665,12 @@ static BOOL FAR PASCAL EnumDeviceCallback(LPCDIDEVICEINSTANCE lpDevice, LPVOID l
 
     if (pJoystickState->m_bVibrationFeature)
     {
-        DIPROPDWORD prop;
-        std::memset(&prop, 0x00, sizeof(prop));		
-        prop.diph.dwHow 		= DIPH_DEVICE;
-        prop.diph.dwObj 		= 0;
-        prop.diph.dwSize 		= sizeof(prop);
-        prop.diph.dwHeaderSize 	= sizeof(prop.diph);
-        prop.dwData 			= 0;
+        DIPROPDWORD prop = {};
+        prop.diph.dwHow = DIPH_DEVICE;
+        prop.diph.dwObj = 0;
+        prop.diph.dwSize = sizeof(prop);
+        prop.diph.dwHeaderSize = sizeof(prop.diph);
+        prop.dwData = 0;
 
         if (FAILED(pJoystickState->m_pDevice->SetProperty(DIPROP_AUTOCENTER, &prop.diph)))
             goto label_failure;
@@ -670,26 +678,30 @@ static BOOL FAR PASCAL EnumDeviceCallback(LPCDIDEVICEINSTANCE lpDevice, LPVOID l
         if (pJoystickState->m_numAxes > 2)
             pJoystickState->m_numAxes = 2;
 
-        int32 aAxes[4] = { 0, 4, 0, 0 };
+        LONG direction[2] = { 0, 0 };
 
-        DIEFFECT effect;
-        std::memset(&effect, 0x00, sizeof(effect));		
-        effect.dwGain 					= 10000;
-        effect.rglDirection 			= LPLONG(&aAxes[2]);
-        effect.dwDuration 				= INFINITE;
-        effect.dwTriggerButton 			= DIEB_NOTRIGGER;
-        effect.cAxes 					= pJoystickState->m_numAxes;
-        effect.dwSize 					= sizeof(effect);
-        effect.dwFlags 					= DIEFF_CARTESIAN | DIEFF_OBJECTOFFSETS;
-        effect.dwSamplePeriod 			= 0;
-        effect.dwTriggerRepeatInterval 	= 0;
-        effect.rgdwAxes 				= LPDWORD(aAxes);
-        effect.lpEnvelope 				= 0;
-        effect.dwStartDelay 			= 0;
+        DWORD axes[2] = { DIJOFS_X,
+                          DIJOFS_Y };
 
-        int32 param = 10000;
-        effect.cbTypeSpecificParams = sizeof(param);
-        effect.lpvTypeSpecificParams = &param;
+        DIEFFECT effect = {};
+        effect.dwGain = 10000; // 100%
+        effect.rglDirection = direction;
+        effect.dwDuration = INFINITE;
+        effect.dwTriggerButton = DIEB_NOTRIGGER;
+        effect.cAxes = pJoystickState->m_numAxes;
+        effect.dwSize = sizeof(effect);
+        effect.dwFlags = DIEFF_CARTESIAN | DIEFF_OBJECTOFFSETS;
+        effect.dwSamplePeriod = 0;
+        effect.dwTriggerRepeatInterval = 0;
+        effect.rgdwAxes = axes;
+        effect.lpEnvelope = nullptr;
+        effect.dwStartDelay = 0;
+
+        DICONSTANTFORCE constantForce = {};
+        constantForce.lMagnitude = 10000;
+
+        effect.cbTypeSpecificParams = sizeof(constantForce);
+        effect.lpvTypeSpecificParams = &constantForce;
 
         if (FAILED(pJoystickState->m_pDevice->CreateEffect(GUID_ConstantForce, &effect, &pJoystickState->m_pVibrationEffect, NULL)))
             goto label_failure;
@@ -733,7 +745,8 @@ label_failure:
                                     reinterpret_cast<LPVOID*>(&s_pDirectInput8), NULL);
     if (SUCCEEDED(hr))
     {
-        if (s_pDirectInput8->EnumDevices(DI8DEVCLASS_ALL, EnumDeviceCallback, NULL, 0) == DI_OK)
+        hr = s_pDirectInput8->EnumDevices(DI8DEVCLASS_ALL, EnumDeviceCallback, NULL, 0);
+        if (SUCCEEDED(hr))
         {
             s_pPCKeyboardController = new CPCKeyboardController(s_JoystickInfo.m_nJoystickCnt);
             if (s_pPCKeyboardController)
@@ -806,7 +819,7 @@ label_failure:
 {
     IPhysicalController* pPhysicalController = s_pPCKeyboardController;
 
-    if(KeyboardController().Info().m_iPhysicalPort != iController)
+    if (KeyboardController().Info().m_iPhysicalPort != iController)
     {
         ASSERT(iController < PHYSICALCONTROLLER_MAX);
         pPhysicalController = new CPCGamepadController(iController);

@@ -8,6 +8,21 @@
 #include "Game/System/Utils/List.hpp"
 
 
+#if defined(TARGET_PC)
+    #define TMNT2_FEATURE_KEYBOARD
+    #define TMNT2_FEATURE_MOVIE
+    #define TMNT2_FEATURE_DISPLAYRESO
+#elif defined(TARGET_WEB)
+    #define TMNT2_FEATURE_KEYBOARD
+    #define TMNT2_FEATURE_TOUCHCONTROLLER
+    //#define TMNT2_FEATURE_MOVIE
+#endif
+
+#if defined(TMNT2_TRIAL)
+#undef TMNT2_FEATURE_MOVIE
+#endif /* defined(TMNT2_TRIAL) */
+
+
 #define ANIM_FRAMERATE                  (60.0f)
 
 #define ANIM_DURATION_FRAMES(frames)    ( (CScreen::Framerate()) * ((static_cast<float>(frames)) / ANIM_FRAMERATE) )

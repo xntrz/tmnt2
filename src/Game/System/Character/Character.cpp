@@ -762,12 +762,13 @@ void CCharacter::Initialize(PARAMETER* pParameter)
 {
     ASSERT(pParameter);
 
-    if (pParameter->m_bToon)
-        m_pModel = CModelManager::CreateModelToon(pParameter->m_pszModelName);
-    else
-        m_pModel = CModelManager::CreateModel(pParameter->m_pszModelName);
-
+    m_pModel = (pParameter->m_bToon ? CModelManager::CreateModelToon(pParameter->m_pszModelName) :
+                                      CModelManager::CreateModel(pParameter->m_pszModelName));
     ASSERT(m_pModel);
+    
+#if defined(TMNT2_RWDRV_OPENGL)
+    m_pModel->SetLightingEnable(true);
+#endif /* defined(TMNT2_RWDRV_OPENGL) */
     
     m_pMotionController = new CMotionController(m_pModel);
 

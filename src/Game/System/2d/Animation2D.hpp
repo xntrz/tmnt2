@@ -79,7 +79,10 @@ private:
     static Rt2dMessage* MessageHandlerCallback(Rt2dMaestro* maestro, Rt2dMessage* message);
     static Rt2dObject* AllStringObjectCallback(Rt2dObject* object, Rt2dObject* parent, void* data);
     static Rt2dMaestro* AllAnimSetInterpolateCallback(Rt2dMaestro* maestro, Rt2dAnim* anim, Rt2dAnimProps* props, void* pData);
-
+#if defined(TMNT2_RWDRV_OPENGL)
+    static Rt2dObject* SetLightAllShapeObjectCallback(Rt2dObject* object, Rt2dObject* parent, void* data);
+#endif /* defined(TMNT2_RWDRV_OPENGL) */
+    
 private:
     static CAnimation2D* m_pAnimation2D;
     static uint32        m_uAnimation2DRef;

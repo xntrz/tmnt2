@@ -131,9 +131,6 @@ void CMapClumpModelContainer::CMapModelInfo::Draw(void)
     if (m_hUVAnim)
         CUVAnim::UpdateUVAnim(m_hUVAnim, CGameProperty::GetElapsedTime());    
 
-    RENDERSTATE_PUSH(rwRENDERSTATEVERTEXALPHAENABLE, true);
-    RENDERSTATE_PUSH(rwRENDERSTATEZTESTENABLE, true);
-    
     switch (m_mode)
     {
     case MODE_NONE:
@@ -165,15 +162,11 @@ void CMapClumpModelContainer::CMapModelInfo::Draw(void)
         break;
     };
 
-    ASSERT(m_pModel);
     if (m_pModel)
         m_pModel->Draw();
 
     RENDERSTATE_POP(rwRENDERSTATEDESTBLEND);
     RENDERSTATE_POP(rwRENDERSTATESRCBLEND);
-    RENDERSTATE_POP(rwRENDERSTATEZWRITEENABLE);
-    RENDERSTATE_POP(rwRENDERSTATEZTESTENABLE);
-    RENDERSTATE_POP(rwRENDERSTATEVERTEXALPHAENABLE);
 };
 
 
@@ -236,8 +229,15 @@ void CMapClumpModelContainer::CreateModel(void)
 
 void CMapClumpModelContainer::Draw(void)
 {
+    RENDERSTATE_PUSH(rwRENDERSTATEVERTEXALPHAENABLE, true);
+    RENDERSTATE_PUSH(rwRENDERSTATEZTESTENABLE, true);
+
     for (CMapModelInfo& it : m_listAlloc)
         it.Draw();
+
+    RENDERSTATE_POP(rwRENDERSTATEZWRITEENABLE);
+    RENDERSTATE_POP(rwRENDERSTATEZTESTENABLE);
+    RENDERSTATE_POP(rwRENDERSTATEVERTEXALPHAENABLE);
 };
 
 

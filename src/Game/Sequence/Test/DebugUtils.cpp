@@ -1,9 +1,63 @@
 #include "DebugUtils.hpp"
 
-#ifdef _DEBUG
+#if defined(_DEBUG) || defined(TMNT2_TEST)
 
 #include "Game/System/Misc/Gamepad.hpp"
 #include "System/Common/Process/Sequence.hpp"
+
+
+/*static*/ void CDebugUtils::FormatThousands(size_t size, char* pszTextBuf)
+{
+    char szTemp[64];
+    int32 len = std::snprintf(szTemp, sizeof(szTemp), "%zd", size);
+
+    if (len <= 0)
+        return;
+
+    int32 commas = (len - 1) / 3;
+    int32 out_idx = len + commas;
+
+    pszTextBuf[out_idx] = '\0';
+    out_idx--;
+
+    int32 count = 0;
+    for (int32 i = len - 1; i >= 0; i--)
+    {
+        if (count > 0 && count % 3 == 0)
+            if (out_idx >= 0) pszTextBuf[out_idx--] = ',';
+
+        if (out_idx >= 0)
+            pszTextBuf[out_idx--] = szTemp[i];
+
+        count++;
+    };
+};
+
+
+/*static*/ void CDebugUtils::FormatBytesSize(size_t size, char* pszTextBuf)
+{
+    static const char* s_szUnits[] = { "B", "KB", "MB", "GB", "TB" };
+
+    double bytes = static_cast<double>(size);
+    double base = 1000; // 1024
+
+    int32 i = 0;
+    while ((bytes >= base) && (i < 4))
+    {
+        bytes /= base;
+        i++;
+    };
+
+    if (bytes == static_cast<size_t>(bytes))
+        std::sprintf(pszTextBuf, "%.0f %s", bytes, s_szUnits[i]);
+    else
+        std::sprintf(pszTextBuf, "%.1f %s", bytes, s_szUnits[i]);
+};
+
+
+//
+// *********************************************************************************
+//
 
 
 CDebugFontCtrl::CDebugFontCtrl(void)
@@ -877,5 +931,4 @@ CDebugSequenceCheckObj& CDebugSequenceCheckObj::Check(int32 iTargetSeqLbl)
     return *this;
 };
 
-
-#endif /* _DEBUG */
+#endif /* defined(_DEBUG) || defined(TMNT2_TEST) */

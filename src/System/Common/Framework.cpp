@@ -3,13 +3,16 @@
 #include "InputsDevice.hpp"
 #include "SystemTime.hpp"
 #include "SystemText.hpp"
+#include "SoundDevice.hpp"
 
 #include "Process/ProcessDispatcher.hpp"
 #include "File/FileManager.hpp"
 
 #if defined(TARGET_PC)
 #include "System/PC/PCFramework.hpp"
-#endif /* defined(TARGET_PC) */
+#elif defined(TARGET_WEB)
+#include "System/Web/WebFramework.hpp"
+#endif
 
 
 extern const PROCESSTYPES::PROCESS g_aProcessList[];
@@ -21,8 +24,10 @@ extern const PROCESSTYPES::PROCESS g_aProcessList[];
 
 #if defined(TARGET_PC)
     pFramework = new CPCFramework;
-#endif /* defined(TARGET_PC) */
-
+#elif defined(TARGET_WEB)
+    pFramework = new CWebFramework;
+#endif
+    
     return pFramework;
 };
 
@@ -57,6 +62,7 @@ CFramework::CFramework(void)
 : m_pMemory(nullptr)
 , m_pGraphicsDevice(nullptr)
 , m_pInputsDevice(nullptr)
+, m_pSoundDevice(nullptr)
 , m_pFileManager(nullptr)
 , m_pClockDevice(nullptr)
 , m_pProcessDispatcher(nullptr)
@@ -77,18 +83,30 @@ bool CFramework::Initialize(void)
     ASSERT(m_pInputsDevice);
     ASSERT(m_pFileManager);
     ASSERT(!m_pProcessDispatcher);
-    
+
     if (!m_pGraphicsDevice->Initialize())
+    {
+        OUTPUT("GX device init failed!\n");
         return false;
+    };
 
     if (!m_pFileManager->Start())
+    {
+        OUTPUT("FS manager start failed!\n");
         return false;
+    };
 
     if (!m_pInputsDevice->Start())
+    {
+        OUTPUT("INPUT device start failed!\n");
         return false;
+    };
 
     if (!m_pGraphicsDevice->Start())
+    {
+        OUTPUT("GX device start failed!\n");
         return false;
+    };
 
     CSystemTime::Instance().AttachClock(m_pClockDevice);
     CSystemText::Initialize();
@@ -111,7 +129,7 @@ void CFramework::Terminate(void)
 
     CSystemText::Terminate();
     CSystemTime::Instance().DetachClock();
-
+    
     if (m_pGraphicsDevice)
         m_pGraphicsDevice->Stop();
 

@@ -2,18 +2,35 @@
 #include "Filename.hpp"
 
 
+#define InRange(v, begin, end) \
+    (((v) >= (begin)) && ((v) < (end)))
+
+
+#define ToRange(v, begin) \
+    ((v) - (begin))
+
+
 static inline int32 GetPtFileID(int32 id)
 {
-    if (id < FILEID::COMMON_MAX)
-        return id;
+    if (InRange(id, FILEID::COMMON_BEGIN, FILEID::COMMON_END))
+        return ToRange(id, FILEID::COMMON_BEGIN);        
 
-    return (id - FILEID::COMMON_MAX);
+    if (InRange(id, FILEID::LANGUAGE_BEGIN, FILEID::LANGUAGE_END))
+        return ToRange(id, FILEID::LANGUAGE_BEGIN);
+
+    return -1;
 };
 
 
 static inline int32 GetPtID(int32 id)
 {
-    return (id < FILEID::COMMON_MAX ? 0 : 1);
+    if (InRange(id, FILEID::COMMON_BEGIN, FILEID::COMMON_END))
+        return 0;
+
+    if (InRange(id, FILEID::LANGUAGE_BEGIN, FILEID::LANGUAGE_END))
+        return 1;
+
+    return -1;
 };
 
 
@@ -66,9 +83,7 @@ bool CAdxFileAccess::Open(int32 id)
     int32 ptid = GetPtID(id);
     int32 fid = GetPtFileID(id);
 
-#ifdef _DEBUG
     std::strcpy(m_szLastFilename, CFilename::FullName(id));
-#endif /* _DEBUG */    
 
     m_adxf = ADXF_OpenAfs(ptid, fid);
     if (m_adxf != NULL)

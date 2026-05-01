@@ -14,6 +14,23 @@
 #endif /* _DEBUG */
 
 
+static inline float LerpFactor(float t)
+{
+#ifdef TARGET_WEB
+    float dt = CGameProperty::GetElapsedTime();
+    float framerate = 60.0f; // org
+
+    float xx = (1.0f - t);
+    float yx = (dt * framerate);
+
+    t = (1.0f - std::pow(xx, yx));
+    t = Clamp(t, 0.0f, 1.0f);
+#endif /* TARGET_WEB */
+    
+    return t;
+};
+
+
 class CMapCamera::CIntroduction
 {
 private:
@@ -589,7 +606,7 @@ void CMapCamera::UpdatePathCamera(const RwV3d* pvAt, bool bExPath)
     if (m_bChangeMoment)
         m_vAt = vAt;
     else
-        Math::Vec3_Lerp(&m_vAt, &m_vAt, &vAt, 0.2f);
+        Math::Vec3_Lerp(&m_vAt, &m_vAt, &vAt, LerpFactor(0.2f));
 
     int32 nAtPathID = -1;
     int32 nEyePathID = -1;
@@ -672,9 +689,9 @@ void CMapCamera::UpdatePathCamera(const RwV3d* pvAt, bool bExPath)
 
         m_fChangeTimer -= CGameProperty::GetElapsedTime();
         if (m_fChangeTimer <= 0.0f)
-            Math::Vec3_Lerp(&m_vEye, &m_vEye, &vEye, 0.2f);
+            Math::Vec3_Lerp(&m_vEye, &m_vEye, &vEye, LerpFactor(0.2f));
         else
-            Math::Vec3_Lerp(&m_vEye, &m_vEye, &vEye, 0.1f);
+            Math::Vec3_Lerp(&m_vEye, &m_vEye, &vEye, LerpFactor(0.1f));
 
         if (m_bChangeMoment)
             m_vEye = vEye;
@@ -695,7 +712,7 @@ void CMapCamera::UpdateSetCamera(const RwV3d* pvAt)
     if (m_bChangeMoment)
         m_vAt = vAt;
     else
-        Math::Vec3_Lerp(&m_vAt, &m_vAt, &vAt, 0.4f);
+        Math::Vec3_Lerp(&m_vAt, &m_vAt, &vAt, LerpFactor(0.4f));
 
     int32 cameraId = -1;
 
@@ -719,7 +736,7 @@ void CMapCamera::UpdateSetCamera(const RwV3d* pvAt)
         if (m_bChangeMoment)
             m_vEye = vEye;
         else
-            Math::Vec3_Lerp(&m_vEye, &m_vEye, &vEye, 0.04f);
+            Math::Vec3_Lerp(&m_vEye, &m_vEye, &vEye, LerpFactor(0.04f));
 
 		UpdateLookat();
 
@@ -746,7 +763,7 @@ void CMapCamera::UpdateFixedCamera(const RwV3d* pvAt)
         if (m_bChangeMoment)
             m_vEye = vEye;
         else
-            Math::Vec3_Lerp(&m_vEye, &m_vEye, &vEye, 0.025f);
+            Math::Vec3_Lerp(&m_vEye, &m_vEye, &vEye, LerpFactor(0.025f));
 
         /* update at */
         RwV3d vAt = *CCameraDataManager::GetSetCamPosLookat(cameraId);
@@ -754,7 +771,7 @@ void CMapCamera::UpdateFixedCamera(const RwV3d* pvAt)
         if (m_bChangeMoment)
             m_vAt = vAt;
         else
-            Math::Vec3_Lerp(&m_vAt, &m_vAt, &vAt, 0.04f);
+            Math::Vec3_Lerp(&m_vAt, &m_vAt, &vAt, LerpFactor(0.04f));
 
         UpdateLookat();
 

@@ -503,7 +503,7 @@ void CRideCharacter::MakePadInfo(void)
     m_padinfo.fStickX = (std::fabs(x) >= DEADZONE ? x : 0.0f);
     m_padinfo.fStickY = (std::fabs(y) >= DEADZONE ? y : 0.0f);
 
-#ifdef TARGET_PC
+#if defined(TARGET_PC) || defined(TARGET_WEB)
     uint32 uMoveMask = CController::DIGITAL_LUP
                      | CController::DIGITAL_LDOWN
                      | CController::DIGITAL_LLEFT
@@ -528,7 +528,7 @@ void CRideCharacter::MakePadInfo(void)
         m_padinfo.fStickX = xDigital;
         m_padinfo.fStickY = yDigital;
     };
-#endif    
+#endif /* defined(TARGET_PC) || defined(TARGET_WEB) */
 
     uint32 uDigitalTrigger = IPad::GetDigitalTrigger(m_padinfo.pad);
 

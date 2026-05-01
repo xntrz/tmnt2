@@ -437,6 +437,7 @@ void CGameObjectContainer::FreeObjectWork(GAMEOBJECTWORK* pWork)
 {
     --m_nNumActiveObj;
 
+#ifdef _DEBUG
     using CListNodeCommon = CListNode<GAMEOBJECTWORK>;
     ASSERT(static_cast<CListNodeCommon*>(pWork)->is_linked() == false, "unlink node from common list before free");
     
@@ -445,7 +446,8 @@ void CGameObjectContainer::FreeObjectWork(GAMEOBJECTWORK* pWork)
 
     using CListNodeType = CListNode<GAMEOBJECTWORK, TAG_TYPE>;
     ASSERT(static_cast<CListNodeType*>(pWork)->is_linked() == false, "unlink node from type list before free");
-
+#endif /* _DEBUG */
+    
     m_listWorkFree.push_front(pWork);
 };
 
@@ -536,7 +538,7 @@ inline CGameObject* CGameObjectContainer::GetNextFromList(CList<GAMEOBJECTWORK, 
     GAMEOBJECTWORK* pWork = FindObjectWork(hObject);
     ASSERT(pWork);
 
-    auto it = ++typename CList<GAMEOBJECTWORK, TAG>::iterator(&list, pWork);
+    auto it = ++(typename CList<GAMEOBJECTWORK, TAG>::iterator(&list, pWork));
     auto itEnd = list.end();
     if (it != itEnd)
         return (*it).object;

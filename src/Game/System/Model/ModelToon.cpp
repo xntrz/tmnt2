@@ -5,6 +5,14 @@
 #include "rptoon.h"
 
 
+#if defined(TARGET_PC)
+
+#define RpSkinAtomicSetType \
+    RpToonSkinAtomicSetType
+
+#endif /* defined(TARGET_PC) */
+
+
 class CSetToonObjectFunctor final : public CModelToon::IAtomicCallbackFunctor
 {
 public:
@@ -21,9 +29,9 @@ RpAtomic* CSetToonObjectFunctor::operator()(RpAtomic* pAtomic)
     ASSERT(pGeometry);
 
     if (RpSkinGeometryGetSkin(pGeometry))
-        RpSkinAtomicSetType(pAtomic, rpSKINTYPETOON); // RpToonSkinAtomicSetType(pAtomic, rpSKINTYPETOON); // 
-	else
-		RpToonAtomicEnable(pAtomic);
+        RpSkinAtomicSetType(pAtomic, rpSKINTYPETOON);
+    else
+        RpToonAtomicEnable(pAtomic);
     
     RpToonGeo* pToonGeometry = RpToonGeometryGetToonGeo(pGeometry);
     ASSERT(pToonGeometry);

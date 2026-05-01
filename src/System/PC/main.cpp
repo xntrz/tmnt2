@@ -14,8 +14,6 @@
 #endif /* VLDCHECK */
 
 
-#ifdef TARGET_PC
-
 int32 APIENTRY
 _tWinMain(
     _In_     HINSTANCE	hInstance,
@@ -52,5 +50,3 @@ _tWinMain(
 
     return (bResult ? EXIT_SUCCESS : EXIT_FAILURE);
 };
-
-#endif /* TARGET_PC */

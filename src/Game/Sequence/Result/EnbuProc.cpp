@@ -138,6 +138,10 @@ void CEnbuProc_Container::Settings(void)
     m_pModel = CModelManager::CreateModelToon(pszMvpName);
     ASSERT(m_pModel);
 
+#if defined(TMNT2_RWDRV_OPENGL)
+    m_pModel->SetLightingEnable(true);
+#endif /* defined(TMNT2_RWDRV_OPENGL) */
+    
     RwV3d vPos = { 0.0f, 0.5f, 0.0f };
     m_pModel->SetPosition(&vPos);
     m_pModel->UpdateFrame();

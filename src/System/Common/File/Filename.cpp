@@ -9,10 +9,26 @@
 
 #if (defined(TARGET_PC))
 
-    #if (defined(TMNT2_BUILD_EU))
-        #include "FnameTable_PC_EU.hpp"
-    #else
-        #include "FnameTable_PC_NA.hpp"
+    #if (defined(TMNT2_TRIAL))
+        #include "FnameTable_PC_TRIAL.hpp"
+    #else 
+        #if (defined(TMNT2_BUILD_EU))
+            #include "FnameTable_PC_EU.hpp"
+        #else
+            #include "FnameTable_PC_NA.hpp"
+        #endif
+    #endif
+
+#elif (defined(TARGET_WEB))
+
+    #if (defined(TMNT2_TRIAL))
+        #include "FnameTable_PC_TRIAL.hpp"
+    #else 
+        #if (defined(TMNT2_BUILD_EU))
+            #include "FnameTable_PC_EU.hpp"
+        #else
+            #include "FnameTable_PC_NA.hpp"
+        #endif
     #endif
 
 #else 
@@ -87,12 +103,17 @@
     if ((id >= FILEID::COMMON_BEGIN) &&
         (id < FILEID::COMMON_END))
     {
-        std::strcpy(s_szFilename, "common/");
+        std::strcpy(s_szFilename, m_pszCommonDataPath);
     }
     else if ((id >= FILEID::LANGUAGE_BEGIN) &&
              (id < FILEID::LANGUAGE_END))
     {
-        std::strcpy(s_szFilename, "language/");
+        TYPEDEF::CONFIG_LANG lang = TYPEDEF::CONFIG_LANG_ENGLISH;
+#ifdef TMNT2_BUILD_EU
+        lang = CConfigure::GetLanguage();
+#endif /* TMNT2_BUILD_EU */
+
+        std::strcpy(s_szFilename, m_apszLanguageDataPath[lang]);
     };
 
     std::strcat(s_szFilename, m_apszFilename[id]);
@@ -138,9 +159,9 @@
 
 /*static*/ void CFilename::ConvTablePathLanguage(char* pszTablePath)
 {
-    const char szDefaultLanguagePath[] = "language/english/";
+    const char* pszDefaultLanguagePath = m_apszLanguageDataPath[TYPEDEF::CONFIG_LANG_ENGLISH];
 
-    if (std::strstr(pszTablePath, szDefaultLanguagePath))
+    if (std::strstr(pszTablePath, pszDefaultLanguagePath))
     {
         char szNewFilename[FILETYPES::FILE_NAME_MAX];
         szNewFilename[0] = '\0';
@@ -148,7 +169,7 @@
         const char* pszCurrentLanguagePath = m_apszLanguageDataPath[CConfigure::GetLanguage()];
 
         std::strcpy(szNewFilename, pszCurrentLanguagePath);
-        std::strcat(szNewFilename, &pszTablePath[sizeof(szDefaultLanguagePath) - 1]);
+        std::strcat(szNewFilename, &pszTablePath[std::strlen(pszDefaultLanguagePath)]);
 
         std::strcpy(pszTablePath, szNewFilename);
     };

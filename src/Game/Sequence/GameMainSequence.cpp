@@ -10,6 +10,7 @@
 #include "Game/System/Misc/SoftwareReset.hpp"
 #include "Game/System/Misc/Timeout.hpp"
 #include "Game/System/Misc/PadConnectCheck.hpp"
+#include "Game/System/Misc/TouchController.hpp"
 #include "Game/System/Movie/MovieManager.hpp"
 #include "Game/System/Sound/GameSound.hpp"
 #include "Game/System/Texture/TextureManager.hpp"
@@ -18,6 +19,11 @@
 #include "System/Common/Screen.hpp"
 #include "System/Common/Configure.hpp"
 #include "System/Common/SystemText.hpp"
+
+#if defined(TARGET_WEB)
+#include "System/Web/WebSpecific.hpp"
+#include "System/Web/File/WebFile.hpp"
+#endif /* defined(TARGET_WEB) */
 
 
 #define MVPATH_OP1 (MVPATH("OP_TMNT1.sfd"))
@@ -52,10 +58,14 @@ CGameMainSequence::~CGameMainSequence(void)
 bool CGameMainSequence::OnAttach(const void* pParam)
 {
     Math::SRand(123456);
+#if defined(TARGET_PC)    
     CScreen::SetFlipInterval(1);
+#endif /* defined(TARGET_PC) */
     CDataLoader::Initialize();
     CTextureManager::Initialize();
+#if defined(TMNT2_FEATURE_MOVIE)    
     CMovieManager::Initialize();
+#endif /* defined(TMNT2_FEATURE_MOVIE) */
     CGameSound::Initialize();
     CSystemText::Initialize();
     CGameText::Initialize();
@@ -71,10 +81,18 @@ bool CGameMainSequence::OnAttach(const void* pParam)
     
     CDataLoader::Regist(FPATH_LANG("Language/English/Text/Text.lpac"));
     CDataLoader::Regist(FPATH("Common/Fonts/Fonts.lpac"));
-    
+#if defined(TMNT2_FEATURE_TOUCHCONTROLLER)
+    //if (CWebSpecific::IsMobilePlatform())
+        //CDataLoader::Regist(CWebFile::MakePath("touch.txd"), true);
+#endif /* defined(TMNT2_FEATURE_TOUCHCONTROLLER) */
+
     CGameData::Initialize();
     EnableStickToDirButton(true);
 
+#ifdef _DEBUG
+    CSoftwareResetProcess::Initialize(this, CSoftwareResetProcess::MODE_DEBUGMENU);
+#endif /* _DEBUG */
+    
     m_fTime = 0.0f;
     m_movieId = MVPATH_OP2;
     m_step = STEP_LOAD_TEXTURE;
@@ -85,9 +103,18 @@ bool CGameMainSequence::OnAttach(const void* pParam)
 
 void CGameMainSequence::OnDetach(void)
 {
+#ifdef _DEBUG
+    CSoftwareResetProcess::Terminate(this);
+#endif /* _DEBUG */
+
 #ifdef TARGET_PS2
     CPadConnectCheckProcess::Terminate(this);
 #endif /* TARGET_PS2 */
+
+#if defined(TARGET_WEB)
+    if (CWebSpecific::IsMobilePlatform())
+        CTouchControllerProcess::Terminate(this);
+#endif /* defined(TARGET_WEB) */
 
     CGameData::Terminate();
     CLoadingDisplay::Terminate(this);
@@ -98,7 +125,9 @@ void CGameMainSequence::OnDetach(void)
     CGameText::Terminate();
     CSystemText::Terminate();
     CGameSound::Terminate();
+#if defined(TMNT2_FEATURE_MOVIE)    
     CMovieManager::Terminate();
+#endif /* defined(TMNT2_FEATURE_MOVIE) */
     CTextureManager::Terminate();
     CDataLoader::Terminate();
 };
@@ -108,9 +137,6 @@ void CGameMainSequence::OnMove(bool bRet, const void* pReturnValue)
 {
     if (bRet)
     {
-#ifdef BUILD_TRIAL        
-        CTimeoutProcess::Reset(this);
-#endif /* BUILD_TRIAL */
         if (pReturnValue)
         {
             m_iLabelNext = reinterpret_cast<int32>(pReturnValue);
@@ -131,11 +157,16 @@ void CGameMainSequence::OnMove(bool bRet, const void* pReturnValue)
         m_iLabelCurrent = m_iLabelNext;
         
         if (m_iLabelCurrent == PROCLABEL_SEQ_MOVIE)
+        {
             PreMovie();
+        }
         else if (m_iLabelCurrent == PROCLABEL_SEQ_AREA)
+        {
             CGameData::ClearNewGameFlag();
+        };
         
-        Call(m_iLabelCurrent);
+        Call(m_iLabelCurrent, m_param);
+        m_param = nullptr;
     }
     else
     {
@@ -149,13 +180,18 @@ void CGameMainSequence::OnMove(bool bRet, const void* pReturnValue)
                 if (!CDataLoader::IsLoadEnd())
                     break;
 
-                CMessageWindow::Load();
-                CGameSound::LoadWave(0);
+                CMessageWindow::Load();                
                 CGameSound::LoadWave(1);
+                
                 m_step = STEP_LOAD_SOUND;
 #ifdef TARGET_PS2
                 CPadConnectCheckProcess::Initialize(this);
 #endif /* TARGET_PS2 */
+
+#if defined(TMNT2_FEATURE_TOUCHCONTROLLER)
+                if (CWebSpecific::IsMobilePlatform())
+                    CTouchControllerProcess::Initialize(this);
+#endif /* defined(TMNT2_FEATURE_TOUCHCONTROLLER) */
             }
             break;
 
@@ -164,19 +200,24 @@ void CGameMainSequence::OnMove(bool bRet, const void* pReturnValue)
                 if (!CGameSound::IsLoadEnd())
                     break;
 
-                m_iLabelNext    = PROCLABEL_SEQ_SAVELOADCHECK;
-                m_iLabelPrev    = PROCLABEL_SEQ_SAVELOADCHECK;
-                m_iLabelCurrent = PROCLABEL_SEQ_SAVELOADCHECK;                
+                const int32 iFirstLabel = PROCLABEL_SEQ_SAVELOADCHECK;
 
+                m_iLabelNext = iFirstLabel;
+                m_iLabelPrev = iFirstLabel;
+                m_iLabelCurrent = iFirstLabel;
                 m_param = nullptr;
                 m_step = STEP_RUN;
 
                 CScreen::SetFlipEnable(true);
 #ifdef _DEBUG
+                CSoftwareResetProcess::SetEnable(this, true);
+                CSoftwareResetProcess::SetResponse(this, 1.5f);
+
                 Call(PROCLABEL_SEQ_DBGMAIN);
 #else /* _DEBUG */
-                Call(PROCLABEL_SEQ_SAVELOADCHECK);
-#endif  /* _DEBUG */
+                Call(m_iLabelCurrent);
+#endif /* _DEBUG */
+
             }
             break;
 
@@ -221,15 +262,19 @@ int32 CGameMainSequence::Branch(int32 iLabel)
 		break;
 
     case PROCLABEL_SEQ_SAVELOADCHECK:
-        return PROCLABEL_SEQ_LOGODISP;
-
-    case PROCLABEL_SEQ_LOGODISP:
 #ifdef _DEBUG
         return PROCLABEL_SEQ_TITLE;
 #else /* _DEBUG */
+        return PROCLABEL_SEQ_LOGODISP;
+#endif /* _DEBUG */
+
+    case PROCLABEL_SEQ_LOGODISP:
+#ifdef TMNT2_FEATURE_MOVIE
         return (CConfigure::GetLaunchMode() != TYPEDEF::CONFIG_LAUNCH_NORMAL ? PROCLABEL_SEQ_TITLE :
                                                                                PROCLABEL_SEQ_MOVIE);
-#endif /* _DEBUG */
+#else /* TMNT2_FEATURE_MOVIE */
+        return PROCLABEL_SEQ_TITLE;
+#endif /* TMNT2_FEATURE_MOVIE */
 
     case PROCLABEL_SEQ_TITLE:
         return PROCLABEL_SEQ_CHARASELECT;
@@ -257,8 +302,15 @@ int32 CGameMainSequence::Branch(int32 iLabel)
             switch (arearesult)
             {
             case CGamePlayResult::AREARESULT_GAMECLEAR:
-                return (CGameData::Record().Area().GetCurrentSelectedArea() == AREAID::ID_AREA58) ? PROCLABEL_SEQ_ENDING :
-                                                                                                    PROCLABEL_SEQ_AREA;
+                {
+                    AREAID::VALUE idAreaNow = CGameData::Record().Area().GetCurrentSelectedArea();
+                    if (idAreaNow == AREAID::ID_AREA58)
+                    {
+                        m_param = reinterpret_cast<void*>(GAMETYPES::ENDINGTYPE_STORY);
+                        return PROCLABEL_SEQ_ENDING;
+                    };
+                }
+                return PROCLABEL_SEQ_AREA;
 
             case CGamePlayResult::AREARESULT_GAMEOVER:
                 return PROCLABEL_SEQ_AREA;
@@ -301,6 +353,7 @@ int32 CGameMainSequence::Branch(int32 iLabel)
 
 void CGameMainSequence::PreMovie(void)
 {
+#if defined(TMNT2_FEATURE_MOVIE)
     CMovieManager::PreCreateMovieInstance(m_movieId);
     CScreenFade::BlackIn(0.0f);
 
@@ -308,10 +361,13 @@ void CGameMainSequence::PreMovie(void)
         m_movieId = MVPATH_OP2;
     else
         m_movieId = MVPATH_OP1;
+#endif /* defined(TMNT2_FEATURE_MOVIE) */
 };
 
 
 void CGameMainSequence::PostMovie(void)
 {
+#if defined(TMNT2_FEATURE_MOVIE)
     CMovieManager::DeleteMovieInstance();
+#endif /* defined(TMNT2_FEATURE_MOVIE) */
 };

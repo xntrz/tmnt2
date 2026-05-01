@@ -1,5 +1,11 @@
 #pragma once
 
+#if defined(TARGET_PC)
+#define PATH_SEP ('\\')
+#elif defined(TARGET_WEB)
+#define PATH_SEP ('/')
+#endif
+
 
 template<class T, std::size_t N>
 inline constexpr
@@ -8,13 +14,15 @@ std::size_t _fname_ofs(
     std::size_t pos = N - 1u
 )
 {
-    return (str[pos] == '\\') ? pos + 1u : (pos > 0u ? _fname_ofs(str, pos - 1u) : 0u);
+    return (str[pos] == PATH_SEP) ? pos + 1u : (pos > 0u ? _fname_ofs(str, pos - 1u) : 0u);
 };
+
 
 template <class T, T v>
 struct _fname_ofs_evaluate {
     static constexpr const T value = v;
 };
+
 
 #define __FILENAME__ (&__FILE__[_fname_ofs_evaluate<decltype(_fname_ofs(__FILE__)), _fname_ofs(__FILE__)>::value])
 

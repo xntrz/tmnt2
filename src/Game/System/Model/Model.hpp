@@ -77,8 +77,6 @@ public:
     
     inline const char* GetName(void) const { return m_pszName; };
 
-
-
 protected:
     static RwFrame* CallbackFrame(RwFrame* frame, void* data);
     static RpMaterial* CallbackMaterial(RpMaterial* material, void* data);

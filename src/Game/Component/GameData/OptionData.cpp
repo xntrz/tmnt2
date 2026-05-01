@@ -2,6 +2,12 @@
 
 #include "System/Common/Controller.hpp"
 
+#if defined(TARGET_PC)
+#include "Option/KeyboardOptionDataWin.hpp"
+#elif defined(TARGET_WEB)
+#include "Option/KeyboardOptionDataWeb.hpp"
+#endif
+
 
 COptionData::COptionData(void)
 {
@@ -31,19 +37,32 @@ void COptionData::Initialize(void)
     for (int32 i = 0; i < m_iGamepadNum; ++i)
         m_paGamepad[i].Initialize(i);
 
-#ifdef TARGET_PC
-    m_keyboard.Initialize();
-#endif /* TARGET_PC */
+#if defined(TMNT2_FEATURE_KEYBOARD)
 
+#if defined(TARGET_PC)
+    m_pKeyboard = new CKeyboardOptionDataWin;
+#elif defined(TARGET_WEB)
+    m_pKeyboard = new CKeyboardOptionDataWeb;
+#endif
+    if (m_pKeyboard)
+        m_pKeyboard->Initialize();
+
+#endif /* defined(TMNT2_FEATURE_KEYBOARD) */
+    
     Apply();
 };
 
 
 void COptionData::Terminate(void)
 {
-#ifdef TARGET_PC
-    m_keyboard.Terminate();
-#endif /* TARGET_PC */
+#if defined(TMNT2_FEATURE_KEYBOARD)
+    if (m_pKeyboard)
+    {
+        m_pKeyboard->Terminate();
+        delete m_pKeyboard;
+        m_pKeyboard = nullptr;
+    };
+#endif /* defined(TMNT2_FEATURE_KEYBOARD) */
 
     for (int32 i = 0; i < m_iGamepadNum; ++i)
         m_paGamepad[i].Terminate();
@@ -72,9 +91,10 @@ void COptionData::Snapshot(RAWDATA& rRawData) const
     for (int32 i = 0; i < m_iGamepadNum; ++i)
         m_paGamepad[i].Snapshot(rRawData.m_aGamepad[i]);
 
-#ifdef TARGET_PC
-    m_keyboard.Snapshot(rRawData.m_keyboard);
-#endif /* TARGET_PC */ 
+#if defined(TMNT2_FEATURE_KEYBOARD)
+    if (m_pKeyboard)
+        m_pKeyboard->Snapshot(rRawData.m_keyboard);
+#endif /* defined(TMNT2_FEATURE_KEYBOARD) */
 };
 
 
@@ -89,9 +109,10 @@ void COptionData::Restore(const RAWDATA& rRawData)
     for (int32 i = 0; i < m_iGamepadNum; ++i)
         m_paGamepad[i].Restore(rRawData.m_aGamepad[i]);
 
-#ifdef TARGET_PC
-    m_keyboard.Restore(rRawData.m_keyboard);
-#endif /* TARGET_PC */    
+#if defined(TMNT2_FEATURE_KEYBOARD)
+    if (m_pKeyboard)
+        m_pKeyboard->Restore(rRawData.m_keyboard);
+#endif /* defined(TMNT2_FEATURE_KEYBOARD) */
 };
 
 
@@ -104,9 +125,10 @@ void COptionData::Apply(void)
     for (int32 i = 0; i < m_iGamepadNum; ++i)
         m_paGamepad[i].Apply();
 
-#ifdef TARGET_PC
-    m_keyboard.Apply();
-#endif /* TARGET_PC */    
+#if defined(TMNT2_FEATURE_KEYBOARD)
+    if (m_pKeyboard)
+        m_pKeyboard->Apply();
+#endif /* defined(TMNT2_FEATURE_KEYBOARD) */
 };
 
 
@@ -128,12 +150,13 @@ CDisplayOptionData& COptionData::Display(void)
 };
 
 
-#if defined(TARGET_PC)
-CKeyboardOptionData& COptionData::Keyboard(void)
+#if defined(TMNT2_FEATURE_KEYBOARD)
+IKeyboardOptionData& COptionData::Keyboard(void)
 {
-    return m_keyboard;
+    ASSERT(m_pKeyboard != nullptr);
+    return *m_pKeyboard;
 };
-#endif /* defined(TARGET_PC) */
+#endif /* defined(TMNT2_FEATURE_KEYBOARD) */
 
 
 CGamepadOptionData& COptionData::Gamepad(int32 controller)

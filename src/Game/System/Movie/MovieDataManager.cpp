@@ -13,6 +13,14 @@
         #include "MovieDataManagerTable_PC_NA.hpp"
     #endif
 
+#elif (defined(TARGET_WEB))
+
+#if (defined(TMNT2_BUILD_EU))
+        #include "MovieDataManagerTable_PC_EU.hpp"
+    #else
+        #include "MovieDataManagerTable_PC_NA.hpp"
+    #endif
+
 #else 
 
 #error "Not implemented for current target"

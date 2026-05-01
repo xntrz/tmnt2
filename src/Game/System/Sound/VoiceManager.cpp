@@ -1,15 +1,39 @@
 #include "VoiceManager.hpp"
 #include "GameSound.hpp"
 
+#include "Game/Component/GameData/GameData.hpp"
 #include "Game/Component/GameMain/GameProperty.hpp"
 #include "Game/Component/GameMain/GamePlayer.hpp"
+#include "System/Common/Configure.hpp"
+#include "System/Common/Sound/SdLog.hpp"
+
+
+class CVoiceChooseTool
+{
+public:
+    struct VOICELIST
+    {
+        int32           m_nCode;
+        PLAYERID::VALUE m_PlayerID;
+    };
+
+public:
+    static PLAYERID::VALUE m_VoicePlayerID;
+
+public:
+    static void GetExistCharacter(int32* count, VOICELIST* pVoiceList);
+    static void MakeExistListFromVoiceList(int32* VoiceListSize, PLAYERID::VALUE idPlayer, VOICELIST* VoiceList);
+    static int32 GetVoiceID(int32* VoiceListSize, const VOICELIST* VoiceList);
+    static uint32 MakePlayerIdArrayMask(int32 count, const VOICELIST* pVoiceList);
+};
 
 
 class CVoiceChooser
 {
 public:
     virtual void Initialize(void) {};
-	virtual int32 GetVoiceID(PLAYERID::VALUE idPlayer) { return PLAYERID::ID_INVALID;  };
+    virtual int32 GetVoiceID(PLAYERID::VALUE idPlayer) { return PLAYERID::ID_INVALID; };
+    virtual CVoiceChooseTool::VOICELIST* GetVoiceList(int32* size) { *size = 0; return nullptr; };
 
     static CVoiceChooser* Dummy(void)
     {
@@ -19,30 +43,10 @@ public:
 };
 
 
-class CVoiceChooseTool
-{
-public:
-    struct VOICELIST
-    {
-        int32 m_nVoiceID;
-        PLAYERID::VALUE m_PlayerID;
-    };
-
-public:
-    static PLAYERID::VALUE m_VoicePlayerID;
-
-public:
-    static void GetExistCharacter(int32* Count, PLAYERID::VALUE* idPlayerArray);
-    static void MakeExistListFromVoiceList(int32* VoiceListSize, PLAYERID::VALUE idPlayer, VOICELIST* VoiceList);
-    static int32 GetVoiceID(int32* VoiceListSize, VOICELIST* VoiceList);
-    static uint32 MakePlayerIdArrayMask(int32 count, PLAYERID::VALUE aPlayerId[]);
-};
-
-
 /*static*/ PLAYERID::VALUE CVoiceChooseTool::m_VoicePlayerID = PLAYERID::ID_LEO;
 
 
-/*static*/ void CVoiceChooseTool::GetExistCharacter(int32* count, PLAYERID::VALUE* aPlayerId)
+/*static*/ void CVoiceChooseTool::GetExistCharacter(int32* count, VOICELIST* pVoiceList)
 {
     int32 playerNum = CGameProperty::GetPlayerNum();
     for (int32 i = 0; i < playerNum; ++i)
@@ -52,129 +56,168 @@ public:
 
         int32 characterNum = pGameplayer->GetCharacterNum();
         for (int32 j = 0; j < characterNum; ++j)
-            aPlayerId[(*count)++] = pGameplayer->GetCharacterID(j);
+            pVoiceList[(*count)++].m_PlayerID = pGameplayer->GetCharacterID(j);
 
         pGameplayer->Release();
     };
 };
 
 
-/*static*/ void CVoiceChooseTool::MakeExistListFromVoiceList(int32* VoiceListSize, PLAYERID::VALUE idPlayer, VOICELIST* VoiceList)
+/*static*/ void
+CVoiceChooseTool::MakeExistListFromVoiceList(int32* voiceListSize,
+                                             PLAYERID::VALUE idPlayer,
+                                             VOICELIST* pVoiceList)
 {
-    PLAYERID::VALUE idExistPlayerArray[GAMETYPES::PLAYERS_MAX];
-    int32 ExistPlayerNum = 0;
+    VOICELIST idExistPlayerArray[GAMETYPES::PLAYERS_MAX] = { { -1, PLAYERID::ID_INVALID },
+                                                             { -1, PLAYERID::ID_INVALID },
+                                                             { -1, PLAYERID::ID_INVALID },
+                                                             { -1, PLAYERID::ID_INVALID } };
+    int32 numPlayerExist = 0;
 
     if (idPlayer == PLAYERID::ID_INVALID)
     {
-        GetExistCharacter(&ExistPlayerNum, idExistPlayerArray);
+        GetExistCharacter(&numPlayerExist, idExistPlayerArray);
     }
     else
     {
-        idExistPlayerArray[0] = idPlayer;
-        ExistPlayerNum = 1;
+        idExistPlayerArray[0].m_PlayerID = idPlayer;
+        numPlayerExist = 1;
     };
 
     //
     //  Match exist player id with voice list player id
     //  If player id in voice list is not exist - remove it from list
     //
-    int32 VoiceListCnt = *VoiceListSize;
-    for (int32 i = 0; i < VoiceListCnt; ++i)
+    int32 voiceListCnt = *voiceListSize;
+    for (int32 i = 0; i < voiceListCnt; ++i)
     {
-        VOICELIST* VoiceListRec = &VoiceList[i];
+        const VOICELIST* pVoice = &pVoiceList[i];
 
-        if (VoiceListRec->m_PlayerID == PLAYERID::ID_INVALID)
+        if (pVoice->m_PlayerID == PLAYERID::ID_INVALID)
             continue;
 
-        bool PlayerExistInList = false;
+        bool bIsPlayerExist = false;
         
-        for (int32 j = 0; j < ExistPlayerNum; ++j)
+        for (int32 j = 0; j < numPlayerExist; ++j)
         {
-            if (idExistPlayerArray[j] == VoiceListRec->m_PlayerID)
-                PlayerExistInList = true;
+            if (idExistPlayerArray[j].m_PlayerID == pVoice->m_PlayerID)
+                bIsPlayerExist = true;
         };
 
-        if (!PlayerExistInList)
+        if (!bIsPlayerExist)
         {            
-            for (int32 j = i; j < VoiceListCnt - 1; ++j)
-                VoiceList[j] = VoiceList[j + 1];
+            for (int32 j = i; j < voiceListCnt - 1; ++j)
+                pVoiceList[j] = pVoiceList[j + 1];
 
             --i;
-            --VoiceListCnt;
+            --voiceListCnt;
         };
     };
 
-    *VoiceListSize = VoiceListCnt;
+    *voiceListSize = voiceListCnt;
 };
 
 
-/*static*/ int32 CVoiceChooseTool::GetVoiceID(int32* VoiceListSize, VOICELIST* VoiceList)
+/*static*/ int32 CVoiceChooseTool::GetVoiceID(int32* voiceListSize, const VOICELIST* pVoiceList)
 {
-    int32 VoiceListCnt = *VoiceListSize;
+    int32 voiceListCnt = *voiceListSize;
     
-    if (!VoiceListCnt)
+    if (!voiceListCnt)
         return -1;
     
-    int32 ChosenVoice = Math::Rand() % VoiceListCnt;
+    int32 idx = (Math::Rand() % voiceListCnt);
+    m_VoicePlayerID = pVoiceList[idx].m_PlayerID;
     
-    m_VoicePlayerID = VoiceList[ChosenVoice].m_PlayerID;
-    
-    return VoiceList[ChosenVoice].m_nVoiceID;
+    return pVoiceList[idx].m_nCode;
 };
 
 
-/*static*/ uint32 CVoiceChooseTool::MakePlayerIdArrayMask(int32 count, PLAYERID::VALUE aPlayerId[])
+/*static*/ uint32 CVoiceChooseTool::MakePlayerIdArrayMask(int32 count, const VOICELIST* pVoiceList)
 {
     ASSERT(count < BITSOF(uint32), "count should be less than bitsof(uint32)");
-    ASSERT(aPlayerId != nullptr);
+    ASSERT(pVoiceList != nullptr);
 
     uint32 result = 0;
 
     for (int32 i = 0; i < count; ++i)
-        result |= (1 << static_cast<int32>(aPlayerId[i]));
+    {
+        if (pVoiceList[i].m_PlayerID != PLAYERID::ID_INVALID)
+            result |= (1 << static_cast<int32>(pVoiceList[i].m_PlayerID));
+    };
     
     return result;
 };
 
 
-#define CREATE_CHOOSER(No, ...)                                                                 \
-    class CVoiceChooserGroup##No : public CVoiceChooser                                         \
-    {                                                                                           \
-    public:                                                                                     \
-        virtual int32 GetVoiceID(PLAYERID::VALUE idPlayer) override                             \
-        {                                                                                       \
-            CVoiceChooseTool::VOICELIST VoiceList[] =  { __VA_ARGS__ };                         \
-            int32 VoiceListSize = COUNT_OF(VoiceList);                                          \
-            CVoiceChooseTool::MakeExistListFromVoiceList(&VoiceListSize, idPlayer, VoiceList);  \
-            return CVoiceChooseTool::GetVoiceID(&VoiceListSize, VoiceList);                     \
-        };                                                                                      \
-                                                                                                \
-        static CVoiceChooser* Instance(void)                                                    \
-        {                                                                                       \
-            static CVoiceChooserGroup##No s_VoiceChooserGroup##No;                              \
-            return &s_VoiceChooserGroup##No;                                                    \
-        };                                                                                      \
+#define CREATE_CHOOSER(No, ...)                                                                     \
+    class CVoiceChooserGroup##No : public CVoiceChooser                                             \
+    {                                                                                               \
+    public:                                                                                         \
+        virtual int32 GetVoiceID(PLAYERID::VALUE idPlayer) override                                 \
+        {                                                                                           \
+            int32 voiceListSize = 0;                                                                \
+            CVoiceChooseTool::VOICELIST* pVoiceList = GetVoiceList(&voiceListSize);                 \
+            CVoiceChooseTool::MakeExistListFromVoiceList(&voiceListSize, idPlayer, pVoiceList);     \
+            return CVoiceChooseTool::GetVoiceID(&voiceListSize, pVoiceList);                        \
+        };                                                                                          \
+                                                                                                    \
+        virtual CVoiceChooseTool::VOICELIST* GetVoiceList(int32* size) override                     \
+        {                                                                                           \
+            static CVoiceChooseTool::VOICELIST s_aVoiceListOrg[] = { __VA_ARGS__ };                 \
+            static CVoiceChooseTool::VOICELIST s_aVoiceListWork[] = { __VA_ARGS__ };                \
+                                                                                                    \
+            *size = COUNT_OF(s_aVoiceListOrg);                                                      \
+            for (int32 i = 0; i < COUNT_OF(s_aVoiceListOrg); ++i)                                   \
+                s_aVoiceListWork[i] = s_aVoiceListOrg[i];                                           \
+                                                                                                    \
+            return s_aVoiceListWork;                                                                \
+        };                                                                                          \
+                                                                                                    \
+        static CVoiceChooser* Instance(void)                                                        \
+        {                                                                                           \
+            static CVoiceChooserGroup##No s_VoiceChooserGroup##No;                                  \
+            return &s_VoiceChooserGroup##No;                                                        \
+        };                                                                                          \
     }
 
 
-#define CREATE_CHOOSER_EX(No, VoiceCode, ...)                                                                       \
+#define CREATE_CHOOSER_EX(No, ...)                                                                                  \
     class CVoiceChooserGroupEx##No : public CVoiceChooser                                                           \
     {                                                                                                               \
     public:                                                                                                         \
         virtual int32 GetVoiceID(PLAYERID::VALUE idPlayer) override                                                 \
         {                                                                                                           \
-            /* get exist player characters on the stage and its mask */                                             \
-            PLAYERID::VALUE aPlayerIdExists[GAMETYPES::PLAYERS_MAX];                                                \
-            int32 numPlayerIdExists = 0;                                                                            \
-            CVoiceChooseTool::GetExistCharacter(&numPlayerIdExists, aPlayerIdExists);                               \
-            uint32 maskExists = CVoiceChooseTool::MakePlayerIdArrayMask(numPlayerIdExists, aPlayerIdExists);        \
+            /* get exist player mask */                                                                             \
+            int32 numPlayerExists = 0;                                                                              \
+            CVoiceChooseTool::VOICELIST aTmpVoiceList[GAMETYPES::PLAYERS_MAX] = { { -1, PLAYERID::ID_INVALID },     \
+                                                                                  { -1, PLAYERID::ID_INVALID },     \
+                                                                                  { -1, PLAYERID::ID_INVALID },     \
+                                                                                  { -1, PLAYERID::ID_INVALID } };   \
+            CVoiceChooseTool::GetExistCharacter(&numPlayerExists, aTmpVoiceList);                                   \
+            uint32 maskExists = CVoiceChooseTool::MakePlayerIdArrayMask(numPlayerExists, aTmpVoiceList);            \
+                                                                                                                    \
             /* get check player character mask */                                                                   \
-            PLAYERID::VALUE aPlayerIdCheck [] = __VA_ARGS__;                                                        \
-            uint32 maskCheck = CVoiceChooseTool::MakePlayerIdArrayMask(COUNT_OF(aPlayerIdCheck), aPlayerIdCheck);   \
+            int32 voiceListSize = 0;                                                                                \
+            CVoiceChooseTool::VOICELIST* pVoiceList = GetVoiceList(&voiceListSize);                                 \
+            uint32 maskCheck = CVoiceChooseTool::MakePlayerIdArrayMask(voiceListSize, pVoiceList);                  \
+                                                                                                                    \
             /* now check if all characters of voice code is exists on the stage */                                  \
             if ((maskExists & maskCheck) == maskCheck)                                                              \
-                return VoiceCode;                                                                                   \
+                return pVoiceList[0].m_nCode;                                                                       \
+                                                                                                                    \
             return -1;                                                                                              \
+        };                                                                                                          \
+                                                                                                                    \
+        virtual CVoiceChooseTool::VOICELIST* GetVoiceList(int32* size) override                                     \
+        {                                                                                                           \
+            static CVoiceChooseTool::VOICELIST s_aVoiceListOrg[] = { __VA_ARGS__ };                                 \
+            static CVoiceChooseTool::VOICELIST s_aVoiceListWork[] = { __VA_ARGS__ };                                \
+                                                                                                                    \
+            *size = COUNT_OF(s_aVoiceListOrg);                                                                      \
+            for (int32 i = 0; i < COUNT_OF(s_aVoiceListOrg); ++i)                                                   \
+                s_aVoiceListWork[i] = s_aVoiceListOrg[i];                                                           \
+                                                                                                                    \
+            return s_aVoiceListWork;                                                                                \
         };                                                                                                          \
                                                                                                                     \
         static CVoiceChooser* Instance(void)                                                                        \
@@ -1625,9 +1668,8 @@ CREATE_CHOOSER(
 
 
 CREATE_CHOOSER_EX(
-    167,
-    0x5001,
-    { PLAYERID::ID_LEO }
+    167,    
+    { 0x5001, PLAYERID::ID_LEO }
 );
 
 
@@ -1645,8 +1687,10 @@ CREATE_CHOOSER(
 
 CREATE_CHOOSER_EX(
     170,
-    0x5004,
-    { PLAYERID::ID_MIC, PLAYERID::ID_LEO, PLAYERID::ID_RAP, PLAYERID::ID_DON }
+    { 0x5004, PLAYERID::ID_MIC },
+    { 0x5004, PLAYERID::ID_LEO },
+    { 0x5004, PLAYERID::ID_RAP },
+    { 0x5004, PLAYERID::ID_DON }
 );
 
 
@@ -1665,8 +1709,8 @@ CREATE_CHOOSER(
 
 CREATE_CHOOSER_EX(
     173,
-    0x5007,
-    { PLAYERID::ID_MIC, PLAYERID::ID_LEO }
+    { 0x5007, PLAYERID::ID_MIC },
+    { 0x5007, PLAYERID::ID_LEO },
 );
 
 
@@ -2040,6 +2084,7 @@ CREATE_CHOOSER(
 
 
 static CVoiceChooser* s_apVoiceChooserList[SEGROUPID::ID_ONLYVOX_MAX] = { nullptr };
+static bool s_abVoiceChooserListPrinted[COUNT_OF(s_apVoiceChooserList)];
 
 
 /*static*/ void CVoiceManager::Initialize(void)
@@ -2276,6 +2321,14 @@ static CVoiceChooser* s_apVoiceChooserList[SEGROUPID::ID_ONLYVOX_MAX] = { nullpt
     s_apVoiceChooserList[225] = CVoiceChooserGroup225::Instance();
     s_apVoiceChooserList[226] = CVoiceChooserGroup226::Instance();
     s_apVoiceChooserList[227] = nullptr;
+
+#ifdef _DEBUG
+    if (CGameData::PlayParam().IsFirstStage())
+    {
+        for (int32 i = 0; i < COUNT_OF(s_abVoiceChooserListPrinted); ++i)
+            s_abVoiceChooserListPrinted[i] = false;
+    };
+#endif /* _DEBUG */
 };
 
 
@@ -2302,12 +2355,38 @@ static CVoiceChooser* s_apVoiceChooserList[SEGROUPID::ID_ONLYVOX_MAX] = { nullpt
     ASSERT(idGroup >= 0);
     ASSERT(idGroup < SEGROUPID::ID_MAX);
 
+    if (idGroup >= SEGROUPID::ID_MAX)
+        return false;
+
+    if (idGroup < 0)
+        return false;
+
     CVoiceChooser* pVoiceChooser = s_apVoiceChooserList[idGroup];
-    ASSERT(pVoiceChooser);
-    
-    int32 nVoiceCode = pVoiceChooser->GetVoiceID(idPlayer);
-    
-    return PlayVoice(nVoiceCode, bIsHelpID);
+    if (pVoiceChooser)
+    {
+#ifdef _DEBUG
+        if (CConfigure::CheckArg("sdlogld"))
+        {
+            if (!s_abVoiceChooserListPrinted[idGroup])
+            {
+                s_abVoiceChooserListPrinted[idGroup] = true;
+
+                int32 voiceListSize = 0;
+                CVoiceChooseTool::VOICELIST* pVoiceList = pVoiceChooser->GetVoiceList(&voiceListSize);
+                if (pVoiceList)
+                {                    
+                    for (int32 i = 0; i < voiceListSize; ++i)
+                        SdLogCodeLoad(pVoiceList[i].m_nCode);
+                };                
+            };
+        };
+#endif /* _DEBUG */
+
+        int32 nVoiceCode = pVoiceChooser->GetVoiceID(idPlayer);
+        return PlayVoice(nVoiceCode, bIsHelpID);
+    };
+
+    return false;
 };
 
 

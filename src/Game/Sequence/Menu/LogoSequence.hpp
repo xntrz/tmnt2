@@ -58,5 +58,5 @@ private:
     float m_fTime;
     int32 m_iLogoIndex;
     PHASE m_phase;
-    CSprite m_Sprite;
+    CSprite m_sprite;
 };

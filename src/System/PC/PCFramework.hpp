@@ -9,13 +9,11 @@ class CPCSystem;
 class CPCTimer;
 class CPCGraphicsDevice;
 class CPCSoundDevice;
+class CPCFrameSkipController;
 
 
 class CPCFramework final : public CFramework
 {
-private:
-    class CFrameSkipController;
-    
 public:
     static CPCFramework& Instance(void);
     
@@ -40,5 +38,5 @@ private:
     CPCTimer*               m_pTimer;
     CPCGraphicsDevice*      m_pPCGraphicsDevice;
     CPCSoundDevice*         m_pPCSoundDevice;
-    CFrameSkipController*   m_pFrameSkipController;
+    CPCFrameSkipController* m_pFrameSkipController;
 };

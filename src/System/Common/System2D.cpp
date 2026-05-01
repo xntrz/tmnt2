@@ -5,14 +5,20 @@
 #include "Screen.hpp"
 
 
-static CCamera* s_pDefaultCamera = nullptr;
-static CCamera* s_pCurrentCamera = nullptr;
-static uint32 s_uReferenceCount = 0;
+#if defined(TMNT2_RWDRV_OPENGL)
+static const RwRGBAReal LIGHT_COLOR = { 1.0f, 1.0f, 1.0f, 1.0f };
+static RpLight* s_pLightAmbient = nullptr;
+#endif /* defined(TMNT2_RWDRV_OPENGL) */
+
+
+/*static*/ CCamera* CSystem2D::m_pDefaultCamera = nullptr;
+/*static*/ CCamera* CSystem2D::m_pCurrentCamera = nullptr;
+/*static*/ uint32   CSystem2D::m_uReferenceCount = 0;
 
 
 /*static*/ bool CSystem2D::Initialize(void)
 {
-    if (!s_uReferenceCount++)
+    if (!m_uReferenceCount++)
     {
         RwBBox WorldBBox;
         WorldBBox.inf.x = -100.0f;        
@@ -22,18 +28,33 @@ static uint32 s_uReferenceCount = 0;
         WorldBBox.sup.y = 100.0f;
         WorldBBox.sup.z = 100.0f;
 
-        RpWorld* pRpWorld = RpWorldCreate(&WorldBBox);
-        ASSERT(pRpWorld);
+        RpWorld* pWorld = RpWorldCreate(&WorldBBox);
+        ASSERT(pWorld);
 
-        s_pDefaultCamera = CCamera::GetCamera();
-        ASSERT(s_pDefaultCamera);
+        m_pDefaultCamera = CCamera::GetCamera();
+        ASSERT(m_pDefaultCamera);
         
-        s_pCurrentCamera = s_pDefaultCamera;
-        RpWorldAddCamera(pRpWorld, s_pDefaultCamera->GetRwCamera());
-        Rt2dOpen(s_pDefaultCamera->GetRwCamera());
+        m_pCurrentCamera = m_pDefaultCamera;
+        RpWorldAddCamera(pWorld, m_pDefaultCamera->GetRwCamera());
+
+#if defined(TMNT2_RWDRV_OPENGL)
+        RpLight* pLight = nullptr;
+
+        pLight = RpLightCreate(rpLIGHTAMBIENT);
+        if (pLight)
+        {
+            RpLightSetColor(pLight, &LIGHT_COLOR);
+
+            RpWorldAddLight(pWorld, pLight);
+            s_pLightAmbient = pLight;
+        };
+#endif /* defined(TMNT2_RWDRV_OPENGL) */
+
+        Rt2dOpen(m_pDefaultCamera->GetRwCamera());
     };
 
     CSprite::SetDefaultVirtualScreen();
+    
     Rt2dDeviceSetMetric(CSprite::m_fVirtualScreenX,
                         CSprite::m_fVirtualScreenY,
                         CSprite::m_fVirtualScreenW,
@@ -47,35 +68,48 @@ static uint32 s_uReferenceCount = 0;
 
 /*static*/ void CSystem2D::Terminate(void)
 {
-    ASSERT(s_uReferenceCount > 0);
+    ASSERT(m_uReferenceCount > 0);
     
-    if (!--s_uReferenceCount)
+    if (!--m_uReferenceCount)
     {
         Rt2dClose();
         
-        RpWorld* pRpWorld = RwCameraGetWorld(s_pDefaultCamera->GetRwCamera());
-        RpWorldRemoveCamera(pRpWorld, s_pDefaultCamera->GetRwCamera());
-        RpWorldDestroy(pRpWorld);
+        RpWorld* pWorld = RwCameraGetWorld(m_pDefaultCamera->GetRwCamera());
 
-        s_pDefaultCamera->Release();
+#if defined(TMNT2_RWDRV_OPENGL)
+        RpLight** ppLight = nullptr;
+
+        ppLight = &s_pLightAmbient;
+        if (*ppLight)
+        {
+            RpWorldRemoveLight(pWorld, *ppLight);
+            RpLightDestroy(*ppLight);
+            *ppLight = nullptr;
+        };
+#endif /* defined(TMNT2_RWDRV_OPENGL) */
         
-        s_pDefaultCamera = nullptr;
-        s_pCurrentCamera = nullptr;
+        RpWorldRemoveCamera(pWorld, m_pDefaultCamera->GetRwCamera());
+        RpWorldDestroy(pWorld);
+
+        m_pDefaultCamera->Release();
+        
+        m_pDefaultCamera = nullptr;
+        m_pCurrentCamera = nullptr;
     };
 };
 
 
 /*static*/ bool CSystem2D::BeginScene(void)
 {
-    ASSERT(s_pCurrentCamera);
-    return s_pCurrentCamera->BeginScene();
+    ASSERT(m_pCurrentCamera);
+    return m_pCurrentCamera->BeginScene();
 };
 
 
 /*static*/ void CSystem2D::EndScene(void)
 {
-    ASSERT(s_pCurrentCamera);
-    s_pCurrentCamera->EndScene();
+    ASSERT(m_pCurrentCamera);
+    m_pCurrentCamera->EndScene();
 };
 
 
@@ -107,25 +141,22 @@ static uint32 s_uReferenceCount = 0;
 
 /*static*/ bool CSystem2D::Reset(void)
 {
-    if (!s_uReferenceCount)
+    if (!m_uReferenceCount)
         return false;
 
-    Rt2dDeviceSetMetric(
-        CSprite::m_fVirtualScreenX,
-        CSprite::m_fVirtualScreenY,
-        CSprite::m_fVirtualScreenW,
-        CSprite::m_fVirtualScreenH
-    );
+    Rt2dDeviceSetMetric(CSprite::m_fVirtualScreenX,
+                        CSprite::m_fVirtualScreenY,
+                        CSprite::m_fVirtualScreenW,
+                        CSprite::m_fVirtualScreenH);
 
-    ASSERT(s_pDefaultCamera);
-    s_pCurrentCamera = s_pDefaultCamera;
+    ASSERT(m_pDefaultCamera);
+    m_pCurrentCamera = m_pDefaultCamera;
     
-    return Rt2dDeviceSetCamera(s_pDefaultCamera->GetRwCamera()) != 0;
+    return Rt2dDeviceSetCamera(m_pDefaultCamera->GetRwCamera()) != 0;
 };
 
 
-/*static*/ CCamera& CSystem2D::Camera(void)
+/*static*/ void CSystem2D::SetLayerDepth(float fDepth)
 {
-    ASSERT(s_pCurrentCamera);
-    return *s_pCurrentCamera;
+    Rt2dDeviceSetLayerDepth(RwCameraGetNearClipPlane(m_pCurrentCamera->GetRwCamera()) * fDepth);
 };

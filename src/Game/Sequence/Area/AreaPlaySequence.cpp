@@ -37,12 +37,12 @@ bool CAreaPlaySequence::OnAttach(const void* pParam)
     m_idLastStage = STAGEID::ID_NONE;
     changeStep(STEP_STAGESTART);
     
-    CGameData::OnBeginArea();
-
-#ifdef BUILD_TRIAL
+#ifdef TMNT2_TRIAL
     CTimeoutProcess::Enable(this, true);
     CTimeoutProcess::Start(this);
-#endif /* BUILD_TRIAL */
+#endif /* TMNT2_TRIAL */
+    
+    CGameData::OnBeginArea();
 
 #ifdef _DEBUG
 	m_bSkipAllMovies = (pParam != nullptr);
@@ -140,7 +140,11 @@ void CAreaPlaySequence::OnMove(bool bRet, const void* pReturnValue)
                     else
                     {
                         CGameData::PlayResult().SetAreaResult(CGamePlayResult::AREARESULT_GAMECLEAR);
+#ifdef TMNT2_TRIAL
+                        changeStep(STEP_EOL);
+#else /* TMNT2_TRIAL */
                         changeStep(STEP_RESULT);
+#endif /* TMNT2_TRIAL */
                     };
                 };
             }
@@ -360,7 +364,9 @@ void CAreaPlaySequence::callMovieSequence(MVNAME mvname)
         return;
 #endif /* _DEBUG */
     
+#if defined(TMNT2_FEATURE_MOVIE)
     CScreenFade::BlackIn(0.0f);
     Call(PROCLABEL_SEQ_MOVIE, reinterpret_cast<const void*>(mvname));
+#endif /* defined(TMNT2_FEATURE_MOVIE) */
 };
 

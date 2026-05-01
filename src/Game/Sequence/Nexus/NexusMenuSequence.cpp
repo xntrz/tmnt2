@@ -549,7 +549,7 @@ void CNexusMenuSequence::ReplaceText(void)
             const wchar* pwszFormat = CGameText::GetText(GAMETEXT_GG_TOURNEY_WIN);
 
             wchar wszRepStr[256];
-            wszRepStr[0] = UTEXT('\0');
+            wszRepStr[0] = UCHAR('\0');
             CTextData::Sprintf(wszRepStr, pwszFormat, numClear, numPlay, clearPercent);
 
             std::sprintf(szOrgStr, "%swin_%d", apszTournamentHeadLabel[i], j);
@@ -596,11 +596,11 @@ void CNexusMenuSequence::ReplaceText(void)
                      totalClearTime.GetSecond());
 
         wchar wszClearTimeAsStr[64];
-        wszClearTimeAsStr[0] = UTEXT('\0');
+        wszClearTimeAsStr[0] = UCHAR('\0');
         CGameFont::ConvertToUnicode(wszClearTimeAsStr, szClearTimeAsStr);
     
         wchar wszRepStr[128];
-        wszRepStr[0] = UTEXT('\0');
+        wszRepStr[0] = UCHAR('\0');
 #ifdef TMNT2_BUILD_EU
         CTextData::Sprintf(wszRepStr, CGameText::GetText(GAMETEXT_GG_TIME), wszClearTimeAsStr);
 #else /* TMNT2_BUILD_EU */

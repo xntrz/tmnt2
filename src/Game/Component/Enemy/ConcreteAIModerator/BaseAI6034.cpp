@@ -332,17 +332,31 @@ namespace Utils6034
     };
 
 
-    void CSmallMemoryManager::PushGlobal(void)
+    /*NOINLINE*/ void CSmallMemoryManager::PushGlobal(void)
     {
+        //
+        //  NOTE: At web build (emscripten) with full optimization for some reason some of this 
+        //        functions (PushGlobal/PopGlobal) may thrown away and cause memory corruption.
+        //        So memory barrier is required here.
+        // 
+        //        Example alloc for CWaitMessage in PushMessage is cause corruption because
+        //        replace global memory manager with this is not happens so allocs goes to global
+        //        but when message handled then free goes here so that cause crash.
+        //
+
+        MEMORY_BARRIER();
         m_pPrev = m_pThis;
         m_pThis = this;
+        MEMORY_BARRIER();    
     };
 
 
-    void CSmallMemoryManager::PopGlobal(void)
+    /*NOINLINE*/ void CSmallMemoryManager::PopGlobal(void)
     {
+        MEMORY_BARRIER();
         m_pThis = m_pPrev;
         m_pPrev = nullptr;
+        MEMORY_BARRIER();
     };
 
 

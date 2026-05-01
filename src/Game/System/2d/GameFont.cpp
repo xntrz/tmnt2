@@ -203,7 +203,7 @@ static inline float GetFontHeight(Rt2dFont* pFont)
 /*static*/ float CGameFont::GetStringWidth(const char* pszString)
 {
     static wchar s_awszBuff[1024];
-    s_awszBuff[0] = UTEXT('\0');
+    s_awszBuff[0] = UCHAR('\0');
 
     CUnicodeFont::ConvertToUnicode(s_awszBuff, pszString);
 
@@ -214,7 +214,7 @@ static inline float GetFontHeight(Rt2dFont* pFont)
 /*static*/ float CGameFont::GetStringWidth(const char* pszString, float fHeight)
 {
     static wchar s_awszBuff[1024];
-    s_awszBuff[0] = UTEXT('\0');
+    s_awszBuff[0] = UCHAR('\0');
 
     CUnicodeFont::ConvertToUnicode(s_awszBuff, pszString);
 

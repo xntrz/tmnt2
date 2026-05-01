@@ -22,6 +22,7 @@
 #include "Game/System/Hit/BodyHitManager.hpp"
 #include "Game/System/Map/MapCamera.hpp"
 #include "Game/System/Misc/Gamepad.hpp"
+#include "Game/System/Sound/VoiceManager.hpp"
 #include "Game/ProcessList.hpp"
 #include "System/Common/Process/ProcessMail.hpp"
 #include "System/Common/Process/Sequence.hpp"
@@ -29,15 +30,19 @@
 
 #include <cctype> // toupper
 
-#ifdef TARGET_PC
+#if defined(TARGET_PC)
 #include "System/PC/PCSpecific.hpp"
 #include "System/PC/PCPhysicalControllerKey.hpp"
-#endif /* TARGET_PC */
+#elif defined(TARGET_WEB)
+#include "System/Web/WebSpecific.hpp"
+#include "SDL3/SDL_scancode.h"
+#endif
 
-
-#ifdef TARGET_PC
+#if defined(TARGET_PC)
 #define MENU_ACTIVATE_KEY (DIK_F4)
-#endif /* TARGET_PC */
+#elif defined(TARGET_WEB)
+#define MENU_ACTIVATE_KEY (SDL_SCANCODE_F4)
+#endif
 
 
 static int32 s_aSequenceLabelListToAddMenu[] =
@@ -472,6 +477,16 @@ void CDebugMenu::InitMenu_Common(CDebugMenuCtrl& menu)
     menu.AddTrigger("Make WND screenshot to clipboard", [](void*) {
         m_pInstance->m_inStepMakeScrShot = 3;
     });  
+
+    menu.AddInt("Call voice group", SEGROUPID::VALUE(0), SEGROUPID::ID_MAX, 1, SEGROUPID::VALUE(0), [](int32 value, bool bTrigger) {
+        if (bTrigger) {
+            if (CGameProperty::GetPlayerNum() > 0)
+            {
+                IGamePlayer* pGameplayer = CGameProperty::Player(0);
+                CVoiceManager::SetVoice(SEGROUPID::VALUE(value), pGameplayer->GetCurrentCharacterID(), false);
+            };
+        };
+    });
 };
 
 
@@ -663,8 +678,15 @@ void CDebugMenuProcess::Move(void)
     };
 
     /* menu activation check */
-#ifdef TARGET_PC
-    if (CPCSpecific::IsKeyTrigger(MENU_ACTIVATE_KEY) || bDbgBrkRq)
+    bool bKeyTrigger = false;
+
+#if defined(TARGET_PC)
+    bKeyTrigger = CPCSpecific::IsKeyTrigger(MENU_ACTIVATE_KEY);
+#elif defined(TARGET_WEB)
+    bKeyTrigger = CWebSpecific::IsKeyTrigger(MENU_ACTIVATE_KEY);
+#endif
+    
+    if (bKeyTrigger || bDbgBrkRq)
     {
         s_bDebugMenuEnable = !s_bDebugMenuEnable;
 
@@ -673,7 +695,6 @@ void CDebugMenuProcess::Move(void)
         else
             Mail().Send(CSequence::GetCurrently(), PROCESSTYPES::MAIL::TYPE_MOVE_ENABLE);
     };
-#endif /* TARGET_PC */
 
     /* terminate self when game exit */
     if (!Info().IsProcessExist(PROCLABEL_SEQ_GAMEMAIN))
@@ -725,8 +746,10 @@ void CDebugMenuProcess::Draw(void) const
 
 #if defined(TARGET_PC)
         pszKeyName = CPCSpecific::GetKeyName(MENU_ACTIVATE_KEY);
+#elif defined(TARGET_WEB)
+        pszKeyName = CWebSpecific::GetKeyName(MENU_ACTIVATE_KEY);
+#endif
         ASSERT(pszKeyName, "key is invalid or not allowed");
-#endif /* defined(TARGET_PC) */     
 
         char szKeyBuffer[32];
         szKeyBuffer[0] = '\0';

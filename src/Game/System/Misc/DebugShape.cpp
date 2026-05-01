@@ -245,16 +245,23 @@ void CDebugShapeContainer::Draw3D(void)
         };
     };
 
-    RSPush3D();
-    Flush();
-    RSPop3D();
+    if (!m_listShapeAlloc3D.empty())
+    {
+        RSPush3D();
+        Flush();
+        RSPop3D();
+    };    
 };
 
 
 void CDebugShapeContainer::Draw2D(void)
 {
-    RSPush2D();
-    m_fLabelDiff = 0.0f;
+    if (!m_listShapeAlloc2D.empty())
+    {
+        RSPush2D();
+        m_fLabelDiff = 0.0f;
+    };
+    
     for (SHAPE& it : m_listShapeAlloc2D)
     {
         switch (it.m_type)
@@ -268,7 +275,11 @@ void CDebugShapeContainer::Draw2D(void)
             break;
         };
     };
-    RSPop2D();
+
+    if (!m_listShapeAlloc2D.empty())
+    {
+        RSPop2D();
+    };
 };
 
 

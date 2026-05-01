@@ -2,6 +2,13 @@
 Reimplementation PC version of Teenage Mutant Ninja Turtles 2: Battle Nexus (2004). \
 All names & `src/` structure restored by dwarf pdb from leaked PS2 prototype [image](https://archive.org/details/TeenageMutantNinjaTurtles2BattleNexusJun142004prototype).
 
+<!--
+You can try to play web version:     
+- Play [TRIAL](http://192.168.1.36:6931/?trial) version (Required downloading of ~80MB of addition data)     
+- Play [FULL](http://192.168.1.36:6931/?full) version (Required owning of PC game version assets to select at startup)     
+&nbsp;    
+-->
+
 <p float="left">
 <img src="scr1.png" width="250"/>
 <img src="scr3.png" width="250"/>
@@ -10,34 +17,10 @@ All names & `src/` structure restored by dwarf pdb from leaked PS2 prototype [im
 
 &nbsp;
 > # Building & Run
-Currently building available only via premake5 & visual studio.\
-This is simplified instruction, more detailed process you can see [here](https://github.com/xntrz/tmnt2/issues/1#issuecomment-2637289859).
-
-**Requirements**
-- Assets files from **PC version** of the game
-- MS Visual Studio with fully support c++11 (Visual Studio 2015 or higher)
-- MS DirectX 9.0 SDK with `DXSDK_DIR` environment variable is set
-
-**Build**
-- Navigate to `build/pc/`
-- [Generate](https://premake.github.io/docs/Using-Premake/#using-premake-to-generate-project-files) `.sln` file by [premake5](https://premake.github.io/)
-- Open `.sln` file in `build/pc/vs*` by Visual Studio
-- Select [build configuration](https://learn.microsoft.com/en-us/visualstudio/ide/understanding-build-configurations) depending on your game region: NA or EU (how to know: see below [Game Region](#Game-region))
-- Hit `Build solution`
-
-**Run**
-- Place executable to assets folder or specify path to them as **run arg**
-- Run
-
-**Run args**
-- `-afspath=%PATH%` - specifies location of game assets files
-- `-wnd` - windowed mode
-- `-noeval` - removes RW evaluation logo at left-down corner
-- `-lang=%LOCALE%` - forcefully sets language (available only for EU build, value to set: `en`, `fr`, `de`, `es`, `it`)
-
-&nbsp;
-> # Game region
-Retail PC game has 2 build types first one for North America (NA) and second one for Europe (EU). Both of them have minor changes for UI and some for gameplay. If you have some or all of the following files in your game assets directory: `TMNTF.DAT`, `TMNTG.DAT`, `TMNTI.DAT`, `TMNTS.DAT` - you have EU version, otherwise NA.
+- [For Windows](README-build-win.md)
+<!-- 
+- [For Web](README-build-web.md) 
+-->
 
 &nbsp;
 > # 3rd party solutions used
@@ -45,3 +28,8 @@ Retail PC game has 2 build types first one for North America (NA) and second one
 * Dwarf explorer - [dwex](https://github.com/sevaa/dwex)
 * CRIWARE SDK - [crisdk](https://archive.org/details/cri-sdk)
 * toon plugin - [rptoon](https://github.com/xntrz/rptoon)
+<!--
+* Emscripten SDK - [emsdk](https://emscripten.org/)
+* GL4ES - [GL4ES](https://github.com/ptitseb/gl4es)
+* SDL3 - [SDL3](https://github.com/libsdl-org/SDL)
+-->

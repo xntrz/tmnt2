@@ -853,7 +853,7 @@ void CAntiqueShop::Draw(void)
 #endif /* TMNT2_BUILD_EU */
 
         wchar wszBuff[256];
-        wszBuff[0] = UTEXT('\0');
+        wszBuff[0] = UCHAR('\0');
 
         CTextData::Sprintf(wszBuff, CGameText::GetText(GAMETEXT_AT_NO), m_idAntiqueSel);
 

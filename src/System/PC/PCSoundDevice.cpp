@@ -1,10 +1,9 @@
 #include "PCSoundDevice.hpp"
 #include "PCSpecific.hpp"
 
-#include "Sound/SdDrv.hpp"
-
-#include "System/Common/File/Filename.hpp"
 #include "System/Common/Configure.hpp"
+#include "System/Common/File/Filename.hpp"
+#include "System/Common/Sound/SdDrv.hpp"
 
 #include "cri_adxt.h"
 #include "adx_dsound8.h"
@@ -17,6 +16,12 @@ CPCSoundDevice::CPCSoundDevice(void)
 : m_pSoundHeap(nullptr)
 , m_pDs(nullptr)
 , m_pDsBuffer(nullptr)
+{
+    ;
+};
+
+
+CPCSoundDevice::~CPCSoundDevice(void)
 {
     ;
 };
@@ -91,11 +96,8 @@ void CPCSoundDevice::Terminate(void)
 };
 
 
-bool CPCSoundDevice::InitializeLib(void)
+bool CPCSoundDevice::StartupFramework(void)
 {
-    //
-    //	Init path
-    //
     char szPath[MAX_PATH];
     szPath[0] = '\0';
     
@@ -109,37 +111,23 @@ bool CPCSoundDevice::InitializeLib(void)
     if (szPath[0] == '\0')
         GetModulePath(szPath);
 
-    //
-    //	Init options
-    //
-    uint32 OptFlag = 0;
-
-    if (CConfigure::CheckArg("novag"))
-        OptFlag |= 0x1;
-    
-    if (CConfigure::CheckArg("novox"))
-        OptFlag |= 0x2;
-
-    if (CConfigure::CheckArg("noseq"))
-        OptFlag |= 0x4;
-
-    if (CConfigure::CheckArg("sdlog"))
-        OptFlag |= 0x8;
-
-    //
-    //	Init heap
-    //
+    uint32 OptFlag = GetFrameworkOptFlags();
     void* HeapPtr = nullptr;
     uint32 HeapSize = 0;
 
-    //
-    //	Init drv
-    //
-    return SdDrvInitialize(CPCSpecific::m_hWnd, szPath, HeapPtr, HeapSize, OptFlag);
+    if (!SdDrvInitialize(CPCSpecific::m_hWnd, szPath, HeapPtr, HeapSize, OptFlag))
+        return false;
+
+    SdDrvFirstLoad();
+
+    while (SdDrvGetLoadInfo())
+        ;
+
+    return true;
 };
 
 
-void CPCSoundDevice::TerminateLib(void)
+void CPCSoundDevice::ShutdownFramework(void)
 {
     SdDrvTerminate();
 

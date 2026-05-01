@@ -20,9 +20,11 @@ CGimmick::CGimmick(const char* pszName, void* pParam)
     ASSERT(pParam);
     
 #ifdef _DEBUG
-	GIMMICKPARAM::GIMMICK_BASIC* pBasic = static_cast<GIMMICKPARAM::GIMMICK_BASIC*>(pParam);
+    GIMMICKPARAM::GIMMICK_BASIC* pBasic =
+        static_cast<GIMMICKPARAM::GIMMICK_BASIC*>(pParam);
+    
     m_vDebugInitialPos = pBasic->m_vPosition;
-#endif    
+#endif /* _DEBUG */
 };
 
 
@@ -80,22 +82,13 @@ void CGimmick::MessageProc(int32 nMessageID, void* pParam)
 
 void CGimmick::Draw(void) const
 {
-    RENDERSTATE_PUSH(rwRENDERSTATETEXTURERASTER, 0);
-    RENDERSTATE_PUSH(rwRENDERSTATECULLMODE, rwCULLMODECULLNONE);
-    RENDERSTATE_PUSH(rwRENDERSTATETEXTUREADDRESSU, rwTEXTUREADDRESSCLAMP);
-    RENDERSTATE_PUSH(rwRENDERSTATETEXTUREADDRESSV, rwTEXTUREADDRESSCLAMP);
-
     if (m_pModelStrategy)
         m_pModelStrategy->Draw();
-
-    RENDERSTATE_POP(rwRENDERSTATETEXTUREADDRESSV);
-    RENDERSTATE_POP(rwRENDERSTATETEXTUREADDRESSU);
-    RENDERSTATE_POP(rwRENDERSTATECULLMODE);
 
 #ifdef _DEBUG
     if (CGimmickDebug::SHOW_ME)
         CDebugShape::ShowLabel(&m_vDebugInitialPos, GetName());
-#endif    
+#endif /* _DEBUG */
 };
 
 

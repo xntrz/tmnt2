@@ -4,6 +4,8 @@
 #include "Game/Component/GameData/GameData.hpp"
 #include "Game/Component/Player/Manipulator.hpp"
 #include "Game/Component/Player/PlayerCharacter.hpp"
+#include "Game/Component/Module/CircleShadowModule.hpp"
+#include "Game/Component/Module/PlayerChangeVoiceModule.hpp"
 
 
 class CHomeCharacterManipulator : public CManipulator
@@ -134,11 +136,25 @@ void CHomeCharacterManipulator::Run(void)
             continue;
 
         CPlayerCharacter* pPlayerCharacter = CPlayerCharacter::New(PLAYERID::VALUE(i), GAMETYPES::COSTUME_NONE);
-        ASSERT(pPlayerCharacter);
+        if (pPlayerCharacter)
+        {
+            CCircleShadowModule* pCircleShadowModule =
+                static_cast<CCircleShadowModule*>(pPlayerCharacter->GetModule(MODULETYPE::CIRCLE_SHADOW));
 
-        ASSERT(i >= 0);
-        ASSERT(i < COUNT_OF(s_apHomeCharacterManipulator));
-        s_apHomeCharacterManipulator[i] = new CHomeCharacterManipulator(pPlayerCharacter);
+            if (pCircleShadowModule)
+                pCircleShadowModule->SetEnable(true);
+
+            CPlayerChangeVoiceModule* pChangeVoiceModule =
+                static_cast<CPlayerChangeVoiceModule*>(pPlayerCharacter->GetModule(MODULETYPE::PLAYER_CHNG_VOICE));
+
+            if (pChangeVoiceModule)
+            {
+                pChangeVoiceModule->unlink();
+                delete pChangeVoiceModule;
+            };
+
+            s_apHomeCharacterManipulator[i] = new CHomeCharacterManipulator(pPlayerCharacter);
+        };
     };
 };
 

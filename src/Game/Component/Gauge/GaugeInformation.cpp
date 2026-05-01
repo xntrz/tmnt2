@@ -44,12 +44,22 @@ private:
 
     enum PAUSERESULT
     {
+#if !defined(TMNT2_TRIAL)
         PAUSERESULT_BACK = 0,
         PAUSERESULT_INFO,
         PAUSERESULT_RET_WORLD,
         PAUSERESULT_RET_TITLE,
-        
+
         PAUSERESULTNUM,
+#else /* !defined(TMNT2_TRIAL) */
+        PAUSERESULT_BACK = 0,
+        PAUSERESULT_RET_TITLE,
+
+        PAUSERESULTNUM,
+
+        PAUSERESULT_INFO,
+        PAUSERESULT_RET_WORLD,
+#endif /* !defined(TMNT2_TRIAL) */
     };
 
     enum NEXUSSTEP
@@ -336,8 +346,11 @@ void CGaugeInformation_Container::PauseDrawSub(void)
     vecHelpPos.y = -85.0f;
     CGameFont::SetHeightScaled(2.0f);
 #endif /* TMNT2_BUILD_EU */
-    CGameFont::SetRGBA(255, 255, 255, 255);    
-    CGameFont::Show(CGameText::GetText(m_bShowInformationFlag ? GAMETEXT_HELP_FUNC_BACK : GAMETEXT_HELP_FUNC_SELECT), &vecHelpPos);
+    CGameFont::SetRGBA(255, 255, 255, 255);
+    
+    const wchar* pwszText = CGameText::GetText(m_bShowInformationFlag ? GAMETEXT_HELP_FUNC_BACK :
+                                                                        GAMETEXT_HELP_FUNC_SELECT);
+    CGameFont::Show(pwszText, &vecHelpPos);
 
 #ifdef TMNT2_BUILD_EU
     CGameFont::SetHeightScaled(2.0f);
@@ -487,7 +500,7 @@ void CGaugeInformation_Container::PauseDrawSub(void)
 
         for (int32 i = 0; i < PAUSERESULTNUM; ++i)
         {
-            const wchar* pwszText = nullptr;
+            pwszText = nullptr;
 
             switch (i)
             {
@@ -532,7 +545,7 @@ void CGaugeInformation_Container::PauseDrawSub(void)
         bbox.w =  440.0f;
         bbox.h =  300.0f;
 
-        const wchar* pwszText = nullptr;
+        pwszText = nullptr;
 
         if (CGameData::PlayParam().GetStageMode() == GAMETYPES::STAGEMODE_NEXUS)
         {
@@ -619,11 +632,11 @@ void CGaugeInformation_Container::MissionInfoDrawSub(void)
         ASSERT(pszEpisode != nullptr);
 
         wchar wszEpisode[128];
-        wszEpisode[0] = UTEXT('\0');
+        wszEpisode[0] = UCHAR('\0');
         CGameFont::ConvertToUnicode(wszEpisode, pszEpisode);
 
         wchar wszEpisodeFmtBuff[256];
-        wszEpisodeFmtBuff[0] = UTEXT('\0');        
+        wszEpisodeFmtBuff[0] = UCHAR('\0');        
         CTextData::Sprintf(wszEpisodeFmtBuff, CGameText::GetText(GAMETEXT_GG_EPISODE), wszEpisode);
 
         CGameFont::Show(wszEpisodeFmtBuff, -240.0f, -140.0f);
@@ -878,7 +891,7 @@ void CGaugeInformation_Container::DispBattleNexusInfoSub(void)
 
         /* draw battle no format str */
         wchar wszBuff[128];
-        wszBuff[0] = UTEXT('\0');
+        wszBuff[0] = UCHAR('\0');
 
         const wchar* pwszFormat = CGameText::GetText(GAMETEXT_GG_TOURNEY_BATTLE);
         CTextData::Sprintf(wszBuff, pwszFormat, stageIndex + 1);

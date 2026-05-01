@@ -4,9 +4,11 @@
 #include "Game/System/Misc/Gamepad.hpp"
 #include "System/Common/Controller.hpp"
 
-#ifdef TARGET_PC
+#if defined(TARGET_PC)
 #include "System/PC/PCSpecific.hpp"
-#endif /* TARGET_PC */
+#elif defined(TARGET_WEB)
+#include "System/Web/WebSpecific.hpp"
+#endif
 
 
 CGamepadOptionData::CGamepadOptionData(void)
@@ -76,15 +78,18 @@ void CGamepadOptionData::Apply(void)
 #if defined(TARGET_PS2)
     IGamepad::AppendButtonFunction(iController, IGamepad::DIGITAL_LUP,      IGamepad::FUNCTION_SWITCH_CAM);
     IGamepad::AppendButtonFunction(iController, IGamepad::DIGITAL_LDOWN,    IGamepad::FUNCTION_SWITCH_GAUGE);
-#elif defined(TARGET_PC)
+#elif (defined(TARGET_PC) || defined(TARGET_WEB))
     IGamepad::AppendButtonFunction(iController, IGamepad::DIGITAL_R3,       IGamepad::FUNCTION_SWITCH_CAM);
     IGamepad::AppendButtonFunction(iController, IGamepad::DIGITAL_L3,       IGamepad::FUNCTION_SWITCH_GAUGE);
 #endif    
 
-#ifdef TARGET_PC
+#if defined(TARGET_PC)
     if (m_port == CPCSpecific::GetKeyboradPort())
         CGameData::Option().Keyboard().AssignButton();
-#endif /* TARGET_PC */
+#elif defined(TARGET_WEB)    
+    if (m_port == CWebSpecific::GetKeyboradPort())
+        CGameData::Option().Keyboard().AssignButton();
+#endif
     
     IGamepad::EnableVibration(iController, m_bVibration);
 };
@@ -95,6 +100,9 @@ bool CGamepadOptionData::IsValid(void) const
     for (int32 i = 0; i < COUNT_OF(m_auButtonAssign); ++i)
     {
         if (m_auButtonAssign[i] & ~IGamepad::DIGITAL_MASK)
+            return false;
+
+        if (m_auButtonAssign[i] == 0)
             return false;
     };
 
