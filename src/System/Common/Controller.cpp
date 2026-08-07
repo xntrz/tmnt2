@@ -297,29 +297,34 @@
 
 
 IPhysicalController::IPhysicalController(void)
+: m_info({})
+, m_aDigitalMapping()
+, m_aAnalogMapping()
 {
-    m_info = {};
     m_info.m_eState = CController::STATE_MAX;
 
     uint32 aDigitalMapping[] =
     {
-          CController::DIGITAL_LUP,
+        CController::DIGITAL_LUP,
         CController::DIGITAL_LDOWN,
-          CController::DIGITAL_LLEFT,
-          CController::DIGITAL_LRIGHT,
-          CController::DIGITAL_RUP,
-          CController::DIGITAL_RDOWN,
-          CController::DIGITAL_RLEFT,
-          CController::DIGITAL_RRIGHT,
-          CController::DIGITAL_SELECT,
-          CController::DIGITAL_START,
-          CController::DIGITAL_L1,
-          CController::DIGITAL_L2,
-          CController::DIGITAL_L3,
-          CController::DIGITAL_R1,
-          CController::DIGITAL_R2,
-          CController::DIGITAL_R3,
+        CController::DIGITAL_LLEFT,
+        CController::DIGITAL_LRIGHT,
+        CController::DIGITAL_RUP,
+        CController::DIGITAL_RDOWN,
+        CController::DIGITAL_RLEFT,
+        CController::DIGITAL_RRIGHT,
+        CController::DIGITAL_SELECT,
+        CController::DIGITAL_START,
+        CController::DIGITAL_L1,
+        CController::DIGITAL_L2,
+        CController::DIGITAL_L3,
+        CController::DIGITAL_R1,
+        CController::DIGITAL_R2,
+        CController::DIGITAL_R3,
     };
+
+    std::memset(m_aDigitalMapping, 0, sizeof(m_aDigitalMapping));
+    std::memcpy(m_aDigitalMapping, aDigitalMapping, sizeof(aDigitalMapping));
 
     CController::ANALOG aAnalogMapping[] =
     {
@@ -339,10 +344,7 @@ IPhysicalController::IPhysicalController(void)
         CController::ANALOG_R3,
     };
 
-    static_assert(sizeof(aDigitalMapping) == (sizeof(m_aDigitalMapping) / 2), "check out");
-    static_assert(sizeof(aAnalogMapping) == sizeof(m_aAnalogMapping), "check out");
-
-    std::memcpy(m_aDigitalMapping, aDigitalMapping, sizeof(aDigitalMapping));
+    std::memset(m_aAnalogMapping, 0, sizeof(m_aAnalogMapping));
     std::memcpy(m_aAnalogMapping, aAnalogMapping, sizeof(aAnalogMapping));
 };
 
