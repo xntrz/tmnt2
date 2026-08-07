@@ -313,11 +313,11 @@ static bool SdStrReadHeadWait(SdStr_t* SdStr)
             return false;
         };
 
-        alCall(alBufferData(SdStr->ALBuffer[i],
-                            SdALGetWaveFormat(&SdStr->WaveHeader),
-                            nullptr,
-                            SdStr->DmaPageBlock,
-                            SdStr->WaveHeader.SamplesPerSec));
+//        alCall(alBufferData(SdStr->ALBuffer[i],
+//                            SdALGetWaveFormat(&SdStr->WaveHeader),
+//                            nullptr,
+//                            SdStr->DmaPageBlock,
+//                            SdStr->WaveHeader.SamplesPerSec));
     };
 
     alCall(alSourcef(SdStr->ALSource, AL_GAIN, 0.0f));
@@ -494,6 +494,11 @@ static bool SdStrOffsetDownload(SdStr_t* SdStr)
     if (!SdStr->MemAddress)
         return false;
 
+    //
+    // TODO read size clamp for end of file
+    // (check voice code from 1 bank - 0x136 in web version)
+    //
+    
     SdStr->FileHandle = SdLoadTaskReadAsync(SdStr->Filename,
                                             SdStr->MemAddress,
                                             SdStr->DmaPageBlock,

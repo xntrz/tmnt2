@@ -267,8 +267,13 @@ static void SdDrvUpdateAll(void)
 
     SdDrvUserThreadCB();
 
+    double PeriodMaxScale = 4.0;
+#ifdef TARGET_WEB
+    PeriodMaxScale = 8.0;
+#endif /* TARGET_WEB */
+
     const double PeriodT = ((double)SD_PERIOD);
-    const double PeriodMax = ((double)SD_PERIOD) * 4.0;
+    const double PeriodMax = ((double)SD_PERIOD) * PeriodMaxScale;
 
     double NowT = SdTimerGetNow();
     double ElapsedT = NowT - SdDrvTimerPrevT;
