@@ -1645,20 +1645,19 @@ bool CBaseLeatherheadChr::CheckDamagePermission(CCharacterAttackCalculator& rCal
                (statusNow == BASELEATHERHEAD::STATUS_ATTACK_E_STUN));
     };
 
-    /* TODO: following ifdef-endif block not exist in PS2 US version */
-#ifdef TARGET_PC
     if (!m_swimParam.bNowSwimmingFlag)
         return true;
-    
+
     if (statusNow == BASELEATHERHEAD::STATUS_SWIM)
     {
+        /* decline any damage to prevent order change while
+           we are about to jump attack from swim mode */
         if (AIThinkOrder().GetOrder() == CAIThinkOrder::ORDER_ATTACK)
             return false;
     };
 
     if (statusNow == ENEMYTYPES::STATUS_COUNTERACT)
         return false;
-#endif /* TARGET_PC */
 
     /* allow damage from magic in swim mode */
     if (m_swimParam.bNowSwimmingFlag)
