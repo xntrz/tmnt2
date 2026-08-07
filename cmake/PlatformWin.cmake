@@ -71,7 +71,7 @@ target_compile_options(${EXEC_NAME} PRIVATE
 )
 
 if(MSVC_VERSION GREATER_EQUAL 1910)
-    target_compile_options(${PROJECT_NAME} PRIVATE /permissive-)
+    target_compile_options(${EXEC_NAME} PRIVATE /permissive-)
     message(STATUS "Setting /permissive- for Visual Studio 2017+")
 endif()
 
