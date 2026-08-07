@@ -395,18 +395,18 @@ void CShotScythe::SetModel(void)
 
 void CShotScythe::Move(void)
 {
-    float fTimeNow = m_fTimer * 0.2f;
+    float fLife = m_fLife * 0.2f;
 
-    if (fTimeNow <= m_fLife)
+    if (m_fTimer > fLife)
     {
-        if ((m_fTimer - fTimeNow) >= m_fLife)
+        if (m_fTimer < (m_fLife - fLife))
             m_fAlpha = 1.0f;
         else
-            m_fAlpha = (m_fTimer - m_fLife) / fTimeNow;
+            m_fAlpha = (m_fLife - m_fTimer) / fLife;
     }
     else
     {
-        m_fAlpha = m_fLife / fTimeNow;
+        m_fAlpha = (m_fTimer / fLife);
     };
 };
 
