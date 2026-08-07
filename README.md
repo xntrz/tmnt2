@@ -8,8 +8,8 @@
 Reimplementation PC version of Teenage Mutant Ninja Turtles 2: Battle Nexus (2004). \
 All names & `src/` structure restored by dwarf pdb from leaked PS2 prototype [image](https://archive.org/details/TeenageMutantNinjaTurtles2BattleNexusJun142004prototype).
 
-<!-- Play [DEMO](http://192.168.1.36:6931/?demo) (require downloading of ~100MB of addition data) -->
-<!-- Play [FULL](http://192.168.1.36:6931/?full) (require owning of PC game version assets to mount at startup) -->
+Play [DEMO](https://xntrz.github.io/tmnt2-play/?demo) (require downloading of ~100MB of addition data)  
+Play [FULL](https://xntrz.github.io/tmnt2-play/?full) (require owning of PC game version assets to mount at startup)    
 
 &nbsp;
 > # Building & Run
