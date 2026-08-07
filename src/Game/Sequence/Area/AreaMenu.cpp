@@ -16,6 +16,9 @@
 #include "System/Common/System2D.hpp"
 
 
+#define WINDOW_ANIM_DURATION (ANIM_DURATION_FRAMES(12))
+
+
 class CAreaMenu_Container
 {
 public:
@@ -102,8 +105,8 @@ private:
     bool        m_bTextureSettingFlag;
     bool        m_bMenuDispFlag;
     bool        m_bSubMenuDispFlag;
-    uint32      m_MenuAnimCount;
-    uint32      m_SubMenuAnimCount;
+    float       m_fMenuAnimCount;
+    float       m_fSubMenuAnimCount;
     int32       m_nMenuItemCount;
     int32       m_aMenuItemTable[MENUITEM_MAX];
     int32       m_nSubMenuItemCount;
@@ -123,8 +126,8 @@ CAreaMenu_Container::CAreaMenu_Container(void)
 , m_bTextureSettingFlag(false)
 , m_bMenuDispFlag(false)
 , m_bSubMenuDispFlag(false)
-, m_MenuAnimCount(0)
-, m_SubMenuAnimCount(0)
+, m_fMenuAnimCount(0.0f)
+, m_fSubMenuAnimCount(0.0f)
 , m_nMenuItemCount(0)
 , m_aMenuItemTable()
 , m_nSubMenuItemCount(0)
@@ -150,8 +153,8 @@ void CAreaMenu_Container::AreaMenuInit_Sub(void)
 {
     m_bMenuDispFlag     = true;
     m_bSubMenuDispFlag  = false;
-    m_MenuAnimCount     = 0;
-    m_SubMenuAnimCount  = 0;
+    m_fMenuAnimCount    = 0.0f;
+    m_fSubMenuAnimCount = 0.0f;
     m_SubmenuType       = SUBMENUTYPE_NONE;
     m_nCursor           = 0;
     m_fCursorRot        = 0.0f;
@@ -189,14 +192,14 @@ AREATYPES::NEXTSEQUENCE CAreaMenu_Container::AreaMenuSelect_Sub(void)
     if (!m_bTextureSettingFlag)
         return AREATYPES::NEXTSEQUENCE_NONE;
 
-    uint32 uAnimDur = static_cast<uint32>(ANIM_DURATION_FRAMES(12));
+    const float fAnimDuration = WINDOW_ANIM_DURATION;
     int32 iController = CGameData::Attribute().GetVirtualPad();
 
     switch (m_SubmenuType)
     {
     case SUBMENUTYPE_WARP:
         {
-            if (m_SubMenuAnimCount < uAnimDur)
+            if (m_fSubMenuAnimCount < fAnimDuration)
                 break;
 
             if (!m_bSubMenuDispFlag)
@@ -218,7 +221,7 @@ AREATYPES::NEXTSEQUENCE CAreaMenu_Container::AreaMenuSelect_Sub(void)
             else if (CController::GetDigitalTrigger(iController, CController::DIGITAL_CANCEL))
             {
                 m_bSubMenuDispFlag = false;
-                m_SubMenuAnimCount = 0;
+                m_fSubMenuAnimCount = 0.0f;
                 CGameSound::PlaySE(SDCODE_SE(4097));
             }
             else if (CController::GetDigitalTrigger(iController, CController::DIGITAL_OK))
@@ -231,7 +234,7 @@ AREATYPES::NEXTSEQUENCE CAreaMenu_Container::AreaMenuSelect_Sub(void)
 
     case SUBMENUTYPE_COMBO:
         {
-            if (m_SubMenuAnimCount < uAnimDur)
+            if (m_fSubMenuAnimCount < fAnimDuration)
                 break;
 
             if (!m_bSubMenuDispFlag)
@@ -269,7 +272,7 @@ AREATYPES::NEXTSEQUENCE CAreaMenu_Container::AreaMenuSelect_Sub(void)
             else if (CController::GetDigitalTrigger(iController, CController::DIGITAL_CANCEL))
             {
                 m_bSubMenuDispFlag = false;
-                m_SubMenuAnimCount = 0;
+                m_fSubMenuAnimCount = 0.0f;
                 CGameSound::PlaySE(SDCODE_SE(4097));
             };
         }
@@ -282,7 +285,7 @@ AREATYPES::NEXTSEQUENCE CAreaMenu_Container::AreaMenuSelect_Sub(void)
             ASSERT(m_nCursor >= 0);
             ASSERT(m_nCursor < m_nMenuItemCount);
 
-            if (m_MenuAnimCount < uAnimDur)
+            if (m_fMenuAnimCount < fAnimDuration)
                 break;
 
             if (!m_bMenuDispFlag)
@@ -301,7 +304,7 @@ AREATYPES::NEXTSEQUENCE CAreaMenu_Container::AreaMenuSelect_Sub(void)
             else if (CController::GetDigitalTrigger(iController, CController::DIGITAL_CANCEL | CController::DIGITAL_R1))
             {
                 m_bMenuDispFlag = false;
-                m_MenuAnimCount = 0;
+                m_fMenuAnimCount = 0.0f;
                 CGameSound::PlaySE(SDCODE_SE(4097));
             }
             else if (CController::GetDigitalTrigger(iController, CController::DIGITAL_OK))
@@ -313,7 +316,7 @@ AREATYPES::NEXTSEQUENCE CAreaMenu_Container::AreaMenuSelect_Sub(void)
                     m_SubmenuType = SUBMENUTYPE_WARP;
                     m_bSubMenuDispFlag = true;
                     m_nSubCursor = 0;
-                    m_SubMenuAnimCount = 0;                    
+                    m_fSubMenuAnimCount = 0.0f;
                     break;
                     
                 case MAIN_CHARSEL:
@@ -323,7 +326,7 @@ AREATYPES::NEXTSEQUENCE CAreaMenu_Container::AreaMenuSelect_Sub(void)
                     m_SubmenuType = SUBMENUTYPE_COMBO;
                     m_bSubMenuDispFlag = true;
                     m_nSubCursor = 0;
-                    m_SubMenuAnimCount = 0;
+                    m_fSubMenuAnimCount = 0.0f;
                     break;
                     
                 case MAIN_OPTIONS:
@@ -347,7 +350,10 @@ AREATYPES::NEXTSEQUENCE CAreaMenu_Container::AreaMenuSelect_Sub(void)
                     CGameSound::PlaySE(SDCODE_SE(4097));
 
                     m_bMenuDispFlag = false;
-                    m_MenuAnimCount = 0;
+                    m_fMenuAnimCount = 0.0f;
+                    break;
+
+                default:
                     break;
                 };
             };
@@ -608,10 +614,13 @@ void CAreaMenu_Container::AreaInfoMenuDraw_Sub(void)
 
 void CAreaMenu_Container::AreaMenuDisp(void)
 {
-    uint32 uAnimDur = static_cast<uint32>(ANIM_DURATION_FRAMES(12));
+    const float fAnimDuration = WINDOW_ANIM_DURATION;
     
-    if (m_MenuAnimCount < uAnimDur)
-        ++m_MenuAnimCount;
+    if (m_fMenuAnimCount < fAnimDuration)
+    {
+        m_fMenuAnimCount += CScreen::TimerStride();
+        m_fMenuAnimCount = Clamp(m_fMenuAnimCount, m_fMenuAnimCount, fAnimDuration);
+    };
 
     float fWidthChange = 300.0f;
 #ifdef TMNT2_BUILD_EU
@@ -623,18 +632,18 @@ void CAreaMenu_Container::AreaMenuDisp(void)
 
     float fWidth = Math::LinearTween((m_bMenuDispFlag ? 0.0f : fWidthChange),
                                      (m_bMenuDispFlag ? fWidthChange : -fWidthChange),
-                                     float(m_MenuAnimCount),
-                                     float(uAnimDur));
+                                     m_fMenuAnimCount,
+                                     fAnimDuration);
     
     float fHeight = Math::LinearTween((m_bMenuDispFlag ? 0.0f : m_nMenuItemCount * 23.0f),
                                       (m_bMenuDispFlag ? m_nMenuItemCount * 23.0f : -(m_nMenuItemCount * 23.0f)),
-                                      float(m_MenuAnimCount),
-                                      float(uAnimDur));
+                                      m_fMenuAnimCount,
+                                      fAnimDuration);
     
-    uint8 AlphaBasis = uint8(Math::LinearTween((m_bMenuDispFlag ? 0.0f : 255.0f),
-                                               (m_bMenuDispFlag ? 255.0f : -255.0f),
-                                               float(m_MenuAnimCount),
-                                               float(uAnimDur)));
+    uint8 AlphaBasis = Math::LinearTweenAutoRet((m_bMenuDispFlag ? 0.0f : 255.0f),
+                                                (m_bMenuDispFlag ? 255.0f : -255.0f),
+                                                m_fMenuAnimCount,
+                                                fAnimDuration);
 
     RenderStatePush();
     WindowDisp(WINDOWTYPE_NORMAL, -296.0f, -194.0f, fWidth, fHeight);
@@ -667,8 +676,8 @@ void CAreaMenu_Container::AreaMenuDisp(void)
         {
             float fPosX = Math::LinearTween(-213.0f - ((i + 1) * 20.0f),
                                             ((i + 1) * 20.0f),
-                                            float(m_MenuAnimCount),
-                                            float(uAnimDur));
+                                            m_fMenuAnimCount,
+                                            fAnimDuration);
             
             CGameFont::SetHeightScaled(2.15f);
             CGameFont::Show(GetAreaMenuName(m_aMenuItemTable[i]), fPosX, ((i * 25.0f) - 129.0f));
@@ -702,10 +711,13 @@ void CAreaMenu_Container::AreaMenuDisp(void)
 
 void CAreaMenu_Container::MenuDispSub_Station(void)
 {
-    uint32 uAnimDur = static_cast<uint32>(ANIM_DURATION_FRAMES(12));
+    const float fAnimDuration = WINDOW_ANIM_DURATION;
 
-    if (m_SubMenuAnimCount < uAnimDur)
-        ++m_SubMenuAnimCount;
+    if (m_fSubMenuAnimCount < fAnimDuration)
+    {
+        m_fSubMenuAnimCount += CScreen::TimerStride();
+        m_fSubMenuAnimCount = Clamp(m_fSubMenuAnimCount, m_fSubMenuAnimCount, fAnimDuration);
+    };
 
     float fWidthChange = 300.0f;
 #ifdef TMNT2_BUILD_EU
@@ -714,25 +726,21 @@ void CAreaMenu_Container::MenuDispSub_Station(void)
 
     float fWidth = Math::LinearTween((m_bSubMenuDispFlag ? 0.0f : fWidthChange),
                                      (m_bSubMenuDispFlag ? fWidthChange : -fWidthChange),
-                                     float(m_SubMenuAnimCount),
-                                     float(uAnimDur));
+                                     m_fSubMenuAnimCount,
+                                     fAnimDuration);
 
     float fHeight = Math::LinearTween((m_bSubMenuDispFlag ? 0.0f : m_nSubMenuItemCount * 23.0f),
                                       (m_bSubMenuDispFlag ? m_nSubMenuItemCount * 23.0f : -(m_nSubMenuItemCount * 23.0f)),
-                                      float(m_SubMenuAnimCount),
-                                      float(uAnimDur));
+                                      m_fSubMenuAnimCount,
+                                      fAnimDuration);
 
-    uint8 AlphaBasis = uint8(Math::LinearTween((m_bSubMenuDispFlag ? 0.0f : 255.0f),
-                                               (m_bSubMenuDispFlag ? 255.0f : -255.0f),
-                                               float(m_SubMenuAnimCount),
-                                               float(uAnimDur)));
+    uint8 AlphaBasis = Math::LinearTweenAutoRet((m_bSubMenuDispFlag ? 0.0f : 255.0f),
+                                                (m_bSubMenuDispFlag ? 255.0f : -255.0f),
+                                                m_fSubMenuAnimCount,
+                                                fAnimDuration);
 
     RenderStatePush();
-    WindowDisp(WINDOWTYPE_NORMAL,
-               -256.0f,
-               (m_nCursor * 25.0f) - 144.0f,
-               fWidth,
-               fHeight);
+    WindowDisp(WINDOWTYPE_NORMAL, -256.0f, (m_nCursor * 25.0f) - 144.0f, fWidth, fHeight);
     RenderStatePop();
 
     CSystem2D::PushRenderState();
@@ -762,11 +770,10 @@ void CAreaMenu_Container::MenuDispSub_Station(void)
         {
             float fPosX = Math::LinearTween(-173.0f - ((i + 1) * 20.0f),
                                             ((i + 1) * 20.0f),
-                                            float(m_SubMenuAnimCount),
-                                            float(uAnimDur));
+                                            m_fSubMenuAnimCount,
+                                            fAnimDuration);
 
-            CGameFont::SetHeightScaled(2.15f);
-            
+            CGameFont::SetHeightScaled(2.15f);            
             CGameFont::Show(GetStationName(m_aSubMenuItemTable[i]), fPosX, ((m_nCursor * 25.0f) + (i * 25.0f) - 79.0f));
         };
     };
@@ -776,32 +783,31 @@ void CAreaMenu_Container::MenuDispSub_Station(void)
 
 void CAreaMenu_Container::MenuDispSub_Combo(void)
 {    
-    uint32 uAnimDur = static_cast<uint32>(ANIM_DURATION_FRAMES(12));
+    const float fAnimDuration = WINDOW_ANIM_DURATION;
 
-    if (m_SubMenuAnimCount < uAnimDur)
-        ++m_SubMenuAnimCount;
+    if (m_fSubMenuAnimCount < fAnimDuration)
+    {
+        m_fSubMenuAnimCount += CScreen::TimerStride();
+        m_fSubMenuAnimCount = Clamp(m_fSubMenuAnimCount, m_fSubMenuAnimCount, fAnimDuration);
+    };
 
     float fWidth = Math::LinearTween((m_bSubMenuDispFlag ? 0.0f : 400.0f),
                                      (m_bSubMenuDispFlag ? 400.0f : -400.0f),
-                                     float(m_SubMenuAnimCount),
-                                     float(uAnimDur));
+                                     m_fSubMenuAnimCount,
+                                     fAnimDuration);
 
     float fHeight = Math::LinearTween((m_bSubMenuDispFlag ? 0.0f : 221.0f),
                                       (m_bSubMenuDispFlag ? 221.0f : -221.0f),
-                                      float(m_SubMenuAnimCount),
-                                      float(uAnimDur));
+                                      m_fSubMenuAnimCount,
+                                      fAnimDuration);
 
-    uint8 AlphaBasis = uint8(Math::LinearTween((m_bSubMenuDispFlag ? 0.0f : 255.0f),
-                                               (m_bSubMenuDispFlag ? 255.0f : -255.0f),
-                                               float(m_SubMenuAnimCount),
-                                               float(uAnimDur)));
+    uint8 AlphaBasis = Math::LinearTweenAutoRet((m_bSubMenuDispFlag ? 0.0f : 255.0f),
+                                                (m_bSubMenuDispFlag ? 255.0f : -255.0f),
+                                                m_fSubMenuAnimCount,
+                                                fAnimDuration);
 
     RenderStatePush();
-    WindowDisp(WINDOWTYPE_NORMAL,
-               -276.0f,
-               -174.0f,
-               fWidth,
-               fHeight);
+    WindowDisp(WINDOWTYPE_NORMAL, -276.0f, -174.0f, fWidth, fHeight);
     RenderStatePop();
 
     CSystem2D::PushRenderState();
@@ -841,8 +847,8 @@ void CAreaMenu_Container::MenuDispSub_Combo(void)
         {
             float fPosX = Math::LinearTween(-193.0f - ((i + 1) * 20.0f),
                                             ((i + 1) * 20.0f),
-                                            float(m_SubMenuAnimCount),
-                                            float(uAnimDur));
+                                            m_fSubMenuAnimCount,
+                                            fAnimDuration);
 
             CGameFont::SetHeightScaled(2.15f);
             

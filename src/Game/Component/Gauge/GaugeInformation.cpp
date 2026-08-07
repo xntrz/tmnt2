@@ -5,6 +5,7 @@
 #include "Game/Component/GameMain/StageInfo.hpp"
 #include "Game/Component/GameMain/AreaInfo.hpp"
 #include "Game/Component/GameMain/NexusInfo.hpp"
+#include "Game/Component/GameMain/GameProperty.hpp"
 #include "Game/Component/Menu/Dialog.hpp"
 #include "Game/System/2d/GameFont.hpp"
 #include "Game/System/Text/GameText.hpp"
@@ -38,7 +39,7 @@ private:
         int32   m_nHpOld;
         int32   m_nHpTotal;
         int32   m_nHpMove;
-        uint32  m_uAnimCnt;
+        float   m_fAnimCnt;
         bool    m_bEnable;
     };
 
@@ -82,6 +83,7 @@ public:
     void PauseDrawSub(void);
     PAUSESTATUS GetPauseStatusSub(void);
     void MissionInfoSetSub(STAGEID::VALUE idStage);
+    void MissionInfoClrSub(void);
     void MissionPeriodSub(void);
     void MissionInfoDrawSub(void);
     void SetBattleNexusInfoSub(void);
@@ -115,12 +117,12 @@ private:
     PAUSESTATUS     m_pausestatus;
     float           m_fCursorRot;
     bool            m_bCursorAnimFlag;
-    uint32          m_uCursorAnimCount;
+    float           m_fCursorAnimCount;
     int32           m_nCursor;
     CDialog*        m_pConfirmDlg;
     bool            m_bDlgRunFlag;
     BOSSGAUGEINFO   m_aBossGaugeInfo[2];
-    uint32          m_uNexusAnimCnt;
+    float           m_fNexusAnimCnt;
     NEXUSSTEP       m_eNexusStep;
     bool            m_bNexusDispFlag;
 };
@@ -134,12 +136,12 @@ CGaugeInformation_Container::CGaugeInformation_Container(void)
 , m_pausestatus(CGaugeInformation::PAUSESTATUS_INIT)
 , m_fCursorRot(0.0f)
 , m_bCursorAnimFlag(false)
-, m_uCursorAnimCount(0)
+, m_fCursorAnimCount(0.0f)
 , m_nCursor(0)
 , m_pConfirmDlg(nullptr)
 , m_bDlgRunFlag(false)
 , m_aBossGaugeInfo()
-, m_uNexusAnimCnt(0)
+, m_fNexusAnimCnt(0)
 , m_eNexusStep(NEXUSSTEP_ENEMY_IN)
 , m_bNexusDispFlag(false)
 {
@@ -181,6 +183,22 @@ void CGaugeInformation_Container::DispInitSub(void)
 void CGaugeInformation_Container::PausePeriodSub(void)
 {
     InfoSettings();
+
+    if (!m_bShowInformationFlag)
+    {
+        m_fCursorRot += (6.0f * CScreen::TimerStride());
+        if (m_fCursorRot >= 360.0f)
+            m_fCursorRot -= 360.0f;
+    };
+
+    float fDuration = ANIM_DURATION_FRAMES(30);
+
+    m_fCursorAnimCount += CGameProperty::GetElapsedTime();
+    if (m_fCursorAnimCount >= fDuration)
+    {
+        m_bCursorAnimFlag = !m_bCursorAnimFlag;
+        m_fCursorAnimCount = 0.0f;
+    };
 
     if (!m_bDlgRunFlag)
     {
@@ -313,17 +331,7 @@ void CGaugeInformation_Container::PauseDrawSub(void)
     float fDuration = ANIM_DURATION_FRAMES(30);
     float fStartValue = (m_bCursorAnimFlag ? 255.0f : 0.0f);
     float fEndValue = (m_bCursorAnimFlag ? -255.0f : 255.0f);
-    uint8 uAlphaBasis = uint8(Math::LinearTween(fStartValue, fEndValue, float(m_uCursorAnimCount), fDuration));
-
-    if (m_uCursorAnimCount >= uint32(fDuration))
-    {
-        m_bCursorAnimFlag = !m_bCursorAnimFlag;
-        m_uCursorAnimCount = 0;
-    }
-    else
-    {
-        ++m_uCursorAnimCount;
-    };
+    uint8 uAlphaBasis = Math::LinearTweenAutoRet(fStartValue, fEndValue, m_fCursorAnimCount, fDuration);
 
     RENDERSTATE_PUSH(rwRENDERSTATEZWRITEENABLE, false);
     RENDERSTATE_PUSH(rwRENDERSTATESRCBLEND,     rwBLENDSRCALPHA);
@@ -487,10 +495,6 @@ void CGaugeInformation_Container::PauseDrawSub(void)
         m_sprite.Move(0.0f, 45.0f);
         m_sprite.Draw();
 
-        m_fCursorRot += 0.1f;
-        if (m_fCursorRot >= 360.0f)
-            m_fCursorRot -= 360.0f;
-
         m_sprite.SetTexture(m_pTextureGGIconSel1);
         m_sprite.SetOffset(0.0f, 0.0f);
         m_sprite.ResizeStrict(19.0f, 19.0f);
@@ -600,6 +604,13 @@ void CGaugeInformation_Container::MissionInfoSetSub(STAGEID::VALUE idStage)
 };
 
 
+void CGaugeInformation_Container::MissionInfoClrSub(void)
+{
+    m_idMap = MAPID::ID_NONE;
+    m_bMapSetFlag = false;
+};
+
+
 void CGaugeInformation_Container::MissionPeriodSub(void)
 {
     InfoSettings();
@@ -610,8 +621,6 @@ void CGaugeInformation_Container::MissionInfoDrawSub(void)
 {
     if (!m_bMapSetFlag)
         return;
-
-    m_bMapSetFlag = false;
 
     InfoDispRenderStatePush();
     InfoDispBase(false);
@@ -744,7 +753,7 @@ void CGaugeInformation_Container::MissionInfoDrawSub(void)
 
 void CGaugeInformation_Container::SetBattleNexusInfoSub(void)
 {
-    m_uNexusAnimCnt = 0;
+    m_fNexusAnimCnt = 0.0f;
     m_eNexusStep = NEXUSSTEP_ENEMY_IN;
     m_bNexusDispFlag = true;
 };
@@ -780,16 +789,13 @@ void CGaugeInformation_Container::DispBattleNexusInfoSub(void)
         {
             float fDuration = ANIM_DURATION_FRAMES(15);
 
-            Alpha = uint8(Math::LinearTween(0.0f, 255.0f, float(m_uNexusAnimCnt), fDuration));
+            Alpha = Math::LinearTweenAutoRet(0.0f, 255.0f, m_fNexusAnimCnt, fDuration);
 
-            if (float(m_uNexusAnimCnt) >= fDuration)
+            m_fNexusAnimCnt += CGameProperty::GetElapsedTime();
+            if (m_fNexusAnimCnt >= fDuration)
             {
                 m_eNexusStep = NEXUSSTEP_ENEMY_WAIT;
-                m_uNexusAnimCnt = 0;
-            }
-            else
-            {
-                ++m_uNexusAnimCnt;
+                m_fNexusAnimCnt = 0.0f;
             };
         }
         break;
@@ -798,14 +804,11 @@ void CGaugeInformation_Container::DispBattleNexusInfoSub(void)
         {
             float fDuration = ANIM_DURATION_FRAMES(30);
 
-            if (float(m_uNexusAnimCnt) >= fDuration)
+            m_fNexusAnimCnt += CGameProperty::GetElapsedTime();
+            if (m_fNexusAnimCnt >= fDuration)
             {
                 m_eNexusStep = NEXUSSTEP_ENEMY_OUT;
-                m_uNexusAnimCnt = 0;
-            }
-            else
-            {
-                ++m_uNexusAnimCnt;
+                m_fNexusAnimCnt = 0.0f;
             };
         }
         break;
@@ -814,16 +817,13 @@ void CGaugeInformation_Container::DispBattleNexusInfoSub(void)
         {
             float fDuration = ANIM_DURATION_FRAMES(15);
 
-            Alpha = uint8(Math::LinearTween(255.0f, -255.0f, float(m_uNexusAnimCnt), fDuration));
+            Alpha = Math::LinearTweenAutoRet(255.0f, -255.0f, m_fNexusAnimCnt, fDuration);
 
-            if (float(m_uNexusAnimCnt) >= fDuration)
+            m_fNexusAnimCnt += CGameProperty::GetElapsedTime();
+            if (m_fNexusAnimCnt >= fDuration)
             {
-                m_eNexusStep = NEXUSSTEP_STEADY;                
-                m_uNexusAnimCnt = 0;
-            }
-            else
-            {
-                ++m_uNexusAnimCnt;
+                m_eNexusStep = NEXUSSTEP_STEADY;
+                m_fNexusAnimCnt = 0.0f;
             };
         }
         break;
@@ -832,38 +832,32 @@ void CGaugeInformation_Container::DispBattleNexusInfoSub(void)
         {
             float fDuration = ANIM_DURATION_FRAMES(30);
 
-            Alpha = uint8(Math::LinearTween(255.0f, -255.0f, float(m_uNexusAnimCnt), fDuration));
-            SpriteW = Math::LinearTween(512.0f, -512.0f, float(m_uNexusAnimCnt), fDuration);
-            SpriteH = Math::LinearTween(128.0f, -128.0f, float(m_uNexusAnimCnt), fDuration);
+            Alpha = Math::LinearTweenAutoRet(255.0f, -255.0f, m_fNexusAnimCnt, fDuration);
+            SpriteW = Math::LinearTweenAutoRet(512.0f, -512.0f, m_fNexusAnimCnt, fDuration);
+            SpriteH = Math::LinearTweenAutoRet(128.0f, -128.0f, m_fNexusAnimCnt, fDuration);
 
-            if (float(m_uNexusAnimCnt) >= fDuration)
+            m_fNexusAnimCnt += CGameProperty::GetElapsedTime();
+            if (m_fNexusAnimCnt >= fDuration)
             {
                 m_eNexusStep = NEXUSSTEP_FIGHT;
-                m_uNexusAnimCnt = 0;
-            }
-            else
-            {
-                ++m_uNexusAnimCnt;
+                m_fNexusAnimCnt = 0.0f;
             };
         }
         break;
 
     case NEXUSSTEP_FIGHT:
         {
-            float fDuration = (CScreen::Framerate());
+            float fDuration = ANIM_DURATION_FRAMES(60);
 
-            Alpha = uint8(Math::LinearTween(255.0f, -255.0f, float(m_uNexusAnimCnt), fDuration));
-            SpriteW = Math::LinearTween(0.0f, 512.0f, float(m_uNexusAnimCnt), fDuration);
-            SpriteH = Math::LinearTween(0.0f, 128.0f, float(m_uNexusAnimCnt), fDuration);
+            Alpha = Math::LinearTweenAutoRet(255.0f, -255.0f, m_fNexusAnimCnt, fDuration);
+            SpriteW = Math::LinearTweenAutoRet(0.0f, 512.0f, m_fNexusAnimCnt, fDuration);
+            SpriteH = Math::LinearTweenAutoRet(0.0f, 128.0f, m_fNexusAnimCnt, fDuration);
 
-            if (float(m_uNexusAnimCnt) >= fDuration)
+            m_fNexusAnimCnt += CGameProperty::GetElapsedTime();
+            if (m_fNexusAnimCnt >= fDuration)
             {
                 m_eNexusStep = NEXUSSTEP_END;
-                m_uNexusAnimCnt = 0;
-            }
-            else
-            {
-                ++m_uNexusAnimCnt;
+                m_fNexusAnimCnt = 0.0f;
             };
         }
         break;
@@ -985,12 +979,12 @@ void CGaugeInformation_Container::BossGaugeDrawSub(int32 no)
 			if (HpOld > HpNow)
 			{
 				pBossGaugeInfo->m_eState = BOSSGAUGEINFO::STATE_DAMAGE;
-				pBossGaugeInfo->m_uAnimCnt = 0;
+				pBossGaugeInfo->m_fAnimCnt = 0.0f;
 			}
 			else
 			{
 				pBossGaugeInfo->m_eState = BOSSGAUGEINFO::STATE_RECOVER;
-				pBossGaugeInfo->m_uAnimCnt = 0;
+				pBossGaugeInfo->m_fAnimCnt = 0.0f;
 			};
 		};
     }
@@ -1004,7 +998,7 @@ void CGaugeInformation_Container::BossGaugeDrawSub(int32 no)
 
     float fDuration = ANIM_DURATION_FRAMES(8);
 
-    float fAnimStep = (static_cast<float>(pBossGaugeInfo->m_uAnimCnt) / fDuration);
+    float fAnimStep = (pBossGaugeInfo->m_fAnimCnt / fDuration);
     float fHpMove = static_cast<float>(pBossGaugeInfo->m_nHpMove);
     float fHpOld = static_cast<float>(pBossGaugeInfo->m_nHpOld);
 
@@ -1019,10 +1013,17 @@ void CGaugeInformation_Container::BossGaugeDrawSub(int32 no)
 
     if (pBossGaugeInfo->m_eState > BOSSGAUGEINFO::STATE_IDLE)
     {
-        if (static_cast<float>(pBossGaugeInfo->m_uAnimCnt) >= fDuration)
+        if (pBossGaugeInfo->m_fAnimCnt >= fDuration)
+        {
             pBossGaugeInfo->m_eState = BOSSGAUGEINFO::STATE_IDLE;
+        }
         else
-            ++pBossGaugeInfo->m_uAnimCnt;
+        {
+            pBossGaugeInfo->m_fAnimCnt += CGameProperty::GetElapsedTime();
+            pBossGaugeInfo->m_fAnimCnt = Clamp(pBossGaugeInfo->m_fAnimCnt,
+                                               pBossGaugeInfo->m_fAnimCnt,
+                                               fDuration);
+        };
     };
 
 	m_sprite.SetRGBA(255, 255, 255, 255);
@@ -1211,6 +1212,12 @@ static inline CGaugeInformation_Container& GaugeInformationContainer(void)
 /*static*/ void CGaugeInformation::MissionInfoSet(STAGEID::VALUE idStage)
 {
     GaugeInformationContainer().MissionInfoSetSub(idStage);
+};
+
+
+/*static*/ void CGaugeInformation::MissionInfoClr(void)
+{
+    GaugeInformationContainer().MissionInfoClrSub();
 };
 
 

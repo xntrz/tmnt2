@@ -30,7 +30,7 @@ public:
     RwTexture* GetFailTexture(void) const;
 
 protected:
-    uint32      m_uAnimCnt;
+    float       m_fAnimCnt;
     uint32      m_uAnimStep;
     RESULTREQ   m_resultReq;
     int32       m_nReqFailedPlayer;
@@ -42,7 +42,7 @@ protected:
 
 
 CGaugeResult_Container::CGaugeResult_Container(void)
-: m_uAnimCnt(0)
+: m_fAnimCnt(0.0f)
 , m_uAnimStep(0)
 , m_resultReq(CGaugeResult::RESULTREQ_NONE)
 , m_nReqFailedPlayer(0)
@@ -130,7 +130,7 @@ void CGaugeResult_Container::Draw(void)
 
 void CGaugeResult_Container::SetMissionResult(RESULTREQ req)
 {
-    m_uAnimCnt = 0;
+    m_fAnimCnt = 0.0f;
     m_uAnimStep = 0;
     m_resultReq = req;
     m_nReqFailedPlayer = 0;
@@ -139,7 +139,7 @@ void CGaugeResult_Container::SetMissionResult(RESULTREQ req)
 
 void CGaugeResult_Container::SetMissionResult(RESULTREQ req, int32 nPlayerNo)
 {
-    m_uAnimCnt = 0;
+    m_fAnimCnt = 0.0f;
     m_uAnimStep = 0;
     m_resultReq = req;
     m_nReqFailedPlayer = nPlayerNo;
@@ -162,7 +162,6 @@ void CGaugeResult_Container::DrawNormal(void)
     float fHeight_f = 128.0f;
     uint8 uAlphaBasis_f = 255;
     
-    float fT = float(m_uAnimCnt);
     float x = 0.0f;
     float y = 0.0f;
     float x_f = 0.0f;
@@ -185,18 +184,15 @@ void CGaugeResult_Container::DrawNormal(void)
                 {
                     float fDuration = ANIM_DURATION_FRAMES(19);
                     
-                    fWidth = Math::LinearTween(1228.8f, -716.8f, fT, fDuration);
-                    fHeight = Math::LinearTween(614.4f, -358.4f, fT, fDuration);
-                    uAlphaBasis = uint8(Math::LinearTween(0.0f, 255.0f, fT, fDuration));
+                    fWidth = Math::LinearTweenAutoRet(1228.8f, -716.8f, m_fAnimCnt, fDuration);
+                    fHeight = Math::LinearTweenAutoRet(614.4f, -358.4f, m_fAnimCnt, fDuration);
+                    uAlphaBasis = Math::LinearTweenAutoRet(0.0f, 255.0f, m_fAnimCnt, fDuration);
 
-                    if (m_uAnimCnt >= uint32(fDuration))
+                    m_fAnimCnt += CGameProperty::GetElapsedTime();
+                    if (m_fAnimCnt >= fDuration)
                     {
-                        m_uAnimCnt = 0;
+                        m_fAnimCnt = 0.0f;
                         m_uAnimStep = 1;
-                    }
-                    else
-                    {
-                        ++m_uAnimCnt;
                     };
                 }
                 break;
@@ -205,17 +201,14 @@ void CGaugeResult_Container::DrawNormal(void)
                 {
                     float fDuration = ANIM_DURATION_FRAMES(2);
 
-                    fWidth = Math::LinearTween(512.0f, 25.6f, fT, fDuration);
-                    fHeight = Math::LinearTween(256.0f, 12.8f, fT, fDuration);
+                    fWidth = Math::LinearTweenAutoRet(512.0f, 25.6f, m_fAnimCnt, fDuration);
+                    fHeight = Math::LinearTweenAutoRet(256.0f, 12.8f, m_fAnimCnt, fDuration);
 
-                    if (m_uAnimCnt >= uint32(fDuration))
+                    m_fAnimCnt += CGameProperty::GetElapsedTime();
+                    if (m_fAnimCnt >= fDuration)
                     {
-                        m_uAnimCnt = 0;
+                        m_fAnimCnt = 0.0f;
                         m_uAnimStep = 2;
-                    }
-                    else
-                    {
-                        ++m_uAnimCnt;
                     };
                 }
                 break;
@@ -224,17 +217,14 @@ void CGaugeResult_Container::DrawNormal(void)
                 {
                     float fDuration = ANIM_DURATION_FRAMES(2);
 
-                    fWidth = Math::LinearTween(512.0f, -25.6f, fT, fDuration);
-                    fHeight = Math::LinearTween(256.8f, -12.8f, fT, fDuration);
+                    fWidth = Math::LinearTweenAutoRet(512.0f, -25.6f, m_fAnimCnt, fDuration);
+                    fHeight = Math::LinearTweenAutoRet(256.8f, -12.8f, m_fAnimCnt, fDuration);
 
-                    if (m_uAnimCnt >= uint32(fDuration))
+                    m_fAnimCnt += CGameProperty::GetElapsedTime();
+                    if (m_fAnimCnt >= fDuration)
                     {
-                        m_uAnimCnt = 0;
+                        m_fAnimCnt = 0.0f;
                         m_uAnimStep = 3;
-                    }
-                    else
-                    {
-                        ++m_uAnimCnt;
                     };
                 }
                 break;
@@ -243,13 +233,10 @@ void CGaugeResult_Container::DrawNormal(void)
                 {
                     float fDuration = ANIM_DURATION_FRAMES(120);
                     
-                    if (m_uAnimCnt >= uint32(fDuration))
+                    m_fAnimCnt += CGameProperty::GetElapsedTime();
+                    if (m_fAnimCnt >= fDuration)
                     {
                         m_resultReq = CGaugeResult::RESULTREQ_NONE;
-                    }
-                    else
-                    {
-                        ++m_uAnimCnt;
                     };
                 }
                 break;
@@ -300,20 +287,17 @@ void CGaugeResult_Container::DrawNormal(void)
                 {
                     float fDuration = ANIM_DURATION_FRAMES(19);
 
-                    fWidth = Math::LinearTween(1228.8f, -716.8f, fT, fDuration);
-                    fHeight = Math::LinearTween(307.2f, -179.2f, fT, fDuration);
-                    uAlphaBasis = uint8(Math::LinearTween(0.0f, 255.0f, fT, fDuration));
+                    fWidth = Math::LinearTweenAutoRet(1228.8f, -716.8f, m_fAnimCnt, fDuration);
+                    fHeight = Math::LinearTweenAutoRet(307.2f, -179.2f, m_fAnimCnt, fDuration);
+                    uAlphaBasis = Math::LinearTweenAutoRet(0.0f, 255.0f, m_fAnimCnt, fDuration);
 
                     CallFailMessage();
 
-                    if (m_uAnimCnt >= uint32(fDuration))
+                    m_fAnimCnt += CGameProperty::GetElapsedTime();
+                    if (m_fAnimCnt >= fDuration)
                     {
-                        m_uAnimCnt = 0;
+                        m_fAnimCnt = 0.0f;
                         m_uAnimStep = 1;
-                    }
-                    else
-                    {
-                        ++m_uAnimCnt;
                     };
                 }
                 break;
@@ -322,17 +306,14 @@ void CGaugeResult_Container::DrawNormal(void)
                 {
                     float fDuration = ANIM_DURATION_FRAMES(2);
 
-                    fWidth = Math::LinearTween(512.0f, 25.6f, fT, fDuration);
-                    fHeight = Math::LinearTween(128.0f, 6.4f, fT, fDuration);
+                    fWidth = Math::LinearTweenAutoRet(512.0f, 25.6f, m_fAnimCnt, fDuration);
+                    fHeight = Math::LinearTweenAutoRet(128.0f, 6.4f, m_fAnimCnt, fDuration);
 
-                    if (m_uAnimCnt >= uint32(fDuration))
+                    m_fAnimCnt += CGameProperty::GetElapsedTime();
+                    if (m_fAnimCnt >= fDuration)
                     {
-                        m_uAnimCnt = 0;
+                        m_fAnimCnt = 0.0f;
                         m_uAnimStep = 2;
-                    }
-                    else
-                    {
-                        ++m_uAnimCnt;
                     };
                 }
                 break;
@@ -341,17 +322,14 @@ void CGaugeResult_Container::DrawNormal(void)
                 {
                     float fDuration = ANIM_DURATION_FRAMES(2);
 
-                    fWidth = Math::LinearTween(537.6f, -25.6f, fT, fDuration);
-                    fHeight = Math::LinearTween(134.4f, -6.4f, fT, fDuration);
+                    fWidth = Math::LinearTweenAutoRet(537.6f, -25.6f, m_fAnimCnt, fDuration);
+                    fHeight = Math::LinearTweenAutoRet(134.4f, -6.4f, m_fAnimCnt, fDuration);
 
-                    if (m_uAnimCnt >= uint32(fDuration))
+                    m_fAnimCnt += CGameProperty::GetElapsedTime();
+                    if (m_fAnimCnt >= fDuration)
                     {
-                        m_uAnimCnt = 0;
+                        m_fAnimCnt = 0.0f;
                         m_uAnimStep = 3;
-                    }
-                    else
-                    {
-                        ++m_uAnimCnt;
                     };
                 }
                 break;
@@ -360,18 +338,15 @@ void CGaugeResult_Container::DrawNormal(void)
                 {
                     float fDuration = ANIM_DURATION_FRAMES(19);
 
-                    fWidth_f = Math::LinearTween(614.4f, -358.4f, fT, fDuration);
-                    fHeight_f = Math::LinearTween(307.2f, -179.2f, fT, fDuration);
-                    uAlphaBasis_f = uint8(Math::LinearTween(0.0f, 255.0f, fT, fDuration));
+                    fWidth_f = Math::LinearTween(614.4f, -358.4f, m_fAnimCnt, fDuration);
+                    fHeight_f = Math::LinearTween(307.2f, -179.2f, m_fAnimCnt, fDuration);
+                    uAlphaBasis_f = uint8(Math::LinearTween(0.0f, 255.0f, m_fAnimCnt, fDuration));
 
-                    if (m_uAnimCnt >= uint32(fDuration))
+                    m_fAnimCnt += CGameProperty::GetElapsedTime();
+                    if (m_fAnimCnt >= fDuration)
                     {
-                        m_uAnimCnt = 0;
+                        m_fAnimCnt = 0.0f;
                         m_uAnimStep = 4;
-                    }
-                    else
-                    {
-                        ++m_uAnimCnt;
                     };
                 }
                 break;
@@ -380,18 +355,15 @@ void CGaugeResult_Container::DrawNormal(void)
                 {
                     float fDuration = ANIM_DURATION_FRAMES(2);
 
-                    fWidth_f = Math::LinearTween(256.0f, 12.8f, fT, fDuration);
-                    fHeight_f = Math::LinearTween(128.0f, 6.4f, fT, fDuration);
+                    fWidth_f = Math::LinearTweenAutoRet(256.0f, 12.8f, m_fAnimCnt, fDuration);
+                    fHeight_f = Math::LinearTweenAutoRet(128.0f, 6.4f, m_fAnimCnt, fDuration);
                     uAlphaBasis_f = 255;
                     
-                    if (m_uAnimCnt >= uint32(fDuration))
+                    m_fAnimCnt += CGameProperty::GetElapsedTime();
+                    if (m_fAnimCnt >= fDuration)
                     {
-                        m_uAnimCnt = 0;
+                        m_fAnimCnt = 0.0f;
                         m_uAnimStep = 5;
-                    }
-                    else
-                    {
-                        ++m_uAnimCnt;
                     };
                 }
                 break;
@@ -400,18 +372,15 @@ void CGaugeResult_Container::DrawNormal(void)
                 {
                     float fDuration = ANIM_DURATION_FRAMES(2);
 
-                    fWidth_f = Math::LinearTween(256.8f, -12.8f, fT, fDuration);
-                    fHeight_f = Math::LinearTween(128.4f, -6.4f, fT, fDuration);
+                    fWidth_f = Math::LinearTweenAutoRet(256.8f, -12.8f, m_fAnimCnt, fDuration);
+                    fHeight_f = Math::LinearTweenAutoRet(128.4f, -6.4f, m_fAnimCnt, fDuration);
                     uAlphaBasis_f = 255;
                     
-                    if (m_uAnimCnt >= uint32(fDuration))
+                    m_fAnimCnt += CGameProperty::GetElapsedTime();
+                    if (m_fAnimCnt >= fDuration)
                     {
-                        m_uAnimCnt = 0;
+                        m_fAnimCnt = 0.0f;
                         m_uAnimStep = 6;
-                    }
-                    else
-                    {
-                        ++m_uAnimCnt;
                     };
                 }
                 break;
@@ -422,13 +391,10 @@ void CGaugeResult_Container::DrawNormal(void)
 
 					uAlphaBasis_f = 255;
 
-                    if (m_uAnimCnt >= uint32(fDuration))
+                    m_fAnimCnt += CGameProperty::GetElapsedTime();
+                    if (m_fAnimCnt >= fDuration)
                     {
                         m_resultReq = CGaugeResult::RESULTREQ_NONE;
-                    }
-                    else
-                    {
-                        ++m_uAnimCnt;
                     };
                 }
                 break;
@@ -471,8 +437,7 @@ void CGaugeResult_Container::DrawNexus(void)
     float fWidth = 512.0f;
     float fHeight = 128.0f;
     uint8 uAlphaBasis = 255;
-    CGaugeResult::RESULTREQ req = m_resultReq;
-    float fT = float(m_uAnimCnt);
+    RESULTREQ req = m_resultReq;
 
     switch (m_uAnimStep)
     {
@@ -480,19 +445,16 @@ void CGaugeResult_Container::DrawNexus(void)
         {
             float fDuration = ANIM_DURATION_FRAMES(60);
             
-            fWidth = Math::LinearTween(0.0f, 563.2f, fT, fDuration);
-            fHeight = Math::LinearTween(0.0f, 140.8f, fT, fDuration);
-            m_fSpriteRot = Math::LinearTween(0.0f, (MATH_PI * 5.9f), fT, fDuration);
-            uAlphaBasis = uint8(Math::LinearTween(0.0f, 255.0f, fT, fDuration));
-            
-            if (m_uAnimCnt >= uint32(fDuration))
+            fWidth = Math::LinearTweenAutoRet(0.0f, 563.2f, m_fAnimCnt, fDuration);
+            fHeight = Math::LinearTweenAutoRet(0.0f, 140.8f, m_fAnimCnt, fDuration);
+            m_fSpriteRot = Math::LinearTweenAutoRet(0.0f, (MATH_PI * 5.9f), m_fAnimCnt, fDuration);
+            uAlphaBasis = Math::LinearTweenAutoRet(0.0f, 255.0f, m_fAnimCnt, fDuration);
+
+            m_fAnimCnt += CGameProperty::GetElapsedTime();
+            if (m_fAnimCnt >= fDuration)
             {
-                m_uAnimCnt = 0;
+                m_fAnimCnt = 0.0f;
                 m_uAnimStep = 1;
-            }
-            else
-            {
-                ++m_uAnimCnt;
             };
         }
         break; /* case 0 */
@@ -501,17 +463,14 @@ void CGaugeResult_Container::DrawNexus(void)
         {
             float fDuration = ANIM_DURATION_FRAMES(2);
 
-            fWidth = Math::LinearTween(563.2f, -51.2f, fT, fDuration);
-            fHeight = Math::LinearTween(140.8f, -12.8f, fT, fDuration);
+            fWidth = Math::LinearTweenAutoRet(563.2f, -51.2f, m_fAnimCnt, fDuration);
+            fHeight = Math::LinearTweenAutoRet(140.8f, -12.8f, m_fAnimCnt, fDuration);
 
-            if (m_uAnimCnt >= uint32(fDuration))
+            m_fAnimCnt += CGameProperty::GetElapsedTime();
+            if (m_fAnimCnt >= fDuration)
             {
-                m_uAnimCnt = 0;
+                m_fAnimCnt = 0.0f;
                 m_uAnimStep = 2;
-            }
-            else
-            {
-                ++m_uAnimCnt;
             };
         }
         break; /* case 1 */
@@ -519,11 +478,12 @@ void CGaugeResult_Container::DrawNexus(void)
     case 2:
         {
             float fDuration = ANIM_DURATION_FRAMES(120);
-            
-            if (m_uAnimCnt >= uint32(fDuration))
+
+            m_fAnimCnt += CGameProperty::GetElapsedTime();
+            if (m_fAnimCnt >= fDuration)
+            {
                 m_resultReq = CGaugeResult::RESULTREQ_NONE;
-            else
-                ++m_uAnimCnt;
+            };
         }
         break; /* case 2 */
 

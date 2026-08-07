@@ -20,6 +20,20 @@
 #include "System/Common/Screen.hpp"
 
 
+static inline float DampFactor(float f)
+{
+//#ifdef TARGET_WEB
+//    float dt = CGameProperty::GetElapsedTime();
+//    float framerate = 60.0f; // org
+//
+//    f = std::pow(f, dt * framerate);
+//    f = Clamp(f, 0.0f, 1.0f);
+//#endif /* TARGET_WEB */
+
+    return f;
+};
+
+
 /*static*/ CRideCharacter* CRideCharacter::New(PLAYERID::VALUE idChr, CRidePlayer* pRidePlayer, GAMETYPES::COSTUME costume)
 {
     char szPlayerName[GAMEOBJECTTYPES::GO_NAME_MAX];
@@ -492,8 +506,8 @@ void CRideCharacter::MakePadInfo(void)
     std::memset(&m_padinfo, 0x00, sizeof(m_padinfo));
     m_padinfo.pad = GetPadID();
 
-    float x = static_cast<float>(IPad::GetAnalog(m_padinfo.pad, IPad::ANALOG_LSTICK_X));
-    float y = static_cast<float>(IPad::GetAnalog(m_padinfo.pad, IPad::ANALOG_LSTICK_Y));
+    float x = static_cast<float>(IGamepad::GetAnalog(m_padinfo.pad, IGamepad::ANALOG_LSTICK_X));
+    float y = static_cast<float>(IGamepad::GetAnalog(m_padinfo.pad, IGamepad::ANALOG_LSTICK_Y));
 
     x = (x >= 0.0f ? (x / static_cast<float>(TYPEDEF::SINT16_MAX)) : -(x / static_cast<float>(TYPEDEF::SINT16_MIN)));
     y = (y >= 0.0f ? (y / static_cast<float>(TYPEDEF::SINT16_MAX)) : -(y / static_cast<float>(TYPEDEF::SINT16_MIN)));
@@ -504,25 +518,25 @@ void CRideCharacter::MakePadInfo(void)
     m_padinfo.fStickY = (std::fabs(y) >= DEADZONE ? y : 0.0f);
 
 #if defined(TARGET_PC) || defined(TARGET_WEB)
-    uint32 uMoveMask = CController::DIGITAL_LUP
-                     | CController::DIGITAL_LDOWN
-                     | CController::DIGITAL_LLEFT
-                     | CController::DIGITAL_LRIGHT;
+    uint32 uMoveMask = IGamepad::DIGITAL_LUP
+                     | IGamepad::DIGITAL_LDOWN
+                     | IGamepad::DIGITAL_LLEFT
+                     | IGamepad::DIGITAL_LRIGHT;
 
-    uint32 uDigital = IPad::GetDigital(m_padinfo.pad);
+    uint32 uDigital = IGamepad::GetDigital(m_padinfo.pad);
     if (uDigital & uMoveMask)
     {
         float xDigital = 0.0f;
         float yDigital = 0.0f;
 
-        if (uDigital & CController::DIGITAL_LLEFT)
+        if (uDigital & IGamepad::DIGITAL_LLEFT)
             xDigital = -1.0f;
-        else if (uDigital & CController::DIGITAL_LRIGHT)
+        else if (uDigital & IGamepad::DIGITAL_LRIGHT)
             xDigital = 1.0f;
 
-        if (uDigital & CController::DIGITAL_LUP)
+        if (uDigital & IGamepad::DIGITAL_LUP)
             yDigital = 1.0f;
-        else if (uDigital & CController::DIGITAL_LDOWN)
+        else if (uDigital & IGamepad::DIGITAL_LDOWN)
             yDigital = -1.0f;
 
         m_padinfo.fStickX = xDigital;
@@ -530,12 +544,12 @@ void CRideCharacter::MakePadInfo(void)
     };
 #endif /* defined(TARGET_PC) || defined(TARGET_WEB) */
 
-    uint32 uDigitalTrigger = IPad::GetDigitalTrigger(m_padinfo.pad);
+    uint32 uDigitalTrigger = IGamepad::GetDigitalTrigger(m_padinfo.pad);
 
-    m_padinfo.bShot       = IPad::CheckFunction(uDigitalTrigger, IPad::FUNCTION_SHOT);
-    m_padinfo.bJump       = IPad::CheckFunction(uDigitalTrigger, IPad::FUNCTION_JUMP);
-    m_padinfo.bLeftTurn   = IPad::CheckFunction(uDigitalTrigger, IPad::FUNCTION_DASH);
-    m_padinfo.bRightTurn  = IPad::CheckFunction(uDigitalTrigger, IPad::FUNCTION_GUARD);
+    m_padinfo.bShot       = IGamepad::CheckFunction(uDigitalTrigger, IGamepad::FUNCTION_SHOT);
+    m_padinfo.bJump       = IGamepad::CheckFunction(uDigitalTrigger, IGamepad::FUNCTION_JUMP);
+    m_padinfo.bLeftTurn   = IGamepad::CheckFunction(uDigitalTrigger, IGamepad::FUNCTION_DASH);
+    m_padinfo.bRightTurn  = IGamepad::CheckFunction(uDigitalTrigger, IGamepad::FUNCTION_GUARD);
 };
 
 
@@ -562,6 +576,7 @@ void CRideCharacter::Roll(void)
 void CRideCharacter::MoveForShip(void)
 {
     float dt = CGameProperty::GetElapsedTime();
+    float dtInv = (1.0f / dt);
     float x_max = CRideStage::GetMoveLimitXMax();
     float x_min = CRideStage::GetMoveLimitXMin();
     float y_max = CRideStage::GetMoveLimitYMax();
@@ -570,7 +585,7 @@ void CRideCharacter::MoveForShip(void)
     //
     //	x vel
     //
-    float damping_x = m_vVelocity.x * 0.97f;
+    float damping_x = m_vVelocity.x * DampFactor(0.97f);
     float dx = damping_x - (dt * (m_padinfo.fStickX * m_fControlRate) * 18.0f);
     float px = m_vPosition.x + dx * dt;
 
@@ -580,7 +595,7 @@ void CRideCharacter::MoveForShip(void)
     //
     //	y vel
     //
-    float damping_y = m_vVelocity.y * 0.97f;
+    float damping_y = m_vVelocity.y * DampFactor(0.97f);
     float dy = damping_y - (dt * (m_padinfo.fStickY * m_fControlRate) * 18.0f);
     float py = m_vPosition.y + dy * dt;
 
@@ -653,6 +668,7 @@ void CRideCharacter::Jump(void)
 void CRideCharacter::Move(void)
 {
     float dt = CGameProperty::GetElapsedTime();
+    float dtInv = (1.0f / dt);
     float x_max = CRideStage::GetMoveLimitXMax();
     float x_min = CRideStage::GetMoveLimitXMin();
 	float z_max = CRideStage::GetMoveLimitZMax();
@@ -661,15 +677,15 @@ void CRideCharacter::Move(void)
 	//
 	//	x vel
 	//
-    float damping = m_vVelocity.x * 0.97f;
+    float damping = m_vVelocity.x * DampFactor(0.97f);
     float dx = damping - (dt * (m_padinfo.fStickX * m_fControlRate) * 18.0f);
     float px = m_vPosition.x + dx * dt;
 
     if (px > x_max)
-        dx = (x_max - m_vPosition.x) * CScreen::Framerate();
+        dx = (x_max - m_vPosition.x) * dtInv;
     
     if (px < x_min)
-        dx = (x_min - m_vPosition.x) * CScreen::Framerate();
+        dx = (x_min - m_vPosition.x) * dtInv;
 
 	//
 	//	y vel
@@ -683,9 +699,9 @@ void CRideCharacter::Move(void)
         dy = dt * y * 1.9444444f;
 
         if (dy >= toMinZ)
-            dy *= CScreen::Framerate();
+            dy *= dtInv;
         else
-            dy = (toMinZ * CScreen::Framerate());
+            dy = (toMinZ * dtInv);
     }
     else if (y > 0.0f)
     {

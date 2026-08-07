@@ -24,6 +24,7 @@ public:
     static void PauseDraw(void);
     static PAUSESTATUS GetPauseStatus(void);
     static void MissionInfoSet(STAGEID::VALUE idStage);
+    static void MissionInfoClr(void);
     static void MissionInfoPeriod(void);
     static void MissionInfoDraw(void);
     static void SetBattleNexusInfo(void);

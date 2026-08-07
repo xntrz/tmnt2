@@ -42,9 +42,10 @@ CEnbuSequence::CEnbuSequence(void)
 , m_fDistEye(3.5f)
 , m_fEyeOfsY(1.0f)
 , m_fCameraOfsY(1.25f)
+, m_afAnimTime()
 , m_uAnimStep(0)
 {
-    std::memset(m_aAnimFrameCnt, 0x00, sizeof(m_aAnimFrameCnt));    
+    std::memset(m_afAnimTime, 0, sizeof(m_afAnimTime));
 };
 
 
@@ -209,7 +210,7 @@ void CEnbuSequence::OnMove(bool bRet, const void* pReturnValue)
                 CEnbuProc::Settings();
 
                 SetEnbuCameraInit();
-                CScreenFade::BlackIn();
+                CScreenFade::BlackIn(1.0f);
                 CGameSound::PlayBGM(SDCODE_BGM(12326));
                 
                 m_step = STEP_RUN;
@@ -300,6 +301,11 @@ void CEnbuSequence::EnbuCameraProc(void)
     if (CEnbuProc::IsEnbuIdle())
         return;
 
+#define AddTime(timer, duration)                        \
+        ((timer) += CScreen::TimerStride(),             \
+         (timer) = Clamp((timer), (timer), (duration)), \
+         (timer) < (duration))
+
     int32 nCameraType = GetEnbuCameraType();
     switch (nCameraType)
     {
@@ -311,12 +317,12 @@ void CEnbuSequence::EnbuCameraProc(void)
         
     case 1:
         {
-            float fDuration = (CScreen::Framerate() * CEnbuProc::GetEnbuEndTime());
-            m_fCameraOfsY = 0.85f;
-            m_fDistEye = Math::LinearTween(4.0f, -1.0f, float(m_aAnimFrameCnt[0]), fDuration);
+            float fDuration = ANIM_DURATION_FRAMES(CScreen::Framerate() * CEnbuProc::GetEnbuEndTime());
 
-            if (m_aAnimFrameCnt[0] < uint32(fDuration))
-                ++m_aAnimFrameCnt[0];
+            m_fCameraOfsY = 0.85f;
+            m_fDistEye = Math::LinearTweenAutoRet(4.0f, -1.0f, m_afAnimTime[0], fDuration);
+
+            AddTime(m_afAnimTime[0], fDuration);            
         }
         break;
         
@@ -329,37 +335,45 @@ void CEnbuSequence::EnbuCameraProc(void)
         
     case 3:
         {
-            float fDuration = CScreen::Framerate();
-
-            m_fEyeOfsY = Math::LinearTween(1.0f, -0.5f, float(m_aAnimFrameCnt[0]), fDuration);
-            m_fDistEye = Math::LinearTween(3.5f, -1.0f, float(m_aAnimFrameCnt[0]), fDuration);
-
-            if (m_aAnimFrameCnt[0] < uint32(fDuration))
+            switch (m_uAnimStep)
             {
-                ++m_aAnimFrameCnt[0];
-            }
-            else
-            {
-                float fDurationSub = (CEnbuProc::GetEnbuEndTime() - 1.0f) * CScreen::Framerate();
+            case 0:
+                {
+                    float fDuration = ANIM_DURATION_FRAMES(CScreen::Framerate());
 
-                m_fEyeOfsY = Math::LinearTween(0.5f, 0.25f, float(m_aAnimFrameCnt[1]), fDurationSub);
-                m_fDistEye = Math::LinearTween(2.5f, 1.0f, float(m_aAnimFrameCnt[1]), fDurationSub);
+                    m_fEyeOfsY = Math::LinearTweenAutoRet(1.0f, -0.5f, m_afAnimTime[0], fDuration);
+                    m_fDistEye = Math::LinearTweenAutoRet(3.5f, -1.0f, m_afAnimTime[0], fDuration);
 
-                if (m_aAnimFrameCnt[1] < uint32(fDurationSub))
-                    ++m_aAnimFrameCnt[1];
+                    if (!AddTime(m_afAnimTime[0], fDuration))
+                        ++m_uAnimStep;
+                }
+                break;
+
+            case 1:
+                {
+                    float fDurationSub = ANIM_DURATION_FRAMES((CEnbuProc::GetEnbuEndTime() - 1.0f) * CScreen::Framerate());
+
+                    m_fEyeOfsY = Math::LinearTweenAutoRet(0.5f, 0.25f, m_afAnimTime[1], fDurationSub);
+                    m_fDistEye = Math::LinearTweenAutoRet(2.5f, 1.0f, m_afAnimTime[1], fDurationSub);
+
+                    AddTime(m_afAnimTime[1], fDurationSub);                    
+                }
+                break;
+
+            default:
+                break;
             };
         }
         break;
         
     case 4:
         {
-            float fDuration = (CScreen::Framerate() * CEnbuProc::GetEnbuEndTime());
+            float fDuration = ANIM_DURATION_FRAMES(CScreen::Framerate() * CEnbuProc::GetEnbuEndTime());
 
-            m_fEyeOfsY = Math::LinearTween(1.0f, -0.5f, float(m_aAnimFrameCnt[0]), fDuration);
-            m_fDistEye = Math::LinearTween(3.5f, -1.0f, float(m_aAnimFrameCnt[0]), fDuration);
+            m_fEyeOfsY = Math::LinearTweenAutoRet(1.0f, -0.5f, m_afAnimTime[0], fDuration);
+            m_fDistEye = Math::LinearTweenAutoRet(3.5f, -1.0f, m_afAnimTime[0], fDuration);
 
-            if (m_aAnimFrameCnt[0] < uint32(fDuration))
-                ++m_aAnimFrameCnt[0];
+            AddTime(m_afAnimTime[0], fDuration);            
         }
         break;
         
@@ -367,78 +381,72 @@ void CEnbuSequence::EnbuCameraProc(void)
     case 6:
     case 7:
         {
-            float fDuration = (CScreen::Framerate() * CEnbuProc::GetEnbuEndTime());
+            float fDuration = ANIM_DURATION_FRAMES(CScreen::Framerate() * CEnbuProc::GetEnbuEndTime());
 
             if (nCameraType == 6)
             {
-                m_fCameraRotY = Math::LinearTween(2.0f, -2.0f, float(m_aAnimFrameCnt[0]), fDuration);
+                m_fCameraRotY = Math::LinearTweenAutoRet(2.0f, -2.0f, m_afAnimTime[0], fDuration);
             }
-            else if(nCameraType == 5)
+            else if (nCameraType == 5)
             {
-                m_fCameraRotY = Math::LinearTween(-2.0f, 2.0f, float(m_aAnimFrameCnt[0]), fDuration);
+                m_fCameraRotY = Math::LinearTweenAutoRet(-2.0f, 2.0f, m_afAnimTime[0], fDuration);
             };
 
-            m_fDistEye = Math::LinearTween(3.0f, 0.5f, float(m_aAnimFrameCnt[0]), fDuration);
+            m_fDistEye = Math::LinearTweenAutoRet(3.0f, 0.5f, m_afAnimTime[0], fDuration);
 
-            if (m_aAnimFrameCnt[0] < uint32(fDuration))
-                ++m_aAnimFrameCnt[0];
+            AddTime(m_afAnimTime[0], fDuration);
         }
         break;
         
     case 8:
         {
-            float fDuration = (CEnbuProc::GetEnbuEndTime() - 0.4f) * CScreen::Framerate();
+            float fDuration = ANIM_DURATION_FRAMES((CEnbuProc::GetEnbuEndTime() - 0.4f) * CScreen::Framerate());
 
-            m_fCameraRotY = Math::LinearTween(0.0f, -3.65f, float(m_aAnimFrameCnt[0]), fDuration);
+            m_fCameraRotY = Math::LinearTweenAutoRet(0.0f, -3.65f, m_afAnimTime[0], fDuration);
 
-            if (m_aAnimFrameCnt[0] < uint32(fDuration))
-                ++m_aAnimFrameCnt[0];
+            AddTime(m_afAnimTime[0], fDuration);
         }
         break;
         
     case 9:
         {
-            float fDuration = (CScreen::Framerate() * 1.5f) * 2.0f;
+            float fDuration = ANIM_DURATION_FRAMES((CScreen::Framerate() * 1.5f) * 2.0f);
 
-            m_fCameraRotY = Math::LinearTween(-2.0f, 2.0f, float(m_aAnimFrameCnt[0]), fDuration);
+            m_fCameraRotY = Math::LinearTweenAutoRet(-2.0f, 2.0f, m_afAnimTime[0], fDuration);
 
-            if (m_aAnimFrameCnt[0] < uint32(fDuration))
-                ++m_aAnimFrameCnt[0];
+            AddTime(m_afAnimTime[0], fDuration);
         }
         break;
         
     case 10:
         {
-            float fDuration = CScreen::Framerate() * CEnbuProc::GetEnbuEndTime();
+            float fDuration = ANIM_DURATION_FRAMES(CScreen::Framerate() * CEnbuProc::GetEnbuEndTime());
 
-            m_fCameraRotY = Math::LinearTween(0.0f, -0.08f, float(m_aAnimFrameCnt[0]), fDuration);
-            m_fDistEye = Math::LinearTween(3.0f, 0.5f, float(m_aAnimFrameCnt[0]), fDuration);
+            m_fCameraRotY = Math::LinearTweenAutoRet(0.0f, -0.08f, m_afAnimTime[0], fDuration);
+            m_fDistEye = Math::LinearTweenAutoRet(3.0f, 0.5f, m_afAnimTime[0], fDuration);
 
-            if (m_aAnimFrameCnt[0] < uint32(fDuration))
-                ++m_aAnimFrameCnt[0];
+            AddTime(m_afAnimTime[0], fDuration);
         }
         break;
         
     case 11:
         {
-            float fDuration = CScreen::Framerate() * CEnbuProc::GetEnbuEndTime();
+            float fDuration = ANIM_DURATION_FRAMES(CScreen::Framerate() * CEnbuProc::GetEnbuEndTime());
 
-            m_fCameraRotY = Math::LinearTween(0.0f, -0.18f, float(m_aAnimFrameCnt[0]), fDuration);
-            m_fDistEye = Math::LinearTween(3.0f, 0.5f, float(m_aAnimFrameCnt[0]), fDuration);
+            m_fCameraRotY = Math::LinearTweenAutoRet(0.0f, -0.18f, m_afAnimTime[0], fDuration);
+            m_fDistEye = Math::LinearTweenAutoRet(3.0f, 0.5f, m_afAnimTime[0], fDuration);
 
-            if (m_aAnimFrameCnt[0] < uint32(fDuration))
-                ++m_aAnimFrameCnt[0];
+            AddTime(m_afAnimTime[0], fDuration);
         }
         break;
         
     case 12:
         {
-            float fDuration = (CEnbuProc::GetEnbuEndTime() - 1.0f) * CScreen::Framerate();
+            float fDuration = ANIM_DURATION_FRAMES((CEnbuProc::GetEnbuEndTime() - 1.0f) * CScreen::Framerate());
             
-            m_fCameraRotY = Math::LinearTween(0.0f, 0.86f, float(m_aAnimFrameCnt[0]), fDuration);
+            m_fCameraRotY = Math::LinearTweenAutoRet(0.0f, 0.86f, m_afAnimTime[0], fDuration);
             
-            if (m_aAnimFrameCnt[0] < uint32(fDuration))
-                ++m_aAnimFrameCnt[0];
+            AddTime(m_afAnimTime[0], fDuration);
         }
         break;
         
@@ -448,23 +456,20 @@ void CEnbuSequence::EnbuCameraProc(void)
             {
             case 0:
                 {
-                    float fDuration = CScreen::Framerate() * 3.0f;
+                    float fDuration = ANIM_DURATION_FRAMES(CScreen::Framerate() * 3.0f);
 
-                    if (m_aAnimFrameCnt[0] < uint32(fDuration))
-                        ++m_aAnimFrameCnt[0];
-                    else
-                        m_uAnimStep = 1;
+                    if (!AddTime(m_afAnimTime[0], fDuration))
+                        ++m_uAnimStep;
                 }
                 break;
 
             case 1:
                 {
-                    float fDuration = (CEnbuProc::GetEnbuEndTime() - 3.25f) * CScreen::Framerate();
+                    float fDuration = ANIM_DURATION_FRAMES((CEnbuProc::GetEnbuEndTime() - 3.25f) * CScreen::Framerate());
 
-                    m_fCameraOfsY = Math::LinearTween(1.25f, -0.35f, float(m_aAnimFrameCnt[1]), fDuration);
+                    m_fCameraOfsY = Math::LinearTween(1.25f, -0.35f, m_afAnimTime[1], fDuration);
 
-                    if (m_aAnimFrameCnt[1] < uint32(fDuration))
-                        ++m_aAnimFrameCnt[1];
+                    AddTime(m_afAnimTime[1], fDuration);                    
                 }
                 break;
 
@@ -480,36 +485,31 @@ void CEnbuSequence::EnbuCameraProc(void)
             {
             case 0:
                 {
-                    float fDuration = CScreen::Framerate();
+                    float fDuration = ANIM_DURATION_FRAMES(CScreen::Framerate());
 
-                    m_fCameraRotY = Math::LinearTween(0.0, -1.5f, float(m_aAnimFrameCnt[0]), fDuration);
+                    m_fCameraRotY = Math::LinearTween(0.0, -1.5f, m_afAnimTime[0], fDuration);
 
-                    if (m_aAnimFrameCnt[0] < uint32(fDuration))
-                        ++m_aAnimFrameCnt[0];
-                    else
-                        m_uAnimStep = 1;
+                    if (!AddTime(m_afAnimTime[0], fDuration))
+                        ++m_uAnimStep;
                 }
                 break;
 
             case 1:
                 {
-                    float fDuration = CScreen::Framerate() * 2.0f;
-                    
-                    if (m_aAnimFrameCnt[1] < uint32(fDuration))
-                        ++m_aAnimFrameCnt[1];
-                    else
-                        m_uAnimStep = 2;
+                    float fDuration = ANIM_DURATION_FRAMES(CScreen::Framerate() * 2.0f);
+
+                    if (!AddTime(m_afAnimTime[1], fDuration))
+                        ++m_uAnimStep;
                 }
                 break;
 
             case 2:
                 {
-                    float fDuration = (CEnbuProc::GetEnbuEndTime() - 3.5f) * CScreen::Framerate();
+                    float fDuration = ANIM_DURATION_FRAMES((CEnbuProc::GetEnbuEndTime() - 3.5f) * CScreen::Framerate());
 
-                    m_fCameraRotY = Math::LinearTween(-1.5, 1.38f, float(m_aAnimFrameCnt[2]), fDuration);
+                    m_fCameraRotY = Math::LinearTween(-1.5, 1.38f, m_afAnimTime[2], fDuration);
 
-                    if (m_aAnimFrameCnt[2] < uint32(fDuration))
-                        ++m_aAnimFrameCnt[2];
+                    AddTime(m_afAnimTime[2], fDuration);
                 }
                 break;
 
@@ -521,75 +521,91 @@ void CEnbuSequence::EnbuCameraProc(void)
         
     case 15:
         {
-            float fDuration = CScreen::Framerate() * 3.0f;
-
-            if (m_aAnimFrameCnt[0] < uint32(fDuration))
+            switch (m_uAnimStep)
             {
-                ++m_aAnimFrameCnt[0];
-                m_fCameraOfsY = 1.0f;
-            }
-            else
-            {
-                float fDurationSub = (CEnbuProc::GetEnbuEndTime() - 3.25f) * CScreen::Framerate();
+            case 0:
+                {
+                    float fDuration = ANIM_DURATION_FRAMES(CScreen::Framerate() * 3.0f);
 
-                m_fCameraOfsY = Math::LinearTween(1.0, -0.15f, float(m_aAnimFrameCnt[1]), fDurationSub);
+                    m_fCameraOfsY = 1.0f;
 
-                if (m_aAnimFrameCnt[1] < uint32(fDurationSub))
-                    ++m_aAnimFrameCnt[1];
+                    if (!AddTime(m_afAnimTime[0], fDuration))
+                        ++m_uAnimStep;
+                }
+                break;
+
+            case 1:
+                {
+                    float fDuration = ANIM_DURATION_FRAMES((CEnbuProc::GetEnbuEndTime() - 3.25f) * CScreen::Framerate());
+
+                    m_fCameraOfsY = Math::LinearTween(1.0, -0.15f, m_afAnimTime[1], fDuration);
+
+                    AddTime(m_afAnimTime[1], fDuration);
+                }
+                break;
+
+            default:
+                break;
             };
         }
         break;
         
     case 16:
         {
-            float fDuration = CEnbuProc::GetEnbuEndTime() * CScreen::Framerate();
+            float fDuration = ANIM_DURATION_FRAMES(CEnbuProc::GetEnbuEndTime() * CScreen::Framerate());
             
-            m_fCameraRotY = Math::LinearTween(0.0, 0.8f, float(m_aAnimFrameCnt[0]), fDuration);
-            
-            if (m_aAnimFrameCnt[0] < uint32(fDuration))
-                ++m_aAnimFrameCnt[0];
+            m_fCameraRotY = Math::LinearTween(0.0, 0.8f, m_afAnimTime[0], fDuration);
+
+            AddTime(m_afAnimTime[0], fDuration);
         }
         break;
         
     case 17:
         {
-            float fDuration = (CEnbuProc::GetEnbuEndTime() - 0.25f) * CScreen::Framerate();
+            float fDuration = ANIM_DURATION_FRAMES((CEnbuProc::GetEnbuEndTime() - 0.25f) * CScreen::Framerate());
 
-            m_fCameraRotY = Math::LinearTween(-2.0f, 1.72f, float(m_aAnimFrameCnt[0]), fDuration);
-            m_fDistEye = Math::LinearTween(3.0f, 0.5f, float(m_aAnimFrameCnt[0]), fDuration);
+            m_fCameraRotY = Math::LinearTween(-2.0f, 1.72f, m_afAnimTime[0], fDuration);
+            m_fDistEye = Math::LinearTween(3.0f, 0.5f, m_afAnimTime[0], fDuration);
 
-            if (m_aAnimFrameCnt[0] < uint32(fDuration))
-                ++m_aAnimFrameCnt[0];
+            AddTime(m_afAnimTime[0], fDuration);
         }
         break;
         
     case 18:
         {
-            float fDuration = (CEnbuProc::GetEnbuEndTime() - 0.25f) * CScreen::Framerate();
+            float fDuration = ANIM_DURATION_FRAMES((CEnbuProc::GetEnbuEndTime() - 0.25f) * CScreen::Framerate());
             
-            m_fCameraRotY = Math::LinearTween(0.0, -0.16f, float(m_aAnimFrameCnt[0]), fDuration);
+            m_fCameraRotY = Math::LinearTween(0.0, -0.16f, m_afAnimTime[0], fDuration);
             
-            if (m_aAnimFrameCnt[0] < uint32(fDuration))
-                ++m_aAnimFrameCnt[0];
+            AddTime(m_afAnimTime[0], fDuration);
         }
         break;
         
     case 19:
         {
-            float fDuration = CScreen::Framerate() * 2.0f;
-
-            if (m_aAnimFrameCnt[0] < uint32(fDuration))
+            switch (m_uAnimStep)
             {
-                ++m_aAnimFrameCnt[0];
-            }
-            else
-            {
-                float fDurationSub = (CEnbuProc::GetEnbuEndTime() - 2.25f) * CScreen::Framerate();
+            case 0:
+                {
+                    float fDuration = ANIM_DURATION_FRAMES(CScreen::Framerate() * 2.0f);
 
-                m_fCameraRotY = Math::LinearTween(0.0, -0.6f, float(m_aAnimFrameCnt[1]), fDurationSub);
+                    if (!AddTime(m_afAnimTime[0], fDuration))
+                        ++m_uAnimStep;
+                }
+                break;
 
-                if (m_aAnimFrameCnt[1] < uint32(fDurationSub))
-                    ++m_aAnimFrameCnt[1];
+            case 1:
+                {
+                    float fDuration = ANIM_DURATION_FRAMES((CEnbuProc::GetEnbuEndTime() - 2.25f) * CScreen::Framerate());
+
+                    m_fCameraRotY = Math::LinearTween(0.0, -0.6f, m_afAnimTime[1], fDuration);
+
+                    AddTime(m_afAnimTime[1], fDuration);
+                }
+                break;
+
+            default:
+                break;
             };
         }
         break;
@@ -636,20 +652,24 @@ void CEnbuSequence::SetEnbuCameraInit(void)
     m_fCameraOfsY   = 1.25f;
     m_uAnimStep     = 0;
     
-    std::memset(m_aAnimFrameCnt, 0x00, sizeof(m_aAnimFrameCnt));
+    std::memset(m_afAnimTime, 0, sizeof(m_afAnimTime));
 
     GAMETYPES::CLEARRANK clearrank = CEnbuProc::GetEnbuRank();
     PLAYERID::VALUE idMvp = CEnbuProc::GetEnbuMvp();
     switch (idMvp)
     {
     case PLAYERID::ID_LEO:
-        if (clearrank != GAMETYPES::CLEARRANK_A)
-            m_fCameraOfsY = 1.0f;        
+        {
+            if (clearrank == GAMETYPES::CLEARRANK_A)
+                m_fCameraOfsY = 1.0f;
+        }
         break;
         
     case PLAYERID::ID_RAP:
-        if (clearrank == GAMETYPES::CLEARRANK_E)
-            m_fCameraOfsY = 0.9f;        
+        {
+            if (clearrank == GAMETYPES::CLEARRANK_E)
+                m_fCameraOfsY = 0.9f;
+        }
         break;
         
     case PLAYERID::ID_MIC:
@@ -659,24 +679,32 @@ void CEnbuSequence::SetEnbuCameraInit(void)
         break;
         
     case PLAYERID::ID_SLA:
-        m_fCameraOfsY = 1.5f;
-        m_fDistEye = 4.25f;
+        {
+            m_fCameraOfsY = 1.5f;
+            m_fDistEye = 4.25f;
+        }
         break;
         
     case PLAYERID::ID_CAS:
-        m_fCameraOfsY = 1.5f;
+        {
+            m_fCameraOfsY = 1.5f;
+        }        
         break;
         
     case PLAYERID::ID_KAR:
-        if (clearrank == GAMETYPES::CLEARRANK_S)
-            m_fCameraOfsY = 1.35f;        
+        {
+            if (clearrank == GAMETYPES::CLEARRANK_S)
+                m_fCameraOfsY = 1.35f;
+        }
         break;
         
     case PLAYERID::ID_SPL:
-        if (clearrank == GAMETYPES::CLEARRANK_SS)
-            m_fCameraOfsY = 1.15f;
-        else
-            m_fCameraOfsY = 1.0f;
+        {
+            if (clearrank == GAMETYPES::CLEARRANK_SS)
+                m_fCameraOfsY = 1.15f;
+            else
+                m_fCameraOfsY = 1.0f;
+        }
         break;
 
     default:

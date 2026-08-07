@@ -53,7 +53,7 @@ public:
     void DekuDraw(void);
 
 private:
-    uint32      m_aGaugeCnt[4];
+    float       m_afGaugeCnt[4];
     uint8       m_aGaugeStep[4];
     bool        m_bGaugeMeterSetting;
     CSprite     m_aSprite[7];
@@ -70,8 +70,7 @@ private:
     float       m_afHeight[2];
     uint8       m_aAlpha[4];
     float       m_fRecoverRot;
-    uint32      m_uLifeAnimCnt;
-    uint32      m_uLifeAnimCnt2;
+    float       m_fLifeAnimCnt;
     bool        m_bDekuDispFlag;
     DEKUSTATE   m_DekuState;
     uint32      m_uDekuAnimCnt;
@@ -89,8 +88,7 @@ CGaugeMeter_Container::CGaugeMeter_Container(void)
 , m_PlayerHpChu(0)
 , m_PlayerHpKi(0)
 , m_fRecoverRot(0.0f)
-, m_uLifeAnimCnt(0)
-, m_uLifeAnimCnt2(0)
+, m_fLifeAnimCnt(0.0f)
 , m_bDekuDispFlag(false)
 , m_DekuState(DEKUSTATE_IDLE)
 , m_uDekuAnimCnt(0)
@@ -100,7 +98,7 @@ CGaugeMeter_Container::CGaugeMeter_Container(void)
     std::memset(m_afHeight,   0x00, sizeof(m_afHeight));
     std::memset(m_aGaugeStep, 0x00, sizeof(m_aGaugeStep));
     std::memset(m_aAlpha,     0x00, sizeof(m_aAlpha));
-    std::memset(m_aGaugeCnt,  0x00, sizeof(m_aGaugeCnt));
+    std::memset(m_afGaugeCnt,  0x00, sizeof(m_afGaugeCnt));
 
     m_bDekuDispFlag = CGameData::Record().Item().IsComebackProcessed();
 };
@@ -251,19 +249,19 @@ void CGaugeMeter_Container::GaugeUpdate(void)
                 m_aGaugeStep[2] = 0;
                 m_aGaugeStep[3] = 0;
 
-                m_aGaugeCnt[0] = 0;
-                m_aGaugeCnt[1] = 0;
-                m_aGaugeCnt[2] = 0;
-                m_aGaugeCnt[3] = 0;
+                m_afGaugeCnt[0] = 0.0f;
+                m_afGaugeCnt[1] = 0.0f;
+                m_afGaugeCnt[2] = 0.0f;
+                m_afGaugeCnt[3] = 0.0f;
 
                 m_fRecoverRot = 0.0f;
-                m_uLifeAnimCnt = 0;
+                m_fLifeAnimCnt = 0.0f;
             }
             else if (m_PlayerHp < m_PlayerHpOld)
             {
                 m_PlayerHpAnimReq = ANIMREQ_DMGER;
                 m_aGaugeStep[1] = 0;
-                m_aGaugeCnt[1] = 0;
+                m_afGaugeCnt[1] = 0.0f;
             };
         };
     }
@@ -296,7 +294,7 @@ void CGaugeMeter_Container::GaugeUpdate(void)
     if (m_GaugeType != PrevGaugetype)
     {
         m_aGaugeStep[0] = 0;
-        m_aGaugeCnt[0] = 0;
+        m_afGaugeCnt[0] = 0.0f;
     };
 };
 
@@ -417,18 +415,15 @@ void CGaugeMeter_Container::AnimGaugeFont_Period(void)
                 {
                     float fDuration = ANIM_DURATION_FRAMES(9);
 
-                    w = Math::LinearTween(64.0f, 32.0f, float(m_aGaugeCnt[0]), fDuration);
-                    h = Math::LinearTween(64.0f, 32.0f, float(m_aGaugeCnt[0]), fDuration);
-                    uAlpha = uint8(Math::LinearTween(255.0f, -255.0f, float(m_aGaugeCnt[0]), fDuration));
+                    w = Math::LinearTweenAutoRet(64.0f, 32.0f, m_afGaugeCnt[0], fDuration);
+                    h = Math::LinearTweenAutoRet(64.0f, 32.0f, m_afGaugeCnt[0], fDuration);
+                    uAlpha = Math::LinearTweenAutoRet(255.0f, -255.0f, m_afGaugeCnt[0], fDuration);
 
-                    if (m_aGaugeCnt[0] >= uint32(fDuration))
+                    m_afGaugeCnt[0] += CGameProperty::GetElapsedTime();
+                    if (m_afGaugeCnt[0] >= fDuration)
                     {
                         m_aGaugeStep[0] = 2;
-                        m_aGaugeCnt[0] = 0;
-                    }
-                    else
-                    {
-                        ++m_aGaugeCnt[0];
+                        m_afGaugeCnt[0] = 0.0f;
                     };
                 }
                 break;
@@ -437,16 +432,13 @@ void CGaugeMeter_Container::AnimGaugeFont_Period(void)
                 {
                     float fDuration = ANIM_DURATION_FRAMES(23);
 
-                    uAlpha = uint8(Math::LinearTween(0.0f, 255.0f, float(m_aGaugeCnt[0]), fDuration));
+                    uAlpha = Math::LinearTweenAutoRet(0.0f, 255.0f, m_afGaugeCnt[0], fDuration);
 
-                    if (m_aGaugeCnt[0] >= uint32(fDuration))
+                    m_afGaugeCnt[0] += CGameProperty::GetElapsedTime();
+                    if (m_afGaugeCnt[0] >= fDuration)
                     {
                         ++m_aGaugeStep[0];
-                        m_aGaugeCnt[0] = 0;
-                    }
-                    else
-                    {
-                        ++m_aGaugeCnt[0];
+                        m_afGaugeCnt[0] = 0.0f;
                     };
                 }
                 break;
@@ -455,18 +447,15 @@ void CGaugeMeter_Container::AnimGaugeFont_Period(void)
                 {
                     float fDuration = ANIM_DURATION_FRAMES(10);
 
-                    w = Math::LinearTween(96.0f, -32.0f, float(m_aGaugeCnt[0]), fDuration);
-                    h = Math::LinearTween(96.0f, -32.0f, float(m_aGaugeCnt[0]), fDuration);
-                    uAlpha = uint8(Math::LinearTween(0.0f, 255.0f, float(m_aGaugeCnt[0]), fDuration));
+                    w = Math::LinearTweenAutoRet(96.0f, -32.0f, m_afGaugeCnt[0], fDuration);
+                    h = Math::LinearTweenAutoRet(96.0f, -32.0f, m_afGaugeCnt[0], fDuration);
+                    uAlpha = Math::LinearTweenAutoRet(0.0f, 255.0f, m_afGaugeCnt[0], fDuration);
 
-                    if (m_aGaugeCnt[0] >= uint32(fDuration))
+                    m_afGaugeCnt[0] += CGameProperty::GetElapsedTime();
+                    if (m_afGaugeCnt[0] >= fDuration)
                     {
                         m_aGaugeStep[0] = 2;
-                        m_aGaugeCnt[0] = 0;
-                    }
-                    else
-                    {
-                        ++m_aGaugeCnt[0];
+                        m_afGaugeCnt[0] = 0.0f;
                     };
                 }
                 break;
@@ -484,16 +473,13 @@ void CGaugeMeter_Container::AnimGaugeFont_Period(void)
             {
                 float fDuration = ANIM_DURATION_FRAMES(23);
 
-                uAlpha = uint8(Math::LinearTween(255.0f, -255.0f, float(m_aGaugeCnt[0]), fDuration));
+                uAlpha = Math::LinearTweenAutoRet(255.0f, -255.0f, m_afGaugeCnt[0], fDuration);
 
-                if (m_aGaugeCnt[0] >= uint32(fDuration))
+                m_afGaugeCnt[0] += CGameProperty::GetElapsedTime();
+                if (m_afGaugeCnt[0] >= fDuration)
                 {
                     ++m_aGaugeStep[0];
-                    m_aGaugeCnt[0] = 0;
-                }
-                else
-                {
-                    ++m_aGaugeCnt[0];
+                    m_afGaugeCnt[0] = 0.0f;
                 };
             };
         }
@@ -505,14 +491,11 @@ void CGaugeMeter_Container::AnimGaugeFont_Period(void)
 
             uAlpha = 0;
 
-            if (m_aGaugeCnt[0] >= uint32(fDuration))
+            m_afGaugeCnt[0] += CGameProperty::GetElapsedTime();
+            if (m_afGaugeCnt[0] >= fDuration)
             {
                 m_aGaugeStep[0] = 0;
-                m_aGaugeCnt[0] = 0;
-            }
-            else
-            {
-                ++m_aGaugeCnt[0];
+                m_afGaugeCnt[0] = 0.0f;
             };
         }
         break;
@@ -561,13 +544,19 @@ void CGaugeMeter_Container::LifeRecover_Period(void)
         {
             float fDuration = ANIM_DURATION_FRAMES(6);
 
-            w0 = Math::LinearTween(140.8f, -76.8f, float(m_aGaugeCnt[0]), fDuration);
-            h0 = Math::LinearTween(140.8f, -76.8f, float(m_aGaugeCnt[0]), fDuration);
-            uAlpha0 = uint8(Math::LinearTween(255.0f, -255.0f, float(m_aGaugeCnt[0]), fDuration));
+            w0 = Math::LinearTweenAutoRet(140.8f, -76.8f, m_afGaugeCnt[0], fDuration);
+            h0 = Math::LinearTweenAutoRet(140.8f, -76.8f, m_afGaugeCnt[0], fDuration);
+            uAlpha0 = Math::LinearTweenAutoRet(255.0f, -255.0f, m_afGaugeCnt[0], fDuration);
 
-            if (m_aGaugeCnt[0] < uint32(fDuration))
-                ++m_aGaugeCnt[0];
+            if (m_afGaugeCnt[0] < fDuration)
+            {
+                m_afGaugeCnt[0] += CGameProperty::GetElapsedTime();
+                m_afGaugeCnt[0] = Clamp(m_afGaugeCnt[0], m_afGaugeCnt[0], fDuration);
+            };
         }
+        break;
+
+    default:
         break;
     };
 
@@ -581,14 +570,11 @@ void CGaugeMeter_Container::LifeRecover_Period(void)
             h1 = 64.0f;
             uAlpha1 = 255;
 
-            if (m_aGaugeCnt[1] >= uint32(fDuration))
+            m_afGaugeCnt[1] += CGameProperty::GetElapsedTime();
+            if (m_afGaugeCnt[1] >= fDuration)
             {
-                m_aGaugeCnt[1] = 0;
+                m_afGaugeCnt[1] = 0.0f;
                 ++m_aGaugeStep[1];
-            }
-            else
-            {
-                ++m_aGaugeCnt[1];
             };
         }
         break;
@@ -597,12 +583,15 @@ void CGaugeMeter_Container::LifeRecover_Period(void)
         {
             float fDuration = ANIM_DURATION_FRAMES(10);
 
-            w1 = Math::LinearTween(64.0f, 32.0f, float(m_aGaugeCnt[1]), fDuration);
-            h1 = Math::LinearTween(64.0f, 32.0f, float(m_aGaugeCnt[1]), fDuration);
-            uAlpha1 = uint8(Math::LinearTween(255.0f, -255.0f, float(m_aGaugeCnt[1]), fDuration));
+            w1 = Math::LinearTweenAutoRet(64.0f, 32.0f, m_afGaugeCnt[1], fDuration);
+            h1 = Math::LinearTweenAutoRet(64.0f, 32.0f, m_afGaugeCnt[1], fDuration);
+            uAlpha1 = Math::LinearTweenAutoRet(255.0f, -255.0f, m_afGaugeCnt[1], fDuration);
 
-            if (m_aGaugeCnt[1] < uint32(fDuration))
-                ++m_aGaugeCnt[1];
+            if (m_afGaugeCnt[1] < fDuration)
+            {
+                m_afGaugeCnt[1] += CGameProperty::GetElapsedTime();
+                m_afGaugeCnt[1] = Clamp(m_afGaugeCnt[1], m_afGaugeCnt[1], fDuration);
+            };
         }
         break;
 
@@ -618,14 +607,11 @@ void CGaugeMeter_Container::LifeRecover_Period(void)
 
             uAlpha2 = 255;
 
-            if (m_aGaugeCnt[2] >= uint32(fDuration))
+            m_afGaugeCnt[2] += CGameProperty::GetElapsedTime();
+            if (m_afGaugeCnt[2] >= fDuration)
             {
-                m_aGaugeCnt[2] = 0;
+                m_afGaugeCnt[2] = 0.0f;
                 ++m_aGaugeStep[2];
-            }
-            else
-            {
-                ++m_aGaugeCnt[2];
             };
         }
         break;
@@ -636,14 +622,11 @@ void CGaugeMeter_Container::LifeRecover_Period(void)
 
             uAlpha2 = 255;
 
-            if (m_aGaugeCnt[2] >= uint32(fDuration))
+            m_afGaugeCnt[2] += CGameProperty::GetElapsedTime();
+            if (m_afGaugeCnt[2] >= fDuration)
             {
-                m_aGaugeCnt[2] = 0;
+                m_afGaugeCnt[2] = 0.0f;
                 ++m_aGaugeStep[2];
-            }
-            else
-            {
-                ++m_aGaugeCnt[2];
             };
         }
         break;
@@ -652,10 +635,13 @@ void CGaugeMeter_Container::LifeRecover_Period(void)
         {
             float fDuration = ANIM_DURATION_FRAMES(17);
 
-            uAlpha2 = uint8(Math::LinearTween(255.0f, -255.0f, float(m_aGaugeCnt[2]), fDuration));
+            uAlpha2 = Math::LinearTweenAutoRet(255.0f, -255.0f, m_afGaugeCnt[2], fDuration);
 
-            if (m_aGaugeCnt[2] < uint32(fDuration))
-                ++m_aGaugeCnt[2];
+            if (m_afGaugeCnt[2] < fDuration)
+            {
+                m_afGaugeCnt[2] += CGameProperty::GetElapsedTime();
+                m_afGaugeCnt[2] = Clamp(m_afGaugeCnt[2], m_afGaugeCnt[2], fDuration);
+            };
         }
         break;
 
@@ -669,10 +655,13 @@ void CGaugeMeter_Container::LifeRecover_Period(void)
         {
             float fDuration = ANIM_DURATION_FRAMES(6);
 
-            uAlpha3 = uint8(Math::LinearTween(255.0f, -255.0f, float(m_aGaugeCnt[3]), fDuration));
+            uAlpha3 = Math::LinearTweenAutoRet(255.0f, -255.0f, m_afGaugeCnt[3], fDuration);
 
-            if (m_aGaugeCnt[3] < uint32(fDuration))
-                ++m_aGaugeCnt[3];
+            if (m_afGaugeCnt[3] < fDuration)
+            {
+                m_afGaugeCnt[3] += CGameProperty::GetElapsedTime();
+                m_afGaugeCnt[3] = Clamp(m_afGaugeCnt[3], m_afGaugeCnt[3], fDuration);
+            };
         }
         break;
 
@@ -682,15 +671,14 @@ void CGaugeMeter_Container::LifeRecover_Period(void)
 
     float fAnimDur = ANIM_DURATION_FRAMES(40);
 
-    if (m_uLifeAnimCnt >= uint32(fAnimDur))
+    m_fLifeAnimCnt += CGameProperty::GetElapsedTime();
+    if (m_fLifeAnimCnt >= fAnimDur)
     {
+        m_fLifeAnimCnt = Clamp(m_fLifeAnimCnt, m_fLifeAnimCnt, fAnimDur);
+
         m_aGaugeStep[0] = 0;
-        m_aGaugeCnt[0] = 0;
+        m_afGaugeCnt[0] = 0.0f;
         m_PlayerHpAnimReq = ANIMREQ_FONT;
-    }
-    else
-    {
-        ++m_uLifeAnimCnt;
     };
 
     m_fRecoverRot += 0.1f;
@@ -698,7 +686,7 @@ void CGaugeMeter_Container::LifeRecover_Period(void)
         m_fRecoverRot -= 360.0f;
 
     float fHpRecover = static_cast<float>(m_PlayerHp - m_PlayerHpOld);
-    float fAnimRatio = (static_cast<float>(m_uLifeAnimCnt) / fAnimDur);
+    float fAnimRatio = (m_fLifeAnimCnt / fAnimDur);
 
     m_PlayerHpMove = m_PlayerHpOld + static_cast<int32>(fHpRecover * fAnimRatio);
 
@@ -754,23 +742,20 @@ void CGaugeMeter_Container::LifeDamage_Period(void)
         {
             float fDuration = ANIM_DURATION_FRAMES(10);
 
-            if (m_aGaugeCnt[1] >= uint32(fDuration))
+            m_afGaugeCnt[1] += CGameProperty::GetElapsedTime();
+            if (m_afGaugeCnt[1] >= fDuration)
             {
                 m_aGaugeStep[0] = 0;
-                m_aGaugeCnt[0] = 0;
+                m_afGaugeCnt[0] = 0.0f;
                 m_PlayerHpAnimReq = ANIMREQ_FONT;
-            }
-            else
-            {
-                ++m_aGaugeCnt[1];
             };
 
             float fHpDamaged = static_cast<float>(m_PlayerHpOld - m_PlayerHp);
-            float fAnimRatio = (static_cast<float>(m_aGaugeCnt[1]) / fDuration);
+            float fAnimRatio = (m_afGaugeCnt[1] / fDuration);
 
             m_PlayerHpMove = m_PlayerHpOld - static_cast<int32>(fHpDamaged * fAnimRatio);
             
-            m_aAlpha[0] = uint8(Math::LinearTween(255.0f, -255.0f, float(m_aGaugeCnt[1]), fDuration));
+            m_aAlpha[0] = Math::LinearTweenAutoRet(255.0f, -255.0f, m_afGaugeCnt[1], fDuration);
         }
         break;
 

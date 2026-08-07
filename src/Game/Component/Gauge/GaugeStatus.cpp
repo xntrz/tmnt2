@@ -55,7 +55,7 @@ private:
         int32  m_nHpOld;
         int32  m_nHpMove;
         int32  m_nHpTotal;
-        uint32 m_uAnimCnt;
+        float  m_fAnimCnt;
     };
 
 public:
@@ -713,12 +713,12 @@ void CGaugeStatus_Container::ZakoGaugeDisp(int32 nZakoNo, float fX, float fY)
             if (HpOld > HpNow)
             {
                 pZakoInfo->m_eState = ZAKOINFO::STATE_DAMAGE;
-                pZakoInfo->m_uAnimCnt = 0;
+                pZakoInfo->m_fAnimCnt = 0.0f;
             }
             else
             {
                 pZakoInfo->m_eState = ZAKOINFO::STATE_RECOVER;
-                pZakoInfo->m_uAnimCnt = 0;
+                pZakoInfo->m_fAnimCnt = 0.0f;
             };
         };
     }
@@ -730,7 +730,7 @@ void CGaugeStatus_Container::ZakoGaugeDisp(int32 nZakoNo, float fX, float fY)
     };
 
     float fAnimDuration = ANIM_DURATION_FRAMES(4);
-    float fAnimStep = (float(pZakoInfo->m_uAnimCnt) / fAnimDuration);
+    float fAnimStep = (pZakoInfo->m_fAnimCnt / fAnimDuration);
     float hpMove = float(pZakoInfo->m_nHpMove);
 
     if (pZakoInfo->m_eState == ZAKOINFO::STATE_RECOVER)
@@ -744,10 +744,17 @@ void CGaugeStatus_Container::ZakoGaugeDisp(int32 nZakoNo, float fX, float fY)
 
     if (pZakoInfo->m_eState > ZAKOINFO::STATE_IDLE)
     {
-        if (float(pZakoInfo->m_uAnimCnt) >= fAnimDuration)
+        if (pZakoInfo->m_fAnimCnt >= fAnimDuration)
+        {
             pZakoInfo->m_eState = ZAKOINFO::STATE_IDLE;
+        }
         else
-            ++pZakoInfo->m_uAnimCnt;
+        {
+            pZakoInfo->m_fAnimCnt += CGameProperty::GetElapsedTime();
+            pZakoInfo->m_fAnimCnt = Clamp(pZakoInfo->m_fAnimCnt,
+                                          pZakoInfo->m_fAnimCnt,
+                                          fAnimDuration);
+        };
     };
 
     const RwRGBA aZakoColor[] =

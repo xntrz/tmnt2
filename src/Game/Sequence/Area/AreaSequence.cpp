@@ -25,14 +25,6 @@
 #include "System/Common/TextData.hpp"
 
 
-template<class T>
-static inline float
-LinearTween(float startValue, float changeValue, T time, T duration)
-{
-    return (startValue + ((static_cast<float>(time) / static_cast<float>(duration)) * changeValue));
-};
-
-
 class CAreaWorkPool
 {
 public:
@@ -56,9 +48,9 @@ public:
     struct CLEARANIM
     {
         int32   step;
-        uint32  counter;
+        float  fCounter;
         uint8   alphaBasis;
-        float   scale;
+        float   fScale;
     };
 
 public:
@@ -114,10 +106,10 @@ private:
     CLEARANIM     m_aClearAnim[4];
     float         m_fClearAnimRot;
     ANIMATION     m_animation;
-    uint32        m_kameMoveAnimCount;
-    uint32        m_kameIconAnimCount;
+    float        m_fKameMoveAnimCount;
+    float        m_fKameIconAnimCount;
     bool          m_bKameClearRotAnimFlag;
-    bool          m_bKameIconAnimFlag;
+    bool          m_bKameIconAnimAlphaIn;
     bool          m_bMenuInfoDispFlag;
 };
 
@@ -141,10 +133,10 @@ CAreaWorkPool::CAreaWorkPool(void)
 , m_aClearAnim()
 , m_fClearAnimRot(0.0f)
 , m_animation(ANIMATION_NONE)
-, m_kameMoveAnimCount(0)
-, m_kameIconAnimCount(0)
+, m_fKameMoveAnimCount(0.0f)
+, m_fKameIconAnimCount(0.0f)
 , m_bKameClearRotAnimFlag(false)
-, m_bKameIconAnimFlag(false)
+, m_bKameIconAnimAlphaIn(false)
 , m_bMenuInfoDispFlag(false)
 {
     ;
@@ -179,9 +171,9 @@ void CAreaWorkPool::Attach(void)
     std::memset(m_apAreaTextTexture, 0x00, sizeof(m_apAreaTextTexture));
     
     m_bTextureSettingFlag = false;
-    m_bKameIconAnimFlag = false;
-    m_kameIconAnimCount = 0;
-    m_kameMoveAnimCount = 0;
+    m_bKameIconAnimAlphaIn = false;
+    m_fKameIconAnimCount = 0.0f;
+    m_fKameMoveAnimCount = 0.0f;
     m_bMenuOpenFlag = false;
     m_bStationWarpFlag = false;
 
@@ -303,7 +295,7 @@ bool CAreaWorkPool::Move(void)
             return true;
         };
     }
-    else if (CController::GetDigitalTrigger(iController, CController::DIGITAL_R1))
+    else if (CController::GetDigitalTrigger(iController, IPadFunctionMask(IGamepad::FUNCTION_GUARD)))
     {
         m_bMenuOpenFlag = true;
         CAreaMenu::AreaMenuInit();
@@ -597,14 +589,11 @@ void CAreaWorkPool::TextureDraw(void)
     RENDERSTATE_POP(rwRENDERSTATEFOGENABLE);
     RENDERSTATE_POP(rwRENDERSTATECULLMODE);
 
-    if (static_cast<float>(m_kameIconAnimCount) >= ANIM_DURATION_FRAMES(30))
+    m_fKameIconAnimCount += CScreen::TimerStride();
+    if (m_fKameIconAnimCount >= ANIM_DURATION_FRAMES(30))
     {
-        m_bKameIconAnimFlag = !m_bKameIconAnimFlag;
-        m_kameIconAnimCount = 0;
-    }
-    else
-    {
-        ++m_kameIconAnimCount;
+        m_bKameIconAnimAlphaIn = !m_bKameIconAnimAlphaIn;
+        m_fKameIconAnimCount = 0.0f;
     };
 };
 
@@ -998,19 +987,18 @@ void CAreaWorkPool::KameIconDisp(void)
     m_sprite.Resize(64.0f, 64.0f);
     m_sprite.Draw();
 
+    float fAnimCnt = m_fKameIconAnimCount;
+    float fAnimDuration = ANIM_DURATION_FRAMES(30);
+    float fStart = (m_bKameIconAnimAlphaIn ? 0.0f : 255.0f);
+    float fChange = (m_bKameIconAnimAlphaIn ? 255.0f : -255.0f);
+
+    uint8 animAlphaBasis = Math::LinearTweenAutoRet(fStart, fChange, fAnimCnt, fAnimDuration);
+
     RENDERSTATE_PUSH(rwRENDERSTATEZWRITEENABLE, false);
     RENDERSTATE_PUSH(rwRENDERSTATESRCBLEND, rwBLENDSRCALPHA);
     RENDERSTATE_PUSH(rwRENDERSTATEDESTBLEND, rwBLENDONE);
-
-    uint8 AlphaBasis = uint8(Math::LinearTween(0.0f,
-                                               255.0f,
-                                               float(m_kameIconAnimCount),
-                                               float(CScreen::Framerate() * 0.5f)));
-
-    if (!m_bKameIconAnimFlag)
-        AlphaBasis = 255 - AlphaBasis;
     
-    m_sprite.SetAlpha(AlphaBasis);
+    m_sprite.SetAlpha(animAlphaBasis);
     m_sprite.Draw();
 
     RENDERSTATE_POP(rwRENDERSTATEDESTBLEND);
@@ -1077,7 +1065,7 @@ void CAreaWorkPool::ClearedAnimDisp(void)
     m_sprite.SetTexture(m_apAreaSelTexture[9]);
     m_sprite.Move(vAreaPos.x + 32.0f, vAreaPos.y + 32.0f);
     m_sprite.SetRGBA(255, 255, 255, m_aClearAnim[0].alphaBasis);
-    m_sprite.Resize(m_aClearAnim[0].scale, m_aClearAnim[0].scale);
+    m_sprite.Resize(m_aClearAnim[0].fScale, m_aClearAnim[0].fScale);
     m_sprite.Draw();
 
     //
@@ -1086,7 +1074,7 @@ void CAreaWorkPool::ClearedAnimDisp(void)
     m_sprite.SetTexture(m_apAreaSelTexture[2]);
     m_sprite.Move(vAreaPos.x + 32.0f, vAreaPos.y + 32.0f);
     m_sprite.SetRGBA(255, 255, 255, m_aClearAnim[1].alphaBasis);
-    m_sprite.Resize(m_aClearAnim[1].scale, m_aClearAnim[1].scale);
+    m_sprite.Resize(m_aClearAnim[1].fScale, m_aClearAnim[1].fScale);
     m_sprite.Draw();
 
     //
@@ -1098,7 +1086,7 @@ void CAreaWorkPool::ClearedAnimDisp(void)
         m_sprite.SetTexture(m_apAreaSelTexture[areaClearedRank + 9]);
         m_sprite.Move(vAreaPos.x + 32.0f, vAreaPos.y + 32.0f);
         m_sprite.SetRGBA(255, 255, 255, m_aClearAnim[2].alphaBasis);
-        m_sprite.Resize(m_aClearAnim[2].scale, m_aClearAnim[2].scale);
+        m_sprite.Resize(m_aClearAnim[2].fScale, m_aClearAnim[2].fScale);
         m_sprite.Draw();
     };
 
@@ -1107,7 +1095,7 @@ void CAreaWorkPool::ClearedAnimDisp(void)
         m_sprite.SetTexture(m_apAreaSelTexture[4]);
         m_sprite.Move(m_vKamePos.x + 32.0f, m_vKamePos.y + 32.0f);
         m_sprite.SetRGBA(255, 255, 255, m_aClearAnim[3].alphaBasis);
-        m_sprite.Resize(m_aClearAnim[3].scale, m_aClearAnim[3].scale);
+        m_sprite.Resize(m_aClearAnim[3].fScale, m_aClearAnim[3].fScale);
         m_sprite.SetRotate(m_fClearAnimRot);
         m_sprite.DrawRotate();
     };
@@ -1178,54 +1166,31 @@ void CAreaWorkPool::AreaMoveAnimation(void)
     RwV2d vNewPos = Math::VECTOR2_ZERO;
     GetAreaPosition(&vNewPos, m_areaNew);
 
-    float x = 0.0f;
-    float y = 0.0f;
-
-    if (vOldPos.x <= vNewPos.x)
-        x = vNewPos.x - vOldPos.x;
-    else
-        x = vOldPos.x - vNewPos.x;
-
-    if (vOldPos.y <= vNewPos.y)
-        y = vNewPos.y - vOldPos.y;
-    else
-        y = vOldPos.y - vNewPos.y;
+    m_fKameMoveAnimCount += CScreen::TimerStride();
 
     float duration = ANIM_DURATION_FRAMES(24);
-    float len = std::sqrt(x * x + y * y);
-    float step = len / duration;
+    float t = m_fKameMoveAnimCount / duration;
 
-    x *= (1.0f / len) * step;
-    y *= (1.0f / len) * step;
+    if (t >= 1.0f)
+        t = 1.0f;
 
-    if (static_cast<float>(m_kameMoveAnimCount) >= duration)
-    {        
+    m_vKamePos.x = vOldPos.x + ((vNewPos.x - vOldPos.x) * t);
+    m_vKamePos.y = vOldPos.y + ((vNewPos.y - vOldPos.y) * t);
+
+    if (t >= 1.0f)
+    {
         GetAreaPosition(&m_vKamePos, m_areaNew);
-        
-        m_kameMoveAnimCount = 0;
+
+        m_fKameMoveAnimCount = 0.0f;
         m_animation = ANIMATION_NONE;
         m_areaNow = m_areaNew;
 
 #ifdef _DEBUG        
         OnAreaChanged();
 #endif /* _DEBUG */
-        
+
         if (m_areaNow < AREAID::SELECTABLEMAX)
             CGameData::Record().Area().SetCurrentSelectedArea(m_areaNow);
-    }
-    else
-    {
-        if (vOldPos.x <= vNewPos.x)
-            m_vKamePos.x = x + m_vKamePos.x;
-        else
-            m_vKamePos.x = m_vKamePos.x - x;
-
-        if (vOldPos.y <= vNewPos.y)
-            m_vKamePos.y = y + m_vKamePos.y;
-        else
-            m_vKamePos.y = m_vKamePos.y - y;
-        
-        ++m_kameMoveAnimCount;
     };
 };
 
@@ -1235,9 +1200,9 @@ void CAreaWorkPool::AreaClearedAnimationInit(void)
     for (int32 i = 0; i < COUNT_OF(m_aClearAnim); ++i)
     {
         m_aClearAnim[i].step = 0;
-        m_aClearAnim[i].counter = 0;
+        m_aClearAnim[i].fCounter = 0.0f;
         m_aClearAnim[i].alphaBasis = 0;
-        m_aClearAnim[i].scale = 0.0f;
+        m_aClearAnim[i].fScale = 0.0f;
     };
 
     m_fClearAnimRot = 0.0f;
@@ -1250,82 +1215,72 @@ void CAreaWorkPool::AreaClearedAnimation(void)
 {
     if (m_bKameClearRotAnimFlag)
     {
-        CLEARANIM* anim = &m_aClearAnim[3];
+        CLEARANIM* pAnim = &m_aClearAnim[3];
 
-        const uint32 duration = static_cast<uint32>(ANIM_DURATION_FRAMES(30));
+        float fDuration = ANIM_DURATION_FRAMES(30);
 
-        if (anim->counter >= duration)
+        pAnim->fCounter += CScreen::TimerStride();
+        if (pAnim->fCounter >= fDuration)
         {
+            pAnim->fCounter = Clamp(pAnim->fCounter, pAnim->fCounter, fDuration);
+
             m_areaCleared = AREAID::ID_NONE;
             m_animation = ANIMATION_NONE;
-        }
-        else
-        {
-            ++anim->counter;
         };
 
-        anim->alphaBasis = static_cast<uint8>(LinearTween(0.0f, 255.0f, anim->counter, duration));
-        anim->scale = LinearTween(192.0f, -128.0f, anim->counter, duration);        
+        pAnim->alphaBasis = Math::LinearTweenAutoRet(0.0f, 255.0f, pAnim->fCounter, fDuration);
+        pAnim->fScale = Math::LinearTweenAutoRet(192.0f, -128.0f, pAnim->fCounter, fDuration);        
 
-        m_fClearAnimRot = LinearTween(360.0f, -360.0f, anim->counter, duration);
+        m_fClearAnimRot = Math::LinearTweenAutoRet(360.0f, -360.0f, pAnim->fCounter, fDuration);
     }
     else
     {
-        CLEARANIM* anim = nullptr;
+        CLEARANIM* pAnim = nullptr;
 
         //
         //  Kemuri
         //
-        anim = &m_aClearAnim[0];
-        switch (anim->step)
+        pAnim = &m_aClearAnim[0];
+        switch (pAnim->step)
         {
         case 0:
             {
-                if (anim->counter >= static_cast<uint32>(ANIM_DURATION_FRAMES(8)))
+                pAnim->fCounter += CScreen::TimerStride();
+                if (pAnim->fCounter >= ANIM_DURATION_FRAMES(8))
                 {
-                    ++anim->step;
-                    anim->counter = 0;
-                }
-                else
-                {
-                    ++anim->counter;
+                    ++pAnim->step;
+                    pAnim->fCounter = 0.0f;
                 };
             }
             break;
 
         case 1:
             {
-                const uint32 duration = static_cast<uint32>(ANIM_DURATION_FRAMES(10));
+                const float fDuration = ANIM_DURATION_FRAMES(10);
 
-                anim->alphaBasis = static_cast<uint8>(LinearTween(0.0f, 255.0f, anim->counter, duration));
-                anim->scale = LinearTween(64.0f, -38.4f, anim->counter, duration);
+                pAnim->alphaBasis = Math::LinearTweenAutoRet(0.0f, 255.0f, pAnim->fCounter, fDuration);
+                pAnim->fScale = Math::LinearTweenAutoRet(64.0f, -38.4f, pAnim->fCounter, fDuration);
 
-                if (anim->counter >= duration)
+                pAnim->fCounter += CScreen::TimerStride();
+                if (pAnim->fCounter >= fDuration)
                 {
-                    ++anim->step;
-                    anim->counter = 0;
-                }
-                else
-                {
-                    ++anim->counter;
+                    ++pAnim->step;
+                    pAnim->fCounter = 0.0f;
                 };
             }
             break;
 
         case 2:
             {
-                const uint32 duration = static_cast<uint32>(ANIM_DURATION_FRAMES(26));
+                const float fDuration = ANIM_DURATION_FRAMES(26);
 
-                anim->alphaBasis = static_cast<uint8>(LinearTween(255.0f, -255.0f, anim->counter, duration));
-                anim->scale = LinearTween(89.6f, 64.0f, anim->counter, duration);
+                pAnim->alphaBasis = Math::LinearTweenAutoRet(255.0f, -255.0f, pAnim->fCounter, fDuration);
+                pAnim->fScale = Math::LinearTweenAutoRet(89.6f, 64.0f, pAnim->fCounter, fDuration);
 
-                if (anim->counter >= duration)
+                pAnim->fCounter += CScreen::TimerStride();
+                if (pAnim->fCounter >= fDuration)
                 {
                     m_bKameClearRotAnimFlag = true;
-                }
-                else
-                {
-                    ++anim->counter;
                 };
             }
             break;
@@ -1337,36 +1292,36 @@ void CAreaWorkPool::AreaClearedAnimation(void)
         //
         //  Status
         //
-        anim = &m_aClearAnim[1];
-        switch (anim->step)
+        pAnim = &m_aClearAnim[1];
+        switch (pAnim->step)
         {
         case 0:
             {
-                const uint32 duration = static_cast<uint32>(ANIM_DURATION_FRAMES(8));
+                const float fDuration = ANIM_DURATION_FRAMES(8);
 
-                anim->alphaBasis = static_cast<uint8>(LinearTween(0.0f, 255.0f, anim->counter, duration));
-                anim->scale = LinearTween(192.0f, -128.0f, anim->counter, duration);
+                pAnim->alphaBasis = Math::LinearTweenAutoRet(0.0f, 255.0f, pAnim->fCounter, fDuration);
+                pAnim->fScale = Math::LinearTweenAutoRet(192.0f, -128.0f, pAnim->fCounter, fDuration);
 
-                if (anim->counter >= duration)
+                pAnim->fCounter += CScreen::TimerStride();
+                if (pAnim->fCounter >= fDuration)
                 {
-                    ++anim->step;
-                    anim->counter = 0;
-                }
-                else
-                {
-                    ++anim->counter;
+                    ++pAnim->step;
+                    pAnim->fCounter = 0.0f;
                 };
             }
             break;
 
         case 1:
             {
-                const uint32 duration = static_cast<uint32>(ANIM_DURATION_FRAMES(6));
+                const float fDuration = ANIM_DURATION_FRAMES(6);
 
-                anim->scale = LinearTween(44.8f, 19.2f, anim->counter, duration);
+                pAnim->fScale = Math::LinearTweenAutoRet(44.8f, 19.2f, pAnim->fCounter, fDuration);
 
-                if (anim->counter < duration)
-                    ++anim->counter;
+                if (pAnim->fCounter < fDuration)
+                {
+                    pAnim->fCounter += CScreen::TimerStride();
+                    pAnim->fCounter = Clamp(pAnim->fCounter, pAnim->fCounter, fDuration);
+                };
             }
             break;
 
@@ -1377,50 +1332,47 @@ void CAreaWorkPool::AreaClearedAnimation(void)
         //
         //  Rank
         //
-        anim = &m_aClearAnim[2];
-        switch (anim->step)
+        pAnim = &m_aClearAnim[2];
+        switch (pAnim->step)
         {
         case 0:
             {
-                if (anim->counter >= static_cast<uint32>(ANIM_DURATION_FRAMES(10)))
+                pAnim->fCounter += CScreen::TimerStride();
+                if (pAnim->fCounter >= ANIM_DURATION_FRAMES(10))
                 {
-                    ++anim->step;
-                    anim->counter = 0;
-                }
-                else
-                {
-                    ++anim->counter;
+                    ++pAnim->step;
+                    pAnim->fCounter = 0.0f;
                 };
             }
             break;
             
         case 1:
             {
-                const uint32 duration = static_cast<uint32>(ANIM_DURATION_FRAMES(6));
+                const float fDuration = ANIM_DURATION_FRAMES(6);
 
-                anim->alphaBasis = static_cast<uint8>(LinearTween(0.0f, 255.0f, anim->counter, duration));
-                anim->scale = LinearTween(192.0f, -128.0f, anim->counter, duration);
+                pAnim->alphaBasis = Math::LinearTweenAutoRet(0.0f, 255.0f, pAnim->fCounter, fDuration);
+                pAnim->fScale = Math::LinearTweenAutoRet(192.0f, -128.0f, pAnim->fCounter, fDuration);
 
-                if (anim->counter >= duration)
+                pAnim->fCounter += CScreen::TimerStride();
+                if (pAnim->fCounter >= fDuration)
                 {
-                    ++anim->step;
-                    anim->counter = 0;
-                }
-                else
-                {
-                    ++anim->counter;
+                    ++pAnim->step;
+                    pAnim->fCounter = 0.0f;
                 };
             }
             break;
 
         case 2:
             {
-                const uint32 duration = static_cast<uint32>(ANIM_DURATION_FRAMES(6));
+                const float fDuration = ANIM_DURATION_FRAMES(6);
 
-                anim->scale = LinearTween(51.2f, 12.8f, anim->counter, duration);
+                pAnim->fScale = Math::LinearTweenAutoRet(51.2f, 12.8f, pAnim->fCounter, fDuration);
 
-                if (anim->counter < duration)
-                    ++anim->counter;
+                if (pAnim->fCounter < fDuration)
+                {
+                    pAnim->fCounter += CScreen::TimerStride();
+                    pAnim->fCounter = Clamp(pAnim->fCounter, pAnim->fCounter, fDuration);
+                };
             }
             break;
 

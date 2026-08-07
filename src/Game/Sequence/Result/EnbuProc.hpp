@@ -19,4 +19,5 @@ public:
     static float GetEnbuTime(void);
     static float GetEnbuEndTime(void);
     static bool IsEnbuIdle(void);
+    static void SetTestRankAndMvp(PLAYERID::VALUE idPlayer, GAMETYPES::CLEARRANK rank);
 };

@@ -42,6 +42,6 @@ private:
     float    m_fDistEye;
     float    m_fEyeOfsY;
     float    m_fCameraOfsY;
-    uint32   m_aAnimFrameCnt[3];
+    float    m_afAnimTime[3];
     int32    m_uAnimStep;
 };

@@ -50,10 +50,22 @@ private:
         int32   m_iController;
         PLAYERID::VALUE     m_aStackPlayerID[GAMETYPES::PLAYERS_MAX];
         GAMETYPES::COSTUME  m_aStackCostume[GAMETYPES::PLAYERS_MAX];
-        uint32  m_uAnimPressStartFrame;
-        uint32  m_uAnimPressStartDuration;
-        uint32  m_uAnimCharChangeFrame;
-        uint32  m_uAnimCharChangeDuration;
+
+        float   m_fAnimPressStartCnt;
+        float   m_fAnimPressStartDuration;
+        bool    m_bAnimPressStartHold;
+        bool    m_bAnimPressStartAlphaIn;
+
+        float m_fAnimWakuSelCnt;
+        float m_fAnimWakuSelDuration;
+        bool  m_bAnimWakuSelAlphaIn;
+
+        float m_fAnimCursorCnt;
+        float m_fAnimCursorDuration;
+        bool  m_bAnimCursorAlphaIn;
+
+        float   m_fAnimCharChangeCnt;
+        float   m_fAnimCharChangeDuration;
         bool    m_bSecret;
     };
 
@@ -98,6 +110,10 @@ public:
     bool IsDecideCheck(void) const;
     bool ReturnCheck(void) const;
     bool IsReturnCheck(void) const;
+    void UpdatePressStartAnim(int32 iPlayerNo);
+    void UpdateChrChangeAnim(int32 iPlayerNo);
+    void UpdateWakuSelAnim(int32 iPlayerNo);
+    void UpdateCursorSelAnim(int32 iPlayerNo);
 
 private:
     float               m_fTimer;
@@ -207,31 +223,14 @@ void CPlayerSelectWorkPool::Move(void)
         else
             pPlayerInfo->m_state = PLAYERINFO::STATE_INACTIVE;
 
-        pPlayerInfo->m_uAnimPressStartDuration = static_cast<uint32>(ANIM_DURATION_FRAMES(30));
-        if (pPlayerInfo->m_uAnimPressStartFrame < pPlayerInfo->m_uAnimPressStartDuration)
-            ++pPlayerInfo->m_uAnimPressStartFrame;
+        UpdatePressStartAnim(i);
         
         if (pPlayerInfo->m_state != PLAYERINFO::STATE_ACTIVE)
             continue;
 
-        uint32 uChngAnimDuration = static_cast<uint32>(ANIM_DURATION_FRAMES(15));
-#ifdef TMNT2_BUILD_EU
-        uChngAnimDuration = static_cast<uint32>(ANIM_DURATION_FRAMES(24));
-#endif /* TMNT2_BUILD_EU */
-
-        if (pPlayerInfo->m_iCursorDisplay != pPlayerInfo->m_iCursor)
-        {
-            pPlayerInfo->m_uAnimCharChangeDuration = uChngAnimDuration;
-            if (pPlayerInfo->m_uAnimCharChangeFrame >= pPlayerInfo->m_uAnimCharChangeDuration)
-                pPlayerInfo->m_iCursorDisplay = pPlayerInfo->m_iCursor;
-            else
-                ++pPlayerInfo->m_uAnimCharChangeFrame;
-        }
-        else
-        {
-            pPlayerInfo->m_uAnimCharChangeDuration = uChngAnimDuration;
-            pPlayerInfo->m_uAnimCharChangeFrame = uChngAnimDuration;
-        };
+        UpdateChrChangeAnim(i);
+        UpdateWakuSelAnim(i);
+        UpdateCursorSelAnim(i);
 
         if (CController::GetDigitalTrigger(iController, CController::DIGITAL_OK))
         {
@@ -250,7 +249,7 @@ void CPlayerSelectWorkPool::Move(void)
         {
             CGameSound::PlaySE(SDCODE_SE(4100));
             pPlayerInfo->m_CursorAnimDir = PLAYERINFO::ANIMDIR_LEFT;
-            pPlayerInfo->m_uAnimCharChangeFrame = 0;
+            pPlayerInfo->m_fAnimCharChangeCnt = 0.0f;
             pPlayerInfo->m_iCursorDisplay = pPlayerInfo->m_iCursor;
 
             do
@@ -262,7 +261,7 @@ void CPlayerSelectWorkPool::Move(void)
         {
             CGameSound::PlaySE(SDCODE_SE(4100));
             pPlayerInfo->m_CursorAnimDir = PLAYERINFO::ANIMDIR_RIGHT;
-            pPlayerInfo->m_uAnimCharChangeFrame = 0;
+            pPlayerInfo->m_fAnimCharChangeCnt = 0.0f;
             pPlayerInfo->m_iCursorDisplay = pPlayerInfo->m_iCursor;
 
             do
@@ -309,9 +308,7 @@ void CPlayerSelectWorkPool::Draw(void)
     {
         bool bConnected = false;
 
-        if (i >= CController::Max())
-            bConnected = false;
-        else
+        if (i < CController::Max())
             bConnected = (CController::GetState(i) == CController::STATE_CONNECT);
 
         if (bConnected)
@@ -412,13 +409,13 @@ void CPlayerSelectWorkPool::DrawChr(int32 iPlayerNo)
     int32 iCursorOffsetMain = (pPlayerInfo->m_bSecret ? 4 : 0);
     int32 iCursorOffsetSub  = (pPlayerInfo->m_bSecret ? 0 : 4);
     
-    float fAnimFrame    = float(pPlayerInfo->m_uAnimCharChangeFrame);
-    float fAnimDuration = float(pPlayerInfo->m_uAnimCharChangeDuration);
+    float fAnimCnt = pPlayerInfo->m_fAnimCharChangeCnt;
+    float fAnimDuration = pPlayerInfo->m_fAnimCharChangeDuration;
 
-    uint8 AlphaBasisOut     = uint8(Math::LinearTween(255.0f, -255.0f, fAnimFrame, fAnimDuration));
-    uint8 AlphaBasisOutSub  = uint8(Math::LinearTween(127.0f, -127.0f, fAnimFrame, fAnimDuration));
-    uint8 AlphaBasisIn      = uint8(Math::LinearTween(0.0f, 255.0f, fAnimFrame, fAnimDuration));
-    uint8 AlphaBasisInSub   = uint8(Math::LinearTween(0.0f, 127.0f, fAnimFrame, fAnimDuration));
+    uint8 AlphaBasisOut = Math::LinearTweenAutoRet(255.0f, -255.0f, fAnimCnt, fAnimDuration);
+    uint8 AlphaBasisOutSub = Math::LinearTweenAutoRet(127.0f, -127.0f, fAnimCnt, fAnimDuration);
+    uint8 AlphaBasisIn = Math::LinearTweenAutoRet(0.0f, 255.0f, fAnimCnt, fAnimDuration);
+    uint8 AlphaBasisInSub = Math::LinearTweenAutoRet(0.0f, 127.0f, fAnimCnt, fAnimDuration);
 
     float fPosX = (-205.0f + (iPlayerNo * 140.0f));
     float fPosY = 21.0f;
@@ -430,8 +427,8 @@ void CPlayerSelectWorkPool::DrawChr(int32 iPlayerNo)
     else
         move = -10.0f;
 
-    float fPosOut = Math::LinearTween(fPosX, move, fAnimFrame, fAnimDuration);    
-    float fPosIn = Math::LinearTween(fPosX + -move, move, fAnimFrame, fAnimDuration);
+    float fPosOut = Math::LinearTween(fPosX, move, fAnimCnt, fAnimDuration);    
+    float fPosIn = Math::LinearTween(fPosX + -move, move, fAnimCnt, fAnimDuration);
 
     m_sprite.ResetUV();
     m_sprite.Resize(128.0f, 256.0f);
@@ -514,16 +511,22 @@ void CPlayerSelectWorkPool::DrawIcon(int32 iPlayerNo)
 
 void CPlayerSelectWorkPool::DrawCursor(int32 iPlayerNo)
 {
+    PLAYERINFO* pPlayerInfo = GetPlayerInfo(iPlayerNo);
+
+    float fAnimCnt = pPlayerInfo->m_fAnimCursorCnt;
+    float fAnimDuration = pPlayerInfo->m_fAnimCursorDuration;
+
+    float fStart = (pPlayerInfo->m_bAnimCursorAlphaIn ? 0.0f : 255.0f);
+    float fChange = (pPlayerInfo->m_bAnimCursorAlphaIn ? 255.0f : -255.0f);
+    uint8 animAlphaBasis = Math::LinearTweenAutoRet(fStart, fChange, fAnimCnt, fAnimDuration);
+
     const float fHorOffset = 55.0f;
-    int32 iCursor = m_aPlayerInfo[iPlayerNo].m_iCursor;
+    int32 iCursor = pPlayerInfo->m_iCursor;
 
     for (int32 i = 0; i < 4; ++i)
     {
-        uint8 AlphaBasis = 255;
-        
         if (i > 2)
         {
-            AlphaBasis = uint8(127.0f - Math::Cos(m_fTimer * 13.5f) * 127.0f);
             RENDERSTATE_PUSH(rwRENDERSTATEZWRITEENABLE, false);
             RENDERSTATE_PUSH(rwRENDERSTATESRCBLEND, rwBLENDSRCALPHA);
             RENDERSTATE_PUSH(rwRENDERSTATEDESTBLEND, rwBLENDONE);
@@ -531,7 +534,7 @@ void CPlayerSelectWorkPool::DrawCursor(int32 iPlayerNo)
         
         m_sprite.ResetUV();
         m_sprite.SetOffset(0.5f, 0.5f);
-        m_sprite.SetRGBA(255, 255, 255, AlphaBasis);
+        m_sprite.SetRGBA(255, 255, 255, (i > 2 ? animAlphaBasis : 255));
         m_sprite.Resize(32.0f, 32.0f);
         
         m_sprite.SetTexture(m_pTextureCursorLeft);
@@ -558,18 +561,15 @@ void CPlayerSelectWorkPool::DrawCursor(int32 iPlayerNo)
 
     for (int32 i = 0; i < 4; ++i)
     {
-        uint8 AlphaBasis = 255;
-
         if (i > 2)
         {
-            AlphaBasis = uint8(127.0f - Math::Cos(m_fTimer * 13.5f) * 127.0f);
             RENDERSTATE_PUSH(rwRENDERSTATEZWRITEENABLE, false);
             RENDERSTATE_PUSH(rwRENDERSTATESRCBLEND, rwBLENDSRCALPHA);
             RENDERSTATE_PUSH(rwRENDERSTATEDESTBLEND, rwBLENDONE);
         };
         
         m_sprite.ResetUV();
-        m_sprite.SetRGBA(255, 255, 255, AlphaBasis);
+        m_sprite.SetRGBA(255, 255, 255, (i > 2 ? animAlphaBasis : 255));
         m_sprite.SetTexture(m_pTextureCursorUpDown);
         m_sprite.Resize(16.0f, 16.0f);
         m_sprite.SetOffset(0.5f, 0.5f);
@@ -614,12 +614,19 @@ void CPlayerSelectWorkPool::DrawWakuSelect(int32 iPlayerNo)
         { -207.0f, 139.0f   },
     };
 
+    PLAYERINFO* pPlayerInfo = GetPlayerInfo(iPlayerNo);
+
+    float fAnimCnt = pPlayerInfo->m_fAnimWakuSelCnt;
+    float fAnimDuration = pPlayerInfo->m_fAnimWakuSelDuration;
+
+    float fStart = (pPlayerInfo->m_bAnimWakuSelAlphaIn ? 0.0f : 255.0f);
+    float fChange = (pPlayerInfo->m_bAnimWakuSelAlphaIn ? 255.0f : -255.0f);
+    uint8 animAlphaBasis = Math::LinearTweenAutoRet(fStart, fChange, fAnimCnt, fAnimDuration);
+
     m_sprite.ResetUV();
     m_sprite.SetTexture(m_pTextureTurnNone);
     m_sprite.Resize(128.0f, 64.0f);
     m_sprite.SetOffset(0.5f, 0.5f);
-
-    PLAYERINFO* pPlayerInfo = GetPlayerInfo(iPlayerNo);
     
     if ((pPlayerInfo->m_iCharacterNum < pPlayerInfo->m_iCharacterMax) &&
         (GetTotalCharNum() < COUNT_OF(m_aPlayerInfo)))
@@ -641,18 +648,14 @@ void CPlayerSelectWorkPool::DrawWakuSelect(int32 iPlayerNo)
         RENDERSTATE_PUSH(rwRENDERSTATEZWRITEENABLE, false);
         RENDERSTATE_PUSH(rwRENDERSTATESRCBLEND, rwBLENDSRCALPHA);
         RENDERSTATE_PUSH(rwRENDERSTATEDESTBLEND, rwBLENDONE);
-        m_sprite.SetRGBA(
-            255,
-            255,
-            255,
-            uint8(127.0f - Math::Cos(m_fTimer * 13.5f) * 127.0f)
-        );
+
+        m_sprite.SetRGBA(255, 255, 255, animAlphaBasis);
         m_sprite.Draw();
+
         RENDERSTATE_POP(rwRENDERSTATEZWRITEENABLE);
         RENDERSTATE_POP(rwRENDERSTATESRCBLEND);
         RENDERSTATE_POP(rwRENDERSTATEDESTBLEND);
     };
-
 
     for (int32 i = 0; i < pPlayerInfo->m_iCharacterNum; ++i)
     {
@@ -727,13 +730,23 @@ void CPlayerSelectWorkPool::DrawIconEx(int32 iPlayerNo)
 void CPlayerSelectWorkPool::DrawPressStart(int32 iPlayerNo)
 {    
     float fPressStartWH = 128.0f;
+    uint8 animAlphaBasis = 255;
 
     PLAYERINFO* pPlayerInfo = GetPlayerInfo(iPlayerNo);
-    
-    fPressStartWH = Math::LinearTween(256.0f + 128.0f,
-                                      -256.0f,
-                                      float(pPlayerInfo->m_uAnimPressStartFrame),
-                                      float(pPlayerInfo->m_uAnimPressStartDuration));
+
+    float fAnimCnt = pPlayerInfo->m_fAnimPressStartCnt;
+    float fAnimDuration = pPlayerInfo->m_fAnimPressStartDuration;
+
+    if (pPlayerInfo->m_bAnimPressStartHold)
+    {
+        float fStart = (pPlayerInfo->m_bAnimPressStartAlphaIn ? 0.0f : 255.0f);
+        float fChange = (pPlayerInfo->m_bAnimPressStartAlphaIn ? 255.0f : -255.0f);
+        animAlphaBasis = Math::LinearTweenAutoRet(fStart, fChange, fAnimCnt, fAnimDuration);
+    }
+    else
+    {
+        fPressStartWH = Math::LinearTweenAutoRet(256.0f, -128.0f, fAnimCnt, fAnimDuration);
+    };
 
     m_sprite.SetTexture(m_pTexturePressStart);
     m_sprite.SetOffset(0.5f, 0.5f);
@@ -742,19 +755,19 @@ void CPlayerSelectWorkPool::DrawPressStart(int32 iPlayerNo)
     m_sprite.Resize(fPressStartWH, fPressStartWH);
     m_sprite.Draw();
 
-    RENDERSTATE_PUSH(rwRENDERSTATEZWRITEENABLE, false);
-    RENDERSTATE_PUSH(rwRENDERSTATESRCBLEND, rwBLENDSRCALPHA);
-    RENDERSTATE_PUSH(rwRENDERSTATEDESTBLEND, rwBLENDONE);   
+    if (pPlayerInfo->m_bAnimPressStartHold)
+    {
+        RENDERSTATE_PUSH(rwRENDERSTATEZWRITEENABLE, false);
+        RENDERSTATE_PUSH(rwRENDERSTATESRCBLEND, rwBLENDSRCALPHA);
+        RENDERSTATE_PUSH(rwRENDERSTATEDESTBLEND, rwBLENDONE);
 
-    m_sprite.SetRGBA(255,
-                     255,
-                     255,
-                     uint8(127.0f - Math::Cos(m_fTimer * 13.5f) * 127.0f));
-    m_sprite.Draw();
+        m_sprite.SetRGBA(255, 255, 255, animAlphaBasis);
+        m_sprite.Draw();
 
-    RENDERSTATE_POP(rwRENDERSTATEZWRITEENABLE);
-    RENDERSTATE_POP(rwRENDERSTATESRCBLEND);
-    RENDERSTATE_POP(rwRENDERSTATEDESTBLEND);
+        RENDERSTATE_POP(rwRENDERSTATEZWRITEENABLE);
+        RENDERSTATE_POP(rwRENDERSTATESRCBLEND);
+        RENDERSTATE_POP(rwRENDERSTATEDESTBLEND);
+    };
 
     m_sprite.SetTexture(m_pTextureStartP[iPlayerNo]);
     m_sprite.SetOffset(0.5f, 0.5f);
@@ -956,7 +969,7 @@ void CPlayerSelectWorkPool::UnselectCharacterSearch(int32 iPlayerNo)
     {
         pPlayerInfo->m_iCursor = InvClamp(++pPlayerInfo->m_iCursor, 0, COUNT_OF(m_aPlayerInfo) - 1);
         pPlayerInfo->m_CursorAnimDir = PLAYERINFO::ANIMDIR_RIGHT;
-        pPlayerInfo->m_uAnimCharChangeFrame = 0;
+        pPlayerInfo->m_fAnimCharChangeCnt = 0.0f;
 
         bool bEnable = m_aCharacterInfo[GetRealCursor(iPlayerNo)].m_bEnable;
         bool bLocked = m_aCharacterInfo[pPlayerInfo->m_iCursor].m_bLocked;
@@ -1131,6 +1144,108 @@ bool CPlayerSelectWorkPool::ReturnCheck(void) const
 bool CPlayerSelectWorkPool::IsReturnCheck(void) const
 {
     return m_bReturnCheck;
+};
+
+
+void CPlayerSelectWorkPool::UpdatePressStartAnim(int32 iPlayerNo)
+{
+    PLAYERINFO* pPlayerInfo = GetPlayerInfo(iPlayerNo);
+
+    if (pPlayerInfo->m_bAnimPressStartHold)
+    {
+        float fDuration = ANIM_DURATION_FRAMES(15);
+#ifdef TMNT2_BUILD_EU
+        fDuration = ANIM_DURATION_FRAMES(24);
+#endif /* TMNT2_BUILD_EU */
+
+        pPlayerInfo->m_fAnimPressStartDuration = fDuration;
+        pPlayerInfo->m_fAnimPressStartCnt += CScreen::TimerStride();
+
+        if (pPlayerInfo->m_fAnimPressStartCnt >= pPlayerInfo->m_fAnimPressStartDuration)
+        {
+            pPlayerInfo->m_fAnimPressStartCnt = 0.0f;
+            pPlayerInfo->m_bAnimPressStartAlphaIn = !pPlayerInfo->m_bAnimPressStartAlphaIn;
+        };
+    }
+    else
+    {
+        float fDuration = ANIM_DURATION_FRAMES(12);
+#ifdef TMNT2_BUILD_EU
+        fDuration = ANIM_DURATION_FRAMES(24);
+#endif /* TMNT2_BUILD_EU */
+        
+        pPlayerInfo->m_fAnimPressStartDuration = fDuration;
+        pPlayerInfo->m_fAnimPressStartCnt += CScreen::TimerStride();
+
+        if (pPlayerInfo->m_fAnimPressStartCnt >= pPlayerInfo->m_fAnimPressStartDuration)
+            pPlayerInfo->m_bAnimPressStartHold = true;
+    };
+};
+
+
+void CPlayerSelectWorkPool::UpdateChrChangeAnim(int32 iPlayerNo)
+{
+    PLAYERINFO* pPlayerInfo = GetPlayerInfo(iPlayerNo);
+
+    float fDuration = ANIM_DURATION_FRAMES(15);
+#ifdef TMNT2_BUILD_EU
+    fDuration = ANIM_DURATION_FRAMES(24);
+#endif /* TMNT2_BUILD_EU */
+    pPlayerInfo->m_fAnimCharChangeDuration = fDuration;
+
+    if (pPlayerInfo->m_iCursorDisplay != pPlayerInfo->m_iCursor)
+    {
+        if (pPlayerInfo->m_fAnimCharChangeCnt >= pPlayerInfo->m_fAnimCharChangeDuration)
+        {
+            pPlayerInfo->m_iCursorDisplay = pPlayerInfo->m_iCursor;
+        }
+        else
+        {
+            pPlayerInfo->m_fAnimCharChangeCnt += CScreen::TimerStride();
+            pPlayerInfo->m_fAnimCharChangeCnt = Clamp(pPlayerInfo->m_fAnimCharChangeCnt,
+                                                      pPlayerInfo->m_fAnimCharChangeCnt,
+                                                      pPlayerInfo->m_fAnimCharChangeDuration);
+        };
+    }
+    else
+    {
+        pPlayerInfo->m_fAnimCharChangeCnt = pPlayerInfo->m_fAnimCharChangeDuration;
+    };
+};
+
+
+void CPlayerSelectWorkPool::UpdateWakuSelAnim(int32 iPlayerNo)
+{    
+    PLAYERINFO* pPlayerInfo = GetPlayerInfo(iPlayerNo);
+
+    pPlayerInfo->m_fAnimWakuSelDuration = ANIM_DURATION_FRAMES(30);
+    pPlayerInfo->m_fAnimWakuSelCnt += CScreen::TimerStride();
+
+    if (pPlayerInfo->m_fAnimWakuSelCnt >= pPlayerInfo->m_fAnimWakuSelDuration)
+    {
+        pPlayerInfo->m_fAnimWakuSelCnt = 0.0f;
+        pPlayerInfo->m_bAnimWakuSelAlphaIn = !pPlayerInfo->m_bAnimWakuSelAlphaIn;
+    };
+};
+
+
+void CPlayerSelectWorkPool::UpdateCursorSelAnim(int32 iPlayerNo)
+{
+    PLAYERINFO* pPlayerInfo = GetPlayerInfo(iPlayerNo);
+
+    float fDuration = ANIM_DURATION_FRAMES(15);
+#ifdef TMNT2_BUILD_EU
+    fDuration = ANIM_DURATION_FRAMES(24);    
+#endif /* TMNT2_BUILD_EU */
+    
+    pPlayerInfo->m_fAnimCursorDuration = fDuration;
+    pPlayerInfo->m_fAnimCursorCnt += CScreen::TimerStride();
+
+    if (pPlayerInfo->m_fAnimCursorCnt >= pPlayerInfo->m_fAnimCursorDuration)
+    {
+        pPlayerInfo->m_fAnimCursorCnt = 0.0f;
+        pPlayerInfo->m_bAnimCursorAlphaIn = !pPlayerInfo->m_bAnimCursorAlphaIn;
+    };
 };
 
 

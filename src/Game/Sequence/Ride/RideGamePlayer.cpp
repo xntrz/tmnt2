@@ -223,6 +223,8 @@ void CRideGamePlayer::DestroyPlayer(void)
 {
     if (m_pPlayer)
     {
+        Release();
+        
         CPlayer::Delete(m_pPlayer);
         m_pPlayer = nullptr;
     };

@@ -66,7 +66,7 @@ private:
     int32       m_nLvlupCryIndex;
     ANIMTYPE    m_animtype;
     float       m_afRotate[2];
-    uint32      m_auAnimCnt[4];
+    float       m_afAnimCnt[4];
     bool        m_bAnimFlag;
     int32       m_nPrizeNo;
 };
@@ -84,7 +84,7 @@ CResultWorkPool::CResultWorkPool(void)
     std::memset(m_aAddCry, 0x00, sizeof(m_aAddCry));
     std::memset(m_aLvlupCry, 0x00, sizeof(m_aLvlupCry));
     std::memset(m_aCryTable, 0x00, sizeof(m_aCryTable));
-    std::memset(m_auAnimCnt, 0x00, sizeof(m_auAnimCnt));
+    std::memset(m_afAnimCnt, 0x00, sizeof(m_afAnimCnt));
 
     m_afRotate[0] = 0.0f;
     m_afRotate[1] = 0.0f;
@@ -179,18 +179,21 @@ void CResultWorkPool::ResultAnimAnit(ANIMTYPE animtype)
 {
     m_animtype = animtype;
     m_bAnimFlag = false;
-    std::memset(m_auAnimCnt, 0x00, sizeof(m_auAnimCnt));
+    std::memset(m_afAnimCnt, 0x00, sizeof(m_afAnimCnt));
 };
 
 
 void CResultWorkPool::CrystalPieceDraw(void)
 {
-    float fDuration = ANIM_DURATION_FRAMES(30);
-    if (m_auAnimCnt[0] < uint32(fDuration))
-        ++m_auAnimCnt[0];
+    const float fDuration = ANIM_DURATION_FRAMES(30);
+    if (m_afAnimCnt[0] < fDuration)
+    {
+        m_afAnimCnt[0] += CScreen::TimerStride();
+        m_afAnimCnt[0] = Clamp(m_afAnimCnt[0], m_afAnimCnt[0], fDuration);
+    };
 
-    uint8 uAlphaBasis = uint8(Math::LinearTween(0.0f, 255.0f, float(m_auAnimCnt[0]), fDuration));
-    float wh = Math::LinearTween(128.0f, -64.0f, float(m_auAnimCnt[0]), fDuration);
+    uint8 uAlphaBasis = Math::LinearTweenAutoRet(0.0f, 255.0f, m_afAnimCnt[0], fDuration);
+    float wh = Math::LinearTween(128.0f, -64.0f, m_afAnimCnt[0], fDuration);
 
     m_sprite.SetOffset(0.5f, 0.5f);
     m_sprite.SetRGBA(255, 255, 255, uAlphaBasis);
@@ -200,7 +203,7 @@ void CResultWorkPool::CrystalPieceDraw(void)
 
     for (int32 i = 0; i < nNumAddCry; ++i)
     {
-        float dt = (float(m_auAnimCnt[0]) / fDuration);
+        float dt = (m_afAnimCnt[0] / fDuration);
         
         m_sprite.SetTexture(m_apTexture[m_aCryTable[i] + 11]);
         m_sprite.Move(float(i) * (dt * 64.0f) + (float(nNumAddCry) * -32.0f) + 32.0f, -50.0f);
@@ -213,13 +216,15 @@ void CResultWorkPool::CrystalLvlUpDraw(void)
 {
     int32 nCryData = (GetCrystalData(m_nLvlupCryIndex) / 10) - 1;
 
-    float fDuration = ANIM_DURATION_FRAMES(10);
+    const float fDuration = ANIM_DURATION_FRAMES(10);
+    if (m_afAnimCnt[0] < fDuration)
+    {
+        m_afAnimCnt[0] += CScreen::TimerStride();
+        m_afAnimCnt[0] = Clamp(m_afAnimCnt[0], m_afAnimCnt[0], fDuration);
+    };
 
-    if (m_auAnimCnt[0] < static_cast<uint32>(fDuration))
-        ++m_auAnimCnt[0];
-
-    uint8 uAlphaBasis = uint8(Math::LinearTween(0.0f, 255.0f, float(m_auAnimCnt[0]), fDuration));
-    float wh = Math::LinearTween(256.0f, -192.0f, float(m_auAnimCnt[0]), fDuration);
+    uint8 uAlphaBasis = Math::LinearTweenAutoRet(0.0f, 255.0f, m_afAnimCnt[0], fDuration);
+    float wh = Math::LinearTween(256.0f, -192.0f, m_afAnimCnt[0], fDuration);
 
     m_sprite.Resize(wh, wh);
     m_sprite.SetRGBA(255, 255, 255, uAlphaBasis);
@@ -236,15 +241,17 @@ void CResultWorkPool::CrystalLvlUpDraw(void)
         m_sprite.Draw();
     };
 
-    if (m_auAnimCnt[0] >= uint32(fDuration))
+    if (m_afAnimCnt[0] >= fDuration)
     {
-        float fDurationSub0 = ANIM_DURATION_FRAMES(24);
+        const float fDurationSub0 = ANIM_DURATION_FRAMES(24);
+        if (m_afAnimCnt[1] < fDurationSub0)
+        {
+            m_afAnimCnt[1] += CScreen::TimerStride();
+            m_afAnimCnt[1] = Clamp(m_afAnimCnt[1], m_afAnimCnt[1], fDurationSub0);
+        };
 
-        if (m_auAnimCnt[1] < uint32(fDurationSub0))
-            ++m_auAnimCnt[1];
-
-        uAlphaBasis = uint8(Math::LinearTween(0.0f, 255.0f, float(m_auAnimCnt[1]), fDurationSub0));
-        wh = Math::LinearTween(256.0f, -192.0f, float(m_auAnimCnt[1]), fDurationSub0);
+        uAlphaBasis = Math::LinearTweenAutoRet(0.0f, 255.0f, m_afAnimCnt[1], fDurationSub0);
+        wh = Math::LinearTween(256.0f, -192.0f, m_afAnimCnt[1], fDurationSub0);
 
         m_sprite.Resize(wh, wh);
         m_sprite.SetRGBA(255, 255, 255, uAlphaBasis);
@@ -253,14 +260,16 @@ void CResultWorkPool::CrystalLvlUpDraw(void)
         m_sprite.Move(float(nCryData) * 32.0f - 32.0f, -11.0f);
         m_sprite.Draw();
 
-        if (m_auAnimCnt[1] >= uint32(fDurationSub0))
+        if (m_afAnimCnt[1] >= fDurationSub0)
         {
-            float fDurationSub1 = ANIM_DURATION_FRAMES(24);
+            const float fDurationSub1 = ANIM_DURATION_FRAMES(24);
+            if (m_afAnimCnt[2] < fDurationSub1)
+            {
+                m_afAnimCnt[2] += CScreen::TimerStride();
+                m_afAnimCnt[2] = Clamp(m_afAnimCnt[2], m_afAnimCnt[2], fDurationSub1);
+            };
 
-            if (m_auAnimCnt[2] < uint32(fDurationSub1))
-                ++m_auAnimCnt[2];
-
-            uAlphaBasis = uint8(Math::LinearTween(255.0f, -255.0f, float(m_auAnimCnt[2]), fDurationSub1));
+            uAlphaBasis = Math::LinearTweenAutoRet(255.0f, -255.0f, m_afAnimCnt[2], fDurationSub1);
 
             m_sprite.Resize(64.0f, 64.0f);
             m_sprite.SetRGBA(255, 255, 255, uAlphaBasis);
@@ -269,18 +278,20 @@ void CResultWorkPool::CrystalLvlUpDraw(void)
             m_sprite.Move(float(nCryData) * 32.0f - 32.0f, -11.0f);
             m_sprite.Draw();
 
-            if (m_auAnimCnt[2] >= uint32(fDurationSub1))
+            if (m_afAnimCnt[2] >= fDurationSub1)
             {
-                float fDurationSub2 = ANIM_DURATION_FRAMES(24);
+                const float fDurationSub2 = ANIM_DURATION_FRAMES(24);
+                if (m_afAnimCnt[3] < fDurationSub2)
+                {
+                    m_afAnimCnt[3] += CScreen::TimerStride();
+                    m_afAnimCnt[3] = Clamp(m_afAnimCnt[3], m_afAnimCnt[3], fDurationSub2);
+                };
 
-                if (m_auAnimCnt[3] < uint32(fDurationSub1))
-                    ++m_auAnimCnt[3];
-
-                uAlphaBasis = uint8(Math::LinearTween(0.0f, 255.0f, float(m_auAnimCnt[3]), fDurationSub2));
+                uAlphaBasis = Math::LinearTweenAutoRet(0.0f, 255.0f, m_afAnimCnt[3], fDurationSub2);
 
                 const wchar* pwszText = CGameText::GetText(GAMETEXT_RES_CRY_LVLUP);
                 float x = -(CGameFont::GetStringWidth(pwszText) * 0.5f);
-                float y = Math::LinearTween(-100.0f, 10.0f, float(m_auAnimCnt[3]), fDurationSub2);
+                float y = Math::LinearTween(-100.0f, 10.0f, m_afAnimCnt[3], fDurationSub2);
                 
                 CGameFont::SetHeightScaled(2.5f);
                 CGameFont::SetRGBA(255, 255, 255, uAlphaBasis);
@@ -288,7 +299,7 @@ void CResultWorkPool::CrystalLvlUpDraw(void)
                 
                 pwszText = CGameText::GetText(GAMETEXT(GAMETEXT_RES_CRY_LVLUP_R + m_nLvlupCryIndex));
                 x = -(CGameFont::GetStringWidth(pwszText) * 0.5f);
-                y = Math::LinearTween(-70.0f, 10.0f, float(m_auAnimCnt[3]), fDurationSub2);
+                y = Math::LinearTween(-70.0f, 10.0f, m_afAnimCnt[3], fDurationSub2);
 
                 CGameFont::Show(pwszText, x, y);
             };
@@ -299,12 +310,14 @@ void CResultWorkPool::CrystalLvlUpDraw(void)
 
 void CResultWorkPool::PersonalResultDraw(void)
 {
-    float fDuration = ANIM_DURATION_FRAMES(16);
+    const float fDuration = ANIM_DURATION_FRAMES(16);
+    if (m_afAnimCnt[0] < fDuration)
+    {
+        m_afAnimCnt[0] += CScreen::TimerStride();
+        m_afAnimCnt[0] = Clamp(m_afAnimCnt[0], m_afAnimCnt[0], fDuration);
+    };
 
-    if (m_auAnimCnt[0] < static_cast<uint32>(fDuration))
-        ++m_auAnimCnt[0];
-
-    float w = Math::LinearTween(0.0f, 32.0f, float(m_auAnimCnt[0]), fDuration);
+    float w = Math::LinearTween(0.0f, 32.0f, m_afAnimCnt[0], fDuration);
 
     m_sprite.SetOffset(0.5f, 0.5f);
     m_sprite.Resize(w, 32.0f);
@@ -382,14 +395,14 @@ void CResultWorkPool::PersonalResultDraw(void)
         };
     };
 
-    if (m_auAnimCnt[0] >= uint32(fDuration))
+    if (m_afAnimCnt[0] >= fDuration)
     {
-        if (!m_auAnimCnt[1])
+        if (m_afAnimCnt[1] <= 0.0f)
             CGameSound::PlaySE(SDCODE_SE(4111));
 
-        float fDurationSub = ANIM_DURATION_FRAMES(24);
+        const float fDurationSub = ANIM_DURATION_FRAMES(24);
 
-        if (m_auAnimCnt[1] >= uint32(fDurationSub))
+        if (m_afAnimCnt[1] >= fDurationSub)
         {
             int32 nMvp = CGameData::PlayResult().GetMVP();
 
@@ -397,11 +410,11 @@ void CResultWorkPool::PersonalResultDraw(void)
             RENDERSTATE_PUSH(rwRENDERSTATESRCBLEND, rwBLENDSRCALPHA);
             RENDERSTATE_PUSH(rwRENDERSTATEDESTBLEND, rwBLENDONE);
 
-            float fRotSpeed = 0.05f;
+            float fRotSpeed = 0.05f * (CScreen::TimerStride() * CScreen::Framerate());
             m_afRotate[0] = InvClamp(m_afRotate[0] + fRotSpeed, 0.0f, 360.0f);
             m_afRotate[1] = InvClamp(m_afRotate[1] - fRotSpeed, 0.0f, 360.0f);
 
-            uint8 uAlphaBasis = uint8(Math::LinearTween(0.0f, 255.0f, float(m_auAnimCnt[1]), fDurationSub));
+            uint8 uAlphaBasis = Math::LinearTweenAutoRet(0.0f, 255.0f, m_afAnimCnt[1], fDurationSub);
 
             m_sprite.SetOffset(0.5f, 0.5f);
             m_sprite.SetTexture(m_apTexture[7]);
@@ -425,11 +438,12 @@ void CResultWorkPool::PersonalResultDraw(void)
         }
         else
         {
-            ++m_auAnimCnt[1];
+            m_afAnimCnt[1] += CScreen::TimerStride();
+            m_afAnimCnt[1] = Clamp(m_afAnimCnt[1], m_afAnimCnt[1], fDurationSub);
         };
 
-        float spr_w = Math::LinearTween(320.0f, -192.0f, float(m_auAnimCnt[1]), fDurationSub);
-        float spr_h = Math::LinearTween(160.0f, -96.0f, float(m_auAnimCnt[1]), fDurationSub);
+        float spr_w = Math::LinearTween(320.0f, -192.0f, m_afAnimCnt[1], fDurationSub);
+        float spr_h = Math::LinearTween(160.0f, -96.0f, m_afAnimCnt[1], fDurationSub);
 
         m_sprite.SetOffset(0.5f, 0.5f);
         m_sprite.Resize(spr_w, spr_h);
@@ -455,22 +469,21 @@ void CResultWorkPool::PrizeCursorDraw(void)
     if (m_nPrizeNo == -1)
         return;
 
-    float fDuration = ANIM_DURATION_FRAMES(30);
-    if (m_auAnimCnt[0] < uint32(fDuration))
+    const float fDuration = ANIM_DURATION_FRAMES(30);
+    if (m_afAnimCnt[0] < fDuration)
     {
-        ++m_auAnimCnt[0];
+        m_afAnimCnt[0] += CScreen::TimerStride();
+        m_afAnimCnt[0] = Clamp(m_afAnimCnt[0], m_afAnimCnt[0], fDuration);
     }
     else
     {
         m_bAnimFlag = !m_bAnimFlag;
-        m_auAnimCnt[0] = 0;
+        m_afAnimCnt[0] = 0.0f;
     };
 
-    uint8 uAlphaBasis = 0;
-    if (m_bAnimFlag)
-        uAlphaBasis = uint8(Math::LinearTween(0.0f, 255.0f, float(m_auAnimCnt[0]), fDuration));
-    else
-        uAlphaBasis = uint8(Math::LinearTween(255.0f, -255.0f, float(m_auAnimCnt[0]), fDuration));
+    float fStart = (m_bAnimFlag ? 0.0f : 255.0f);
+    float fChange = (m_bAnimFlag ? 255.0f : -255.0f);
+    uint8 uAlphaBasis = Math::LinearTweenAutoRet(fStart, fChange, m_afAnimCnt[0], fDuration);
 
     RENDERSTATE_PUSH(rwRENDERSTATEZWRITEENABLE, false);
     RENDERSTATE_PUSH(rwRENDERSTATESRCBLEND, rwBLENDSRCALPHA);
@@ -492,14 +505,17 @@ void CResultWorkPool::PrizeCursorDraw(void)
 
 void CResultWorkPool::CrystalGrowingDraw(void)
 {
-    float fDuration = ANIM_DURATION_FRAMES(24);
-    if (m_auAnimCnt[0] < uint32(fDuration))
-        ++m_auAnimCnt[0];
+    const float fDuration = ANIM_DURATION_FRAMES(24);
+    if (m_afAnimCnt[0] < fDuration)
+    {
+        m_afAnimCnt[0] += CScreen::TimerStride();
+        m_afAnimCnt[0] = Clamp(m_afAnimCnt[0], m_afAnimCnt[0], fDuration);
+    };
 
     CSystem2D::PushRenderState();
 
-    uint8 uAlphaBasis = uint8(Math::LinearTween(0.0f, 255.0f, float(m_auAnimCnt[0]), fDuration));
-    float fOfsY = Math::LinearTween(0.0f, 10.0f, float(m_auAnimCnt[0]), fDuration);
+    uint8 uAlphaBasis = Math::LinearTweenAutoRet(0.0f, 255.0f, m_afAnimCnt[0], fDuration);
+    float fOfsY = Math::LinearTween(0.0f, 10.0f, m_afAnimCnt[0], fDuration);
 
     CGameFont::SetHeightScaled(2.0f);
     CGameFont::SetRGBA(255, 255, 255, uAlphaBasis);
@@ -571,7 +587,7 @@ void CResultWorkPool::CrystalGrowingDraw(void)
             { 0, 0, 1,  1,  2, }, // AABBC
         };
 
-        float wh = Math::LinearTween(384.0f, -256.0f, float(m_auAnimCnt[0]), fDuration);
+        float wh = Math::LinearTween(384.0f, -256.0f, m_afAnimCnt[0], fDuration);
         float ofs_x = 0.0f;
         
         m_sprite.SetOffset(0.5f, 0.5f);
@@ -600,13 +616,16 @@ void CResultWorkPool::CrystalGrowingDraw(void)
 
 void CResultWorkPool::BattleNexusWinnerDraw(void)
 {
-    float fDuration = ANIM_DURATION_FRAMES(24);
-    if (m_auAnimCnt[0] < uint32(fDuration))
-        ++m_auAnimCnt[0];
+    const float fDuration = ANIM_DURATION_FRAMES(24);
+    if (m_afAnimCnt[0] < fDuration)
+    {
+        m_afAnimCnt[0] += CScreen::TimerStride();
+        m_afAnimCnt[0] = Clamp(m_afAnimCnt[0], m_afAnimCnt[0], fDuration);
+    };
 
     CSystem2D::PushRenderState();
 
-    uint8 uAlphaBasis = uint8(Math::LinearTween(0.0f, 255.0f, float(m_auAnimCnt[0]), fDuration));
+    uint8 uAlphaBasis = Math::LinearTweenAutoRet(0.0f, 255.0f, m_afAnimCnt[0], fDuration);
 
     CGameFont::SetHeightScaled(2.5f);
     CGameFont::SetRGBA(255, 255, 255, uAlphaBasis);

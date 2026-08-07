@@ -31,7 +31,16 @@ private:
         RANKVALUE_LOW,
     };
 
+    struct TESTREQUEST
+    {
+        bool bActive;
+        PLAYERID::VALUE idPlayer;
+        GAMETYPES::CLEARRANK rank;
+    };
+
 public:
+    static void SetTestRequest(PLAYERID::VALUE idPlayer, GAMETYPES::CLEARRANK rank);
+
     CEnbuProc_Container(void);
     ~CEnbuProc_Container(void);
     void Settings(void);
@@ -46,6 +55,7 @@ public:
     const char* GetRankNameStr(void) const;
 
 private:
+    static TESTREQUEST   m_testRequest;
     PLAYERID::VALUE      m_idPlayerMvp;
     GAMETYPES::COSTUME   m_costume;
     GAMETYPES::CLEARRANK m_rankMvp;
@@ -58,11 +68,25 @@ private:
     CSprite              m_sprite;
     float                m_fTime;
     float                m_afAnimOfsX[3];
-    uint32               m_aAnimFrameCnt[10];
+    float                m_afAnimCnt[10];
     bool                 m_bFlagEnd;
     bool                 m_bFlagBandana;
     bool                 m_bFlagIdle;
     RANKVALUE            m_rankValue;
+};
+
+
+/*static*/ CEnbuProc_Container::TESTREQUEST
+    CEnbuProc_Container::m_testRequest = {};
+
+
+/*static*/ void
+CEnbuProc_Container::SetTestRequest(PLAYERID::VALUE idPlayer,
+                                    GAMETYPES::CLEARRANK rank)
+{
+    m_testRequest.bActive = true;
+    m_testRequest.idPlayer = idPlayer;
+    m_testRequest.rank = rank;
 };
 
 
@@ -83,7 +107,7 @@ CEnbuProc_Container::CEnbuProc_Container(void)
 {
     std::memset(m_apTexture, 0x00, sizeof(m_apTexture));
     std::memset(m_afAnimOfsX, 0x00, sizeof(m_afAnimOfsX));
-    std::memset(m_aAnimFrameCnt, 0x00, sizeof(m_aAnimFrameCnt));
+    std::memset(m_afAnimCnt, 0x00, sizeof(m_afAnimCnt));
 
     int32 mvp = CGameData::PlayResult().GetMVP();
 
@@ -93,6 +117,15 @@ CEnbuProc_Container::CEnbuProc_Container(void)
     
     int32 chrIndex = CGameData::PlayResult().IndexOfChara(m_idPlayerMvp);
     m_costume = CGameData::PlayParam().CharaInfo(chrIndex).m_Costume;
+
+    if (m_testRequest.bActive)
+    {
+        m_testRequest.bActive = false;
+        m_idPlayerMvp = m_testRequest.idPlayer;
+        m_rankMvp = m_testRequest.rank;
+        m_rankTotal = m_testRequest.rank;
+        m_costume = GAMETYPES::COSTUME_NONE;
+    };
 
     if (m_rankMvp == GAMETYPES::CLEARRANK_E)
         m_rankValue = RANKVALUE_LOW;
@@ -462,6 +495,8 @@ void CEnbuProc_Container::EnbuBgDraw(void)
     else
         fStep = 16.0f;
 
+    fStep *= (CScreen::TimerStride() * CScreen::Framerate());
+
     m_afAnimOfsX[0] += (fStep * 4.0f);
     if (m_afAnimOfsX[0] >= 1024.0f)
         m_afAnimOfsX[0] = 0.0f;
@@ -484,12 +519,15 @@ void CEnbuProc_Container::EnbuRankDraw(void)
         {
         case GAMETYPES::CLEARRANK_E:
             {
-                float fDuration = CScreen::Framerate() * 0.75f;
+                const float fDuration = ANIM_DURATION_FRAMES(45);
                 
-				if (m_aAnimFrameCnt[0] < uint32(fDuration))
-					++m_aAnimFrameCnt[0];
+                if (m_afAnimCnt[0] < fDuration)
+                {
+                    m_afAnimCnt[0] += CScreen::TimerStride();
+                    m_afAnimCnt[0] = Clamp(m_afAnimCnt[0], m_afAnimCnt[0], fDuration);
+                };
 
-                uint8 uAlphaBasis = uint8(Math::LinearTween(0.0f, 255.0f, float(m_aAnimFrameCnt[0]), fDuration));
+                uint8 uAlphaBasis = Math::LinearTweenAutoRet(0.0f, 255.0f, m_afAnimCnt[0], fDuration);
 
                 m_sprite.SetOffset(0.5f, 0.5f);
                 m_sprite.SetTexture(m_apTexture[m_rankTotal + 3]);
@@ -504,21 +542,26 @@ void CEnbuProc_Container::EnbuRankDraw(void)
 
         default:
             {
-                for (int32 i = 0; i < COUNT_OF(m_aAnimFrameCnt); ++i)
+                for (int32 i = 0; i < COUNT_OF(m_afAnimCnt); ++i)
                 {
-                    float fDuration = ((60.0f - float(i * 2)) * CScreen::TimerStride() * CScreen::Framerate());
-					float fCnt = float(m_aAnimFrameCnt[i]);
+                    float fDurationFrames = (60.0f - static_cast<float>(i * 2));
+                    float fDuration = ANIM_DURATION_FRAMES(fDurationFrames);
+                    
+                    float fCnt = m_afAnimCnt[i];
                     float fDelta = (fCnt / fDuration);
 
-                    if (m_aAnimFrameCnt[i] < uint32(fDuration))
-                        ++m_aAnimFrameCnt[i];
+                    if (m_afAnimCnt[i] < fDuration)
+                    {
+                        m_afAnimCnt[i] += CScreen::TimerStride();
+                        m_afAnimCnt[i] = Clamp(m_afAnimCnt[i], m_afAnimCnt[i], fDuration);
+                    };
 
                     float fSize = fDelta + fDelta + 6.0f;
 
                     m_sprite.SetOffset(0.5f, 0.5f);
                     m_sprite.SetTexture(m_apTexture[m_rankTotal + 3]);
                     m_sprite.Move(0.0f, 120.0f);
-                    m_sprite.SetRGBA(255, 255, 255, uint8(fDelta * 255.0f));
+                    m_sprite.SetRGBA(255, 255, 255, static_cast<uint8>(fDelta * 255.0f));
                     m_sprite.Resize(
                         fSize * 128.0f - (fSize * 128.0f - 128.0f) * fDelta,
                         fSize * 64.0f - (fSize * 64.0f - 64.0f) * fDelta
@@ -874,4 +917,11 @@ static inline CEnbuProc_Container& EnbuProcContainer(void)
 /*static*/ bool CEnbuProc::IsEnbuIdle(void)
 {
     return EnbuProcContainer().m_bFlagIdle;
+};
+
+
+/*static*/ void CEnbuProc::SetTestRankAndMvp(PLAYERID::VALUE idPlayer,
+                                             GAMETYPES::CLEARRANK rank)
+{
+    CEnbuProc_Container::SetTestRequest(idPlayer, rank);
 };
