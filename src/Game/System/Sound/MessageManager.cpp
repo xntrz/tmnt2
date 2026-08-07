@@ -23,21 +23,21 @@ static const RwRGBA s_initialTextRGBA   = { 0xFF, 0xFF, 0xFF, 0x00 };
 static const RwRGBA s_lastTextRGBA      = { 0xFF, 0xFF, 0xFF, 0xFF };
 static const RwRGBA s_initialVertexRGBA = { 0x00, 0x00, 0x00, 0x00 };
 
-static const RwRGBA s_aLastVerexRGBA[6 * 2] =
+static const RwRGBA s_aLastVerexRGBA[2][6] =
 {
-    { 0x00, 0x00, 0x00, 0x36 },
-    { 0x00, 0x00, 0x00, 0x36 },
-    { 0x00, 0x00, 0x00, 0x36 },
-    { 0x00, 0x00, 0x00, 0x36 },
-    { 0x00, 0x00, 0x00, 0x00 },
-    { 0x00, 0x00, 0x00, 0x00 },
+    { { 0x00, 0x00, 0x00, 0x36 },
+      { 0x00, 0x00, 0x00, 0x36 },
+      { 0x00, 0x00, 0x00, 0x36 },
+      { 0x00, 0x00, 0x00, 0x36 },
+      { 0x00, 0x00, 0x00, 0x00 },
+      { 0x00, 0x00, 0x00, 0x00 } },
 
-    { 0x00, 0x00, 0x00, 0xD6 },
-    { 0x00, 0x00, 0x00, 0xD6 },
-    { 0x00, 0x00, 0x00, 0x59 },
-    { 0x00, 0x00, 0x00, 0x59 },
-    { 0x00, 0x00, 0x00, 0x00 },
-    { 0x00, 0x00, 0x00, 0x00 },
+    { { 0x00, 0x00, 0x00, 0xD6 },
+      { 0x00, 0x00, 0x00, 0xD6 },
+      { 0x00, 0x00, 0x00, 0x59 },
+      { 0x00, 0x00, 0x00, 0x59 },
+      { 0x00, 0x00, 0x00, 0x00 },
+      { 0x00, 0x00, 0x00, 0x00 } },
 };
 
 
@@ -301,9 +301,9 @@ void CMessageContainer::vertexColorLinerMove(bool bFadeInFlag)
     for (int32 i = 0; i < COUNT_OF(m_aVerticesColor); ++i)
     {
         RwRGBA colorStart = (bFadeInFlag ? s_initialVertexRGBA :
-                                           s_aLastVerexRGBA[i + 6 * m_stageKind]);
+                                           s_aLastVerexRGBA[m_stageKind][i]);
         
-        RwRGBA colorEnd = (bFadeInFlag ? s_aLastVerexRGBA[i + 6 * m_stageKind] :
+        RwRGBA colorEnd = (bFadeInFlag ? s_aLastVerexRGBA[m_stageKind][i] :
                                          s_initialVertexRGBA);
 
         colorLinerMove(&m_aVerticesColor[i].red, colorStart.red, colorEnd.red);
@@ -337,12 +337,12 @@ void CMessageContainer::messageSet(void)
     float x = (s_vBasePosition.x + s_vStringBoxOffset.x);
     float y = (s_vBasePosition.y + s_vStringBoxOffset.y);
 
-    m_msgBBox.x =
-        (x * (fScrW / TYPEDEF::VSCR_W)) * (CSprite::m_fVirtualScreenW / fScrW) - -CSprite::m_fVirtualScreenX;
-    
-    m_msgBBox.y =
-        ((y * (fScrH / TYPEDEF::VSCR_H)) * (CSprite::m_fVirtualScreenH / fScrH) - -CSprite::m_fVirtualScreenY) * -1.0f;
-    
+    float rw = (fScrW / TYPEDEF::VSCR_W) * (CSprite::m_fVirtualScreenW / fScrW);
+    float rh = (fScrH / TYPEDEF::VSCR_H) * (CSprite::m_fVirtualScreenH / fScrH);
+
+    m_msgBBox.x = ((x * rw) - -CSprite::m_fVirtualScreenX);
+    m_msgBBox.y = ((y * rh) - -CSprite::m_fVirtualScreenY) * -1.0f;
+
     m_msgBBox.w = s_vStringBoxWH.x;
     m_msgBBox.h = getStringBoxHeight();
 };
@@ -350,8 +350,8 @@ void CMessageContainer::messageSet(void)
 
 void CMessageContainer::vertexSet(void)
 {
-	float fScrW = static_cast<float>(CScreen::Width());
-    float fScrH = static_cast<float>(CScreen::Height());
+    float fVScrW = CSprite::m_fVirtualScreenW;
+    float fVScrH = CSprite::m_fVirtualScreenH;
     
     float fOfsY = 0.0f;
     float fHeight = CGameFont::GetHeight();
@@ -368,10 +368,10 @@ void CMessageContainer::vertexSet(void)
     };
 
     float x0 = s_vBasePosition.x;
-    float x1 = s_vBasePosition.x + fScrW;
+    float x1 = s_vBasePosition.x + fVScrW;
 
-    float y0 = fOfsY + (fScrH - fOfsY);
-    float y1 = fOfsY + (0.1f * (fScrH - fOfsY));
+    float y0 = fOfsY + (fVScrH - fOfsY);
+    float y1 = fOfsY + (0.1f * (fVScrH - fOfsY));
     
     RwV2d aPos[] =
     {
@@ -387,6 +387,9 @@ void CMessageContainer::vertexSet(void)
 
     float z = RwIm2DGetNearScreenZ();
     float rhw = 1.0f;
+
+    float fScrW = static_cast<float>(CScreen::Width());
+    float fScrH = static_cast<float>(CScreen::Height());
 
     for (int32 i = 0; i < COUNT_OF(aPos); ++i)
     {
