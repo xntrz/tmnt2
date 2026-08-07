@@ -6,7 +6,13 @@
 #include "System/Common/Screen.hpp"
 
 
-/*static*/ int32 IGamepad::m_aLockedPhysicalPort[] = { -1, -1, -1, -1 };
+/*static*/ int32 IGamepad::m_aLockedPhysicalPort[32] =
+{
+    -1, -1, -1, -1, -1, -1, -1, -1,
+    -1, -1, -1, -1, -1, -1, -1, -1,
+    -1, -1, -1, -1, -1, -1, -1, -1,
+    -1, -1, -1, -1, -1, -1, -1, -1,
+};
 
 
 /*static*/ bool IGamepad::CheckFunction(uint32 uDigital, FUNCTION function)
@@ -119,6 +125,8 @@
 {
     int32 iControllerMax = Max();
 
+    iControllerMax = Min(iControllerMax, COUNT_OF(m_aLockedPhysicalPort));
+
     for (int32 i = 0; i < iControllerMax; ++i)
         m_aLockedPhysicalPort[i] = (IsLocked(i) ? GetPhysicalPort(i) : -1);
 };
@@ -129,6 +137,8 @@
     UnlockAllControllers();
     
     int32 iControllerMax = Max();
+
+    iControllerMax = Min(iControllerMax, COUNT_OF(m_aLockedPhysicalPort));
 
     for (int32 i = 0; i < iControllerMax; ++i)
     {
@@ -142,6 +152,5 @@
 {
     int32 controllerMax = Max();
     
-    return ((iController >= 0) &&
-            (iController < controllerMax));
+    return ((iController >= 0) && (iController < controllerMax));
 };
