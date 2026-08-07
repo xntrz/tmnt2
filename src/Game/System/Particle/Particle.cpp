@@ -408,7 +408,6 @@ void CParticle::Draw(RwCamera* pCamera)
     if (!m_bDraw)
         return;
 
-    RenderStatePush();
     SortZ(pCamera);
 
     RwMatrix* pMatModeling = RwFrameGetMatrix(RwCameraGetFrame(pCamera));
@@ -479,8 +478,6 @@ void CParticle::Draw(RwCamera* pCamera)
     if ((m_type == PEFINFO::PARTICLETYPE_BILLBOARD) ||
         (m_type == PEFINFO::PARTICLETYPE_NORMALBOARD))
         DrawVertex(pCamera);
-
-    RenderStatePop();
 };
 
 
@@ -830,9 +827,17 @@ void CParticle::SetVertexInfo(RwIm3DVertex* aVertexList, RwCamera* pCamera, TRAN
         float fWidth  = static_cast<float>(RwRasterGetWidth(framebuffer));
         float fHeight = static_cast<float>(RwRasterGetHeight(framebuffer));
         float fViewRatio = CMapCamera::m_fDefaultViewSize / view->x;
-        
+
+#if defined(TARGET_PC)
         w = fViewRatio * pTransition->m_vSizeNow.x;
         h = (fWidth / fHeight) * (fViewRatio * pTransition->m_vSizeNow.y);
+#elif defined(TARGET_WEB)
+        float fCurrentAspect = fWidth / fHeight;
+        float fTargetAspect = TYPEDEF::DEFAULT_SCREEN_WIDTH / TYPEDEF::DEFAULT_SCREEN_HEIGHT;
+
+        w = fViewRatio * pTransition->m_vSizeNow.x;
+        h = (fCurrentAspect / fTargetAspect) * (fViewRatio * pTransition->m_vSizeNow.y);
+#endif
     };
 
     RwV3d aPos[4] = { Math::VECTOR3_ZERO };
@@ -917,11 +922,15 @@ void CParticle::DrawVertex(RwCamera* pCamera)
                            | rwIM3D_VERTEXXYZ
                            | rwIM3D_VERTEXUV;
 
+        RenderStatePush();
+
         if (RwIm3DTransform(s_aVertex, m_nNowUseNum, nullptr, flags))
         {
             RwIm3DRenderPrimitive(rwPRIMTYPETRILIST);
             RwIm3DEnd();
         };
+
+        RenderStatePop();
 
         m_nNowUseNum = 0;
     };
@@ -982,7 +991,9 @@ void CParticle::RecreateCylinder(float fTopRadius, float fBottomRadius, int32 nP
 void CParticle::DrawModel(RwMatrix* pMatrix)
 {
     ASSERT(pMatrix);
-    
+
+    RenderStatePush();
+
     uint32 flags = rwIM3D_VERTEXRGBA
                  | rwIM3D_VERTEXXYZ
                  | rwIM3D_VERTEXUV;
@@ -1002,6 +1013,8 @@ void CParticle::DrawModel(RwMatrix* pMatrix)
         RwIm3DEnd();
     };
     RENDERSTATE_POP(rwRENDERSTATECULLMODE);
+
+    RenderStatePop();
 };
 
 
