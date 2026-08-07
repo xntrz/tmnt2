@@ -2365,7 +2365,7 @@ static bool s_abVoiceChooserListPrinted[COUNT_OF(s_apVoiceChooserList)];
     if (pVoiceChooser)
     {
 #ifdef _DEBUG
-        if (CConfigure::CheckArg("sdlogld"))
+        if (CConfigure::CheckArg("sdlogldr"))
         {
             if (!s_abVoiceChooserListPrinted[idGroup])
             {
@@ -2374,9 +2374,21 @@ static bool s_abVoiceChooserListPrinted[COUNT_OF(s_apVoiceChooserList)];
                 int32 voiceListSize = 0;
                 CVoiceChooseTool::VOICELIST* pVoiceList = pVoiceChooser->GetVoiceList(&voiceListSize);
                 if (pVoiceList)
-                {                    
+                {
+                    CVoiceChooseTool::VOICELIST tmpVoiceList[32];
+                    for (int32 i = 0; i < COUNT_OF(tmpVoiceList); ++i)
+                    {
+                        tmpVoiceList[i].m_nCode = -1;
+                        tmpVoiceList[i].m_PlayerID = PLAYERID::ID_INVALID;
+                    };
+
+                    size_t bytesToCopy = sizeof(tmpVoiceList[0]) * Min(voiceListSize, COUNT_OF(tmpVoiceList));
+                    std::memcpy(tmpVoiceList, pVoiceList, bytesToCopy);
+
+                    CVoiceChooseTool::MakeExistListFromVoiceList(&voiceListSize, PLAYERID::ID_INVALID, tmpVoiceList);
+
                     for (int32 i = 0; i < voiceListSize; ++i)
-                        SdLogCodeLoad(pVoiceList[i].m_nCode);
+                        SdLogCodeLoad(tmpVoiceList[i].m_nCode);
                 };                
             };
         };

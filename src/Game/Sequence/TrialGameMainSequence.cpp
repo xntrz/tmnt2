@@ -13,7 +13,6 @@
 
 #if defined(TARGET_WEB)
 #include "System/Web/WebSpecific.hpp"
-#include "System/Web/File/WebFile.hpp"
 #endif /* defined(TARGET_WEB) */
 
 
@@ -24,6 +23,7 @@
 
 
 CTrialGameMainSequence::CTrialGameMainSequence(void)
+: m_iAreaNo(0)
 {
     ;
 };
@@ -40,9 +40,8 @@ bool CTrialGameMainSequence::OnAttach(const void* pParam)
     bool bResult = CGameMainSequence::OnAttach(pParam);
     if (bResult)
     {
+        CGameData::Option().Play().SetEnableAutosave(false);
         CGameData::Record().Item().SetItemTaken(ITEMID::ID_DON_LASER);
-
-        CTimeoutProcess::Initialize(this);
     };
 
     return bResult;
@@ -51,7 +50,10 @@ bool CTrialGameMainSequence::OnAttach(const void* pParam)
 
 void CTrialGameMainSequence::OnDetach(void)
 {
-    CTimeoutProcess::Terminate(this);
+#if defined(TMNT2_FEATURE_TOUCHCONTROLLER)
+    if (CWebSpecific::IsMobilePlatform())
+        CTouchController::Terminate(this);
+#endif /* defined(TMNT2_FEATURE_TOUCHCONTROLLER) */
 
     CGameMainSequence::OnDetach();
 };
@@ -61,8 +63,6 @@ void CTrialGameMainSequence::OnMove(bool bRet, const void* pReturnValue)
 {
     if (bRet)
     {
-        CTimeoutProcess::Reset(this);
-        
         if (pReturnValue)
         {
             m_iLabelNext = reinterpret_cast<int32>(pReturnValue);
@@ -73,7 +73,7 @@ void CTrialGameMainSequence::OnMove(bool bRet, const void* pReturnValue)
             }
             else if (m_iLabelNext == PROCLABEL_SEQ_SAVELOADCHECK)
             {
-                m_iLabelNext = PROCLABEL_LOADDISP;
+                m_iLabelNext = PROCLABEL_SEQ_LOGODISP;
             };
         }
         else
@@ -85,7 +85,7 @@ void CTrialGameMainSequence::OnMove(bool bRet, const void* pReturnValue)
 
         m_iLabelPrev = m_iLabelCurrent;
         m_iLabelCurrent = m_iLabelNext;
-        
+
         Call(m_iLabelCurrent, m_param);
         m_param = nullptr;
     }
@@ -109,7 +109,7 @@ void CTrialGameMainSequence::OnMove(bool bRet, const void* pReturnValue)
 
 #if defined(TMNT2_FEATURE_TOUCHCONTROLLER)
                 if (CWebSpecific::IsMobilePlatform())
-                    CTouchControllerProcess::Initialize(this);
+                    CTouchController::Initialize(this);
 #endif /* defined(TMNT2_FEATURE_TOUCHCONTROLLER) */
             }
             break;
@@ -119,7 +119,7 @@ void CTrialGameMainSequence::OnMove(bool bRet, const void* pReturnValue)
                 if (!CGameSound::IsLoadEnd())
                     break;
                 
-                const int32 iFirstLabel = PROCLABEL_SEQ_SAVELOADCHECK;
+                const int32 iFirstLabel = PROCLABEL_SEQ_LOGODISP;
 
                 m_iLabelNext = iFirstLabel;
                 m_iLabelPrev = iFirstLabel;
@@ -160,19 +160,10 @@ int32 CTrialGameMainSequence::Branch(int32 iLabel)
         return PROCLABEL_SEQ_CHARASELECT;
 
     case PROCLABEL_SEQ_CHARASELECT:
-        CGameData::PlayParam().SetStartArea(AREAID::ID_AREA02, 0); // st02n & st02nb
-        return PROCLABEL_SEQ_AREAPLAY;
+        return BranchAreaPlay(iLabel);
 
     case PROCLABEL_SEQ_AREAPLAY:
-        {
-            CGamePlayResult::AREARESULT arearesult = CGameData::PlayResult().GetAreaResult();
-            if ((arearesult == CGamePlayResult::AREARESULT_GAMECLEAR) ||
-                (arearesult == CGamePlayResult::AREARESULT_GAMEOVER))
-            {
-                return PROCLABEL_SEQ_TR_COMINGSOON;
-            };            
-        }
-        return PROCLABEL_SEQ_LOGODISP;
+        return BranchAreaPlay(iLabel);
 
     case PROCLABEL_SEQ_TR_COMINGSOON:
         return PROCLABEL_SEQ_LOGODISP;
@@ -180,6 +171,45 @@ int32 CTrialGameMainSequence::Branch(int32 iLabel)
     default:
         ASSERT(false);
 		break;
+    };
+
+    return PROCLABEL_SEQ_LOGODISP;
+};
+
+
+int32 CTrialGameMainSequence::BranchAreaPlay(int32 iLabel)
+{
+    static const AREAID::VALUE s_aTrialAreaId[] =
+    {
+        AREAID::ID_AREA12,
+        AREAID::ID_AREA13,
+        AREAID::ID_AREA14,
+        AREAID::ID_AREA19,
+        AREAID::ID_AREA20,
+    };
+
+    if (iLabel == PROCLABEL_SEQ_CHARASELECT)
+    {
+        m_iAreaNo = 0;
+        CGameData::PlayResult().SetAreaResult(CGamePlayResult::AREARESULT_NONE);
+    };
+
+    CGamePlayResult::AREARESULT arearesult = CGameData::PlayResult().GetAreaResult();
+    
+    if ((arearesult == CGamePlayResult::AREARESULT_NONE) ||
+        (arearesult == CGamePlayResult::AREARESULT_GAMECLEAR))
+    {
+        if (m_iAreaNo < COUNT_OF(s_aTrialAreaId))
+        {
+            CGameData::PlayParam().SetStartArea(s_aTrialAreaId[m_iAreaNo++], 0);
+            return PROCLABEL_SEQ_AREAPLAY;
+        };
+        
+        return PROCLABEL_SEQ_TR_COMINGSOON;
+    }
+    else if (arearesult == CGamePlayResult::AREARESULT_GAMEOVER)
+    {
+        return PROCLABEL_SEQ_TR_COMINGSOON;
     };
 
     return PROCLABEL_SEQ_LOGODISP;

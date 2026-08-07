@@ -227,7 +227,17 @@ class AfsView:
             hline.append("")
             id_offset = id_offset + file_count
 
-        hline.append(f"{tab}{tab}FILEID_MAX = {total_files},")
+        total_files_summ = "("
+        archive_no = 0
+        archive_num = len(minfo.archives)
+        for archive in minfo.archives:
+            total_files_summ += (archive.name + "_MAX")
+            archive_no = archive_no + 1
+            if (archive_no < archive_num):
+                total_files_summ += " + "
+        total_files_summ += ")"
+
+        hline.append(f"{tab}{tab}FILEID_MAX = {total_files_summ},")
         hline.append(f"{tab}}};")
         hline.append("};")
         hline.append("")
@@ -339,7 +349,6 @@ class AfsView:
         minfo = AfsMakeInfo()
         
         for list_path in lists_path:
-            print(list_path)
             basename = os.path.basename(list_path)
             fext = os.path.splitext(basename)[1]
             if fext != ".list":
@@ -418,7 +427,6 @@ class AfsView:
             fname = fpath
         else:
             fname = self.correct_out_path(fname)
-        print(fname)
         try:
             fout = open(fname, "wb")
             fout.write(self.fptr.read(fsize))
@@ -433,7 +441,6 @@ class AfsView:
 
 
     def extract_all(self):
-        print("eall!")
         for fid in range(self.info.fcount):
             self.extract_fid(fid)
 
@@ -505,7 +512,6 @@ def main():
         if sys.argv[i] == '--eall':
             idoffset = 0
             list_afs_paths = get_args_list(i + 1, False, True)
-            print(list_afs_paths)
             for _afs_path in list_afs_paths:
                 _afsview = AfsView()
                 if not _afsview.open(_afs_path):

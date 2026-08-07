@@ -60,6 +60,8 @@ CEffectLight::~CEffectLight(void)
 
 void CEffectLight::Run(void)
 {
+    m_nNumActiveLights = 0;
+
     for (int32 i = 0; i < COUNT_OF(m_aLightWork); ++i)
     {
         LIGHTWORK* pWork = &m_aLightWork[i];
@@ -77,8 +79,6 @@ void CEffectLight::Draw(void)
 {
     if (!m_nNumActiveLights)
         return;
-
-    m_nNumActiveLights = 0;
 
     RwMatrix matrixView;
     RwMatrixSetIdentity(&matrixView);

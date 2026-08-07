@@ -53,7 +53,7 @@ bool CLogoDisplaySequence::OnAttach(const void* pParam)
 
     CTextureManager::GenerationInc();
 
-    if (CConfigure::GetLanguage() != TYPEDEF::CONFIG_LAUNCH_NORMAL)
+    if (CConfigure::GetLaunchMode() != TYPEDEF::CONFIG_LAUNCH_NORMAL)
     {
         m_phase = PHASE_RET;
     }

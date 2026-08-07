@@ -25,6 +25,7 @@ public:
     virtual void OnDetach(void) override;
     virtual void OnMove(bool bRet, const void* pReturnValue) override;
     virtual void OnDraw(void) const override;
+    void SetInteractive(bool bSet);
 
 protected:
     PHASE m_phase;

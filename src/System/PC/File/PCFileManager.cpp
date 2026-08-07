@@ -58,6 +58,7 @@ bool CPCFileManager::SetupFileSystem(void)
 {
     ADXPC_SPRM_WINFS prm;
     prm.rtdir = m_szAfsPath;
+    
     ADXPC_SetupWinFs(&prm);
 
     m_adxfic = ADXFIC_Create(m_szAfsPath, ADXFIC_MODE_CURRENT, NULL, 0);
@@ -111,45 +112,4 @@ void CPCFileManager::SetCwd(void)
         GetModulePath(szMyPath);
 
     SetCurrentDirectoryA(szMyPath);
-};
-
-
-//
-// *********************************************************************************
-//
-
-
-CPCFileManagerReadLog::CPCFileManagerReadLog(void)
-: m_readLog(nullptr)
-{
-    ;
-};
-
-
-bool CPCFileManagerReadLog::Start(void)
-{
-    bool bResult = CPCFileManager::Start();
-
-    m_readLog = std::fopen("readlog.txt", "w");
-
-    return bResult;
-};
-
-
-void CPCFileManagerReadLog::Stop(void)
-{
-    if (m_readLog != nullptr)
-    {
-        std::fclose(m_readLog);
-        m_readLog = nullptr;
-    };
-
-    CPCFileManager::Stop();
-};
-
-
-void CPCFileManagerReadLog::ReadEnd(CFileAccess* pData)
-{
-    if (m_readLog != nullptr)
-        std::fprintf(m_readLog, "%s\n", m_pAccessData->GetLastFilename());
 };

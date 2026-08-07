@@ -23,9 +23,10 @@ public:
     void Snapshot(RAWDATA& rRawData) const;
     void Restore(const RAWDATA& rRawData);
     void SetDifficulty(GAMETYPES::DIFFICULTY difficulty);
-    void SetEnableAutosave(bool bSet);
     GAMETYPES::DIFFICULTY GetDifficulty(void) const;
+    void SetEnableAutosave(bool bSet);
     bool IsAutosaveEnabled(void) const;
+    bool IsSimplifiedInput(void) const;
 
 private:
     GAMETYPES::DIFFICULTY m_difficulty;

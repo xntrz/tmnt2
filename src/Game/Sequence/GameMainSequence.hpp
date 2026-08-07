@@ -23,6 +23,7 @@ public:
     virtual void OnMove(bool bRet, const void* pReturnValue) override;
     virtual void OnDraw(void) const override;
     int32 Branch(int32 iLabel);
+    int32 BranchMovie(int32 iLabel);
     void PreMovie(void);
     void PostMovie(void);
     

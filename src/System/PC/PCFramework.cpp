@@ -65,14 +65,7 @@ bool CPCFramework::Initialize(void)
     m_pClockDevice = new CPCClockDevice;
     m_pPCGraphicsDevice = new CPCGraphicsDevice;
     m_pGraphicsDevice = m_pPCGraphicsDevice;
-#ifdef _DEBUG
-    if (CConfigure::CheckArg("readlog"))
-        m_pFileManager = new CPCFileManagerReadLog;
-    else
-        m_pFileManager = new CPCFileManager;
-#else /* _DEBUG */
     m_pFileManager = new CPCFileManager;
-#endif /* _DEBUG */
     m_pInputsDevice = new CPCInputsDevice;
     m_pPCSoundDevice = new CPCSoundDevice;
     m_pFrameSkipController = new CPCFrameSkipController;

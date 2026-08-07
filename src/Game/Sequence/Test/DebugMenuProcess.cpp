@@ -21,6 +21,7 @@
 #include "Game/System/Hit/HitAttackManager.hpp"
 #include "Game/System/Hit/BodyHitManager.hpp"
 #include "Game/System/Map/MapCamera.hpp"
+#include "Game/System/Misc/ControllerMisc.hpp"
 #include "Game/System/Misc/Gamepad.hpp"
 #include "Game/System/Sound/VoiceManager.hpp"
 #include "Game/ProcessList.hpp"
@@ -683,7 +684,20 @@ void CDebugMenuProcess::Move(void)
 #if defined(TARGET_PC)
     bKeyTrigger = CPCSpecific::IsKeyTrigger(MENU_ACTIVATE_KEY);
 #elif defined(TARGET_WEB)
-    bKeyTrigger = CWebSpecific::IsKeyTrigger(MENU_ACTIVATE_KEY);
+    if (CWebSpecific::IsMobilePlatform())
+    {
+        int32 port = CWebSpecific::GetTouchPort();
+        if (port != -1)
+        {
+            int32 controller = CController::GetController(port);
+            if (controller != -1)
+                bKeyTrigger = CController::GetDigitalTrigger(controller, CController::DIGITAL_SELECT);
+        };
+    }
+    else
+    {
+        bKeyTrigger = CWebSpecific::IsKeyTrigger(MENU_ACTIVATE_KEY);
+    };
 #endif
     
     if (bKeyTrigger || bDbgBrkRq)
@@ -691,9 +705,15 @@ void CDebugMenuProcess::Move(void)
         s_bDebugMenuEnable = !s_bDebugMenuEnable;
 
         if (s_bDebugMenuEnable && !s_pDebugMenu->PeriodMenu())
+        {
             Mail().Send(CSequence::GetCurrently(), PROCESSTYPES::MAIL::TYPE_MOVE_DISABLE);
+            EnableStickToDirButton(true);
+        }
         else
+        {
             Mail().Send(CSequence::GetCurrently(), PROCESSTYPES::MAIL::TYPE_MOVE_ENABLE);
+            EnableStickToDirButton(false);
+        };
     };
 
     /* terminate self when game exit */
@@ -747,7 +767,10 @@ void CDebugMenuProcess::Draw(void) const
 #if defined(TARGET_PC)
         pszKeyName = CPCSpecific::GetKeyName(MENU_ACTIVATE_KEY);
 #elif defined(TARGET_WEB)
-        pszKeyName = CWebSpecific::GetKeyName(MENU_ACTIVATE_KEY);
+        if (CWebSpecific::IsMobilePlatform())
+            pszKeyName = "SELECT";
+        else
+            pszKeyName = CWebSpecific::GetKeyName(MENU_ACTIVATE_KEY);
 #endif
         ASSERT(pszKeyName, "key is invalid or not allowed");
 

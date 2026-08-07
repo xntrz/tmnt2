@@ -11,10 +11,15 @@ include("${CMAKE_SOURCE_DIR}/cmake/Macro.cmake")
 #                   Globals                 #
 #############################################
 
-project(${PROJ_NAME} LANGUAGES CXX)
+project(${PROJ_NAME} LANGUAGES C CXX)
 
 set(CMAKE_CXX_STANDARD 11)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_CXX_EXTENSIONS OFF)
+
+set(CMAKE_C_STANDARD 99)
+set(CMAKE_C_STANDARD_REQUIRED ON)
+set(CMAKE_C_EXTENSIONS OFF)
 
 set(DIR_ROOT "${CMAKE_SOURCE_DIR}")
 set(DIR_SRC  "${DIR_ROOT}/src")
@@ -54,6 +59,8 @@ option(OPT_TEST
 option(OPT_TRIAL
     "Build as trial version" OFF
 )
+
+set(OPT_BIN_DIR "" CACHE STRING "Bin dir add path")
 
 
 #############################################
@@ -155,6 +162,6 @@ endif()
 foreach(CONFIG DEBUG RELEASE MINSIZEREL RELWITHDEBINFO)
     string(TOLOWER "${CONFIG}" CONFIG_LOWER)
     set_target_properties(${EXEC_NAME} PROPERTIES
-        RUNTIME_OUTPUT_DIRECTORY_${CONFIG} "${DIR_ROOT}/bin/${TARGET_OS_NAME}/${RWDRV}/${CONFIG_LOWER}"
+        RUNTIME_OUTPUT_DIRECTORY_${CONFIG} "${DIR_ROOT}/bin/${TARGET_OS_NAME}/${RWDRV}/${CONFIG_LOWER}/${OPT_BIN_DIR}"
     )
 endforeach()

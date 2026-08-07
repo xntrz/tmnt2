@@ -14,4 +14,8 @@ public:
     virtual void OnDetach(void) override;
     virtual void OnMove(bool bRet, const void* pReturnValue) override;
     int32 Branch(int32 iLabel);
+    int32 BranchAreaPlay(int32 iLabel);
+
+private:
+    int32 m_iAreaNo;
 };

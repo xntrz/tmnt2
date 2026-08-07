@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="en-us">
+  <head>
+    <title>TMNT2</title>
+    <meta charset="utf-8">
+    <link rel="stylesheet" href="./styles.css">
+    <link rel="icon" type="image/png" href="./img/favicon-96x96.png" sizes="96x96" />
+    <link rel="shortcut icon" href="./img/favicon.ico" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  </head>
+  <body>
+    <canvas class="emscripten" id="canvas" oncontextmenu="event.preventDefault()"></canvas>
+    <input type="file" id="in-directory" webkitdirectory directory multiple style="display: none" />
+    <div class="game-menu">
+        <div id="status-text" class="menu-btn" style="font-size: 14px;"></div>
+        <div class="progress-container" style="display: none;">
+            <div id="progress-bar" class="progress-fill"></div>
+        </div>
+        <div class="buttons-list" style="display: none;">
+            <button class="menu-btn" id="btn-trial" onclick="launchTrial()">PLAY DEMO</button>
+            <button class="menu-btn" id="btn-full" onclick="launchFull()">PLAY FULL</button>
+        </div>
+    </div>
+    <script src="./js/module.js"></script>
+    <script src="./js/args.js"></script>
+    <script src="./js/datpac.js"></script>
+    <script src="./js/wfsmgr.js"></script>
+    <script src="./js/build.js"></script>
+    <script src="./js/init.js"></script>
+  </body>
+</html>

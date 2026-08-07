@@ -4,7 +4,7 @@
 
 bool CRwFileSystemManager::Initialize(void)
 {
-    if (!RtFSManagerOpen(2))
+    if (!RtFSManagerOpen(8))
         return false;
 
     m_pFileSystem = static_cast<CRwFileSystem*>(RwMalloc(sizeof(CRwFileSystem), rwMEMHINTDUR_GLOBAL));

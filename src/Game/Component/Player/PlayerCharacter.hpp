@@ -134,6 +134,7 @@ private:
     PLAYERTYPES::STATUS m_lastGrondingStatus;
     RwV3d m_vReplacepoint;
     bool m_bActive;
+    bool m_bSimplifiedInput;
 };
 
 

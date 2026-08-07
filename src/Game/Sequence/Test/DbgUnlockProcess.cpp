@@ -44,7 +44,8 @@ void CDbgUnlockProcess::Move(void)
 
     s_seqViewObj.Update();
 
-    if (!s_seqViewObj.Check(PROCLABEL_SEQ_SAVELOADCHECK).IsEnded())
+    if (!s_seqViewObj.Check(PROCLABEL_SEQ_SAVELOADCHECK).IsEnded() ||
+        (CSequence::GetCurrently() == PROCESSTYPES::LABEL_EOL))
         return;
 
     //
@@ -103,7 +104,8 @@ void CDbgUnlockProcess::Move(void)
     {
         OUTPUT("UNLOCKING CRYSTAL\n");
 
-        CGameData::Record().Item().ForceSetCrystalNum(GAMETYPES::CRYSTAL_MAX);
+        CGameData::Record().Item().SetDefault();
+        //CGameData::Record().Item().ForceSetCrystalNum(GAMETYPES::CRYSTAL_MAX);
     };
 
     //
@@ -138,13 +140,13 @@ void CDbgUnlockProcess::Move(void)
     if (m_unlockFlag & UNLOCKFLAG_APRIL)
     {
         OUTPUT("UNLOCKING ANTIQUE\n");
-
-        CGameData::Record().Antique().SetShopState(CAntiqueRecord::SHOPSTATE_OPEN);
-        for (int32 i = ANTIQUEID::ID_FIRST; i < ANTIQUEID::ID_MAX; ++i)
-        {
-            if (!CGameData::Record().Antique().IsAntiqueTaken(ANTIQUEID::VALUE(i)))
-                CGameData::Record().Antique().SetAntiqueTaken(ANTIQUEID::VALUE(i));
-        };
+        CGameData::Record().Antique().SetDefault();
+        //CGameData::Record().Antique().SetShopState(CAntiqueRecord::SHOPSTATE_OPEN);
+        //for (int32 i = ANTIQUEID::ID_FIRST; i < ANTIQUEID::ID_MAX; ++i)
+        //{
+        //    if (!CGameData::Record().Antique().IsAntiqueTaken(ANTIQUEID::VALUE(i)))
+        //        CGameData::Record().Antique().SetDefault() SetAntiqueTaken(ANTIQUEID::VALUE(i));
+        //};
     };
 
     //

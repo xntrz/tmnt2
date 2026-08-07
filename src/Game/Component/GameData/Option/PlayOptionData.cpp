@@ -1,5 +1,9 @@
 #include "PlayOptionData.hpp"
 
+#ifdef TARGET_WEB
+#include "System/Web/WebSpecific.hpp"
+#endif /* TARGET_WEB */
+
 
 CPlayOptionData::CPlayOptionData(void)
 {
@@ -78,19 +82,30 @@ void CPlayOptionData::SetDifficulty(GAMETYPES::DIFFICULTY difficulty)
 };
 
 
-void CPlayOptionData::SetEnableAutosave(bool bSet)
-{
-    m_bAutosaveFlag = bSet;
-};
-
-
 GAMETYPES::DIFFICULTY CPlayOptionData::GetDifficulty(void) const
 {
     return m_difficulty;
 };
 
 
+void CPlayOptionData::SetEnableAutosave(bool bSet)
+{
+    m_bAutosaveFlag = bSet;
+};
+
+
 bool CPlayOptionData::IsAutosaveEnabled(void) const
 {
     return m_bAutosaveFlag;
+};
+
+
+bool CPlayOptionData::IsSimplifiedInput(void) const
+{
+#ifdef TARGET_WEB
+    if (CWebSpecific::IsMobilePlatform())
+        return true;
+#endif /* TARGET_WEB */
+
+    return false;
 };

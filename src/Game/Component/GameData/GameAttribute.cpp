@@ -19,6 +19,7 @@ void CGameAttribute::Clear(void)
 {
     m_iVirtualPad = CController::CONTROLLER_UNLOCKED_ON_VIRTUAL;
     m_bIsInteractive = false;
+    m_gamemode = GAMETYPES::GAMEMODE_NORMAL;
 };
 
 

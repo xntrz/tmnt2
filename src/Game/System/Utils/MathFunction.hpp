@@ -94,4 +94,21 @@ namespace Math
     {
         return (startValue + ((time / duration) * changeValue));
     };
+
+    
+    struct LinearTweenRet
+    {
+        float result;
+
+        inline LinearTweenRet(float _result) : result(_result){};
+
+        template <typename T>
+        inline operator T() const { return static_cast<T>(result); };
+    };
+
+    
+    inline LinearTweenRet LinearTweenAutoRet(float startValue, float changeValue, float time, float duration)
+    {
+        return LinearTween(startValue, changeValue, time, duration);
+    };
 };

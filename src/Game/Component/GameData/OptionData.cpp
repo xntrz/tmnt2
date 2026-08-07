@@ -1,15 +1,28 @@
 #include "OptionData.hpp"
 
+#include "Game/System/Misc/ControllerMisc.hpp"
 #include "System/Common/Controller.hpp"
 
-#if defined(TARGET_PC)
-#include "Option/KeyboardOptionDataWin.hpp"
-#elif defined(TARGET_WEB)
-#include "Option/KeyboardOptionDataWeb.hpp"
-#endif
+
+#if defined(TMNT2_FEATURE_KEYBOARD)
+    #if defined(TARGET_PC)
+        #include "Option/KeyboardOptionDataWin.hpp"
+        #define CKeyboardOptionData CKeyboardOptionDataWin
+    #elif defined(TARGET_WEB)
+        #include "Option/KeyboardOptionDataWeb.hpp"
+        #define CKeyboardOptionData CKeyboardOptionDataWeb
+    #endif
+#endif /* defined(TMNT2_FEATURE_KEYBOARD) */
 
 
 COptionData::COptionData(void)
+: m_play()
+, m_sound()
+, m_display()
+, m_pGamepad(nullptr)
+, m_iGamepadNum(0)
+, m_pKeyboard(nullptr)
+, m_pTouch(nullptr)
 {
     ;
 };
@@ -27,34 +40,52 @@ void COptionData::Initialize(void)
     ASSERT(m_iGamepadNum > 0);
     ASSERT(m_iGamepadNum <= COUNT_OF(RAWDATA::m_aGamepad));
 
-    m_paGamepad = new CGamepadOptionData[m_iGamepadNum];
-    ASSERT(m_paGamepad);
+    if (m_iGamepadNum > 0)
+        m_pGamepad = new CGamepadOptionData[m_iGamepadNum];
 
     m_play.Initialize();
     m_sound.Initialize();
     m_display.Initialize();
 
+    int32 iTouchPort = -1;
     for (int32 i = 0; i < m_iGamepadNum; ++i)
-        m_paGamepad[i].Initialize(i);
+    {
+        m_pGamepad[i].Initialize(i);
+
+        if (ControllerIsTouch(i))
+            iTouchPort = i;
+    };
 
 #if defined(TMNT2_FEATURE_KEYBOARD)
-
-#if defined(TARGET_PC)
-    m_pKeyboard = new CKeyboardOptionDataWin;
-#elif defined(TARGET_WEB)
-    m_pKeyboard = new CKeyboardOptionDataWeb;
-#endif
+    m_pKeyboard = new CKeyboardOptionData;
     if (m_pKeyboard)
         m_pKeyboard->Initialize();
-
 #endif /* defined(TMNT2_FEATURE_KEYBOARD) */
-    
+
+#if defined(TMNT2_FEATURE_TOUCHCONTROLLER)
+    if (iTouchPort != -1)
+    {
+        m_pTouch = new CTouchOptionData;
+        if (m_pTouch)
+            m_pTouch->Initialize(iTouchPort);
+    };
+#endif /* defined(TMNT2_FEATURE_TOUCHCONTROLLER) */    
+
     Apply();
 };
 
 
 void COptionData::Terminate(void)
 {
+#if defined(TMNT2_FEATURE_TOUCHCONTROLLER)
+    if (m_pTouch)
+    {
+        m_pTouch->Terminate();
+        delete m_pTouch;
+        m_pTouch = nullptr;
+    };
+#endif /* defined(TMNT2_FEATURE_TOUCHCONTROLLER) */    
+
 #if defined(TMNT2_FEATURE_KEYBOARD)
     if (m_pKeyboard)
     {
@@ -65,16 +96,16 @@ void COptionData::Terminate(void)
 #endif /* defined(TMNT2_FEATURE_KEYBOARD) */
 
     for (int32 i = 0; i < m_iGamepadNum; ++i)
-        m_paGamepad[i].Terminate();
+        m_pGamepad[i].Terminate();
     
     m_display.Terminate();
     m_sound.Terminate();
     m_play.Terminate();
 
-    if (m_paGamepad)
+    if (m_pGamepad)
     {
-        delete[] m_paGamepad;
-        m_paGamepad = nullptr;
+        delete[] m_pGamepad;
+        m_pGamepad = nullptr;
         m_iGamepadNum = 0;
     };
 };
@@ -89,12 +120,17 @@ void COptionData::Snapshot(RAWDATA& rRawData) const
     ASSERT(m_iGamepadNum < COUNT_OF(rRawData.m_aGamepad));
 
     for (int32 i = 0; i < m_iGamepadNum; ++i)
-        m_paGamepad[i].Snapshot(rRawData.m_aGamepad[i]);
+        m_pGamepad[i].Snapshot(rRawData.m_aGamepad[i]);
 
 #if defined(TMNT2_FEATURE_KEYBOARD)
     if (m_pKeyboard)
         m_pKeyboard->Snapshot(rRawData.m_keyboard);
 #endif /* defined(TMNT2_FEATURE_KEYBOARD) */
+
+#if defined(TMNT2_FEATURE_TOUCHCONTROLLER)
+    if (m_pTouch)
+        m_pTouch->Snapshot(rRawData.m_touch);
+#endif /* defined(TMNT2_FEATURE_TOUCHCONTROLLER) */  
 };
 
 
@@ -107,12 +143,17 @@ void COptionData::Restore(const RAWDATA& rRawData)
     ASSERT(m_iGamepadNum < COUNT_OF(rRawData.m_aGamepad));
     
     for (int32 i = 0; i < m_iGamepadNum; ++i)
-        m_paGamepad[i].Restore(rRawData.m_aGamepad[i]);
+        m_pGamepad[i].Restore(rRawData.m_aGamepad[i]);
 
 #if defined(TMNT2_FEATURE_KEYBOARD)
     if (m_pKeyboard)
         m_pKeyboard->Restore(rRawData.m_keyboard);
 #endif /* defined(TMNT2_FEATURE_KEYBOARD) */
+
+#if defined(TMNT2_FEATURE_TOUCHCONTROLLER)
+    if (m_pTouch)
+        m_pTouch->Restore(rRawData.m_touch);
+#endif /* defined(TMNT2_FEATURE_TOUCHCONTROLLER) */  
 };
 
 
@@ -123,12 +164,17 @@ void COptionData::Apply(void)
     m_display.Apply();
 
     for (int32 i = 0; i < m_iGamepadNum; ++i)
-        m_paGamepad[i].Apply();
+        m_pGamepad[i].Apply();
 
 #if defined(TMNT2_FEATURE_KEYBOARD)
     if (m_pKeyboard)
         m_pKeyboard->Apply();
 #endif /* defined(TMNT2_FEATURE_KEYBOARD) */
+
+#if defined(TMNT2_FEATURE_TOUCHCONTROLLER)
+    if (m_pTouch)
+        m_pTouch->Apply();
+#endif /* defined(TMNT2_FEATURE_TOUCHCONTROLLER) */  
 };
 
 
@@ -150,15 +196,6 @@ CDisplayOptionData& COptionData::Display(void)
 };
 
 
-#if defined(TMNT2_FEATURE_KEYBOARD)
-IKeyboardOptionData& COptionData::Keyboard(void)
-{
-    ASSERT(m_pKeyboard != nullptr);
-    return *m_pKeyboard;
-};
-#endif /* defined(TMNT2_FEATURE_KEYBOARD) */
-
-
 CGamepadOptionData& COptionData::Gamepad(int32 controller)
 {
     ASSERT(controller >= 0);
@@ -167,14 +204,14 @@ CGamepadOptionData& COptionData::Gamepad(int32 controller)
     int32 physicalPort = CController::GetPhysicalPort(controller);
     ASSERT(physicalPort < m_iGamepadNum);
 
-    return m_paGamepad[physicalPort];
+    return m_pGamepad[physicalPort];
 };
 
 
 CGamepadOptionData* COptionData::GamepadFromPort(int32 port)
 {
     if ((port >= 0) && (port < m_iGamepadNum))
-        return &m_paGamepad[port];
+        return &m_pGamepad[port];
 
     return nullptr;
 };
@@ -185,3 +222,20 @@ int32 COptionData::GamepadNum(void) const
     return m_iGamepadNum;
 };
 
+
+#if defined(TMNT2_FEATURE_KEYBOARD)
+IKeyboardOptionData& COptionData::Keyboard(void)
+{
+    ASSERT(m_pKeyboard != nullptr);
+    return *m_pKeyboard;
+};
+#endif /* defined(TMNT2_FEATURE_KEYBOARD) */
+
+
+#if defined(TMNT2_FEATURE_TOUCHCONTROLLER)
+CTouchOptionData& COptionData::Touch(void)
+{
+    ASSERT(m_pTouch != nullptr);
+    return *m_pTouch;
+};
+#endif /* defined(TMNT2_FEATURE_TOUCHCONTROLLER) */  

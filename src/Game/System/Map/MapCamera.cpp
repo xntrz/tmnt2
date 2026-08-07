@@ -16,16 +16,16 @@
 
 static inline float LerpFactor(float t)
 {
-#ifdef TARGET_WEB
-    float dt = CGameProperty::GetElapsedTime();
-    float framerate = 60.0f; // org
-
-    float xx = (1.0f - t);
-    float yx = (dt * framerate);
-
-    t = (1.0f - std::pow(xx, yx));
-    t = Clamp(t, 0.0f, 1.0f);
-#endif /* TARGET_WEB */
+//#ifdef TARGET_WEB
+//    float dt = CGameProperty::GetElapsedTime();
+//    float framerate = 60.0f; // org
+//
+//    float xx = (1.0f - t);
+//    float yx = (dt * framerate);
+//
+//    t = (1.0f - std::pow(xx, yx));
+//    t = Clamp(t, 0.0f, 1.0f);
+//#endif /* TARGET_WEB */
     
     return t;
 };

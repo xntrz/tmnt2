@@ -1,18 +1,160 @@
 #include "ScreenFade.hpp"
 
 #include "Game/Component/Menu/MessageWindow.hpp"
+#include "Game/System/2d/GameFont.hpp"
 #include "Game/ProcessList.hpp"
 #include "System/Common/Process/ProcessMail.hpp"
 #include "System/Common/Screen.hpp"
 #include "System/Common/System2D.hpp"
 #include "System/Common/Camera.hpp"
 #include "System/Common/Memory.hpp"
+#include "System/Common/Configure.hpp"
+#include "System/Common/RenderState.hpp"
 
 #if defined(TARGET_PC)
 #include "System/PC/PCTimer.hpp"
 #elif defined(TARGET_WEB)
 #include <emscripten.h>
 #endif
+
+
+static const int32 VIRTUAL_SCREEN_STACK_SIZE = 4;
+static Rt2dBBox s_aVirtualScreenStack[VIRTUAL_SCREEN_STACK_SIZE];
+static int32 s_iVirtualScreenStackDepth = 0;
+
+
+static inline void PushVirtualScreen(float x, float y, float w, float h)
+{
+    ASSERT(s_iVirtualScreenStackDepth < VIRTUAL_SCREEN_STACK_SIZE);
+
+    Rt2dBBox* vs = &s_aVirtualScreenStack[s_iVirtualScreenStackDepth];
+
+    ++s_iVirtualScreenStackDepth;
+
+    vs->x = CSprite::m_fVirtualScreenX;
+    vs->y = CSprite::m_fVirtualScreenY;
+    vs->w = CSprite::m_fVirtualScreenW;
+    vs->h = CSprite::m_fVirtualScreenH;
+
+    CSprite::m_fVirtualScreenX = x;
+    CSprite::m_fVirtualScreenY = y;
+    CSprite::m_fVirtualScreenW = w;
+    CSprite::m_fVirtualScreenH = h;
+};
+
+
+static inline void PopVirtualScreen(void)
+{
+    ASSERT(s_iVirtualScreenStackDepth > 0);
+
+    Rt2dBBox* vs = &s_aVirtualScreenStack[s_iVirtualScreenStackDepth - 1];
+
+    --s_iVirtualScreenStackDepth;
+
+    CSprite::m_fVirtualScreenX = vs->x;
+    CSprite::m_fVirtualScreenY = vs->y;
+    CSprite::m_fVirtualScreenW = vs->w;
+    CSprite::m_fVirtualScreenH = vs->h;
+};
+
+
+static inline void PushVirtualScreenEx(float x, float y, float w, float h)
+{
+    PushVirtualScreen(x, y, w, h);
+    CSystem2D::Reset();
+};
+
+
+static inline void PopVirtualScreenEx(void)
+{
+    PopVirtualScreen();
+    CSystem2D::Reset();
+};
+
+
+static double NowTimeMS(void)
+{
+#if defined(_DEBUG) || defined(TMNT2_TEST)
+
+#if defined(TARGET_PC)
+    return static_cast<double>(CPCTimer::Instance().GetElapsedTime() / CPCTimer::Instance().GetFreqMs());
+#elif defined(TARGET_WEB)
+    return emscripten_get_now();
+#endif
+
+#else /* defined(_DEBUG) || defined(TMNT2_TEST) */
+
+    return 0.0;
+
+#endif /* defined(_DEBUG) || defined(TMNT2_TEST) */
+};
+
+
+static void DrawDiag(void)
+{
+    if (!CGameFont::GetFontObj())
+        return;
+
+    static double s_dPrevT = 0.0;
+    static int32 s_iFramesNum = 0;
+    static int32 s_iFramesPerSec = 0;
+
+    double dNowT = NowTimeMS();
+    double dElapsedT = (dNowT - s_dPrevT);
+
+    if (dElapsedT >= 1000.0)
+    {
+        s_dPrevT = dNowT;
+        s_iFramesPerSec = s_iFramesNum;
+        s_iFramesNum = 0;
+    }
+    else
+    {
+        ++s_iFramesNum;
+    };
+
+    char szFpsText[256];
+    std::sprintf(szFpsText, "FPS: %d", s_iFramesPerSec);
+
+    size_t memUsed = CMemory::allocatedSize();
+    char szMemoryShortText[256];
+    CDebugUtils::FormatBytesSize(memUsed, szMemoryShortText);
+
+    char szMemoryLongText[256];
+    CDebugUtils::FormatThousands(memUsed, szMemoryLongText);
+
+    char szMemoryText[256];
+    std::sprintf(szMemoryText, "MEM: %s", szMemoryShortText);
+
+    float scw = static_cast<float>(TYPEDEF::DEFAULT_SCREEN_WIDTH);
+    float sch = static_cast<float>(TYPEDEF::DEFAULT_SCREEN_HEIGHT);
+
+    float fHeight = 10.0f;
+    fHeight *= (sch / TYPEDEF::DEFAULT_SCREEN_HEIGHT);
+
+    PushVirtualScreenEx(0.0f, 0.0f, scw, sch);
+    CSprite::PushRenderStates();
+    RENDERSTATE_PUSH(rwRENDERSTATEVERTEXALPHAENABLE, true);
+
+    CGameFont::SetHeight(fHeight);
+    CGameFont::SetRGBA(255, 255, 255, 255);
+
+    RwV2d vPos = Math::VECTOR2_ZERO;
+
+    vPos.x = (scw * 0.5f) + (CGameFont::GetStringWidth(szFpsText, fHeight) * -0.5f);
+    vPos.y = -(sch - fHeight);
+
+    CGameFont::Show(szFpsText, &vPos);
+
+    vPos.x = (scw * 0.5f) + (CGameFont::GetStringWidth(szMemoryText, fHeight) * -0.5f);
+    vPos.y += fHeight;
+
+    CGameFont::Show(szMemoryText, &vPos);
+
+    RENDERSTATE_POP(rwRENDERSTATEVERTEXALPHAENABLE);
+    CSprite::PopRenderStates();
+    PopVirtualScreenEx();
+};
 
 
 class CScreenFade::CScreenFadeController final
@@ -272,9 +414,7 @@ void CScreenFade::CScreenFadeController::Start(float fFadeTime, bool bDraw)
 
 
 CScreenFadeProcess::CScreenFadeProcess(void)
-#if defined(_DEBUG) || defined(TMNT2_TEST)
-: m_font()
-#endif /* defined(_DEBUG) || defined(TMNT2_TEST) */
+: m_bDrawDiag(false)
 {
     ;
 };
@@ -290,7 +430,9 @@ bool CScreenFadeProcess::Attach(void)
 {
     if (CScreenFade::Initialize())
         CMessageWindow::Initialize();
-    
+
+    m_bDrawDiag = CConfigure::CheckArg("diag");
+
     return true;
 };
 
@@ -314,72 +456,7 @@ void CScreenFadeProcess::Draw(void) const
     CMessageWindow::DrawNormal();
     CScreenFade::Draw();
     CMessageWindow::DrawFront();
-    DrawTestData();
-};
 
-
-void CScreenFadeProcess::DrawTestData(void) const
-{
-#if defined(_DEBUG) || defined(TMNT2_TEST)
-    m_font.Color({ 0xFF, 0xFF, 0xFF, 0xFF });
-    m_font.Background({ 0x00, 0x00, 0x00, 0xFF });
-    m_font.SetAutoStep(0, 20);
-    m_font.Position(CScreen::Width() - 270,
-                    CScreen::Height() - 40);
-
-//#if defined(TARGET_WEB)
-    static double s_dPrevT = 0.0;
-    static int32 s_iFramesNum = 0;
-    static int32 s_iFramesPerSec = 0;
-
-    double dNowT = NowTimeMS();
-    double dElapsedT = (dNowT - s_dPrevT);
-    
-    if (dElapsedT >= 1000.0)
-    {
-        s_dPrevT = dNowT;
-        s_iFramesPerSec = s_iFramesNum;
-        s_iFramesNum = 0;
-    }
-    else
-    {
-        ++s_iFramesNum;
-    };
-
-    char szFpsText[256];
-    std::sprintf(szFpsText, "FPS:    %d (%f)", s_iFramesPerSec, CScreen::TimerStride());
-
-    size_t memUsed = CMemory::allocatedSize();
-    char szMemoryShortText[256];
-    CDebugUtils::FormatBytesSize(memUsed, szMemoryShortText);
-
-    char szMemoryLongText[256];
-    CDebugUtils::FormatThousands(memUsed, szMemoryLongText);
-
-    char szMemoryText[256];
-    std::sprintf(szMemoryText, "MEMORY: %s (%s)", szMemoryShortText, szMemoryLongText);
-
-    m_font.Print(szFpsText);
-    m_font.Print(szMemoryText);
-//#endif /* defined(TARGET_WEB) */
-
-#endif /* defined(_DEBUG) || defined(TMNT2_TEST) */
-};
-
-
-double CScreenFadeProcess::NowTimeMS(void) const
-{
-#if defined(_DEBUG) || defined(TMNT2_TEST)
-
-#if defined(TARGET_PC)
-    return static_cast<double>(CPCTimer::Instance().GetElapsedTime() / CPCTimer::Instance().GetFreqMs());
-#elif defined(TARGET_WEB)
-    return emscripten_get_now();
-#endif
-
-#else /* defined(_DEBUG) || defined(TMNT2_TEST) */
-    
-    return 0.0;
-
-#endif /* defined(_DEBUG) || defined(TMNT2_TEST) */
+    if (m_bDrawDiag)
+        DrawDiag();
 };

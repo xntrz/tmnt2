@@ -45,6 +45,7 @@
 #include "Game/Sequence/Test/TestPadSequence.hpp"
 #include "Game/Sequence/Test/EnemySelTestSequence.hpp"
 #include "Game/Sequence/Test/EnemyTestSequence.hpp"
+#include "Game/Sequence/Test/EnbuTestSequence.hpp"
 #include "Game/Sequence/Test/DebugMenuProcess.hpp"
 #include "Game/Sequence/Test/DbgUnlockProcess.hpp"
 #endif /* _DEBUG */
@@ -64,6 +65,7 @@ extern const PROCESSTYPES::PROCESS g_aProcessList[] =
     { PROCLABEL_SEQ_TESTPAD,            PROCESSTYPES::PRIORITY_NORMAL,      CTestPadSequence::Instance          },
     { PROCLABEL_SEQ_TESTENEMYSEL,       PROCESSTYPES::PRIORITY_NORMAL,      CEnemySelTestSequence::Instance     },
     { PROCLABEL_SEQ_TESTENEMY,          PROCESSTYPES::PRIORITY_NORMAL,      CEnemyTestSequence::Instance        },
+    { PROCLABEL_SEQ_TESTENBU,           PROCESSTYPES::PRIORITY_NORMAL,      CEnbuTestSequence::Instance         },
     { PROCLABEL_DBGMENU,                PROCESSTYPES::PRIORITY_NORMAL + 1,  CDebugMenuProcess::Instance         },
     { PROCLABEL_DBGUNLOCK,              PROCESSTYPES::PRIORITY_HIGH,        CDbgUnlockProcess::Instance         },
 #endif /* _DEBUG */
@@ -107,7 +109,7 @@ extern const PROCESSTYPES::PROCESS g_aProcessList[] =
     { PROCLABEL_TIMEOUT,                PROCESSTYPES::PRIORITY_NORMAL - 2,  CTimeoutProcess::Instance           },
     { PROCLABEL_PADCONNECTCHECK,        PROCESSTYPES::PRIORITY_NORMAL + 1,  CPadConnectCheckProcess::Instance   },
 #if defined(TARGET_WEB)
-    { PROCLABEL_TOUCHCONTROLLER,        PROCESSTYPES::PRIORITY_NORMAL + 3,  CTouchControllerProcess::Instance   },
+    { PROCLABEL_TOUCHCONTROLLER,        PROCESSTYPES::PRIORITY_NORMAL + 3,  CTouchController::Instance          },
 #endif /* defined(TARGET_WEB) */
 
     { PROCESSTYPES::LABEL_EOL, 0, nullptr }

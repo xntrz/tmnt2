@@ -559,3 +559,25 @@ static const STAGEINFO& StageInfo(STAGEID::VALUE idStage)
 {
 	return StageInfo(idStage).m_implement;
 };
+
+
+/*static*/ bool CStageInfo::IsRideStage(STAGEID::VALUE idStage)
+{
+    return (IsRideShotStage(idStage) ||
+            IsRideJumpStage(idStage));
+};
+
+
+/*static*/ bool CStageInfo::IsRideShotStage(STAGEID::VALUE idStage)
+{
+    return (idStage == STAGEID::ID_ST22R) ||
+           (idStage == STAGEID::ID_ST32R);
+};
+
+
+/*static*/ bool CStageInfo::IsRideJumpStage(STAGEID::VALUE idStage)
+{
+    return (idStage == STAGEID::ID_ST06R) ||
+           (idStage == STAGEID::ID_ST13R) ||
+           (idStage == STAGEID::ID_ST46R);
+};

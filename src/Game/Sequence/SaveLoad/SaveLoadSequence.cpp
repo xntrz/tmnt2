@@ -1,5 +1,6 @@
 #include "SaveLoadSequence.hpp"
 
+#include "Game/Component/GameData/GameData.hpp"
 #include "Game/System/Misc/ScreenFade.hpp"
 
 
@@ -45,7 +46,10 @@ void CSaveLoadSequence::OnMove(bool bRet, const void* pReturnValue)
     case PHASE_FADEIN_WAIT:
         {
             if (!CScreenFade::IsFading())
+            {
+                SetInteractive(true);
                 m_phase = PHASE_RUN;
+            };
         }
         break;
 
@@ -58,6 +62,7 @@ void CSaveLoadSequence::OnMove(bool bRet, const void* pReturnValue)
 
     case PHASE_FADEOUT:
         {
+            SetInteractive(false);
             CScreenFade::BlackOut(1.0f);
             m_phase = PHASE_FADEOUT_WAIT;
         }
@@ -88,3 +93,9 @@ void CSaveLoadSequence::OnDraw(void) const
     ;
 };
 
+
+void CSaveLoadSequence::SetInteractive(bool bSet)
+{
+    if (m_type != CSaveLoad::TYPE_CHECK)
+        CGameData::Attribute().SetInteractive(bSet);
+};

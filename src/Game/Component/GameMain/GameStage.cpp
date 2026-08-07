@@ -44,6 +44,11 @@
 #include "System/PC/PCPhysicalControllerKey.hpp"
 #endif /* TARGET_PC */
 
+#ifdef TARGET_WEB
+#include "System/Web/WebSpecific.hpp"
+#include "System/Web/WebPhysicalController.hpp"
+#endif /* TARGET_WEB */
+
 
 /*static*/ CGameStage* CGameStage::m_pCurrent = nullptr;
 
@@ -71,6 +76,8 @@ CGameStage::CGameStage(void)
 , m_pRecoveryObj(nullptr)
 , m_pCameraUpdater(nullptr)
 , m_pPauseHandler(nullptr)
+, m_apExGauge()
+, m_pauseType(PAUSETYPE_MENU)
 {
     std::memset(m_apExGauge, 0x00, sizeof(m_apExGauge));  
 };
@@ -375,10 +382,15 @@ void CGameStage::StartPlay(void)
 
 bool CGameStage::CheckPauseMenu(void) const
 {
-#ifdef TARGET_PC    
+#if defined(TARGET_PC)
     return CPCSpecific::IsKeyTrigger(DIK_ESCAPE);
+#elif defined(TARGET_WEB)
+    if (CWebSpecific::IsMobilePlatform())
+        return CController::GetDigitalTrigger(CController::CONTROLLER_LOCKED_ON_VIRTUAL, CController::DIGITAL_START);
+
+    return CWebPhysicalController::IsKeyTrigger(SDL_SCANCODE_ESCAPE);
 #else
-    return CController::GetDigitalTrigger(CController::CONTROLLER_UNLOCKED_ON_VIRTUAL, CController::DIGITAL_START);
+    return CController::GetDigitalTrigger(CController::CONTROLLER_LOCKED_ON_VIRTUAL, CController::DIGITAL_START);
 #endif
 };
 
@@ -389,7 +401,7 @@ void CGameStage::StartPause(PAUSETYPE pausetype, void* param /*= nullptr*/)
         return;
     
     IGameStagePause* pPauseHandler = nullptr;
-    
+
     switch (pausetype)
     {
     case PAUSETYPE_MENU:
@@ -407,6 +419,8 @@ void CGameStage::StartPause(PAUSETYPE pausetype, void* param /*= nullptr*/)
 
     if (pPauseHandler && (m_pPauseHandler != pPauseHandler))
     {
+        m_pauseType = pausetype;
+        
         m_pPauseHandler->Stop();
         m_pPauseHandler = pPauseHandler;
         m_pPauseHandler->Start(param);
@@ -419,6 +433,12 @@ void CGameStage::StartPause(PAUSETYPE pausetype, void* param /*= nullptr*/)
 bool CGameStage::IsPaused(void) const
 {
     return (m_nPauseLevel > 0);
+};
+
+
+CGameStage::PAUSETYPE CGameStage::GetPauseType(void) const
+{
+    return m_pauseType;
 };
 
 

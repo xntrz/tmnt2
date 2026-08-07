@@ -42,4 +42,7 @@ public:
     static MVNAME GetStageOutMovieID(STAGEID::VALUE idStage);
     static bool IsPlayMovieOfStageOut(STAGEID::VALUE idStage);
     static IMPLEMENT GetImplementProgress(STAGEID::VALUE idStage);
+    static bool IsRideStage(STAGEID::VALUE idStage);
+    static bool IsRideShotStage(STAGEID::VALUE idStage);
+    static bool IsRideJumpStage(STAGEID::VALUE idStage);
 };

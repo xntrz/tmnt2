@@ -24,8 +24,7 @@
 
 
 #define ANIM_FRAMERATE                  (60.0f)
-
-#define ANIM_DURATION_FRAMES(frames)    ( (CScreen::Framerate()) * ((static_cast<float>(frames)) / ANIM_FRAMERATE) )
+#define ANIM_DURATION_FRAMES(frames)    (static_cast<float>(frames) / ANIM_FRAMERATE)
 
 
 /* copy of DEFINE_ENUM_FLAG_OPERATORS macro from winnt header - that allows to use bit operations whith enums */

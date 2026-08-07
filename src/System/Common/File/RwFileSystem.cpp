@@ -150,6 +150,12 @@ bool CRwFileSystem::Initialize(void)
     if (err != RTFS_ERROR_NOERROR)
         return false;
 
+    for (int32 i = 0; i < MAX_FILES; ++i)
+    {
+        RtFile* file = fsGetObject(this, i);
+        file->fileSystem = this;
+    };
+
     return true;
 };
 

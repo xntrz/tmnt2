@@ -1,0 +1,105 @@
+body {
+    margin: 0;
+    background-color: black;
+    touch-action: none;
+    overscroll-behavior-y: contain;
+    position: fixed;
+    overflow: hidden;
+}
+
+canvas {
+    width: 100vw;
+    height: 100vh;
+    display: block;
+    position: fixed;
+    overflow: hidden;
+    touch-action: none;
+    overscroll-behavior-y: contain;
+    user-select: none;
+    -webkit-tap-highlight-color: rgba(0, 0, 0, 0);
+    z-index: 1;
+}
+
+.emscripten {
+    position: absolute;
+    top: 0px;
+    left: 0px;
+    margin: 0px;
+    border: 0;
+    width: 100vw;
+    height: 100vh;
+    overflow: hidden;
+    display: block;
+    transform: none;
+    object-fit: cover;
+}
+
+@supports(height:1dvh) {
+    canvas {
+        height: 100dvh;
+    }
+
+    canvas.emscripten {
+        height: 100dvh;
+    }
+}
+
+.game-menu {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 9999;
+
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 20px;
+    width: 90%;
+    max-width: 600px;
+}
+
+.buttons-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    width: 100%;
+}
+
+.menu-btn {
+    background: none;
+    border: none;
+    padding: 10px 20px;
+    font-family: 'Arial Black', sans-serif;
+    font-size: clamp(20px, 5vw, 32px);
+    color: rgb(255, 255, 255);
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: 0.3s;
+    outline: none;
+    text-shadow: 2px 2px 5px rgba(0, 0, 0, 0.5);
+    width: 100%;
+    text-align: center;
+}
+
+.menu-btn:hover {
+    color: #ccc;
+    transform: scale(1.005);
+}
+
+.progress-container {
+    width: 100%;
+    height: 8px;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 4px;
+    overflow: hidden;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+}
+
+.progress-fill {
+    width: 0%;
+    height: 100%;
+    background: #ffffff;
+    box-shadow: 0 0 15px rgba(255, 255, 255, 0.5);
+    transition: width 0.1s ease-out;
+}

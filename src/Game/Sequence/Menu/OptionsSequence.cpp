@@ -21,6 +21,23 @@
 #include "System/Common/Screen.hpp"
 
 
+//#define FAKE_TOUCH
+
+/* fake touch interface for visual studio to making buttons layout */
+#ifdef FAKE_TOUCH
+    #define TMNT2_FEATURE_TOUCHCONTROLLER
+    #define Touch() Gamepad(m_ConfigPad)
+    #define CTouchOptionData CGamepadOptionData
+    #define ControllerIsTouch(controller) (true)
+    #define IsLeftHanded() IsEnabledVibration()
+    #define IsFloating() IsEnabledVibration()
+    #define IsDynamic() IsEnabledVibration()
+    #define SetLeftHanded(x) SetEnableVibration(x)
+    #define SetFloating(x) SetEnableVibration(x)
+    #define SetDynamic(x) SetEnableVibration(x)
+#endif /* FAKE_TOUCH */
+
+
 #define SWITCH_ANM          (4.0f)
 #define SWITCH_ANM_STEP     (1.0f)
 #define SCROLL_TIME         (30)
@@ -69,7 +86,8 @@ enum OPTIONMODE
     OPTIONMODE_RESOLUTION,
     OPTIONMODE_DISPLAY_OK,
 
-    OPTIONMODE_CONTROLLER,
+    OPTIONMODE_CONFIGURE_CONTROL_BEGIN,
+    OPTIONMODE_CONTROLLER = OPTIONMODE_CONFIGURE_CONTROL_BEGIN,
     OPTIONMODE_SELECTPAD,
     OPTIONMODE_GAMEPAD,
     OPTIONMODE_GAMEPAD_CONFIG,
@@ -82,6 +100,15 @@ enum OPTIONMODE
     OPTIONMODE_KEYBOARD_RESET,
     OPTIONMODE_KEYBOARD_DEFAULT,
     OPTIONMODE_KEYBOARD_OK,
+    OPTIONMODE_TOUCH,
+    OPTIONMODE_TOUCH_CONFIG,
+    OPTIONMODE_TOUCH_VIBRATION,
+    OPTIONMODE_TOUCH_LEFTHANDED,
+    OPTIONMODE_TOUCH_FLOATING,
+    OPTIONMODE_TOUCH_DYNAMIC,
+    OPTIONMODE_TOUCH_RESET,
+    OPTIONMODE_TOUCH_DEFAULT,
+    OPTIONMODE_TOUCH_OK,
     OPTIONMODE_CONTROLLER_OK,
 
     OPTIONMODE_PASSWORD,
@@ -196,6 +223,23 @@ static const RwRGBA s_ColorWhite    = { 0xFF, 0xFF, 0xFF, 0xFF };
 #define FONT_KEYBOARD_BTN_X_POS(itemNo) (FONT_KEYBOARD_BTN_X)
 #define FONT_KEYBOARD_BTN_Y_POS(itemNo) (FONT_Y_POS(FONT_KEYBOARD_BTN_Y, FONT_KEYBOARD_BTN_HEIGHT, itemNo))
 
+/* touch config font */
+#define FONT_TOUCH_X                      (-108.0f)
+#define FONT_TOUCH_Y                      (-144.0f)
+#define FONT_TOUCH_HEIGHT                 (19.0f)
+#define FONT_TOUCH_X_POS(itemNo)          (FONT_TOUCH_X)
+#define FONT_TOUCH_Y_POS(itemNo)          (FONT_Y_POS(FONT_TOUCH_Y, FONT_TOUCH_HEIGHT, itemNo))
+#define FONT_TOUCH_EX_HEIGHT              (28.0f)
+#define FONT_TOUCH_EX_X_POS(itemNo)       (FONT_TOUCH_X)
+#define FONT_TOUCH_EX_Y_POS(itemNo)       (FONT_Y_POS(FONT_TOUCH_Y, FONT_TOUCH_EX_HEIGHT, itemNo))
+
+/* touch button font */
+#define FONT_TOUCH_BTN_X                  (148.0f)
+#define FONT_TOUCH_BTN_Y                  (-144.0f)
+#define FONT_TOUCH_BTN_HEIGHT             (19.0f)
+#define FONT_TOUCH_BTN_X_POS(itemNo)      (FONT_TOUCH_BTN_X)
+#define FONT_TOUCH_BTN_Y_POS(itemNo)      (FONT_Y_POS(FONT_TOUCH_BTN_Y, FONT_TOUCH_BTN_HEIGHT, itemNo))
+
 /* reso font */
 #define FONT_RESO_X_POS                 (-61.0f)
 #define FONT_RESO_Y_POS                 (102.0f)
@@ -289,6 +333,23 @@ static const RwRGBA s_ColorWhite    = { 0xFF, 0xFF, 0xFF, 0xFF };
 #define FONT_KEYBOARD_BTN_X_POS(itemNo) (FONT_KEYBOARD_BTN_X)
 #define FONT_KEYBOARD_BTN_Y_POS(itemNo) (FONT_Y_POS(FONT_KEYBOARD_BTN_Y, FONT_KEYBOARD_BTN_HEIGHT, itemNo))
 
+/* touch config font */
+#define FONT_TOUCH_X                      (-108.0f)
+#define FONT_TOUCH_Y                      (-144.0f)
+#define FONT_TOUCH_HEIGHT                 (19.0f)
+#define FONT_TOUCH_X_POS(itemNo)          (FONT_TOUCH_X)
+#define FONT_TOUCH_Y_POS(itemNo)          (FONT_Y_POS(FONT_TOUCH_Y, FONT_TOUCH_HEIGHT, itemNo))
+#define FONT_TOUCH_EX_HEIGHT              (28.0f)
+#define FONT_TOUCH_EX_X_POS(itemNo)       (FONT_TOUCH_X)
+#define FONT_TOUCH_EX_Y_POS(itemNo)       (FONT_Y_POS(FONT_TOUCH_Y, FONT_TOUCH_EX_HEIGHT, itemNo))
+
+/* touch button font */
+#define FONT_TOUCH_BTN_X                  (148.0f)
+#define FONT_TOUCH_BTN_Y                  (-144.0f)
+#define FONT_TOUCH_BTN_HEIGHT             (19.0f)
+#define FONT_TOUCH_BTN_X_POS(itemNo)      (FONT_TOUCH_BTN_X)
+#define FONT_TOUCH_BTN_Y_POS(itemNo)      (FONT_Y_POS(FONT_TOUCH_BTN_Y, FONT_TOUCH_BTN_HEIGHT, itemNo))
+
 /* reso font */
 #define FONT_RESO_X_POS                 (-77.0f)
 #define FONT_RESO_Y_POS                 (42.0f)
@@ -362,9 +423,9 @@ static const FontData_t s_aDisplayFont[] =
     { true, GAMETEXT_OP_DISP_HITFX, { FONT_DISPLAY_X_POS(0), FONT_DISPLAY_Y_POS(0) }, FONT_HEIGHT_SCALE, s_ColorOrange, nullptr },
     { true, GAMETEXT_OP_DISP_MARK,  { FONT_DISPLAY_X_POS(1), FONT_DISPLAY_Y_POS(1) }, FONT_HEIGHT_SCALE, s_ColorOrange, nullptr },
     { true, GAMETEXT_OP_DISP_HELP,  { FONT_DISPLAY_X_POS(2), FONT_DISPLAY_Y_POS(2) }, FONT_HEIGHT_SCALE, s_ColorOrange, nullptr },
-#ifdef TARGET_PC
+#ifdef TMNT2_FEATURE_DISPLAYRESO
     { true, GAMETEXT_OP_DISP_RESO,  { FONT_DISPLAY_X_POS(3), FONT_DISPLAY_Y_POS(3) }, FONT_HEIGHT_SCALE, s_ColorOrange, nullptr },
-#endif /* TARGET_PC */    
+#endif /* TMNT2_FEATURE_DISPLAYRESO */    
     { true, GAMETEXT_OP_OK,         { -223.0f,               26.0f                 }, FONT_HEIGHT_SCALE, s_ColorOrange, nullptr },
     {},
 };
@@ -406,6 +467,24 @@ static const FontData_t s_aKeyboardConfigFont[] =
     {},
 };
 
+static const FontData_t s_aTouchConfigFont[] =
+{
+    { true, GAMETEXT_OP_CTRL_FUNC_1,    { FONT_TOUCH_X_POS(0),      FONT_TOUCH_Y_POS(0)     }, FONT_HEIGHT_SCALE, s_ColorOrange, nullptr	},
+    { true, GAMETEXT_OP_CTRL_FUNC_2,    { FONT_TOUCH_X_POS(1),      FONT_TOUCH_Y_POS(1)     }, FONT_HEIGHT_SCALE, s_ColorOrange, nullptr	},
+    { true, GAMETEXT_OP_CTRL_FUNC_3,    { FONT_TOUCH_X_POS(2),      FONT_TOUCH_Y_POS(2)     }, FONT_HEIGHT_SCALE, s_ColorOrange, nullptr	},
+    { true, GAMETEXT_OP_CTRL_FUNC_4,    { FONT_TOUCH_X_POS(3),      FONT_TOUCH_Y_POS(3)     }, FONT_HEIGHT_SCALE, s_ColorOrange, nullptr	},
+    { true, GAMETEXT_OP_CTRL_FUNC_5,    { FONT_TOUCH_X_POS(4),      FONT_TOUCH_Y_POS(4)     }, FONT_HEIGHT_SCALE, s_ColorOrange, nullptr	},
+    { true, GAMETEXT_OP_CTRL_FUNC_6,    { FONT_TOUCH_X_POS(5),      FONT_TOUCH_Y_POS(5)     }, FONT_HEIGHT_SCALE, s_ColorOrange, nullptr	},
+    { true, GAMETEXT_OP_CTRL_FUNC_7,    { FONT_TOUCH_X_POS(6),      FONT_TOUCH_Y_POS(6)     }, FONT_HEIGHT_SCALE, s_ColorOrange, nullptr	},
+    { true, GAMETEXT_OP_CTRL_VIB,       { FONT_TOUCH_X_POS(7),      FONT_TOUCH_Y_POS(7)     }, FONT_HEIGHT_SCALE, s_ColorOrange, nullptr	},
+    { true, GAMETEXT_EMPTY,             { FONT_TOUCH_X_POS(8),      FONT_TOUCH_Y_POS(8)     }, FONT_HEIGHT_SCALE, s_ColorOrange, "Left handed"      },
+    { true, GAMETEXT_EMPTY,             { FONT_TOUCH_X_POS(9),      FONT_TOUCH_Y_POS(9)     }, FONT_HEIGHT_SCALE, s_ColorOrange, "Floating stick"   },
+    { true, GAMETEXT_EMPTY,             { FONT_TOUCH_X_POS(10),     FONT_TOUCH_Y_POS(10)    }, FONT_HEIGHT_SCALE, s_ColorOrange, "Dynamic stick"    },
+    { true, GAMETEXT_OP_CTRL_RST,       { FONT_TOUCH_EX_X_POS(9),   FONT_TOUCH_EX_Y_POS(9)  }, FONT_HEIGHT_SCALE, s_ColorCyan,   nullptr    },
+    { true, GAMETEXT_OP_CTRL_DEF,       { FONT_TOUCH_EX_X_POS(10),  FONT_TOUCH_EX_Y_POS(10) }, FONT_HEIGHT_SCALE, s_ColorPurple, nullptr	},
+    { true, GAMETEXT_OP_OK,             { -223.0f,                  26.0f                   }, FONT_HEIGHT_SCALE, s_ColorOrange, nullptr	},
+    {},
+};
 
 static const FontData_t s_ResolutionFont = { true, GAMETEXT_EMPTY,              { FONT_RESO_X_POS,      FONT_RESO_Y_POS     }, FONT_HEIGHT_SCALE, s_ColorOrange, nullptr };
 static const FontData_t s_HelpOkFont     = { true, GAMETEXT_HELP_FUNC_SELECT,   { FONT_HELP_YES_X_POS,  FONT_HELP_YES_Y_POS }, FONT_HEIGHT_SCALE, s_ColorWhite, nullptr };
@@ -487,11 +566,39 @@ static OPTIONMODE s_aNextModeOptions[] =
 };
 
 
+static bool s_abBlockModeOptions[] =
+{
+    true,
+    true,
+    true,
+    true,
+#ifdef TMNT2_TRIAL    
+    false,
+#else /* TMNT2_TRIAL */
+    true,
+#endif /* TMNT2_TRIAL */
+    true,
+    true,
+};
+
+
 static OPTIONMODE s_aNextModeGame[] =
 {
     OPTIONMODE_DIFFICULTY,
     OPTIONMODE_SAVE,
     OPTIONMODE_GAME_OK
+};
+
+
+static bool s_abBlockModeGame[] =
+{
+    true,
+#ifdef TMNT2_TRIAL    
+    false,
+#else /* TMNT2_TRIAL */
+    true,
+#endif /* TMNT2_TRIAL */
+    true,
 };
 
 
@@ -510,9 +617,9 @@ static OPTIONMODE s_aNextModeDisplay[] =
     OPTIONMODE_EFFECT,
     OPTIONMODE_MARKER,
     OPTIONMODE_WINDOW,
-#ifdef TARGET_PC
+#ifdef TMNT2_FEATURE_DISPLAYRESO
     OPTIONMODE_RESOLUTION,
-#endif /* TARGET_PC */    
+#endif /* TMNT2_FEATURE_DISPLAYRESO */    
     OPTIONMODE_DISPLAY_OK
 };
 
@@ -601,6 +708,25 @@ static inline GAMETEXT GetPadButtonName(uint32 Digital)
 };
 
 
+static inline RwRGBA ToDisabledColor(const RwRGBA& color)
+{
+    const float fFactor = 0.5f;
+
+    float r = static_cast<float>(color.red)   * fFactor;
+    float g = static_cast<float>(color.green) * fFactor;
+    float b = static_cast<float>(color.blue)  * fFactor;
+    float a = static_cast<float>(color.alpha);
+
+    RwRGBA result;
+    result.red   = static_cast<RwUInt8>(r);
+    result.green = static_cast<RwUInt8>(g);
+    result.blue  = static_cast<RwUInt8>(b);
+    result.alpha = static_cast<RwUInt8>(a);
+
+    return result;
+};
+
+
 class COptions
 {
 public:
@@ -641,7 +767,9 @@ public:
     bool MsgSelectCfg(void);
     void CfgKeyboard(void);
     void CfgGamepad(void);
+    void CfgTouch(void);
     void SwitchDisp(int32 Line, bool On);
+    void SwitchDispTouch(int32 Line, bool On);
     void SwitchVolume(int32 Line, OPTIONTYPES::VOLUMETYPE Volumetype);
     void SwitchSound(int32 Line);
     void SwitchDifficuly(int32 Line);
@@ -652,6 +780,7 @@ public:
     void SwitchResolution(void);
     void SelectResolution(void);
     bool SwitchOnOff(bool On);
+    bool SwitchOnOffTouch(bool On);
     void SwitchClear(void);
     void OptionToCfg(void);
     void CfgToOption(void);
@@ -662,12 +791,21 @@ public:
     void FontDataClear(void);
     void ScrollEffectIn(void);
     void ScrollEffectOut(void);
+    bool CheckIsInControlConfigure(OPTIONMODE eOptionMode) const;
+    bool IsControlConfigure(void) const;
+    void SettingLineBlockTable(void);
+    void SettingLineBlockTable(const FontData_t* pFontData);
+    bool IsLineBlocked(void) const;
+    bool IsLineBlocked(int32 IndexLine) const;
 
 private:
     CGamepadOptionData::RAWDATA m_GamepadOptionData;
 #if defined(TMNT2_FEATURE_KEYBOARD)
     IKeyboardOptionData::RAWDATA m_KeyboardOptionData;
 #endif /* defined(TMNT2_FEATURE_KEYBOARD) */
+#if defined(TMNT2_FEATURE_TOUCHCONTROLLER)
+    CTouchOptionData::RAWDATA m_TouchOptionData;
+#endif /* defined(TMNT2_FEATURE_TOUCHCONTROLLER) */
     int32 m_IndexMax;
     int32 m_IndexMaxNext;
     int32 m_VideomodeNum;
@@ -682,8 +820,8 @@ private:
     const char* m_pszNextWindow;
     GAMETEXT m_NextWindowTextId;
     int32 m_EffectTime;
-    int32 m_EffectIn;
-    int32 m_EffectOut;
+    int32 m_EffectIn;  // unused
+    int32 m_EffectOut;  // unused
     CFGSTATE m_eCfgState;
     OPTIONMODE m_eOptionMode;
     OPTIONMODE m_eOptionModeNext;
@@ -709,7 +847,7 @@ private:
     SpriteData_t m_aOptionBase[3];
     SpriteData_t m_SelectPad;
     SpriteData_t m_Cursor;
-    SpriteData_t m_Switch[10];
+    SpriteData_t m_Switch[2 * 15];
     SpriteData_t m_Volume[3][10];
     SpriteData_t m_InfoBar;
     SpriteData_t m_ConfigCur;
@@ -732,8 +870,10 @@ private:
     CDialog* m_pDialog;
     CUnlockMessage* m_pUnlock;
 #ifdef TMNT2_BUILD_EU
-    bool m_bExtExitPipe;    
+    bool m_bExtExitPipe;
 #endif /* TMNT2_BUILD_EU */
+    bool* m_abLineBlockTable;
+    const FontData_t* m_pFontDataNow;
 };
 
 
@@ -742,14 +882,17 @@ COptions::COptions(void)
 #if defined(TMNT2_FEATURE_KEYBOARD)
 , m_KeyboardOptionData()
 #endif /* defined(TMNT2_FEATURE_KEYBOARD) */
+#if defined(TMNT2_FEATURE_TOUCHCONTROLLER)
+, m_TouchOptionData()
+#endif /* defined(TMNT2_FEATURE_TOUCHCONTROLLER) */
 , m_IndexMax(0)
 , m_IndexMaxNext(0)
 , m_VideomodeNum(0)
 , m_VideomodeNoSel(0)
 , m_VideomodeNoCur(0)
 , m_aVideomodeNo()
-, m_ConfigPad(CController::CONTROLLER_LOCKED_ON_VIRTUAL)
-, m_CtrlPad(CController::CONTROLLER_LOCKED_ON_VIRTUAL)
+, m_ConfigPad(-1)
+, m_CtrlPad(-1)
 , m_aAssignButton()
 , m_bConfigPadMode(false)
 , m_bDefaultYes(false)
@@ -803,6 +946,10 @@ COptions::COptions(void)
 , m_pWindow(nullptr)
 , m_pDialog(nullptr)
 , m_pUnlock(nullptr)
+#ifdef TMNT2_BUILD_EU
+, m_bExtExitPipe(false)
+#endif /* TMNT2_BUILD_EU */
+, m_abLineBlockTable(nullptr)
 {
     ;
 };
@@ -817,9 +964,9 @@ COptions::~COptions(void)
 void COptions::Attach(void)
 {
     Initialize();
-#ifdef TARGET_PC    
+#ifdef TMNT2_FEATURE_DISPLAYRESO
     SelectResolution();
-#endif /* TARGET_PC */    
+#endif /* TMNT2_FEATURE_DISPLAYRESO */    
     DlgCreate();    
     
     m_eOptionMode     = OPTIONMODE_SCROLL_EFFECT;
@@ -850,6 +997,7 @@ bool COptions::Move(void)
             && (m_eOptionMode != OPTIONMODE_CONTROLLER)
             && (m_eOptionMode != OPTIONMODE_GAMEPAD_DEFAULT)
             && (m_eOptionMode != OPTIONMODE_KEYBOARD_DEFAULT)
+            && (m_eOptionMode != OPTIONMODE_TOUCH_DEFAULT)
             && (m_eOptionMode != OPTIONMODE_INPUT)
             && (m_eOptionMode != OPTIONMODE_PASSWORD_OK)
             && (m_eOptionMode != OPTIONMODE_DEFAULT)
@@ -973,8 +1121,11 @@ void COptions::Draw(void)
         {
             CGameFont::SetHeightScaled(m_Index[i].Height);
             CGameFont::SetRGBA(m_Index[i].Color);
-            
-            if (m_Index[i].TextId)
+
+            if (IsLineBlocked(i))
+                CGameFont::SetRGBA(ToDisabledColor(m_Index[i].Color));
+
+            if (m_Index[i].TextId != GAMETEXT_EMPTY)
             {
                 CGameFont::Show(CGameText::GetText(m_Index[i].TextId),
                                 m_Index[i].ScreenPos.x,
@@ -982,10 +1133,11 @@ void COptions::Draw(void)
             }
             else
             {
-                if (m_Index[i].Text)
+                if (m_Index[i].Text) {
                     CGameFont::Show(m_Index[i].Text,
                                     m_Index[i].ScreenPos.x,
                                     m_Index[i].ScreenPos.y);
+                };
             };
         };
     };
@@ -1023,7 +1175,7 @@ void COptions::Draw(void)
                         m_PasswordOk.ScreenPos.y);
     };
 
-#ifdef TARGET_PC    
+#ifdef TMNT2_FEATURE_DISPLAYRESO
     if (m_ResolutionFont.Flag)
     {
         CGameFont::SetHeightScaled(m_ResolutionFont.Height);
@@ -1032,7 +1184,7 @@ void COptions::Draw(void)
                         m_ResolutionFont.ScreenPos.x,
                         m_ResolutionFont.ScreenPos.y);
     };
-#endif /* TARGET_PC */
+#endif /* TMNT2_FEATURE_DISPLAYRESO */
 
 #ifdef TMNT2_BUILD_EU
     CSystem2D::PushRenderState();
@@ -1086,9 +1238,9 @@ void COptions::Initialize(void)
 #if defined(TMNT2_FEATURE_KEYBOARD)
     m_KeyboardOptionData = {};
 #endif /* defined(TMNT2_FEATURE_KEYBOARD) */
-    m_EffectIn = 30;
-    m_EffectOut = 30;
-    m_EffectTime = 15;
+    m_EffectIn = SCROLL_TIME;
+    m_EffectOut = SCROLL_TIME;
+    m_EffectTime = SCROLL_TIME_HALF;
     m_eOptionMode = OPTIONMODE_OPTIONS;
     m_pFontData = nullptr;
     m_pFontDataNext = nullptr;
@@ -1232,11 +1384,11 @@ void COptions::SettingInit(bool bDisplayChanged)
     m_HelpOK     = s_HelpOkFont;
     m_HelpCANCEL = s_HelpCancelFont;
 
-#ifdef TARGET_PC
+#ifdef TMNT2_FEATURE_DISPLAYRESO
     m_VideomodeNum   = CGameData::Option().Display().GetVideomodeNum();
     m_VideomodeNoCur = CGameData::Option().Display().GetVideomodeCur();
     m_VideomodeNoSel = m_VideomodeNoCur;
-#endif /* TARGET_PC */
+#endif /* TMNT2_FEATURE_DISPLAYRESO */
 };
 
 
@@ -1331,7 +1483,6 @@ void COptions::ArrowDisp(int32 Line, bool bWide /*= false*/)
 #endif /* TMNT2_BUILD_EU */
     ArrowRight->Sprite.Move(ArrowRight->ScreenPos.x,
                             ArrowRight->ScreenPos.y);
-
     
     if (m_bSwitchMode)
     {
@@ -1360,6 +1511,8 @@ bool COptions::SettingProc(void)
     m_fCursorRot += 0.1f;
     if (m_fCursorRot >= 360.0f)
         m_fCursorRot -= 360.0f;
+
+    SettingLineBlockTable();
 
     switch (m_eOptionMode)
     {
@@ -1524,9 +1677,9 @@ bool COptions::SettingProc(void)
             SwitchDisp(0, CGameData::Option().Display().IsEnabledFontEffect());
             SwitchDisp(1, CGameData::Option().Display().IsEnabledPlayerMarker());
             SwitchDisp(2, CGameData::Option().Display().IsHelpEnabled());
-#ifdef TARGET_PC            
+#ifdef TMNT2_FEATURE_DISPLAYRESO
             SwitchResolution();
-#endif /* TARGET_PC */          
+#endif /* TMNT2_FEATURE_DISPLAYRESO */
         }
         break;
 
@@ -1573,14 +1726,14 @@ bool COptions::SettingProc(void)
             m_eOptionMode     = OPTIONMODE_OPTIONS;
             m_IndexLine       = m_IndexLineExit;
 
-#ifdef TARGET_PC            
+#ifdef TMNT2_FEATURE_DISPLAYRESO
             if (m_VideomodeNoCur != m_VideomodeNoSel)
             {
                 CGameData::Option().Display().SetVideomode(m_VideomodeNoSel);
                 if (CGameData::Option().Display().ApplyVideomode())
                     SettingInit(true);
             };
-#endif /* TARGET_PC */
+#endif /* TMNT2_FEATURE_DISPLAYRESO */
             
             SwitchClear();
         }
@@ -1593,7 +1746,7 @@ bool COptions::SettingProc(void)
             if (MsgDecidePad())
             {
                 int32 configPad = m_ConfigPad;
-                if (configPad == CGameData::Attribute().GetVirtualPad())
+                if (configPad == -1)
                 {
                     m_EffectTime        = SCROLL_TIME;
                     m_pFontData         = s_aOptionFont;
@@ -1609,14 +1762,22 @@ bool COptions::SettingProc(void)
                 else
                 {   
                     m_eOptionMode = OPTIONMODE_SELECTPAD;
-#if defined(TMNT2_FEATURE_KEYBOARD)
                     if (ControllerIsKeyboard(configPad))
+                    {
+#if defined(TMNT2_FEATURE_KEYBOARD)
                         CGameData::Option().Keyboard().Snapshot(m_KeyboardOptionData);
-                    else
-                        CGameData::Option().Gamepad(m_ConfigPad).Snapshot(m_GamepadOptionData);
-#else /* defined(TMNT2_FEATURE_KEYBOARD) */
-                    CGameData::Option().Gamepad(m_ConfigPad).Snapshot(m_GamepadOptionData);
 #endif /* defined(TMNT2_FEATURE_KEYBOARD) */
+                    }
+                    else if (ControllerIsTouch(configPad))
+                    {
+#if defined(TMNT2_FEATURE_TOUCHCONTROLLER)
+                        CGameData::Option().Touch().Snapshot(m_TouchOptionData);
+#endif /* defined(TMNT2_FEATURE_TOUCHCONTROLLER) */
+                    }
+                    else
+                    {
+                        CGameData::Option().Gamepad(m_ConfigPad).Snapshot(m_GamepadOptionData);
+                    };
                 };
             };
         }
@@ -1626,7 +1787,6 @@ bool COptions::SettingProc(void)
         {
             m_NextWindowTextId = GAMETEXT_OP_CTRL;
 
-#if defined(TMNT2_FEATURE_KEYBOARD)
             if (ControllerIsKeyboard(m_ConfigPad))
             {
                 m_eOptionModeNext = OPTIONMODE_KEYBOARD;
@@ -1634,6 +1794,14 @@ bool COptions::SettingProc(void)
                 m_IndexMaxNext    = COUNT_OF(s_aKeyboardConfigFont) - 2;
 
                 SetPadSprite("op_pipe_config_key_pc");
+            }
+            else if (ControllerIsTouch(m_ConfigPad))
+            {
+                m_eOptionModeNext = OPTIONMODE_TOUCH;
+                m_pFontDataNext   = s_aTouchConfigFont;
+                m_IndexMaxNext    = COUNT_OF(s_aTouchConfigFont) - 2;
+
+                SetPadSprite("op_pipe_config_pad");
             }
             else
             {
@@ -1643,13 +1811,6 @@ bool COptions::SettingProc(void)
 
                 SetPadSprite("op_pipe_config_pad");
             };
-#else /* defined(TMNT2_FEATURE_KEYBOARD) */
-            m_eOptionModeNext = OPTIONMODE_GAMEPAD;
-            m_pFontDataNext   = s_aPadConfigFont;
-            m_IndexMaxNext    = COUNT_OF(s_aPadConfigFont) - 2;
-            
-            SetPadSprite("op_pipe_config_pad");
-#endif /* defined(TMNT2_FEATURE_KEYBOARD) */
             
             m_SelectPad.Sprite.SetAlpha(0);
 
@@ -1855,7 +2016,165 @@ bool COptions::SettingProc(void)
         }
         break;
 #endif /* defined(TMNT2_FEATURE_KEYBOARD) */
-        
+
+#if defined(TMNT2_FEATURE_TOUCHCONTROLLER)
+    case OPTIONMODE_TOUCH:
+        {
+            m_WindowTitle.TextId = GAMETEXT_OP_CTRL;
+
+            FontDataClear();
+            FontDataSet(s_aTouchConfigFont);
+
+            m_bKeyConfig     = (m_IndexLine < 7);
+            m_IndexMax       = COUNT_OF(s_aTouchConfigFont) - 2;
+            m_bSwitchMode    = false;
+            m_bConfigPadMode = true;
+            m_EffectTime     = 0;
+            m_eCfgState      = CFGSTATE_NONE;
+            
+            CfgTouch();
+            SwitchDispTouch(7, CGameData::Option().Touch().IsEnabledVibration());
+            SwitchDispTouch(8, CGameData::Option().Touch().IsLeftHanded());
+            SwitchDispTouch(9, CGameData::Option().Touch().IsFloating());
+            SwitchDispTouch(10, CGameData::Option().Touch().IsDynamic());
+
+            switch (m_IndexLine)
+            {
+            case 7:
+                m_eOptionModeNext = OPTIONMODE_TOUCH_VIBRATION;
+                break;
+
+            case 8:
+                m_eOptionModeNext = OPTIONMODE_TOUCH_LEFTHANDED;
+                break;
+
+            case 9:
+                m_eOptionModeNext = OPTIONMODE_TOUCH_FLOATING;
+                break;
+
+            case 10:
+                m_eOptionModeNext = OPTIONMODE_TOUCH_DYNAMIC;
+                break;
+
+            case 11:
+                m_eOptionModeNext = OPTIONMODE_TOUCH_RESET;
+                break;
+
+            case 12:
+                m_eOptionModeNext = OPTIONMODE_TOUCH_DEFAULT;
+                break;
+
+            default:
+                if (m_IndexLine == m_IndexMax)
+                {
+                    m_eOptionModeNext   = OPTIONMODE_TOUCH_OK;
+                    m_EffectTime        = SCROLL_TIME;
+                    m_pFontDataNext     = s_aOptionFont;
+                    m_IndexMaxNext      = COUNT_OF(s_aOptionFont) - 2;
+                    m_eCfgState         = CFGSTATE_TO_OPT;
+                }
+                break;
+            };
+
+            m_IndexLineNext     = m_IndexLine;
+            m_pszNextWindow     = "op_mozi_settei";
+            m_NextWindowTextId  = GAMETEXT_OP_TIT;
+        }
+        break;
+
+    case OPTIONMODE_TOUCH_CONFIG:
+        {
+            m_eOptionMode = OPTIONMODE_TOUCH;
+        }
+        break;
+
+    case OPTIONMODE_TOUCH_VIBRATION:
+        {
+            m_bSwitchMode = true;
+
+            SwitchDispTouch(7, CGameData::Option().Touch().IsEnabledVibration());
+
+            bool SwitchState = SwitchOnOffTouch(CGameData::Option().Touch().IsEnabledVibration());
+            CGameData::Option().Touch().SetEnableVibration(SwitchState);
+        }
+        break;
+
+    case OPTIONMODE_TOUCH_LEFTHANDED:
+        {
+            m_bSwitchMode = true;
+
+            SwitchDispTouch(8, CGameData::Option().Touch().IsLeftHanded());
+
+            bool SwitchState = SwitchOnOffTouch(CGameData::Option().Touch().IsLeftHanded());
+            CGameData::Option().Touch().SetLeftHanded(SwitchState);
+        }
+        break;
+
+    case OPTIONMODE_TOUCH_FLOATING:
+        {
+            m_bSwitchMode = true;
+
+            SwitchDispTouch(9, CGameData::Option().Touch().IsFloating());
+
+            bool SwitchState = SwitchOnOffTouch(CGameData::Option().Touch().IsFloating());
+            CGameData::Option().Touch().SetFloating(SwitchState);
+        }
+        break;
+
+    case OPTIONMODE_TOUCH_DYNAMIC:
+        {
+            m_bSwitchMode = true;
+
+            SwitchDispTouch(10, CGameData::Option().Touch().IsDynamic());
+
+            bool SwitchState = SwitchOnOffTouch(CGameData::Option().Touch().IsDynamic());
+            CGameData::Option().Touch().SetDynamic(SwitchState);
+        }
+        break;
+
+    case OPTIONMODE_TOUCH_RESET:
+        {
+            CGameData::Option().Touch().Restore(m_TouchOptionData);
+            CGameData::Option().Touch().Apply();
+
+            m_eOptionMode = OPTIONMODE_TOUCH;
+        }
+        break;
+
+    case OPTIONMODE_TOUCH_DEFAULT:
+        {
+            if (!m_pDialog->IsOpen())
+            {
+                if (m_pDialog->GetStatus() == CDialog::STATUS_YES)
+                {
+                    CGameData::Option().Touch().SetDefault();
+                    CGameData::Option().Touch().Apply();
+                };
+
+                m_bDefaultYes = false;
+                m_eOptionMode = OPTIONMODE_TOUCH;
+            };
+        }
+        break;
+
+    case OPTIONMODE_TOUCH_OK:
+        {
+            CGameData::Option().Touch().Apply();
+
+            m_eOptionModePrev = m_eOptionMode;
+            m_eOptionMode = OPTIONMODE_CONTROLLER_OK;
+            m_IndexLine = m_IndexLineExit;
+            m_bConfigWindow = false;
+            m_bConfigPadMode = false;
+
+            if (CGameData::Attribute().GetVirtualPad() == CController::CONTROLLER_UNLOCKED_ON_VIRTUAL)
+                UnlockAllControllers();
+
+            SwitchClear();
+        }
+        break;
+#endif /* defined(TMNT2_FEATURE_TOUCHCONTROLLER) */
+
     case OPTIONMODE_CONTROLLER_OK:
         {
             m_eOptionModePrev = OPTIONMODE_CONTROLLER_OK;
@@ -1951,7 +2270,6 @@ bool COptions::SettingProc(void)
 
                     CGameData::Option().Display().SetDefault();
                     CGameData::Option().Display().Apply();
-                    //CGameData::Option().Display().ApplyVideomode();
 
                     for (int32 i = 0; i < CController::Max(); ++i)
                     {
@@ -1963,6 +2281,11 @@ bool COptions::SettingProc(void)
                     CGameData::Option().Keyboard().SetDefault();
                     CGameData::Option().Keyboard().Apply();
 #endif /* defined(TMNT2_FEATURE_KEYBOARD) */
+
+#if defined(TMNT2_FEATURE_TOUCHCONTROLLER)
+                    CGameData::Option().Touch().SetDefault();
+                    CGameData::Option().Touch().Apply();
+#endif /* defined(TMNT2_FEATURE_TOUCHCONTROLLER) */
                 };
 
                 m_bDefaultYes = false;
@@ -2085,10 +2408,17 @@ void COptions::CtrlProc(void)
         {
             if (CController::GetDigitalTrigger(m_CtrlPad, CController::DIGITAL_OK))
             {
+                if (IsLineBlocked(m_IndexLine))
+                {
+                    CGameSound::PlaySE(SDCODE_SE(0x1000));
+                    return;
+                };
+                
                 CGameSound::PlaySE(SDCODE_SE(0x1002));
                 
                 if ((m_eOptionModeNext == OPTIONMODE_GAMEPAD_DEFAULT) ||
                     (m_eOptionModeNext == OPTIONMODE_KEYBOARD_DEFAULT) ||
+                    (m_eOptionModeNext == OPTIONMODE_TOUCH_DEFAULT) ||
                     (m_eOptionModeNext == OPTIONMODE_DEFAULT))
                 {
                     if (!m_pDialog->IsOpen())
@@ -2246,6 +2576,7 @@ bool COptions::MsgSelectCfg(void)
 
 void COptions::CfgKeyboard(void)
 {
+#if defined(TMNT2_FEATURE_KEYBOARD)
     static const FontData_t s_aKeyboardButtonFont[14] =
     {
         { true, GAMETEXT_EMPTY, { FONT_KEYBOARD_BTN_X_POS(0),  FONT_KEYBOARD_BTN_Y_POS(0)  }, (FONT_HEIGHT_SCALE * 0.75f), s_ColorOrange, nullptr },
@@ -2311,6 +2642,7 @@ void COptions::CfgKeyboard(void)
         if (CGameData::Option().Keyboard().AssignDownKey(s_aKeybordButtonFunction[m_IndexLine]))
             CGameSound::PlaySE(SDCODE_SE(0x1002));
     };
+#endif /* defined(TMNT2_FEATURE_KEYBOARD) */
 };
 
 
@@ -2363,7 +2695,6 @@ void COptions::CfgGamepad(void)
                                 m_ConfigCur.ScreenPos.y);
     };
 
-    
     for (int32 i = 0; i < COUNT_OF(s_aPadButtonFunction); ++i)
     {
         m_aAssignButton[i] = CGameData::Option().Gamepad(m_ConfigPad).GetAssignedButton(s_aPadButtonFunction[i]);
@@ -2374,12 +2705,83 @@ void COptions::CfgGamepad(void)
     {
         uint32 digitalTrigger = CController::GetDigitalTrigger(m_ConfigPad);
         uint32 button = digitalTrigger & s_PadConfigDigitalTrigger;
-        if(button)
+        if (button)
         {
             CGameSound::PlaySE(SDCODE_SE(0x1002));
             CGameData::Option().Gamepad(m_ConfigPad).AssignButton(s_aPadButtonFunction[m_IndexLine], button);            
         };
     };
+};
+
+
+void COptions::CfgTouch(void)
+{
+#if defined(TMNT2_FEATURE_TOUCHCONTROLLER)
+    static const FontData_t s_aTouchButtonFont[10] =
+    {
+        { true, GAMETEXT_EMPTY, { FONT_TOUCH_BTN_X_POS(0), FONT_TOUCH_BTN_Y_POS(0) }, FONT_HEIGHT_SCALE, s_ColorOrange, nullptr },
+        { true, GAMETEXT_EMPTY, { FONT_TOUCH_BTN_X_POS(1), FONT_TOUCH_BTN_Y_POS(1) }, FONT_HEIGHT_SCALE, s_ColorOrange, nullptr },
+        { true, GAMETEXT_EMPTY, { FONT_TOUCH_BTN_X_POS(2), FONT_TOUCH_BTN_Y_POS(2) }, FONT_HEIGHT_SCALE, s_ColorOrange, nullptr },
+        { true, GAMETEXT_EMPTY, { FONT_TOUCH_BTN_X_POS(3), FONT_TOUCH_BTN_Y_POS(3) }, FONT_HEIGHT_SCALE, s_ColorOrange, nullptr },
+        { true, GAMETEXT_EMPTY, { FONT_TOUCH_BTN_X_POS(4), FONT_TOUCH_BTN_Y_POS(4) }, FONT_HEIGHT_SCALE, s_ColorOrange, nullptr },
+        { true, GAMETEXT_EMPTY, { FONT_TOUCH_BTN_X_POS(5), FONT_TOUCH_BTN_Y_POS(5) }, FONT_HEIGHT_SCALE, s_ColorOrange, nullptr },
+        { true, GAMETEXT_EMPTY, { FONT_TOUCH_BTN_X_POS(6), FONT_TOUCH_BTN_Y_POS(6) }, FONT_HEIGHT_SCALE, s_ColorOrange, nullptr },
+        { true, GAMETEXT_EMPTY, { FONT_TOUCH_BTN_X_POS(8), FONT_TOUCH_BTN_Y_POS(8) }, FONT_HEIGHT_SCALE, s_ColorOrange, nullptr },
+        { true, GAMETEXT_EMPTY, { FONT_TOUCH_BTN_X_POS(9), FONT_TOUCH_BTN_Y_POS(9) }, FONT_HEIGHT_SCALE, s_ColorOrange, nullptr },
+        {},
+    };
+
+    static_assert((COUNT_OF(s_aTouchButtonFont) - 3) == COUNT_OF(s_aPadButtonFunction), "update me");
+
+    const FontData_t* pPadFontData = s_aTouchButtonFont;
+
+    for (int32 i = 0; i < COUNT_OF(m_OnOff); ++i)
+    {
+        if (!pPadFontData->Flag)
+            break;
+
+        m_OnOff[i] = *pPadFontData++;
+    };
+
+    for (int32 i = 0; i < COUNT_OF(m_aOptionBase); ++i)
+        m_aOptionBase[i].Flag = false;
+
+    SetPadSprite("op_pipe_config_pad");
+
+    if (m_IndexLine >= 7)
+    {
+        m_ConfigCur.Flag = false;
+    }
+    else
+    {
+        m_OnOff[m_IndexLine].Height *= 1.25f;
+        m_OnOff[m_IndexLine].Color = s_ColorGreen;
+
+        m_ConfigCur.Flag      = true;
+        m_ConfigCur.ScreenPos = { m_OnOff[m_IndexLine].ScreenPos.x - 8.0f,
+                                  m_OnOff[m_IndexLine].ScreenPos.y };
+        m_ConfigCur.Sprite.Move(m_ConfigCur.ScreenPos.x,
+                                m_ConfigCur.ScreenPos.y);
+    };
+
+    for (int32 i = 0; i < COUNT_OF(s_aPadButtonFunction); ++i)
+    {        
+        m_aAssignButton[i] = CGameData::Option().Touch().GetAssignedButton(s_aPadButtonFunction[i]);
+        m_OnOff[i].TextId = GetPadButtonName(m_aAssignButton[i]);
+    };
+
+    if (m_bKeyConfig)
+    {
+        uint32 digitalTrigger = CController::GetDigitalTrigger(m_ConfigPad);
+        uint32 button = digitalTrigger & s_PadConfigDigitalTrigger;
+        if (button)
+        {
+            CGameSound::PlaySE(SDCODE_SE(0x1002));
+            CGameData::Option().Touch().AssignButton(s_aPadButtonFunction[m_IndexLine], button);
+            CGameData::Option().Touch().Apply();
+        };
+    };
+#endif /* defined(TMNT2_FEATURE_TOUCHCONTROLLER) */
 };
 
 
@@ -2398,6 +2800,34 @@ void COptions::SwitchDisp(int32 Line, bool On)
     m_OnOff[Line].TextId    = (On ? GAMETEXT_OP_ON : GAMETEXT_OP_OFF);
     m_OnOff[Line].Height    = (m_bSwitchMode ? 2.5f : 2.0f);
     m_OnOff[Line].Color     = (m_bSwitchMode ? s_ColorGreen : s_ColorOrange);
+
+    if (IsLineBlocked(Line))
+        m_OnOff[Line].Color = ToDisabledColor(m_OnOff[Line].Color);
+};
+
+
+void COptions::SwitchDispTouch(int32 Line, bool On)
+{
+    ArrowDisp(Line);
+
+    m_OnOff[Line].Flag = true;
+    m_OnOff[Line].ScreenPos = { FONT_TOUCH_BTN_X + 35.0f,
+                                    (float(Line) * 19.0f) + FONT_TOUCH_BTN_Y };
+    m_OnOff[Line].TextId = (On ? GAMETEXT_OP_ON : GAMETEXT_OP_OFF);
+    m_OnOff[Line].Height = (m_bSwitchMode ? 2.5f : 2.0f);
+    m_OnOff[Line].Color = (m_bSwitchMode ? s_ColorGreen : s_ColorOrange);
+
+    SpriteData_t* ArrowLeft = &m_Switch[(Line * 2) + 0];
+    ArrowLeft->ScreenPos.x = (m_OnOff[Line].ScreenPos.x - 32.0f) - m_fSwitchMoveL;
+    ArrowLeft->ScreenPos.y = m_OnOff[Line].ScreenPos.y;
+    ArrowLeft->Sprite.Move(ArrowLeft->ScreenPos.x,
+                           ArrowLeft->ScreenPos.y);
+
+    SpriteData_t* ArrowRight = &m_Switch[(Line * 2) + 1];
+    ArrowRight->ScreenPos.x = (m_OnOff[Line].ScreenPos.x + (32.0f * 2.0f)) + m_fSwitchMoveR;
+    ArrowRight->ScreenPos.y = m_OnOff[Line].ScreenPos.y;
+    ArrowRight->Sprite.Move(ArrowRight->ScreenPos.x,
+                            ArrowRight->ScreenPos.y);
 };
 
 
@@ -2786,7 +3216,6 @@ void COptions::SwitchRumble(void)
     m_OnOff[8].TextId   = (CGameData::Option().Gamepad(m_ConfigPad).IsEnabledVibration() ? GAMETEXT_OP_ON : GAMETEXT_OP_OFF);
     m_OnOff[8].Height   = (m_bSwitchMode ? 2.5f : 2.0f);
     m_OnOff[8].Color    = (m_bSwitchMode ? s_ColorGreen : s_ColorOrange);
-
     
     /* if is in switch mode */
     if (m_bSwitchMode)
@@ -2795,15 +3224,14 @@ void COptions::SwitchRumble(void)
 
         bool bState = CGameData::Option().Gamepad(m_ConfigPad).IsEnabledVibration();
 
-        int32 virtualPad = CGameData::Attribute().GetVirtualPad();
-        if (CController::GetDigitalTrigger(virtualPad, CController::DIGITAL_LLEFT))
+        if (CController::GetDigitalTrigger(m_ConfigPad, CController::DIGITAL_LLEFT))
         {
             CGameSound::PlaySE(SDCODE_SE(0x1004));
 
             m_fSwitchMoveL = SWITCH_ANM;
             bState = !bState;
         }
-        else if (CController::GetDigitalTrigger(virtualPad, CController::DIGITAL_LRIGHT))
+        else if (CController::GetDigitalTrigger(m_ConfigPad, CController::DIGITAL_LRIGHT))
         {
             CGameSound::PlaySE(SDCODE_SE(0x1004));
 
@@ -2830,7 +3258,7 @@ void COptions::SwitchRumble(void)
 
 void COptions::SwitchResolution(void)
 {
-#ifdef TARGET_PC    
+#ifdef TMNT2_FEATURE_DISPLAYRESO
     m_Resolution[0].Flag      = true;
 #ifdef TMNT2_BUILD_EU
     m_Resolution[0].ScreenPos = { 80.0f, 102.0f };
@@ -2916,7 +3344,7 @@ void COptions::SwitchResolution(void)
         m_fSwitchMoveL = 0.0f;
         m_fSwitchMoveR = 0.0f;
     };
-#endif /* TARGET_PC */
+#endif /* TMNT2_FEATURE_DISPLAYRESO */
 };
 
 
@@ -2950,6 +3378,36 @@ bool COptions::SwitchOnOff(bool On)
     if (m_fSwitchMoveL > 0.0f)
         m_fSwitchMoveL -= SWITCH_ANM_STEP;
     
+    if (m_fSwitchMoveR > 0.0f)
+        m_fSwitchMoveR -= SWITCH_ANM_STEP;
+
+    return bResult;
+};
+
+
+bool COptions::SwitchOnOffTouch(bool On)
+{
+    bool bResult = On;
+
+    if (!m_bSwitchMode)
+        return bResult;
+
+    if (CController::GetDigitalTrigger(m_ConfigPad, CController::DIGITAL_LLEFT))
+    {
+        CGameSound::PlaySE(SDCODE_SE(0x1004));
+        m_fSwitchMoveL = SWITCH_ANM;
+        bResult = !On;
+    }
+    else if (CController::GetDigitalTrigger(m_ConfigPad, CController::DIGITAL_LRIGHT))
+    {
+        CGameSound::PlaySE(SDCODE_SE(0x1004));
+        m_fSwitchMoveR = SWITCH_ANM;
+        bResult = !On;
+    };
+
+    if (m_fSwitchMoveL > 0.0f)
+        m_fSwitchMoveL -= SWITCH_ANM_STEP;
+
     if (m_fSwitchMoveR > 0.0f)
         m_fSwitchMoveR -= SWITCH_ANM_STEP;
 
@@ -3060,6 +3518,8 @@ void COptions::FontDataSet(const FontData_t* pFontData)
         
         m_Index[i] = *pData++;
     };
+
+    m_pFontDataNow = pFontData;
 };
 
 
@@ -3075,6 +3535,8 @@ void COptions::FontDataClear(void)
 
     for (int32 i = 0; i < COUNT_OF(m_KeyboardFont); ++i)
         m_KeyboardFont[i].Flag = false;
+
+    m_pFontDataNow = nullptr;
 };
 
 
@@ -3194,12 +3656,82 @@ void COptions::ScrollEffectOut(void)
 };
 
 
+bool COptions::CheckIsInControlConfigure(OPTIONMODE eOptionMode) const
+{
+    bool bIsTouchConfigure = (eOptionMode >= OPTIONMODE_TOUCH) &&
+                             (eOptionMode <= OPTIONMODE_TOUCH_OK);
+
+    bool bIsKeyboardConfigure = (eOptionMode >= OPTIONMODE_KEYBOARD) &&
+                                (eOptionMode <= OPTIONMODE_KEYBOARD_OK);
+    
+    bool bIsGamepadConfigure = (eOptionMode >= OPTIONMODE_GAMEPAD) &&
+                               (eOptionMode <= OPTIONMODE_GAMEPAD_OK);
+
+    return (bIsTouchConfigure || bIsKeyboardConfigure || bIsGamepadConfigure);
+};
+
+
+bool COptions::IsControlConfigure(void) const
+{
+    return CheckIsInControlConfigure(m_eOptionMode) ||
+           CheckIsInControlConfigure(m_eOptionModePrev);
+};
+
+
+void COptions::SettingLineBlockTable(void)
+{
+    m_abLineBlockTable = nullptr;
+
+    SettingLineBlockTable(m_pFontDataNow);
+
+    if (m_eOptionMode == OPTIONMODE_SCROLL_EFFECT)
+        SettingLineBlockTable(m_pFontDataNext);
+};
+
+
+void COptions::SettingLineBlockTable(const FontData_t* pFontData)
+{
+    if (pFontData == s_aOptionFont)
+    {
+        m_abLineBlockTable = s_abBlockModeOptions;
+    }
+    else if (pFontData == s_aGameFont)
+    {
+        m_abLineBlockTable = s_abBlockModeGame;
+    };
+};
+
+
+bool COptions::IsLineBlocked(void) const
+{
+    return IsLineBlocked(m_IndexLine);
+};
+
+
+bool COptions::IsLineBlocked(int32 IndexLine) const
+{
+    if (m_abLineBlockTable == nullptr)
+        return false;
+
+    return (m_abLineBlockTable[IndexLine] == false);
+};
+
+
 static COptions* s_pOptions = nullptr;
 
 
 /*static*/ CProcess* COptionsSequence::Instance(void)
 {
     return new COptionsSequence;
+};
+
+
+/*static*/ bool COptionsSequence::IsControlConfigure(void)
+{
+    if (s_pOptions)
+        return s_pOptions->IsControlConfigure();
+    
+    return false;
 };
 
 

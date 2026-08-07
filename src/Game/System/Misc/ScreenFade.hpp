@@ -45,11 +45,7 @@ public:
     virtual void Detach(void) override;
     virtual void Move(void) override;
     virtual void Draw(void) const override;
-    void DrawTestData(void) const;
-    double NowTimeMS(void) const;
 
 private:
-#if defined(_DEBUG) || defined(TMNT2_TEST)
-    mutable CDebugFontCtrl m_font;
-#endif /* defined(_DEBUG) || defined(TMNT2_TEST) */
+    bool m_bDrawDiag;
 };

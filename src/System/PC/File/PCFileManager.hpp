@@ -23,17 +23,3 @@ private:
     void*           m_adxfic;
     char            m_szAfsPath[256];
 };
-
-
-class CPCFileManagerReadLog final : public CPCFileManager
-{
-public:
-    CPCFileManagerReadLog(void);
-    virtual ~CPCFileManagerReadLog(void) {};
-    virtual bool Start(void) override;
-    virtual void Stop(void) override;
-    virtual void ReadEnd(CFileAccess* pData) override;
-
-private:
-    FILE* m_readLog;
-};

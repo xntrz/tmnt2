@@ -168,8 +168,8 @@ CDebugMenuCtrl::CDebugMenuCtrl(void)
 , m_iHeight(0)
 , m_Result(RESULT_NONE)
 , m_uOptFlag(0)
-, m_uDigitalOK(CController::DIGITAL_START | CController::DIGITAL_RDOWN)         // START or A
-, m_uDigitalCANCEL(CController::DIGITAL_SELECT | CController::DIGITAL_RRIGHT)   // SELECT or B
+, m_uDigitalOK(CController::DIGITAL_OK)
+, m_uDigitalCANCEL(CController::DIGITAL_CANCEL)
 {
     SetHeight(15);
     SetDispMax(10);
@@ -352,7 +352,7 @@ void CDebugMenuCtrl::Draw(void) const
                 char buff[pad + 8];
                 int32 j = 0;
 
-                for (j = 0; j < sizeof(buff) - 1; ++j)
+                for (j = 0; j < static_cast<int32>(sizeof(buff) - 1); ++j)
                     buff[j] = '-';
                 
                 buff[j] = '\0';

@@ -7,6 +7,7 @@ class COptionsSequence final : public CAnim2DSequence
 {
 public:
     static CProcess* Instance(void);
+    static bool IsControlConfigure(void);
 
     COptionsSequence(void);
     virtual ~COptionsSequence(void);

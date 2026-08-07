@@ -89,7 +89,7 @@ void CTrialWallpaperSequence::OnMove(bool bRet, const void* pReturnValue)
         {
             int32 iPad = CGameData::Attribute().GetVirtualPad();
 
-            if (IGamepad::GetDigitalTrigger(iPad, IGamepad::DIGITAL_RDOWN))
+            if (IGamepad::GetDigitalTrigger(iPad, IGamepad::DIGITAL_START))
                 m_eStep = STEP_FADEOUT;
 
             if (m_fTimer > 15.0f)

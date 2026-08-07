@@ -5,6 +5,7 @@
 #include "Option/KeyboardOptionData.hpp"
 #include "Option/PlayOptionData.hpp"
 #include "Option/SoundOptionData.hpp"
+#include "Option/TouchOptionData.hpp"
 
 
 class COptionData
@@ -16,9 +17,14 @@ public:
         CSoundOptionData::RAWDATA    m_sound;
         CDisplayOptionData::RAWDATA  m_display;
         CGamepadOptionData::RAWDATA  m_aGamepad[6];
+
 #if defined(TMNT2_FEATURE_KEYBOARD)
         IKeyboardOptionData::RAWDATA m_keyboard;
 #endif /* defined(TMNT2_FEATURE_KEYBOARD) */
+
+#if defined(TMNT2_FEATURE_TOUCHCONTROLLER)
+        CTouchOptionData::RAWDATA    m_touch;
+#endif /* defined(TMNT2_FEATURE_TOUCHCONTROLLER) */
     };
 
     static_assert(std::is_pod<RAWDATA>::value, "option RAWDATA should be POD type");
@@ -34,20 +40,24 @@ public:
     CPlayOptionData& Play(void);
     CSoundOptionData& Sound(void);
     CDisplayOptionData& Display(void);
-#if defined(TMNT2_FEATURE_KEYBOARD)
-    IKeyboardOptionData& Keyboard(void);
-#endif /* defined(TMNT2_FEATURE_KEYBOARD) */
     CGamepadOptionData& Gamepad(int32 controller);
     CGamepadOptionData* GamepadFromPort(int32 port);
     int32 GamepadNum(void) const;
 
-private:
-    CPlayOptionData m_play;
-    CSoundOptionData m_sound;
-    CDisplayOptionData m_display;
-    CGamepadOptionData* m_paGamepad;
-    int32 m_iGamepadNum;
 #if defined(TMNT2_FEATURE_KEYBOARD)
-    IKeyboardOptionData* m_pKeyboard;
+    IKeyboardOptionData& Keyboard(void);
 #endif /* defined(TMNT2_FEATURE_KEYBOARD) */
+    
+#if defined(TMNT2_FEATURE_TOUCHCONTROLLER)
+    CTouchOptionData& Touch(void);
+#endif /* defined(TMNT2_FEATURE_TOUCHCONTROLLER) */    
+
+private:
+    CPlayOptionData      m_play;
+    CSoundOptionData     m_sound;
+    CDisplayOptionData   m_display;
+    CGamepadOptionData*  m_pGamepad;
+    int32                m_iGamepadNum;
+    IKeyboardOptionData* m_pKeyboard;
+    CTouchOptionData*    m_pTouch;
 };

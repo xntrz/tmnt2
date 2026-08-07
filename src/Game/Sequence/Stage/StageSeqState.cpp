@@ -168,14 +168,15 @@ bool CIntroStageSeqState::OnMove(CStageBaseSequence* pSeq)
                 pMapCamera->Skip();
 
             if (pMapCamera->IsIntroductionEnd())
+            {
+                CGaugeInformation::MissionInfoSet(CGameData::PlayParam().GetStage());
                 m_step = STEP_DISPINFO;
+            };
         }
         break;
         
     case STEP_DISPINFO:
         {
-            CGaugeInformation::MissionInfoSet(CGameData::PlayParam().GetStage());
-            
             m_fTime += CGameProperty::GetElapsedTime();
 
             int32 iController = CGameData::Attribute().GetVirtualPad();
@@ -192,10 +193,11 @@ bool CIntroStageSeqState::OnMove(CStageBaseSequence* pSeq)
         
     case STEP_FADEOUT:
         {
-            CGaugeInformation::MissionInfoSet(CGameData::PlayParam().GetStage());
-            
             if (!CScreenFade::IsFading())
+            {
+                CGaugeInformation::MissionInfoClr();
                 m_step = STEP_END;
+            };
         }
         break;
 

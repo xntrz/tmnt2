@@ -27,13 +27,13 @@ void CGamepadOptionData::Initialize(int32 port)
 {
     m_port = port;
 
-#ifdef TARGET_PC    
+#if defined(TARGET_PC) || defined(TARGET_WEB)
     //
     //  "WEAK ATTACK->OK  JUMP->CANCEL"
     //
     IGamepad::DIGITAL_OK = IPadFunctionMask(IGamepad::FUNCTION_ATTACK_A) | IGamepad::DIGITAL_START;
     IGamepad::DIGITAL_CANCEL = IPadFunctionMask(IGamepad::FUNCTION_JUMP) | IGamepad::DIGITAL_SELECT;
-#endif /* TARGET_PC */
+#endif /* defined(TARGET_PC) || defined(TARGET_WEB) */
     
     SetDefault();
 };

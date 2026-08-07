@@ -12,11 +12,13 @@ set(SHELL "index")
 file_glob_dir_r(SRC_SYSTEM_WEB    "${DIR_SRC}/System/Web")
 file_glob_dir_r(SRC_SOUND_BACKEND "${DIR_SRC}/System/Common/Sound/Backend/OpenAL")
 file_glob_dir_r(SRC_SOUND_OS      "${DIR_SRC}/System/Common/Sound/Os/Web")
+file_glob_dir_r(SRC_CRI           "${DIR_SRC}/System/Web/Cri/src")
 
 target_sources(${EXEC_NAME} PRIVATE 
     ${SRC_SYSTEM_WEB}
     ${SRC_SOUND_BACKEND} 
     ${SRC_SOUND_OS}
+    ${SRC_CRI}
 )
 
 set_target_properties(${EXEC_NAME} PROPERTIES OUTPUT_NAME ${SHELL})
@@ -25,18 +27,31 @@ set_target_properties(${EXEC_NAME} PROPERTIES SUFFIX      ".js")
 target_compile_definitions(${EXEC_NAME} PRIVATE 
     $<$<CONFIG:Debug>:_DEBUG>
     TARGET_WEB
+    #RWDEBUG
     ${EXEC_NAME}_RWDRV_OPENGL
     ${EXEC_NAME}_SOUND_OPENAL
+    CRI_XPT_DISABLE_UNPREFIXED_TYPE
+    CRI_TARGET_WEB
 )
 
 target_precompile_headers(${EXEC_NAME} PRIVATE 
     "${DIR_SRC}/Game/pch.hpp"
 )
 
+foreach(source ${SRC_CRI})
+    if(source MATCHES "\\.c$")
+        set_property(SOURCE ${source} PROPERTY LANGUAGE C)
+        set_property(SOURCE ${source} PROPERTY SKIP_PRECOMPILE_HEADERS ON)
+        target_compile_options(${EXEC_NAME} PRIVATE
+            $<$<COMPILE_LANGUAGE:C>:-std=c11>
+        )
+    endif()
+endforeach()
+
 target_include_directories(${EXEC_NAME} PRIVATE 
     "${DIR_SRC}"
     "${DIR_SRC}/System/Common/Sound"
-    "${DIR_SRC}/System/Web/Cri"
+    "${DIR_SRC}/System/Web/Cri/inc"
     "${DIR_LIB}/${RWSDK}/include/${RWDRV}"
     "${DIR_LIB}/sdl3/${TARGET_OS_NAME}/include"
     "${DIR_LIB}/gl4es/${TARGET_OS_NAME}/include"
@@ -75,6 +90,7 @@ set(COMPILE_OP_WOFF
     -Wno-keyword-macro
     -Wno-c99-extensions
     -Wno-unneeded-internal-declaration
+    -Wno-strict-prototypes
 )
 
 set(LINK_OP_MEM
@@ -82,6 +98,7 @@ set(LINK_OP_MEM
     #-sALLOW_MEMORY_GROWTH=1
     -sSTACK_SIZE=2MB
     #-sSTACK_OVERFLOW_CHECK=2
+    #-sSAFE_HEAP=1
 )
 
 # init preload files
@@ -95,6 +112,10 @@ endif()
 
 list(APPEND LINK_OP_PRELOAD 
     --preload-file=${PRELOADFILE_FONT_MET}@Common/Fonts/MainFont.met
+)
+
+list(APPEND LINK_OP_PRELOAD 
+    --preload-file=${DIR_DATA}/Common/Touch/Touch.lpac@Common/Touch/Touch.lpac
 )
 
 function(web_preload_dir dir_path out_variable)
@@ -132,14 +153,15 @@ set(COMPILE_LINK_SHARED_OP
     -funsafe-math-optimizations
     -freciprocal-math
     -fno-trapping-math
-    #-g
+    -Wfloat-conversion
+    #-g # https://chromewebstore.google.com/detail/cc++-devtools-support-dwa/pdcpmagijalfljmkmjngeonclgbbannb
 )
 
 if(OPT_CLOSURE_COMPILER)
     set(LINK_OP_CLOSURE
         --closure 1
-        --closure-externs
-        --closure-args="--externs=${DIR_SRC}/System/Web/externs.js"
+        --closure-args=--jscomp_off=undefinedVars
+        --closure-args=--externs=${DIR_SRC}/System/Web/ems_externs.js
     )
 endif()
 
@@ -156,9 +178,9 @@ target_link_options(${EXEC_NAME} PRIVATE
     -sFULL_ES2=1 # required for gl4es
     -sWASM=1
     -sASYNCIFY=1
-    -sASYNCIFY_ONLY=@${DIR_SRC}/System/Web/asyncify_only.txt
-    -sEXPORTED_RUNTIME_METHODS=@${DIR_SRC}/System/Web/export_runtime.txt
-    -sEXPORTED_FUNCTIONS=@${DIR_SRC}/System/Web/export_functions.txt
+    -sASYNCIFY_ONLY=@${DIR_SRC}/System/Web/ems_asyncify_only.txt
+    -sEXPORTED_RUNTIME_METHODS=@${DIR_SRC}/System/Web/ems_export_runtime.txt
+    -sEXPORTED_FUNCTIONS=@${DIR_SRC}/System/Web/ems_export_functions.txt
     -sASSERTIONS=0
     -sFETCH
     -sMALLOC=emmalloc
@@ -173,6 +195,13 @@ target_link_options(${EXEC_NAME} PRIVATE
     ${LINK_OP_CLOSURE}
     ${LINK_OP_PRELOAD}
 )
+
+if(OPT_TRIAL)
+    # trying to fit 100mb limit at github for trial build
+    target_link_options(${EXEC_NAME} PRIVATE
+        -sLZ4
+    )
+endif()
 
 target_link_libraries(${EXEC_NAME} PRIVATE 
     # proj
@@ -190,7 +219,9 @@ target_link_libraries(${EXEC_NAME} PRIVATE
     rpskinmatfxtoon
 )
 
-# preprocess .html file
+# preprocess config file
+set(PREPROC_JS "build")
+
 set(CMAKE_HTML_IS_MULTI_BUILD false)
 set(CMAKE_HTML_IS_TRIAL_BUILD false)
 
@@ -203,23 +234,37 @@ if(OPT_TRIAL)
 endif()
 
 configure_file(
-    "${DIR_SRC}/System/Web/${SHELL}.html.in"
-    "${CMAKE_CURRENT_BINARY_DIR}/${SHELL}.html"
+    "${DIR_SRC}/System/Web/Page/js/${PREPROC_JS}.js.in"
+    "${CMAKE_CURRENT_BINARY_DIR}/${PREPROC_JS}.js"
     @ONLY
 )
 
 # copy web assets to bin dir
-file(GLOB_RECURSE WEB_FILES 
-    "${DIR_SRC}/System/Web/*.js"
-    "${DIR_SRC}/System/Web/*.json"
-    "${DIR_SRC}/System/Web/*.png"
-    "${DIR_SRC}/System/Web/*.ico"
-    "${CMAKE_CURRENT_BINARY_DIR}/${SHELL}.html"
+file(GLOB_RECURSE WEB_FILES_IMG    
+    "${DIR_SRC}/System/Web/Page/img/*"
+)
+
+file(GLOB_RECURSE WEB_FILES_JS
+    "${DIR_SRC}/System/Web/Page/js/*.js"
+    "${CMAKE_CURRENT_BINARY_DIR}/${PREPROC_JS}.js"
+)
+
+file(GLOB_RECURSE WEB_FILES_MAIN
+    "${DIR_SRC}/System/Web/Page/*.json"    
+    "${DIR_SRC}/System/Web/Page/*.html"
+    "${DIR_SRC}/System/Web/Page/*.css"
 )
 
 add_custom_target(copy_web_assets
     COMMAND ${CMAKE_COMMAND} -E make_directory "$<TARGET_FILE_DIR:${EXEC_NAME}>"
-    COMMAND ${CMAKE_COMMAND} -E copy_if_different ${WEB_FILES} "$<TARGET_FILE_DIR:${EXEC_NAME}>"
+    COMMAND ${CMAKE_COMMAND} -E copy_if_different ${WEB_FILES_MAIN} "$<TARGET_FILE_DIR:${EXEC_NAME}>"
+    
+    COMMAND ${CMAKE_COMMAND} -E make_directory "$<TARGET_FILE_DIR:${EXEC_NAME}>/img"
+    COMMAND ${CMAKE_COMMAND} -E copy_if_different ${WEB_FILES_IMG} "$<TARGET_FILE_DIR:${EXEC_NAME}>/img"
+
+    COMMAND ${CMAKE_COMMAND} -E make_directory "$<TARGET_FILE_DIR:${EXEC_NAME}>/js"
+    COMMAND ${CMAKE_COMMAND} -E copy_if_different ${WEB_FILES_JS} "$<TARGET_FILE_DIR:${EXEC_NAME}>/js"
+
     DEPENDS ${WEB_FILES}
     COMMENT "Copy web assets..."
 )

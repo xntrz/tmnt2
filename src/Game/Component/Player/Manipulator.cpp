@@ -569,14 +569,19 @@ void CManipulator::AnalyzeInputDevice(void)
 
     AnalyzeInputVector(vInputVector, fInputVectorLen);
 
-    if (fInputVectorLen <= 0.4f)
+    float fInputVecScale = 1.0f;
+#ifdef TARGET_WEB
+    fInputVecScale = 0.7f;
+#endif /* TARGET_WEB */
+
+    if (fInputVectorLen <= (0.4f * fInputVecScale))
     {
         m_input.m_move = MOVE_IDLE;
         m_input.m_fDirection = 0.0f;
     }
     else
     {
-        m_input.m_move = (fInputVectorLen >= 0.9f ? MOVE_RUN : MOVE_WALK);
+        m_input.m_move = (fInputVectorLen >= (0.9f * fInputVecScale) ? MOVE_RUN : MOVE_WALK);
 
         RwMatrix modeling;
         CGameProperty::GetCameraFrameMatrix(&modeling);

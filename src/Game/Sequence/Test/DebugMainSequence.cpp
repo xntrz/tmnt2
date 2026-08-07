@@ -14,10 +14,12 @@
 #include "Game/System/Misc/Gamepad.hpp"
 #include "Game/ProcessList.hpp"
 #include "System/Common/Configure.hpp"
+#include "System/Common/Screen.hpp"
 
 
 static CSequence* s_pDebugMainSeq = nullptr;
 static bool s_bNormalGamePAI = false;
+static int32 s_iPrevVirtualPad;
 
 
 //
@@ -30,11 +32,26 @@ static bool s_bNormalGamePAI = false;
 //
 static void CallSeq(void* param)
 {
+    CGameData::Attribute().SetInteractive(false);
+
     switch (reinterpret_cast<int32>(param))
     {
     case -1:
-        CDbgUnlockProcess::Launch(s_pDebugMainSeq, CDbgUnlockProcess::UNLOCKFLAG_ALL);
-        s_pDebugMainSeq->Ret(reinterpret_cast<const void*>(PROCLABEL_SEQ_SAVELOADCHECK));
+        {
+            CDbgUnlockProcess::Launch(s_pDebugMainSeq, CDbgUnlockProcess::UNLOCKFLAG_ALL);
+            s_pDebugMainSeq->Ret(reinterpret_cast<const void*>(PROCLABEL_SEQ_SAVELOADCHECK));
+        }
+        break;
+
+    case PROCLABEL_SEQ_OPTIONS:
+        {
+            for (int32 i = 0; i < CController::Max(); ++i)
+            {
+                if (!CController::IsLocked(i))
+                    CController::Lock(i);
+            };
+            s_pDebugMainSeq->Call(reinterpret_cast<int32>(param));
+        }
         break;
 
     case 0:
@@ -109,6 +126,8 @@ static void CallArea(void* param)
     else
         CGimmickDebug::DISABLE_GENERERATOR = false;
 
+    CGameData::Attribute().SetInteractive(false);
+
     bool bSkipIntroOutroMovies = true;
     s_pDebugMainSeq->Call(PROCLABEL_SEQ_AREAPLAY, reinterpret_cast<const void*>(bSkipIntroOutroMovies));
 };
@@ -124,7 +143,8 @@ static void LockControllersWithKeyboardPriority(void)
     int32 controllerNum = CController::Max();
     for (int32 i = 0; i < controllerNum; ++i)
     {
-        if (ControllerIsKeyboard(i))
+        if (ControllerIsKeyboard(i) ||
+            ControllerIsTouch(i))
         {
             CController::Lock(i);
             break;
@@ -155,18 +175,28 @@ CDebugMainSequence::~CDebugMainSequence(void)
 bool CDebugMainSequence::OnAttach(const void* pParam)
 {
     LockControllersWithKeyboardPriority();
+
+    s_iPrevVirtualPad = CGameData::Attribute().GetVirtualPad();
     CGameData::Attribute().SetVirtualPad(CController::CONTROLLER_LOCKED_ON_VIRTUAL);
+
+    CGameData::Attribute().SetInteractive(true);
 
     CScreenFade::BlackIn(0.0f);
     
     s_pDebugMainSeq = this;
 
+    static char s_szScreenSize[256];
+    std::sprintf(s_szScreenSize, "Screen: %d x %d", CScreen::Width(), CScreen::Height());
+
     m_menu.SetDispMax(20);
     m_menu.SetPos(100, 100);
+    m_menu.AddTextDisp(s_szScreenSize);
+    m_menu.AddSeparator();
     m_menu.AddTrigger("Test movie",             CallSeq,        PROCLABEL_SEQ_TESTMV);
     m_menu.AddTrigger("Test sound",             CallSeq,        PROCLABEL_SEQ_TESTSD);
     m_menu.AddTrigger("Test pad",               CallSeq,        PROCLABEL_SEQ_TESTPAD);
     m_menu.AddTrigger("Test enemmy",            CallSeq,        PROCLABEL_SEQ_TESTENEMYSEL);
+    m_menu.AddTrigger("Test enbu",              CallSeq,        PROCLABEL_SEQ_TESTENBU);
     m_menu.AddSeparator();
     m_menu.AddBool("Debug menu", [](bool value, bool bTrigger) {
         static bool s_bEnabled = false;
@@ -240,6 +270,7 @@ bool CDebugMainSequence::OnAttach(const void* pParam)
     //m_menu.AddTrigger("demo sync test",         CallSeq,        PROCLABEL_SEQ_PLAYDEMO);
     //m_menu.AddTrigger("roof",                   CallArea,       AREAID::ID_AREA02);
     m_menu.AddSeparator();
+    m_menu.AddTrigger("OPTIONS",            CallSeq, PROCLABEL_SEQ_OPTIONS);
     m_menu.AddTrigger("Start NORMAL game!", CallSeq, 0);
     m_menu.AddTrigger("Start UNLOCK game!", CallSeq, -1);
     m_menu.AddTrigger("Exit",               CallSeq, -2);
@@ -250,6 +281,9 @@ bool CDebugMainSequence::OnAttach(const void* pParam)
 
 void CDebugMainSequence::OnDetach(void)
 {
+    CGameData::Attribute().SetInteractive(false);
+    CGameData::Attribute().SetVirtualPad(s_iPrevVirtualPad);
+
     s_pDebugMainSeq = nullptr;
 
     CScreenFade::BlackOut(0.0f);
@@ -263,7 +297,10 @@ void CDebugMainSequence::OnDetach(void)
 void CDebugMainSequence::OnMove(bool bRet, const void* pReturnValue)
 {
     if (bRet)
+    {
+        CGameData::Attribute().SetInteractive(true);
         CScreenFade::BlackIn(0.0f);
+    };
 
     m_menu.Period();
 };

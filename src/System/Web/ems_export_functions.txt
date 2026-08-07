@@ -1,0 +1,10 @@
+_main
+_webIDBFSSyncCallback
+_webMsgBoxCallback
+_onWorkerFSReady
+_onWorkerFSMountReady
+_onWorkerFSDataReady
+_onMainModuleReady
+_malloc
+_free
+_remoteFSOnIOComplete

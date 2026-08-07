@@ -1,0 +1,9 @@
+/* CMAKE_HTML_IS_MULTI_BUILD (BOOL):
+   specifies is multi build or not
+   (en & na & trial) */
+let isMultiBuild = @CMAKE_HTML_IS_MULTI_BUILD@;
+
+/* CMAKE_HTML_IS_TRIAL_BUILD (BOOL):
+   specifies is trial build or not 
+   (may be part of multi build) */
+let isTrialBuild = @CMAKE_HTML_IS_TRIAL_BUILD@;

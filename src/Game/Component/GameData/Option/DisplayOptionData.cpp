@@ -22,7 +22,7 @@ void CDisplayOptionData::Initialize(void)
 {
     SetDefault();
 
-#ifdef TARGET_PC
+#ifdef TMNT2_FEATURE_DISPLAYRESO
     m_iVideomodeNum = CPCSpecific::GetVideomodeNum();
     m_iVideomodeCur = CPCSpecific::GetVideomodeCur();    
 
@@ -39,13 +39,13 @@ void CDisplayOptionData::Initialize(void)
                      videomode.h,
                      videomode.d);
     };
-#endif /* TARGET_PC */
+#endif /* TMNT2_FEATURE_DISPLAYRESO */
 };
 
 
 void CDisplayOptionData::Terminate(void)
 {
-#ifdef TARGET_PC
+#ifdef TMNT2_FEATURE_DISPLAYRESO
     if (m_pVideomode)
     {
         delete[] m_pVideomode;
@@ -54,7 +54,7 @@ void CDisplayOptionData::Terminate(void)
         m_iVideomodeNum = 0;
         m_iVideomodeCur = -1;
     };
-#endif /* TARGET_PC */
+#endif /* TMNT2_FEATURE_DISPLAYRESO */
 };
 
 
@@ -84,9 +84,9 @@ void CDisplayOptionData::Snapshot(RAWDATA& rRawData) const
     rRawData.m_bPlayerMarkerFlag    = m_bPlayerMarkerFlag;
     rRawData.m_bHelpFlag            = m_bHelpFlag;
 
-#ifdef TARGET_PC
+#ifdef TMNT2_FEATURE_DISPLAYRESO
     rRawData.m_iVideomodeNo         = m_iVideomodeCur;
-#endif /* TARGET_PC */
+#endif /* TMNT2_FEATURE_DISPLAYRESO */
 };
 
 
@@ -96,12 +96,12 @@ void CDisplayOptionData::Restore(const RAWDATA& rRawData)
     m_bPlayerMarkerFlag = rRawData.m_bPlayerMarkerFlag;
     m_bHelpFlag         = rRawData.m_bHelpFlag;
 
-#ifdef TARGET_PC
+#ifdef TMNT2_FEATURE_DISPLAYRESO
     m_iVideomodeCur     = rRawData.m_iVideomodeNo;
     
     if (m_iVideomodeCur >= CPCSpecific::GetVideomodeNum())
         m_iVideomodeCur = CPCSpecific::GetVideomodeCur();
-#endif /* TARGET_PC */
+#endif /* TMNT2_FEATURE_DISPLAYRESO */
 };
 
 
@@ -141,7 +141,7 @@ bool CDisplayOptionData::IsHelpEnabled(void) const
 };
 
 
-#ifdef TARGET_PC
+#ifdef TMNT2_FEATURE_DISPLAYRESO
 
 void CDisplayOptionData::SetVideomode(int32 No)
 {
@@ -187,4 +187,4 @@ const char* CDisplayOptionData::GetVideomodeName(int32 No) const
     return m_pVideomode[No].m_szName;
 };
 
-#endif /* TARGET_PC */
+#endif /* TMNT2_FEATURE_DISPLAYRESO */

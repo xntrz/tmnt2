@@ -69,6 +69,7 @@ public:
     bool CheckPauseMenu(void) const;
     void StartPause(PAUSETYPE pausetype, void* param = nullptr);
     bool IsPaused(void) const;
+    PAUSETYPE GetPauseType(void) const;
     void BeginDemo(void);
     void EndDemo(void);
     void BeginPlayerNegateDamage(void);
@@ -118,4 +119,5 @@ private:
     IGameStageCameraUpdater* m_pCameraUpdater;
     IGameStagePause* m_pPauseHandler;
     IGameStageExGauge* m_apExGauge[EXGAUGE_NUM];
+    PAUSETYPE m_pauseType;
 };

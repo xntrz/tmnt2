@@ -763,6 +763,7 @@ void CDatabaseViewer::OnMove(bool bRet, const void* pReturnValue)
             
             if (CDataLoader::IsLoadEnd())
             {
+                CGameData::Attribute().SetInteractive(true);
                 CGameSound::PlayBGM(SDCODE_BGM(0x3024));
                 CScreenFade::BlackIn(1.0f);
                 m_ePhase = PHASE_RUN;
@@ -777,6 +778,7 @@ void CDatabaseViewer::OnMove(bool bRet, const void* pReturnValue)
 
             if (s_pDatabaseViewer_Container->Run())
             {
+                CGameData::Attribute().SetInteractive(false);
                 CGameSound::FadeOut(CGameSound::FADESPEED_SLOW);
                 CScreenFade::BlackOut(1.0f);
                 m_ePhase = PHASE_END;

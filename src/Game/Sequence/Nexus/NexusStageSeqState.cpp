@@ -270,7 +270,10 @@ void CPlayNexusStageSeqState::SetItemBox(void)
         ITEMID::ID_MISSILE,
     };
 
-    ITEMID::VALUE aItemBoxList[8] = { ITEMID::ID_NONE };
+    ITEMID::VALUE aItemBoxList[8] = {};
+
+    for (int32 i = 0; i < COUNT_OF(aItemBoxList); ++i)
+        aItemBoxList[i] = ITEMID::ID_NONE;
 
     for (int32 i = 0; i < COUNT_OF(s_aItemList); ++i)
     {
@@ -291,8 +294,8 @@ void CPlayNexusStageSeqState::SetItemBox(void)
     {                
         const float fAngleDelta = MATH_PI2 / static_cast<float>(COUNT_OF(aItemBoxList));
         
-        param.m_vPosition.x = Math::Cos(i * fAngleDelta) * 8.0f;
-        param.m_vPosition.z = Math::Sin(i * fAngleDelta) * 8.0f;
+        param.m_vPosition.x = Math::Cos(static_cast<float>(i) * fAngleDelta) * 8.0f;
+        param.m_vPosition.z = Math::Sin(static_cast<float>(i) * fAngleDelta) * 8.0f;
         param.m_vPosition.y = CWorldMap::GetMapHeight(&param.m_vPosition);
         param.m_id          = GIMMICKID::ID_N_ITEMBX;
         param.m_nItem       = aItemBoxList[i];

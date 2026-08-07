@@ -22,7 +22,6 @@
 
 #if defined(TARGET_WEB)
 #include "System/Web/WebSpecific.hpp"
-#include "System/Web/File/WebFile.hpp"
 #endif /* defined(TARGET_WEB) */
 
 
@@ -82,8 +81,8 @@ bool CGameMainSequence::OnAttach(const void* pParam)
     CDataLoader::Regist(FPATH_LANG("Language/English/Text/Text.lpac"));
     CDataLoader::Regist(FPATH("Common/Fonts/Fonts.lpac"));
 #if defined(TMNT2_FEATURE_TOUCHCONTROLLER)
-    //if (CWebSpecific::IsMobilePlatform())
-        //CDataLoader::Regist(CWebFile::MakePath("touch.txd"), true);
+    if (CWebSpecific::IsMobilePlatform())
+        CDataLoader::Regist(FPATH("Common/Touch/Touch.lpac"));
 #endif /* defined(TMNT2_FEATURE_TOUCHCONTROLLER) */
 
     CGameData::Initialize();
@@ -113,7 +112,7 @@ void CGameMainSequence::OnDetach(void)
 
 #if defined(TARGET_WEB)
     if (CWebSpecific::IsMobilePlatform())
-        CTouchControllerProcess::Terminate(this);
+        CTouchController::Terminate(this);
 #endif /* defined(TARGET_WEB) */
 
     CGameData::Terminate();
@@ -190,7 +189,7 @@ void CGameMainSequence::OnMove(bool bRet, const void* pReturnValue)
 
 #if defined(TMNT2_FEATURE_TOUCHCONTROLLER)
                 if (CWebSpecific::IsMobilePlatform())
-                    CTouchControllerProcess::Initialize(this);
+                    CTouchController::Initialize(this);
 #endif /* defined(TMNT2_FEATURE_TOUCHCONTROLLER) */
             }
             break;
@@ -217,7 +216,6 @@ void CGameMainSequence::OnMove(bool bRet, const void* pReturnValue)
 #else /* _DEBUG */
                 Call(m_iLabelCurrent);
 #endif /* _DEBUG */
-
             }
             break;
 
@@ -269,12 +267,7 @@ int32 CGameMainSequence::Branch(int32 iLabel)
 #endif /* _DEBUG */
 
     case PROCLABEL_SEQ_LOGODISP:
-#ifdef TMNT2_FEATURE_MOVIE
-        return (CConfigure::GetLaunchMode() != TYPEDEF::CONFIG_LAUNCH_NORMAL ? PROCLABEL_SEQ_TITLE :
-                                                                               PROCLABEL_SEQ_MOVIE);
-#else /* TMNT2_FEATURE_MOVIE */
-        return PROCLABEL_SEQ_TITLE;
-#endif /* TMNT2_FEATURE_MOVIE */
+        return BranchMovie(iLabel);
 
     case PROCLABEL_SEQ_TITLE:
         return PROCLABEL_SEQ_CHARASELECT;
@@ -348,6 +341,17 @@ int32 CGameMainSequence::Branch(int32 iLabel)
     };
 
 	return PROCESSTYPES::LABEL_EOL;
+};
+
+
+int32 CGameMainSequence::BranchMovie(int32 iLabel)
+{
+#ifdef TMNT2_FEATURE_MOVIE
+    return (CConfigure::GetLaunchMode() != TYPEDEF::CONFIG_LAUNCH_NORMAL ? PROCLABEL_SEQ_TITLE :
+                                                                           PROCLABEL_SEQ_MOVIE);
+#else /* TMNT2_FEATURE_MOVIE */
+    return PROCLABEL_SEQ_TITLE;
+#endif /* TMNT2_FEATURE_MOVIE */
 };
 
 

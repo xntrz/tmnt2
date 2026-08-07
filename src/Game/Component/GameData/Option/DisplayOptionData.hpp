@@ -6,21 +6,21 @@
 class CDisplayOptionData
 {
 public:
-#ifdef TARGET_PC    
+#ifdef TMNT2_FEATURE_DISPLAYRESO
     struct VIDEOMODE
     {
         char m_szName[64];
     };
-#endif /* TARGET_PC */
+#endif /* TMNT2_FEATURE_DISPLAYRESO */
 
     struct RAWDATA
     {
         bool m_bPlayerMarkerFlag;
         bool m_bFontEffectFlag;
         bool m_bHelpFlag;
-#ifdef TARGET_PC
+#ifdef TMNT2_FEATURE_DISPLAYRESO
         int32 m_iVideomodeNo;
-#endif /* TARGET_PC */
+#endif /* TMNT2_FEATURE_DISPLAYRESO */
     };
 
 public:
@@ -39,21 +39,21 @@ public:
     bool IsHelpEnabled(void) const;
     bool IsEnabledFontEffect(void) const;
     bool IsEnabledPlayerMarker(void) const;
-#ifdef TARGET_PC    
+#ifdef TMNT2_FEATURE_DISPLAYRESO
     void SetVideomode(int32 No);
     bool ApplyVideomode(void) const;
     int32 GetVideomodeNum(void) const;
     int32 GetVideomodeCur(void) const;
     const char* GetVideomodeName(int32 No) const;
-#endif /* TARGET_PC */
+#endif /* TMNT2_FEATURE_DISPLAYRESO */
 
 private:
     bool m_bHelpFlag;
     bool m_bFontEffectFlag;
     bool m_bPlayerMarkerFlag;    
-#ifdef TARGET_PC
+#ifdef TMNT2_FEATURE_DISPLAYRESO
     VIDEOMODE* m_pVideomode;
     int32 m_iVideomodeNum;
     int32 m_iVideomodeCur;
-#endif /* TARGET_PC */
+#endif /* TMNT2_FEATURE_DISPLAYRESO */
 };

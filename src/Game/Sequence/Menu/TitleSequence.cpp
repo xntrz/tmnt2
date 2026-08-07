@@ -18,6 +18,10 @@
 #include "System/Common/System2D.hpp"
 #include "System/Common/SystemText.hpp"
 
+#ifdef TARGET_WEB
+#include "System/Web/WebSpecific.hpp"
+#endif /* TARGET_WEB */
+
 
 /*static*/ CTitleSequence::MENUITEMINFO CTitleSequence::m_aMenuItemInfoTable[] =
 {
@@ -347,20 +351,23 @@ void CTitleSequence::UpdateMenu(void)
 		};
 	}
 	else if (CController::GetDigitalTrigger(iController, CController::DIGITAL_CANCEL))
-	{
-		CMenuSound::PlaySE(CMenuSound::SOUND_ID_CANCEL);
+    {
+        if (m_aMenuItemInfoTable[MENUITEMID_QUIT].m_bEnabled)
+        {
+            CMenuSound::PlaySE(CMenuSound::SOUND_ID_CANCEL);
 
-		int32 iSelect = GetSelectByItemIndex(MENUITEMID_QUIT);
-		if (m_iCurrentSelect == iSelect)
-		{
-			m_nextSeq = NEXT_SEQUENCE_QUIT;
-			BeginFadeOut();
-		}
-		else
-		{
-			m_iCurrentSelect = iSelect;
-		};
-	}
+            int32 iSelect = GetSelectByItemIndex(MENUITEMID_QUIT);
+            if (m_iCurrentSelect == iSelect)
+            {
+                m_nextSeq = NEXT_SEQUENCE_QUIT;
+                BeginFadeOut();
+            }
+            else
+            {
+                m_iCurrentSelect = iSelect;
+            };
+        };        
+    }
 	else if (CController::GetDigitalTrigger(iController, CController::DIGITAL_LUP))
 	{
 		CMenuSound::PlaySE(CMenuSound::SOUND_ID_SELECT);
@@ -427,11 +434,6 @@ void CTitleSequence::SetMenuItem(void)
         m_aMenuItemInfoTable[MENUITEMID_ARCADE].m_bVisible = true;
     };
 #endif
-
-#ifdef TMNT2_TRIAL
-    m_aMenuItemInfoTable[MENUITEMID_OPTIONS].m_bEnabled = false;
-    m_aMenuItemInfoTable[MENUITEMID_OPTIONS].m_bVisible = true;
-#endif /* TMNT2_TRIAL */
 
     m_aMenuItemInfoTable[MENUITEMID_GAME_CONTINUE].m_bEnabled = (!CGameData::IsNewGame());
 };

@@ -7,7 +7,7 @@
 #include "System/Web/WebSpecific.hpp"
 #else
 #error Not implemented for current target
-#endif /* TARGET_PC */
+#endif
 
 
 int32 LockTriggeredController(uint32 uButton)
@@ -107,4 +107,15 @@ bool ControllerIsKeyboard(int32 iController)
 #else
     return false;
 #endif    
+};
+
+
+bool ControllerIsTouch(int32 iController)
+{
+#if defined(TARGET_WEB)
+    if (CWebSpecific::IsMobilePlatform())
+        return (CWebSpecific::GetTouchPort() == IGamepad::GetPhysicalPort(iController));
+#endif /* defined(TARGET_WEB) */
+    
+    return false;
 };

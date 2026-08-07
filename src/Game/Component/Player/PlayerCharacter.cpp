@@ -156,6 +156,7 @@ CPlayerCharacter::CPlayerCharacter(const char* pszName, PLAYERID::VALUE idPlayer
 , m_feature({})
 , m_vReplacepoint(Math::VECTOR3_ZERO)
 , m_bActive(false)
+, m_bSimplifiedInput(CGameData::Option().Play().IsSimplifiedInput())
 {
 	;
 };
@@ -1257,7 +1258,9 @@ void CPlayerCharacter::RequestAttackB(void)
 {
     if (!TestPlayerFlag(PLAYERTYPES::FLAG_REQUEST_ATTACK_C))
     {
-        ClearPlayerFlag(PLAYERTYPES::FLAG_REQUEST_ATTACK_MASK);
+        ClearPlayerFlag(PLAYERTYPES::FLAG_REQUEST_ATTACK_A |
+                        PLAYERTYPES::FLAG_REQUEST_ATTACK_C);
+
         SetPlayerFlag(PLAYERTYPES::FLAG_REQUEST_ATTACK_B);
     };
 };
@@ -1267,7 +1270,9 @@ void CPlayerCharacter::RequestAttackC(void)
 {
     if (!TestPlayerFlag(PLAYERTYPES::FLAG_REQUEST_ATTACK_C))
     {
-        ClearPlayerFlag(PLAYERTYPES::FLAG_REQUEST_ATTACK_MASK);
+        ClearPlayerFlag(PLAYERTYPES::FLAG_REQUEST_ATTACK_A |
+                        PLAYERTYPES::FLAG_REQUEST_ATTACK_B);
+
         SetPlayerFlag(PLAYERTYPES::FLAG_REQUEST_ATTACK_C);
     };
 };
@@ -1285,18 +1290,38 @@ PLAYERTYPES::FLAG CPlayerCharacter::CheckAttackConnect(PLAYERTYPES::FLAG mask)
         if (fStatusDuration >= fChainMotionConnectTime)
         {
             ClearPlayerFlag(PLAYERTYPES::FLAG_ENABLE_ATTACK_CONNECT);
-            
+
+            //
+            //  Simplify input for mobile device by converting:
+            //      A -> A
+            //      B -> A
+            //      C -> B
+            //
+
             if (TestPlayerFlag(PLAYERTYPES::FLAG_REQUEST_ATTACK_C))
             {
                 result = PLAYERTYPES::FLAG_REQUEST_ATTACK_C;
             }
             else if (TestPlayerFlag(PLAYERTYPES::FLAG_REQUEST_ATTACK_B))
             {
-                result = PLAYERTYPES::FLAG_REQUEST_ATTACK_B;
+                if (m_bSimplifiedInput)
+                    result = PLAYERTYPES::FLAG_REQUEST_ATTACK_C;
+                else
+                    result = PLAYERTYPES::FLAG_REQUEST_ATTACK_B;
             }
             else if (TestPlayerFlag(PLAYERTYPES::FLAG_REQUEST_ATTACK_A))
             {
-                result = PLAYERTYPES::FLAG_REQUEST_ATTACK_A;
+                if (m_bSimplifiedInput)
+                {
+                    if (GetStatus() == PLAYERTYPES::STATUS_ATTACK_A)
+                        result = PLAYERTYPES::FLAG_REQUEST_ATTACK_A;
+                    else
+                        result = PLAYERTYPES::FLAG_REQUEST_ATTACK_B;
+                }
+                else
+                {
+                    result = PLAYERTYPES::FLAG_REQUEST_ATTACK_A;
+                };
             };
 
             result &= mask;
